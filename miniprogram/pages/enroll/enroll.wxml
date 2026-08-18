@@ -6,4 +6,16 @@
 <input class="input" placeholder="手机号" type="number" maxlength="11" value="{{form.travelerPhone}}" bindinput="setPhone" />
 <input class="input" placeholder="18位身份证号" maxlength="18" value="{{form.idCard}}" bindinput="setId" />
 <view class="pad" style="color:{{idOk ? '#6b705c' : '#bc4749'}};font-size:24rpx" wx:if="{{idHint}}">{{idHint}}</view>
+<view class="card" wx:if="{{s.remain>0 && seatRows.length}}">
+  <view class="pad">选座位（不选则自动分配）</view>
+  <view class="seat-map">
+    <view class="seat-front">车头</view>
+    <view class="seat-row" wx:for="{{seatRows}}" wx:key="row">
+      <block wx:for="{{item.seats}}" wx:for-item="seat" wx:key="no">
+        <view class="seat {{seat.taken ? 'taken' : ''}} {{form.seatNo==seat.no ? 'on' : ''}}" bindtap="pickSeat" data-no="{{seat.no}}" data-taken="{{seat.taken}}">{{seat.col}}</view>
+        <view wx:if="{{seat.aisleAfter}}" class="seat-aisle"></view>
+      </block>
+    </view>
+  </view>
+</view>
 <view class="btn" wx:if="{{s.status!='cancelled'}}" bindtap="submit">{{s.remain<=0?'加入候补':'确认报名'}}</view>

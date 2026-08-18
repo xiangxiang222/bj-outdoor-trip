@@ -7,7 +7,8 @@ Page({
     s: null,
     idHint: "",
     idOk: false,
-    form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult" },
+    form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", seatNo: "" },
+    seatRows: [],
   },
   onLoad(q) {
     if (!app.globalData.token) {
@@ -20,6 +21,22 @@ Page({
       "form.travelerPhone": (app.globalData.user || {}).phone || "",
     });
     request("/schedules/" + q.id).then((r) => this.setData({ s: r.data }));
+    request("/schedules/" + q.id + "/seats").then((r) => {
+      const seats = (r.data && r.data.seats) || [];
+      const groups = [];
+      seats.forEach((seat) => {
+        const last = groups[groups.length - 1];
+        if (!last || last.row !== seat.row) groups.push({ row: seat.row, seats: [seat] });
+        else last.seats.push(seat);
+      });
+      this.setData({ seatRows: groups });
+    }).catch(() => {});
+  },
+  pickSeat(e) {
+    const no = e.currentTarget.dataset.no;
+    const taken = e.currentTarget.dataset.taken;
+    if (taken) return;
+    this.setData({ "form.seatNo": this.data.form.seatNo === no ? "" : no });
   },
   setName(e) { this.setData({ "form.travelerName": e.detail.value }); },
   setPhone(e) { this.setData({ "form.travelerPhone": e.detail.value }); },

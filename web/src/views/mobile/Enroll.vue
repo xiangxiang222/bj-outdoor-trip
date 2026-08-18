@@ -22,6 +22,26 @@
       <option value="adult">成人</option>
       <option value="child">儿童</option>
     </select>
+    <div v-if="s.remain > 0 && seatRows.length" class="card"><div class="pad">
+      <div class="h2" style="margin-top:0">选座位</div>
+      <p class="muted">车头朝上，中间为过道。不选则自动分配空位。</p>
+      <div class="seat-map">
+        <div class="seat-front">车头</div>
+        <div class="seat-row" v-for="row in seatRows" :key="row[0].row">
+          <template v-for="seat in row" :key="seat.no">
+            <button
+              type="button"
+              class="seat"
+              :class="{ taken: seat.taken, on: form.seatNo === seat.no, mine: seat.mine }"
+              :disabled="seat.taken"
+              @click="form.seatNo = form.seatNo === seat.no ? '' : seat.no"
+            >{{ seat.col }}</button>
+            <i v-if="seat.aisleAfter" class="seat-aisle" />
+          </template>
+        </div>
+      </div>
+      <p class="muted">{{ form.seatNo ? "已选 " + form.seatNo : "未选座，将自动分配" }}</p>
+    </div></div>
     <p class="muted">积分抵现将在付款时使用。</p>
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
     <button v-if="s.status !== 'cancelled'" class="btn block" style="margin-top:16px" :disabled="loading" @click="submit">
@@ -31,7 +51,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
@@ -52,12 +72,29 @@ const form = ref({
   travelerPhone: store.profile?.phone || "",
   idCard: "",
   travelerType: "adult",
+  seatNo: "",
+});
+const seatChart = ref(null);
+const seatRows = computed(() => {
+  const list = seatChart.value?.seats || [];
+  const groups = [];
+  for (const seat of list) {
+    const last = groups[groups.length - 1];
+    if (!last || last[0].row !== seat.row) groups.push([seat]);
+    else last.push(seat);
+  }
+  return groups;
 });
 
 onMounted(async () => {
   if (!requireLogin(store, router, route)) return;
   s.value = (await http.get("/schedules/" + route.params.id)).data;
   quote.value = s.value.quote.price;
+  try {
+    seatChart.value = (await http.get("/schedules/" + route.params.id + "/seats")).data;
+  } catch {
+    seatChart.value = null;
+  }
 });
 
 function checkId() {
@@ -95,7 +132,11 @@ async function submit() {
   }
   loading.value = true;
   try {
-    await http.post("/enroll", { scheduleId: Number(route.params.id), ...form.value });
+    await http.post("/enroll", {
+      scheduleId: Number(route.params.id),
+      ...form.value,
+      seatNo: form.value.seatNo || undefined,
+    });
     router.push("/m/schedule/" + route.params.id);
   } catch (e) {
     err.value = e.message;

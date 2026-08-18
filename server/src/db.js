@@ -177,6 +177,7 @@ function createSchema(db) {
       status TEXT DEFAULT 'joined',
       waitlisted_at TEXT,
       promoted_at TEXT,
+      seat_no TEXT,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
@@ -253,6 +254,7 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "admin_users", "status", "TEXT DEFAULT 'on'");
   addColumnIfMissing(db, "enrollments", "waitlisted_at", "TEXT");
   addColumnIfMissing(db, "enrollments", "promoted_at", "TEXT");
+  addColumnIfMissing(db, "enrollments", "seat_no", "TEXT");
 }
 
 let _db;

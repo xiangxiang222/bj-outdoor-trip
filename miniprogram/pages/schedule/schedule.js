@@ -2,7 +2,7 @@ const { request } = require("../../utils/request");
 const { payStatusText } = require("../../utils/labels");
 const { shareCover } = require("../../utils/media");
 Page({
-  data: { s: null, id: "", showDissolve: false, reason: "" },
+  data: { s: null, id: "", showDissolve: false, reason: "", seatRows: [] },
   onLoad(q) {
     this.setData({ id: q.id });
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
@@ -16,6 +16,16 @@ Page({
       }
       this.setData({ s });
     });
+    request("/schedules/" + this.data.id + "/seats").then((r) => {
+      const seats = (r.data && r.data.seats) || [];
+      const groups = [];
+      seats.forEach((seat) => {
+        const last = groups[groups.length - 1];
+        if (!last || last.row !== seat.row) groups.push({ row: seat.row, seats: [seat] });
+        else last.seats.push(seat);
+      });
+      this.setData({ seatRows: groups });
+    }).catch(() => {});
   },
   enroll() { wx.navigateTo({ url: "/pages/enroll/enroll?id=" + this.data.id }); },
   stats() { wx.navigateTo({ url: "/pages/stats/stats?id=" + this.data.id }); },

@@ -379,6 +379,10 @@ async function run(opts) {
     );
     ctx.enrollmentId = enroll.enrollmentId;
     assert(enroll.payStatus === "unpaid" || enroll.payStatus === "company_pending", "报名支付状态异常");
+    assert(enroll.seatNo, "报名未分配座位");
+    const seats = apiOk(await request("GET", "/api/schedules/" + ctx.ownScheduleId + "/seats", { token: ctx.token }), "seats");
+    assert(Array.isArray(seats.seats) && seats.seats.length >= 1, "座位图为空");
+    assert(seats.seats.some((s) => s.taken), "座位图没有占用位");
     const dup = await request("POST", "/api/enroll", {
       token: ctx.token,
       body: {

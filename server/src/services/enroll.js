@@ -4,6 +4,7 @@ const { parseIdCard } = require("./idcard");
 const { calcPayable } = require("./biz");
 const { addPoints, enrolledCount, waitlistCount, quoteForSchedule, maybeMatchGuide } = require("./helpers");
 const { sendSms } = require("./sms");
+const { assertSeatAvailable, firstFreeSeat } = require("./seats");
 const config = require("../config");
 
 function fail(status, message) {
@@ -12,7 +13,7 @@ function fail(status, message) {
   throw err;
 }
 
-function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, travelerType }) {
+function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, travelerType, seatNo }) {
   const db = getDb();
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
   if (!user) fail(401, "请先登录");
@@ -30,6 +31,14 @@ function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, t
 
   const occupied = enrolledCount(sch.id);
   const waitlisted = occupied >= Number(sch.max_seats);
+  let seat = null;
+  if (waitlisted) {
+    seat = null;
+  } else if (seatNo) {
+    seat = assertSeatAvailable(sch.id, sch.max_seats, seatNo);
+  } else {
+    seat = firstFreeSeat(sch.id, sch.max_seats);
+  }
   const quote = quoteForSchedule(sch, Math.max(waitlisted ? occupied : occupied + 1, 1), user);
   const payable = calcPayable({
     basePrice: quote.originPrice,
@@ -44,8 +53,8 @@ function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, t
   const status = waitlisted ? "waitlist" : "joined";
   const info = db
     .prepare(
-      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,waitlisted_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,waitlisted_at,seat_no)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       sch.id,
@@ -63,7 +72,8 @@ function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, t
       "",
       "chain",
       status,
-      waitlisted ? dayjs().format("YYYY-MM-DD HH:mm:ss") : null
+      waitlisted ? dayjs().format("YYYY-MM-DD HH:mm:ss") : null,
+      seat
     );
   const enrollmentId = Number(info.lastInsertRowid);
   if (!waitlisted) maybeMatchGuide(sch.id);
@@ -74,6 +84,7 @@ function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, t
     status,
     waitlisted,
     waitlistPosition: position,
+    seatNo: seat,
     needPay: false,
     message: waitlisted
       ? `本车已满，已加入候补（第 ${position} 位），有人取消后自动递补`
@@ -93,7 +104,11 @@ function promoteWaitlist(scheduleId) {
     .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status='waitlist' ORDER BY id LIMIT 1")
     .get(scheduleId);
   if (!next) return null;
-  db.prepare("UPDATE enrollments SET status='joined', promoted_at=datetime('now','localtime') WHERE id=?").run(next.id);
+  const seat = firstFreeSeat(scheduleId, sch.max_seats);
+  db.prepare("UPDATE enrollments SET status='joined', promoted_at=datetime('now','localtime'), seat_no=? WHERE id=?").run(
+    seat,
+    next.id
+  );
   maybeMatchGuide(scheduleId);
   const route = db.prepare("SELECT title FROM routes WHERE id=?").get(sch.route_id);
   sendSms({

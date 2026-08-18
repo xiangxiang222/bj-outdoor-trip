@@ -21,6 +21,13 @@ button.btn::after { border: none; }
 .chips { padding: 8rpx 8rpx 0; }
 .progress { height: 12rpx; background: #eee; border-radius: 99rpx; overflow: hidden; margin: 12rpx 0; }
 .bar { height: 100%; background: #2d6a4f; }
+.seat-map { display: flex; flex-direction: column; align-items: center; gap: 12rpx; padding: 12rpx 0; }
+.seat-front { font-size: 22rpx; color: #6b705c; }
+.seat-row { display: flex; align-items: center; gap: 10rpx; }
+.seat { width: 64rpx; height: 64rpx; border-radius: 12rpx; border: 1px solid #e6dfd2; background: #fff; text-align: center; line-height: 64rpx; font-size: 22rpx; }
+.seat.taken { background: #d8f3dc; color: #6b705c; }
+.seat.on { background: #2d6a4f; color: #fff; }
+.seat-aisle { width: 28rpx; height: 8rpx; }
 .input { background: #fff; border: 1px solid #e6dfd2; border-radius: 12rpx; padding: 18rpx; margin: 12rpx 16rpx; }
 .radio-row { display: flex; gap: 36rpx; padding: 16rpx 24rpx; }
 .radio-item { display: flex; align-items: center; gap: 8rpx; font-size: 28rpx; }

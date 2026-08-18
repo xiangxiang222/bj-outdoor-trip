@@ -11,6 +11,16 @@
     <view class="muted" wx:elif="{{s.guide}}">已匹配导游：{{s.guide.name}}</view>
   </view>
 </view>
+<view class="pad title">座位图</view>
+<view class="seat-map" wx:if="{{seatRows.length}}">
+  <view class="seat-front">车头</view>
+  <view class="seat-row" wx:for="{{seatRows}}" wx:key="row">
+    <block wx:for="{{item.seats}}" wx:for-item="seat" wx:key="no">
+      <view class="seat {{seat.taken ? 'taken' : ''}}">{{seat.col}}</view>
+      <view wx:if="{{seat.aisleAfter}}" class="seat-aisle"></view>
+    </block>
+  </view>
+</view>
 <view class="pad title">报名名单</view>
 <view class="pad" wx:for="{{s.chain}}" wx:key="index">{{item.index}}. {{item.name}} {{item.waitlisted ? '候补' : item.payText}}</view>
 <view class="btn" wx:if="{{s.status!='cancelled'}}" bindtap="enroll">{{s.remain<=0?'已满员，去候补':'立即报名'}}</view>

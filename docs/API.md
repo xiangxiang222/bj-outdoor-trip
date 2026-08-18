@@ -25,6 +25,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/schedules` | Query：`routeId` `organizerType`（不含已解散） |
 | GET | `/schedules/:id` | 排期 + 脱敏名单；已解散团仍可查看 |
 | GET | `/schedules/:id/demographics` | 本团画像 |
+| GET | `/schedules/:id/seats` | 座位图。登录后占用位带 `mine` |
 | GET | `/schedules/:id/poster` | 分享 URL + QR DataURL（**无需登录**） |
 | GET | `/share/:token` | 302 到 `/m/schedule/:id?token=` |
 
@@ -71,13 +72,14 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
   "travelerName": "林北野",
   "travelerPhone": "13800138000",
   "idCard": "110101199205121219",
-  "travelerType": "adult"
+  "travelerType": "adult",
+  "seatNo": "1A"
 }
 ```
 
 身份证须 18 位且校验码正确。同团同一证件不可重复（已取消的不计）。已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序自动递补。当前实现报名时 `points_used=0`，不读取抵现开关。
 
-排期详情含 `waitlistCount`、`remain`；名单项含 `waitlisted`。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`。
+排期详情含 `waitlistCount`、`remain`；名单项含 `waitlisted`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`。
 
 报名成功示例：
 

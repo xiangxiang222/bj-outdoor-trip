@@ -23,12 +23,26 @@
       </div>
     </div>
 
+    <div class="h2">座位图</div>
+    <div class="card"><div class="pad">
+      <div class="seat-map">
+        <div class="seat-front">车头</div>
+        <div class="seat-row" v-for="row in seatRows" :key="row[0].row">
+          <template v-for="seat in row" :key="seat.no">
+            <span class="seat" :class="{ taken: seat.taken, mine: seat.mine }">{{ seat.col }}</span>
+            <i v-if="seat.aisleAfter" class="seat-aisle" />
+          </template>
+        </div>
+      </div>
+      <p class="muted">绿位已占用，中间为过道。</p>
+    </div></div>
+
     <div class="h2">报名名单</div>
     <div class="card"><div class="pad">
       <div class="chain-item" v-for="c in s.chain" :key="c.index">
         <span>{{ c.index }}</span>
         <span>{{ c.name }} · {{ c.gender === "female" ? "女" : c.gender === "male" ? "男" : "" }}</span>
-        <span class="muted">{{ c.waitlisted ? "候补" : payText(c.payStatus) }}</span>
+        <span class="muted">{{ c.waitlisted ? "候补" : (c.seatNo ? c.seatNo + " · " : "") + payText(c.payStatus) }}</span>
       </div>
       <p class="muted" v-if="!s.chain?.length">还没有人报名，快来占第一名。</p>
     </div></div>
@@ -91,6 +105,17 @@ const shareText = ref("");
 const reason = ref("");
 const dissolveErr = ref("");
 const dissolving = ref(false);
+const seatChart = ref(null);
+const seatRows = computed(() => {
+  const list = seatChart.value?.seats || [];
+  const groups = [];
+  for (const seat of list) {
+    const last = groups[groups.length - 1];
+    if (!last || last[0].row !== seat.row) groups.push([seat]);
+    else last.push(seat);
+  }
+  return groups;
+});
 const isOwner = computed(() => store.profile && s.value && Number(s.value.organizerId) === Number(store.profile.id));
 const statusTag = computed(() => {
   if (!s.value) return "";
@@ -102,6 +127,11 @@ onMounted(load);
 
 async function load() {
   s.value = (await http.get("/schedules/" + route.params.id)).data;
+  try {
+    seatChart.value = (await http.get("/schedules/" + route.params.id + "/seats")).data;
+  } catch {
+    seatChart.value = null;
+  }
 }
 
 function payText(st) {

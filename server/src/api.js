@@ -14,6 +14,7 @@ const { pickTier, calcPayable, buildDemographics, maskName } = require("./servic
 const { code2session } = require("./services/wechat");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, canCancelEnrollment } = require("./services/enroll");
+const { scheduleSeats } = require("./services/seats");
 const { deleteAccount } = require("./services/account");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -405,8 +406,8 @@ router.get("/schedules/:id", optionalUser, (req, res) => {
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
   const includeCancelled = sch.status === "cancelled";
   const chainSql = includeCancelled
-    ? "SELECT id,traveler_name,gender,pay_status,traveler_type,status,created_at FROM enrollments WHERE schedule_id=? ORDER BY CASE status WHEN 'joined' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END, id"
-    : "SELECT id,traveler_name,gender,pay_status,traveler_type,status,created_at FROM enrollments WHERE schedule_id=? AND status!='cancelled' ORDER BY CASE status WHEN 'joined' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END, id";
+    ? "SELECT id,traveler_name,gender,pay_status,traveler_type,status,seat_no,created_at FROM enrollments WHERE schedule_id=? ORDER BY CASE status WHEN 'joined' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END, id"
+    : "SELECT id,traveler_name,gender,pay_status,traveler_type,status,seat_no,created_at FROM enrollments WHERE schedule_id=? AND status!='cancelled' ORDER BY CASE status WHEN 'joined' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END, id";
   const chain = db()
     .prepare(chainSql)
     .all(sch.id)
@@ -418,6 +419,7 @@ router.get("/schedules/:id", optionalUser, (req, res) => {
       travelerType: e.traveler_type,
       status: e.status,
       waitlisted: e.status === "waitlist",
+      seatNo: e.seat_no || "",
       createdAt: e.created_at,
     }));
   res.json({
@@ -434,6 +436,17 @@ router.get("/share/:token", (req, res) => {
   const sch = db().prepare("SELECT * FROM schedules WHERE share_token=?").get(req.params.token);
   if (!sch) return res.status(404).json({ ok: false, message: "分享已失效" });
   res.redirect(`/m/schedule/${sch.id}?token=${sch.share_token}`);
+});
+
+router.get("/schedules/:id/seats", optionalUser, (req, res) => {
+  const data = scheduleSeats(req.params.id);
+  if (!data) return res.status(404).json({ ok: false, message: "排期不存在" });
+  data.seats = data.seats.map((seat) => ({
+    ...seat,
+    mine: !!(req.userId && seat.userId && Number(seat.userId) === Number(req.userId)),
+    userId: undefined,
+  }));
+  res.json({ ok: true, data });
 });
 
 router.get("/schedules/:id/poster", async (req, res) => {
@@ -502,7 +515,7 @@ router.post("/schedules/:id/dissolve", authUser, dissolveHandler("organizer"));
 
 router.post("/enroll", authUser, (req, res) => {
   try {
-    const { scheduleId, travelerName, travelerPhone, idCard, travelerType } = req.body || {};
+    const { scheduleId, travelerName, travelerPhone, idCard, travelerType, seatNo } = req.body || {};
     const data = enrollUser({
       userId: req.userId,
       scheduleId,
@@ -510,6 +523,7 @@ router.post("/enroll", authUser, (req, res) => {
       travelerPhone,
       idCard,
       travelerType,
+      seatNo,
     });
     res.json({ ok: true, data });
   } catch (e) {

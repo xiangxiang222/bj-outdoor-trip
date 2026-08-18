@@ -6,7 +6,7 @@
           <strong>{{ o.title }}</strong>
           <span class="tag">{{ o.status === "cancelled" ? "已取消" : o.start_date }}</span>
         </div>
-        <div class="muted">{{ o.traveler_name }} · {{ enrollStatusText(o) }}</div>
+        <div class="muted">{{ o.traveler_name }} · {{ enrollStatusText(o) }}<template v-if="o.seat_no"> · {{ o.seat_no }}座</template></div>
         <div class="price">¥{{ o.pay_amount }}</div>
       </div>
       <div v-if="o.canCancel" class="pad" style="padding-top:0">
