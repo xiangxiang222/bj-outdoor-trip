@@ -272,6 +272,19 @@ button, input, textarea, select { font-family: inherit; }
 .seat.on { background: var(--leaf); color: #fff; border-color: var(--leaf); }
 .seat.mine { box-shadow: 0 0 0 2px var(--gold); }
 .seat-aisle { width: 16px; height: 8px; display: inline-block; }
+.weather {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #eef6ff;
+  font-size: 13px;
+}
+.weather strong { display: block; }
+.weather span { color: var(--muted); font-size: 12px; }
+.weather p { margin: 6px 0 0; }
+.weather.warn { background: #fff6d6; }
+.weather.high { background: #fde8e8; }
+.weather.ok { background: var(--mint); }
 .ins-opt {
   display: flex;
   gap: 8px;

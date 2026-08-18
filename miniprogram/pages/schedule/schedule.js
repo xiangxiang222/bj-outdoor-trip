@@ -2,7 +2,7 @@ const { request } = require("../../utils/request");
 const { payStatusText } = require("../../utils/labels");
 const { shareCover } = require("../../utils/media");
 Page({
-  data: { s: null, id: "", showDissolve: false, reason: "", seatRows: [] },
+  data: { s: null, id: "", showDissolve: false, reason: "", seatRows: [], weather: null },
   onLoad(q) {
     this.setData({ id: q.id });
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
@@ -15,6 +15,13 @@ Page({
         s.chain = s.chain.map((c) => Object.assign({}, c, { payText: payStatusText(c.payStatus) }));
       }
       this.setData({ s });
+      const region = s && s.route && s.route.region;
+      const date = s && s.startDate;
+      if (region) {
+        request("/weather?region=" + encodeURIComponent(region) + "&date=" + (date || "")).then((w) => {
+          this.setData({ weather: w.data });
+        }).catch(() => {});
+      }
     });
     request("/schedules/" + this.data.id + "/seats").then((r) => {
       const seats = (r.data && r.data.seats) || [];

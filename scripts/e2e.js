@@ -232,6 +232,8 @@ async function run(opts) {
     const meta = apiOk(await request("GET", "/api/meta"), "meta");
     assert(meta.name === "北野行", "品牌名不是北野行");
     assert(Array.isArray(meta.insurance) && meta.insurance.length >= 2, "保险方案缺失");
+    const forecast = apiOk(await request("GET", "/api/weather?region=北京怀柔"), "weather");
+    assert(forecast.summary && Array.isArray(forecast.alerts), "天气提醒不完整");
     assert(Array.isArray(meta.days) && meta.days.includes(1), "天数选项缺失");
     const buses = apiOk(await request("GET", "/api/buses"), "buses");
     assert(buses.length > 0, "没有车型");

@@ -20,6 +20,11 @@
         </p>
         <p class="muted" v-else-if="s.guide">已成团，匹配导游：{{ s.guide.name }}（{{ s.guide.specialties }} · {{ s.guide.years }}年）</p>
         <p class="muted" v-else>人数达到最低成团后将自动匹配导游。</p>
+        <div v-if="weather" class="weather" :class="weather.alerts?.[0]?.level">
+          <strong>{{ weather.place }} {{ weather.summary }}</strong>
+          <span>{{ weather.tmin }}~{{ weather.tmax }}℃ · 风 {{ weather.wind }}km/h</span>
+          <p v-for="(a, i) in weather.alerts" :key="i">{{ a.text }}</p>
+        </div>
       </div>
     </div>
 
@@ -105,6 +110,7 @@ const shareText = ref("");
 const reason = ref("");
 const dissolveErr = ref("");
 const dissolving = ref(false);
+const weather = ref(null);
 const seatChart = ref(null);
 const seatRows = computed(() => {
   const list = seatChart.value?.seats || [];
@@ -131,6 +137,13 @@ async function load() {
     seatChart.value = (await http.get("/schedules/" + route.params.id + "/seats")).data;
   } catch {
     seatChart.value = null;
+  }
+  try {
+    weather.value = (
+      await http.get("/weather", { params: { region: s.value.route.region, date: s.value.startDate } })
+    ).data;
+  } catch {
+    weather.value = null;
   }
 }
 

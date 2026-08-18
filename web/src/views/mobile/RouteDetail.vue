@@ -6,6 +6,11 @@
       <span class="tag">{{ r.days }}日 · {{ r.difficulty }}</span>
     </div>
     <p class="muted">{{ r.subtitle }}</p>
+    <div v-if="weather" class="weather" :class="weather.alerts?.[0]?.level">
+      <strong>{{ weather.place }} {{ weather.summary }}</strong>
+      <span>{{ weather.tmin }}~{{ weather.tmax }}℃</span>
+      <p>{{ weather.alerts?.[0]?.text }}</p>
+    </div>
     <div><span class="tag" v-for="t in r.tags" :key="t">{{ t }}</span></div>
     <div class="row" style="margin:10px 0">
       <div>
@@ -106,6 +111,7 @@ const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const r = ref(null);
+const weather = ref(null);
 const copied = ref(false);
 const favMsg = ref("");
 const previewIndex = ref(null);
@@ -119,6 +125,11 @@ const previewList = computed(() => {
 onMounted(async () => {
   r.value = (await http.get("/routes/" + route.params.id)).data;
   window.addEventListener("keydown", onKey);
+  try {
+    weather.value = (await http.get("/weather", { params: { region: r.value.region } })).data;
+  } catch {
+    weather.value = null;
+  }
 });
 onUnmounted(() => window.removeEventListener("keydown", onKey));
 function onKey(e) {

@@ -15,6 +15,7 @@ const { code2session } = require("./services/wechat");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, canCancelEnrollment } = require("./services/enroll");
 const { scheduleSeats } = require("./services/seats");
+const { forecast } = require("./services/weather");
 const { deleteAccount } = require("./services/account");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -318,6 +319,15 @@ router.put("/me", authUser, (req, res) => {
   ).run(nickname, gender, birthday || parsed.birthday, idCard, parsed.hometown, companyName, avatar, req.userId);
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
   res.json({ ok: true, data: userPublic(user, req) });
+});
+
+router.get("/weather", async (req, res) => {
+  try {
+    const data = await forecast({ region: req.query.region, date: req.query.date });
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(500).json({ ok: false, message: e.message || "天气暂不可用" });
+  }
 });
 
 router.get("/buses", (_req, res) => {
