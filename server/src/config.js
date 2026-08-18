@@ -38,4 +38,7 @@ module.exports = {
       { code: "plus", name: "升级高额险", fee: 48, cover: "意外身故/伤残 50 万，医疗 5 万" },
     ],
   },
+  split: {
+    platformRate: 0.08,
+  },
 };

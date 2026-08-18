@@ -197,6 +197,18 @@ function createSchema(db) {
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
+    CREATE TABLE IF NOT EXISTS payment_splits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      schedule_id INTEGER,
+      party TEXT,
+      name TEXT,
+      amount INTEGER,
+      rate REAL,
+      status TEXT,
+      remark TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+
     CREATE TABLE IF NOT EXISTS points_ledger (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER,

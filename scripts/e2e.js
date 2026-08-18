@@ -525,6 +525,7 @@ async function run(opts) {
       "company settle"
     );
     assert(settled.count >= 1, "结算人数为 0");
+    assert(Array.isArray(settled.splits) && settled.splits.length >= 3, "结算后应写入分账");
     apiOk(
       await request("POST", "/api/schedules/" + ctx.companyScheduleId + "/dissolve", {
         token: ctx.companyAuth.token,

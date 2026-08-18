@@ -33,7 +33,7 @@ async function run() {
   writeCovers();
   await downloadPhotos();
   const db = getDb();
-  db.exec("DELETE FROM reviews; DELETE FROM favorites; DELETE FROM points_ledger; DELETE FROM payments; DELETE FROM enrollments; DELETE FROM schedules; DELETE FROM route_buses; DELETE FROM route_price_tiers; DELETE FROM routes; DELETE FROM guides; DELETE FROM bus_types; DELETE FROM sms_codes; DELETE FROM captchas; DELETE FROM users; DELETE FROM admin_users; DELETE FROM settings;");
+  db.exec("DELETE FROM reviews; DELETE FROM payment_splits; DELETE FROM favorites; DELETE FROM points_ledger; DELETE FROM payments; DELETE FROM enrollments; DELETE FROM schedules; DELETE FROM route_buses; DELETE FROM route_price_tiers; DELETE FROM routes; DELETE FROM guides; DELETE FROM bus_types; DELETE FROM sms_codes; DELETE FROM captchas; DELETE FROM users; DELETE FROM admin_users; DELETE FROM settings;");
 
   const hash = bcrypt.hashSync("123456", 10);
   const adminHash = bcrypt.hashSync("admin123", 10);

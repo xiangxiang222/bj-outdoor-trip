@@ -54,7 +54,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
 | POST | `/enroll` | 用户 | 报名占座。个人 `pay_status=unpaid`、`needPay: false`；公司 `company_pending` |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。报名流程默认不调用 |
-| POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调 |
+| POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
 | GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` |
 | POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（出发日前、团未解散） |
 | POST | `/member/buy` | 用户 | **立即开通/续费会员**，记一笔成功支付并返回 `user` |
@@ -125,7 +125,9 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/admin/schedules/dissolve-all` | 解散全部进行中的团。body：`reason` |
 | POST | `/admin/schedules/:id/dissolve` | 解散单团。body：`reason` |
 | PUT | `/admin/schedules/:id/cost` | `transport` `ticket` `hotel` `meal` `guide` `other` |
-| POST | `/admin/schedules/:id/settle` | 公司团挂账结算 |
+| POST | `/admin/schedules/:id/settle` | 公司团挂账结算，并模拟分账 |
+| GET | `/admin/schedules/:id/splits` | 分账明细 |
+| POST | `/admin/schedules/:id/split` | 对已支付金额发起分账（已有记录则复用） |
 | GET | `/admin/enrollments` | Query：`scheduleId` `q` `payStatus` `status` |
 | POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款标记退款） |
 | GET | `/admin/users` | Query：`q`。不含已注销、不含证件；带 `isMember` |

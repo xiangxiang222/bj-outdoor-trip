@@ -28,11 +28,12 @@
       <el-table-column label="导游" width="90">
         <template #default="{ row }">{{ row.guide?.name || "未匹配" }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="320" fixed="right">
+      <el-table-column label="操作" width="380" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="cost(row)">成本</el-button>
           <el-button size="small" @click="demo(row)">画像</el-button>
           <el-button size="small" type="success" :disabled="row.status === 'cancelled'" @click="settle(row)">结算</el-button>
+          <el-button size="small" @click="openSplit(row)">分账</el-button>
           <el-button size="small" type="danger" :disabled="row.status === 'cancelled'" @click="openDissolve(row)">解散</el-button>
         </template>
       </el-table-column>
@@ -101,6 +102,23 @@
         <el-button type="danger" :loading="dissolving" @click="dissolve">确认解散并通知</el-button>
       </template>
     </el-dialog>
+    <el-dialog v-model="showSplit" title="企业支付分账" width="560px">
+      <p class="muted">模拟微信商户号分账：平台抽成 8%，导游按成本或 5%，剩余归开团公司。</p>
+      <el-table :data="splitRows" stripe size="small">
+        <el-table-column prop="name" label="接收方" />
+        <el-table-column prop="party" label="角色" width="90">
+          <template #default="{ row }">{{ { platform: "平台", guide: "导游", merchant: "商家" }[row.party] || row.party }}</template>
+        </el-table-column>
+        <el-table-column prop="amount" label="金额" width="90" />
+        <el-table-column prop="status" label="状态" width="90">
+          <template #default="{ row }">{{ row.status === "success" ? "已分账" : "待分账" }}</template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <el-button @click="showSplit = false">关闭</el-button>
+        <el-button type="success" @click="runSplit">发起/查看分账</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -119,6 +137,9 @@ const showCost = ref(false);
 const showDemo = ref(false);
 const showNew = ref(false);
 const showDissolve = ref(false);
+const showSplit = ref(false);
+const splitRows = ref([]);
+const splitScheduleId = ref(0);
 const dissolveAll = ref(false);
 const dissolving = ref(false);
 const dissolveReason = ref("");
@@ -155,6 +176,29 @@ async function settle(row) {
   const res = await http.post(`/admin/schedules/${row.id}/settle`);
   ElMessage.success(`已结算 ${res.data.count} 人`);
   load();
+  if (res.data.splits?.length) {
+    splitRows.value = res.data.splits;
+    splitScheduleId.value = row.id;
+    showSplit.value = true;
+  }
+}
+async function openSplit(row) {
+  splitScheduleId.value = row.id;
+  try {
+    splitRows.value = (await http.get(`/admin/schedules/${row.id}/splits`)).data;
+  } catch {
+    splitRows.value = [];
+  }
+  showSplit.value = true;
+}
+async function runSplit() {
+  try {
+    const res = await http.post(`/admin/schedules/${splitScheduleId.value}/split`);
+    splitRows.value = res.data.splits;
+    ElMessage.success(res.data.reused ? "已有分账记录" : "已模拟分账到账");
+  } catch (e) {
+    ElMessage.error(e.message || "分账失败");
+  }
 }
 function openDissolve(row) {
   cur.value = row;

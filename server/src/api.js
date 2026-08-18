@@ -16,6 +16,7 @@ const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve"
 const { enrollUser, cancelEnrollment, canCancelEnrollment } = require("./services/enroll");
 const { scheduleSeats } = require("./services/seats");
 const { forecast } = require("./services/weather");
+const { listSplits, createSplitsForSchedule } = require("./services/split");
 const { deleteAccount } = require("./services/account");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -584,7 +585,13 @@ router.post("/pay/company-settle", authUser, (req, res) => {
       "公司统一微信支付"
     );
   }
-  res.json({ ok: true, data: { count: pending.length, total, price: quote.originPrice } });
+  let splits = null;
+  try {
+    splits = createSplitsForSchedule(sch.id, { remark: "公司统一支付后分账" });
+  } catch (e) {
+    if (e.status !== 400) throw e;
+  }
+  res.json({ ok: true, data: { count: pending.length, total, price: quote.originPrice, splits: splits?.splits || [] } });
 });
 
 router.get("/orders", authUser, (req, res) => {
@@ -962,7 +969,26 @@ router.post("/admin/schedules/:id/settle", authAdmin, (req, res) => {
     db().prepare("UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=?").run(amount, en.id);
   }
   maybeMatchGuide(sch.id);
-  res.json({ ok: true, data: { count: pending.length, price: quote.originPrice } });
+  let splits = null;
+  try {
+    splits = createSplitsForSchedule(sch.id, { remark: "后台结算后分账" });
+  } catch (e) {
+    if (e.status !== 400) throw e;
+  }
+  res.json({ ok: true, data: { count: pending.length, price: quote.originPrice, splits: splits?.splits || [] } });
+});
+
+router.get("/admin/schedules/:id/splits", authAdmin, (req, res) => {
+  res.json({ ok: true, data: listSplits(req.params.id) });
+});
+
+router.post("/admin/schedules/:id/split", authAdmin, (req, res) => {
+  try {
+    const data = createSplitsForSchedule(req.params.id, { remark: "后台发起分账" });
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 router.get("/admin/enrollments", authAdmin, (req, res) => {
