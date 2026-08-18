@@ -10,6 +10,10 @@ function signAdmin(admin) {
   return jwt.sign({ aid: admin.id, role: admin.role, typ: "admin" }, config.jwtSecret, { expiresIn: config.adminJwtExpire });
 }
 
+function signGuide(guide) {
+  return jwt.sign({ gid: guide.id, typ: "guide" }, config.jwtSecret, { expiresIn: config.jwtExpire });
+}
+
 function activeUser(id) {
   if (!id) return null;
   const row = getDb().prepare("SELECT id, role, deleted_at FROM users WHERE id=?").get(id);
@@ -68,10 +72,26 @@ function authAdmin(req, res, next) {
   }
 }
 
+function authGuide(req, res, next) {
+  const token = bearer(req);
+  if (!token) return res.status(401).json({ ok: false, message: "请先登录导游端" });
+  try {
+    const p = jwt.verify(token, config.jwtSecret);
+    if (p.typ !== "guide") return res.status(401).json({ ok: false, message: "需要导游身份" });
+    const guide = getDb().prepare("SELECT * FROM guides WHERE id=?").get(p.gid);
+    if (!guide || guide.status === "off") return res.status(401).json({ ok: false, message: "导游账号不可用" });
+    req.guideId = guide.id;
+    req.guide = guide;
+    next();
+  } catch {
+    return res.status(401).json({ ok: false, message: "导游登录已过期" });
+  }
+}
+
 function bearer(req) {
   const h = (req.headers && req.headers.authorization) || "";
   if (h.startsWith("Bearer ")) return h.slice(7);
   return (req.query && req.query.token) || "";
 }
 
-module.exports = { signUser, signAdmin, authUser, optionalUser, authAdmin };
+module.exports = { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide };

@@ -97,6 +97,7 @@ function seedMinimal() {
   db.prepare(
     "INSERT INTO guides (name,phone,gender,years,languages,specialties,rating,bio,status) VALUES (?,?,?,?,?,?,?,?,?)"
   ).run("林晓峰", "13700001101", "male", 8, "普通话", "长城,登山", 4.9, "长城向导", "idle");
+  const guideId = Number(db.prepare("SELECT id FROM guides WHERE phone=?").get("13700001101").id);
 
   const routeId = Number(
     db.prepare(
@@ -208,6 +209,7 @@ function seedMinimal() {
     routeId,
     individualScheduleId,
     companyScheduleId,
+    guideId,
     password: PASSWORD,
   };
 }

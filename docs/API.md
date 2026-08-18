@@ -8,6 +8,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | --- | --- | --- |
 | 用户 | `Authorization: Bearer <token>` | `/auth/login`、`/auth/login-sms`、`/auth/register`、`/auth/wechat` |
 | 管理员 | 同上 | `/admin/login` |
+| 导游 | 同上 | `/guide/login` |
 
 部分接口也接受 `?token=`。用户 token 不能访问 `/admin/*`（除登录）。已注销账号的 token 返回 401「账号已注销」。
 
@@ -19,6 +20,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | --- | --- | --- |
 | GET | `/meta` | 品牌名、演示短信码、会员年费、积分规则、保险方案、可选天数 |
 | GET | `/weather` | 目的地天气。Query：`region` `date`。默认 mock，设 `WEATHER_LIVE=1` 走 Open-Meteo |
+| GET | `/buses` | 车型 |
 | GET | `/guides` | 导游公开信息 |
 | GET | `/routes` | 上架线路。Query：`days` `category` `difficulty` `q` |
 | GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏 |
@@ -63,6 +65,18 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | DELETE | `/favorites/:routeId` | 用户 | 取消收藏 |
 | GET | `/favorites` | 用户 | 收藏列表 |
 | POST | `/reviews` | 用户 | `scheduleId` `rating` `content` |
+
+## 导游端
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| POST | `/guide/login` | `phone` `captchaToken` `captcha`。演示：`13700001101` |
+| GET | `/guide/me` | 当前导游 |
+| GET | `/guide/schedules` | 已分配行程 |
+| GET | `/guide/schedules/:id` | 名单含手机与座位 |
+| POST | `/guide/schedules/:id/checkin` | body：`enrollmentId` |
+
+H5 入口 `/g`。
 
 ### 报名 body
 

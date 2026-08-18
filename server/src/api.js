@@ -8,7 +8,7 @@ const QRCode = require("qrcode");
 const multer = require("multer");
 const { getDb, toRoute } = require("./db");
 const config = require("./config");
-const { signUser, signAdmin, authUser, optionalUser, authAdmin } = require("./middleware/auth");
+const { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide } = require("./middleware/auth");
 const { parseIdCard, maskIdCard } = require("./services/idcard");
 const { pickTier, calcPayable, buildDemographics, maskName } = require("./services/biz");
 const { code2session } = require("./services/wechat");
@@ -674,6 +674,71 @@ router.post("/reviews", authUser, (req, res) => {
   const { scheduleId, rating, content } = req.body || {};
   db().prepare("INSERT INTO reviews (schedule_id,user_id,rating,content) VALUES (?,?,?,?)").run(scheduleId, req.userId, rating || 5, content || "");
   res.json({ ok: true });
+});
+
+function publicGuide(g) {
+  if (!g) return null;
+  return {
+    id: g.id,
+    name: g.name,
+    phone: g.phone,
+    years: g.years,
+    specialties: g.specialties,
+    rating: g.rating,
+    bio: g.bio,
+    status: g.status,
+  };
+}
+
+router.post("/guide/login", (req, res) => {
+  const { phone, captchaToken, captcha } = req.body || {};
+  if (!consumeCaptcha(captchaToken, captcha)) return res.status(400).json({ ok: false, message: "验证码错误或已过期" });
+  const guide = db().prepare("SELECT * FROM guides WHERE phone=?").get(phone);
+  if (!guide || guide.status === "off") return res.status(400).json({ ok: false, message: "未找到导游账号" });
+  res.json({ ok: true, data: { token: signGuide(guide), ...publicGuide(guide) } });
+});
+
+router.get("/guide/me", authGuide, (req, res) => {
+  res.json({ ok: true, data: publicGuide(req.guide) });
+});
+
+router.get("/guide/schedules", authGuide, (req, res) => {
+  const rows = db()
+    .prepare("SELECT * FROM schedules WHERE guide_id=? ORDER BY start_date")
+    .all(req.guideId)
+    .map((s) => scheduleView(s, req));
+  res.json({ ok: true, data: rows });
+});
+
+router.get("/guide/schedules/:id", authGuide, (req, res) => {
+  const sch = db().prepare("SELECT * FROM schedules WHERE id=? AND guide_id=?").get(req.params.id, req.guideId);
+  if (!sch) return res.status(404).json({ ok: false, message: "未分配该团" });
+  const roster = db()
+    .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status='joined' ORDER BY id")
+    .all(sch.id)
+    .map((e) => ({
+      id: e.id,
+      name: e.traveler_name,
+      phone: e.traveler_phone,
+      gender: e.gender,
+      seatNo: e.seat_no,
+      payStatus: e.pay_status,
+      insurance: e.insurance_code,
+      checkinAt: e.checkin_at,
+      idCard: maskIdCard(e.id_card),
+    }));
+  res.json({ ok: true, data: { ...scheduleView(sch, req), roster } });
+});
+
+router.post("/guide/schedules/:id/checkin", authGuide, (req, res) => {
+  const sch = db().prepare("SELECT * FROM schedules WHERE id=? AND guide_id=?").get(req.params.id, req.guideId);
+  if (!sch) return res.status(404).json({ ok: false, message: "未分配该团" });
+  const enrollmentId = Number((req.body || {}).enrollmentId);
+  const en = db().prepare("SELECT * FROM enrollments WHERE id=? AND schedule_id=? AND status='joined'").get(enrollmentId, sch.id);
+  if (!en) return res.status(400).json({ ok: false, message: "报名不存在或已取消" });
+  db().prepare("UPDATE enrollments SET checkin_at=datetime('now','localtime'), checkin_by=? WHERE id=?").run(req.guideId, en.id);
+  const updated = db().prepare("SELECT checkin_at FROM enrollments WHERE id=?").get(en.id);
+  res.json({ ok: true, data: { enrollmentId: en.id, checkinAt: updated.checkin_at } });
 });
 
 function staffAdminOnly(req, res) {

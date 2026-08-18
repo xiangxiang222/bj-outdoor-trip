@@ -10,6 +10,7 @@
       <router-link to="/admin/users">用户与会员</router-link>
       <router-link v-if="me.role === 'admin'" to="/admin/staff">管理员</router-link>
       <a href="/m" target="_blank">打开用户端</a>
+      <a href="/g" target="_blank">打开导游端</a>
       <a href="#" @click.prevent="out">退出</a>
       <div class="admin-me">{{ me.name || "管理员" }} · {{ me.role === "operator" ? "运营" : "管理员" }}</div>
     </aside>

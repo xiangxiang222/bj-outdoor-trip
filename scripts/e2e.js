@@ -472,6 +472,33 @@ async function run(opts) {
     { skip: live, reason: "线上不改座位上限" }
   );
 
+  await step(
+    "导游端：验证码登录、行程名单、签到",
+    async () => {
+      const cap = await readCaptcha(request);
+      const guide = apiOk(
+        await request("POST", "/api/guide/login", {
+          body: { phone: "13700001101", captchaToken: cap.token, captcha: cap.code },
+        }),
+        "guide login"
+      );
+      assert(guide.token && guide.name, "导游登录失败");
+      const trips = apiOk(await request("GET", "/api/guide/schedules", { token: guide.token }), "guide schedules");
+      const hit = trips.find((s) => Number(s.id) === Number(ctx.ownScheduleId));
+      assert(hit, "导游未分配到走查行程");
+      const detail = apiOk(await request("GET", "/api/guide/schedules/" + ctx.ownScheduleId, { token: guide.token }), "guide roster");
+      assert(detail.roster && detail.roster.length >= 1, "导游名单为空");
+      apiOk(
+        await request("POST", "/api/guide/schedules/" + ctx.ownScheduleId + "/checkin", {
+          token: guide.token,
+          body: { enrollmentId: detail.roster[0].id },
+        }),
+        "guide checkin"
+      );
+    },
+    { skip: live, reason: "线上导游手机号可能未预置" }
+  );
+
   await step("分享：海报二维码与分享短链跳转", async () => {
     const poster = apiOk(await request("GET", "/api/schedules/" + ctx.ownScheduleId + "/poster"), "poster");
     assert(/^data:image\/png;base64,/.test(poster.qr), "海报不是 PNG 二维码");
@@ -737,7 +764,7 @@ async function run(opts) {
   }, { skip: live && !opts.unsafe, reason: live ? "线上默认跳过，加 --unsafe 才执行" : "" });
 
   await step("H5 页面可打开", async () => {
-    const pages = ["/m", "/m/login", "/m/routes", "/m/mine", "/admin/login"];
+    const pages = ["/m", "/m/login", "/m/routes", "/m/mine", "/admin/login", "/g/login"];
     for (const p of pages) {
       const res = await request("GET", p, { follow: true });
       assert(res.status === 200, p + " 返回 " + res.status);

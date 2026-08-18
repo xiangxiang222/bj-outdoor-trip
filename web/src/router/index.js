@@ -22,6 +22,15 @@ const routes = [
     ],
   },
   { path: "/admin/login", component: () => import("@/views/admin/Login.vue") },
+  { path: "/g/login", component: () => import("@/views/guide/Login.vue") },
+  {
+    path: "/g",
+    component: () => import("@/layouts/GuideLayout.vue"),
+    children: [
+      { path: "", name: "guide-home", component: () => import("@/views/guide/Home.vue") },
+      { path: "schedule/:id", name: "guide-schedule", component: () => import("@/views/guide/Schedule.vue") },
+    ],
+  },
   {
     path: "/admin",
     component: () => import("@/layouts/AdminLayout.vue"),
@@ -41,6 +50,9 @@ const router = createRouter({ history: createWebHistory(), routes });
 router.beforeEach((to) => {
   if (to.path.startsWith("/admin") && to.path !== "/admin/login") {
     if (!localStorage.getItem("bj_admin_token")) return "/admin/login";
+  }
+  if (to.path.startsWith("/g") && to.path !== "/g/login") {
+    if (!localStorage.getItem("bj_guide_token")) return "/g/login";
   }
   return true;
 });
