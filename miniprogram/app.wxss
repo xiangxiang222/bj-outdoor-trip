@@ -1,0 +1,26 @@
+page { background: #f4efe6; color: #1a1a1a; }
+.card { background: #fffdf8; border-radius: 16px; margin: 16rpx; overflow: hidden; }
+.pad { padding: 24rpx; }
+.cover { width: 100%; height: 320rpx; background: #d8f3dc; }
+.title { font-size: 32rpx; font-weight: 650; }
+.muted { color: #6b705c; font-size: 24rpx; }
+.price { color: #bc4749; font-weight: 700; }
+.tag { display: inline-block; background: #d8f3dc; color: #1b4332; border-radius: 999rpx; padding: 4rpx 14rpx; font-size: 22rpx; margin-right: 8rpx; }
+.btn { background: #2d6a4f; color: #fff; text-align: center; border-radius: 999rpx; padding: 20rpx; margin: 16rpx; }
+.btn.ghost { background: #fff; color: #2d6a4f; border: 1px solid #2d6a4f; }
+.btn.clay { background: #bc4749; }
+button.btn {
+  font-size: 28rpx;
+  line-height: 1.4;
+  font-weight: 600;
+}
+button.btn::after { border: none; }
+.row { display: flex; justify-content: space-between; align-items: center; }
+.chip { display: inline-block; padding: 10rpx 22rpx; border: 1px solid #e6dfd2; border-radius: 999rpx; margin: 8rpx; background: #fff; font-size: 24rpx; }
+.chip.on { background: #1b4332; color: #fff; }
+.chips { padding: 8rpx 8rpx 0; }
+.progress { height: 12rpx; background: #eee; border-radius: 99rpx; overflow: hidden; margin: 12rpx 0; }
+.bar { height: 100%; background: #2d6a4f; }
+.input { background: #fff; border: 1px solid #e6dfd2; border-radius: 12rpx; padding: 18rpx; margin: 12rpx 16rpx; }
+.radio-row { display: flex; gap: 36rpx; padding: 16rpx 24rpx; }
+.radio-item { display: flex; align-items: center; gap: 8rpx; font-size: 28rpx; }

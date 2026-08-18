@@ -1,0 +1,12 @@
+{
+  "all": true,
+  "include": ["src/**/*.js"],
+  "exclude": ["src/index.js", "src/seed/run.js", "src/seed/refresh-images.js", "src/seed/fetch-place-photos.js", "src/seed/fetch-place-albums.js"],
+  "reporter": ["text", "html", "lcov"],
+  "reports-dir": "coverage",
+  "check-coverage": true,
+  "lines": 80,
+  "statements": 80,
+  "functions": 80,
+  "branches": 65
+}

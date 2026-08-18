@@ -1,0 +1,4 @@
+{
+  "desc": "北野行",
+  "rules": [{ "action": "allow", "page": "*" }]
+}

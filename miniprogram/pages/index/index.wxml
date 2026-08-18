@@ -1,0 +1,62 @@
+<view class="home-hero">
+  <view class="home-kicker">说走就走的京郊山野</view>
+  <view class="home-lead">先看出发日期加入拼团，或按天数、目的地去挑线路。</view>
+</view>
+
+<view class="home-grid">
+  <view class="home-tile" wx:for="{{durations}}" wx:key="n" bindtap="goDays" data-n="{{item.n}}">
+    <view class="home-tile-title">{{item.n}} 日</view>
+    <view class="muted">{{item.hint}}</view>
+  </view>
+</view>
+
+<view class="pad" style="padding-bottom:0"><view class="title">想去哪</view></view>
+<view class="chips">
+  <view class="chip" wx:for="{{places}}" wx:key="*this" bindtap="goPlace" data-c="{{item}}">{{item}}</view>
+</view>
+
+<view wx:if="{{theme}}" class="card" bindtap="goTheme">
+  <image class="cover" src="{{theme.cover}}" mode="aspectFill" />
+  <view class="pad">
+    <view class="muted">本周主题 · {{theme.days}}日 · {{theme.region}}</view>
+    <view class="title">{{theme.title}}</view>
+  </view>
+</view>
+
+<view class="row pad" style="padding-bottom:0">
+  <view class="title">正在拼团</view>
+  <view class="muted" bindtap="goChain">全部拼团</view>
+</view>
+<view class="card" wx:for="{{groups}}" wx:key="id" bindtap="goGroup" data-id="{{item.id}}">
+  <view class="pad">
+    <view class="row"><text class="title">{{item.route.title}}</text><text class="tag">{{item.startDate}}</text></view>
+    <view class="muted">{{item.organizerType=='company'?item.companyName:item.organizerName}} · 余 {{item.remain}} 座</view>
+    <view class="progress"><view class="bar" style="width:{{item.enrolled/item.maxSeats*100}}%"></view></view>
+    <view class="row"><text class="muted">{{item.enrolled}}/{{item.maxSeats}}</text><text class="price">¥{{item.quote.price}}</text></view>
+  </view>
+</view>
+<view wx:if="{{!groups.length}}" class="card">
+  <view class="pad">
+    <view class="muted">暂时没有招募中的团，可以选一条线路自己开团。</view>
+    <view class="btn ghost" bindtap="goOpen" style="margin:16rpx 0 0">去选线路开团</view>
+  </view>
+</view>
+
+<view class="row pad" style="padding-bottom:0">
+  <view class="title">周末短途</view>
+  <view class="muted" bindtap="goAllOneDay">1 日线路</view>
+</view>
+<view class="card" wx:for="{{weekend}}" wx:key="id" bindtap="goRoute" data-id="{{item.id}}">
+  <image class="cover" src="{{item.cover}}" mode="aspectFill" style="height:240rpx" />
+  <view class="pad">
+    <view class="row"><text class="title">{{item.title}}</text><text class="tag">{{item.region}}</text></view>
+    <view class="price">¥{{item.fromPrice}} 起</view>
+  </view>
+</view>
+
+<view class="home-member" bindtap="goMember">
+  <view class="title">开通会员</view>
+  <view class="muted">年费 199 元，线路约 92 折，积分加速</view>
+</view>
+
+<view wx:if="{{err}}" class="muted pad">{{err}}</view>

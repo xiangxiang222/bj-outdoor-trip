@@ -1,0 +1,24 @@
+<view class="pad title">性别</view>
+<canvas type="2d" id="genderPie" class="pie"></canvas>
+<view class="legend">
+  <view class="legend-item" wx:for="{{gender}}" wx:key="name">
+    <view class="dot" style="background:{{item.color}}"></view>
+    <text>{{item.name}} {{item.value}}</text>
+  </view>
+</view>
+
+<view class="pad title">年龄段</view>
+<canvas type="2d" id="agePie" class="pie"></canvas>
+<view class="legend">
+  <view class="legend-item" wx:for="{{age}}" wx:key="name">
+    <view class="dot" style="background:{{item.color}}"></view>
+    <text>{{item.name}} {{item.value}}</text>
+  </view>
+</view>
+
+<view class="pad title">籍贯</view>
+<view class="pad" wx:for="{{hometown}}" wx:key="name">
+  <view class="row"><text>{{item.name}}</text><text>{{item.value}}</text></view>
+  <view class="progress"><view class="bar" style="width:{{item.pct}}%"></view></view>
+</view>
+<view class="pad muted" wx:if="{{!hometown.length}}">暂无报名数据</view>

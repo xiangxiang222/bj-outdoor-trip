@@ -1,0 +1,12 @@
+<view class="card" wx:for="{{list}}" wx:key="id">
+  <view class="pad" bindtap="go" data-id="{{item.route_id}}">
+    <view class="row">
+      <view class="title">{{item.title}}</view>
+      <view class="tag">{{item.status=='cancelled'?'已取消':item.start_date}}</view>
+    </view>
+    <view class="muted">{{item.traveler_name}} · {{item.statusText}}</view>
+    <view class="price">¥{{item.pay_amount}}</view>
+  </view>
+  <view wx:if="{{item.canCancel}}" class="btn ghost" catchtap="cancel" data-id="{{item.id}}" style="color:#bc4749">取消报名</view>
+</view>
+<view class="pad muted" wx:if="{{!list.length}}">暂无报名</view>

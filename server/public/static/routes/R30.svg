@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#89c2d9"/>
+      <stop offset="100%" stop-color="#f7f3eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#sky)"/>
+  <circle cx="980" cy="140" r="70" fill="#ffb703" opacity="0.9"/>
+  <path d="M0 520 L180 360 L320 500 L480 280 L640 470 L820 300 L1000 480 L1200 340 L1200 800 L0 800 Z" fill="#2d6a4f" opacity="0.85"/>
+  <path d="M0 620 L220 480 L400 610 L590 430 L780 600 L980 450 L1200 580 L1200 800 L0 800 Z" fill="#95d5b2" opacity="0.35"/>
+  <rect x="0" y="620" width="1200" height="180" fill="#1b4332" opacity="0.55"/>
+  <text x="60" y="700" font-family="PingFang SC, sans-serif" font-size="28" fill="#d8f3dc">北野行 · 5日 · 河北张家口</text>
+  <text x="60" y="755" font-family="PingFang SC, sans-serif" font-size="48" font-weight="700" fill="#ffffff">张家口草原天路 + 崇礼</text>
+</svg>

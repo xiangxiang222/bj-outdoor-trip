@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.env
+.env.local
+server/data/*.sqlite
+server/data/*.sqlite-*
+web/dist/
+miniprogram/node_modules/
+.idea/
+.vscode/
+coverage/
+server/public/static/uploads/*
+!server/public/static/uploads/.gitkeep

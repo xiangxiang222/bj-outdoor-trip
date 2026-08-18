@@ -1,0 +1,39 @@
+<view class="pad muted" wx:if="{{title}}">为「{{title}}」发布一个可报名日期，可分享到微信群召集报名。</view>
+
+<view class="label">出发日期</view>
+<picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
+  <view class="input">{{dateLabels[dateIndex]}}</view>
+</picker>
+
+<view class="label">组织类型</view>
+<picker mode="selector" range="{{types}}" value="{{typeIndex}}" bindchange="setType">
+  <view class="input">{{types[typeIndex]}}</view>
+</picker>
+
+<input
+  wx:if="{{form.organizerType === 'company'}}"
+  class="input"
+  placeholder="公司名称（公司开团必填）"
+  value="{{form.companyName}}"
+  bindinput="setCo"
+/>
+
+<view class="label">大巴车型</view>
+<picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">
+  <view class="input">{{busNames[busIndex]}}</view>
+</picker>
+
+<view class="label">最低成团人数</view>
+<input class="input" type="number" placeholder="最低成团人数" value="{{form.minGroupSize}}" bindinput="setMin" />
+
+<view class="label">集合点</view>
+<picker mode="selector" range="{{meetupNames}}" value="{{meetupIndex}}" bindchange="setMeetup">
+  <view class="input">{{meetupNames[meetupIndex]}}</view>
+</picker>
+
+<view class="label">集合时间</view>
+<picker mode="selector" range="{{times}}" value="{{timeIndex}}" bindchange="setTime">
+  <view class="input">{{form.meetupTime}}</view>
+</picker>
+
+<view class="btn" bindtap="submit">发布</view>

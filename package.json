@@ -1,0 +1,23 @@
+{
+  "name": "bj-outdoor-trip",
+  "version": "1.0.0",
+  "private": true,
+  "description": "北野行 · 北京周边短途游微信小程序（第一阶段）",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix web",
+    "seed": "node server/src/seed/run.js",
+    "dev:server": "node --watch server/src/index.js",
+    "dev:web": "npm run dev --prefix web",
+    "dev": "concurrently -n server,web -c green,cyan \"npm run dev:server\" \"npm run dev:web\"",
+    "start": "node server/src/index.js",
+    "build": "npm run build --prefix web",
+    "test": "npm run test --prefix server && npm run test --prefix web",
+    "test:coverage": "npm run test:coverage --prefix server && npm run test --prefix web",
+    "test:e2e": "node scripts/e2e.js",
+    "test:e2e:live": "node scripts/e2e.js --live",
+    "deploy": "bash scripts/deploy.sh"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

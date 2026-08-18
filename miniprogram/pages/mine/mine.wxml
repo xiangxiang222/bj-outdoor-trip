@@ -1,0 +1,14 @@
+<view class="card" wx:if="{{user}}">
+  <view class="pad">
+    <view class="title">{{user.nickname}}</view>
+    <view class="muted">{{user.phone}}</view>
+    <view>{{user.isMember ? '会员' : '普通用户'}} · 积分 {{user.points}}</view>
+  </view>
+</view>
+<view class="btn" wx:if="{{!user}}" bindtap="login">登录</view>
+<view class="btn ghost" wx:if="{{!user}}" bindtap="register">注册</view>
+<view class="card" bindtap="go" data-url="/pages/orders/orders"><view class="pad">我的报名</view></view>
+<view class="card" bindtap="go" data-url="/pages/favorites/favorites"><view class="pad">我的收藏</view></view>
+<view class="card" bindtap="openMember"><view class="pad">{{user.isMember ? '会员中心' : '开通会员'}}</view></view>
+<view class="btn ghost" wx:if="{{user}}" bindtap="out">退出</view>
+<view class="btn ghost" wx:if="{{user}}" bindtap="closeAccount" style="color:#bc4749">注销账号</view>

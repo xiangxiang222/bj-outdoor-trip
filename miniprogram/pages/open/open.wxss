@@ -1,0 +1,5 @@
+.label {
+  margin: 16rpx 32rpx 0;
+  color: #6b705c;
+  font-size: 24rpx;
+}

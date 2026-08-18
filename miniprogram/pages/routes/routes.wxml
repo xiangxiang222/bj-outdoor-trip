@@ -1,0 +1,21 @@
+<input class="input" placeholder="搜索长城 / 十渡 / 坝上" value="{{q}}" bindconfirm="onSearch" />
+<view class="chips">
+  <view class="chip {{days==0?'on':''}}" bindtap="setDays" data-d="0">全部天数</view>
+  <view class="chip {{days==1?'on':''}}" bindtap="setDays" data-d="1">1日</view>
+  <view class="chip {{days==2?'on':''}}" bindtap="setDays" data-d="2">2日</view>
+  <view class="chip {{days==3?'on':''}}" bindtap="setDays" data-d="3">3日</view>
+  <view class="chip {{days==5?'on':''}}" bindtap="setDays" data-d="5">5日</view>
+</view>
+<view class="chips">
+  <view class="chip {{category==item?'on':''}}" wx:for="{{cats}}" wx:key="*this" bindtap="setCat" data-c="{{item}}">{{item}}</view>
+</view>
+<view wx:if="{{err}}" class="muted pad">{{err}}</view>
+<view wx:if="{{!list.length}}" class="muted pad">没有匹配的线路</view>
+<view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
+  <image class="cover" src="{{item.cover}}" mode="aspectFill" />
+  <view class="pad">
+    <view class="title">{{item.title}}</view>
+    <view class="muted">{{item.region}} · {{item.days}}日 · {{item.difficulty}}</view>
+    <view class="price">¥{{item.fromPrice}} 起 / 会员 ¥{{item.memberFromPrice}}</view>
+  </view>
+</view>

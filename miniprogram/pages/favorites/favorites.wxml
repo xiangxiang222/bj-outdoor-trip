@@ -1,0 +1,8 @@
+<view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
+  <image class="cover" src="{{item.cover}}" mode="aspectFill" />
+  <view class="pad">
+    <view class="title">{{item.title}}</view>
+    <view class="muted">{{item.subtitle}}</view>
+  </view>
+</view>
+<view class="pad muted" wx:if="{{!list.length}}">还没有收藏，去线路详情点收藏</view>
