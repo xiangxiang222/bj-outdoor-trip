@@ -2,13 +2,14 @@ const { request } = require("../../utils/request");
 const details = require("../../data/routes-detail");
 const { withLocalMedia, detailUrl, shareCover } = require("../../utils/media");
 const { resolvePreviewUrls } = require("../../utils/preview");
+const { starText } = require("../../utils/labels");
 
 function localDetail(id) {
   return (Array.isArray(details) ? details : []).find((row) => String(row.id) === String(id)) || null;
 }
 
 Page({
-  data: { r: {}, fromPrice: 0, id: "", err: "" },
+  data: { r: {}, fromPrice: 0, id: "", err: "", reviews: { list: [], count: 0, avg: 0 } },
   onLoad(q) {
     const id = q.id;
     const local = withLocalMedia(localDetail(id) || { id });
@@ -36,10 +37,21 @@ Page({
         fromPrice: ((r.priceTiers && r.priceTiers[0]) || {}).price || this.data.fromPrice,
         err: "",
       });
+      this.loadReviews();
     } catch (err) {
       if (!this.data.r.title) {
         this.setData({ err: (err && err.message) || "详情加载失败" });
       }
+    }
+  },
+  async loadReviews() {
+    try {
+      const res = await request("/routes/" + this.data.id + "/reviews");
+      const data = res.data || {};
+      const list = (data.list || []).map((row) => Object.assign({}, row, { stars: starText(row.rating) }));
+      this.setData({ reviews: { list, count: data.count || 0, avg: data.avg || 0 } });
+    } catch (err) {
+      this.setData({ reviews: { list: [], count: 0, avg: 0 } });
     }
   },
   goSch(e) {

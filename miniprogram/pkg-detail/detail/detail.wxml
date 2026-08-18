@@ -39,3 +39,13 @@
 </view>
 <button class="btn" open-type="share">分享到微信</button>
 <view class="btn ghost" bindtap="open">发布排期</view>
+<view class="pad"><view class="title">出行评价 <text class="muted" wx:if="{{reviews.count}}">{{reviews.avg}}分 · {{reviews.count}}条</text></view>
+  <view wx:if="{{!reviews.list.length}}" class="muted">还没有评价。报名后可在「我的报名」写下体验。</view>
+  <view class="card" wx:for="{{reviews.list}}" wx:key="id">
+    <view class="pad">
+      <view class="row"><text>{{item.name}}</text><text class="stars">{{item.stars}}</text></view>
+      <view wx:if="{{item.content}}">{{item.content}}</view>
+      <view class="muted">{{item.createdAt}}</view>
+    </view>
+  </view>
+</view>

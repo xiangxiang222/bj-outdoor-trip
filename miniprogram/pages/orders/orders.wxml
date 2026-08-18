@@ -8,5 +8,19 @@
     <view class="price">¥{{item.pay_amount}}</view>
   </view>
   <view wx:if="{{item.canCancel}}" class="btn ghost" catchtap="cancel" data-id="{{item.id}}" style="color:#bc4749">取消报名</view>
+  <view wx:if="{{item.canReview}}">
+    <view wx:if="{{reviewingId != item.id}}" class="btn ghost" catchtap="openReview" data-id="{{item.id}}">去评价</view>
+    <view wx:else class="pad">
+      <view class="star-pick">
+        <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="star {{rating >= n ? 'on' : ''}}" catchtap="pickStar" data-n="{{n}}">★</text>
+      </view>
+      <textarea class="input" placeholder="这次出行怎么样（选填）" value="{{content}}" bindinput="setContent" />
+      <view class="row">
+        <view class="btn ghost" style="flex:1;margin:0 8rpx 0 0" catchtap="closeReview">取消</view>
+        <view class="btn" style="flex:1;margin:0 0 0 8rpx" catchtap="submitReview" data-id="{{item.id}}">提交评价</view>
+      </view>
+    </view>
+  </view>
+  <view wx:elif="{{item.reviewed}}" class="pad muted">已评价</view>
 </view>
 <view class="pad muted" wx:if="{{!list.length}}">暂无报名</view>

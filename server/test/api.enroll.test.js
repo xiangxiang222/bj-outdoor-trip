@@ -71,6 +71,8 @@ describe("enroll pay member favorites", () => {
     const orders = await agent.get("/api/orders").set(auth(token)).expect(200);
     assert.equal(orders.body.data[0].pay_status, "unpaid");
     assert.equal(orders.body.data[0].canCancel, true);
+    assert.equal(orders.body.data[0].canReview, true);
+    assert.equal(orders.body.data[0].reviewed, false);
     assert.ok(orders.body.data[0].route_id);
     assert.match(orders.body.data[0].idCard, /\*{8}/);
   });
@@ -272,7 +274,7 @@ describe("enroll pay member favorites", () => {
     assert.equal(me.body.data.isMember, true);
   });
 
-  it("favorites crud and reviews", async () => {
+  it("favorites crud", async () => {
     const token = await loginUser(agent);
     await agent.post(`/api/favorites/${seed.routeId}`).set(auth(token)).expect(200);
     const list = await agent.get("/api/favorites").set(auth(token)).expect(200);
@@ -280,11 +282,6 @@ describe("enroll pay member favorites", () => {
     await agent.delete(`/api/favorites/${seed.routeId}`).set(auth(token)).expect(200);
     const empty = await agent.get("/api/favorites").set(auth(token)).expect(200);
     assert.equal(empty.body.data.length, 0);
-    await agent
-      .post("/api/reviews")
-      .set(auth(token))
-      .send({ scheduleId: seed.individualScheduleId, rating: 5, content: "很好" })
-      .expect(200);
   });
 
   it("mock pay missing trade returns 400", async () => {

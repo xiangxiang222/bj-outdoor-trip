@@ -235,7 +235,8 @@ function createSchema(db) {
       user_id INTEGER,
       rating INTEGER,
       content TEXT,
-      created_at TEXT DEFAULT (datetime('now','localtime'))
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      UNIQUE(user_id, schedule_id)
     );
 
     CREATE TABLE IF NOT EXISTS settings (
@@ -275,6 +276,11 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "enrollments", "insurance_fee", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "enrollments", "checkin_at", "TEXT");
   addColumnIfMissing(db, "enrollments", "checkin_by", "INTEGER");
+  db.exec(`
+    DELETE FROM reviews
+    WHERE id NOT IN (SELECT MIN(id) FROM reviews GROUP BY user_id, schedule_id);
+  `);
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_user_schedule ON reviews(user_id, schedule_id)");
 }
 
 let _db;

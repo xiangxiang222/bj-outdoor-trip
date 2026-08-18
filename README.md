@@ -79,7 +79,10 @@ npm run dev
 - 开通会员（演示立即生效）、会员价、积分规则
 - 报名后查看本团画像（男女、年龄段、籍贯）
 - 成团后按线路类型自动匹配导游
+- 满员候补、2+2 座位图、出行保险加购、目的地天气
+- 报名成功后评价（线路详情展示）
 - 注销账号（软删除，同一手机可再注册）
+- 导游工作台 `/g`：行程、名单、签到
 
 **管理后台**
 
@@ -113,7 +116,7 @@ npm run test:coverage
 npm run test:e2e
 ```
 
-服务端使用临时 SQLite，不会覆盖 `server/data/app.sqlite`。当前约 **113** 条服务端用例 + **3** 条 H5 用例。打已启动服务（本机或线上）用 `npm run test:e2e:live`。说明见 [docs/TESTING.md](docs/TESTING.md)。
+服务端使用临时 SQLite，不会覆盖 `server/data/app.sqlite`。当前 **125** 条服务端用例 + **3** 条 H5 用例。打已启动服务（本机或线上）用 `npm run test:e2e:live`。说明见 [docs/TESTING.md](docs/TESTING.md)。
 
 ## 支付说明
 
@@ -138,4 +141,4 @@ bj-outdoor-trip/
 
 ## 后续可做
 
-真实短信网关、微信原路退款与候补、座位图、保险加购、天气提醒、企业微信支付分账、导游端小程序。
+真实短信网关、微信原路退款。

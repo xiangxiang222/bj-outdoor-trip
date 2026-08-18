@@ -28,6 +28,10 @@ button.btn::after { border: none; }
 .seat.taken { background: #d8f3dc; color: #6b705c; }
 .seat.on { background: #2d6a4f; color: #fff; }
 .weather { margin: 16rpx 24rpx; padding: 16rpx 20rpx; background: #eef6ff; border-radius: 12rpx; font-size: 24rpx; }
+.stars { color: #c9a227; letter-spacing: 2rpx; font-size: 24rpx; }
+.star-pick { display: flex; gap: 8rpx; padding: 8rpx 8rpx 16rpx; }
+.star { font-size: 44rpx; color: #d8d2c2; }
+.star.on { color: #c9a227; }
 .input { background: #fff; border: 1px solid #e6dfd2; border-radius: 12rpx; padding: 18rpx; margin: 12rpx 16rpx; }
 .radio-row { display: flex; gap: 36rpx; padding: 16rpx 24rpx; }
 .radio-item { display: flex; align-items: center; gap: 8rpx; font-size: 28rpx; }

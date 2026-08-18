@@ -24,10 +24,12 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/guides` | 导游公开信息 |
 | GET | `/routes` | 上架线路。Query：`days` `category` `difficulty` `q` |
 | GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏 |
+| GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
 | GET | `/schedules` | Query：`routeId` `organizerType`（不含已解散） |
 | GET | `/schedules/:id` | 排期 + 脱敏名单；已解散团仍可查看 |
 | GET | `/schedules/:id/demographics` | 本团画像 |
 | GET | `/schedules/:id/seats` | 座位图。登录后占用位带 `mine` |
+| GET | `/schedules/:id/reviews` | 该团评价列表。`{ list, count, avg }` |
 | GET | `/schedules/:id/poster` | 分享 URL + QR DataURL（**无需登录**） |
 | GET | `/share/:token` | 302 到 `/m/schedule/:id?token=` |
 
@@ -57,14 +59,14 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/enroll` | 用户 | 报名占座。个人 `pay_status=unpaid`、`needPay: false`；公司 `company_pending` |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。报名流程默认不调用 |
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
-| GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` |
+| GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canReview` `reviewed` |
 | POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（出发日前、团未解散） |
 | POST | `/member/buy` | 用户 | **立即开通/续费会员**，记一笔成功支付并返回 `user` |
 | GET | `/points` | 用户 | 积分余额与流水 |
 | POST | `/favorites/:routeId` | 用户 | 收藏 |
 | DELETE | `/favorites/:routeId` | 用户 | 取消收藏 |
 | GET | `/favorites` | 用户 | 收藏列表 |
-| POST | `/reviews` | 用户 | `scheduleId` `rating` `content` |
+| POST | `/reviews` | 用户 | 须已报名成功（非候补）。每人每团一条。`scheduleId` `rating`(1–5) `content`(≤500) |
 
 ## 导游端
 

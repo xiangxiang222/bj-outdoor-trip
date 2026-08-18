@@ -1,3 +1,8 @@
+function starText(n) {
+  const r = Math.max(0, Math.min(5, Number(n) || 0));
+  return "★".repeat(r) + "☆".repeat(5 - r);
+}
+
 function enrollStatusText(row) {
   if (row && row.status === "cancelled") {
     return row.pay_status === "refunded" ? "已取消 · 已退款" : "已取消";
@@ -34,4 +39,4 @@ function scheduleStatusText(status) {
   );
 }
 
-module.exports = { payStatusText, enrollStatusText, organizerTypeText, scheduleStatusText };
+module.exports = { payStatusText, enrollStatusText, organizerTypeText, scheduleStatusText, starText };

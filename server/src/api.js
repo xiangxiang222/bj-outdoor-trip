@@ -17,6 +17,7 @@ const { enrollUser, cancelEnrollment, canCancelEnrollment } = require("./service
 const { scheduleSeats } = require("./services/seats");
 const { forecast } = require("./services/weather");
 const { listSplits, createSplitsForSchedule } = require("./services/split");
+const { listReviews, createReview, reviewedScheduleIds } = require("./services/reviews");
 const { deleteAccount } = require("./services/account");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -595,6 +596,7 @@ router.post("/pay/company-settle", authUser, (req, res) => {
 });
 
 router.get("/orders", authUser, (req, res) => {
+  const reviewed = reviewedScheduleIds(req.userId);
   const rows = db()
     .prepare(
       `SELECT e.*, s.start_date, s.end_date, s.organizer_type, s.status AS schedule_status, s.route_id, r.title, r.cover, r.days
@@ -607,6 +609,8 @@ router.get("/orders", authUser, (req, res) => {
       cover: attachAssetHost(req, e.cover),
       idCard: maskIdCard(e.id_card),
       canCancel: canCancelEnrollment(e, e.schedule_status, e.start_date),
+      reviewed: reviewed.has(e.schedule_id),
+      canReview: e.status === "joined" && !reviewed.has(e.schedule_id),
     }));
   res.json({ ok: true, data: rows });
 });
@@ -670,10 +674,25 @@ router.get("/favorites", authUser, (req, res) => {
   res.json({ ok: true, data: rows });
 });
 
+router.get("/routes/:id/reviews", (req, res) => {
+  const row = db().prepare("SELECT id FROM routes WHERE id=?").get(req.params.id);
+  if (!row) return res.status(404).json({ ok: false, message: "线路不存在" });
+  res.json({ ok: true, data: listReviews({ routeId: row.id }) });
+});
+
+router.get("/schedules/:id/reviews", (req, res) => {
+  const sch = db().prepare("SELECT id FROM schedules WHERE id=?").get(req.params.id);
+  if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
+  res.json({ ok: true, data: listReviews({ scheduleId: sch.id }) });
+});
+
 router.post("/reviews", authUser, (req, res) => {
-  const { scheduleId, rating, content } = req.body || {};
-  db().prepare("INSERT INTO reviews (schedule_id,user_id,rating,content) VALUES (?,?,?,?)").run(scheduleId, req.userId, rating || 5, content || "");
-  res.json({ ok: true });
+  try {
+    const data = createReview(req.userId, req.body || {});
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 function publicGuide(g) {

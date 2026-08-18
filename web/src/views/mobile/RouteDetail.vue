@@ -91,6 +91,19 @@
     </div>
     <p class="muted" v-if="!r.schedules?.length">暂无排期，可以自己开一团。</p>
 
+    <div class="h2">出行评价 <span v-if="reviews.count" class="muted">{{ reviews.avg }} 分 · {{ reviews.count }} 条</span></div>
+    <div class="card" v-if="reviews.list?.length">
+      <div class="pad review-item" v-for="rv in reviews.list" :key="rv.id">
+        <div class="row">
+          <strong>{{ rv.name }}</strong>
+          <span class="stars">{{ starText(rv.rating) }}</span>
+        </div>
+        <p v-if="rv.content">{{ rv.content }}</p>
+        <p class="muted">{{ rv.createdAt }}</p>
+      </div>
+    </div>
+    <p class="muted" v-else>还没有评价。报名后可在「我的报名」写下体验。</p>
+
     <div style="display:flex;gap:8px;margin-top:12px">
       <button class="btn ghost" style="flex:1" @click="share">分享报名</button>
       <button class="btn" style="flex:1" @click="$router.push('/m/open/' + r.id)">发布排期</button>
@@ -103,7 +116,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { organizerTypeText } from "@/utils/labels";
+import { organizerTypeText, starText } from "@/utils/labels";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 
@@ -112,6 +125,7 @@ const router = useRouter();
 const store = useUserStore();
 const r = ref(null);
 const weather = ref(null);
+const reviews = ref({ list: [], count: 0, avg: 0 });
 const copied = ref(false);
 const favMsg = ref("");
 const previewIndex = ref(null);
@@ -129,6 +143,11 @@ onMounted(async () => {
     weather.value = (await http.get("/weather", { params: { region: r.value.region } })).data;
   } catch {
     weather.value = null;
+  }
+  try {
+    reviews.value = (await http.get("/routes/" + route.params.id + "/reviews")).data;
+  } catch {
+    reviews.value = { list: [], count: 0, avg: 0 };
   }
 });
 onUnmounted(() => window.removeEventListener("keydown", onKey));

@@ -1,8 +1,8 @@
 const { request } = require("../../utils/request");
-const { payStatusText } = require("../../utils/labels");
+const { payStatusText, starText } = require("../../utils/labels");
 const { shareCover } = require("../../utils/media");
 Page({
-  data: { s: null, id: "", showDissolve: false, reason: "", seatRows: [], weather: null },
+  data: { s: null, id: "", showDissolve: false, reason: "", seatRows: [], weather: null, reviews: { list: [], count: 0, avg: 0 } },
   onLoad(q) {
     this.setData({ id: q.id });
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
@@ -32,6 +32,11 @@ Page({
         else last.seats.push(seat);
       });
       this.setData({ seatRows: groups });
+    }).catch(() => {});
+    request("/schedules/" + this.data.id + "/reviews").then((r) => {
+      const data = (r && r.data) || {};
+      const list = (data.list || []).map((row) => Object.assign({}, row, { stars: starText(row.rating) }));
+      this.setData({ reviews: { list, count: data.count || 0, avg: data.avg || 0 } });
     }).catch(() => {});
   },
   enroll() { wx.navigateTo({ url: "/pages/enroll/enroll?id=" + this.data.id }); },

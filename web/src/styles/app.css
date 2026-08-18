@@ -296,6 +296,21 @@ button, input, textarea, select { font-family: inherit; }
 .ins-opt span { display: flex; flex-direction: column; }
 .ins-opt em { font-style: normal; color: var(--clay); font-size: 13px; }
 .ins-opt small { color: var(--muted); font-size: 12px; }
+.review-item { border-bottom: 1px dashed var(--line); }
+.review-item:last-child { border-bottom: 0; }
+.review-item p { margin: 6px 0 0; }
+.stars { color: #c9a227; letter-spacing: 1px; font-size: 13px; }
+.star-pick { display: flex; gap: 4px; margin: 0 0 8px; }
+.star-pick button {
+  border: 0;
+  background: transparent;
+  color: #d8d2c2;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+}
+.star-pick button.on { color: #c9a227; }
 .chain-item {
   display: grid;
   grid-template-columns: 32px 1fr auto;

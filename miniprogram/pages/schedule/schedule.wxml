@@ -27,6 +27,15 @@
 </view>
 <view class="pad title">报名名单</view>
 <view class="pad" wx:for="{{s.chain}}" wx:key="index">{{item.index}}. {{item.name}} {{item.waitlisted ? '候补' : item.payText}}</view>
+<view class="pad title">本团评价 <text class="muted" wx:if="{{reviews.count}}">{{reviews.avg}}分 · {{reviews.count}}条</text></view>
+<view class="pad muted" wx:if="{{!reviews.list.length}}">还没有评价。</view>
+<view class="card" wx:for="{{reviews.list}}" wx:key="id">
+  <view class="pad">
+    <view class="row"><text>{{item.name}}</text><text class="stars">{{item.stars}}</text></view>
+    <view wx:if="{{item.content}}">{{item.content}}</view>
+    <view class="muted">{{item.createdAt}}</view>
+  </view>
+</view>
 <view class="btn" wx:if="{{s.status!='cancelled'}}" bindtap="enroll">{{s.remain<=0?'已满员，去候补':'立即报名'}}</view>
 <view class="btn ghost" bindtap="stats">本团画像</view>
 <button class="btn ghost" open-type="share">分享到微信</button>

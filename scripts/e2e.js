@@ -523,6 +523,16 @@ async function run(opts) {
       }),
       "review"
     );
+    const listed = apiOk(await request("GET", "/api/routes/" + ctx.routeId + "/reviews"), "route reviews");
+    assert(listed.count >= 1 && listed.list.some((r) => r.content === "e2e评价"), "线路评价列表没有刚写的内容");
+    const dup = await request("POST", "/api/reviews", {
+      token: ctx.token,
+      body: { scheduleId: ctx.ownScheduleId, rating: 4, content: "再评" },
+    });
+    assert(dup.status === 400, "重复评价应 400");
+    const afterReview = apiOk(await request("GET", "/api/orders", { token: ctx.token }), "orders after review");
+    const reviewed = afterReview.find((o) => Number(o.schedule_id) === Number(ctx.ownScheduleId) && o.status === "joined");
+    assert(reviewed && reviewed.reviewed && reviewed.canReview === false, "评价后 canReview 应为 false");
   });
 
   await step("公司团：挂账报名与发起人统一结算", async () => {

@@ -52,6 +52,19 @@
       <p class="muted" v-if="!s.chain?.length">还没有人报名，快来占第一名。</p>
     </div></div>
 
+    <div class="h2">本团评价 <span v-if="reviews.count" class="muted">{{ reviews.avg }} 分 · {{ reviews.count }} 条</span></div>
+    <div class="card" v-if="reviews.list?.length">
+      <div class="pad review-item" v-for="rv in reviews.list" :key="rv.id">
+        <div class="row">
+          <strong>{{ rv.name }}</strong>
+          <span class="stars">{{ starText(rv.rating) }}</span>
+        </div>
+        <p v-if="rv.content">{{ rv.content }}</p>
+        <p class="muted">{{ rv.createdAt }}</p>
+      </div>
+    </div>
+    <p class="muted" v-else>还没有评价。</p>
+
     <div style="display:flex;gap:8px;margin:12px 0">
       <button class="btn ghost" style="flex:1" @click="$router.push('/m/stats/' + s.id)">本团画像</button>
       <button class="btn ghost" style="flex:1" @click="share">分享到微信</button>
@@ -96,7 +109,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
-import { payStatusText, scheduleStatusText } from "@/utils/labels";
+import { payStatusText, scheduleStatusText, starText } from "@/utils/labels";
 
 const route = useRoute();
 const store = useUserStore();
@@ -111,6 +124,7 @@ const reason = ref("");
 const dissolveErr = ref("");
 const dissolving = ref(false);
 const weather = ref(null);
+const reviews = ref({ list: [], count: 0, avg: 0 });
 const seatChart = ref(null);
 const seatRows = computed(() => {
   const list = seatChart.value?.seats || [];
@@ -144,6 +158,11 @@ async function load() {
     ).data;
   } catch {
     weather.value = null;
+  }
+  try {
+    reviews.value = (await http.get("/schedules/" + route.params.id + "/reviews")).data;
+  } catch {
+    reviews.value = { list: [], count: 0, avg: 0 };
   }
 }
 
