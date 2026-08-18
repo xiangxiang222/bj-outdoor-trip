@@ -13,7 +13,12 @@ function fail(status, message) {
   throw err;
 }
 
-function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, travelerType, seatNo }) {
+function pickInsurance(code) {
+  const plans = config.insurance.plans;
+  return plans.find((p) => p.code === (code || "none")) || plans[0];
+}
+
+function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, travelerType, seatNo, insuranceCode }) {
   const db = getDb();
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
   if (!user) fail(401, "请先登录");
@@ -47,14 +52,15 @@ function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, t
     points: 0,
     pointsConfig: config.points,
   });
-
+  const insurance = pickInsurance(insuranceCode);
   const company = sch.organizer_type === "company";
+  const payAmount = company ? 0 : payable.payAmount + insurance.fee;
   const payStatus = company ? "company_pending" : "unpaid";
   const status = waitlisted ? "waitlist" : "joined";
   const info = db
     .prepare(
-      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,waitlisted_at,seat_no)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,waitlisted_at,seat_no,insurance_code,insurance_fee)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       sch.id,
@@ -67,13 +73,15 @@ function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, t
       parsed.hometown,
       travelerType || "adult",
       payStatus,
-      company ? 0 : payable.payAmount,
+      payAmount,
       0,
       "",
       "chain",
       status,
       waitlisted ? dayjs().format("YYYY-MM-DD HH:mm:ss") : null,
-      seat
+      seat,
+      insurance.code,
+      insurance.fee
     );
   const enrollmentId = Number(info.lastInsertRowid);
   if (!waitlisted) maybeMatchGuide(sch.id);
@@ -85,13 +93,14 @@ function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, t
     waitlisted,
     waitlistPosition: position,
     seatNo: seat,
+    insurance,
+    quote: { ...payable, payAmount, insuranceFee: insurance.fee },
     needPay: false,
     message: waitlisted
       ? `本车已满，已加入候补（第 ${position} 位），有人取消后自动递补`
       : company
         ? "已加入公司团，费用由公司统一支付"
         : "已报名占座，费用待出行前支付",
-    quote: payable,
   };
 }
 

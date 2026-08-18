@@ -231,6 +231,7 @@ async function run(opts) {
   await step("公开：品牌、车型、导游、线路、排期", async () => {
     const meta = apiOk(await request("GET", "/api/meta"), "meta");
     assert(meta.name === "北野行", "品牌名不是北野行");
+    assert(Array.isArray(meta.insurance) && meta.insurance.length >= 2, "保险方案缺失");
     assert(Array.isArray(meta.days) && meta.days.includes(1), "天数选项缺失");
     const buses = apiOk(await request("GET", "/api/buses"), "buses");
     assert(buses.length > 0, "没有车型");
@@ -373,12 +374,14 @@ async function run(opts) {
           travelerName: "走查甲",
           travelerPhone: ctx.phones.user,
           idCard: ID.maleBj,
+          insuranceCode: "outdoor",
         },
       }),
       "enroll"
     );
     ctx.enrollmentId = enroll.enrollmentId;
     assert(enroll.payStatus === "unpaid" || enroll.payStatus === "company_pending", "报名支付状态异常");
+    assert(enroll.insurance && enroll.insurance.fee === 20, "未计入户外意外险");
     assert(enroll.seatNo, "报名未分配座位");
     const seats = apiOk(await request("GET", "/api/schedules/" + ctx.ownScheduleId + "/seats", { token: ctx.token }), "seats");
     assert(Array.isArray(seats.seats) && seats.seats.length >= 1, "座位图为空");

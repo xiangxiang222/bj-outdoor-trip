@@ -178,6 +178,8 @@ function createSchema(db) {
       waitlisted_at TEXT,
       promoted_at TEXT,
       seat_no TEXT,
+      insurance_code TEXT DEFAULT 'none',
+      insurance_fee INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
@@ -255,6 +257,8 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "enrollments", "waitlisted_at", "TEXT");
   addColumnIfMissing(db, "enrollments", "promoted_at", "TEXT");
   addColumnIfMissing(db, "enrollments", "seat_no", "TEXT");
+  addColumnIfMissing(db, "enrollments", "insurance_code", "TEXT DEFAULT 'none'");
+  addColumnIfMissing(db, "enrollments", "insurance_fee", "INTEGER DEFAULT 0");
 }
 
 let _db;

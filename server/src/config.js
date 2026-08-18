@@ -31,4 +31,11 @@ module.exports = {
     pointsBonus: 1.2,
     durationDays: 365,
   },
+  insurance: {
+    plans: [
+      { code: "none", name: "暂不购买", fee: 0, cover: "出行风险自担" },
+      { code: "outdoor", name: "户外意外险", fee: 20, cover: "意外身故/伤残 10 万，医疗 2 万" },
+      { code: "plus", name: "升级高额险", fee: 48, cover: "意外身故/伤残 50 万，医疗 5 万" },
+    ],
+  },
 };

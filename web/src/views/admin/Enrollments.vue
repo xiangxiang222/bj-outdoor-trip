@@ -34,6 +34,9 @@
         <template #default="{ row }">{{ row.status === "cancelled" ? "已取消" : row.status === "waitlist" ? "候补" : "有效" }}</template>
       </el-table-column>
       <el-table-column prop="seat_no" label="座位" width="80" />
+      <el-table-column label="保险" width="90">
+        <template #default="{ row }">{{ row.insurance_code === "plus" ? "升级" : row.insurance_code === "outdoor" ? "意外" : "无" }}</template>
+      </el-table-column>
       <el-table-column prop="pay_amount" label="金额" width="90" />
       <el-table-column label="操作" width="100" fixed="right">
         <template #default="{ row }">

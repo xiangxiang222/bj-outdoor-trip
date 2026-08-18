@@ -17,7 +17,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/meta` | 品牌名、演示短信码、会员年费、积分规则、可选天数 |
+| GET | `/meta` | 品牌名、演示短信码、会员年费、积分规则、保险方案、可选天数 |
 | GET | `/buses` | 车型 |
 | GET | `/guides` | 导游公开信息 |
 | GET | `/routes` | 上架线路。Query：`days` `category` `difficulty` `q` |
@@ -73,7 +73,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
   "travelerPhone": "13800138000",
   "idCard": "110101199205121219",
   "travelerType": "adult",
-  "seatNo": "1A"
+  "seatNo": "1A",
+  "insuranceCode": "outdoor"
 }
 ```
 

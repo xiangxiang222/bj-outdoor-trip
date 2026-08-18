@@ -42,7 +42,17 @@
       </div>
       <p class="muted">{{ form.seatNo ? "已选 " + form.seatNo : "未选座，将自动分配" }}</p>
     </div></div>
-    <p class="muted">积分抵现将在付款时使用。</p>
+    <div v-if="plans.length" class="card"><div class="pad">
+      <div class="h2" style="margin-top:0">出行保险</div>
+      <label v-for="p in plans" :key="p.code" class="ins-opt">
+        <input type="radio" :value="p.code" v-model="form.insuranceCode" />
+        <span>
+          <strong>{{ p.name }}</strong>
+          <em v-if="p.fee"> +¥{{ p.fee }}</em>
+          <small>{{ p.cover }}</small>
+        </span>
+      </label>
+    </div></div>
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
     <button v-if="s.status !== 'cancelled'" class="btn block" style="margin-top:16px" :disabled="loading" @click="submit">
       {{ s.remain <= 0 ? "加入候补" : "加入报名（暂不付款）" }}
@@ -73,7 +83,17 @@ const form = ref({
   idCard: "",
   travelerType: "adult",
   seatNo: "",
+  insuranceCode: "outdoor",
 });
+const plans = computed(() =>
+  store.meta?.insurance?.length
+    ? store.meta.insurance
+    : [
+        { code: "none", name: "暂不购买", fee: 0, cover: "出行风险自担" },
+        { code: "outdoor", name: "户外意外险", fee: 20, cover: "意外身故/伤残 10 万，医疗 2 万" },
+        { code: "plus", name: "升级高额险", fee: 48, cover: "意外身故/伤残 50 万，医疗 5 万" },
+      ]
+);
 const seatChart = ref(null);
 const seatRows = computed(() => {
   const list = seatChart.value?.seats || [];

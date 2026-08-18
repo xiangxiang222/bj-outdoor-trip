@@ -7,8 +7,9 @@ Page({
     s: null,
     idHint: "",
     idOk: false,
-    form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", seatNo: "" },
+    form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", seatNo: "", insuranceCode: "outdoor" },
     seatRows: [],
+    plans: [],
   },
   onLoad(q) {
     if (!app.globalData.token) {
@@ -21,6 +22,7 @@ Page({
       "form.travelerPhone": (app.globalData.user || {}).phone || "",
     });
     request("/schedules/" + q.id).then((r) => this.setData({ s: r.data }));
+    request("/meta").then((r) => this.setData({ plans: (r.data && r.data.insurance) || [] })).catch(() => {});
     request("/schedules/" + q.id + "/seats").then((r) => {
       const seats = (r.data && r.data.seats) || [];
       const groups = [];
@@ -31,6 +33,9 @@ Page({
       });
       this.setData({ seatRows: groups });
     }).catch(() => {});
+  },
+  pickIns(e) {
+    this.setData({ "form.insuranceCode": e.currentTarget.dataset.code });
   },
   pickSeat(e) {
     const no = e.currentTarget.dataset.no;

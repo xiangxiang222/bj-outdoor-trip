@@ -191,6 +191,7 @@ router.get("/meta", (req, res) => {
       wechatPayMock: config.wechat.mock,
       memberAnnualFee: config.member.annualFee,
       points: config.points,
+      insurance: config.insurance.plans,
       days: [1, 2, 3, 5],
     },
   });
@@ -515,7 +516,7 @@ router.post("/schedules/:id/dissolve", authUser, dissolveHandler("organizer"));
 
 router.post("/enroll", authUser, (req, res) => {
   try {
-    const { scheduleId, travelerName, travelerPhone, idCard, travelerType, seatNo } = req.body || {};
+    const { scheduleId, travelerName, travelerPhone, idCard, travelerType, seatNo, insuranceCode } = req.body || {};
     const data = enrollUser({
       userId: req.userId,
       scheduleId,
@@ -524,6 +525,7 @@ router.post("/enroll", authUser, (req, res) => {
       idCard,
       travelerType,
       seatNo,
+      insuranceCode,
     });
     res.json({ ok: true, data });
   } catch (e) {
@@ -558,13 +560,14 @@ router.post("/pay/company-settle", authUser, (req, res) => {
   const quote = quoteForSchedule(sch, enrolledCount(sch.id), null);
   let total = 0;
   for (const en of pending) {
-    total += quote.originPrice;
-    db().prepare("UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=?").run(quote.originPrice, en.id);
+    const amount = quote.originPrice + Number(en.insurance_fee || 0);
+    total += amount;
+    db().prepare("UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=?").run(amount, en.id);
     db().prepare("INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark) VALUES (?,?,?,?,?,?,?,?)").run(
       en.id,
       req.userId,
       sch.id,
-      quote.originPrice,
+      amount,
       "wechat",
       "success",
       `CO${Date.now()}${en.id}`,
@@ -945,7 +948,8 @@ router.post("/admin/schedules/:id/settle", authAdmin, (req, res) => {
   const pending = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending' AND status='joined'").all(sch.id);
   const quote = quoteForSchedule(sch, enrolledCount(sch.id), null);
   for (const en of pending) {
-    db().prepare("UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=?").run(quote.originPrice, en.id);
+    const amount = quote.originPrice + Number(en.insurance_fee || 0);
+    db().prepare("UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=?").run(amount, en.id);
   }
   maybeMatchGuide(sch.id);
   res.json({ ok: true, data: { count: pending.length, price: quote.originPrice } });

@@ -18,4 +18,11 @@
     </view>
   </view>
 </view>
+<view class="card" wx:if="{{plans.length}}">
+  <view class="pad">出行保险</view>
+  <view class="pad" wx:for="{{plans}}" wx:key="code" bindtap="pickIns" data-code="{{item.code}}">
+    <view>{{form.insuranceCode==item.code ? '●' : '○'}} {{item.name}}{{item.fee ? ' +¥' + item.fee : ''}}</view>
+    <view class="muted">{{item.cover}}</view>
+  </view>
+</view>
 <view class="btn" wx:if="{{s.status!='cancelled'}}" bindtap="submit">{{s.remain<=0?'加入候补':'确认报名'}}</view>
