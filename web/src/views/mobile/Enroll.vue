@@ -4,6 +4,7 @@
       <strong>{{ s.route.title }}</strong>
       <p class="muted">{{ s.startDate }} · {{ s.bus?.name }}</p>
       <p v-if="s.status === 'cancelled'" style="color:var(--clay)">本团已解散。理由：{{ s.cancelReason }}</p>
+      <p v-else-if="s.remain <= 0">本车已满（{{ s.enrolled }}/{{ s.maxSeats }}）。仍可加入候补，有人取消后按顺序递补。</p>
       <p v-else-if="s.organizerType === 'company'">公司团：报名后挂账，由 {{ s.companyName || "公司" }} 统一支付。</p>
       <p v-else>个人拼团：先报名占座，费用待出行前支付。</p>
       <p class="price">当前档位 ¥{{ quote }} / 人</p>
@@ -24,7 +25,7 @@
     <p class="muted">积分抵现将在付款时使用。</p>
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
     <button v-if="s.status !== 'cancelled'" class="btn block" style="margin-top:16px" :disabled="loading" @click="submit">
-      加入报名（暂不付款）
+      {{ s.remain <= 0 ? "加入候补" : "加入报名（暂不付款）" }}
     </button>
   </div>
 </template>

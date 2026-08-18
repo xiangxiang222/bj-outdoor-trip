@@ -12,7 +12,7 @@
         <p>发起人：{{ s.organizerName }} <span v-if="s.companyName">（{{ s.companyName }}）</span></p>
         <div class="progress"><i :style="{ width: Math.min(100, (s.enrolled / s.maxSeats) * 100) + '%' }"></i></div>
         <div class="row">
-          <span>已报名 {{ s.enrolled }}/{{ s.maxSeats }}，最低成团 {{ s.minGroupSize }}</span>
+          <span>已报名 {{ s.enrolled }}/{{ s.maxSeats }}，最低成团 {{ s.minGroupSize }}<template v-if="s.waitlistCount"> · 候补 {{ s.waitlistCount }}</template></span>
           <span class="price">¥{{ s.quote.price }}</span>
         </div>
         <p class="muted" v-if="s.status === 'cancelled'" style="color:var(--clay)">
@@ -28,7 +28,7 @@
       <div class="chain-item" v-for="c in s.chain" :key="c.index">
         <span>{{ c.index }}</span>
         <span>{{ c.name }} · {{ c.gender === "female" ? "女" : c.gender === "male" ? "男" : "" }}</span>
-        <span class="muted">{{ payText(c.payStatus) }}</span>
+        <span class="muted">{{ c.waitlisted ? "候补" : payText(c.payStatus) }}</span>
       </div>
       <p class="muted" v-if="!s.chain?.length">还没有人报名，快来占第一名。</p>
     </div></div>
@@ -37,7 +37,9 @@
       <button class="btn ghost" style="flex:1" @click="$router.push('/m/stats/' + s.id)">本团画像</button>
       <button class="btn ghost" style="flex:1" @click="share">分享到微信</button>
     </div>
-    <button v-if="s.status !== 'cancelled'" class="btn block clay" @click="$router.push('/m/enroll/' + s.id)">立即报名</button>
+    <button v-if="s.status !== 'cancelled'" class="btn block clay" @click="$router.push('/m/enroll/' + s.id)">
+      {{ s.remain <= 0 ? "已满员，去候补" : "立即报名" }}
+    </button>
     <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>
     <button v-if="s.isOrganizer && s.status !== 'cancelled'" class="btn ghost block" style="margin-top:8px;color:var(--clay)" @click="showDissolve = true">解散拼团</button>
     <p class="muted" style="margin-top:8px">{{ s.notes }}</p>

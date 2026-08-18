@@ -1,8 +1,9 @@
 <view class="pad" wx:if="{{s}}">{{s.route.title}} {{s.startDate}}</view>
 <view class="pad muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">本团已解散，无法报名。理由：{{s.cancelReason}}</view>
+<view class="pad muted" wx:elif="{{s.remain<=0}}">本车已满，仍可加入候补，有人取消后按顺序递补。</view>
 <view class="pad muted" wx:else>{{s.organizerType=='company'?'公司团：先报名，公司统一支付':'个人拼团：先报名占座，出行前付款'}}</view>
 <input class="input" placeholder="姓名（与身份证一致）" value="{{form.travelerName}}" bindinput="setName" />
 <input class="input" placeholder="手机号" type="number" maxlength="11" value="{{form.travelerPhone}}" bindinput="setPhone" />
 <input class="input" placeholder="18位身份证号" maxlength="18" value="{{form.idCard}}" bindinput="setId" />
 <view class="pad" style="color:{{idOk ? '#6b705c' : '#bc4749'}};font-size:24rpx" wx:if="{{idHint}}">{{idHint}}</view>
-<view class="btn" wx:if="{{s.status!='cancelled'}}" bindtap="submit">确认报名</view>
+<view class="btn" wx:if="{{s.status!='cancelled'}}" bindtap="submit">{{s.remain<=0?'加入候补':'确认报名'}}</view>

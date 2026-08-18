@@ -175,6 +175,8 @@ function createSchema(db) {
       pay_channel TEXT,
       join_mode TEXT DEFAULT 'chain',
       status TEXT DEFAULT 'joined',
+      waitlisted_at TEXT,
+      promoted_at TEXT,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
@@ -249,6 +251,8 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "cancelled_by_id", "INTEGER");
   addColumnIfMissing(db, "users", "deleted_at", "TEXT");
   addColumnIfMissing(db, "admin_users", "status", "TEXT DEFAULT 'on'");
+  addColumnIfMissing(db, "enrollments", "waitlisted_at", "TEXT");
+  addColumnIfMissing(db, "enrollments", "promoted_at", "TEXT");
 }
 
 let _db;

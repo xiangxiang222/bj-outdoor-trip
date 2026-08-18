@@ -13,7 +13,7 @@ const { parseIdCard, maskIdCard } = require("./services/idcard");
 const { pickTier, calcPayable, buildDemographics, maskName } = require("./services/biz");
 const { code2session } = require("./services/wechat");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
-const { cancelEnrollment, canCancelEnrollment } = require("./services/enroll");
+const { enrollUser, cancelEnrollment, canCancelEnrollment } = require("./services/enroll");
 const { deleteAccount } = require("./services/account");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -28,6 +28,7 @@ const {
 const {
   isMember,
   enrolledCount,
+  waitlistCount,
   loadRouteBundle,
   quoteForSchedule,
   maybeMatchGuide,
@@ -137,7 +138,7 @@ function scheduleView(sch, req) {
     (sch.cost_meal || 0) +
     (sch.cost_guide || 0) +
     (sch.cost_other || 0);
-  const revenue = db().prepare("SELECT IFNULL(SUM(pay_amount),0) AS s FROM enrollments WHERE schedule_id=? AND status!='cancelled'").get(sch.id).s;
+    const revenue = db().prepare("SELECT IFNULL(SUM(pay_amount),0) AS s FROM enrollments WHERE schedule_id=? AND status='joined'").get(sch.id).s;
   return {
     id: sch.id,
     routeId: sch.route_id,
@@ -160,7 +161,8 @@ function scheduleView(sch, req) {
     shareToken: sch.share_token,
     notes: sch.notes,
     enrolled,
-    remain: Math.max(0, sch.max_seats - enrolled),
+    waitlistCount: waitlistCount(sch.id),
+    remain: Math.max(0, sch.max_seats - live),
     quote,
     people,
     guide,
@@ -403,8 +405,8 @@ router.get("/schedules/:id", optionalUser, (req, res) => {
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
   const includeCancelled = sch.status === "cancelled";
   const chainSql = includeCancelled
-    ? "SELECT id,traveler_name,gender,pay_status,traveler_type,status,created_at FROM enrollments WHERE schedule_id=? ORDER BY id"
-    : "SELECT id,traveler_name,gender,pay_status,traveler_type,status,created_at FROM enrollments WHERE schedule_id=? AND status!='cancelled' ORDER BY id";
+    ? "SELECT id,traveler_name,gender,pay_status,traveler_type,status,created_at FROM enrollments WHERE schedule_id=? ORDER BY CASE status WHEN 'joined' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END, id"
+    : "SELECT id,traveler_name,gender,pay_status,traveler_type,status,created_at FROM enrollments WHERE schedule_id=? AND status!='cancelled' ORDER BY CASE status WHEN 'joined' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END, id";
   const chain = db()
     .prepare(chainSql)
     .all(sch.id)
@@ -415,6 +417,7 @@ router.get("/schedules/:id", optionalUser, (req, res) => {
       payStatus: e.pay_status,
       travelerType: e.traveler_type,
       status: e.status,
+      waitlisted: e.status === "waitlist",
       createdAt: e.created_at,
     }));
   res.json({
@@ -498,66 +501,20 @@ function dissolveHandler(actor) {
 router.post("/schedules/:id/dissolve", authUser, dissolveHandler("organizer"));
 
 router.post("/enroll", authUser, (req, res) => {
-  const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
-  const { scheduleId, travelerName, travelerPhone, idCard, travelerType } = req.body || {};
-  const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
-  if (!sch) return res.status(400).json({ ok: false, message: "排期不存在" });
-  if (sch.status === "cancelled") return res.status(400).json({ ok: false, message: "该拼团已解散，无法报名" });
-  const enrolled = enrolledCount(sch.id);
-  if (enrolled >= sch.max_seats) return res.status(400).json({ ok: false, message: "本车已满员" });
-  if (!travelerName || !travelerPhone) return res.status(400).json({ ok: false, message: "请填写出行人姓名和手机" });
-  if (!idCard) return res.status(400).json({ ok: false, message: "请填写身份证号，用于实名与籍贯统计" });
-  const parsed = parseIdCard(idCard);
-  if (!parsed.valid) return res.status(400).json({ ok: false, message: parsed.error || "身份证号不正确" });
-  const exist = db().prepare("SELECT id FROM enrollments WHERE schedule_id=? AND upper(id_card)=? AND status!='cancelled'").get(sch.id, parsed.idCard);
-  if (exist) return res.status(400).json({ ok: false, message: "该身份证已在本团报名" });
-
-  const quote = quoteForSchedule(sch, enrolled + 1, user);
-  const payable = calcPayable({
-    basePrice: quote.originPrice,
-    memberPrice: quote.memberPrice,
-    isMember: quote.isMember,
-    points: 0,
-    pointsConfig: config.points,
-  });
-
-  const company = sch.organizer_type === "company";
-  const payStatus = company ? "company_pending" : "unpaid";
-  const info = db()
-    .prepare(
-      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-    )
-    .run(
-      sch.id,
-      user.id,
+  try {
+    const { scheduleId, travelerName, travelerPhone, idCard, travelerType } = req.body || {};
+    const data = enrollUser({
+      userId: req.userId,
+      scheduleId,
       travelerName,
       travelerPhone,
-      parsed.idCard,
-      parsed.gender,
-      parsed.birthday,
-      parsed.hometown,
-      travelerType || "adult",
-      payStatus,
-      company ? 0 : payable.payAmount,
-      0,
-      "",
-      "chain",
-      "joined"
-    );
-  const enrollmentId = Number(info.lastInsertRowid);
-  maybeMatchGuide(sch.id);
-
-  return res.json({
-    ok: true,
-    data: {
-      enrollmentId,
-      payStatus,
-      needPay: false,
-      message: company ? "已加入公司团，费用由公司统一支付" : "已报名占座，费用待出行前支付",
-      quote: payable,
-    },
-  });
+      idCard,
+      travelerType,
+    });
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 router.post("/pay/mock-success", authUser, (req, res) => {
@@ -583,7 +540,7 @@ router.post("/pay/company-settle", authUser, (req, res) => {
   if (!sch) return res.status(400).json({ ok: false, message: "排期不存在" });
   if (sch.status === "cancelled") return res.status(400).json({ ok: false, message: "该拼团已解散" });
   if (sch.organizer_id !== req.userId) return res.status(403).json({ ok: false, message: "仅开团公司可统一支付" });
-  const pending = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending'").all(sch.id);
+  const pending = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending' AND status='joined'").all(sch.id);
   const quote = quoteForSchedule(sch, enrolledCount(sch.id), null);
   let total = 0;
   for (const en of pending) {
@@ -630,7 +587,7 @@ router.post("/orders/:id/cancel", authUser, (req, res) => {
 });
 
 router.get("/schedules/:id/demographics", optionalUser, (req, res) => {
-  const list = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status!='cancelled'").all(req.params.id);
+  const list = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status='joined'").all(req.params.id);
   res.json({ ok: true, data: buildDemographics(list) });
 });
 
@@ -776,7 +733,7 @@ router.get("/admin/dashboard", authAdmin, (req, res) => {
   const userCount = db().prepare("SELECT COUNT(*) c FROM users WHERE deleted_at IS NULL").get().c;
   const enrollCount = db().prepare("SELECT COUNT(*) c FROM enrollments WHERE status!='cancelled'").get().c;
   const revenue = db().prepare("SELECT IFNULL(SUM(pay_amount),0) s FROM enrollments WHERE pay_status='paid'").get().s;
-  const pending = db().prepare("SELECT IFNULL(SUM(1),0) s FROM enrollments WHERE pay_status='company_pending'").get().s;
+  const pending = db().prepare("SELECT IFNULL(SUM(1),0) s FROM enrollments WHERE pay_status='company_pending' AND status='joined'").get().s;
   const byRoute = db()
     .prepare(
       `SELECT r.id, r.title, r.days, COUNT(e.id) AS people, IFNULL(SUM(CASE WHEN e.pay_status='paid' THEN e.pay_amount ELSE 0 END),0) AS revenue
@@ -971,7 +928,7 @@ router.post("/admin/schedules/:id/settle", authAdmin, (req, res) => {
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
   if (!sch) return res.status(400).json({ ok: false, message: "排期不存在" });
   if (sch.status === "cancelled") return res.status(400).json({ ok: false, message: "该拼团已解散" });
-  const pending = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending'").all(sch.id);
+  const pending = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending' AND status='joined'").all(sch.id);
   const quote = quoteForSchedule(sch, enrolledCount(sch.id), null);
   for (const en of pending) {
     db().prepare("UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=?").run(quote.originPrice, en.id);
@@ -1070,7 +1027,7 @@ router.post("/admin/users/:id/close", authAdmin, (req, res) => {
 });
 
 router.get("/admin/schedules/:id/demographics", authAdmin, (req, res) => {
-  const list = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status!='cancelled'").all(req.params.id);
+  const list = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status='joined'").all(req.params.id);
   res.json({ ok: true, data: buildDemographics(list) });
 });
 

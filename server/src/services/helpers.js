@@ -16,8 +16,15 @@ function enrolledCount(scheduleId, includeCancelled = false) {
   const db = getDb();
   const sql = includeCancelled
     ? "SELECT COUNT(*) AS c FROM enrollments WHERE schedule_id=?"
-    : "SELECT COUNT(*) AS c FROM enrollments WHERE schedule_id=? AND status!='cancelled'";
+    : "SELECT COUNT(*) AS c FROM enrollments WHERE schedule_id=? AND status='joined'";
   const row = db.prepare(sql).get(scheduleId);
+  return row.c;
+}
+
+function waitlistCount(scheduleId) {
+  const row = getDb()
+    .prepare("SELECT COUNT(*) AS c FROM enrollments WHERE schedule_id=? AND status='waitlist'")
+    .get(scheduleId);
   return row.c;
 }
 
@@ -135,6 +142,7 @@ function publicMediaUrl(url) {
 module.exports = {
   isMember,
   enrolledCount,
+  waitlistCount,
   loadRouteBundle,
   quoteForSchedule,
   maybeMatchGuide,

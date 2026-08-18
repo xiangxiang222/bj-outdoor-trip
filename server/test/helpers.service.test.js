@@ -55,6 +55,13 @@ describe("helpers service", () => {
       )
       .run(seed.individualScheduleId, seed.userId, "B", "13800000002", "110101199001011229", "unpaid", "cancelled");
     assert.equal(enrolledCount(seed.individualScheduleId), 1);
+    seed.db
+      .prepare(
+        `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,pay_status,status)
+         VALUES (?,?,?,?,?,?,?)`
+      )
+      .run(seed.individualScheduleId, seed.userId, "C", "13800000003", "130102198805201218", "unpaid", "waitlist");
+    assert.equal(enrolledCount(seed.individualScheduleId), 1);
   });
 
   it("matches guide when min group size is reached", () => {

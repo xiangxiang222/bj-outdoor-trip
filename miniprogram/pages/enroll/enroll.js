@@ -72,7 +72,7 @@ Page({
           await wx.requestPayment(pay);
         }
       }
-      wx.showToast({ title: "报名成功" });
+      wx.showToast({ title: res.data.waitlisted ? "已加入候补" : "报名成功" });
       wx.redirectTo({ url: "/pages/schedule/schedule?id=" + this.data.id });
     } catch (e) {
       wx.showModal({ title: "报名失败", content: e.message, showCancel: false });

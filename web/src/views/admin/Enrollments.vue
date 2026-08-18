@@ -12,6 +12,7 @@
         </el-select>
         <el-select v-model="status" clearable placeholder="报名状态" style="width:120px">
           <el-option label="有效" value="joined" />
+          <el-option label="候补" value="waitlist" />
           <el-option label="已取消" value="cancelled" />
         </el-select>
         <el-button type="success" @click="load">查询</el-button>
@@ -30,7 +31,7 @@
         <template #default="{ row }">{{ payStatusText(row.pay_status) }}</template>
       </el-table-column>
       <el-table-column label="报名" width="90">
-        <template #default="{ row }">{{ row.status === "cancelled" ? "已取消" : "有效" }}</template>
+        <template #default="{ row }">{{ row.status === "cancelled" ? "已取消" : row.status === "waitlist" ? "候补" : "有效" }}</template>
       </el-table-column>
       <el-table-column prop="pay_amount" label="金额" width="90" />
       <el-table-column label="操作" width="100" fixed="right">

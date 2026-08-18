@@ -214,7 +214,7 @@ describe("enroll pay member favorites", () => {
     assert.equal(demo.body.data.total, 1);
   });
 
-  it("rejects enroll when seats are full", async () => {
+  it("joins waitlist when seats are full instead of rejecting", async () => {
     seed.db.prepare("UPDATE schedules SET max_seats=1 WHERE id=?").run(seed.individualScheduleId);
     const token = await loginUser(agent);
     await agent
@@ -233,8 +233,9 @@ describe("enroll pay member favorites", () => {
       travelerPhone: "13800138000",
       idCard: ID.femaleBj,
     });
-    assert.equal(full.status, 400);
-    assert.match(full.body.message, /满员/);
+    assert.equal(full.status, 200);
+    assert.equal(full.body.data.waitlisted, true);
+    assert.match(full.body.data.message, /候补/);
   });
 
   it("matches guide after min group size", async () => {

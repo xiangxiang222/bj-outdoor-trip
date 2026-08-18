@@ -201,7 +201,7 @@ async function run(opts) {
     live,
     seed,
     request,
-    phones: { user: uniquePhone(), buddy: uniquePhone(), sms: uniquePhone() },
+    phones: { user: uniquePhone(), buddy: uniquePhone(), sms: uniquePhone(), wait: uniquePhone() },
   };
   const results = [];
 
@@ -433,6 +433,35 @@ async function run(opts) {
     const demo = apiOk(await request("GET", "/api/schedules/" + ctx.ownScheduleId + "/demographics"), "demographics");
     assert(demo.total >= 2, "画像人数不足 2");
   });
+
+  await step(
+    "候补：满员排队并在取消后递补",
+    async () => {
+      seed.db.prepare("UPDATE schedules SET max_seats=2 WHERE id=?").run(ctx.ownScheduleId);
+      ctx.waitAuth = await registerWithCaptcha(request, ctx.phones.wait, "走查候补");
+      const wl = apiOk(
+        await request("POST", "/api/enroll", {
+          token: ctx.waitAuth.token,
+          body: {
+            scheduleId: ctx.ownScheduleId,
+            travelerName: "走查候补",
+            travelerPhone: ctx.phones.wait,
+            idCard: ID.femaleSd,
+          },
+        }),
+        "waitlist enroll"
+      );
+      assert(wl.waitlisted === true, "满员后应进入候补");
+      const buddyOrders = apiOk(await request("GET", "/api/orders", { token: ctx.buddy.token }), "buddy orders");
+      const buddyRow = buddyOrders.find((o) => Number(o.schedule_id) === Number(ctx.ownScheduleId) && o.status === "joined");
+      assert(buddyRow, "找不到第二人有效报名");
+      apiOk(await request("POST", "/api/orders/" + buddyRow.id + "/cancel", { token: ctx.buddy.token }), "cancel to promote");
+      const waitOrders = apiOk(await request("GET", "/api/orders", { token: ctx.waitAuth.token }), "wait orders");
+      const promoted = waitOrders.find((o) => Number(o.id) === Number(wl.enrollmentId));
+      assert(promoted && promoted.status === "joined", "候补未递补为有效报名");
+    },
+    { skip: live, reason: "线上不改座位上限" }
+  );
 
   await step("分享：海报二维码与分享短链跳转", async () => {
     const poster = apiOk(await request("GET", "/api/schedules/" + ctx.ownScheduleId + "/poster"), "poster");
@@ -721,6 +750,9 @@ async function run(opts) {
     }
     if (ctx.buddy && ctx.buddy.token) {
       await request("DELETE", "/api/me", { token: ctx.buddy.token });
+    }
+    if (ctx.waitAuth && ctx.waitAuth.token) {
+      await request("DELETE", "/api/me", { token: ctx.waitAuth.token });
     }
     if (ctx.companyAuth && ctx.companyAuth.token && live) {
       await request("DELETE", "/api/me", { token: ctx.companyAuth.token });

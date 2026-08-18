@@ -8,6 +8,7 @@ export function enrollStatusText(row) {
   if (row?.status === "cancelled") {
     return row.pay_status === "refunded" ? "已取消 · 已退款" : "已取消";
   }
+  if (row?.status === "waitlist") return "候补中";
   return payStatusText(row?.pay_status);
 }
 

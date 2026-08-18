@@ -19,8 +19,8 @@
       <el-table-column label="车型" width="120">
         <template #default="{ row }">{{ row.bus?.name }}</template>
       </el-table-column>
-      <el-table-column label="人数" width="90">
-        <template #default="{ row }">{{ row.enrolled }}/{{ row.maxSeats }}</template>
+      <el-table-column label="人数" width="110">
+        <template #default="{ row }">{{ row.enrolled }}/{{ row.maxSeats }}<span v-if="row.waitlistCount" class="muted"> +{{ row.waitlistCount }}候</span></template>
       </el-table-column>
       <el-table-column prop="revenue" label="收入" width="80" />
       <el-table-column prop="cost" label="成本" width="80" />
