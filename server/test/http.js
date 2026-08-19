@@ -45,4 +45,14 @@ const ID = {
   femaleSd: "370102199512181224",
 };
 
-module.exports = { harness, issueCaptcha, loginUser, loginCompany, loginAdmin, auth, ID };
+function enrollPayload(extra = {}) {
+  return {
+    emergencyName: "紧急联系人",
+    emergencyPhone: "13700000002",
+    waiverAccepted: true,
+    healthOk: true,
+    ...extra,
+  };
+}
+
+module.exports = { harness, issueCaptcha, loginUser, loginCompany, loginAdmin, auth, ID, enrollPayload };

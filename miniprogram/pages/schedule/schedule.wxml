@@ -4,7 +4,8 @@
     <view class="title">{{s.route.title}}</view>
     <view class="tag">{{s.status=='cancelled'?'已解散':(s.organizerType=='company'?'公司统一支付':'先报名后付款')}}</view>
     <view>{{s.startDate}} · {{s.bus.name}}</view>
-    <view class="muted">集合 {{s.meetupPoint}} {{s.meetupTime}}</view>
+    <view class="muted">集合 {{s.meetupPoint}} {{s.meetupTime}} <text class="nav-link" catchtap="openMap">复制并搜地图</text></view>
+    <view class="muted" wx:if="{{s.guaranteed}}" style="color:#2d6a4f">已成团 · 铁定出发</view>
     <view class="progress"><view class="bar" style="width:{{s.enrolled/s.maxSeats*100}}%"></view></view>
     <view class="row"><text>已报 {{s.enrolled}}/{{s.maxSeats}} 成团{{s.minGroupSize}}{{s.waitlistCount ? ' · 候补' + s.waitlistCount : ''}}</text><text class="price">¥{{s.quote.price}}</text></view>
     <view class="muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">本团已解散。理由：{{s.cancelReason}}</view>
@@ -36,6 +37,10 @@
     <view class="muted">{{item.createdAt}}</view>
   </view>
 </view>
+<view class="pad title">装备清单</view>
+<view class="pad" wx:for="{{packing}}" wx:key="*this">· {{item}}</view>
+<view class="pad title">退改说明</view>
+<view class="pad muted">{{cancelSummary}}</view>
 <view class="btn" wx:if="{{s.status!='cancelled'}}" bindtap="enroll">{{s.remain<=0?'已满员，去候补':'立即报名'}}</view>
 <view class="btn ghost" bindtap="stats">本团画像</view>
 <button class="btn ghost" open-type="share">分享到微信</button>

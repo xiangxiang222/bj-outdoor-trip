@@ -80,6 +80,8 @@ npm run dev
 - 报名后查看本团画像（男女、年龄段、籍贯）
 - 成团后按线路类型自动匹配导游
 - 满员候补、2+2 座位图、出行保险加购、目的地天气
+- 报名须紧急联系人、健康声明与户外风险确认；成团后显示铁定出发
+- 装备清单、行前常见问题、10 日出发日历、即将出行提醒
 - 报名成功后评价（线路详情展示）
 - 注销账号（软删除，同一手机可再注册）
 - 导游工作台 `/g`：行程、名单、签到
@@ -116,7 +118,7 @@ npm run test:coverage
 npm run test:e2e
 ```
 
-服务端使用临时 SQLite，不会覆盖 `server/data/app.sqlite`。当前 **125** 条服务端用例 + **3** 条 H5 用例。打已启动服务（本机或线上）用 `npm run test:e2e:live`。说明见 [docs/TESTING.md](docs/TESTING.md)。
+服务端使用临时 SQLite，不会覆盖 `server/data/app.sqlite`。当前 **128** 条服务端用例 + **3** 条 H5 用例。打已启动服务（本机或线上）用 `npm run test:e2e:live`。说明见 [docs/TESTING.md](docs/TESTING.md)。
 
 ## 支付说明
 

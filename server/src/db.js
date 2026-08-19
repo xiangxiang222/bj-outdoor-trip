@@ -182,6 +182,10 @@ function createSchema(db) {
       insurance_fee INTEGER DEFAULT 0,
       checkin_at TEXT,
       checkin_by INTEGER,
+      emergency_name TEXT,
+      emergency_phone TEXT,
+      waiver_accepted_at TEXT,
+      health_declared_at TEXT,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
@@ -276,6 +280,10 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "enrollments", "insurance_fee", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "enrollments", "checkin_at", "TEXT");
   addColumnIfMissing(db, "enrollments", "checkin_by", "INTEGER");
+  addColumnIfMissing(db, "enrollments", "emergency_name", "TEXT");
+  addColumnIfMissing(db, "enrollments", "emergency_phone", "TEXT");
+  addColumnIfMissing(db, "enrollments", "waiver_accepted_at", "TEXT");
+  addColumnIfMissing(db, "enrollments", "health_declared_at", "TEXT");
   db.exec(`
     DELETE FROM reviews
     WHERE id NOT IN (SELECT MIN(id) FROM reviews GROUP BY user_id, schedule_id);
@@ -317,6 +325,10 @@ function toRoute(row, extra = {}) {
     feeExclude: row.fee_exclude,
     equipment: row.equipment,
     notices: row.notices,
+    packingList: String(row.equipment || "")
+      .split(/[、，,;；/\n]+/)
+      .map((s) => s.replace(/^(请自备|装备|含)[:：]?\s*/, "").trim())
+      .filter((s) => s.length >= 2 && s.length <= 48),
     meetupPoints: JSON.parse(row.meetup_json || "[]"),
     status: row.status,
     ...extra,

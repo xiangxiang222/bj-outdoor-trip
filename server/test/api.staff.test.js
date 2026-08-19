@@ -132,6 +132,10 @@ describe("admin staff and user ops", () => {
       travelerName: "后台取消",
       travelerPhone: "13800138000",
       idCard: ID.maleHb,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     const id = enrolled.body.data.enrollmentId;
     const filtered = await agent.get("/api/admin/enrollments?q=后台取消&status=joined").set(auth(adminToken)).expect(200);

@@ -1,7 +1,7 @@
 <view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
   <view class="pad">
     <view class="row"><text class="title">{{item.route.title}}</text><text class="tag">{{item.startDate}}</text></view>
-    <view class="muted">{{item.organizerType=='company'?item.companyName:item.organizerName}} · {{item.bus.name}}</view>
+    <view class="muted">{{item.organizerType=='company'?item.companyName:item.organizerName}} · {{item.bus.name}}<text wx:if="{{item.guaranteed}}"> · 铁定出发</text></view>
     <view class="progress"><view class="bar" style="width:{{item.enrolled/item.maxSeats*100}}%"></view></view>
     <view class="row muted"><text>{{item.enrolled}}/{{item.maxSeats}}</text><text>¥{{item.quote.price}}</text></view>
   </view>

@@ -296,6 +296,37 @@ button, input, textarea, select { font-family: inherit; }
 .ins-opt span { display: flex; flex-direction: column; }
 .ins-opt em { font-style: normal; color: var(--clay); font-size: 13px; }
 .ins-opt small { color: var(--muted); font-size: 12px; }
+.check-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 10px 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.check-row input { margin-top: 3px; accent-color: var(--leaf); }
+.cal {
+  display: flex;
+  gap: 6px;
+  overflow: auto;
+  padding: 4px 0 12px;
+}
+.cal-day {
+  flex: none;
+  width: 52px;
+  text-align: center;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px 0;
+  font-size: 12px;
+}
+.cal-day.on { border-color: var(--leaf); background: var(--mint); }
+.cal-day .n { display: block; font-weight: 700; color: var(--forest); }
+.faq-item { padding: 8px 0; border-bottom: 1px dashed var(--line); }
+.faq-item:last-child { border-bottom: 0; }
+.pack-item { display: flex; gap: 8px; padding: 4px 0; font-size: 14px; }
+.nav-link { color: var(--leaf); font-size: 13px; }
 .review-item { border-bottom: 1px dashed var(--line); }
 .review-item:last-child { border-bottom: 0; }
 .review-item p { margin: 6px 0 0; }

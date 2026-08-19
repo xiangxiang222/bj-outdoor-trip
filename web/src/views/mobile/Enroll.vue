@@ -42,6 +42,10 @@
       </div>
       <p class="muted">{{ form.seatNo ? "已选 " + form.seatNo : "未选座，将自动分配" }}</p>
     </div></div>
+    <label>紧急联系人</label>
+    <input class="input" v-model="form.emergencyName" placeholder="家人或同伴姓名" />
+    <label>紧急联系人手机</label>
+    <input class="input" v-model="form.emergencyPhone" maxlength="11" placeholder="不能与出行人同一号码" />
     <div v-if="plans.length" class="card"><div class="pad">
       <div class="h2" style="margin-top:0">出行保险</div>
       <label v-for="p in plans" :key="p.code" class="ins-opt">
@@ -52,6 +56,19 @@
           <small>{{ p.cover }}</small>
         </span>
       </label>
+    </div></div>
+    <div class="card"><div class="pad">
+      <div class="h2" style="margin-top:0">行前确认</div>
+      <p class="muted" style="white-space:pre-wrap">{{ waiver }}</p>
+      <label class="check-row">
+        <input type="checkbox" v-model="form.healthOk" />
+        <span>本人身体健康，无心脏病、哮喘、癫痫等不适宜本次强度的疾病（或已告知领队并自行评估风险）。</span>
+      </label>
+      <label class="check-row">
+        <input type="checkbox" v-model="form.waiverAccepted" />
+        <span>已阅读风险告知与退改说明，自愿参加。</span>
+      </label>
+      <p class="muted">{{ cancelSummary }}</p>
     </div></div>
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
     <button v-if="s.status !== 'cancelled'" class="btn block" style="margin-top:16px" :disabled="loading" @click="submit">
@@ -84,7 +101,13 @@ const form = ref({
   travelerType: "adult",
   seatNo: "",
   insuranceCode: "outdoor",
+  emergencyName: "",
+  emergencyPhone: "",
+  waiverAccepted: false,
+  healthOk: false,
 });
+const waiver = ref("");
+const cancelSummary = ref("出发日前可取消；出发当天不可取消。解散则报名作废。");
 const plans = computed(() =>
   store.meta?.insurance?.length
     ? store.meta.insurance
@@ -110,6 +133,16 @@ onMounted(async () => {
   if (!requireLogin(store, router, route)) return;
   s.value = (await http.get("/schedules/" + route.params.id)).data;
   quote.value = s.value.quote.price;
+  try {
+    const meta = (await http.get("/meta")).data;
+    if (meta.insurance?.length) {
+      /* plans computed from store; keep meta texts */
+    }
+    waiver.value = meta.waiverText || waiver.value;
+    cancelSummary.value = meta.cancelPolicy?.summary || cancelSummary.value;
+  } catch {
+    /* use defaults */
+  }
   try {
     seatChart.value = (await http.get("/schedules/" + route.params.id + "/seats")).data;
   } catch {
@@ -148,6 +181,22 @@ async function submit() {
   const parsed = checkId();
   if (!parsed.valid) {
     err.value = parsed.error;
+    return;
+  }
+  if (!form.value.emergencyName || !form.value.emergencyPhone) {
+    err.value = "请填写紧急联系人姓名和手机";
+    return;
+  }
+  if (form.value.emergencyPhone === form.value.travelerPhone) {
+    err.value = "紧急联系人不能与出行人使用同一手机号";
+    return;
+  }
+  if (!form.value.healthOk) {
+    err.value = "请确认健康状况适合本次活动";
+    return;
+  }
+  if (!form.value.waiverAccepted) {
+    err.value = "请阅读并确认户外活动风险告知";
     return;
   }
   loading.value = true;

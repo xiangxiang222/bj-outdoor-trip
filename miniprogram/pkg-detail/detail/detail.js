@@ -9,7 +9,7 @@ function localDetail(id) {
 }
 
 Page({
-  data: { r: {}, fromPrice: 0, id: "", err: "", reviews: { list: [], count: 0, avg: 0 } },
+  data: { r: {}, fromPrice: 0, id: "", err: "", reviews: { list: [], count: 0, avg: 0 }, faqs: [] },
   onLoad(q) {
     const id = q.id;
     const local = withLocalMedia(localDetail(id) || { id });
@@ -38,10 +38,19 @@ Page({
         err: "",
       });
       this.loadReviews();
+      this.loadFaqs();
     } catch (err) {
       if (!this.data.r.title) {
         this.setData({ err: (err && err.message) || "详情加载失败" });
       }
+    }
+  },
+  async loadFaqs() {
+    try {
+      const res = await request("/meta");
+      this.setData({ faqs: ((res && res.data) || {}).faqs || [] });
+    } catch (err) {
+      this.setData({ faqs: [] });
     }
   },
   async loadReviews() {

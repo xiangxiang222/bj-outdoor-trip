@@ -18,15 +18,15 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/meta` | 品牌名、演示短信码、会员年费、积分规则、保险方案、可选天数 |
+| GET | `/meta` | 品牌名、演示短信码、会员年费、积分规则、保险方案、可选天数、退改说明、风险告知、常见问题 |
 | GET | `/weather` | 目的地天气。Query：`region` `date`。默认 mock，设 `WEATHER_LIVE=1` 走 Open-Meteo |
 | GET | `/buses` | 车型 |
 | GET | `/guides` | 导游公开信息 |
 | GET | `/routes` | 上架线路。Query：`days` `category` `difficulty` `q` |
-| GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏 |
+| GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条） |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
 | GET | `/schedules` | Query：`routeId` `organizerType`（不含已解散） |
-| GET | `/schedules/:id` | 排期 + 脱敏名单；已解散团仍可查看 |
+| GET | `/schedules/:id` | 排期 + 脱敏名单；含 `guaranteed`（已达成团线）、`meetupMapUrl`；已解散团仍可查看 |
 | GET | `/schedules/:id/demographics` | 本团画像 |
 | GET | `/schedules/:id/seats` | 座位图。登录后占用位带 `mine` |
 | GET | `/schedules/:id/reviews` | 该团评价列表。`{ list, count, avg }` |
@@ -45,6 +45,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/auth/login-sms` | 否 | `phone` `code`；无用户则创建。当前 UI 未使用 |
 | POST | `/auth/wechat` | 否 | `code` `nickname` `avatar` |
 | GET | `/me` | 用户 | 当前用户（证件掩码） |
+| GET | `/me/trips` | 用户 | 即将出行：已报名且团未解散、出发日 ≥ 昨天的 `joined`/`waitlist` |
 | PUT | `/me` | 用户 | `nickname` `gender` `birthday` `idCard` `companyName` `avatar` |
 | DELETE | `/me` | 用户 | 注销：清空手机/密码/openid/证件，取消未完成报名；同一手机可再注册 |
 
@@ -56,11 +57,11 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | --- | --- | --- | --- |
 | POST | `/schedules` | 用户 | 开团。公司类型必须有公司名 |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
-| POST | `/enroll` | 用户 | 报名占座。个人 `pay_status=unpaid`、`needPay: false`；公司 `company_pending` |
+| POST | `/enroll` | 用户 | 报名占座。须紧急联系人、健康声明、风险确认。个人 `pay_status=unpaid`、`needPay: false`；公司 `company_pending` |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。报名流程默认不调用 |
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
 | GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canReview` `reviewed` |
-| POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（出发日前、团未解散） |
+| POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（出发日前、团未解散；当天不可取消） |
 | POST | `/member/buy` | 用户 | **立即开通/续费会员**，记一笔成功支付并返回 `user` |
 | GET | `/points` | 用户 | 积分余额与流水 |
 | POST | `/favorites/:routeId` | 用户 | 收藏 |
@@ -75,7 +76,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/guide/login` | `phone` `captchaToken` `captcha`。演示：`13700001101` |
 | GET | `/guide/me` | 当前导游 |
 | GET | `/guide/schedules` | 已分配行程 |
-| GET | `/guide/schedules/:id` | 名单含手机与座位 |
+| GET | `/guide/schedules/:id` | 名单含手机、座位、紧急联系人 |
 | POST | `/guide/schedules/:id/checkin` | body：`enrollmentId` |
 
 H5 入口 `/g`。
@@ -90,13 +91,17 @@ H5 入口 `/g`。
   "idCard": "110101199205121219",
   "travelerType": "adult",
   "seatNo": "1A",
-  "insuranceCode": "outdoor"
+  "insuranceCode": "outdoor",
+  "emergencyName": "紧急联系人",
+  "emergencyPhone": "13700000002",
+  "waiverAccepted": true,
+  "healthOk": true
 }
 ```
 
-身份证须 18 位且校验码正确。同团同一证件不可重复（已取消的不计）。已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序自动递补。当前实现报名时 `points_used=0`，不读取抵现开关。
+身份证须 18 位且校验码正确。紧急联系人手机须 11 位且不能与出行人相同。`waiverAccepted`、`healthOk` 须为真。同团同一证件不可重复（已取消的不计）。已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序自动递补。当前实现报名时 `points_used=0`，不读取抵现开关。
 
-排期详情含 `waitlistCount`、`remain`；名单项含 `waitlisted`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`。
+排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`；名单项含 `waitlisted`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`。
 
 报名成功示例：
 
@@ -117,7 +122,7 @@ H5 入口 `/g`。
 
 解散成功返回 `cancelled`（取消人数）、`refunded`（退款人数）、`smsCount`。已付款报名改为 `pay_status=refunded`。
 
-取消报名：活动开始日（含当天之前）可取消；已开始返回「活动已开始，无法取消报名」。已付款则退款标记。同一证件取消后可再报。
+取消报名：出发日之前、团未解散时可取消；出发当天及之后返回「出发当天及之后不可取消报名」。已付款则退款标记。同一证件取消后可再报。
 
 ## 管理端（均需管理员 token，登录除外）
 

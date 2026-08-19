@@ -232,6 +232,7 @@ async function run(opts) {
     const meta = apiOk(await request("GET", "/api/meta"), "meta");
     assert(meta.name === "北野行", "品牌名不是北野行");
     assert(Array.isArray(meta.insurance) && meta.insurance.length >= 2, "保险方案缺失");
+    assert(meta.waiverText && meta.cancelPolicy && Array.isArray(meta.faqs), "行前政策缺失");
     const forecast = apiOk(await request("GET", "/api/weather?region=北京怀柔"), "weather");
     assert(forecast.summary && Array.isArray(forecast.alerts), "天气提醒不完整");
     assert(Array.isArray(meta.days) && meta.days.includes(1), "天数选项缺失");
@@ -247,6 +248,7 @@ async function run(opts) {
     assert(Array.isArray(filtered), "筛选结果不是数组");
     const detail = apiOk(await request("GET", "/api/routes/" + ctx.routeId), "route detail");
     assert(detail.title && Array.isArray(detail.priceTiers), "线路详情不完整");
+    assert(Array.isArray(detail.packingList), "装备清单缺失");
     const missing = await request("GET", "/api/routes/999999");
     assert(missing.status === 404, "不存在的线路应 404");
     const schedules = apiOk(await request("GET", "/api/schedules"), "schedules");
@@ -376,6 +378,10 @@ async function run(opts) {
           travelerName: "走查甲",
           travelerPhone: ctx.phones.user,
           idCard: ID.maleBj,
+          emergencyName: "紧急联系人",
+          emergencyPhone: "13700000002",
+          waiverAccepted: true,
+          healthOk: true,
           insuranceCode: "outdoor",
         },
       }),
@@ -395,6 +401,10 @@ async function run(opts) {
         travelerName: "走查甲",
         travelerPhone: ctx.phones.user,
         idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       },
     });
     assert(dup.status === 400, "同一身份证重复报名应失败");
@@ -414,11 +424,17 @@ async function run(opts) {
           travelerName: "走查甲",
           travelerPhone: ctx.phones.user,
           idCard: ID.maleBj,
+          emergencyName: "紧急联系人",
+          emergencyPhone: "13700000002",
+          waiverAccepted: true,
+          healthOk: true,
         },
       }),
       "re-enroll"
     );
     ctx.enrollmentId = again.enrollmentId;
+    const trips = apiOk(await request("GET", "/api/me/trips", { token: ctx.token }), "my trips");
+    assert(trips.some((t) => Number(t.id) === Number(ctx.enrollmentId)), "即将出行没有刚报的名");
   });
 
   await step("成团：第二人报名、导游匹配、本团画像", async () => {
@@ -433,6 +449,10 @@ async function run(opts) {
           travelerName: "走查乙",
           travelerPhone: ctx.phones.buddy,
           idCard: ID.femaleBj,
+          emergencyName: "紧急联系人",
+          emergencyPhone: "13700000002",
+          waiverAccepted: true,
+          healthOk: true,
         },
       }),
       "second enroll"
@@ -456,6 +476,10 @@ async function run(opts) {
             travelerName: "走查候补",
             travelerPhone: ctx.phones.wait,
             idCard: ID.femaleSd,
+            emergencyName: "紧急联系人",
+            emergencyPhone: "13700000002",
+            waiverAccepted: true,
+            healthOk: true,
           },
         }),
         "waitlist enroll"
@@ -544,6 +568,10 @@ async function run(opts) {
           travelerName: "同事甲",
           travelerPhone: ctx.phones.user,
           idCard: ID.maleHb,
+          emergencyName: "紧急联系人",
+          emergencyPhone: "13700000002",
+          waiverAccepted: true,
+          healthOk: true,
         },
       }),
       "company enroll"
@@ -593,6 +621,10 @@ async function run(opts) {
         travelerName: "走查甲",
         travelerPhone: ctx.phones.user,
         idCard: ID.femaleSd,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       },
     });
     assert(blocked.status === 400, "已解散的团不应再报名");

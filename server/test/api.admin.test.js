@@ -113,6 +113,10 @@ describe("admin API", () => {
       travelerName: "报名甲",
       travelerPhone: "13800138000",
       idCard: ID.maleHb,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
 
     const settle = await agent.post(`/api/admin/schedules/${scheduleId}/settle`).set(auth(adminToken)).expect(200);

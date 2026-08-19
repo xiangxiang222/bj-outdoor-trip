@@ -17,6 +17,10 @@ describe("payment split", () => {
       travelerName: "同事",
       travelerPhone: "13800138000",
       idCard: ID.maleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     const companyToken = await loginCompany(agent);
     const settled = await agent

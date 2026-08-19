@@ -8,7 +8,11 @@
           <span class="tag">{{ statusTag }}</span>
         </div>
         <p class="muted">{{ s.startDate }} {{ s.endDate !== s.startDate ? "至 " + s.endDate : "" }} · {{ s.bus?.name }}</p>
-        <p>集合：{{ s.meetupPoint }} {{ s.meetupTime }}</p>
+        <p>
+          集合：{{ s.meetupPoint }} {{ s.meetupTime }}
+          <a v-if="s.meetupMapUrl" class="nav-link" :href="s.meetupMapUrl" target="_blank" rel="noreferrer">打开地图</a>
+        </p>
+        <p v-if="s.guaranteed" class="muted" style="color:var(--leaf)">已成团 · 铁定出发（人数已达最低成团线）</p>
         <p>发起人：{{ s.organizerName }} <span v-if="s.companyName">（{{ s.companyName }}）</span></p>
         <div class="progress"><i :style="{ width: Math.min(100, (s.enrolled / s.maxSeats) * 100) + '%' }"></i></div>
         <div class="row">
@@ -64,6 +68,21 @@
       </div>
     </div>
     <p class="muted" v-else>还没有评价。</p>
+
+    <div class="h2">装备清单</div>
+    <div class="card"><div class="pad">
+      <label class="pack-item" v-for="item in packing" :key="item">
+        <input type="checkbox" />
+        <span>{{ item }}</span>
+      </label>
+      <p class="muted" v-if="!packing.length">详见线路介绍中的装备说明。</p>
+    </div></div>
+
+    <div class="h2">退改说明</div>
+    <div class="card"><div class="pad">
+      <p class="muted" style="margin-top:0">{{ cancelPolicy.summary }}</p>
+      <p v-for="(it, i) in cancelPolicy.items" :key="i" class="muted">{{ i + 1 }}. {{ it }}</p>
+    </div></div>
 
     <div style="display:flex;gap:8px;margin:12px 0">
       <button class="btn ghost" style="flex:1" @click="$router.push('/m/stats/' + s.id)">本团画像</button>
@@ -125,6 +144,8 @@ const dissolveErr = ref("");
 const dissolving = ref(false);
 const weather = ref(null);
 const reviews = ref({ list: [], count: 0, avg: 0 });
+const cancelPolicy = ref({ summary: "", items: [] });
+const packing = computed(() => s.value?.route?.packingList || []);
 const seatChart = ref(null);
 const seatRows = computed(() => {
   const list = seatChart.value?.seats || [];
@@ -163,6 +184,12 @@ async function load() {
     reviews.value = (await http.get("/schedules/" + route.params.id + "/reviews")).data;
   } catch {
     reviews.value = { list: [], count: 0, avg: 0 };
+  }
+  try {
+    const meta = (await http.get("/meta")).data;
+    cancelPolicy.value = meta.cancelPolicy || cancelPolicy.value;
+  } catch {
+    /* ignore */
   }
 }
 

@@ -2,7 +2,7 @@ const { request } = require("../../utils/request");
 const { payStatusText, starText } = require("../../utils/labels");
 const { shareCover } = require("../../utils/media");
 Page({
-  data: { s: null, id: "", showDissolve: false, reason: "", seatRows: [], weather: null, reviews: { list: [], count: 0, avg: 0 } },
+  data: { s: null, id: "", showDissolve: false, reason: "", seatRows: [], weather: null, reviews: { list: [], count: 0, avg: 0 }, packing: [], cancelSummary: "" },
   onLoad(q) {
     this.setData({ id: q.id });
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
@@ -14,7 +14,10 @@ Page({
       if (s && s.chain) {
         s.chain = s.chain.map((c) => Object.assign({}, c, { payText: payStatusText(c.payStatus) }));
       }
-      this.setData({ s });
+      this.setData({
+        s,
+        packing: (s.route && s.route.packingList) || [],
+      });
       const region = s && s.route && s.route.region;
       const date = s && s.startDate;
       if (region) {
@@ -38,6 +41,18 @@ Page({
       const list = (data.list || []).map((row) => Object.assign({}, row, { stars: starText(row.rating) }));
       this.setData({ reviews: { list, count: data.count || 0, avg: data.avg || 0 } });
     }).catch(() => {});
+    request("/meta").then((r) => {
+      const data = (r && r.data) || {};
+      this.setData({ cancelSummary: (data.cancelPolicy && data.cancelPolicy.summary) || "" });
+    }).catch(() => {});
+  },
+  openMap() {
+    const point = this.data.s && this.data.s.meetupPoint;
+    if (!point) return;
+    wx.setClipboardData({
+      data: point,
+      success: () => wx.showToast({ title: "已复制集合点", icon: "none" }),
+    });
   },
   enroll() { wx.navigateTo({ url: "/pages/enroll/enroll?id=" + this.data.id }); },
   stats() { wx.navigateTo({ url: "/pages/stats/stats?id=" + this.data.id }); },

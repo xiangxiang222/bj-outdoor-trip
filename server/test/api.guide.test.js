@@ -17,12 +17,20 @@ describe("guide portal", () => {
       travelerName: "林北野",
       travelerPhone: "13800138000",
       idCard: ID.maleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     await agent.post("/api/enroll").set(auth(userToken)).send({
       scheduleId: seed.individualScheduleId,
       travelerName: "陈小川",
       travelerPhone: "13800138001",
       idCard: ID.femaleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     const sch = seed.db.prepare("SELECT * FROM schedules WHERE id=?").get(seed.individualScheduleId);
     assert.equal(sch.guide_id, seed.guideId);
@@ -40,6 +48,8 @@ describe("guide portal", () => {
     const detail = await agent.get(`/api/guide/schedules/${seed.individualScheduleId}`).set(gauth).expect(200);
     const first = detail.body.data.roster[0];
     assert.ok(first.phone);
+    assert.equal(first.emergencyName, "紧急联系人");
+    assert.ok(first.emergencyPhone);
     const checked = await agent
       .post(`/api/guide/schedules/${seed.individualScheduleId}/checkin`)
       .set(gauth)

@@ -31,6 +31,10 @@ describe("seat map API", () => {
         travelerName: "林北野",
         travelerPhone: "13800138000",
         idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
         seatNo: "1A",
       })
       .expect(200);
@@ -41,6 +45,10 @@ describe("seat map API", () => {
       travelerName: "B",
       travelerPhone: "13800138000",
       idCard: ID.femaleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
       seatNo: "1A",
     });
     assert.equal(taken.status, 400);
@@ -54,6 +62,10 @@ describe("seat map API", () => {
         travelerName: "B",
         travelerPhone: "13800138000",
         idCard: ID.femaleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       })
       .expect(200);
     assert.equal(second.body.data.seatNo, "1B");
@@ -69,6 +81,10 @@ describe("seat map API", () => {
       travelerName: "C",
       travelerPhone: "13800138000",
       idCard: ID.maleHb,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
       seatNo: "9Z",
     });
     assert.equal(bad.status, 400);

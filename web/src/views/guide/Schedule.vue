@@ -16,7 +16,7 @@
     <div class="card">
       <div class="pad chain-item" v-for="r in s.roster" :key="r.id">
         <span>{{ r.seatNo || "-" }}</span>
-        <span>{{ r.name }} · {{ r.phone }}</span>
+        <span>{{ r.name }} · {{ r.phone }}<div class="muted">紧急 {{ r.emergencyName || "未填" }} {{ r.emergencyPhone || "" }}</div></span>
         <button v-if="!r.checkinAt" class="btn" style="padding:4px 10px" @click="checkin(r)">签到</button>
         <span v-else class="muted">已签</span>
       </div>

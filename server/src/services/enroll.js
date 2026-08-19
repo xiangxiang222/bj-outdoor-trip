@@ -18,7 +18,24 @@ function pickInsurance(code) {
   return plans.find((p) => p.code === (code || "none")) || plans[0];
 }
 
-function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, travelerType, seatNo, insuranceCode }) {
+function truthy(v) {
+  return v === true || v === 1 || v === "true" || v === "1" || v === "on";
+}
+
+function enrollUser({
+  userId,
+  scheduleId,
+  travelerName,
+  travelerPhone,
+  idCard,
+  travelerType,
+  seatNo,
+  insuranceCode,
+  emergencyName,
+  emergencyPhone,
+  waiverAccepted,
+  healthOk,
+}) {
   const db = getDb();
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
   if (!user) fail(401, "请先登录");
@@ -29,6 +46,11 @@ function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, t
   if (!idCard) fail(400, "请填写身份证号，用于实名与籍贯统计");
   const parsed = parseIdCard(idCard);
   if (!parsed.valid) fail(400, parsed.error || "身份证号不正确");
+  if (!emergencyName || !emergencyPhone) fail(400, "请填写紧急联系人姓名和手机");
+  if (!/^1\d{10}$/.test(String(emergencyPhone))) fail(400, "紧急联系人手机号不正确");
+  if (String(emergencyPhone) === String(travelerPhone)) fail(400, "紧急联系人不能与出行人使用同一手机号");
+  if (!truthy(waiverAccepted)) fail(400, "请阅读并确认户外活动风险告知");
+  if (!truthy(healthOk)) fail(400, "请确认本人健康状况适合本次活动");
   const exist = db
     .prepare("SELECT id FROM enrollments WHERE schedule_id=? AND upper(id_card)=? AND status!='cancelled'")
     .get(sch.id, parsed.idCard);
@@ -57,10 +79,11 @@ function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, t
   const payAmount = company ? 0 : payable.payAmount + insurance.fee;
   const payStatus = company ? "company_pending" : "unpaid";
   const status = waitlisted ? "waitlist" : "joined";
+  const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
   const info = db
     .prepare(
-      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,waitlisted_at,seat_no,insurance_code,insurance_fee)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,waitlisted_at,seat_no,insurance_code,insurance_fee,emergency_name,emergency_phone,waiver_accepted_at,health_declared_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       sch.id,
@@ -78,10 +101,14 @@ function enrollUser({ userId, scheduleId, travelerName, travelerPhone, idCard, t
       "",
       "chain",
       status,
-      waitlisted ? dayjs().format("YYYY-MM-DD HH:mm:ss") : null,
+      waitlisted ? now : null,
       seat,
       insurance.code,
-      insurance.fee
+      insurance.fee,
+      String(emergencyName).trim(),
+      String(emergencyPhone).trim(),
+      now,
+      now
     );
   const enrollmentId = Number(info.lastInsertRowid);
   if (!waitlisted) maybeMatchGuide(sch.id);
@@ -140,8 +167,8 @@ function cancelEnrollment(enrollmentId, userId, options = {}) {
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(en.schedule_id);
   if (!sch) fail(400, "排期不存在");
   if (sch.status === "cancelled" && !options.force) fail(400, "拼团已解散，报名已取消");
-  if (!options.force && !options.admin && dayjs(sch.start_date).isBefore(dayjs(), "day")) {
-    fail(400, "活动已开始，无法取消报名");
+  if (!options.force && !options.admin && !dayjs(sch.start_date).isAfter(dayjs(), "day")) {
+    fail(400, "出发当天及之后不可取消报名");
   }
 
   const paid = en.pay_status === "paid" && Number(en.pay_amount || 0) > 0;
@@ -189,7 +216,7 @@ function canCancelEnrollment(en, scheduleStatus, startDate) {
   return (
     en.status !== "cancelled" &&
     scheduleStatus !== "cancelled" &&
-    !dayjs(startDate).isBefore(dayjs(), "day")
+    dayjs(startDate).isAfter(dayjs(), "day")
   );
 }
 

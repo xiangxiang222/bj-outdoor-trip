@@ -31,6 +31,10 @@ describe("dissolve group", () => {
         travelerName: "林北野",
         travelerPhone: "13800138000",
         idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       })
       .expect(200);
 
@@ -60,6 +64,10 @@ describe("dissolve group", () => {
       travelerName: "林北野",
       travelerPhone: "13800138000",
       idCard: ID.femaleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     assert.equal(again.status, 400);
     assert.match(again.body.message, /解散/);
@@ -103,6 +111,10 @@ describe("dissolve group", () => {
       travelerName: "同事甲",
       travelerPhone: "13800138000",
       idCard: ID.maleHb,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
 
     const forbidden = await agent.post(`/api/schedules/${id}/dissolve`).set(auth(userToken)).send({ reason: "用户不能解散后台团" });
@@ -129,6 +141,10 @@ describe("dissolve group", () => {
       travelerName: "林北野",
       travelerPhone: "13800138000",
       idCard: ID.maleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     const denied = await agent.post("/api/admin/schedules/dissolve-all").set(auth(userToken)).send({ reason: "用户不能全解散" });
     assert.equal(denied.status, 401);

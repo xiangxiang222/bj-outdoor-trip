@@ -23,6 +23,9 @@
       <el-table-column prop="start_date" label="日期" width="120" />
       <el-table-column prop="traveler_name" label="姓名" width="100" />
       <el-table-column prop="traveler_phone" label="手机" width="130" />
+      <el-table-column label="紧急联系人" min-width="160">
+        <template #default="{ row }">{{ row.emergency_name ? row.emergency_name + " " + (row.emergency_phone || "") : "—" }}</template>
+      </el-table-column>
       <el-table-column label="性别" width="80">
         <template #default="{ row }">{{ genderText(row.gender) }}</template>
       </el-table-column>

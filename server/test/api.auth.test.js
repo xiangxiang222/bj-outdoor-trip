@@ -141,6 +141,10 @@ describe("auth and profile API", () => {
         travelerName: "林北野",
         travelerPhone: "13800138000",
         idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       })
       .expect(200);
     await agent.delete("/api/me").set(auth(token)).expect(200);

@@ -16,9 +16,14 @@ describe("reviews", () => {
       .set(auth(token))
       .send({
         scheduleId: seed.individualScheduleId,
-        travelerName: extra.travelerName || "林北野",
-        travelerPhone: extra.travelerPhone || "13800138000",
-        idCard: extra.idCard || ID.maleBj,
+        travelerName: "林北野",
+        travelerPhone: "13800138000",
+        idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
+        ...extra,
       });
   }
 
@@ -98,6 +103,10 @@ describe("reviews", () => {
       travelerName: "候补客",
       travelerPhone: "13600136009",
       idCard: ID.femaleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     }).expect(200);
     assert.equal(wait.body.data.waitlisted, true);
     const denied = await agent

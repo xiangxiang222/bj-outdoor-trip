@@ -53,6 +53,10 @@ describe("routes and schedules API", () => {
       travelerName: "林北野",
       travelerPhone: "13800138000",
       idCard: "110101199205121219",
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     const detail = await agent.get(`/api/schedules/${seed.individualScheduleId}`).expect(200);
     assert.equal(detail.body.data.chain[0].name, "林**");

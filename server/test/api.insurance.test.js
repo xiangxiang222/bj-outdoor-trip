@@ -24,6 +24,10 @@ describe("insurance add-on", () => {
         travelerName: "林北野",
         travelerPhone: "13800138000",
         idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
         insuranceCode: "plus",
       })
       .expect(200);

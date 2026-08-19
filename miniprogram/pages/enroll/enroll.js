@@ -7,9 +7,11 @@ Page({
     s: null,
     idHint: "",
     idOk: false,
-    form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", seatNo: "", insuranceCode: "outdoor" },
+    form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", seatNo: "", insuranceCode: "outdoor", emergencyName: "", emergencyPhone: "", waiverAccepted: false, healthOk: false },
     seatRows: [],
     plans: [],
+    waiver: "",
+    cancelSummary: "出发日前可取消；出发当天不可取消。",
   },
   onLoad(q) {
     if (!app.globalData.token) {
@@ -22,7 +24,14 @@ Page({
       "form.travelerPhone": (app.globalData.user || {}).phone || "",
     });
     request("/schedules/" + q.id).then((r) => this.setData({ s: r.data }));
-    request("/meta").then((r) => this.setData({ plans: (r.data && r.data.insurance) || [] })).catch(() => {});
+    request("/meta").then((r) => {
+      const data = (r && r.data) || {};
+      this.setData({
+        plans: data.insurance || [],
+        waiver: data.waiverText || "",
+        cancelSummary: (data.cancelPolicy && data.cancelPolicy.summary) || this.data.cancelSummary,
+      });
+    }).catch(() => {});
     request("/schedules/" + q.id + "/seats").then((r) => {
       const seats = (r.data && r.data.seats) || [];
       const groups = [];
@@ -45,6 +54,10 @@ Page({
   },
   setName(e) { this.setData({ "form.travelerName": e.detail.value }); },
   setPhone(e) { this.setData({ "form.travelerPhone": e.detail.value }); },
+  setEmergencyName(e) { this.setData({ "form.emergencyName": e.detail.value }); },
+  setEmergencyPhone(e) { this.setData({ "form.emergencyPhone": e.detail.value }); },
+  toggleHealth() { this.setData({ "form.healthOk": !this.data.form.healthOk }); },
+  toggleWaiver() { this.setData({ "form.waiverAccepted": !this.data.form.waiverAccepted }); },
   setId(e) {
     this.setData({ "form.idCard": e.detail.value });
     this.checkId(e.detail.value);
@@ -78,6 +91,22 @@ Page({
     const parsed = this.checkId();
     if (!parsed.valid) {
       wx.showModal({ title: "身份证号不正确", content: parsed.error, showCancel: false });
+      return;
+    }
+    if (!this.data.form.emergencyName || !this.data.form.emergencyPhone) {
+      wx.showToast({ title: "请填紧急联系人", icon: "none" });
+      return;
+    }
+    if (this.data.form.emergencyPhone === this.data.form.travelerPhone) {
+      wx.showToast({ title: "紧急联系人手机不能相同", icon: "none" });
+      return;
+    }
+    if (!this.data.form.healthOk) {
+      wx.showToast({ title: "请确认健康状况", icon: "none" });
+      return;
+    }
+    if (!this.data.form.waiverAccepted) {
+      wx.showToast({ title: "请确认风险告知", icon: "none" });
       return;
     }
     try {

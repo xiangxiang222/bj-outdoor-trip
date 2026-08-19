@@ -5,6 +5,25 @@
       <div class="home-lead">先看出发日期加入拼团，或按天数、目的地去挑线路。</div>
     </div>
 
+    <div v-if="upcoming.length" class="card" @click="$router.push('/m/schedule/' + upcoming[0].scheduleId)">
+      <div class="pad">
+        <div class="muted">即将出行</div>
+        <div class="row">
+          <strong>{{ upcoming[0].title }}</strong>
+          <span class="tag">{{ upcoming[0].startDate }}</span>
+        </div>
+        <p class="muted" style="margin:6px 0 0">集合 {{ upcoming[0].meetupPoint }} {{ upcoming[0].meetupTime }}<template v-if="upcoming[0].seatNo"> · {{ upcoming[0].seatNo }}座</template></p>
+      </div>
+    </div>
+
+    <div class="h2">出发日历</div>
+    <div class="cal">
+      <div class="cal-day" :class="{ on: d.count }" v-for="d in calendar" :key="d.date" @click="goDay(d)">
+        <span class="n">{{ d.label }}</span>
+        <span class="muted">{{ d.count ? d.count + " 团" : "—" }}</span>
+      </div>
+    </div>
+
     <div class="home-grid">
       <button class="home-tile" type="button" v-for="d in durations" :key="d.n" @click="goRoutes({ days: d.n })">
         <strong>{{ d.n }} 日</strong>
@@ -35,7 +54,7 @@
           <strong>{{ s.route?.title }}</strong>
           <span class="tag">{{ s.startDate }}</span>
         </div>
-        <div class="muted" style="margin:6px 0">{{ s.organizerType === "company" ? s.companyName : s.organizerName }} · 余 {{ s.remain }} 座</div>
+        <div class="muted" style="margin:6px 0">{{ s.organizerType === "company" ? s.companyName : s.organizerName }} · 余 {{ s.remain }} 座<template v-if="s.guaranteed"> · 铁定出发</template></div>
         <div class="progress"><i :style="{ width: Math.min(100, ((s.enrolled || 0) / (s.maxSeats || 1)) * 100) + '%' }"></i></div>
         <div class="row" style="margin-top:8px">
           <span class="muted">{{ s.enrolled }}/{{ s.maxSeats }} · 成团 {{ s.minGroupSize }}</span>
@@ -80,6 +99,7 @@ const router = useRouter();
 const store = useUserStore();
 const list = ref([]);
 const schedules = ref([]);
+const upcoming = ref([]);
 const durations = [
   { n: 1, hint: "当天往返" },
   { n: 2, hint: "过夜一晚" },
@@ -93,15 +113,39 @@ const weekend = computed(() => list.value.filter((r) => r.days === 1).slice(0, 4
 const groups = computed(() =>
   schedules.value.filter((s) => s.status !== "cancelled" && Number(s.remain) > 0).slice(0, 4)
 );
+const calendar = computed(() => {
+  const days = [];
+  const now = new Date();
+  for (let i = 0; i < 10; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const count = schedules.value.filter((s) => s.startDate === key && s.status !== "cancelled").length;
+    days.push({ date: key, label: `${d.getMonth() + 1}/${d.getDate()}`, count });
+  }
+  return days;
+});
 
 onMounted(async () => {
   const [routesRes, schRes] = await Promise.all([http.get("/routes"), http.get("/schedules").catch(() => ({ data: [] }))]);
   list.value = routesRes.data || [];
   schedules.value = schRes.data || [];
+  if (store.token) {
+    try {
+      upcoming.value = (await http.get("/me/trips")).data || [];
+    } catch {
+      upcoming.value = [];
+    }
+  }
 });
 
 function goRoutes(query) {
   router.push({ path: "/m/routes", query });
+}
+function goDay(d) {
+  if (!d.count) return;
+  const hit = schedules.value.find((s) => s.startDate === d.date && s.status !== "cancelled");
+  if (hit) router.push("/m/schedule/" + hit.id);
+  else router.push("/m/chain");
 }
 
 function goMember() {

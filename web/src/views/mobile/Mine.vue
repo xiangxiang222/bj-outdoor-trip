@@ -21,6 +21,14 @@
       <button class="btn ghost block" style="margin-top:8px" @click="goLogin('', 'register')">注册</button>
     </div></div>
 
+    <div v-if="upcoming.length" class="card" @click="$router.push('/m/schedule/' + upcoming[0].scheduleId)">
+      <div class="pad">
+        <div class="muted">即将出行</div>
+        <strong>{{ upcoming[0].title }}</strong>
+        <p class="muted" style="margin:6px 0 0">{{ upcoming[0].startDate }} · {{ upcoming[0].meetupPoint }} {{ upcoming[0].meetupTime }}</p>
+      </div>
+    </div>
+
     <div class="card" @click="goAuth('/m/orders')"><div class="pad">我的报名</div></div>
     <div class="card" @click="goAuth('/m/favorites')"><div class="pad">我的收藏</div></div>
     <div class="card" @click="openMember"><div class="pad">{{ store.profile?.isMember ? "会员中心" : "开通会员" }}</div></div>
@@ -39,7 +47,16 @@ import { useUserStore } from "@/stores/user";
 const store = useUserStore();
 const router = useRouter();
 const opening = ref(false);
-onMounted(() => store.fetchMe().catch(() => {}));
+const upcoming = ref([]);
+onMounted(async () => {
+  await store.fetchMe().catch(() => {});
+  if (!store.token) return;
+  try {
+    upcoming.value = (await http.get("/me/trips")).data || [];
+  } catch {
+    upcoming.value = [];
+  }
+});
 
 function goLogin(redirect, tab) {
   const query = {};

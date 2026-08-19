@@ -3,6 +3,22 @@
   <view class="home-lead">先看出发日期加入拼团，或按天数、目的地去挑线路。</view>
 </view>
 
+<view class="card" wx:if="{{upcoming}}" bindtap="goUpcoming">
+  <view class="pad">
+    <view class="muted">即将出行</view>
+    <view class="title">{{upcoming.title}}</view>
+    <view class="muted">{{upcoming.startDate}} · {{upcoming.meetupPoint}} {{upcoming.meetupTime}}</view>
+  </view>
+</view>
+
+<view class="pad" style="padding-bottom:0"><view class="title">出发日历</view></view>
+<view class="cal">
+  <view class="cal-day {{item.count ? 'on' : ''}}" wx:for="{{calendar}}" wx:key="date" bindtap="goDay" data-date="{{item.date}}" data-count="{{item.count}}">
+    <view class="cal-n">{{item.label}}</view>
+    <view class="muted">{{item.count ? item.count + '团' : '—'}}</view>
+  </view>
+</view>
+
 <view class="home-grid">
   <view class="home-tile" wx:for="{{durations}}" wx:key="n" bindtap="goDays" data-n="{{item.n}}">
     <view class="home-tile-title">{{item.n}} 日</view>
@@ -30,7 +46,7 @@
 <view class="card" wx:for="{{groups}}" wx:key="id" bindtap="goGroup" data-id="{{item.id}}">
   <view class="pad">
     <view class="row"><text class="title">{{item.route.title}}</text><text class="tag">{{item.startDate}}</text></view>
-    <view class="muted">{{item.organizerType=='company'?item.companyName:item.organizerName}} · 余 {{item.remain}} 座</view>
+    <view class="muted">{{item.organizerType=='company'?item.companyName:item.organizerName}} · 余 {{item.remain}} 座<text wx:if="{{item.guaranteed}}"> · 铁定出发</text></view>
     <view class="progress"><view class="bar" style="width:{{item.enrolled/item.maxSeats*100}}%"></view></view>
     <view class="row"><text class="muted">{{item.enrolled}}/{{item.maxSeats}}</text><text class="price">¥{{item.quote.price}}</text></view>
   </view>

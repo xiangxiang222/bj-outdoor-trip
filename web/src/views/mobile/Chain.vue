@@ -11,7 +11,7 @@
           <strong>{{ s.route.title }}</strong>
           <span class="tag">{{ s.startDate }}</span>
         </div>
-        <div class="muted">{{ s.organizerType === "company" ? s.companyName : s.organizerName }} · {{ s.bus?.name }}</div>
+        <div class="muted">{{ s.organizerType === "company" ? s.companyName : s.organizerName }} · {{ s.bus?.name }}<template v-if="s.guaranteed"> · 铁定出发</template></div>
         <div class="progress"><i :style="{ width: Math.min(100, (s.enrolled / s.maxSeats) * 100) + '%' }"></i></div>
         <div class="row muted">
           <span>{{ s.enrolled }}/{{ s.maxSeats }} · 成团{{ s.minGroupSize }}</span>

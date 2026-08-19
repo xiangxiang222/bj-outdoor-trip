@@ -21,6 +21,10 @@ describe("waitlist", () => {
         travelerName: "林北野",
         travelerPhone: "13800138000",
         idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       })
       .expect(200);
     assert.equal(first.body.data.waitlisted, false);
@@ -34,6 +38,10 @@ describe("waitlist", () => {
         travelerName: "陈小川",
         travelerPhone: "13800138001",
         idCard: ID.femaleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       })
       .expect(200);
     assert.equal(second.body.data.waitlisted, true);
@@ -69,18 +77,30 @@ describe("waitlist", () => {
       travelerName: "A",
       travelerPhone: "13800138000",
       idCard: ID.maleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     await agent.post("/api/enroll").set(auth(token)).send({
       scheduleId: seed.individualScheduleId,
       travelerName: "B",
       travelerPhone: "13800138000",
       idCard: ID.femaleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     const third = await agent.post("/api/enroll").set(auth(token)).send({
       scheduleId: seed.individualScheduleId,
       travelerName: "C",
       travelerPhone: "13800138000",
       idCard: ID.maleHb,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     assert.equal(third.body.data.waitlisted, true);
     assert.equal(third.body.data.waitlistPosition, 2);

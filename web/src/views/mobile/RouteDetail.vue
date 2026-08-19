@@ -104,6 +104,20 @@
     </div>
     <p class="muted" v-else>还没有评价。报名后可在「我的报名」写下体验。</p>
 
+    <div class="h2">装备清单</div>
+    <div class="card"><div class="pad">
+      <p v-for="item in (r.packingList || [])" :key="item">· {{ item }}</p>
+      <p class="muted" v-if="!r.packingList?.length">{{ r.equipment }}</p>
+    </div></div>
+
+    <div class="h2">常见问题</div>
+    <div class="card"><div class="pad">
+      <div class="faq-item" v-for="f in faqs" :key="f.q">
+        <strong>{{ f.q }}</strong>
+        <p class="muted">{{ f.a }}</p>
+      </div>
+    </div></div>
+
     <div style="display:flex;gap:8px;margin-top:12px">
       <button class="btn ghost" style="flex:1" @click="share">分享报名</button>
       <button class="btn" style="flex:1" @click="$router.push('/m/open/' + r.id)">发布排期</button>
@@ -126,6 +140,7 @@ const store = useUserStore();
 const r = ref(null);
 const weather = ref(null);
 const reviews = ref({ list: [], count: 0, avg: 0 });
+const faqs = ref([]);
 const copied = ref(false);
 const favMsg = ref("");
 const previewIndex = ref(null);
@@ -148,6 +163,11 @@ onMounted(async () => {
     reviews.value = (await http.get("/routes/" + route.params.id + "/reviews")).data;
   } catch {
     reviews.value = { list: [], count: 0, avg: 0 };
+  }
+  try {
+    faqs.value = ((await http.get("/meta")).data || {}).faqs || [];
+  } catch {
+    faqs.value = [];
   }
 });
 onUnmounted(() => window.removeEventListener("keydown", onKey));

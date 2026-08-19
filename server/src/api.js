@@ -18,6 +18,7 @@ const { scheduleSeats } = require("./services/seats");
 const { forecast } = require("./services/weather");
 const { listSplits, createSplitsForSchedule } = require("./services/split");
 const { listReviews, createReview, reviewedScheduleIds } = require("./services/reviews");
+const { cancelPolicy, waiverText, faqs, meetupMapUrl } = require("./services/policy");
 const { deleteAccount } = require("./services/account");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -181,6 +182,8 @@ function scheduleView(sch, req) {
     },
     revenue,
     profit: revenue - cost,
+    guaranteed: sch.status !== "cancelled" && live >= Number(sch.min_group_size),
+    meetupMapUrl: meetupMapUrl(sch.meetup_point),
   };
 }
 
@@ -196,6 +199,9 @@ router.get("/meta", (req, res) => {
       points: config.points,
       insurance: config.insurance.plans,
       days: [1, 2, 3, 5],
+      cancelPolicy,
+      waiverText,
+      faqs,
     },
   });
 });
@@ -301,6 +307,46 @@ router.post("/auth/wechat", async (req, res) => {
 router.get("/me", authUser, (req, res) => {
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
   res.json({ ok: true, data: userPublic(user, req) });
+});
+
+router.get("/me/trips", authUser, (req, res) => {
+  const rows = db()
+    .prepare(
+      `SELECT e.id, e.status, e.seat_no, e.insurance_code, e.pay_status, e.pay_amount, e.schedule_id,
+              s.start_date, s.end_date, s.meetup_point, s.meetup_time, s.status AS schedule_status,
+              s.route_id, r.title, r.cover, r.region, r.equipment, r.days
+       FROM enrollments e
+       JOIN schedules s ON s.id=e.schedule_id
+       JOIN routes r ON r.id=s.route_id
+       WHERE e.user_id=? AND e.status IN ('joined','waitlist') AND s.status!='cancelled'
+         AND s.start_date>=date('now','-1 day')
+       ORDER BY s.start_date, e.id`
+    )
+    .all(req.userId)
+    .map((row) => ({
+      id: row.id,
+      scheduleId: row.schedule_id,
+      routeId: row.route_id,
+      title: row.title,
+      cover: attachAssetHost(req, row.cover),
+      region: row.region,
+      days: row.days,
+      startDate: row.start_date,
+      endDate: row.end_date,
+      meetupPoint: row.meetup_point,
+      meetupTime: row.meetup_time,
+      meetupMapUrl: meetupMapUrl(row.meetup_point),
+      status: row.status,
+      seatNo: row.seat_no,
+      insurance: row.insurance_code,
+      payStatus: row.pay_status,
+      payAmount: row.pay_amount,
+      packingList: String(row.equipment || "")
+        .split(/[、，,;；/\n]+/)
+        .map((s) => s.trim())
+        .filter((s) => s.length >= 2),
+    }));
+  res.json({ ok: true, data: rows });
 });
 
 router.delete("/me", authUser, (req, res) => {
@@ -528,7 +574,19 @@ router.post("/schedules/:id/dissolve", authUser, dissolveHandler("organizer"));
 
 router.post("/enroll", authUser, (req, res) => {
   try {
-    const { scheduleId, travelerName, travelerPhone, idCard, travelerType, seatNo, insuranceCode } = req.body || {};
+    const {
+      scheduleId,
+      travelerName,
+      travelerPhone,
+      idCard,
+      travelerType,
+      seatNo,
+      insuranceCode,
+      emergencyName,
+      emergencyPhone,
+      waiverAccepted,
+      healthOk,
+    } = req.body || {};
     const data = enrollUser({
       userId: req.userId,
       scheduleId,
@@ -538,6 +596,10 @@ router.post("/enroll", authUser, (req, res) => {
       travelerType,
       seatNo,
       insuranceCode,
+      emergencyName,
+      emergencyPhone,
+      waiverAccepted,
+      healthOk,
     });
     res.json({ ok: true, data });
   } catch (e) {
@@ -743,6 +805,8 @@ router.get("/guide/schedules/:id", authGuide, (req, res) => {
       seatNo: e.seat_no,
       payStatus: e.pay_status,
       insurance: e.insurance_code,
+      emergencyName: e.emergency_name,
+      emergencyPhone: e.emergency_phone,
       checkinAt: e.checkin_at,
       idCard: maskIdCard(e.id_card),
     }));

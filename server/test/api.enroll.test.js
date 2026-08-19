@@ -53,6 +53,10 @@ describe("enroll pay member favorites", () => {
         travelerName: "林北野",
         travelerPhone: "13800138000",
         idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       })
       .expect(200);
     assert.equal(enrolled.body.data.payStatus, "unpaid");
@@ -65,6 +69,10 @@ describe("enroll pay member favorites", () => {
       travelerName: "林北野",
       travelerPhone: "13800138000",
       idCard: ID.maleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     assert.equal(dup.status, 400);
 
@@ -87,6 +95,10 @@ describe("enroll pay member favorites", () => {
         travelerName: "林北野",
         travelerPhone: "13800138000",
         idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       })
       .expect(200);
     const id = enrolled.body.data.enrollmentId;
@@ -105,6 +117,10 @@ describe("enroll pay member favorites", () => {
         travelerName: "林北野",
         travelerPhone: "13800138000",
         idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       })
       .expect(200);
   });
@@ -119,6 +135,10 @@ describe("enroll pay member favorites", () => {
         travelerName: "林北野",
         travelerPhone: "13800138000",
         idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       })
       .expect(200);
     const id = enrolled.body.data.enrollmentId;
@@ -143,12 +163,20 @@ describe("enroll pay member favorites", () => {
       travelerName: "A",
       travelerPhone: "13800138000",
       idCard: ID.maleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     await agent.post("/api/enroll").set(auth(token)).send({
       scheduleId: seed.individualScheduleId,
       travelerName: "B",
       travelerPhone: "13800138000",
       idCard: ID.femaleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     let sch = seed.db.prepare("SELECT * FROM schedules WHERE id=?").get(seed.individualScheduleId);
     assert.ok(sch.guide_id);
@@ -168,6 +196,10 @@ describe("enroll pay member favorites", () => {
         travelerName: "林北野",
         travelerPhone: "13800138000",
         idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       })
       .expect(200);
     seed.db
@@ -175,7 +207,12 @@ describe("enroll pay member favorites", () => {
       .run(seed.individualScheduleId);
     const res = await agent.post(`/api/orders/${enrolled.body.data.enrollmentId}/cancel`).set(auth(token));
     assert.equal(res.status, 400);
-    assert.match(res.body.message, /已开始/);
+    assert.match(res.body.message, /不可取消|已开始/);
+    seed.db
+      .prepare("UPDATE schedules SET start_date=date('now') WHERE id=?")
+      .run(seed.individualScheduleId);
+    const sameDay = await agent.post(`/api/orders/${enrolled.body.data.enrollmentId}/cancel`).set(auth(token));
+    assert.equal(sameDay.status, 400);
   });
 
   it("company enroll stays pending until organizer settles", async () => {
@@ -188,6 +225,10 @@ describe("enroll pay member favorites", () => {
         travelerName: "同事甲",
         travelerPhone: "13800138000",
         idCard: ID.femaleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       })
       .expect(200);
     assert.equal(join.body.data.payStatus, "company_pending");
@@ -227,6 +268,10 @@ describe("enroll pay member favorites", () => {
         travelerName: "A",
         travelerPhone: "13800138000",
         idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
       })
       .expect(200);
     const full = await agent.post("/api/enroll").set(auth(token)).send({
@@ -234,6 +279,10 @@ describe("enroll pay member favorites", () => {
       travelerName: "B",
       travelerPhone: "13800138000",
       idCard: ID.femaleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     assert.equal(full.status, 200);
     assert.equal(full.body.data.waitlisted, true);
@@ -247,12 +296,20 @@ describe("enroll pay member favorites", () => {
       travelerName: "A",
       travelerPhone: "13800138000",
       idCard: ID.maleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     await agent.post("/api/enroll").set(auth(token)).send({
       scheduleId: seed.individualScheduleId,
       travelerName: "B",
       travelerPhone: "13800138000",
       idCard: ID.femaleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
     });
     const sch = seed.db.prepare("SELECT * FROM schedules WHERE id=?").get(seed.individualScheduleId);
     assert.ok(sch.guide_id);
@@ -288,5 +345,51 @@ describe("enroll pay member favorites", () => {
     const token = await loginUser(agent);
     await agent.post("/api/pay/mock-success").set(auth(token)).send({ tradeNo: "NOPE" }).expect(400);
     await agent.post("/api/pay/company-settle").set(auth(token)).send({ scheduleId: 999 }).expect(400);
+  });
+
+  it("requires emergency contact, health and waiver", async () => {
+    const token = await loginUser(agent);
+    const base = {
+      scheduleId: seed.individualScheduleId,
+      travelerName: "林北野",
+      travelerPhone: "13800138000",
+      idCard: ID.maleBj,
+    };
+    const noIce = await agent.post("/api/enroll").set(auth(token)).send({ ...base, waiverAccepted: true, healthOk: true });
+    assert.equal(noIce.status, 400);
+    assert.match(noIce.body.message, /紧急联系人/);
+    const samePhone = await agent.post("/api/enroll").set(auth(token)).send({
+      ...base,
+      emergencyName: "家人",
+      emergencyPhone: "13800138000",
+      waiverAccepted: true,
+      healthOk: true,
+    });
+    assert.equal(samePhone.status, 400);
+    const noWaiver = await agent.post("/api/enroll").set(auth(token)).send({
+      ...base,
+      emergencyName: "家人",
+      emergencyPhone: "13700000002",
+      healthOk: true,
+    });
+    assert.equal(noWaiver.status, 400);
+    const ok = await agent
+      .post("/api/enroll")
+      .set(auth(token))
+      .send({
+        ...base,
+        emergencyName: "家人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
+      })
+      .expect(200);
+    assert.equal(ok.body.data.status, "joined");
+    const trips = await agent.get("/api/me/trips").set(auth(token)).expect(200);
+    assert.equal(trips.body.data.length, 1);
+    assert.equal(trips.body.data[0].title, "慕田峪长城缆车一日游");
+    const sch = await agent.get(`/api/schedules/${seed.individualScheduleId}`).expect(200);
+    assert.equal(sch.body.data.guaranteed, false);
+    assert.match(sch.body.data.meetupMapUrl, /amap/);
   });
 });
