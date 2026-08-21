@@ -115,7 +115,7 @@ function hourlyFromLive(json) {
 
 async function liveDaily(lat, lon, date) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&hourly=weathercode,temperature_2m,precipitation&timezone=Asia%2FShanghai&start_date=${date}&end_date=${date}`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(2500) });
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new Error("weather http " + res.status);
   const json = await res.json();
   const d = json.daily || {};
@@ -130,11 +130,17 @@ async function liveDaily(lat, lon, date) {
   };
 }
 
+function liveEnabled() {
+  if (process.env.WEATHER_LIVE === "0") return false;
+  if (process.env.WEATHER_LIVE === "1") return true;
+  return process.env.NODE_ENV === "production";
+}
+
 async function forecast({ region, date }) {
   const day = dayjs(date || undefined).isValid() ? dayjs(date).format("YYYY-MM-DD") : dayjs().format("YYYY-MM-DD");
   const place = resolvePlace(region);
   let daily;
-  if (process.env.WEATHER_LIVE === "1") {
+  if (liveEnabled()) {
     try {
       daily = await liveDaily(place.lat, place.lon, day);
     } catch {

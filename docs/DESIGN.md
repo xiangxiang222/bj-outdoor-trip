@@ -64,6 +64,7 @@
 | `MMC_SKIP_WEB` | `1` 时不托管前端 dist | 未设置则 dist 存在即托管 |
 | `WX_APPID` / `WX_APPSECRET` / `WX_MCH_ID` / `WX_MCH_KEY` | 真实微信 | 演示 `wx_demo_appid` |
 | `WX_PAY_MOCK` | `0` 关闭 mock 支付 | 默认开启 mock |
+| `WEATHER_LIVE` | `1` 强制 Open-Meteo；`0` 强制模拟 | 生产默认实时，本地默认 mock |
 | `WX_PAY_NOTIFY` | 支付回调 URL | `http://localhost:3780/api/pay/wechat/notify` |
 
 短信验证码演示固定为 `888888`（`config.demoSmsCode`），接口仍可用，登录/注册 UI 改用图片验证码。测试环境设置 `MMC_SKIP_WEB=1` 时不托管 `web/dist`，避免单测依赖前端构建产物。

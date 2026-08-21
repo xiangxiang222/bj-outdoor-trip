@@ -71,9 +71,13 @@ NODE_ENV=production
 JWT_SECRET=$JWT
 WX_PAY_MOCK=1
 WX_PAY_NOTIFY=http://$HOST/api/pay/wechat/notify
+WEATHER_LIVE=1
 ENV
   chmod 600 .env
   echo "已生成 $DIR/.env"
+fi
+if ! grep -q '^WEATHER_LIVE=' .env; then
+  echo 'WEATHER_LIVE=1' >> .env
 fi
 
 npm install --omit=dev
