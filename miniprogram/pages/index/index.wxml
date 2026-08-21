@@ -70,6 +70,20 @@
   </view>
 </view>
 
+<view class="row pad" style="padding-bottom:0">
+  <view class="title">领队导游</view>
+  <view class="muted" bindtap="goGuides">全部导游</view>
+</view>
+<view class="card" wx:for="{{guides}}" wx:key="id" bindtap="goGuide" data-id="{{item.id}}">
+  <view class="pad guide-row">
+    <view class="guide-face">{{item.initial}}</view>
+    <view class="guide-body">
+      <view class="row"><text class="title">{{item.name}}</text><text class="muted">{{item.rating}} 分</text></view>
+      <view class="muted">{{item.years}}年 · {{item.specialties}}</view>
+    </view>
+  </view>
+</view>
+
 <view class="home-member" bindtap="goMember">
   <view class="title">开通会员</view>
   <view class="muted">年费 199 元，线路约 92 折，积分加速</view>

@@ -1,3 +1,9 @@
+function genderText(gender) {
+  if (gender === "male") return "男";
+  if (gender === "female") return "女";
+  return gender ? "未填" : "";
+}
+
 function starText(n) {
   const r = Math.max(0, Math.min(5, Number(n) || 0));
   return "★".repeat(r) + "☆".repeat(5 - r);
@@ -39,4 +45,4 @@ function scheduleStatusText(status) {
   );
 }
 
-module.exports = { payStatusText, enrollStatusText, organizerTypeText, scheduleStatusText, starText };
+module.exports = { payStatusText, enrollStatusText, organizerTypeText, scheduleStatusText, starText, genderText };

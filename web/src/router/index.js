@@ -19,6 +19,8 @@ const routes = [
       { path: "orders", name: "orders", component: () => import("@/views/mobile/Orders.vue") },
       { path: "favorites", name: "favorites", component: () => import("@/views/mobile/Favorites.vue") },
       { path: "stats/:id", name: "stats", component: () => import("@/views/mobile/Stats.vue") },
+      { path: "guides", name: "guides", component: () => import("@/views/mobile/Guides.vue") },
+      { path: "guide/:id", name: "guide", component: () => import("@/views/mobile/Guide.vue") },
     ],
   },
   { path: "/admin/login", component: () => import("@/views/admin/Login.vue") },

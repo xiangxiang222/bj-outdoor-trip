@@ -327,6 +327,22 @@ button, input, textarea, select { font-family: inherit; }
 .faq-item:last-child { border-bottom: 0; }
 .pack-item { display: flex; gap: 8px; padding: 4px 0; font-size: 14px; }
 .nav-link { color: var(--leaf); font-size: 13px; }
+.guide-row { display: flex; gap: 12px; align-items: center; }
+.guide-face {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--mint);
+  color: var(--forest);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  overflow: hidden;
+  flex: none;
+}
+.guide-face img { width: 100%; height: 100%; object-fit: cover; }
+.guide-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; }
 .review-item { border-bottom: 1px dashed var(--line); }
 .review-item:last-child { border-bottom: 0; }
 .review-item p { margin: 6px 0 0; }

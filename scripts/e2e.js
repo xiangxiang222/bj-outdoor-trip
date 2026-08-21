@@ -240,7 +240,11 @@ async function run(opts) {
     assert(buses.length > 0, "没有车型");
     ctx.busId = (buses.find((b) => b.id === "bus30") || buses[0]).id;
     const guides = apiOk(await request("GET", "/api/guides"), "guides");
-    assert(Array.isArray(guides), "导游列表不是数组");
+    assert(Array.isArray(guides) && guides.length > 0, "导游列表不是数组");
+    const guideDetail = apiOk(await request("GET", "/api/guides/" + guides[0].id), "guide detail");
+    assert(guideDetail.name && Array.isArray(guideDetail.upcoming), "导游详情不完整");
+    const missingGuide = await request("GET", "/api/guides/999999");
+    assert(missingGuide.status === 404, "不存在的导游应 404");
     const routes = apiOk(await request("GET", "/api/routes"), "routes");
     assert(routes.length > 0, "没有上架线路");
     ctx.routeId = seed ? seed.routeId : routes[0].id;
@@ -806,7 +810,7 @@ async function run(opts) {
   }, { skip: live && !opts.unsafe, reason: live ? "线上默认跳过，加 --unsafe 才执行" : "" });
 
   await step("H5 页面可打开", async () => {
-    const pages = ["/m", "/m/login", "/m/routes", "/m/mine", "/admin/login", "/g/login"];
+    const pages = ["/m", "/m/login", "/m/routes", "/m/guides", "/m/mine", "/admin/login", "/g/login"];
     for (const p of pages) {
       const res = await request("GET", p, { follow: true });
       assert(res.status === 200, p + " 返回 " + res.status);

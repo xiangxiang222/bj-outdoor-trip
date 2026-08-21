@@ -60,6 +60,8 @@ const title = computed(() => {
     orders: "我的报名",
     favorites: "我的收藏",
     stats: "本团画像",
+    guides: "领队导游",
+    guide: "导游详情",
   };
   return map[route.name] || "北野行";
 });

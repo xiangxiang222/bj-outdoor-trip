@@ -14,7 +14,16 @@ describe("routes and schedules API", () => {
     const buses = await agent.get("/api/buses").expect(200);
     assert.ok(buses.body.data.some((b) => b.id === "coaster10"));
     const guides = await agent.get("/api/guides").expect(200);
-    assert.ok(guides.body.data.some((g) => g.name === "林晓峰"));
+    const peak = guides.body.data.find((g) => g.name === "林晓峰");
+    assert.ok(peak);
+    assert.ok(peak.bio);
+    assert.equal(peak.phone, undefined);
+    assert.ok(peak.languages);
+    const detail = await agent.get(`/api/guides/${peak.id}`).expect(200);
+    assert.equal(detail.body.data.name, "林晓峰");
+    assert.ok(Array.isArray(detail.body.data.upcoming));
+    assert.equal(typeof detail.body.data.tripCount, "number");
+    await agent.get("/api/guides/99999").expect(404);
   });
 
   it("filters routes by days and keyword", async () => {

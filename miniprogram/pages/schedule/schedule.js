@@ -55,6 +55,10 @@ Page({
     });
   },
   enroll() { wx.navigateTo({ url: "/pages/enroll/enroll?id=" + this.data.id }); },
+  goGuide() {
+    const g = this.data.s && this.data.s.guide;
+    if (g && g.id) wx.navigateTo({ url: "/pages/guide/guide?id=" + g.id });
+  },
   stats() { wx.navigateTo({ url: "/pages/stats/stats?id=" + this.data.id }); },
   toggleDissolve() { this.setData({ showDissolve: !this.data.showDissolve }); },
   setReason(e) { this.setData({ reason: e.detail.value }); },

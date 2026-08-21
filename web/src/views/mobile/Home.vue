@@ -82,6 +82,26 @@
       </div>
     </div>
 
+    <div class="row" style="margin:16px 0 8px">
+      <div class="h2" style="margin:0">领队导游</div>
+      <router-link to="/m/guides" class="muted">全部导游</router-link>
+    </div>
+    <div class="card" v-for="g in guides" :key="g.id" @click="$router.push('/m/guide/' + g.id)">
+      <div class="pad guide-row">
+        <div class="guide-face">
+          <img v-if="g.avatar" :src="g.avatar" :alt="g.name" />
+          <span v-else>{{ (g.name || "导").slice(0, 1) }}</span>
+        </div>
+        <div>
+          <div class="row">
+            <strong>{{ g.name }}</strong>
+            <span class="muted">{{ g.rating }} 分</span>
+          </div>
+          <p class="muted" style="margin:4px 0 0">{{ g.years }}年 · {{ g.specialties }}</p>
+        </div>
+      </div>
+    </div>
+
     <div class="home-member" @click="goMember">
       <strong>{{ store.profile?.isMember ? "会员中心" : "开通会员" }}</strong>
       <span>{{ store.profile?.isMember ? "本线路自动按会员价报价" : "年费 199 元，线路约 92 折，积分加速" }}</span>
@@ -100,6 +120,8 @@ const store = useUserStore();
 const list = ref([]);
 const schedules = ref([]);
 const upcoming = ref([]);
+const allGuides = ref([]);
+const guides = computed(() => allGuides.value.slice(0, 4));
 const durations = [
   { n: 1, hint: "当天往返" },
   { n: 2, hint: "过夜一晚" },
@@ -126,9 +148,14 @@ const calendar = computed(() => {
 });
 
 onMounted(async () => {
-  const [routesRes, schRes] = await Promise.all([http.get("/routes"), http.get("/schedules").catch(() => ({ data: [] }))]);
+  const [routesRes, schRes, guideRes] = await Promise.all([
+    http.get("/routes"),
+    http.get("/schedules").catch(() => ({ data: [] })),
+    http.get("/guides").catch(() => ({ data: [] })),
+  ]);
   list.value = routesRes.data || [];
   schedules.value = schRes.data || [];
+  allGuides.value = guideRes.data || [];
   if (store.token) {
     try {
       upcoming.value = (await http.get("/me/trips")).data || [];

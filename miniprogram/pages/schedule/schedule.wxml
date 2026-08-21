@@ -9,7 +9,7 @@
     <view class="progress"><view class="bar" style="width:{{s.enrolled/s.maxSeats*100}}%"></view></view>
     <view class="row"><text>已报 {{s.enrolled}}/{{s.maxSeats}} 成团{{s.minGroupSize}}{{s.waitlistCount ? ' · 候补' + s.waitlistCount : ''}}</text><text class="price">¥{{s.quote.price}}</text></view>
     <view class="muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">本团已解散。理由：{{s.cancelReason}}</view>
-    <view class="muted" wx:elif="{{s.guide}}">已匹配导游：{{s.guide.name}}</view>
+    <view class="muted" wx:elif="{{s.guide}}" bindtap="goGuide">已匹配导游：{{s.guide.name}} <text class="nav-link">查看详情</text></view>
     <view class="weather" wx:if="{{weather}}">
       <view>{{weather.place}} {{weather.summary}} {{weather.tmin}}~{{weather.tmax}}℃</view>
       <view class="muted">{{weather.alerts[0].text}}</view>

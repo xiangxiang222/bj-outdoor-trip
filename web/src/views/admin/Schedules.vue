@@ -25,8 +25,11 @@
       <el-table-column prop="revenue" label="收入" width="80" />
       <el-table-column prop="cost" label="成本" width="80" />
       <el-table-column prop="profit" label="利润" width="80" />
-      <el-table-column label="导游" width="90">
-        <template #default="{ row }">{{ row.guide?.name || "未匹配" }}</template>
+      <el-table-column label="导游" width="110">
+        <template #default="{ row }">
+          <el-button v-if="row.guide" link type="primary" @click="openGuide(row)">{{ row.guide.name }}</el-button>
+          <span v-else>未匹配</span>
+        </template>
       </el-table-column>
       <el-table-column label="操作" width="380" fixed="right">
         <template #default="{ row }">
@@ -119,6 +122,16 @@
         <el-button type="success" @click="runSplit">发起/查看分账</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="showGuide" :title="guideDetail?.name || '导游详情'" width="480px">
+      <template v-if="guideDetail">
+        <p>评分 {{ guideDetail.rating }} · 从业 {{ guideDetail.years }} 年 · 已带团 {{ guideDetail.tripCount }} 次</p>
+        <p class="muted">擅长：{{ guideDetail.specialties }}</p>
+        <p class="muted" v-if="guideDetail.languages">语言：{{ guideDetail.languages }}</p>
+        <p>{{ guideDetail.bio }}</p>
+        <p class="muted" v-if="guideDetail.upcoming?.length">近期：{{ guideDetail.upcoming.map((s) => s.startDate + " " + s.title).join("；") }}</p>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -138,6 +151,8 @@ const showDemo = ref(false);
 const showNew = ref(false);
 const showDissolve = ref(false);
 const showSplit = ref(false);
+const showGuide = ref(false);
+const guideDetail = ref(null);
 const splitRows = ref([]);
 const splitScheduleId = ref(0);
 const dissolveAll = ref(false);
@@ -157,6 +172,15 @@ const neu = ref({
   companyName: "",
 });
 
+async function openGuide(row) {
+  if (!row.guide?.id) return;
+  try {
+    guideDetail.value = (await http.get("/guides/" + row.guide.id)).data;
+    showGuide.value = true;
+  } catch (e) {
+    ElMessage.error(e.message || "导游详情加载失败");
+  }
+}
 async function load() {
   list.value = (await http.get("/admin/schedules")).data;
   routes.value = (await http.get("/admin/routes")).data;

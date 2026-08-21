@@ -39,6 +39,7 @@ Page({
     upcoming: null,
     calendar: [],
     allSchedules: [],
+    guides: [],
   },
   onLoad() {
     this.applyRoutes(asList(lite));
@@ -58,9 +59,10 @@ Page({
   },
   async load() {
     try {
-      const [routesRes, schRes] = await Promise.all([
+      const [routesRes, schRes, guideRes] = await Promise.all([
         request("/routes"),
         request("/schedules").catch(() => ({ data: [] })),
+        request("/guides").catch(() => ({ data: [] })),
       ]);
       const rows = asList(routesRes.data);
       if (rows.length) this.applyRoutes(rows);
@@ -69,7 +71,12 @@ Page({
       const groups = allSchedules
         .filter((s) => s.status !== "cancelled" && Number(s.remain) > 0)
         .slice(0, 4);
-      this.setData({ groups, allSchedules, calendar: buildCalendar(allSchedules) });
+      this.setData({
+        groups,
+        allSchedules,
+        calendar: buildCalendar(allSchedules),
+        guides: asList(guideRes.data).slice(0, 4).map((g) => Object.assign({}, g, { initial: String(g.name || "导").slice(0, 1) })),
+      });
       await this.loadUpcoming();
     } catch (err) {
       if (!this.data.theme) this.applyRoutes(asList(lite));
@@ -106,6 +113,12 @@ Page({
   },
   goOpen() {
     wx.switchTab({ url: "/pages/routes/routes" });
+  },
+  goGuides() {
+    wx.navigateTo({ url: "/pages/guides/guides" });
+  },
+  goGuide(e) {
+    wx.navigateTo({ url: "/pages/guide/guide?id=" + e.currentTarget.dataset.id });
   },
   goMember() {
     wx.navigateTo({ url: "/pages/member/member" });

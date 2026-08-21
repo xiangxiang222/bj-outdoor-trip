@@ -42,3 +42,16 @@ button.btn::after { border: none; }
 .cal-n { font-weight: 700; color: #1b4332; }
 .faq-item { padding: 12rpx 0; border-bottom: 1px dashed #e6dfd2; }
 .faq-item:last-child { border-bottom: 0; }
+.guide-row { display: flex; gap: 20rpx; align-items: center; }
+.guide-face {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: #d8f3dc;
+  color: #1b4332;
+  text-align: center;
+  line-height: 88rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.guide-body { flex: 1; min-width: 0; }

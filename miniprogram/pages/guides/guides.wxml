@@ -1,0 +1,12 @@
+<view class="pad muted">成团后系统会按线路类型匹配导游。也可以先了解领队风格再报名。</view>
+<view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
+  <view class="pad guide-row">
+    <view class="guide-face">{{item.initial}}</view>
+    <view class="guide-body">
+      <view class="row"><text class="title">{{item.name}}</text><text class="muted">{{item.rating}} 分</text></view>
+      <view class="muted">{{item.years}}年 · {{item.specialties}}</view>
+      <view style="margin-top:8rpx">{{item.bio}}</view>
+    </view>
+  </view>
+</view>
+<view wx:if="{{err}}" class="muted pad">{{err}}</view>

@@ -11,7 +11,9 @@
     "pages/member/member",
     "pages/orders/orders",
     "pages/favorites/favorites",
-    "pages/stats/stats"
+    "pages/stats/stats",
+    "pages/guides/guides",
+    "pages/guide/guide"
   ],
   "subPackages": [
     { "root": "pkg-detail", "name": "detail", "pages": ["detail/detail"] }

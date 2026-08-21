@@ -131,7 +131,8 @@ function mapRouteSummary(row, req, extra) {
 function scheduleView(sch, req) {
   const route = db().prepare("SELECT * FROM routes WHERE id=?").get(sch.route_id);
   const bus = db().prepare("SELECT * FROM bus_types WHERE id=?").get(sch.bus_type_id);
-  const guide = sch.guide_id ? db().prepare("SELECT id,name,years,specialties,rating,bio FROM guides WHERE id=?").get(sch.guide_id) : null;
+  const guideRow = sch.guide_id ? db().prepare("SELECT * FROM guides WHERE id=?").get(sch.guide_id) : null;
+  const guide = publicGuideCard(guideRow, req);
   const live = enrolledCount(sch.id);
   const enrolled = sch.status === "cancelled" ? enrolledCount(sch.id, true) : live;
   const people = Math.max(live || enrolled, 1);
@@ -382,8 +383,56 @@ router.get("/buses", (_req, res) => {
   res.json({ ok: true, data: db().prepare("SELECT * FROM bus_types ORDER BY sort_order").all() });
 });
 
-router.get("/guides", (_req, res) => {
-  res.json({ ok: true, data: db().prepare("SELECT id,name,years,specialties,rating,bio,status FROM guides").all() });
+function publicGuideCard(g, req) {
+  if (!g) return null;
+  return {
+    id: g.id,
+    name: g.name,
+    gender: g.gender || "",
+    years: Number(g.years) || 0,
+    languages: g.languages || "",
+    specialties: g.specialties || "",
+    rating: Number(g.rating) || 0,
+    bio: g.bio || "",
+    avatar: attachAssetHost(req, g.avatar) || "",
+  };
+}
+
+function guideProfile(g, req) {
+  const card = publicGuideCard(g, req);
+  const tripCount = db().prepare("SELECT COUNT(*) AS n FROM schedules WHERE guide_id=? AND status!='cancelled'").get(g.id).n;
+  const upcoming = db()
+    .prepare(
+      `SELECT s.id, s.start_date, s.end_date, s.status, r.title, r.cover, r.region
+       FROM schedules s JOIN routes r ON r.id=s.route_id
+       WHERE s.guide_id=? AND s.status!='cancelled' AND s.start_date>=date('now','-1 day')
+       ORDER BY s.start_date LIMIT 8`
+    )
+    .all(g.id)
+    .map((row) => ({
+      id: row.id,
+      startDate: row.start_date,
+      endDate: row.end_date,
+      status: row.status,
+      title: row.title,
+      region: row.region,
+      cover: attachAssetHost(req, row.cover),
+    }));
+  return { ...card, tripCount, upcoming };
+}
+
+router.get("/guides", (req, res) => {
+  const rows = db()
+    .prepare("SELECT * FROM guides WHERE status!='off' ORDER BY rating DESC, id")
+    .all()
+    .map((g) => publicGuideCard(g, req));
+  res.json({ ok: true, data: rows });
+});
+
+router.get("/guides/:id", (req, res) => {
+  const g = db().prepare("SELECT * FROM guides WHERE id=?").get(req.params.id);
+  if (!g || g.status === "off") return res.status(404).json({ ok: false, message: "导游不存在" });
+  res.json({ ok: true, data: guideProfile(g, req) });
 });
 
 router.get("/routes", (req, res) => {
@@ -757,18 +806,9 @@ router.post("/reviews", authUser, (req, res) => {
   }
 });
 
-function publicGuide(g) {
+function publicGuide(g, req) {
   if (!g) return null;
-  return {
-    id: g.id,
-    name: g.name,
-    phone: g.phone,
-    years: g.years,
-    specialties: g.specialties,
-    rating: g.rating,
-    bio: g.bio,
-    status: g.status,
-  };
+  return { ...publicGuideCard(g, req), phone: g.phone, status: g.status };
 }
 
 router.post("/guide/login", (req, res) => {
@@ -776,11 +816,11 @@ router.post("/guide/login", (req, res) => {
   if (!consumeCaptcha(captchaToken, captcha)) return res.status(400).json({ ok: false, message: "验证码错误或已过期" });
   const guide = db().prepare("SELECT * FROM guides WHERE phone=?").get(phone);
   if (!guide || guide.status === "off") return res.status(400).json({ ok: false, message: "未找到导游账号" });
-  res.json({ ok: true, data: { token: signGuide(guide), ...publicGuide(guide) } });
+  res.json({ ok: true, data: { token: signGuide(guide), ...publicGuide(guide, req) } });
 });
 
 router.get("/guide/me", authGuide, (req, res) => {
-  res.json({ ok: true, data: publicGuide(req.guide) });
+  res.json({ ok: true, data: publicGuide(req.guide, req) });
 });
 
 router.get("/guide/schedules", authGuide, (req, res) => {

@@ -198,13 +198,13 @@ User 1──n Favorite / PointsLedger / Review
 
 ## 6. 前端信息架构
 
-用户端（`/m`）：首页发现（即将出行、10 日出发日历、天数入口、目的地、正在拼团、周末短途）→ 线路目录筛选/详情（含评价、装备清单、FAQ）→ 排期详情与报名名单 → 报名占座（紧急联系人、风险确认）/ 开团 → 我的（即将出行、订单、取消、评价、收藏、开通会员、注销）。导游端（`/g`）：手机号登录后看出行名单、紧急联系人并签到。
+用户端（`/m`）：首页发现（即将出行、10 日出发日历、天数入口、目的地、正在拼团、周末短途、领队导游）→ 线路目录筛选/详情（含评价、装备清单、FAQ）→ 排期详情与报名名单 → 导游个人页 → 报名占座（紧急联系人、风险确认）/ 开团 → 我的（即将出行、订单、取消、评价、收藏、开通会员、注销）。导游端（`/g`）：手机号登录后看出行名单、紧急联系人并签到。
 
 后台（`/admin`）：看板 KPI 与图表 → 线路 CRUD/下架/上传封面 → 排期与成本/利润/解散 → 公司结算与本团画像 → 报名明细与代取消 → 用户会员运营 → 管理员账号（仅管理员角色）。
 
 后台账号 `admin_users.status`：`on` 启用 / `off` 停用。角色 `admin` 可管理其他后台账号，`operator` 不能。至少保留一名启用中的管理员。
 
-小程序页面：`pages/index|routes|chain|schedule|enroll|open|mine|login|member|orders|favorites|stats`，线路详情在分包 `pkg-detail`。
+小程序页面：`pages/index|routes|chain|schedule|enroll|open|mine|login|member|orders|favorites|stats|guides|guide`，线路详情在分包 `pkg-detail`。
 
 ## 7. 安全与合规边界
 

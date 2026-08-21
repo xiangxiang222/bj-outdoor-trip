@@ -1,0 +1,28 @@
+<view wx:if="{{err}}" class="muted pad">{{err}}</view>
+<view wx:elif="{{g}}">
+  <view class="card">
+    <view class="pad guide-row">
+      <view class="guide-face" style="width:128rpx;height:128rpx;font-size:44rpx;line-height:128rpx">{{g.initial}}</view>
+      <view class="guide-body">
+        <view class="row"><text class="title">{{g.name}}</text><text class="tag">{{g.rating}} 分</text></view>
+        <view class="muted">{{g.genderText}} · 从业 {{g.years}} 年 · 已带团 {{g.tripCount}} 次</view>
+      </view>
+    </view>
+  </view>
+  <view class="chips" wx:if="{{g.specialtyList.length}}">
+    <view class="chip on" wx:for="{{g.specialtyList}}" wx:key="*this">{{item}}</view>
+  </view>
+  <view class="pad title">个人简介</view>
+  <view class="card"><view class="pad">
+    <view>{{g.bio || "暂无简介"}}</view>
+    <view class="muted" wx:if="{{g.languages}}" style="margin-top:12rpx">语言：{{g.languages}}</view>
+  </view></view>
+  <view class="pad title">近期带团</view>
+  <view class="card" wx:for="{{g.upcoming}}" wx:key="id" bindtap="goSch" data-id="{{item.id}}">
+    <view class="pad">
+      <view class="row"><text class="title">{{item.title}}</text><text class="tag">{{item.startDate}}</text></view>
+      <view class="muted">{{item.region}}</view>
+    </view>
+  </view>
+  <view wx:if="{{!g.upcoming.length}}" class="pad muted">暂时没有即将出发的行程。</view>
+</view>

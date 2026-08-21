@@ -22,7 +22,11 @@
         <p class="muted" v-if="s.status === 'cancelled'" style="color:var(--clay)">
           本团已解散。理由：{{ s.cancelReason }}
         </p>
-        <p class="muted" v-else-if="s.guide">已成团，匹配导游：{{ s.guide.name }}（{{ s.guide.specialties }} · {{ s.guide.years }}年）</p>
+        <p class="muted" v-else-if="s.guide">
+          已成团，匹配导游：
+          <a class="nav-link" href="#" @click.prevent="$router.push('/m/guide/' + s.guide.id)">{{ s.guide.name }} 查看详情</a>
+          （{{ s.guide.specialties }} · {{ s.guide.years }}年）
+        </p>
         <p class="muted" v-else>人数达到最低成团后将自动匹配导游。</p>
         <div v-if="weather" class="weather" :class="weather.alerts?.[0]?.level">
           <strong>{{ weather.place }} {{ weather.summary }}</strong>

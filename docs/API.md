@@ -21,7 +21,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/meta` | 品牌名、演示短信码、会员年费、积分规则、保险方案、可选天数、退改说明、风险告知、常见问题 |
 | GET | `/weather` | 目的地天气。Query：`region` `date`。默认 mock，设 `WEATHER_LIVE=1` 走 Open-Meteo |
 | GET | `/buses` | 车型 |
-| GET | `/guides` | 导游公开信息 |
+| GET | `/guides` | 在岗导游公开资料（不含手机号） |
+| GET | `/guides/:id` | 导游详情、带团次数、近期行程。停用或不存在返回 404 |
 | GET | `/routes` | 上架线路。Query：`days` `category` `difficulty` `q` |
 | GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条） |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
