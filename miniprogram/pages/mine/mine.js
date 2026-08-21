@@ -23,6 +23,10 @@ Page({
     const u = this.data.upcoming;
     if (u && u.scheduleId) wx.navigateTo({ url: "/pages/schedule/schedule?id=" + u.scheduleId });
   },
+  goHome() {
+    const u = this.data.user;
+    if (u && u.id) wx.navigateTo({ url: "/pages/user/user?id=" + u.id });
+  },
   login() { wx.navigateTo({ url: "/pages/login/login" }); },
   register() { wx.navigateTo({ url: "/pages/login/login?tab=register" }); },
   go(e) {

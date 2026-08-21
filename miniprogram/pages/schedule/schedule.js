@@ -1,6 +1,7 @@
 const { request } = require("../../utils/request");
 const { payStatusText, starText } = require("../../utils/labels");
 const { shareCover } = require("../../utils/media");
+const { drawWeatherChart } = require("../../utils/weather-chart");
 const app = getApp();
 
 function busLine(s) {
@@ -20,7 +21,6 @@ Page({
     reason: "",
     seatRows: [],
     weather: null,
-    showHourly: false,
     reviews: { list: [], count: 0, avg: 0 },
     packing: [],
     cancelSummary: "",
@@ -28,6 +28,7 @@ Page({
     gallery: [],
     busPhotos: [],
     busText: "",
+    leaderSlots: [{ slot: 1, label: "领队1", leader: null }, { slot: 2, label: "领队2", leader: null }],
   },
   onLoad(q) {
     this.setData({ id: q.id });
@@ -46,12 +47,19 @@ Page({
         gallery: (s.gallery && s.gallery.length ? s.gallery : (s.route && s.route.cover ? [s.route.cover] : [])),
         busPhotos: (s.bus && s.bus.photos) || [],
         busText: busLine(s),
+        leaderSlots: [1, 2].map((slot) => ({
+          slot,
+          label: "领队" + slot,
+          leader: ((s.leaders || []).find((l) => Number(l.slot) === slot)) || null,
+        })),
       });
       const region = s && s.route && [s.route.region, s.route.title].filter(Boolean).join(" ");
       const date = s && s.startDate;
       if (region) {
         request("/weather?region=" + encodeURIComponent(region) + "&date=" + (date || "")).then((w) => {
-          this.setData({ weather: w.data });
+          this.setData({ weather: w.data }, () => {
+            wx.nextTick(() => this.drawWeather());
+          });
         }).catch(() => {});
       }
     });
@@ -108,8 +116,17 @@ Page({
     if (!urls.length) return;
     wx.previewImage({ urls, current: urls[0] });
   },
-  toggleHourly() {
-    this.setData({ showHourly: !this.data.showHourly });
+  drawWeather() {
+    const hourly = this.data.weather && this.data.weather.hourly;
+    if (!hourly || !hourly.length) return;
+    wx.createSelectorQuery().in(this)
+      .select("#weatherChart")
+      .fields({ node: true, size: true })
+      .exec((res) => {
+        const info = res && res[0];
+        if (!info || !info.node) return;
+        drawWeatherChart(info.node, info.width, info.height, hourly);
+      });
   },
   goUser(e) {
     const id = e.currentTarget.dataset.id;
@@ -117,7 +134,37 @@ Page({
   },
   onSeat(e) {
     const id = e.currentTarget.dataset.userid;
-    if (id) wx.navigateTo({ url: "/pages/user/user?id=" + id });
+    if (id) {
+      wx.navigateTo({ url: "/pages/user/user?id=" + id });
+      return;
+    }
+    if (e.currentTarget.dataset.locked || e.currentTarget.dataset.taken) return;
+    const mine = this.data.s && this.data.s.myEnrollment;
+    if (mine && mine.status === "joined") {
+      request("/schedules/" + this.data.id + "/seats/pick", "POST", { seatNo: e.currentTarget.dataset.no }).then(() => {
+        wx.showToast({ title: "已选座", icon: "none" });
+        this.load();
+      }).catch((err) => wx.showToast({ title: err.message || "选座失败", icon: "none" }));
+      return;
+    }
+    wx.showToast({ title: "早报名早选座", icon: "none" });
+  },
+  applyLeader() {
+    if (!app.globalData.token) {
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/schedule/schedule?id=" + this.data.id) });
+      return;
+    }
+    request("/schedules/" + this.data.id + "/leaders/apply", "POST", {}).then(() => {
+      wx.showToast({ title: "已报名领队", icon: "none" });
+      this.load();
+    }).catch((e) => wx.showModal({ title: "报名领队失败", content: e.message, showCancel: false }));
+  },
+  openLeader(e) {
+    const kind = e.currentTarget.dataset.kind;
+    const id = e.currentTarget.dataset.id;
+    const userId = e.currentTarget.dataset.userid;
+    if (kind === "guide" && id) wx.navigateTo({ url: "/pages/guide/guide?id=" + id });
+    else if (userId || id) wx.navigateTo({ url: "/pages/user/user?id=" + (userId || id) });
   },
   async payFor(e) {
     if (!app.globalData.token) {

@@ -8,7 +8,8 @@
     <p class="muted">{{ r.subtitle }}</p>
     <div v-if="weather" class="weather" :class="weather.alerts?.[0]?.level">
       <strong>{{ weather.place }} {{ weather.summary }}</strong>
-      <span>{{ weather.tmin }}~{{ weather.tmax }}℃</span>
+      <span>{{ weather.tmin }}~{{ weather.tmax }}℃ · 风 {{ weather.wind }}km/h</span>
+      <WeatherChart :hourly="weather.hourly" :label="weather.place + '分时气温'" />
       <p>{{ weather.alerts?.[0]?.text }}</p>
     </div>
     <div><span class="play-tag sm" v-for="t in r.playTags || r.tags" :key="t.id || t" :style="{ background: t.color || '#2d6a4f' }">{{ t.name || t }}</span></div>
@@ -136,6 +137,7 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { organizerTypeText, starText } from "@/utils/labels";
+import WeatherChart from "@/components/WeatherChart.vue";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 

@@ -18,20 +18,24 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/meta` | 品牌名、演示短信码、会员年费/95折/赠团文案、积分规则、保险方案、可选天数、退改说明、风险告知、常见问题、官方微信/用户群 |
+| GET | `/meta` | 品牌名、演示短信码、会员年费/95折/赠团文案、积分规则、保险方案、可选天数、退改说明、风险告知、常见问题、官方账号、公共规则、推荐领队文案 |
 | GET | `/home` | 首页：品牌轮播、随发团出现的城市及相册、玩法标签、节日、月份、天数缩略图。Query：`month=YYYY-MM` 返回该月日历 |
 | GET | `/play-tags` | 想怎么玩标签（名称、颜色、配图） |
-| GET | `/users/:id` | 用户公开主页：昵称、头像、性别、年龄段、籍贯、出行次数。不含手机号 |
-| GET | `/weather` | 目的地天气（含 `hourly` 分时）。Query：`region` `date`。默认 mock，设 `WEATHER_LIVE=1` 走 Open-Meteo |
+| GET | `/users/:id` | 用户公开主页：昵称、头像、相册、拟出行/已参与/关注的线路。不含手机号 |
+| GET | `/weather` | 目的地天气（含 `hourly` 分时气温/降水）。Query：`region` `date`。默认 mock，设 `WEATHER_LIVE=1` 走 Open-Meteo |
 | GET | `/buses` | 车型 |
 | GET | `/guides` | 在岗导游公开资料（不含手机号） |
+| GET | `/guides/recruit` | 推荐领队文案与奖励（200 元），登录后带推荐码 |
 | GET | `/guides/:id` | 导游详情、带团次数、近期行程。停用或不存在返回 404 |
 | GET | `/routes` | 上架线路。Query：`days`（`multi` 表示 4 日及以上）`category` `tag` `city` `difficulty` `q` |
 | GET | `/schedules` | Query：`routeId` `organizerType` `city` `tag` `offerType` `month` `date`（不含已解散、待审核） |
 | GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条） |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
-| GET | `/schedules/:id` | 排期 + 脱敏名单；含 `guaranteed`、`meetupMapUrl`/`meetupLat`/`meetupLng`、`gallery`、`consultGroup`、车型座位数/车号/照片；名单项含 `userId` `lifeStage` `canPay` |
+| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`myEnrollment`、本团群二维码、候选团选项 |
 | GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
+| POST | `/schedules/:id/seats/pick` | 已报名用户改座 |
+| POST | `/schedules/:id/leaders/apply` | 报名领队（最多两位） |
+| POST | `/enrollments/:id/fallbacks` | 设置候选团与替代团 |
 | GET | `/schedules/:id/demographics` | 本团画像
 | GET | `/schedules/:id/reviews` | 该团评价列表。`{ list, count, avg }` |
 | GET | `/schedules/:id/poster` | 分享 URL + QR DataURL（**无需登录**） |
@@ -50,6 +54,9 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/auth/wechat` | 否 | `code` `nickname` `avatar` |
 | GET | `/me` | 用户 | 当前用户（证件掩码） |
 | GET | `/me/trips` | 用户 | 即将出行：已报名且团未解散、出发日 ≥ 昨天的 `joined`/`waitlist` |
+| GET | `/me/referral` | 用户 | 推荐码、专属二维码、5% 按人结算明细。Query：`scheduleId` |
+| POST | `/me/photos` | 用户 | `{ url }` 写入个人相册 |
+| DELETE | `/me/photos/:id` | 用户 | 删除自己的相册照片 |
 | PUT | `/me` | 用户 | `nickname` `gender` `birthday` `idCard` `companyName` `avatar` |
 | DELETE | `/me` | 用户 | 注销：清空手机/密码/openid/证件，取消未完成报名；同一手机可再注册 |
 
@@ -63,7 +70,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/trips` | 用户 | 发团（类似后台编辑线路）。提交后 `reviewStatus=pending`，审核通过才上首页 |
 | POST | `/upload` | 用户 | 发团封面。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
-| POST | `/enroll` | 用户 | 报名占座。须紧急联系人、健康声明、风险确认。个人 `pay_status=unpaid`、`needPay: false`；公司 `company_pending` |
+| POST | `/enroll` | 用户 | 报名占座。可选 `referrerCode` `autoAlt` `fallbackScheduleIds`。须紧急联系人、健康声明、风险确认 |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。报名流程默认不调用 |
 | POST | `/pay/for-enrollment` | 用户 | 行程页待支付代付。任何人可替 `unpaid` 且已占座的报名支付（演示立即成功）。公司挂账不可用 |
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
@@ -169,7 +176,8 @@ H5 入口 `/g`。
 | POST | `/admin/schedules/:id/split` | 对已支付金额发起分账（已有记录则复用） |
 | GET | `/admin/enrollments` | Query：`scheduleId` `q` `payStatus` `status` |
 | POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款标记退款） |
-| GET | `/admin/users` | Query：`q`。不含已注销、不含证件；带 `isMember` |
+| GET | `/admin/users` | Query：`q`。不含已注销、不含证件；带 `isMember` `isVirtual` |
+| POST | `/admin/virtual-users` | `{ count, perSchedule }` 批量虚拟用户并随机报名 |
 | POST | `/admin/users/:id/member` | `action=grant` 开通/续费，`revoke` 取消会员 |
 | POST | `/admin/users/:id/points` | `delta` 非零整数、`reason` |
 | POST | `/admin/users/:id/close` | 注销该用户 |

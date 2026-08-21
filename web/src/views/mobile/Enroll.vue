@@ -6,7 +6,8 @@
       <p v-if="s.status === 'cancelled'" style="color:var(--clay)">本团已解散。理由：{{ s.cancelReason }}</p>
       <p v-else-if="s.remain <= 0">本车已满（{{ s.enrolled }}/{{ s.maxSeats }}）。仍可加入候补，有人取消后按顺序递补。</p>
       <p v-else-if="s.organizerType === 'company'">公司团：报名后挂账，由 {{ s.companyName || "公司" }} 统一支付。</p>
-      <p v-else>个人拼团：先报名占座，费用待出行前支付。</p>
+      <p class="muted">个人拼团先报名占座，费用待出行前支付。早报名早选座。</p>
+    </div></div>
       <p class="price">当前档位 ¥{{ quote }} / 人</p>
     </div></div>
 
@@ -70,6 +71,18 @@
       </label>
       <p class="muted">{{ cancelSummary }}</p>
     </div></div>
+    <div class="card"><div class="pad">
+      <div class="h2" style="margin-top:0">不成团时的备选</div>
+      <label class="check-row">
+        <input type="checkbox" v-model="form.autoAlt" />
+        <span>如本团未成团，自动加入相同行程的其他日期（替代团）</span>
+      </label>
+      <p class="muted">也可多选候选团，解散后按顺序转团，价格多退少补。</p>
+      <label class="check-row" v-for="opt in fallbackOptions" :key="opt.id">
+        <input type="checkbox" :value="opt.id" v-model="form.fallbackScheduleIds" />
+        <span>{{ opt.title }} {{ opt.startDate }}</span>
+      </label>
+    </div></div>
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
     <button v-if="s.status !== 'cancelled'" class="btn block" style="margin-top:16px" :disabled="loading" @click="submit">
       {{ s.remain <= 0 ? "加入候补" : "加入报名（暂不付款）" }}
@@ -105,7 +118,10 @@ const form = ref({
   emergencyPhone: "",
   waiverAccepted: false,
   healthOk: false,
+  autoAlt: false,
+  fallbackScheduleIds: [],
 });
+const fallbackOptions = ref([]);
 const waiver = ref("");
 const cancelSummary = ref("出发日前可取消；出发当天不可取消。解散则报名作废。");
 const plans = computed(() =>
@@ -133,6 +149,8 @@ onMounted(async () => {
   if (!requireLogin(store, router, route)) return;
   s.value = (await http.get("/schedules/" + route.params.id)).data;
   quote.value = s.value.quote.price;
+  const opts = s.value.fallbackOptions || {};
+  fallbackOptions.value = [...(opts.sameRoute || []), ...(opts.otherRecruiting || [])];
   try {
     const meta = (await http.get("/meta")).data;
     if (meta.insurance?.length) {
@@ -205,8 +223,9 @@ async function submit() {
       scheduleId: Number(route.params.id),
       ...form.value,
       seatNo: form.value.seatNo || undefined,
+      referrerCode: route.query.ref,
     });
-    router.push("/m/schedule/" + route.params.id);
+    router.push("/m/schedule/" + route.params.id + "?joined=1");
   } catch (e) {
     err.value = e.message;
   } finally {

@@ -22,6 +22,26 @@ function enrolledCount(scheduleId, includeCancelled = false) {
   return row.c;
 }
 
+function realEnrolledCount(scheduleId) {
+  return getDb()
+    .prepare(
+      `SELECT COUNT(*) AS c FROM enrollments e
+       LEFT JOIN users u ON u.id=e.user_id
+       WHERE e.schedule_id=? AND e.status='joined' AND IFNULL(u.is_virtual,0)=0`
+    )
+    .get(scheduleId).c;
+}
+
+function virtualEnrolledCount(scheduleId) {
+  return getDb()
+    .prepare(
+      `SELECT COUNT(*) AS c FROM enrollments e
+       JOIN users u ON u.id=e.user_id
+       WHERE e.schedule_id=? AND e.status='joined' AND IFNULL(u.is_virtual,0)=1`
+    )
+    .get(scheduleId).c;
+}
+
 function waitlistCount(scheduleId) {
   const row = getDb()
     .prepare("SELECT COUNT(*) AS c FROM enrollments WHERE schedule_id=? AND status='waitlist'")
@@ -69,7 +89,7 @@ function maybeMatchGuide(scheduleId) {
   const db = getDb();
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
   if (!sch || sch.guide_id || sch.status === "cancelled") return sch;
-  const n = enrolledCount(scheduleId);
+  const n = realEnrolledCount(scheduleId);
   if (n < sch.min_group_size) return sch;
   const route = db.prepare("SELECT * FROM routes WHERE id=?").get(sch.route_id);
   if (!route) {
@@ -84,6 +104,12 @@ function maybeMatchGuide(scheduleId) {
   if (hit) {
     db.prepare("UPDATE schedules SET guide_id=?, status=? WHERE id=?").run(hit.id, "confirmed", scheduleId);
     db.prepare("UPDATE guides SET status='assigned' WHERE id=?").run(hit.id);
+    db.prepare("INSERT OR IGNORE INTO schedule_leaders (schedule_id, slot, guide_id, status) VALUES (?,?,?,?)").run(
+      scheduleId,
+      1,
+      hit.id,
+      "assigned"
+    );
   } else {
     db.prepare("UPDATE schedules SET status=? WHERE id=?").run("confirmed", scheduleId);
   }
@@ -148,6 +174,8 @@ function publicMediaUrl(url) {
 module.exports = {
   isMember,
   enrolledCount,
+  realEnrolledCount,
+  virtualEnrolledCount,
   waitlistCount,
   loadRouteBundle,
   quoteForSchedule,
@@ -155,5 +183,6 @@ module.exports = {
   addPoints,
   attachAssetHost,
   publicMediaUrl,
+  publicBase,
   config,
 };

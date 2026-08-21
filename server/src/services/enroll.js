@@ -5,6 +5,9 @@ const { calcPayable } = require("./biz");
 const { addPoints, enrolledCount, waitlistCount, quoteForSchedule, maybeMatchGuide } = require("./helpers");
 const { sendSms } = require("./sms");
 const { assertSeatAvailable, firstFreeSeat } = require("./seats");
+const { kickVirtualSeat, trimVirtuals } = require("./virtual");
+const { findReferrer, recordEnrollReferral } = require("./referral");
+const { setFallbacks } = require("./fallback");
 const config = require("../config");
 
 function fail(status, message) {
@@ -35,6 +38,9 @@ function enrollUser({
   emergencyPhone,
   waiverAccepted,
   healthOk,
+  referrerCode,
+  autoAlt,
+  fallbackScheduleIds,
 }) {
   const db = getDb();
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
@@ -61,13 +67,28 @@ function enrollUser({
   let waitlisted = occupied >= Number(sch.max_seats);
   let seat = null;
   if (waitlisted) {
-    seat = null;
-  } else if (seatNo) {
-    seat = assertSeatAvailable(sch.id, sch.max_seats, seatNo);
-  } else {
-    seat = firstFreeSeat(sch.id, sch.max_seats);
-    if (!seat) waitlisted = true;
+    if (kickVirtualSeat(sch.id)) {
+      waitlisted = false;
+    } else {
+      seat = null;
+    }
   }
+  if (!waitlisted) {
+    if (seatNo) {
+      try {
+        seat = assertSeatAvailable(sch.id, sch.max_seats, seatNo);
+      } catch (e) {
+        if (kickVirtualSeat(sch.id)) seat = assertSeatAvailable(sch.id, sch.max_seats, seatNo);
+        else throw e;
+      }
+    } else {
+      seat = firstFreeSeat(sch.id, sch.max_seats);
+      if (!seat && kickVirtualSeat(sch.id)) seat = firstFreeSeat(sch.id, sch.max_seats);
+      if (!seat) waitlisted = true;
+    }
+  }
+  const referrer = findReferrer(referrerCode);
+  const referrerId = referrer && Number(referrer.id) !== Number(user.id) ? referrer.id : null;
   const quote = quoteForSchedule(sch, Math.max(waitlisted ? occupied : occupied + 1, 1), user);
   const company = sch.organizer_type === "company";
   const payable =
@@ -101,8 +122,8 @@ function enrollUser({
   const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
   const info = db
     .prepare(
-      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,waitlisted_at,seat_no,insurance_code,insurance_fee,emergency_name,emergency_phone,waiver_accepted_at,health_declared_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,waitlisted_at,seat_no,insurance_code,insurance_fee,emergency_name,emergency_phone,waiver_accepted_at,health_declared_at,referrer_user_id,auto_alt)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       sch.id,
@@ -127,10 +148,23 @@ function enrollUser({
       String(emergencyName).trim(),
       String(emergencyPhone).trim(),
       now,
-      now
+      now,
+      referrerId,
+      autoAlt ? 1 : 0
     );
   const enrollmentId = Number(info.lastInsertRowid);
-  if (!waitlisted) maybeMatchGuide(sch.id);
+  if (!waitlisted) {
+    maybeMatchGuide(sch.id);
+    trimVirtuals(sch.id);
+  }
+  if (referrerId && !waitlisted) recordEnrollReferral(referrerId, enrollmentId, payAmount);
+  if (fallbackScheduleIds && fallbackScheduleIds.length) {
+    try {
+      setFallbacks(enrollmentId, user.id, { scheduleIds: fallbackScheduleIds, autoAlt });
+    } catch {
+      /* ignore invalid ids */
+    }
+  }
   const position = waitlisted ? waitlistCount(sch.id) : 0;
   return {
     enrollmentId,

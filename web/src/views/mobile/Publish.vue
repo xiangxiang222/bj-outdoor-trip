@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p class="muted">填写线路与出发信息，提交后需管理员审核才会出现在首页。</p>
+    <p class="muted">填写线路与出发信息，提交后需管理员审核才会出现在首页。发团规则见「规则」页；成团后最多两位领队。</p>
     <label>线路标题</label>
     <input class="input" v-model="form.title" placeholder="例如：慕田峪长城一日" />
     <label>副标题</label>

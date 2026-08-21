@@ -77,6 +77,9 @@ function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
   });
   run();
 
+  const { transferDissolved } = require("./fallback");
+  const transferred = transferDissolved(enrollments);
+
   return {
     scheduleId: sch.id,
     reason: trimmed,
@@ -85,6 +88,7 @@ function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
     refundAmount,
     smsCount,
     status: "cancelled",
+    transferred,
   };
 }
 

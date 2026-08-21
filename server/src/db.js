@@ -316,6 +316,56 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "play_tags_json", "TEXT DEFAULT '[]'");
   addColumnIfMissing(db, "schedules", "city", "TEXT");
   addColumnIfMissing(db, "users", "member_gift_left", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "users", "is_virtual", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "users", "referral_code", "TEXT");
+  addColumnIfMissing(db, "enrollments", "referrer_user_id", "INTEGER");
+  addColumnIfMissing(db, "enrollments", "auto_alt", "INTEGER DEFAULT 0");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_photos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      url TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE TABLE IF NOT EXISTS schedule_leaders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      schedule_id INTEGER,
+      slot INTEGER,
+      guide_id INTEGER,
+      user_id INTEGER,
+      status TEXT DEFAULT 'assigned',
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      UNIQUE(schedule_id, slot)
+    );
+    CREATE TABLE IF NOT EXISTS enrollment_fallbacks (
+      enrollment_id INTEGER,
+      schedule_id INTEGER,
+      kind TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      PRIMARY KEY (enrollment_id, schedule_id)
+    );
+    CREATE TABLE IF NOT EXISTS referrals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      referrer_id INTEGER,
+      enrollment_id INTEGER,
+      amount INTEGER,
+      rate REAL,
+      status TEXT DEFAULT 'pending',
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE TABLE IF NOT EXISTS leader_referrals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      referrer_id INTEGER,
+      leader_user_id INTEGER,
+      schedule_id INTEGER,
+      amount INTEGER DEFAULT 200,
+      status TEXT DEFAULT 'pending',
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+  `);
+  db.exec(`
+    UPDATE users SET referral_code='BX' || id WHERE referral_code IS NULL OR referral_code='';
+  `);
   db.exec(`
     CREATE TABLE IF NOT EXISTS play_tags (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

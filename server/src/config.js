@@ -43,4 +43,8 @@ module.exports = {
   split: {
     platformRate: 0.08,
   },
+  referral: {
+    enrollRate: 0.05,
+    leaderReward: 200,
+  },
 };

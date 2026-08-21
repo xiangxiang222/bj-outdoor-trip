@@ -1,12 +1,14 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/official/official",
+    "pages/rules/rules",
+    "pages/mine/mine",
     "pages/routes/routes",
     "pages/chain/chain",
     "pages/schedule/schedule",
     "pages/enroll/enroll",
     "pages/open/open",
-    "pages/mine/mine",
     "pages/login/login",
     "pages/member/member",
     "pages/orders/orders",
@@ -32,8 +34,8 @@
     "backgroundColor": "#ffffff",
     "list": [
       { "pagePath": "pages/index/index", "text": "首页", "iconPath": "images/home.png", "selectedIconPath": "images/home-on.png" },
-      { "pagePath": "pages/routes/routes", "text": "线路", "iconPath": "images/routes.png", "selectedIconPath": "images/routes-on.png" },
-      { "pagePath": "pages/chain/chain", "text": "拼团", "iconPath": "images/chain.png", "selectedIconPath": "images/chain-on.png" },
+      { "pagePath": "pages/official/official", "text": "官方", "iconPath": "images/official.png", "selectedIconPath": "images/official-on.png" },
+      { "pagePath": "pages/rules/rules", "text": "规则", "iconPath": "images/rules.png", "selectedIconPath": "images/rules-on.png" },
       { "pagePath": "pages/mine/mine", "text": "我的", "iconPath": "images/mine.png", "selectedIconPath": "images/mine-on.png" }
     ]
   },

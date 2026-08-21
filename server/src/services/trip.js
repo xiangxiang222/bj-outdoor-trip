@@ -1,31 +1,14 @@
 const { getDb } = require("../db");
-const { parseIdCard, lifeStageFromPerson } = require("./idcard");
+const { lifeStageFromPerson } = require("./idcard");
 const { maskName } = require("./biz");
 const { addPoints, isMember, quoteForSchedule, enrolledCount, maybeMatchGuide, attachAssetHost } = require("./helpers");
+const { publicUserProfile } = require("./profile");
 const config = require("../config");
 
 function fail(status, message) {
   const err = new Error(message);
   err.status = status;
   throw err;
-}
-
-function publicUserProfile(user, req) {
-  if (!user || user.deleted_at) return null;
-  const parsed = user.id_card ? parseIdCard(user.id_card) : { valid: false };
-  const stage = lifeStageFromPerson({ idCard: user.id_card, birthday: user.birthday });
-  const tripCount = getDb()
-    .prepare("SELECT COUNT(*) AS n FROM enrollments WHERE user_id=? AND status='joined'")
-    .get(user.id).n;
-  return {
-    id: user.id,
-    nickname: user.nickname,
-    avatar: attachAssetHost(req, user.avatar) || "",
-    gender: user.gender || parsed.gender || "",
-    lifeStage: stage.label || "",
-    hometown: user.hometown || "",
-    tripCount,
-  };
 }
 
 function payEnrollment(enrollmentId, payerId) {

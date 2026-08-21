@@ -9,5 +9,23 @@
       </view>
     </view>
   </view>
+  <view class="pad title">个人相册</view>
+  <view class="album-grid" wx:if="{{u.album.length}}">
+    <image wx:for="{{u.album}}" wx:key="id" src="{{item.url}}" mode="aspectFill" class="album-img" />
+  </view>
+  <view class="pad muted" wx:else>还没有相册。</view>
+  <view class="pad title">拟出行</view>
+  <view class="card" wx:for="{{u.trips.upcoming}}" wx:key="id" bindtap="goSch" data-id="{{item.scheduleId}}">
+    <view class="pad"><view>{{item.title}}</view><view class="muted">{{item.startDate}} · {{item.region}}</view></view>
+  </view>
+  <view class="pad muted" wx:if="{{!u.trips.upcoming.length}}">暂无即将出发的行程。</view>
+  <view class="pad title">已参与</view>
+  <view class="card" wx:for="{{u.trips.past}}" wx:key="id" bindtap="goSch" data-id="{{item.scheduleId}}">
+    <view class="pad">{{item.title}} · {{item.startDate}}</view>
+  </view>
+  <view class="pad title">关注的</view>
+  <view class="card" wx:for="{{u.trips.following}}" wx:key="id" bindtap="goRoute" data-id="{{item.routeId}}">
+    <view class="pad">{{item.title}}</view>
+  </view>
   <view class="pad muted">公开资料不含手机号与精确年龄，仅展示年龄段。</view>
 </view>

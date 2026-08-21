@@ -47,19 +47,24 @@
         <p class="muted" v-if="s.status === 'cancelled'" style="color:var(--clay)">
           本团已解散。理由：{{ s.cancelReason }}
         </p>
-        <p class="muted" v-else-if="s.guide">
-          已成团，匹配导游：
-          <a class="nav-link" href="#" @click.prevent="$router.push('/m/guide/' + s.guide.id)">{{ s.guide.name }} 查看详情</a>
-          （{{ s.guide.specialties }} · {{ s.guide.years }}年）
-        </p>
-        <p class="muted" v-else>人数达到最低成团后将自动匹配导游。</p>
-        <div v-if="weather" class="weather" :class="weather.alerts?.[0]?.level" @click="showHourly = !showHourly">
-          <strong>{{ weather.place }} {{ weather.summary }}</strong>
-          <span>{{ weather.tmin }}~{{ weather.tmax }}℃ · 风 {{ weather.wind }}km/h · 点看分时</span>
-          <p v-for="(a, i) in weather.alerts" :key="i">{{ a.text }}</p>
-          <div v-if="showHourly && weather.hourly?.length" class="hourly">
-            <span v-for="h in weather.hourly" :key="h.hour">{{ h.hour }}<br />{{ h.temp }}℃<br />{{ h.summary }}</span>
+        <div class="leader-board">
+          <div class="leader-slot" v-for="slot in leaderSlots" :key="slot.slot">
+            <template v-if="slot.leader">
+              <a class="nav-link" href="#" @click.prevent="openLeader(slot.leader)">
+                <img v-if="slot.leader.avatar" class="leader-face" :src="slot.leader.avatar" alt="" />
+                <span v-else class="leader-face">{{ (slot.leader.name || "领").slice(0, 1) }}</span>
+                {{ slot.label }} {{ slot.leader.name }}
+              </a>
+            </template>
+            <a v-else class="nav-link" href="#" @click.prevent="applyLeader(slot.slot)">{{ slot.label }} · 报名领队</a>
           </div>
+          <p class="muted">{{ s.leaderRecruitCopy }}</p>
+        </div>
+        <div v-if="weather" class="weather" :class="weather.alerts?.[0]?.level">
+          <strong>{{ weather.place }} {{ weather.summary }}</strong>
+          <span>{{ weather.tmin }}~{{ weather.tmax }}℃ · 风 {{ weather.wind }}km/h</span>
+          <WeatherChart :hourly="weather.hourly" :label="weather.place + '分时气温'" />
+          <p v-for="(a, i) in weather.alerts" :key="i">{{ a.text }}</p>
         </div>
       </div>
     </div>
@@ -84,7 +89,35 @@
           </template>
         </div>
       </div>
-      <p class="muted">占用位显示性别与年龄段，点击可看个人主页。灰位为官方/导游锁定。</p>
+      <p class="muted">{{ seatHint }}</p>
+    </div></div>
+
+    <div class="h2" v-if="s.myEnrollment">报名后</div>
+    <div class="card" v-if="s.myEnrollment"><div class="pad">
+      <p>1. 座位图可改座，早报名早选座。</p>
+      <p>2. 本团微信群</p>
+      <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本团群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
+      <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
+      <p>3. 候选团（本团未成团则按顺序转团，价格多退少补）</p>
+      <label class="check-row" v-for="opt in candidateOptions" :key="opt.id">
+        <input type="checkbox" :value="opt.id" v-model="fallbackIds" />
+        <span>{{ opt.title }} {{ opt.startDate }} · 余 {{ opt.remain }}</span>
+      </label>
+      <p>4. 替代团</p>
+      <label class="check-row">
+        <input type="checkbox" v-model="autoAlt" />
+        <span>如本团未成团，自动加入相同行程的其他日期</span>
+      </label>
+      <button class="btn ghost block" style="margin-top:8px" :disabled="savingFallbacks" @click="saveFallbacks">保存备选</button>
+    </div></div>
+
+    <div class="h2">推荐报名</div>
+    <div class="card"><div class="pad" style="text-align:center">
+      <p class="muted">推荐成功后按人数结算报名费的 5%</p>
+      <img v-if="referral.qr" :src="referral.qr" alt="推荐二维码" style="width:160px;height:160px;background:#fff;border-radius:12px" />
+      <p class="muted" style="word-break:break-all">{{ referral.url }}</p>
+      <p v-if="referral.code">我的推荐码 {{ referral.code }} · 待结 ¥{{ referral.pending || 0 }} / 已结 ¥{{ referral.earned || 0 }}</p>
+      <button class="btn ghost" @click="loadReferral">生成我的推荐码</button>
     </div></div>
 
     <div class="h2">报名名单</div>
@@ -157,8 +190,8 @@
       <button class="btn ghost" style="flex:1" @click="$router.push('/m/stats/' + s.id)">本团画像</button>
       <button class="btn ghost" style="flex:1" @click="share">分享到微信</button>
     </div>
-    <button v-if="s.status !== 'cancelled' && s.reviewStatus !== 'pending' && s.reviewStatus !== 'rejected'" class="btn block clay" @click="$router.push('/m/enroll/' + s.id)">
-      {{ s.remain <= 0 ? "已满员，去候补" : "立即报名" }}
+    <button v-if="s.status !== 'cancelled' && s.reviewStatus !== 'pending' && s.reviewStatus !== 'rejected'" class="btn block clay" @click="$router.push('/m/enroll/' + s.id + (route.query.ref ? ('?ref=' + route.query.ref) : ''))">
+      {{ s.canEnrollDirect === false && s.remain <= 0 ? "已满员，去候补" : "立即报名" }}
     </button>
     <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>
     <button v-if="s.isOrganizer && s.status !== 'cancelled'" class="btn ghost block" style="margin-top:8px;color:var(--clay)" @click="showDissolve = true">解散拼团</button>
@@ -206,6 +239,7 @@ import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { payStatusText, scheduleStatusText, starText } from "@/utils/labels";
+import WeatherChart from "@/components/WeatherChart.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -215,7 +249,6 @@ const msg = ref("");
 const showDissolve = ref(false);
 const showShare = ref(false);
 const showBus = ref(false);
-const showHourly = ref(false);
 const shareUrl = ref("");
 const shareQr = ref("");
 const shareText = ref("");
@@ -227,6 +260,10 @@ const reviews = ref({ list: [], count: 0, avg: 0 });
 const cancelPolicy = ref({ summary: "", items: [] });
 const contacts = ref({ officialWechat: "beiyexing", officialWechatName: "北野行官方", officialGroup: "北野行户外交流群", hint: "" });
 const packing = computed(() => s.value?.route?.packingList || []);
+const referral = ref({});
+const fallbackIds = ref([]);
+const autoAlt = ref(false);
+const savingFallbacks = ref(false);
 const seatChart = ref(null);
 const heroIndex = ref(0);
 const busPhotoIndex = ref(0);
@@ -253,6 +290,22 @@ const seatRows = computed(() => {
   return groups;
 });
 const isOwner = computed(() => store.profile && s.value && Number(s.value.organizerId) === Number(store.profile.id));
+const leaderSlots = computed(() => {
+  const list = s.value?.leaders || [];
+  return [1, 2].map((slot) => ({
+    slot,
+    label: `领队${slot}`,
+    leader: list.find((l) => Number(l.slot) === slot) || null,
+  }));
+});
+const candidateOptions = computed(() => {
+  const opts = s.value?.fallbackOptions || {};
+  return [...(opts.sameRoute || []), ...(opts.otherRecruiting || [])];
+});
+const seatHint = computed(() => {
+  if (s.value?.myEnrollment?.status === "joined") return "点空位即可改座。占用位显示性别与年龄段。";
+  return "早报名早选座。报名前点空位会提示先报名；占用位可看个人主页。";
+});
 const statusTag = computed(() => {
   if (!s.value) return "";
   if (s.value.status === "cancelled") return scheduleStatusText("cancelled");
@@ -272,6 +325,8 @@ onUnmounted(() => {
 async function load() {
   s.value = (await http.get("/schedules/" + route.params.id)).data;
   heroIndex.value = 0;
+  fallbackIds.value = (s.value.myEnrollment?.fallbacks || []).map((f) => f.id);
+  autoAlt.value = !!s.value.myEnrollment?.autoAlt;
   try {
     seatChart.value = (await http.get("/schedules/" + route.params.id + "/seats")).data;
   } catch {
@@ -310,7 +365,74 @@ function goUser(id) {
 }
 
 function onSeat(seat) {
-  if (seat.occupant?.userId) goUser(seat.occupant.userId);
+  if (seat.occupant?.userId) {
+    goUser(seat.occupant.userId);
+    return;
+  }
+  if (seat.locked || seat.taken) return;
+  if (s.value?.myEnrollment?.status === "joined") {
+    pickSeat(seat.no);
+    return;
+  }
+  msg.value = "早报名早选座";
+}
+
+async function pickSeat(seatNo) {
+  try {
+    await http.post("/schedules/" + s.value.id + "/seats/pick", { seatNo });
+    msg.value = "已选 " + seatNo;
+    await load();
+  } catch (e) {
+    msg.value = e.message;
+  }
+}
+
+function openLeader(leader) {
+  if (leader.kind === "guide") router.push("/m/guide/" + leader.id);
+  else if (leader.userId || leader.id) router.push("/m/user/" + (leader.userId || leader.id));
+}
+
+async function applyLeader() {
+  if (!store.token) {
+    router.push("/m/login?redirect=" + encodeURIComponent(route.fullPath));
+    return;
+  }
+  try {
+    const res = await http.post("/schedules/" + s.value.id + "/leaders/apply", { leadRef: route.query.leadRef });
+    msg.value = res.message || "已报名领队";
+    await load();
+  } catch (e) {
+    msg.value = e.message;
+  }
+}
+
+async function saveFallbacks() {
+  if (!s.value?.myEnrollment) return;
+  savingFallbacks.value = true;
+  try {
+    await http.post("/enrollments/" + s.value.myEnrollment.id + "/fallbacks", {
+      scheduleIds: fallbackIds.value,
+      autoAlt: autoAlt.value,
+    });
+    msg.value = "已保存候选团 / 替代团";
+    await load();
+  } catch (e) {
+    msg.value = e.message;
+  } finally {
+    savingFallbacks.value = false;
+  }
+}
+
+async function loadReferral() {
+  if (!store.token) {
+    router.push("/m/login?redirect=" + encodeURIComponent(route.fullPath));
+    return;
+  }
+  try {
+    referral.value = (await http.get("/me/referral", { params: { scheduleId: s.value.id } })).data || {};
+  } catch (e) {
+    msg.value = e.message;
+  }
 }
 
 function previewHero() {

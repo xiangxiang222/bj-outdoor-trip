@@ -16,8 +16,8 @@
     </div>
     <nav class="mp-tab">
       <router-link to="/m" :class="{ active: $route.path === '/m' }"><span class="ico">⛰</span>首页</router-link>
-      <router-link to="/m/routes" :class="{ active: $route.path.startsWith('/m/route') }"><span class="ico">🗺</span>线路</router-link>
-      <router-link to="/m/chain" :class="{ active: $route.path.startsWith('/m/chain') || $route.path.startsWith('/m/schedule') }"><span class="ico">🔗</span>拼团</router-link>
+      <router-link to="/m/official" :class="{ active: $route.path.startsWith('/m/official') }"><span class="ico">☎</span>官方</router-link>
+      <router-link to="/m/rules" :class="{ active: $route.path.startsWith('/m/rules') }"><span class="ico">☰</span>规则</router-link>
       <router-link to="/m/mine" :class="{ active: $route.path.startsWith('/m/mine') || $route.path.startsWith('/m/login') || $route.path.startsWith('/m/orders') || $route.path.startsWith('/m/member') || $route.path.startsWith('/m/favorites') }"><span class="ico">☺</span>我的</router-link>
     </nav>
   </div>
@@ -33,7 +33,7 @@ const router = useRouter();
 const store = useUserStore();
 onMounted(() => store.fetchMeta());
 
-const tabNames = new Set(["home", "routes", "chain", "mine"]);
+const tabNames = new Set(["home", "official", "rules", "mine"]);
 const showBack = computed(() => !tabNames.has(route.name));
 
 function goBack() {
@@ -48,6 +48,8 @@ function goBack() {
 const title = computed(() => {
   const map = {
     home: "北野行",
+    official: "官方",
+    rules: "规则",
     routes: "线路列表",
     route: "线路详情",
     schedule: "活动报名",
@@ -66,5 +68,5 @@ const title = computed(() => {
   };
   return map[route.name] || "北野行";
 });
-const subtitle = computed(() => "北京周边 1 / 2 / 3 / 5 日短途游");
+const subtitle = computed(() => "北京周边 1 / 2 / 3 / 多日短途游");
 </script>

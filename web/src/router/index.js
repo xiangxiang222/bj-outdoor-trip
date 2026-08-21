@@ -7,6 +7,8 @@ const routes = [
     component: () => import("@/layouts/MobileLayout.vue"),
     children: [
       { path: "", name: "home", component: () => import("@/views/mobile/Home.vue") },
+      { path: "official", name: "official", component: () => import("@/views/mobile/Official.vue") },
+      { path: "rules", name: "rules", component: () => import("@/views/mobile/Rules.vue") },
       { path: "routes", name: "routes", component: () => import("@/views/mobile/RouteList.vue") },
       { path: "route/:id", name: "route", component: () => import("@/views/mobile/RouteDetail.vue") },
       { path: "schedule/:id", name: "schedule", component: () => import("@/views/mobile/ScheduleDetail.vue") },

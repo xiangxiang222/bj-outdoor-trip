@@ -14,11 +14,11 @@ const { buildDemographics } = require("./services/biz");
 const { code2session } = require("./services/wechat");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, canCancelEnrollment } = require("./services/enroll");
-const { scheduleSeats, setLockedSeats, toggleLockedSeat, assignSeat } = require("./services/seats");
+const { scheduleSeats, setLockedSeats, toggleLockedSeat, assignSeat, pickMySeat } = require("./services/seats");
 const { forecast } = require("./services/weather");
 const { listSplits, createSplitsForSchedule } = require("./services/split");
 const { listReviews, createReview, reviewedScheduleIds } = require("./services/reviews");
-const { cancelPolicy, waiverText, faqs, meetupMap, contacts } = require("./services/policy");
+const { cancelPolicy, waiverText, faqs, meetupMap, contacts, officialAccounts, commonRules, leaderRecruitCopy } = require("./services/policy");
 const {
   buildHome,
   cityOf,
@@ -31,6 +31,11 @@ const {
 } = require("./services/home");
 const { offerMeta, liveMemberPrice } = require("./services/offer");
 const { publicUserProfile, payEnrollment, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
+const { addPhoto, removePhoto, ensureReferralCode } = require("./services/profile");
+const { leadersOf, applyLeader, settleLeaderRewards, recruitPayload } = require("./services/leaders");
+const { referralCard, groupQrPayload, settleEnrollReferrals } = require("./services/referral");
+const { optionsForSchedule, setFallbacks, listFallbacks } = require("./services/fallback");
+const { generateVirtualUsers } = require("./services/virtual");
 const { deleteAccount } = require("./services/account");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -45,6 +50,8 @@ const {
 const {
   isMember,
   enrolledCount,
+  realEnrolledCount,
+  virtualEnrolledCount,
   waitlistCount,
   loadRouteBundle,
   quoteForSchedule,
@@ -98,6 +105,7 @@ function userPublic(u, req) {
     points: u.points,
     companyName: u.company_name,
     role: u.role,
+    referralCode: ensureReferralCode(u.id),
     idCardMasked: maskIdCard(u.id_card),
   };
 }
@@ -188,6 +196,9 @@ function scheduleView(sch, req) {
   } catch {
     lockedCount = 0;
   }
+  const realLive = realEnrolledCount(sch.id);
+  const virtualLive = virtualEnrolledCount(sch.id);
+  const leaders = leadersOf(sch.id, req);
   return {
     id: sch.id,
     routeId: sch.route_id,
@@ -221,6 +232,12 @@ function scheduleView(sch, req) {
     quote,
     people,
     guide,
+    leaders,
+    leaderRecruitCopy,
+    realEnrolled: realLive,
+    virtualEnrolled: virtualLive,
+    canEnrollDirect: Math.max(0, sch.max_seats - live - lockedCount) > 0 || virtualLive > 0,
+    cost,
     cost,
     costBreakdown: {
       transport: sch.cost_transport,
@@ -232,7 +249,7 @@ function scheduleView(sch, req) {
     },
     revenue,
     profit: revenue - cost,
-    guaranteed: sch.status !== "cancelled" && live >= Number(sch.min_group_size),
+    guaranteed: sch.status !== "cancelled" && realLive >= Number(sch.min_group_size),
     city: sch.city || cityOf(mappedRoute?.region),
     offerType: quote.offerType || sch.offer_type || "full",
     offerLabel: quote.offerLabel || offerMeta(sch.offer_type).label,
@@ -281,6 +298,11 @@ router.get("/meta", (req, res) => {
       waiverText,
       faqs,
       contacts,
+      officialAccounts,
+      commonRules,
+      leaderRecruitCopy,
+      referralRate: config.referral.enrollRate,
+      leaderReward: config.referral.leaderReward,
       offers: Object.values(require("./services/offer").OFFER_TYPES),
     },
   });
@@ -456,6 +478,35 @@ router.delete("/me", authUser, (req, res) => {
   }
 });
 
+router.get("/me/referral", authUser, async (req, res) => {
+  try {
+    settleEnrollReferrals();
+    settleLeaderRewards();
+    const data = await referralCard(req.userId, req, { scheduleId: req.query.scheduleId });
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/me/photos", authUser, (req, res) => {
+  try {
+    const data = addPhoto(req.userId, (req.body || {}).url);
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.delete("/me/photos/:id", authUser, (req, res) => {
+  try {
+    const data = removePhoto(req.userId, req.params.id);
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
 router.put("/me", authUser, (req, res) => {
   const { nickname, gender, birthday, idCard, companyName, avatar } = req.body || {};
   const parsed = idCard ? parseIdCard(idCard) : {};
@@ -535,6 +586,11 @@ router.get("/guides", (req, res) => {
     .all()
     .map((g) => publicGuideCard(g, req));
   res.json({ ok: true, data: rows });
+});
+
+router.get("/guides/recruit", optionalUser, (req, res) => {
+  settleLeaderRewards();
+  res.json({ ok: true, data: recruitPayload(req.userId) });
 });
 
 router.get("/guides/:id", (req, res) => {
@@ -650,7 +706,7 @@ router.get("/schedules", (req, res) => {
   res.json({ ok: true, data: rows });
 });
 
-router.get("/schedules/:id", optionalUser, (req, res) => {
+router.get("/schedules/:id", optionalUser, async (req, res) => {
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
   const includeCancelled = sch.status === "cancelled";
@@ -663,12 +719,33 @@ router.get("/schedules/:id", optionalUser, (req, res) => {
     .prepare(chainSql)
     .all(sch.id)
     .map((e, i) => chainItem(e, i, req));
+  const groupText = sch.consult_group || contacts.officialWechat;
+  let myEnrollment = null;
+  if (req.userId) {
+    const mine = db()
+      .prepare(
+        "SELECT * FROM enrollments WHERE schedule_id=? AND user_id=? AND status IN ('joined','waitlist') ORDER BY id DESC LIMIT 1"
+      )
+      .get(sch.id, req.userId);
+    if (mine) {
+      myEnrollment = {
+        id: mine.id,
+        status: mine.status,
+        seatNo: mine.seat_no || "",
+        autoAlt: !!mine.auto_alt,
+        fallbacks: listFallbacks(mine.id),
+      };
+    }
+  }
   res.json({
     ok: true,
     data: {
       ...scheduleView(sch, req),
       chain,
       isOrganizer: !!(req.userId && sch.organizer_id && Number(req.userId) === Number(sch.organizer_id)),
+      consultGroupQr: await groupQrPayload(groupText),
+      myEnrollment,
+      fallbackOptions: optionsForSchedule(sch.id),
     },
   });
 });
@@ -690,6 +767,42 @@ router.get("/schedules/:id/seats", optionalUser, (req, res) => {
       : null,
   }));
   res.json({ ok: true, data });
+});
+
+router.post("/schedules/:id/seats/pick", authUser, (req, res) => {
+  try {
+    const data = pickMySeat(req.params.id, req.userId, (req.body || {}).seatNo);
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/schedules/:id/leaders/apply", authUser, (req, res) => {
+  try {
+    const data = applyLeader(req.params.id, req.userId, { leadRef: (req.body || {}).leadRef || req.query.leadRef });
+    res.json({ ok: true, data, message: `已报名领队${data.slot}` });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.get("/guides/recruit", optionalUser, (req, res) => {
+  settleLeaderRewards();
+  res.json({ ok: true, data: recruitPayload(req.userId) });
+});
+
+router.post("/enrollments/:id/fallbacks", authUser, (req, res) => {
+  try {
+    const body = req.body || {};
+    const data = setFallbacks(req.params.id, req.userId, {
+      scheduleIds: body.scheduleIds || body.fallbackScheduleIds,
+      autoAlt: body.autoAlt,
+    });
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 router.get("/schedules/:id/poster", async (req, res) => {
@@ -872,6 +985,9 @@ router.post("/enroll", authUser, (req, res) => {
       emergencyPhone,
       waiverAccepted,
       healthOk,
+      referrerCode,
+      autoAlt,
+      fallbackScheduleIds,
     } = req.body || {};
     const data = enrollUser({
       userId: req.userId,
@@ -886,6 +1002,9 @@ router.post("/enroll", authUser, (req, res) => {
       emergencyPhone,
       waiverAccepted,
       healthOk,
+      referrerCode: referrerCode || req.query.ref,
+      autoAlt,
+      fallbackScheduleIds,
     });
     res.json({ ok: true, data });
   } catch (e) {
@@ -1585,7 +1704,7 @@ router.post("/admin/enrollments/:id/cancel", authAdmin, (req, res) => {
 router.get("/admin/users", authAdmin, (req, res) => {
   const q = String(req.query.q || "").trim();
   let sql =
-    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at FROM users WHERE deleted_at IS NULL";
+    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual FROM users WHERE deleted_at IS NULL";
   const args = [];
   if (q) {
     sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ?)";
@@ -1593,8 +1712,18 @@ router.get("/admin/users", authAdmin, (req, res) => {
     args.push(like, like, like);
   }
   sql += " ORDER BY id DESC";
-  const rows = db().prepare(sql).all(...args).map((u) => ({ ...u, isMember: isMember(u) }));
+  const rows = db().prepare(sql).all(...args).map((u) => ({ ...u, isMember: isMember(u), isVirtual: !!u.is_virtual }));
   res.json({ ok: true, data: rows });
+});
+
+router.post("/admin/virtual-users", authAdmin, (req, res) => {
+  try {
+    const body = req.body || {};
+    const data = generateVirtualUsers({ count: body.count, perSchedule: body.perSchedule });
+    res.json({ ok: true, data, message: `已生成 ${data.created} 名虚拟用户，随机报名 ${data.joined} 人次` });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 router.post("/admin/users/:id/member", authAdmin, (req, res) => {

@@ -1,0 +1,19 @@
+<view class="card">
+  <view class="pad">
+    <view class="title">{{rules.title}}</view>
+    <view class="muted">{{rules.summary}}</view>
+  </view>
+</view>
+<view class="card" wx:for="{{rules.sections}}" wx:key="title">
+  <view class="pad">
+    <view class="title">{{item.title}}</view>
+    <view class="muted" wx:for="{{item.items}}" wx:for-item="line" wx:key="*this">{{index + 1}}. {{line}}</view>
+  </view>
+</view>
+<view class="card" wx:if="{{faqs.length}}">
+  <view class="pad title">常见问题</view>
+  <view class="pad faq-item" wx:for="{{faqs}}" wx:key="q">
+    <view>{{item.q}}</view>
+    <view class="muted">{{item.a}}</view>
+  </view>
+</view>

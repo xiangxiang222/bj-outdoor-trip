@@ -179,6 +179,15 @@ function assignSeat(scheduleId, enrollmentId, toSeatNo) {
   };
 }
 
+function pickMySeat(scheduleId, userId, seatNo) {
+  const db = getDb();
+  const en = db
+    .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND user_id=? AND status='joined' ORDER BY id DESC LIMIT 1")
+    .get(scheduleId, userId);
+  if (!en) fail(400, "请先报名再选座");
+  return assignSeat(scheduleId, en.id, seatNo);
+}
+
 module.exports = {
   seatLayout,
   occupiedSeatNos,
@@ -189,4 +198,5 @@ module.exports = {
   setLockedSeats,
   toggleLockedSeat,
   assignSeat,
+  pickMySeat,
 };

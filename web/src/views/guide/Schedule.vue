@@ -7,7 +7,8 @@
         <p>集合 {{ s.meetupPoint }} {{ s.meetupTime }}</p>
         <p>已报 {{ s.enrolled }} / {{ s.maxSeats }} · 已签到 {{ checked }}</p>
         <div v-if="weather" class="weather" :class="weather.alerts?.[0]?.level">
-          <strong>{{ weather.summary }} {{ weather.tmin }}~{{ weather.tmax }}℃</strong>
+          <strong>{{ weather.summary }} {{ weather.tmin }}~{{ weather.tmax }}℃ · 风 {{ weather.wind }}km/h</strong>
+          <WeatherChart :hourly="weather.hourly" :label="'分时气温'" />
           <p>{{ weather.alerts?.[0]?.text }}</p>
         </div>
       </div>
@@ -58,6 +59,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import http from "@/api/http";
+import WeatherChart from "@/components/WeatherChart.vue";
 
 const route = useRoute();
 const s = ref(null);

@@ -1,0 +1,15 @@
+<view class="card" wx:for="{{accounts}}" wx:key="platform">
+  <view class="pad contact-row">
+    <view>
+      <view class="title">{{item.platform}}</view>
+      <view>{{item.name}} {{item.id}}</view>
+      <view class="muted">{{item.remark}}</view>
+    </view>
+    <text class="nav-link" catchtap="copy" data-text="{{item.id}}">复制</text>
+  </view>
+</view>
+<view class="card" wx:if="{{contacts.officialWechat}}">
+  <view class="pad contact-row">官方微信 {{contacts.officialWechatName}} {{contacts.officialWechat}} <text class="nav-link" catchtap="copy" data-text="{{contacts.officialWechat}}">复制</text></view>
+  <view class="pad">官方用户群 {{contacts.officialGroup}}</view>
+  <view class="pad muted">{{contacts.hint}}</view>
+</view>

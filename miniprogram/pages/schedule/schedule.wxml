@@ -27,12 +27,18 @@
     <view class="muted" wx:if="{{s.reviewStatus=='pending'}}" style="color:#c77d3a">本团正在审核，通过后才会出现在首页。</view>
     <view class="muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">本团已解散。理由：{{s.cancelReason}}</view>
     <view class="muted" wx:elif="{{s.guide}}" bindtap="goGuide">已匹配导游：{{s.guide.name}} <text class="nav-link">查看详情</text></view>
-    <view class="weather" wx:if="{{weather}}" bindtap="toggleHourly">
-      <view>{{weather.place}} {{weather.summary}} {{weather.tmin}}~{{weather.tmax}}℃</view>
-      <view class="muted">点看分时预报</view>
-      <scroll-view wx:if="{{showHourly}}" scroll-x class="hourly">
-        <view class="hour" wx:for="{{weather.hourly}}" wx:key="hour">{{item.hour}}\n{{item.temp}}℃\n{{item.summary}}</view>
-      </scroll-view>
+    <view class="leader-slot" wx:for="{{leaderSlots}}" wx:key="slot">
+      <view wx:if="{{item.leader}}" bindtap="openLeader" data-kind="{{item.leader.kind}}" data-id="{{item.leader.id}}" data-userid="{{item.leader.userId}}">
+        <text class="nav-link">{{item.label}} {{item.leader.name}}</text>
+      </view>
+      <view wx:else bindtap="applyLeader">{{item.label}} · 报名领队</view>
+    </view>
+    <view class="muted">{{s.leaderRecruitCopy}}</view>
+    <view class="weather" wx:if="{{weather}}">
+      <view>{{weather.place}} {{weather.summary}}</view>
+      <view class="muted">{{weather.tmin}}~{{weather.tmax}}℃ · 风 {{weather.wind}}km/h</view>
+      <canvas wx:if="{{weather.hourly && weather.hourly.length}}" type="2d" id="weatherChart" class="wx-chart" disable-scroll="true"></canvas>
+      <view class="muted" wx:for="{{weather.alerts}}" wx:key="text">{{item.text}}</view>
     </view>
   </view>
 </view>
@@ -41,7 +47,7 @@
   <view class="seat-front">车头</view>
   <view class="seat-row" wx:for="{{seatRows}}" wx:key="row">
     <block wx:for="{{item.seats}}" wx:for-item="seat" wx:key="no">
-      <view class="seat {{seat.locked ? 'locked' : (seat.taken ? 'taken' : '')}}" catchtap="onSeat" data-userid="{{seat.occupant.userId}}" data-locked="{{seat.locked}}">
+      <view class="seat {{seat.locked ? 'locked' : (seat.taken ? 'taken' : '')}} {{seat.mine ? 'mine' : ''}}" catchtap="onSeat" data-userid="{{seat.occupant.userId}}" data-no="{{seat.no}}" data-taken="{{seat.taken}}" data-locked="{{seat.locked}}">
         <text wx:if="{{seat.occupant}}">{{seat.occupant.initial}}{{seat.occupant.lifeStage}}</text>
         <text wx:elif="{{seat.locked}}">锁</text>
         <text wx:else>{{seat.col}}</text>
@@ -49,6 +55,14 @@
       <view wx:if="{{seat.aisleAfter}}" class="seat-aisle"></view>
     </block>
   </view>
+</view>
+<view class="card" wx:if="{{s.myEnrollment}}">
+  <view class="pad title">报名后</view>
+  <view class="pad">1. 点空位可选座 · 早报名早选座</view>
+  <view class="pad">2. 本团微信群</view>
+  <image wx:if="{{s.consultGroupQr}}" src="{{s.consultGroupQr}}" style="width:280rpx;height:280rpx;margin:16rpx" />
+  <view class="pad muted">{{s.consultGroup || contacts.officialWechat}}</view>
+  <view class="pad">3. 候选团 / 4. 替代团请在报名页勾选，不成团自动转团多退少补</view>
 </view>
 <view class="pad title">报名名单</view>
 <view class="pad chain-line" wx:for="{{s.chain}}" wx:key="index">

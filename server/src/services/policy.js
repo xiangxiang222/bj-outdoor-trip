@@ -91,4 +91,72 @@ const contacts = {
   hint: "添加官方微信后拉入用户群。本团咨询群由领队确认后显示在行程页。",
 };
 
-module.exports = { packingList, cancelPolicy, waiverText, faqs, meetupMapUrl, meetupMap, MEETUP_POIS, contacts };
+const officialAccounts = [
+  { platform: "微信公众号", name: "北野行官方", id: "beiyexing", remark: "活动预告与成团通知" },
+  { platform: "微信小程序", name: "北野行", id: "北野行", remark: "报名、选座、查看行程" },
+  { platform: "视频号", name: "北野行", id: "北野行", remark: "线路实拍与行前说明" },
+  { platform: "小红书", name: "北野行户外", id: "@beiyexing", remark: "目的地攻略与成团日记" },
+  { platform: "抖音", name: "北野行户外", id: "@beiyexing", remark: "短视频看路况与风景" },
+  { platform: "微博", name: "北野行", id: "@北野行", remark: "天气与集合点提醒" },
+];
+
+const leaderRecruitCopy = "推荐领队 首次带队完成后 奖励推荐者200元";
+
+const commonRules = {
+  title: "各线路公共规则",
+  summary: "以下规则适用于北野行全部线路；各团行程页的装备、集合点以当次排期为准。",
+  sections: [
+    {
+      title: "成团与出发",
+      items: [
+        "未达最低成团人数前显示招募中；达到成团线后铁定出发并安排领队。",
+        "一个团最多两位领队。还没有领队时可在行程页点「报名领队」。",
+        "人数不足或天气封山时，发起人可解散；已付款标记退款。",
+      ],
+    },
+    {
+      title: "报名与座位",
+      items: [
+        "早报名早选座。报名前点座位图会提示先报名；报名后可在座位图改座。",
+        "个人拼团先占座，费用待出行前支付；公司团由开团方统一结算。",
+        "满员可候补。有人取消后按顺序递补。",
+      ],
+    },
+    {
+      title: "不成团时的备选",
+      items: [
+        "报名后可勾选多个候选团：本团未成团时，按你选的顺序自动转到别的团，价格多退少补。",
+        "也可打开「替代团」：本团未成团时，自动加入相同行程的其他日期。",
+      ],
+    },
+    {
+      title: "推荐与领队",
+      items: [
+        leaderRecruitCopy + "。",
+        "推荐好友报名成功后，按人数结算报名费的 5%。",
+      ],
+    },
+    {
+      title: "装备与安全",
+      items: [
+        "请按行程页装备清单准备；儿童须由监护人确认风险告知。",
+        "服从领队现场安排；中途退出须告知领队，下撤费用自理。",
+      ],
+    },
+    { title: "退改", items: cancelPolicy.items },
+  ],
+};
+
+module.exports = {
+  packingList,
+  cancelPolicy,
+  waiverText,
+  faqs,
+  meetupMapUrl,
+  meetupMap,
+  MEETUP_POIS,
+  contacts,
+  officialAccounts,
+  commonRules,
+  leaderRecruitCopy,
+};

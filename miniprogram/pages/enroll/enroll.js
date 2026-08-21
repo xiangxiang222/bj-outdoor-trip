@@ -4,6 +4,7 @@ const app = getApp();
 Page({
   data: {
     id: "",
+    ref: "",
     s: null,
     idHint: "",
     idOk: false,
@@ -20,6 +21,7 @@ Page({
     }
     this.setData({
       id: q.id,
+      ref: q.ref || "",
       "form.travelerName": (app.globalData.user || {}).nickname || "",
       "form.travelerPhone": (app.globalData.user || {}).phone || "",
     });
@@ -114,6 +116,7 @@ Page({
         scheduleId: Number(this.data.id),
         ...this.data.form,
         idCard: parsed.idCard,
+        referrerCode: this.data.ref,
       });
       if (res.data.needPay) {
         const pay = res.data.wechatPay;

@@ -5,11 +5,15 @@
       <div class="row" style="gap:8px">
         <el-input v-model="q" placeholder="手机 / 昵称 / 公司" clearable style="width:240px" @keyup.enter="load" />
         <el-button type="success" @click="load">查询</el-button>
+        <el-button @click="genVirtual">批量生成虚拟用户</el-button>
       </div>
     </div>
     <el-table :data="list" stripe>
       <el-table-column prop="nickname" label="昵称" min-width="120" />
       <el-table-column prop="phone" label="手机" width="130" />
+      <el-table-column label="类型" width="80">
+        <template #default="{ row }">{{ row.isVirtual ? "虚拟" : "真实" }}</template>
+      </el-table-column>
       <el-table-column label="性别" width="80">
         <template #default="{ row }">{{ genderText(row.gender) }}</template>
       </el-table-column>
@@ -61,6 +65,17 @@ const pointsRow = ref(null);
 const pointsForm = ref({ delta: 10, reason: "" });
 
 onMounted(load);
+
+async function genVirtual() {
+  try {
+    await ElMessageBox.confirm("生成虚拟用户并随机加入招募中的团。真人数增加后，虚拟用户会自动退团腾座。", "批量虚拟用户", { type: "warning" });
+    const res = await http.post("/admin/virtual-users", { count: 12, perSchedule: 3 });
+    ElMessage.success(res.message || "已生成");
+    await load();
+  } catch (e) {
+    if (e !== "cancel") ElMessage.error(e.message || "已取消");
+  }
+}
 
 async function load() {
   list.value = (await http.get("/admin/users", { params: { q: q.value } })).data;

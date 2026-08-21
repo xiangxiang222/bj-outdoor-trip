@@ -29,8 +29,10 @@
       </div>
     </div>
 
+    <div class="card" v-if="store.token && store.profile" @click="$router.push('/m/user/' + store.profile.id)"><div class="pad">个人主页 · 相册与行程</div></div>
     <div class="card" @click="goAuth('/m/orders')"><div class="pad">我的报名</div></div>
     <div class="card" @click="goAuth('/m/favorites')"><div class="pad">我的收藏</div></div>
+    <div class="card" @click="goReferral"><div class="pad">推荐报名 · 按人数结 5%</div></div>
     <div class="card" @click="openMember"><div class="pad">{{ store.profile?.isMember ? "会员中心" : "开通会员" }}</div></div>
     <div class="card" @click="$router.push('/m/routes')"><div class="pad">去选线路开团</div></div>
     <button v-if="store.token" class="btn ghost block" @click="store.logout(); $router.replace('/m/mine')">退出登录</button>
@@ -67,6 +69,10 @@ function goLogin(redirect, tab) {
 function goAuth(path) {
   if (!store.token) goLogin(path);
   else router.push(path);
+}
+function goReferral() {
+  if (!store.token) goLogin("/m/mine");
+  else router.push(store.profile?.id ? "/m/user/" + store.profile.id : "/m/orders");
 }
 async function openMember() {
   if (!store.token) {

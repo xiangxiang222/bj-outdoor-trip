@@ -1,4 +1,8 @@
 <view class="pad muted">成团后系统会按线路类型匹配导游。也可以先了解领队风格再报名。</view>
+<view class="card">
+  <view class="pad title">{{recruit.copy}}</view>
+  <view class="pad muted">首次带队完成后奖励推荐者 {{recruit.reward}} 元。我的推荐码 {{recruit.code}}</view>
+</view>
 <view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
   <view class="pad guide-row">
     <view class="guide-face">{{item.initial}}</view>

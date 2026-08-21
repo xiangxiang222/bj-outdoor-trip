@@ -1,6 +1,13 @@
 <template>
   <div>
     <p class="muted">成团后系统会按线路类型匹配导游。也可以先了解领队风格再报名。</p>
+    <div class="card">
+      <div class="pad">
+        <strong>{{ recruit.copy }}</strong>
+        <p class="muted">把推荐码发给想当领队的朋友。首次带队完成后奖励推荐者 {{ recruit.reward }} 元。</p>
+        <p v-if="recruit.code">我的推荐码 {{ recruit.code }}</p>
+      </div>
+    </div>
     <div class="card" v-for="g in list" :key="g.id" @click="$router.push('/m/guide/' + g.id)">
       <div class="pad guide-row">
         <div class="guide-face">
@@ -26,7 +33,13 @@ import { onMounted, ref } from "vue";
 import http from "@/api/http";
 
 const list = ref([]);
+const recruit = ref({ copy: "推荐领队 首次带队完成后 奖励推荐者200元", reward: 200, code: "" });
 onMounted(async () => {
   list.value = (await http.get("/guides")).data || [];
+  try {
+    recruit.value = (await http.get("/guides/recruit")).data || recruit.value;
+  } catch {
+    /* ignore */
+  }
 });
 </script>
