@@ -35,7 +35,7 @@ describe("helpers service", () => {
     const member = seed.db.prepare("SELECT * FROM users WHERE id=?").get(seed.userId);
     const q = quoteForSchedule({ route_id: seed.routeId }, 20, member);
     assert.equal(q.originPrice, 179);
-    assert.equal(q.price, 165);
+    assert.equal(q.price, 170);
     assert.equal(q.isMember, true);
     const missing = quoteForSchedule({ route_id: 99999 }, 10, member);
     assert.equal(missing.price, 0);

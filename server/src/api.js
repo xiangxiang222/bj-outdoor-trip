@@ -19,6 +19,17 @@ const { forecast } = require("./services/weather");
 const { listSplits, createSplitsForSchedule } = require("./services/split");
 const { listReviews, createReview, reviewedScheduleIds } = require("./services/reviews");
 const { cancelPolicy, waiverText, faqs, meetupMap, contacts } = require("./services/policy");
+const {
+  buildHome,
+  cityOf,
+  parseIdList,
+  listPlayTags,
+  mapPlayTag,
+  tagsForIds,
+  monthDays,
+  randomTagColor,
+} = require("./services/home");
+const { offerMeta, liveMemberPrice } = require("./services/offer");
 const { publicUserProfile, payEnrollment, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
 const { deleteAccount } = require("./services/account");
 const { createCaptcha, codesMatch } = require("./services/captcha");
@@ -83,6 +94,7 @@ function userPublic(u, req) {
     hometown: u.hometown,
     isMember: isMember(u),
     memberExpireAt: u.member_expire_at,
+    memberGiftLeft: Number(u.member_gift_left || 0),
     points: u.points,
     companyName: u.company_name,
     role: u.role,
@@ -94,7 +106,11 @@ function grantMembership(userId) {
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(userId);
   const expire = dayjs(user.member_expire_at).isAfter(dayjs()) ? dayjs(user.member_expire_at) : dayjs();
   const next = expire.add(config.member.durationDays, "day").format("YYYY-MM-DD");
-  db().prepare("UPDATE users SET is_member=1, member_expire_at=? WHERE id=?").run(next, userId);
+  db().prepare("UPDATE users SET is_member=1, member_expire_at=?, member_gift_left=COALESCE(member_gift_left,0)+? WHERE id=?").run(
+    next,
+    config.member.giftTrips || 1,
+    userId
+  );
   addPoints(userId, config.member.annualFee, "开通会员赠送积分", "member", userId);
   return db().prepare("SELECT * FROM users WHERE id=?").get(userId);
 }
@@ -126,6 +142,7 @@ function mapRouteSummary(row, req, extra) {
     memberFromPrice: extra.memberFromPrice,
     priceTiers: extra.priceTiers,
     upcoming: extra.upcoming,
+    playTags: extra.playTags || [],
   };
 }
 
@@ -216,7 +233,33 @@ function scheduleView(sch, req) {
     revenue,
     profit: revenue - cost,
     guaranteed: sch.status !== "cancelled" && live >= Number(sch.min_group_size),
+    city: sch.city || cityOf(mappedRoute?.region),
+    offerType: quote.offerType || sch.offer_type || "full",
+    offerLabel: quote.offerLabel || offerMeta(sch.offer_type).label,
+    offerColor: quote.offerColor || offerMeta(sch.offer_type).color,
+    playTags: resolvePlayTags(sch, mappedRoute, req),
+    reviewStatus: sch.review_status || "approved",
   };
+}
+
+function resolvePlayTags(sch, route, req) {
+  let ids = parseIdList(sch.play_tags_json);
+  if (!ids.length && route) {
+    const names = new Set([route.category, ...((route.tags || []).map(String))]);
+    ids = listPlayTags().filter((t) => names.has(t.name)).map((t) => t.id);
+  }
+  return tagsForIds(ids, req);
+}
+
+function applyScheduleExtras(id, body, route) {
+  const offerType = offerMeta(body.offerType || body.offer_type).key;
+  const offerPrice = body.offerPrice == null || body.offerPrice === "" ? null : Number(body.offerPrice);
+  const reviewStatus = body.reviewStatus || body.review_status || "approved";
+  const playTagIds = Array.isArray(body.playTagIds) ? body.playTagIds : parseIdList(body.play_tags_json);
+  const city = body.city || cityOf(route?.region);
+  db()
+    .prepare("UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=? WHERE id=?")
+    .run(offerType, offerPrice, reviewStatus, JSON.stringify(playTagIds), city, id);
 }
 
 router.get("/meta", (req, res) => {
@@ -228,6 +271,9 @@ router.get("/meta", (req, res) => {
       smsDemoCode: config.demoSmsCode,
       wechatPayMock: config.wechat.mock,
       memberAnnualFee: config.member.annualFee,
+      memberDiscountRate: config.member.discountRate,
+      memberGiftMaxPrice: config.member.giftMaxPrice,
+      memberCopy: "限时开通会员 年费 99元 赠送一次100以内的团 线路享受额外95折",
       points: config.points,
       insurance: config.insurance.plans,
       days: [1, 2, 3, 5],
@@ -235,8 +281,27 @@ router.get("/meta", (req, res) => {
       waiverText,
       faqs,
       contacts,
+      offers: Object.values(require("./services/offer").OFFER_TYPES),
     },
   });
+});
+
+router.get("/home", (req, res) => {
+  const data = buildHome(req);
+  if (req.query.month) {
+    const dates = db()
+      .prepare(
+        "SELECT start_date FROM schedules WHERE IFNULL(review_status,'approved')='approved' AND status!='cancelled'"
+      )
+      .all()
+      .map((r) => r.start_date);
+    data.monthDays = monthDays(String(req.query.month), dates);
+  }
+  res.json({ ok: true, data });
+});
+
+router.get("/play-tags", (req, res) => {
+  res.json({ ok: true, data: listPlayTags().map((t) => mapPlayTag(t, req)) });
 });
 
 router.post("/auth/sms", (req, res) => {
@@ -479,16 +544,26 @@ router.get("/guides/:id", (req, res) => {
 });
 
 router.get("/routes", (req, res) => {
-  const { days, category, q, difficulty } = req.query;
+  const { days, category, q, difficulty, tag, city } = req.query;
   let sql = "SELECT * FROM routes WHERE status='on'";
   const args = [];
-  if (days) {
+  if (String(days) === "multi") {
+    sql += " AND days>=4";
+  } else if (days) {
     sql += " AND days=?";
     args.push(Number(days));
   }
   if (category) {
     sql += " AND category=?";
     args.push(category);
+  }
+  if (tag) {
+    sql += " AND (category=? OR tags_json LIKE ?)";
+    args.push(tag, `%${tag}%`);
+  }
+  if (city) {
+    sql += " AND region LIKE ?";
+    args.push(`%${city}%`);
   }
   if (difficulty) {
     sql += " AND difficulty=?";
@@ -502,12 +577,16 @@ router.get("/routes", (req, res) => {
   const rows = db().prepare(sql).all(...args);
   const data = rows.map((row) => {
     const tiers = db().prepare("SELECT * FROM route_price_tiers WHERE route_id=? ORDER BY min_people").all(row.id);
-    const schedules = db().prepare("SELECT id,start_date,status FROM schedules WHERE route_id=? AND start_date>=date('now') AND status!='cancelled' ORDER BY start_date LIMIT 3").all(row.id);
+    const schedules = db().prepare("SELECT id,start_date,status FROM schedules WHERE route_id=? AND start_date>=date('now') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved' ORDER BY start_date LIMIT 3").all(row.id);
+    const mapped = mapRoute(row, req);
+    const names = new Set([mapped.category, ...(mapped.tags || [])]);
+    const playTags = listPlayTags().filter((t) => names.has(t.name)).map((t) => mapPlayTag(t, req));
     return mapRouteSummary(row, req, {
       fromPrice: tiers[0]?.price,
-      memberFromPrice: tiers[0]?.member_price,
-      priceTiers: tiers.map((t) => ({ minPeople: t.min_people, price: t.price, memberPrice: t.member_price })),
+      memberFromPrice: liveMemberPrice(tiers[0]?.price),
+      priceTiers: tiers.map((t) => ({ minPeople: t.min_people, price: t.price, memberPrice: liveMemberPrice(t.price) })),
       upcoming: schedules,
+      playTags,
     });
   });
   res.json({ ok: true, data });
@@ -518,27 +597,31 @@ router.get("/routes/:id", optionalUser, (req, res) => {
   if (!row) return res.status(404).json({ ok: false, message: "线路不存在" });
   const bundle = loadRouteBundle(row.id);
   const schedules = db()
-    .prepare("SELECT * FROM schedules WHERE route_id=? AND start_date>=date('now','-1 day') AND status!='cancelled' ORDER BY start_date")
+    .prepare("SELECT * FROM schedules WHERE route_id=? AND start_date>=date('now','-1 day') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved' ORDER BY start_date")
     .all(row.id)
     .map((s) => scheduleView(s, req));
   let favored = false;
   if (req.userId) {
     favored = !!db().prepare("SELECT 1 FROM favorites WHERE user_id=? AND route_id=?").get(req.userId, row.id);
   }
+  const mapped = mapRoute(row, req);
+  const names = new Set([mapped.category, ...(mapped.tags || [])]);
+  const playTags = listPlayTags().filter((t) => names.has(t.name)).map((t) => mapPlayTag(t, req));
   res.json({
     ok: true,
     data: mapRoute(row, req, {
-      priceTiers: bundle.tiers.map((t) => ({ minPeople: t.min_people, maxPeople: t.max_people, price: t.price, memberPrice: t.member_price })),
+      priceTiers: bundle.tiers.map((t) => ({ minPeople: t.min_people, maxPeople: t.max_people, price: t.price, memberPrice: liveMemberPrice(t.price) })),
       buses: bundle.buses,
       schedules,
       favored,
+      playTags,
     }),
   });
 });
 
 router.get("/schedules", (req, res) => {
-  const { routeId, organizerType } = req.query;
-  let sql = "SELECT * FROM schedules WHERE start_date>=date('now','-1 day') AND status!='cancelled'";
+  const { routeId, organizerType, city, tag, offerType, month, date } = req.query;
+  let sql = "SELECT * FROM schedules WHERE start_date>=date('now','-1 day') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved'";
   const args = [];
   if (routeId) {
     sql += " AND route_id=?";
@@ -548,8 +631,23 @@ router.get("/schedules", (req, res) => {
     sql += " AND organizer_type=?";
     args.push(organizerType);
   }
+  if (offerType) {
+    sql += " AND IFNULL(offer_type,'full')=?";
+    args.push(offerType);
+  }
+  if (date) {
+    sql += " AND start_date=?";
+    args.push(date);
+  }
+  if (month) {
+    sql += " AND start_date LIKE ?";
+    args.push(`${month}%`);
+  }
   sql += " ORDER BY start_date";
-  res.json({ ok: true, data: db().prepare(sql).all(...args).map((s) => scheduleView(s, req)) });
+  let rows = db().prepare(sql).all(...args).map((s) => scheduleView(s, req));
+  if (city) rows = rows.filter((s) => s.city === city);
+  if (tag) rows = rows.filter((s) => (s.playTags || []).some((t) => t.name === tag || String(t.id) === String(tag)));
+  res.json({ ok: true, data: rows });
 });
 
 router.get("/schedules/:id", optionalUser, (req, res) => {
@@ -637,6 +735,7 @@ router.post("/schedules", authUser, (req, res) => {
       nanoid(10),
       notes || ""
     );
+  applyScheduleExtras(info.lastInsertRowid, { ...(req.body || {}), reviewStatus: "approved" }, route);
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(info.lastInsertRowid);
   res.json({ ok: true, data: scheduleView(sch, req) });
 });
@@ -657,6 +756,107 @@ function dissolveHandler(actor) {
 }
 
 router.post("/schedules/:id/dissolve", authUser, dissolveHandler("organizer"));
+
+router.post("/upload", authUser, (req, res) => {
+  uploadImage.single("file")(req, res, (err) => {
+    if (err) return res.status(400).json({ ok: false, message: err.message || "上传失败" });
+    if (!req.file) return res.status(400).json({ ok: false, message: "请选择图片" });
+    res.json({ ok: true, data: { url: `/static/uploads/${req.file.filename}` } });
+  });
+});
+
+router.post("/trips", authUser, (req, res) => {
+  const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+  const b = req.body || {};
+  const title = String(b.title || "").trim();
+  if (!title) return res.status(400).json({ ok: false, message: "请填写线路标题" });
+  if (!b.startDate) return res.status(400).json({ ok: false, message: "请选择出发日期" });
+  const bus = db().prepare("SELECT * FROM bus_types WHERE id=?").get(b.busTypeId);
+  if (!bus) return res.status(400).json({ ok: false, message: "请选择车型" });
+  const days = String(b.days) === "multi" ? 5 : Number(b.days) || 1;
+  const city = b.city || "北京";
+  const playTagIds = Array.isArray(b.playTagIds) ? b.playTagIds.map(Number).filter((n) => n > 0) : [];
+  const tagNames = tagsForIds(playTagIds, req).map((t) => t.name);
+  const originPrice = Number(b.originPrice || b.price || 0);
+  if (originPrice < 0) return res.status(400).json({ ok: false, message: "价格不正确" });
+  const memberPrice = liveMemberPrice(originPrice);
+  const type = b.organizerType === "company" ? "company" : "individual";
+  if (type === "company" && !(b.companyName || user.company_name)) {
+    return res.status(400).json({ ok: false, message: "公司开团请填写公司名称" });
+  }
+  const cover = b.cover || "";
+  const routeInfo = db()
+    .prepare(
+      `INSERT INTO routes (code,title,subtitle,days,distance_km,difficulty,category,region,season,tags_json,cover,gallery_json,min_group_size,description,highlights_json,itinerary_json,fee_include,fee_exclude,equipment,notices,meetup_json,status)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+    )
+    .run(
+      `U${Date.now()}`,
+      title,
+      b.subtitle || "",
+      days,
+      Number(b.distanceKm) || 0,
+      b.difficulty || "休闲",
+      tagNames[0] || b.category || "山水",
+      city,
+      b.season || "四季",
+      JSON.stringify(tagNames),
+      cover,
+      JSON.stringify(cover ? [cover] : []),
+      Number(b.minGroupSize) || 10,
+      b.description || "",
+      JSON.stringify(b.highlights || []),
+      JSON.stringify(b.itinerary || []),
+      b.feeInclude || "",
+      b.feeExclude || "",
+      b.equipment || "",
+      b.notices || "",
+      JSON.stringify(b.meetupPoint ? [{ id: "custom", name: b.meetupPoint }] : []),
+      "pending"
+    );
+  const routeId = Number(routeInfo.lastInsertRowid);
+  db()
+    .prepare("INSERT INTO route_price_tiers (route_id,min_people,max_people,price,member_price) VALUES (?,?,?,?,?)")
+    .run(routeId, 10, null, originPrice || 0, memberPrice || 0);
+  db().prepare("INSERT INTO route_buses (route_id, bus_type_id) VALUES (?,?)").run(routeId, bus.id);
+  const route = db().prepare("SELECT * FROM routes WHERE id=?").get(routeId);
+  const end = dayjs(b.startDate).add(days - 1, "day").format("YYYY-MM-DD");
+  const schInfo = db()
+    .prepare(
+      `INSERT INTO schedules (route_id,start_date,end_date,organizer_type,organizer_id,organizer_name,company_name,bus_type_id,min_group_size,max_seats,meetup_point,meetup_time,status,share_token,notes)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+    )
+    .run(
+      routeId,
+      b.startDate,
+      end,
+      type,
+      user.id,
+      user.nickname,
+      b.companyName || user.company_name,
+      bus.id,
+      Number(b.minGroupSize) || 10,
+      bus.seats,
+      b.meetupPoint || "",
+      b.meetupTime || "07:30",
+      "recruiting",
+      nanoid(10),
+      b.notes || ""
+    );
+  applyScheduleExtras(
+    schInfo.lastInsertRowid,
+    {
+      offerType: b.offerType,
+      offerPrice: b.offerType === "free" ? 0 : b.offerPrice,
+      playTagIds,
+      city,
+      reviewStatus: "pending",
+    },
+    route
+  );
+  const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(schInfo.lastInsertRowid);
+  res.json({ ok: true, data: { ...scheduleView(sch, req), message: "已提交，待管理员审核后才会出现在首页" } });
+});
 
 router.post("/enroll", authUser, (req, res) => {
   try {
@@ -1077,6 +1277,35 @@ router.post("/admin/upload", authAdmin, (req, res) => {
   });
 });
 
+router.get("/admin/play-tags", authAdmin, (req, res) => {
+  res.json({ ok: true, data: db().prepare("SELECT * FROM play_tags ORDER BY sort_order, id").all().map((t) => mapPlayTag(t, req)) });
+});
+
+router.post("/admin/play-tags", authAdmin, (req, res) => {
+  const b = req.body || {};
+  const name = String(b.name || "").trim();
+  if (!name) return res.status(400).json({ ok: false, message: "请填写标签名" });
+  const info = db()
+    .prepare("INSERT INTO play_tags (name, color, cover, sort_order, status) VALUES (?,?,?,?,?)")
+    .run(name, b.color || randomTagColor(), b.cover || "", Number(b.sortOrder) || 99, "on");
+  res.json({ ok: true, data: mapPlayTag(db().prepare("SELECT * FROM play_tags WHERE id=?").get(info.lastInsertRowid), req) });
+});
+
+router.put("/admin/play-tags/:id", authAdmin, (req, res) => {
+  const row = db().prepare("SELECT * FROM play_tags WHERE id=?").get(req.params.id);
+  if (!row) return res.status(404).json({ ok: false, message: "标签不存在" });
+  const b = req.body || {};
+  db()
+    .prepare("UPDATE play_tags SET name=?, color=?, cover=?, sort_order=?, status=? WHERE id=?")
+    .run(b.name || row.name, b.color || row.color, b.cover == null ? row.cover : b.cover, b.sortOrder == null ? row.sort_order : b.sortOrder, b.status || row.status, row.id);
+  res.json({ ok: true, data: mapPlayTag(db().prepare("SELECT * FROM play_tags WHERE id=?").get(row.id), req) });
+});
+
+router.delete("/admin/play-tags/:id", authAdmin, (req, res) => {
+  db().prepare("UPDATE play_tags SET status='off' WHERE id=?").run(req.params.id);
+  res.json({ ok: true });
+});
+
 router.get("/admin/routes", authAdmin, (req, res) => {
   const rows = db()
     .prepare("SELECT * FROM routes ORDER BY id")
@@ -1206,6 +1435,7 @@ router.post("/admin/schedules", authAdmin, (req, res) => {
       nanoid(10),
       notes || ""
     );
+  applyScheduleExtras(info.lastInsertRowid, { ...(req.body || {}), reviewStatus: "approved" }, route);
   res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(info.lastInsertRowid), req) });
 });
 
@@ -1224,6 +1454,17 @@ router.post("/admin/schedules/dissolve-all", authAdmin, (req, res) => {
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }
+});
+
+router.post("/admin/schedules/:id/review", authAdmin, (req, res) => {
+  const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
+  if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
+  const status = (req.body || {}).status === "rejected" ? "rejected" : "approved";
+  db().prepare("UPDATE schedules SET review_status=? WHERE id=?").run(status, sch.id);
+  if (status === "approved") {
+    db().prepare("UPDATE routes SET status='on' WHERE id=? AND status='pending'").run(sch.route_id);
+  }
+  res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id), req) });
 });
 
 router.post("/admin/schedules/:id/dissolve", authAdmin, dissolveHandler("admin"));

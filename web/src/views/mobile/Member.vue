@@ -18,9 +18,10 @@
 
     <div class="card"><div class="pad">
       <h3 style="margin-top:0">{{ store.profile?.isMember ? "会员权益" : "开通北野行会员" }}</h3>
-      <p>年费 ¥{{ fee }}，线路会员价、积分 1.2 倍加速，报名时可抵现。</p>
+      <p>年费 ¥{{ fee }}，线路额外 95 折，赠送一次 100 元以内的团，积分 1.2 倍加速。</p>
       <ul>
-        <li>会员价自动计算</li>
+        <li>会员价自动按 95 折计算</li>
+        <li>开通即赠一次 100 元以内团免费名额<template v-if="store.profile?.isMember">（剩余 {{ store.profile.memberGiftLeft || 0 }} 次）</template></li>
         <li>参加活动累积积分，100 积分抵 1 元</li>
         <li>开团、报名、分享不受限</li>
       </ul>
@@ -42,12 +43,12 @@ import { requireLogin } from "@/utils/auth";
 const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
-const fee = ref(199);
+const fee = ref(99);
 const msg = ref("");
 const loading = ref(false);
 onMounted(async () => {
   if (!requireLogin(store, router, route)) return;
-  fee.value = store.meta?.memberAnnualFee || 199;
+  fee.value = store.meta?.memberAnnualFee || 99;
   await store.fetchMe().catch(() => {});
 });
 async function buy() {

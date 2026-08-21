@@ -9,8 +9,14 @@
       </div>
       <div class="pad">
         <div class="row">
-          <strong>{{ s.route.title }}</strong>
+          <strong>
+            <span v-if="s.offerLabel" class="offer-chip inline" :style="{ background: s.offerColor }">{{ s.offerLabel }}</span>
+            {{ s.route.title }}
+          </strong>
           <span class="tag">{{ statusTag }}</span>
+        </div>
+        <div class="tag-row">
+          <span class="play-tag sm" v-for="t in s.playTags || s.route.tags || []" :key="t.id || t" :style="{ background: t.color || '#2d6a4f' }">{{ t.name || t }}</span>
         </div>
         <p class="muted">{{ s.startDate }} {{ s.endDate !== s.startDate ? "至 " + s.endDate : "" }}</p>
         <p>
@@ -31,8 +37,13 @@
         <div class="progress"><i :style="{ width: Math.min(100, (s.enrolled / s.maxSeats) * 100) + '%' }"></i></div>
         <div class="row">
           <span>已报名 {{ s.enrolled }}/{{ s.maxSeats }}，最低成团 {{ s.minGroupSize }}<template v-if="s.waitlistCount"> · 候补 {{ s.waitlistCount }}</template></span>
-          <span class="price">¥{{ s.quote.price }}</span>
+          <span class="price-pair">
+            <s v-if="s.quote.originPrice > s.quote.price" class="price-origin">¥{{ s.quote.originPrice }}</s>
+            <span class="price">¥{{ s.quote.price }}</span>
+          </span>
         </div>
+        <p class="muted" v-if="s.reviewStatus === 'pending'" style="color:#c77d3a">本团正在审核，通过后才会出现在首页，暂不能报名。</p>
+        <p class="muted" v-else-if="s.reviewStatus === 'rejected'" style="color:var(--clay)">本团未通过审核。</p>
         <p class="muted" v-if="s.status === 'cancelled'" style="color:var(--clay)">
           本团已解散。理由：{{ s.cancelReason }}
         </p>
@@ -146,7 +157,7 @@
       <button class="btn ghost" style="flex:1" @click="$router.push('/m/stats/' + s.id)">本团画像</button>
       <button class="btn ghost" style="flex:1" @click="share">分享到微信</button>
     </div>
-    <button v-if="s.status !== 'cancelled'" class="btn block clay" @click="$router.push('/m/enroll/' + s.id)">
+    <button v-if="s.status !== 'cancelled' && s.reviewStatus !== 'pending' && s.reviewStatus !== 'rejected'" class="btn block clay" @click="$router.push('/m/enroll/' + s.id)">
       {{ s.remain <= 0 ? "已满员，去候补" : "立即报名" }}
     </button>
     <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>

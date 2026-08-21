@@ -11,11 +11,14 @@
       <span>{{ weather.tmin }}~{{ weather.tmax }}℃</span>
       <p>{{ weather.alerts?.[0]?.text }}</p>
     </div>
-    <div><span class="tag" v-for="t in r.tags" :key="t">{{ t }}</span></div>
+    <div><span class="play-tag sm" v-for="t in r.playTags || r.tags" :key="t.id || t" :style="{ background: t.color || '#2d6a4f' }">{{ t.name || t }}</span></div>
     <div class="row" style="margin:10px 0">
       <div>
-        <div class="price">¥{{ r.priceTiers?.[0]?.price }} <small>起</small></div>
-        <div class="muted">会员价 ¥{{ r.priceTiers?.[0]?.memberPrice }} 起</div>
+        <div class="price-pair">
+          <s v-if="r.priceTiers?.[0]?.price > r.priceTiers?.[0]?.memberPrice" class="price-origin">¥{{ r.priceTiers[0].price }}</s>
+          <span class="price">¥{{ r.priceTiers?.[0]?.memberPrice || r.priceTiers?.[0]?.price }} <small>起</small></span>
+        </div>
+        <div class="muted">会员额外 95 折</div>
       </div>
       <button class="btn ghost" @click="fav">{{ r.favored ? "已收藏" : "收藏" }}</button>
     </div>

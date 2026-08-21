@@ -34,7 +34,9 @@ async function run() {
   writeCovers();
   await downloadPhotos();
   const db = getDb();
-  db.exec("DELETE FROM reviews; DELETE FROM payment_splits; DELETE FROM favorites; DELETE FROM points_ledger; DELETE FROM payments; DELETE FROM enrollments; DELETE FROM schedules; DELETE FROM route_buses; DELETE FROM route_price_tiers; DELETE FROM routes; DELETE FROM guides; DELETE FROM bus_types; DELETE FROM sms_codes; DELETE FROM captchas; DELETE FROM users; DELETE FROM admin_users; DELETE FROM settings;");
+  db.exec("DELETE FROM reviews; DELETE FROM payment_splits; DELETE FROM favorites; DELETE FROM points_ledger; DELETE FROM payments; DELETE FROM enrollments; DELETE FROM schedules; DELETE FROM route_buses; DELETE FROM route_price_tiers; DELETE FROM routes; DELETE FROM guides; DELETE FROM bus_types; DELETE FROM sms_codes; DELETE FROM captchas; DELETE FROM users; DELETE FROM admin_users; DELETE FROM settings; DELETE FROM play_tags;");
+  const { ensureDefaultPlayTags, cityOf } = require("../services/home");
+  ensureDefaultPlayTags(db);
 
   const hash = bcrypt.hashSync("123456", 10);
   const adminHash = bcrypt.hashSync("admin123", 10);
@@ -156,6 +158,7 @@ async function run() {
     { code: "R16", ...upcoming(21, 2), organizer_type: "individual", organizer_id: userIds["13700137000"], organizer_name: "领队老周", company_name: null, bus_type_id: "coaster10", meetup_point: "东直门东方银座C口", meetup_time: "07:30", notes: "精品小团，考斯特", cost_transport: 2800, cost_ticket: 3600, cost_hotel: 2400, cost_meal: 600, cost_guide: 800, cost_other: 200, plate_no: "京A·C10086", consult_group: "古北小团咨询" },
     { code: "R24", ...upcoming(30, 3), organizer_type: "company", organizer_id: userIds["13900139000"], organizer_name: "华创团建", company_name: "北京华创科技有限公司", bus_type_id: "bus38", meetup_point: "东直门东方银座C口", meetup_time: "06:30", notes: "公司三日坝上", cost_transport: 6800, cost_ticket: 4200, cost_hotel: 9600, cost_meal: 3600, cost_guide: 1500, cost_other: 800, plate_no: "", consult_group: "" },
     { code: "R04", ...upcoming(5, 1), organizer_type: "individual", organizer_id: userIds["13800138000"], organizer_name: "林北野", company_name: null, bus_type_id: "bus30", meetup_point: "国贸桥下大巴停靠点", meetup_time: "07:00", notes: "即将成团", cost_transport: 1900, cost_ticket: 2200, cost_hotel: 0, cost_meal: 0, cost_guide: 450, cost_other: 100, plate_no: "", consult_group: "" },
+    { code: "R27", ...upcoming(12, 5), organizer_type: "individual", organizer_id: userIds["13700137000"], organizer_name: "领队老周", company_name: null, bus_type_id: "bus38", meetup_point: "东直门东方银座C口", meetup_time: "06:30", notes: "多日深度线", cost_transport: 8800, cost_ticket: 5200, cost_hotel: 7200, cost_meal: 2800, cost_guide: 1800, cost_other: 600, plate_no: "", consult_group: "" },
   ];
 
   const schIds = [];
@@ -190,6 +193,18 @@ async function run() {
     });
     schIds.push(Number(info.lastInsertRowid));
   }
+
+  const offers = ["early", "deal", "free", "full", "early", "deal", "full"];
+  schIds.forEach((id, i) => {
+    const row = db.prepare("SELECT r.region FROM schedules s JOIN routes r ON r.id=s.route_id WHERE s.id=?").get(id);
+    const offer = offers[i] || "full";
+    db.prepare("UPDATE schedules SET offer_type=?, offer_price=?, city=?, review_status='approved' WHERE id=?").run(
+      offer,
+      offer === "free" ? 0 : null,
+      cityOf(row.region),
+      id
+    );
+  });
 
   const users = db.prepare("SELECT * FROM users").all();
   const insertEn = db.prepare(`INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status)

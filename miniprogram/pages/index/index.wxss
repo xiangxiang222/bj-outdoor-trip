@@ -5,6 +5,27 @@
   background: linear-gradient(135deg, #1b4332, #40916c);
   color: #fff;
 }
+.brand-hero { height: 360rpx; }
+.brand-img { width: 100%; height: 360rpx; }
+.brand-cap {
+  margin: -120rpx 16rpx 16rpx;
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  text-shadow: 0 2rpx 8rpx rgba(0,0,0,.45);
+}
+.city-bar { white-space: nowrap; padding: 8rpx 8rpx 0; }
+.city-swipe { height: 280rpx; margin: 0 16rpx 16rpx; border-radius: 16rpx; overflow: hidden; }
+.month-grid { display: flex; flex-wrap: wrap; padding: 0 12rpx 12rpx; }
+.month-cell { width: 13%; margin: 4rpx 0.5%; background: #fff; border-radius: 8rpx; padding: 8rpx 0; text-align: center; font-size: 22rpx; }
+.month-cell.on { background: #d8f3dc; }
+.play-tag { display: inline-block; color: #fff; border-radius: 999rpx; padding: 8rpx 18rpx; font-size: 24rpx; margin: 8rpx; }
+.offer-chip { display: inline-block; color: #fff; border-radius: 999rpx; padding: 8rpx 18rpx; font-size: 24rpx; margin: 8rpx; }
+.offer-chip.inline { margin-right: 8rpx; font-size: 20rpx; padding: 2rpx 10rpx; }
+.offer-chip.publish { background: #c9a227; color: #1b4332; }
+.price-origin { color: #6b705c; text-decoration: line-through; margin-right: 8rpx; font-weight: 400; }
+.tile-thumbs { display: flex; gap: 8rpx; margin-top: 12rpx; }
+.tile-thumbs image { width: 72rpx; height: 72rpx; border-radius: 12rpx; }
 .home-kicker { font-size: 36rpx; font-weight: 700; }
 .home-lead { margin-top: 12rpx; font-size: 26rpx; opacity: .88; line-height: 1.5; }
 .home-grid {

@@ -29,6 +29,7 @@ function createSchema(db) {
       wechat_unionid TEXT,
       is_member INTEGER DEFAULT 0,
       member_expire_at TEXT,
+      member_gift_left INTEGER DEFAULT 0,
       points INTEGER DEFAULT 0,
       company_name TEXT,
       role TEXT DEFAULT 'user',
@@ -161,7 +162,21 @@ function createSchema(db) {
       bus_photo TEXT,
       locked_seats TEXT DEFAULT '[]',
       consult_group TEXT,
+      offer_type TEXT DEFAULT 'full',
+      offer_price INTEGER,
+      review_status TEXT DEFAULT 'approved',
+      play_tags_json TEXT DEFAULT '[]',
+      city TEXT,
       created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+
+    CREATE TABLE IF NOT EXISTS play_tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      color TEXT,
+      cover TEXT,
+      sort_order INTEGER DEFAULT 0,
+      status TEXT DEFAULT 'on'
     );
 
     CREATE TABLE IF NOT EXISTS enrollments (
@@ -295,6 +310,38 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "bus_photo", "TEXT");
   addColumnIfMissing(db, "schedules", "locked_seats", "TEXT DEFAULT '[]'");
   addColumnIfMissing(db, "schedules", "consult_group", "TEXT");
+  addColumnIfMissing(db, "schedules", "offer_type", "TEXT DEFAULT 'full'");
+  addColumnIfMissing(db, "schedules", "offer_price", "INTEGER");
+  addColumnIfMissing(db, "schedules", "review_status", "TEXT DEFAULT 'approved'");
+  addColumnIfMissing(db, "schedules", "play_tags_json", "TEXT DEFAULT '[]'");
+  addColumnIfMissing(db, "schedules", "city", "TEXT");
+  addColumnIfMissing(db, "users", "member_gift_left", "INTEGER DEFAULT 0");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS play_tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
+      color TEXT,
+      cover TEXT,
+      sort_order INTEGER DEFAULT 0,
+      status TEXT DEFAULT 'on'
+    );
+  `);
+  const tagCount = db.prepare("SELECT COUNT(*) AS c FROM play_tags").get().c;
+  if (!tagCount) {
+    const defaults = [
+      ["徒步", "#2d6a4f"],
+      ["登山", "#bc4749"],
+      ["玩水", "#1d6a9f"],
+      ["亲子", "#c77d3a"],
+      ["摄影", "#6b4c9a"],
+      ["露营", "#3d6b4f"],
+      ["文化", "#8b5a2b"],
+      ["看星空", "#1b3a5f"],
+      ["团建", "#40916c"],
+    ];
+    const insertTag = db.prepare("INSERT INTO play_tags (name, color, cover, sort_order, status) VALUES (?,?,?,?,?)");
+    defaults.forEach((t, i) => insertTag.run(t[0], t[1], "", i + 1, "on"));
+  }
   backfillBusPhotos(db);
   db.exec(`
     DELETE FROM reviews

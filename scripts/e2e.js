@@ -238,6 +238,10 @@ async function run(opts) {
     assert(forecast.summary && Array.isArray(forecast.alerts), "天气提醒不完整");
     assert(Array.isArray(forecast.hourly) && forecast.hourly.length > 0, "缺少分时天气");
     assert(Array.isArray(meta.days) && meta.days.includes(1), "天数选项缺失");
+    assert(meta.memberAnnualFee === 99, "会员年费应为 99");
+    const home = apiOk(await request("GET", "/api/home"), "home");
+    assert(home.brand && Array.isArray(home.tags) && home.tags.length > 0, "首页标签缺失");
+    assert(Array.isArray(home.cities), "首页城市不是数组");
     const buses = apiOk(await request("GET", "/api/buses"), "buses");
     assert(buses.length > 0, "没有车型");
     ctx.busId = (buses.find((b) => b.id === "bus30") || buses[0]).id;

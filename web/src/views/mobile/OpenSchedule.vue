@@ -22,6 +22,17 @@
     </select>
     <label>集合时间</label>
     <input class="input" v-model="form.meetupTime" />
+    <label>团型</label>
+    <select class="select" v-model="form.offerType">
+      <option value="early">早鸟团</option>
+      <option value="deal">特惠团</option>
+      <option value="free">免费团</option>
+      <option value="full">全价团</option>
+    </select>
+    <label>想怎么玩</label>
+    <div class="chips">
+      <div class="play-tag" v-for="t in tags" :key="t.id" :style="{ background: t.color, opacity: form.playTagIds.includes(t.id) ? 1 : 0.4 }" @click="toggleTag(t.id)">{{ t.name }}</div>
+    </div>
     <label>备注</label>
     <textarea class="input" v-model="form.notes" rows="3" />
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
@@ -42,6 +53,7 @@ const store = useUserStore();
 const routeInfo = ref(null);
 const buses = ref([]);
 const err = ref("");
+const tags = ref([]);
 const form = ref({
   startDate: "",
   organizerType: "individual",
@@ -51,6 +63,8 @@ const form = ref({
   meetupPoint: "",
   meetupTime: "07:30",
   notes: "",
+  offerType: "full",
+  playTagIds: [],
 });
 
 onMounted(async () => {
@@ -60,7 +74,13 @@ onMounted(async () => {
   form.value.busTypeId = buses.value[0]?.id;
   form.value.minGroupSize = routeInfo.value.minGroupSize;
   form.value.meetupPoint = routeInfo.value.meetupPoints?.[0]?.name || "";
+  tags.value = (await http.get("/play-tags")).data || [];
 });
+
+function toggleTag(id) {
+  const ids = form.value.playTagIds;
+  form.value.playTagIds = ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
+}
 
 async function submit() {
   try {

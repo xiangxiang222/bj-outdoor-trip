@@ -53,7 +53,14 @@
           </el-upload>
           <div class="muted">可多选。未单独设封面时，会用相册第一张当封面。</div>
         </el-form-item>
-        <el-form-item label="天数"><el-select v-model="form.days"><el-option v-for="n in [1,2,3,5]" :key="n" :label="n+'日'" :value="n" /></el-select></el-form-item>
+        <el-form-item label="天数">
+          <el-select v-model="form.days">
+            <el-option :value="1" label="1日" />
+            <el-option :value="2" label="2日" />
+            <el-option :value="3" label="3日" />
+            <el-option :value="5" label="多日" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="类型"><el-input v-model="form.category" /></el-form-item>
         <el-form-item label="地区"><el-input v-model="form.region" /></el-form-item>
         <el-form-item label="难度"><el-input v-model="form.difficulty" /></el-form-item>
@@ -91,7 +98,7 @@ onMounted(load);
 
 function openCreate() {
   form.value = { days: 1, minGroupSize: 10, category: "山水", difficulty: "休闲", tags: [], highlights: [], itinerary: [], cover: "", gallery: [], meetupPoints: [], buses: ["bus30"], status: "on" };
-  tiersText.value = JSON.stringify([{ minPeople: 10, price: 199, memberPrice: 183 }, { minPeople: 20, price: 179, memberPrice: 165 }, { minPeople: 30, price: 159, memberPrice: 146 }, { minPeople: 50, price: 139, memberPrice: 128 }], null, 2);
+  tiersText.value = JSON.stringify([{ minPeople: 10, price: 199, memberPrice: 189 }, { minPeople: 20, price: 179, memberPrice: 170 }, { minPeople: 30, price: 159, memberPrice: 151 }, { minPeople: 50, price: 139, memberPrice: 132 }], null, 2);
   show.value = true;
 }
 function edit(row) {

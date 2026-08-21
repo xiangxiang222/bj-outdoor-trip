@@ -11,7 +11,7 @@ describe("config env overrides", () => {
     assert.equal(config.wechat.mock, true);
     assert.equal(config.points.redeemRate, 100);
     assert.equal(config.points.maxOffsetRatio, 0.2);
-    assert.equal(config.member.annualFee, 199);
+    assert.equal(config.member.annualFee, 99);
     assert.equal(config.insurance.plans.length, 3);
   });
 });

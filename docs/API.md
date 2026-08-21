@@ -18,16 +18,18 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/meta` | 品牌名、演示短信码、会员年费、积分规则、保险方案、可选天数、退改说明、风险告知、常见问题、官方微信/用户群 |
+| GET | `/meta` | 品牌名、演示短信码、会员年费/95折/赠团文案、积分规则、保险方案、可选天数、退改说明、风险告知、常见问题、官方微信/用户群 |
+| GET | `/home` | 首页：品牌轮播、随发团出现的城市及相册、玩法标签、节日、月份、天数缩略图。Query：`month=YYYY-MM` 返回该月日历 |
+| GET | `/play-tags` | 想怎么玩标签（名称、颜色、配图） |
 | GET | `/users/:id` | 用户公开主页：昵称、头像、性别、年龄段、籍贯、出行次数。不含手机号 |
 | GET | `/weather` | 目的地天气（含 `hourly` 分时）。Query：`region` `date`。默认 mock，设 `WEATHER_LIVE=1` 走 Open-Meteo |
 | GET | `/buses` | 车型 |
 | GET | `/guides` | 在岗导游公开资料（不含手机号） |
 | GET | `/guides/:id` | 导游详情、带团次数、近期行程。停用或不存在返回 404 |
-| GET | `/routes` | 上架线路。Query：`days` `category` `difficulty` `q` |
+| GET | `/routes` | 上架线路。Query：`days`（`multi` 表示 4 日及以上）`category` `tag` `city` `difficulty` `q` |
+| GET | `/schedules` | Query：`routeId` `organizerType` `city` `tag` `offerType` `month` `date`（不含已解散、待审核） |
 | GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条） |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
-| GET | `/schedules` | Query：`routeId` `organizerType`（不含已解散） |
 | GET | `/schedules/:id` | 排期 + 脱敏名单；含 `guaranteed`、`meetupMapUrl`/`meetupLat`/`meetupLng`、`gallery`、`consultGroup`、车型座位数/车号/照片；名单项含 `userId` `lifeStage` `canPay` |
 | GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
 | GET | `/schedules/:id/demographics` | 本团画像
@@ -57,7 +59,9 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 
 | 方法 | 路径 | 鉴权 | 说明 |
 | --- | --- | --- | --- |
-| POST | `/schedules` | 用户 | 开团。公司类型必须有公司名 |
+| POST | `/schedules` | 用户 | 基于已有线路开团。可带 `offerType` `playTagIds` |
+| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。提交后 `reviewStatus=pending`，审核通过才上首页 |
+| POST | `/upload` | 用户 | 发团封面。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
 | POST | `/enroll` | 用户 | 报名占座。须紧急联系人、健康声明、风险确认。个人 `pay_status=unpaid`、`needPay: false`；公司 `company_pending` |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。报名流程默认不调用 |
@@ -65,7 +69,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
 | GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canReview` `reviewed` |
 | POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（出发日前、团未解散；当天不可取消） |
-| POST | `/member/buy` | 用户 | **立即开通/续费会员**，记一笔成功支付并返回 `user` |
+| POST | `/member/buy` | 用户 | **立即开通/续费会员**（年费 99），赠一次 100 元以内团，记成功支付并返回 `user` |
 | GET | `/points` | 用户 | 积分余额与流水 |
 | POST | `/favorites/:routeId` | 用户 | 收藏 |
 | DELETE | `/favorites/:routeId` | 用户 | 取消收藏 |
@@ -143,11 +147,16 @@ H5 入口 `/g`。
 | DELETE | `/admin/staff/:id` | 删除。不能删自己，至少留一名管理员 |
 | GET | `/admin/dashboard` | KPI、按线路、按天数 |
 | POST | `/admin/upload` | `multipart/form-data` 字段 `file`，返回 `{ url }` |
+| GET | `/admin/play-tags` | 全部玩法标签 |
+| POST | `/admin/play-tags` | 新增。`name` `color` `cover` |
+| PUT | `/admin/play-tags/:id` | 更新 |
+| DELETE | `/admin/play-tags/:id` | 下架 |
 | GET | `/admin/routes` | 含下架 |
 | POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` |
 | PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换 |
 | DELETE | `/admin/routes/:id` | 下架 |
 | POST | `/admin/schedules` | 后台发布排期 |
+| POST | `/admin/schedules/:id/review` | 用户发团审核。`status=approved|rejected` |
 | GET | `/admin/schedules` | 含成本、收入、利润、导游 |
 | POST | `/admin/schedules/dissolve-all` | 解散全部进行中的团。body：`reason` |
 | POST | `/admin/schedules/:id/dissolve` | 解散单团。body：`reason` |

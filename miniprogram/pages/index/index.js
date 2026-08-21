@@ -1,45 +1,31 @@
 const { request } = require("../../utils/request");
 const lite = require("../../data/routes-lite");
 const { withLocalMediaList, detailUrl } = require("../../utils/media");
+const { OFFER_TYPES, countOn, buildCalendar } = require("../../utils/offer");
 
 function asList(rows) {
   return Array.isArray(rows) && rows.length ? rows : [];
 }
 
-function buildCalendar(schedules) {
-  const days = [];
-  const now = new Date();
-  for (let i = 0; i < 10; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
-    const key =
-      d.getFullYear() +
-      "-" +
-      String(d.getMonth() + 1).padStart(2, "0") +
-      "-" +
-      String(d.getDate()).padStart(2, "0");
-    const count = schedules.filter((s) => s.startDate === key && s.status !== "cancelled").length;
-    days.push({ date: key, label: d.getMonth() + 1 + "/" + d.getDate(), count });
-  }
-  return days;
-}
-
 Page({
   data: {
+    home: { brand: { kicker: "北野行", lead: "说走就走的京郊山野", gallery: [] }, cities: [], tags: [], festivals: [], months: [], durations: [] },
     theme: null,
     groups: [],
     weekend: [],
-    durations: [
-      { n: 1, hint: "当天往返" },
-      { n: 2, hint: "过夜一晚" },
-      { n: 3, hint: "小长假" },
-      { n: 5, hint: "深度出省" },
-    ],
-    places: ["长城", "玩水", "登山", "山水", "文化", "草原", "海滨"],
     err: "",
     upcoming: null,
     calendar: [],
     allSchedules: [],
     guides: [],
+    city: "",
+    cityGallery: [],
+    monthKey: "",
+    monthDays: [],
+    festivalKey: "",
+    festivalDates: [],
+    offers: OFFER_TYPES,
+    offerFilter: "",
   },
   onLoad() {
     this.applyRoutes(asList(lite));
@@ -57,40 +43,76 @@ Page({
     const weekend = raw.filter((r) => r.days === 1).slice(0, 4);
     this.setData({ theme, weekend, err: raw.length ? "" : "暂无线路" });
   },
+  applyGroups() {
+    const offerFilter = this.data.offerFilter;
+    const groups = (this.data.allSchedules || [])
+      .filter((s) => s.status !== "cancelled" && Number(s.remain) > 0)
+      .filter((s) => !offerFilter || s.offerType === offerFilter)
+      .slice(0, 6);
+    this.setData({ groups });
+  },
   async load() {
     try {
-      const [routesRes, schRes, guideRes] = await Promise.all([
+      const [homeRes, routesRes, schRes, guideRes] = await Promise.all([
+        request("/home").catch(() => ({ data: {} })),
         request("/routes"),
         request("/schedules").catch(() => ({ data: [] })),
         request("/guides").catch(() => ({ data: [] })),
       ]);
+      const home = homeRes.data || {};
+      const city = home.cities && home.cities[0] ? home.cities[0].name : "";
       const rows = asList(routesRes.data);
       if (rows.length) this.applyRoutes(rows);
       else if (!this.data.theme) this.applyRoutes(asList(lite));
       const allSchedules = asList(schRes.data);
-      const groups = allSchedules
-        .filter((s) => s.status !== "cancelled" && Number(s.remain) > 0)
-        .slice(0, 4);
       this.setData({
-        groups,
+        home,
+        city,
+        cityGallery: (home.cities && home.cities[0] && home.cities[0].gallery) || [],
+        monthKey: (home.months && home.months[0] && home.months[0].key) || "",
+        monthDays: home.monthDays || [],
         allSchedules,
         calendar: buildCalendar(allSchedules),
-        guides: asList(guideRes.data).slice(0, 4).map((g) => Object.assign({}, g, { initial: String(g.name || "导").slice(0, 1) })),
+        guides: asList(guideRes.data)
+          .slice(0, 4)
+          .map((g) => Object.assign({}, g, { initial: String(g.name || "导").slice(0, 1) })),
       });
+      this.applyGroups();
       await this.loadUpcoming();
     } catch (err) {
       if (!this.data.theme) this.applyRoutes(asList(lite));
       if (!this.data.theme) this.setData({ err: (err && err.message) || "加载失败" });
     }
   },
+  setCity(e) {
+    const name = e.currentTarget.dataset.name;
+    const hit = (this.data.home.cities || []).find((c) => c.name === name);
+    this.setData({ city: name, cityGallery: (hit && hit.gallery) || [] });
+  },
+  setOffer(e) {
+    const key = e.currentTarget.dataset.key;
+    this.setData({ offerFilter: this.data.offerFilter === key ? "" : key });
+    this.applyGroups();
+  },
+  setFestival(e) {
+    const key = e.currentTarget.dataset.key;
+    const on = this.data.festivalKey === key ? "" : key;
+    const f = (this.data.home.festivals || []).find((x) => x.key === on);
+    this.setData({ festivalKey: on, festivalDates: (f && f.dates) || [] });
+  },
+  async pickMonth(e) {
+    const key = e.currentTarget.dataset.key;
+    const res = await request("/home?month=" + key);
+    this.setData({ monthKey: key, monthDays: (res.data && res.data.monthDays) || [] });
+  },
   goDays(e) {
     const app = getApp();
-    app.globalData.routeFilter = { days: Number(e.currentTarget.dataset.n) || 0, category: "全部" };
+    app.globalData.routeFilter = { days: e.currentTarget.dataset.days, tag: "" };
     wx.switchTab({ url: "/pages/routes/routes" });
   },
   goPlace(e) {
     const app = getApp();
-    app.globalData.routeFilter = { days: 0, category: e.currentTarget.dataset.c };
+    app.globalData.routeFilter = { days: 0, tag: e.currentTarget.dataset.c };
     wx.switchTab({ url: "/pages/routes/routes" });
   },
   goTheme() {
@@ -108,11 +130,17 @@ Page({
   },
   goAllOneDay() {
     const app = getApp();
-    app.globalData.routeFilter = { days: 1, category: "全部" };
+    app.globalData.routeFilter = { days: 1, tag: "" };
     wx.switchTab({ url: "/pages/routes/routes" });
   },
-  goOpen() {
-    wx.switchTab({ url: "/pages/routes/routes" });
+  goPublish(date) {
+    const app = getApp();
+    const q = typeof date === "string" ? "?date=" + date : "";
+    if (!app.globalData.token) {
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/publish/publish" + q) });
+      return;
+    }
+    wx.navigateTo({ url: "/pages/publish/publish" + q });
   },
   goGuides() {
     wx.navigateTo({ url: "/pages/guides/guides" });
@@ -141,10 +169,16 @@ Page({
     const u = this.data.upcoming;
     if (u && u.scheduleId) wx.navigateTo({ url: "/pages/schedule/schedule?id=" + u.scheduleId });
   },
+  goFestivalDay(e) {
+    this.goDay({ currentTarget: { dataset: { date: e.currentTarget.dataset.date, count: countOn(this.data.allSchedules, e.currentTarget.dataset.date) } } });
+  },
   goDay(e) {
     const date = e.currentTarget.dataset.date;
     const count = Number(e.currentTarget.dataset.count || 0);
-    if (!count) return;
+    if (!count) {
+      this.goPublish(date);
+      return;
+    }
     const hit = (this.data.allSchedules || []).find((s) => s.startDate === date && s.status !== "cancelled");
     if (hit) wx.navigateTo({ url: "/pages/schedule/schedule?id=" + hit.id });
     else wx.switchTab({ url: "/pages/chain/chain" });

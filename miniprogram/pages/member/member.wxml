@@ -10,7 +10,7 @@
 <view class="card">
   <view class="pad">
     <view class="title">{{user && user.isMember ? '会员权益' : '开通北野行会员'}}</view>
-    <view class="muted">年费 ¥199，线路会员价、积分 1.2 倍加速，报名时可抵现。</view>
+    <view class="muted">年费 ¥99，线路额外 95 折，赠送一次 100 元以内的团。</view>
     <view class="muted">· 会员价自动计算</view>
     <view class="muted">· 100 积分抵 1 元</view>
     <view class="muted">· 开团、报名、分享不受限</view>

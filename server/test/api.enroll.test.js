@@ -324,11 +324,38 @@ describe("enroll pay member favorites", () => {
       .expect(200);
     const token = created.body.data.token;
     const buy = await agent.post("/api/member/buy").set(auth(token)).expect(200);
-    assert.equal(buy.body.data.amount, 199);
+    assert.equal(buy.body.data.amount, 99);
     assert.equal(buy.body.data.user.isMember, true);
+    assert.equal(buy.body.data.user.memberGiftLeft, 1);
     assert.ok(buy.body.data.user.memberExpireAt);
     const me = await agent.get("/api/me").set(auth(token)).expect(200);
     assert.equal(me.body.data.isMember, true);
+  });
+
+  it("applies one gift trip when member price is within 100", async () => {
+    const cap = await issueCaptcha(agent);
+    const created = await agent
+      .post("/api/auth/register")
+      .send({ phone: "13600136009", password: "123456", captchaToken: cap.token, captcha: cap.code })
+      .expect(200);
+    const token = created.body.data.token;
+    await agent.post("/api/member/buy").set(auth(token)).expect(200);
+    seed.db.prepare("UPDATE schedules SET offer_type='deal', offer_price=80 WHERE id=?").run(seed.individualScheduleId);
+    const enrolled = await agent.post("/api/enroll").set(auth(token)).send({
+      scheduleId: seed.individualScheduleId,
+      travelerName: "赠送团",
+      travelerPhone: "13600136009",
+      idCard: ID.femaleSd,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
+    }).expect(200);
+    assert.equal(enrolled.body.data.quote.giftApplied, true);
+    assert.equal(enrolled.body.data.payStatus, "paid");
+    assert.equal(enrolled.body.data.quote.payAmount, 0);
+    const me = await agent.get("/api/me").set(auth(token)).expect(200);
+    assert.equal(me.body.data.memberGiftLeft, 0);
   });
 
   it("favorites crud", async () => {

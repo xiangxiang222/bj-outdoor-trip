@@ -4,6 +4,7 @@ page { background: #f4efe6; color: #1a1a1a; }
 .cover { width: 100%; height: 320rpx; background: #d8f3dc; }
 .title { font-size: 32rpx; font-weight: 650; }
 .muted { color: #6b705c; font-size: 24rpx; }
+.label { margin: 12rpx 32rpx 0; color: #6b705c; font-size: 24rpx; }
 .price { color: #bc4749; font-weight: 700; }
 .tag { display: inline-block; background: #d8f3dc; color: #1b4332; border-radius: 999rpx; padding: 4rpx 14rpx; font-size: 22rpx; margin-right: 8rpx; }
 .btn { background: #2d6a4f; color: #fff; text-align: center; border-radius: 999rpx; padding: 20rpx; margin: 16rpx; }
@@ -32,6 +33,11 @@ button.btn::after { border: none; }
 .star-pick { display: flex; gap: 8rpx; padding: 8rpx 8rpx 16rpx; }
 .star { font-size: 44rpx; color: #d8d2c2; }
 .star.on { color: #c9a227; }
+.play-tag { display: inline-block; color: #fff; border-radius: 999rpx; padding: 8rpx 18rpx; font-size: 24rpx; margin: 8rpx; }
+.offer-chip { display: inline-block; color: #fff; border-radius: 999rpx; padding: 8rpx 18rpx; font-size: 24rpx; margin: 8rpx; }
+.offer-chip.inline { margin-right: 8rpx; font-size: 20rpx; padding: 2rpx 10rpx; }
+.offer-chip.publish { background: #c9a227; color: #1b4332; }
+.price-origin { color: #6b705c; text-decoration: line-through; margin-right: 8rpx; font-weight: 400; }
 .input { background: #fff; border: 1px solid #e6dfd2; border-radius: 12rpx; padding: 18rpx; margin: 12rpx 16rpx; }
 .radio-row { display: flex; gap: 36rpx; padding: 16rpx 24rpx; }
 .radio-item { display: flex; align-items: center; gap: 8rpx; font-size: 28rpx; }

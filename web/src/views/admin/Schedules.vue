@@ -13,8 +13,12 @@
       <el-table-column label="组织" width="90">
         <template #default="{ row }">{{ organizerTypeText(row.organizerType, true) }}</template>
       </el-table-column>
-      <el-table-column label="状态" width="90">
-        <template #default="{ row }">{{ scheduleStatusText(row.status) }}</template>
+      <el-table-column label="状态" width="110">
+        <template #default="{ row }">
+          {{ scheduleStatusText(row.status) }}
+          <span v-if="row.reviewStatus === 'pending'" style="color:#c77d3a"> · 待审</span>
+          <span v-else-if="row.reviewStatus === 'rejected'" style="color:#bc4749"> · 驳回</span>
+        </template>
       </el-table-column>
       <el-table-column label="车型" width="120">
         <template #default="{ row }">{{ row.bus?.name }}</template>
@@ -33,6 +37,8 @@
       </el-table-column>
       <el-table-column label="操作" width="460" fixed="right">
         <template #default="{ row }">
+          <el-button v-if="row.reviewStatus === 'pending'" size="small" type="success" @click="review(row, 'approved')">通过</el-button>
+          <el-button v-if="row.reviewStatus === 'pending'" size="small" type="warning" @click="review(row, 'rejected')">驳回</el-button>
           <el-button size="small" @click="cost(row)">成本</el-button>
           <el-button size="small" @click="openTrip(row)">车辆座位</el-button>
           <el-button size="small" @click="demo(row)">画像</el-button>
@@ -90,6 +96,14 @@
           </el-select>
         </el-form-item>
         <el-form-item label="集合时间"><el-input v-model="neu.meetupTime" /></el-form-item>
+        <el-form-item label="团型">
+          <el-select v-model="neu.offerType">
+            <el-option label="早鸟团" value="early" />
+            <el-option label="特惠团" value="deal" />
+            <el-option label="免费团" value="free" />
+            <el-option label="全价团" value="full" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="备注"><el-input v-model="neu.notes" type="textarea" :rows="2" /></el-form-item>
       </el-form>
       <template #footer>
@@ -194,6 +208,7 @@ const neu = ref({
   meetupTime: "07:30",
   notes: "",
   companyName: "",
+  offerType: "full",
 });
 
 async function openGuide(row) {
@@ -338,6 +353,11 @@ async function demo(row) {
     yAxis: {},
     series: [{ type: "bar", data: d.hometown.map((x) => x.value) }],
   });
+}
+async function review(row, status) {
+  await http.post(`/admin/schedules/${row.id}/review`, { status });
+  ElMessage.success(status === "approved" ? "已通过" : "已驳回");
+  load();
 }
 async function create() {
   await http.post("/admin/schedules", neu.value);

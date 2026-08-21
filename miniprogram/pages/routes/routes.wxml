@@ -4,10 +4,11 @@
   <view class="chip {{days==1?'on':''}}" bindtap="setDays" data-d="1">1日</view>
   <view class="chip {{days==2?'on':''}}" bindtap="setDays" data-d="2">2日</view>
   <view class="chip {{days==3?'on':''}}" bindtap="setDays" data-d="3">3日</view>
-  <view class="chip {{days==5?'on':''}}" bindtap="setDays" data-d="5">5日</view>
+  <view class="chip {{days=='multi'?'on':''}}" bindtap="setDays" data-d="multi">多日</view>
 </view>
 <view class="chips">
-  <view class="chip {{category==item?'on':''}}" wx:for="{{cats}}" wx:key="*this" bindtap="setCat" data-c="{{item}}">{{item}}</view>
+  <view class="chip {{tag==''?'on':''}}" bindtap="setTag" data-c="">全部玩法</view>
+  <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}}" bindtap="setTag" data-c="{{item.name}}">{{item.name}}</view>
 </view>
 <view wx:if="{{err}}" class="muted pad">{{err}}</view>
 <view wx:if="{{!list.length}}" class="muted pad">没有匹配的线路</view>
@@ -16,6 +17,9 @@
   <view class="pad">
     <view class="title">{{item.title}}</view>
     <view class="muted">{{item.region}} · {{item.days}}日 · {{item.difficulty}}</view>
-    <view class="price">¥{{item.fromPrice}} 起 / 会员 ¥{{item.memberFromPrice}}</view>
+    <view class="price">
+      <text wx:if="{{item.fromPrice > item.memberFromPrice}}" class="price-origin">¥{{item.fromPrice}}</text>
+      ¥{{item.memberFromPrice || item.fromPrice}} 起
+    </view>
   </view>
 </view>

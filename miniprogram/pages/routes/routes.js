@@ -10,8 +10,8 @@ Page({
   data: {
     list: [],
     days: 0,
-    category: "全部",
-    cats: ["全部", "长城", "玩水", "登山", "山水", "文化", "草原", "海滨"],
+    tag: "",
+    tags: [],
     q: "",
     err: "",
   },
@@ -19,20 +19,25 @@ Page({
     const filter = getApp().globalData.routeFilter;
     if (filter) {
       this.setData({
-        days: Number(filter.days) || 0,
-        category: filter.category || "全部",
+        days: filter.days || 0,
+        tag: filter.tag || filter.category || "",
       });
       getApp().globalData.routeFilter = null;
     }
     if (!this.data.list.length) this.setData({ list: withLocalMediaList(asList(lite)) });
+    if (!this.data.tags.length) {
+      request("/play-tags")
+        .then((r) => this.setData({ tags: r.data || [] }))
+        .catch(() => {});
+    }
     this.search();
   },
   setDays(e) {
-    this.setData({ days: Number(e.currentTarget.dataset.d) });
+    this.setData({ days: e.currentTarget.dataset.d === "multi" ? "multi" : Number(e.currentTarget.dataset.d) });
     this.search();
   },
-  setCat(e) {
-    this.setData({ category: e.currentTarget.dataset.c });
+  setTag(e) {
+    this.setData({ tag: e.currentTarget.dataset.c || "" });
     this.search();
   },
   onSearch(e) {
@@ -42,17 +47,18 @@ Page({
   async search() {
     const q = this.data.q || "";
     const days = this.data.days;
-    const category = this.data.category;
+    const tag = this.data.tag;
     const local = withLocalMediaList(asList(lite)).filter((r) => {
-      if (days && r.days !== days) return false;
-      if (category && category !== "全部" && r.category !== category) return false;
+      if (days === "multi" && r.days < 4) return false;
+      if (days && days !== "multi" && r.days !== days) return false;
+      if (tag && r.category !== tag && !(r.tags || []).includes(tag)) return false;
       if (q && !(r.title + r.region + r.subtitle).toLowerCase().includes(q.toLowerCase())) return false;
       return true;
     });
     const params = [];
     if (q) params.push("q=" + encodeURIComponent(q));
     if (days) params.push("days=" + days);
-    if (category && category !== "全部") params.push("category=" + encodeURIComponent(category));
+    if (tag) params.push("tag=" + encodeURIComponent(tag));
     try {
       const res = await request("/routes" + (params.length ? "?" + params.join("&") : ""));
       const rows = withLocalMediaList(asList(res.data));

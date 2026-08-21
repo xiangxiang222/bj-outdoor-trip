@@ -1,0 +1,31 @@
+<view class="pad muted">填写线路与出发信息，提交后需管理员审核才会出现在首页。</view>
+<input class="input" placeholder="线路标题" value="{{form.title}}" bindinput="setField" data-k="title" />
+<input class="input" placeholder="城市，如怀柔" value="{{form.city}}" bindinput="setField" data-k="city" />
+<view class="label">天数</view>
+<picker mode="selector" range="{{dayLabels}}" value="{{dayIndex}}" bindchange="setDay">
+  <view class="input">{{dayLabels[dayIndex]}}</view>
+</picker>
+<view class="label">想怎么玩</view>
+<view class="chips">
+  <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}};opacity:{{item.on?1:0.4}}" bindtap="toggleTag" data-id="{{item.id}}">{{item.name}}</view>
+</view>
+<view class="label">团型</view>
+<picker mode="selector" range="{{offerLabels}}" value="{{offerIndex}}" bindchange="setOffer">
+  <view class="input">{{offerLabels[offerIndex]}}</view>
+</picker>
+<input class="input" type="number" placeholder="原价（元）" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
+<view class="label">出发日期</view>
+<picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
+  <view class="input">{{dateLabels[dateIndex]}}</view>
+</picker>
+<view class="label">车型</view>
+<picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">
+  <view class="input">{{busNames[busIndex]}}</view>
+</picker>
+<input class="input" type="number" placeholder="最低成团人数" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
+<view class="label">集合点</view>
+<picker mode="selector" range="{{meetupNames}}" value="{{meetupIndex}}" bindchange="setMeetup">
+  <view class="input">{{meetupNames[meetupIndex]}}</view>
+</picker>
+<textarea class="input" placeholder="介绍" value="{{form.description}}" bindinput="setField" data-k="description" />
+<view class="btn" bindtap="submit">提交审核</view>

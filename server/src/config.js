@@ -26,10 +26,12 @@ module.exports = {
     maxOffsetRatio: 0.2,
   },
   member: {
-    annualFee: 199,
-    discountRate: 0.92,
+    annualFee: 99,
+    discountRate: 0.95,
     pointsBonus: 1.2,
     durationDays: 365,
+    giftMaxPrice: 100,
+    giftTrips: 1,
   },
   insurance: {
     plans: [

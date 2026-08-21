@@ -14,4 +14,12 @@ Page({
   goGuides() {
     wx.navigateTo({ url: "/pages/guides/guides" });
   },
+  goPublish() {
+    const app = getApp();
+    if (!app.globalData.token) {
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/publish/publish") });
+      return;
+    }
+    wx.navigateTo({ url: "/pages/publish/publish" });
+  },
 });

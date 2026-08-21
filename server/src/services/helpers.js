@@ -2,6 +2,7 @@ const { getDb } = require("../db");
 const { pickTier } = require("./biz");
 const config = require("../config");
 const dayjs = require("dayjs");
+const { applyOfferQuote, liveMemberPrice } = require("./offer");
 const { PHOTO } = require("../seed/routes-data");
 const { COMMONS_FILES, commonsUrl } = require("../seed/fetch-place-photos");
 
@@ -49,14 +50,19 @@ function quoteForSchedule(schedule, people, user) {
     people
   );
   const member = isMember(user);
-  return {
-    people,
-    tierMin: tier.minPeople,
-    price: member ? tier.memberPrice : tier.price,
-    originPrice: tier.price,
-    memberPrice: tier.memberPrice,
-    isMember: member,
-  };
+  const origin = Number(tier.price);
+  return applyOfferQuote(
+    {
+      people,
+      tierMin: tier.minPeople,
+      price: member ? liveMemberPrice(origin) : origin,
+      originPrice: origin,
+      memberPrice: liveMemberPrice(origin),
+      isMember: member,
+    },
+    schedule,
+    member
+  );
 }
 
 function maybeMatchGuide(scheduleId) {

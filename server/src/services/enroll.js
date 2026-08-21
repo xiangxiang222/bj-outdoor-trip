@@ -42,6 +42,7 @@ function enrollUser({
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
   if (!sch) fail(400, "排期不存在");
   if (sch.status === "cancelled") fail(400, "该拼团已解散，无法报名");
+  if ((sch.review_status || "approved") !== "approved") fail(400, "该团正在审核或未通过，暂不能报名");
   if (!travelerName || !travelerPhone) fail(400, "请填写出行人姓名和手机");
   if (!idCard) fail(400, "请填写身份证号，用于实名与籍贯统计");
   const parsed = parseIdCard(idCard);
@@ -68,17 +69,34 @@ function enrollUser({
     if (!seat) waitlisted = true;
   }
   const quote = quoteForSchedule(sch, Math.max(waitlisted ? occupied : occupied + 1, 1), user);
-  const payable = calcPayable({
-    basePrice: quote.originPrice,
-    memberPrice: quote.memberPrice,
-    isMember: quote.isMember,
-    points: 0,
-    pointsConfig: config.points,
-  });
-  const insurance = pickInsurance(insuranceCode);
   const company = sch.organizer_type === "company";
-  const payAmount = company ? 0 : payable.payAmount + insurance.fee;
-  const payStatus = company ? "company_pending" : "unpaid";
+  const payable =
+    quote.price <= 0
+      ? { price: 0, offsetYuan: 0, pointsUsed: 0, payAmount: 0 }
+      : calcPayable({
+          basePrice: quote.price,
+          memberPrice: quote.price,
+          isMember: false,
+          points: 0,
+          pointsConfig: config.points,
+        });
+  const insurance = pickInsurance(insuranceCode);
+  let tripPay = payable.payAmount;
+  let giftApplied = false;
+  if (
+    !company &&
+    !waitlisted &&
+    quote.isMember &&
+    Number(user.member_gift_left || 0) > 0 &&
+    tripPay > 0 &&
+    tripPay <= Number(config.member.giftMaxPrice || 100)
+  ) {
+    tripPay = 0;
+    giftApplied = true;
+    db.prepare("UPDATE users SET member_gift_left=member_gift_left-1 WHERE id=?").run(user.id);
+  }
+  const payAmount = company ? 0 : tripPay + insurance.fee;
+  const payStatus = company ? "company_pending" : payAmount === 0 ? "paid" : "unpaid";
   const status = waitlisted ? "waitlist" : "joined";
   const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
   const info = db
@@ -122,13 +140,15 @@ function enrollUser({
     waitlistPosition: position,
     seatNo: seat,
     insurance,
-    quote: { ...payable, payAmount, insuranceFee: insurance.fee },
+    quote: { ...payable, payAmount, insuranceFee: insurance.fee, giftApplied, originPrice: quote.originPrice },
     needPay: false,
     message: waitlisted
       ? `本车已满，已加入候补（第 ${position} 位），有人取消后自动递补`
       : company
         ? "已加入公司团，费用由公司统一支付"
-        : "已报名占座，费用待出行前支付",
+        : giftApplied
+          ? "已用会员赠送名额占座，本团免费"
+          : "已报名占座，费用待出行前支付",
   };
 }
 
