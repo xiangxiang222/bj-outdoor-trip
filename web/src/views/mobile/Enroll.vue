@@ -6,8 +6,7 @@
       <p v-if="s.status === 'cancelled'" style="color:var(--clay)">本团已解散。理由：{{ s.cancelReason }}</p>
       <p v-else-if="s.remain <= 0">本车已满（{{ s.enrolled }}/{{ s.maxSeats }}）。仍可加入候补，有人取消后按顺序递补。</p>
       <p v-else-if="s.organizerType === 'company'">公司团：报名后挂账，由 {{ s.companyName || "公司" }} 统一支付。</p>
-      <p class="muted">个人拼团先报名占座，费用待出行前支付。早报名早选座。</p>
-    </div></div>
+      <p v-else class="muted">个人拼团先报名占座，费用待出行前支付。早报名早选座。</p>
       <p class="price">当前档位 ¥{{ quote }} / 人</p>
     </div></div>
 
