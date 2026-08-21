@@ -10,15 +10,16 @@ const { getDb, toRoute } = require("./db");
 const config = require("./config");
 const { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide } = require("./middleware/auth");
 const { parseIdCard, maskIdCard } = require("./services/idcard");
-const { pickTier, calcPayable, buildDemographics, maskName } = require("./services/biz");
+const { buildDemographics } = require("./services/biz");
 const { code2session } = require("./services/wechat");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, canCancelEnrollment } = require("./services/enroll");
-const { scheduleSeats } = require("./services/seats");
+const { scheduleSeats, setLockedSeats, toggleLockedSeat, assignSeat } = require("./services/seats");
 const { forecast } = require("./services/weather");
 const { listSplits, createSplitsForSchedule } = require("./services/split");
 const { listReviews, createReview, reviewedScheduleIds } = require("./services/reviews");
-const { cancelPolicy, waiverText, faqs, meetupMapUrl } = require("./services/policy");
+const { cancelPolicy, waiverText, faqs, meetupMap, contacts } = require("./services/policy");
+const { publicUserProfile, payEnrollment, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
 const { deleteAccount } = require("./services/account");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -128,6 +129,22 @@ function mapRouteSummary(row, req, extra) {
   };
 }
 
+function mapBus(bus, sch, req) {
+  if (!bus) return null;
+  const photos = [];
+  if (bus.photo) photos.push(attachAssetHost(req, bus.photo));
+  if (sch?.bus_photo) photos.push(attachAssetHost(req, sch.bus_photo));
+  return {
+    id: bus.id,
+    name: bus.name,
+    seats: bus.seats,
+    description: bus.description,
+    photo: photos[0] || "",
+    photos,
+    plateNo: (sch && sch.plate_no) || "",
+  };
+}
+
 function scheduleView(sch, req) {
   const route = db().prepare("SELECT * FROM routes WHERE id=?").get(sch.route_id);
   const bus = db().prepare("SELECT * FROM bus_types WHERE id=?").get(sch.bus_type_id);
@@ -145,30 +162,45 @@ function scheduleView(sch, req) {
     (sch.cost_guide || 0) +
     (sch.cost_other || 0);
     const revenue = db().prepare("SELECT IFNULL(SUM(pay_amount),0) AS s FROM enrollments WHERE schedule_id=? AND status='joined'").get(sch.id).s;
+  const mappedRoute = mapRoute(route, req);
+  const meetup = meetupMap(sch.meetup_point);
+  let lockedCount = 0;
+  try {
+    const locked = JSON.parse(sch.locked_seats || "[]");
+    lockedCount = Array.isArray(locked) ? locked.length : 0;
+  } catch {
+    lockedCount = 0;
+  }
   return {
     id: sch.id,
     routeId: sch.route_id,
-    route: mapRoute(route, req),
+    route: mappedRoute,
+    gallery: galleryOfSchedule(mappedRoute, req),
     startDate: sch.start_date,
     endDate: sch.end_date,
     organizerType: sch.organizer_type,
     organizerId: sch.organizer_id,
     organizerName: sch.organizer_name,
     companyName: sch.company_name,
-    bus,
+    bus: mapBus(bus, sch, req),
     minGroupSize: sch.min_group_size,
     maxSeats: sch.max_seats,
     meetupPoint: sch.meetup_point,
     meetupTime: sch.meetup_time,
+    meetupMapUrl: meetup.url,
+    meetupLat: meetup.lat,
+    meetupLng: meetup.lng,
+    meetupPrecise: meetup.precise,
     status: sch.status,
     cancelReason: sch.cancel_reason || "",
     cancelledAt: sch.cancelled_at || "",
     cancelledBy: sch.cancelled_by || "",
     shareToken: sch.share_token,
     notes: sch.notes,
+    consultGroup: sch.consult_group || "",
     enrolled,
     waitlistCount: waitlistCount(sch.id),
-    remain: Math.max(0, sch.max_seats - live),
+    remain: Math.max(0, sch.max_seats - live - lockedCount),
     quote,
     people,
     guide,
@@ -184,7 +216,6 @@ function scheduleView(sch, req) {
     revenue,
     profit: revenue - cost,
     guaranteed: sch.status !== "cancelled" && live >= Number(sch.min_group_size),
-    meetupMapUrl: meetupMapUrl(sch.meetup_point),
   };
 }
 
@@ -203,6 +234,7 @@ router.get("/meta", (req, res) => {
       cancelPolicy,
       waiverText,
       faqs,
+      contacts,
     },
   });
 });
@@ -336,7 +368,7 @@ router.get("/me/trips", authUser, (req, res) => {
       endDate: row.end_date,
       meetupPoint: row.meetup_point,
       meetupTime: row.meetup_time,
-      meetupMapUrl: meetupMapUrl(row.meetup_point),
+      meetupMapUrl: meetupMap(row.meetup_point).url,
       status: row.status,
       seatNo: row.seat_no,
       insurance: row.insurance_code,
@@ -372,15 +404,26 @@ router.put("/me", authUser, (req, res) => {
 
 router.get("/weather", async (req, res) => {
   try {
-    const data = await forecast({ region: req.query.region, date: req.query.date });
+    const data = await forecast({ region: req.query.region || req.query.place, date: req.query.date });
     res.json({ ok: true, data });
   } catch (e) {
     res.status(500).json({ ok: false, message: e.message || "天气暂不可用" });
   }
 });
 
-router.get("/buses", (_req, res) => {
-  res.json({ ok: true, data: db().prepare("SELECT * FROM bus_types ORDER BY sort_order").all() });
+router.get("/users/:id", (req, res) => {
+  const user = db().prepare("SELECT * FROM users WHERE id=? AND deleted_at IS NULL").get(req.params.id);
+  const data = publicUserProfile(user, req);
+  if (!data) return res.status(404).json({ ok: false, message: "用户不存在" });
+  res.json({ ok: true, data });
+});
+
+router.get("/buses", (req, res) => {
+  const data = db()
+    .prepare("SELECT * FROM bus_types ORDER BY sort_order")
+    .all()
+    .map((b) => ({ ...b, photo: attachAssetHost(req, b.photo) || "" }));
+  res.json({ ok: true, data });
 });
 
 function publicGuideCard(g, req) {
@@ -514,22 +557,14 @@ router.get("/schedules/:id", optionalUser, (req, res) => {
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
   const includeCancelled = sch.status === "cancelled";
   const chainSql = includeCancelled
-    ? "SELECT id,traveler_name,gender,pay_status,traveler_type,status,seat_no,created_at FROM enrollments WHERE schedule_id=? ORDER BY CASE status WHEN 'joined' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END, id"
-    : "SELECT id,traveler_name,gender,pay_status,traveler_type,status,seat_no,created_at FROM enrollments WHERE schedule_id=? AND status!='cancelled' ORDER BY CASE status WHEN 'joined' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END, id";
+    ? `SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar
+       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END, e.id`
+    : `SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar
+       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? AND e.status!='cancelled' ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END, e.id`;
   const chain = db()
     .prepare(chainSql)
     .all(sch.id)
-    .map((e, i) => ({
-      index: i + 1,
-      name: maskName(e.traveler_name),
-      gender: e.gender,
-      payStatus: e.pay_status,
-      travelerType: e.traveler_type,
-      status: e.status,
-      waitlisted: e.status === "waitlist",
-      seatNo: e.seat_no || "",
-      createdAt: e.created_at,
-    }));
+    .map((e, i) => chainItem(e, i, req));
   res.json({
     ok: true,
     data: {
@@ -552,7 +587,9 @@ router.get("/schedules/:id/seats", optionalUser, (req, res) => {
   data.seats = data.seats.map((seat) => ({
     ...seat,
     mine: !!(req.userId && seat.userId && Number(seat.userId) === Number(req.userId)),
-    userId: undefined,
+    occupant: seat.occupant
+      ? { ...seat.occupant, avatar: attachAssetHost(req, seat.occupant.avatar) || "" }
+      : null,
   }));
   res.json({ ok: true, data });
 });
@@ -650,6 +687,16 @@ router.post("/enroll", authUser, (req, res) => {
       waiverAccepted,
       healthOk,
     });
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/pay/for-enrollment", authUser, (req, res) => {
+  try {
+    const enrollmentId = Number((req.body || {}).enrollmentId);
+    const data = payEnrollment(enrollmentId, req.userId);
     res.json({ ok: true, data });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
@@ -862,6 +909,49 @@ router.post("/guide/schedules/:id/checkin", authGuide, (req, res) => {
   db().prepare("UPDATE enrollments SET checkin_at=datetime('now','localtime'), checkin_by=? WHERE id=?").run(req.guideId, en.id);
   const updated = db().prepare("SELECT checkin_at FROM enrollments WHERE id=?").get(en.id);
   res.json({ ok: true, data: { enrollmentId: en.id, checkinAt: updated.checkin_at } });
+});
+
+function ensureGuideSchedule(req, res) {
+  const sch = db().prepare("SELECT * FROM schedules WHERE id=? AND guide_id=?").get(req.params.id, req.guideId);
+  if (!sch) {
+    res.status(404).json({ ok: false, message: "未分配该团" });
+    return null;
+  }
+  return sch;
+}
+
+router.put("/guide/schedules/:id/trip", authGuide, (req, res) => {
+  if (!ensureGuideSchedule(req, res)) return;
+  try {
+    const sch = updateScheduleTrip(req.params.id, req.body || {});
+    res.json({ ok: true, data: scheduleView(sch, req) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/guide/schedules/:id/seats/lock", authGuide, (req, res) => {
+  if (!ensureGuideSchedule(req, res)) return;
+  try {
+    const b = req.body || {};
+    const lockedSeats = Array.isArray(b.lockedSeats)
+      ? setLockedSeats(req.params.id, b.lockedSeats)
+      : toggleLockedSeat(req.params.id, b.seatNo, b.locked !== false);
+    res.json({ ok: true, data: { lockedSeats, seats: scheduleSeats(req.params.id) } });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/guide/schedules/:id/seats/assign", authGuide, (req, res) => {
+  if (!ensureGuideSchedule(req, res)) return;
+  try {
+    const b = req.body || {};
+    const data = assignSeat(req.params.id, Number(b.enrollmentId), b.seatNo);
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 function staffAdminOnly(req, res) {
@@ -1144,6 +1234,43 @@ router.put("/admin/schedules/:id/cost", authAdmin, (req, res) => {
     "UPDATE schedules SET cost_transport=?, cost_ticket=?, cost_hotel=?, cost_meal=?, cost_guide=?, cost_other=? WHERE id=?"
   ).run(b.transport || 0, b.ticket || 0, b.hotel || 0, b.meal || 0, b.guide || 0, b.other || 0, req.params.id);
   res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id), req) });
+});
+
+router.put("/admin/schedules/:id/trip", authAdmin, (req, res) => {
+  try {
+    const exists = db().prepare("SELECT id FROM schedules WHERE id=?").get(req.params.id);
+    if (!exists) return res.status(404).json({ ok: false, message: "排期不存在" });
+    const sch = updateScheduleTrip(req.params.id, req.body || {});
+    res.json({ ok: true, data: scheduleView(sch, req) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/admin/schedules/:id/seats/lock", authAdmin, (req, res) => {
+  try {
+    const exists = db().prepare("SELECT id FROM schedules WHERE id=?").get(req.params.id);
+    if (!exists) return res.status(404).json({ ok: false, message: "排期不存在" });
+    const b = req.body || {};
+    const lockedSeats = Array.isArray(b.lockedSeats)
+      ? setLockedSeats(req.params.id, b.lockedSeats)
+      : toggleLockedSeat(req.params.id, b.seatNo, b.locked !== false);
+    res.json({ ok: true, data: { lockedSeats, seats: scheduleSeats(req.params.id) } });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/admin/schedules/:id/seats/assign", authAdmin, (req, res) => {
+  try {
+    const exists = db().prepare("SELECT id FROM schedules WHERE id=?").get(req.params.id);
+    if (!exists) return res.status(404).json({ ok: false, message: "排期不存在" });
+    const b = req.body || {};
+    const data = assignSeat(req.params.id, Number(b.enrollmentId), b.seatNo);
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 router.post("/admin/schedules/:id/settle", authAdmin, (req, res) => {

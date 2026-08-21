@@ -168,6 +168,35 @@ function ageBucketOf(age) {
   return bucket || AGE_BUCKETS[AGE_BUCKETS.length - 1];
 }
 
+function lifeStageOf(age) {
+  const n = Number(age);
+  if (!Number.isFinite(n) || n < 0) return { key: "", label: "" };
+  if (n < 18) return { key: "teen", label: "少年" };
+  if (n <= 35) return { key: "young", label: "青年" };
+  if (n <= 55) return { key: "middle", label: "中年" };
+  return { key: "senior", label: "老年" };
+}
+
+function ageFromBirthday(birthday) {
+  const m = String(birthday || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  if (!isRealDate(year, month, day)) return null;
+  const today = new Date();
+  let age = today.getFullYear() - year;
+  const md = (today.getMonth() + 1) * 100 + today.getDate();
+  if (md < month * 100 + day) age -= 1;
+  return age;
+}
+
+function lifeStageFromPerson({ idCard, birthday } = {}) {
+  const parsed = idCard ? parseIdCard(idCard) : { valid: false };
+  if (parsed.valid) return lifeStageOf(parsed.age);
+  return lifeStageOf(ageFromBirthday(birthday));
+}
+
 module.exports = {
   PROVINCES,
   CITIES,
@@ -175,6 +204,9 @@ module.exports = {
   maskIdCard,
   parseIdCard,
   ageBucketOf,
+  lifeStageOf,
+  lifeStageFromPerson,
+  ageFromBirthday,
   checkDigit,
   makeIdCard,
   normalizeIdCard,

@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const Database = require("better-sqlite3");
 const config = require("./config");
+const { backfillBusPhotos } = require("./seed/bus-art");
 
 function ensureDirs() {
   fs.mkdirSync(config.dataDir, { recursive: true });
@@ -69,6 +70,7 @@ function createSchema(db) {
       name TEXT,
       seats INTEGER,
       description TEXT,
+      photo TEXT,
       sort_order INTEGER DEFAULT 0
     );
 
@@ -155,6 +157,10 @@ function createSchema(db) {
       cost_guide INTEGER DEFAULT 0,
       cost_other INTEGER DEFAULT 0,
       guide_id INTEGER,
+      plate_no TEXT,
+      bus_photo TEXT,
+      locked_seats TEXT DEFAULT '[]',
+      consult_group TEXT,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
@@ -284,6 +290,12 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "enrollments", "emergency_phone", "TEXT");
   addColumnIfMissing(db, "enrollments", "waiver_accepted_at", "TEXT");
   addColumnIfMissing(db, "enrollments", "health_declared_at", "TEXT");
+  addColumnIfMissing(db, "bus_types", "photo", "TEXT");
+  addColumnIfMissing(db, "schedules", "plate_no", "TEXT");
+  addColumnIfMissing(db, "schedules", "bus_photo", "TEXT");
+  addColumnIfMissing(db, "schedules", "locked_seats", "TEXT DEFAULT '[]'");
+  addColumnIfMissing(db, "schedules", "consult_group", "TEXT");
+  backfillBusPhotos(db);
   db.exec(`
     DELETE FROM reviews
     WHERE id NOT IN (SELECT MIN(id) FROM reviews GROUP BY user_id, schedule_id);

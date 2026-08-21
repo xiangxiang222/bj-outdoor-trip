@@ -37,7 +37,7 @@ const faqs = [
   },
   {
     q: "集合点怎么找？",
-    a: "排期页展示集合点与时间，可一键复制并打开地图搜索。请提前 10 分钟到达，超时可能无法等候。",
+    a: "排期页展示集合点与时间，可打开地图定位到具体位置。请提前 10 分钟到达，超时可能无法等候。",
   },
   {
     q: "一定要买保险吗？",
@@ -49,9 +49,46 @@ const faqs = [
   },
 ];
 
-function meetupMapUrl(point) {
-  const q = encodeURIComponent(String(point || "").trim());
-  return q ? `https://uri.amap.com/search?keyword=${q}&src=beiyexing` : "";
+const MEETUP_POIS = {
+  东直门东方银座C口: { lng: 116.4356, lat: 39.9412, name: "东直门东方银座C口" },
+  西直门凯德mall北门外: { lng: 116.3554, lat: 39.9406, name: "西直门凯德MALL北门" },
+  国贸桥下大巴停靠点: { lng: 116.4617, lat: 39.9087, name: "国贸桥下大巴停靠点" },
+  丽泽桥西南角: { lng: 116.3142, lat: 39.8684, name: "丽泽桥西南角" },
+};
+
+function meetupMap(point) {
+  const text = String(point || "").trim();
+  if (!text) return { url: "", name: "", lat: null, lng: null, precise: false };
+  const poi = MEETUP_POIS[text] || Object.entries(MEETUP_POIS).find(([k]) => text.includes(k) || k.includes(text))?.[1];
+  if (poi) {
+    const name = encodeURIComponent(poi.name);
+    return {
+      url: `https://uri.amap.com/marker?position=${poi.lng},${poi.lat}&name=${name}&src=beiyexing`,
+      name: poi.name,
+      lat: poi.lat,
+      lng: poi.lng,
+      precise: true,
+    };
+  }
+  const q = encodeURIComponent(text);
+  return {
+    url: `https://uri.amap.com/search?keyword=${q}&src=beiyexing`,
+    name: text,
+    lat: null,
+    lng: null,
+    precise: false,
+  };
 }
 
-module.exports = { packingList, cancelPolicy, waiverText, faqs, meetupMapUrl };
+function meetupMapUrl(point) {
+  return meetupMap(point).url;
+}
+
+const contacts = {
+  officialWechat: "beiyexing",
+  officialWechatName: "北野行官方",
+  officialGroup: "北野行户外交流群",
+  hint: "添加官方微信后拉入用户群。本团咨询群由领队确认后显示在行程页。",
+};
+
+module.exports = { packingList, cancelPolicy, waiverText, faqs, meetupMapUrl, meetupMap, MEETUP_POIS, contacts };

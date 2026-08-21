@@ -57,7 +57,7 @@ function enrollUser({
   if (exist) fail(400, "该身份证已在本团报名");
 
   const occupied = enrolledCount(sch.id);
-  const waitlisted = occupied >= Number(sch.max_seats);
+  let waitlisted = occupied >= Number(sch.max_seats);
   let seat = null;
   if (waitlisted) {
     seat = null;
@@ -65,6 +65,7 @@ function enrollUser({
     seat = assertSeatAvailable(sch.id, sch.max_seats, seatNo);
   } else {
     seat = firstFreeSeat(sch.id, sch.max_seats);
+    if (!seat) waitlisted = true;
   }
   const quote = quoteForSchedule(sch, Math.max(waitlisted ? occupied : occupied + 1, 1), user);
   const payable = calcPayable({

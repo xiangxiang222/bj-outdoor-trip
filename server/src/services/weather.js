@@ -75,8 +75,46 @@ function mockDaily(region, date) {
   return { weatherCode, tmax, tmin, wind, precip, source: "mock" };
 }
 
+function mockHourly(region, date, daily) {
+  const seed = crypto.createHash("sha1").update(`h|${region}|${date}`).digest();
+  const hours = [];
+  for (let h = 6; h <= 20; h++) {
+    const t = (h - 6) / 14;
+    const temp = Math.round(daily.tmin + (daily.tmax - daily.tmin) * Math.sin(Math.PI * t));
+    const wet = daily.weatherCode >= 61 && seed[h % seed.length] % 3 === 0;
+    hours.push({
+      hour: `${String(h).padStart(2, "0")}:00`,
+      summary: wet ? codeLabel(daily.weatherCode) : codeLabel(Math.min(daily.weatherCode, 3)),
+      temp,
+      precip: wet ? Math.max(0.2, Number(daily.precip || 0) / 6) : 0,
+    });
+  }
+  return hours;
+}
+
+function hourlyFromLive(json) {
+  const h = json.hourly || {};
+  const times = h.time || [];
+  const codes = h.weathercode || h.weather_code || [];
+  const temps = h.temperature_2m || [];
+  const precips = h.precipitation || [];
+  const out = [];
+  for (let i = 0; i < times.length; i += 1) {
+    const hour = String(times[i] || "").slice(11, 16);
+    const n = Number(hour.slice(0, 2));
+    if (n < 6 || n > 20) continue;
+    out.push({
+      hour,
+      summary: codeLabel(Number(codes[i] || 1)),
+      temp: Math.round(Number(temps[i] || 0)),
+      precip: Number(precips[i] || 0),
+    });
+  }
+  return out;
+}
+
 async function liveDaily(lat, lon, date) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=Asia%2FShanghai&start_date=${date}&end_date=${date}`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&hourly=weathercode,temperature_2m,precipitation&timezone=Asia%2FShanghai&start_date=${date}&end_date=${date}`;
   const res = await fetch(url, { signal: AbortSignal.timeout(2500) });
   if (!res.ok) throw new Error("weather http " + res.status);
   const json = await res.json();
@@ -88,6 +126,7 @@ async function liveDaily(lat, lon, date) {
     wind: Number(d.windspeed_10m_max?.[0] || 10),
     precip: Number(d.precipitation_sum?.[0] || 0),
     source: "open-meteo",
+    hourly: hourlyFromLive(json),
   };
 }
 
@@ -105,6 +144,7 @@ async function forecast({ region, date }) {
     daily = mockDaily(region || place.name, day);
   }
   const summary = codeLabel(daily.weatherCode);
+  const hourly = Array.isArray(daily.hourly) && daily.hourly.length ? daily.hourly : mockHourly(region || place.name, day, daily);
   return {
     date: day,
     region: region || place.name,
@@ -118,6 +158,7 @@ async function forecast({ region, date }) {
     precip: daily.precip,
     source: daily.source,
     alerts: alertsFor(daily),
+    hourly,
   };
 }
 

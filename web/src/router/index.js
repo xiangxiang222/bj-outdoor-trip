@@ -21,6 +21,7 @@ const routes = [
       { path: "stats/:id", name: "stats", component: () => import("@/views/mobile/Stats.vue") },
       { path: "guides", name: "guides", component: () => import("@/views/mobile/Guides.vue") },
       { path: "guide/:id", name: "guide", component: () => import("@/views/mobile/Guide.vue") },
+      { path: "user/:id", name: "user", component: () => import("@/views/mobile/User.vue") },
     ],
   },
   { path: "/admin/login", component: () => import("@/views/admin/Login.vue") },

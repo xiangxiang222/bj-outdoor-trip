@@ -12,6 +12,8 @@ describe("weather", () => {
     const data = await forecast({ region: "北京怀柔", date: "2026-09-01" });
     assert.equal(data.place, "怀柔");
     assert.ok(data.summary);
+    assert.ok(Array.isArray(data.hourly) && data.hourly.length >= 8);
+    assert.match(data.hourly[0].hour, /^\d{2}:00$/);
     assert.ok(Array.isArray(data.alerts) && data.alerts.length >= 1);
     assert.equal(data.source, "mock");
   });

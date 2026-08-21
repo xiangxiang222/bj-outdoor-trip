@@ -18,8 +18,9 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/meta` | 品牌名、演示短信码、会员年费、积分规则、保险方案、可选天数、退改说明、风险告知、常见问题 |
-| GET | `/weather` | 目的地天气。Query：`region` `date`。默认 mock，设 `WEATHER_LIVE=1` 走 Open-Meteo |
+| GET | `/meta` | 品牌名、演示短信码、会员年费、积分规则、保险方案、可选天数、退改说明、风险告知、常见问题、官方微信/用户群 |
+| GET | `/users/:id` | 用户公开主页：昵称、头像、性别、年龄段、籍贯、出行次数。不含手机号 |
+| GET | `/weather` | 目的地天气（含 `hourly` 分时）。Query：`region` `date`。默认 mock，设 `WEATHER_LIVE=1` 走 Open-Meteo |
 | GET | `/buses` | 车型 |
 | GET | `/guides` | 在岗导游公开资料（不含手机号） |
 | GET | `/guides/:id` | 导游详情、带团次数、近期行程。停用或不存在返回 404 |
@@ -27,9 +28,9 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条） |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
 | GET | `/schedules` | Query：`routeId` `organizerType`（不含已解散） |
-| GET | `/schedules/:id` | 排期 + 脱敏名单；含 `guaranteed`（已达成团线）、`meetupMapUrl`；已解散团仍可查看 |
-| GET | `/schedules/:id/demographics` | 本团画像 |
-| GET | `/schedules/:id/seats` | 座位图。登录后占用位带 `mine` |
+| GET | `/schedules/:id` | 排期 + 脱敏名单；含 `guaranteed`、`meetupMapUrl`/`meetupLat`/`meetupLng`、`gallery`、`consultGroup`、车型座位数/车号/照片；名单项含 `userId` `lifeStage` `canPay` |
+| GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
+| GET | `/schedules/:id/demographics` | 本团画像
 | GET | `/schedules/:id/reviews` | 该团评价列表。`{ list, count, avg }` |
 | GET | `/schedules/:id/poster` | 分享 URL + QR DataURL（**无需登录**） |
 | GET | `/share/:token` | 302 到 `/m/schedule/:id?token=` |
@@ -60,6 +61,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
 | POST | `/enroll` | 用户 | 报名占座。须紧急联系人、健康声明、风险确认。个人 `pay_status=unpaid`、`needPay: false`；公司 `company_pending` |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。报名流程默认不调用 |
+| POST | `/pay/for-enrollment` | 用户 | 行程页待支付代付。任何人可替 `unpaid` 且已占座的报名支付（演示立即成功）。公司挂账不可用 |
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
 | GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canReview` `reviewed` |
 | POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（出发日前、团未解散；当天不可取消） |
@@ -79,6 +81,9 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/guide/schedules` | 已分配行程 |
 | GET | `/guide/schedules/:id` | 名单含手机、座位、紧急联系人 |
 | POST | `/guide/schedules/:id/checkin` | body：`enrollmentId` |
+| PUT | `/guide/schedules/:id/trip` | 车牌、本团咨询群 |
+| POST | `/guide/schedules/:id/seats/lock` | `seatNo`+`locked` 或 `lockedSeats` 数组 |
+| POST | `/guide/schedules/:id/seats/assign` | `enrollmentId` `seatNo`，空位调座或两人互换 |
 
 H5 入口 `/g`。
 
@@ -147,6 +152,9 @@ H5 入口 `/g`。
 | POST | `/admin/schedules/dissolve-all` | 解散全部进行中的团。body：`reason` |
 | POST | `/admin/schedules/:id/dissolve` | 解散单团。body：`reason` |
 | PUT | `/admin/schedules/:id/cost` | `transport` `ticket` `hotel` `meal` `guide` `other` |
+| PUT | `/admin/schedules/:id/trip` | `plateNo` `busPhoto` `consultGroup` |
+| POST | `/admin/schedules/:id/seats/lock` | 锁定空座位 |
+| POST | `/admin/schedules/:id/seats/assign` | 为报名调换座位 |
 | POST | `/admin/schedules/:id/settle` | 公司团挂账结算，并模拟分账 |
 | GET | `/admin/schedules/:id/splits` | 分账明细 |
 | POST | `/admin/schedules/:id/split` | 对已支付金额发起分账（已有记录则复用） |

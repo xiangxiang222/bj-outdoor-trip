@@ -62,6 +62,7 @@ const title = computed(() => {
     stats: "本团画像",
     guides: "领队导游",
     guide: "导游详情",
+    user: "个人主页",
   };
   return map[route.name] || "北野行";
 });

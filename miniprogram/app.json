@@ -13,7 +13,8 @@
     "pages/favorites/favorites",
     "pages/stats/stats",
     "pages/guides/guides",
-    "pages/guide/guide"
+    "pages/guide/guide",
+    "pages/user/user"
   ],
   "subPackages": [
     { "root": "pkg-detail", "name": "detail", "pages": ["detail/detail"] }

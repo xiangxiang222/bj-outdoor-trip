@@ -6,13 +6,14 @@ const config = require("../config");
 const { ROUTES } = require("./routes-data");
 const { parseIdCard, makeIdCard } = require("../services/idcard");
 const { writeCovers, downloadPhotos, coverOf, galleryOf } = require("./image-helpers");
+const { BUS_PHOTO_BY_ID, backfillBusPhotos } = require("./bus-art");
 
 const BUSES = [
-  { id: "coaster10", name: "10 人考斯特", seats: 10, description: "豪华考斯特，适合小团和公司高管团", sort_order: 1 },
-  { id: "van15", name: "15 人商务车", seats: 15, description: "丰田/金杯商务，灵活走山路", sort_order: 2 },
-  { id: "bus30", name: "30 人中巴", seats: 30, description: "标准旅游中巴，团建主力", sort_order: 3 },
-  { id: "bus38", name: "38 人旅游大巴", seats: 38, description: "舒适大巴，长途三日线常用", sort_order: 4 },
-  { id: "bus50", name: "50 人大型大巴", seats: 50, description: "满员单价最低，适合爆款一日游", sort_order: 5 },
+  { id: "coaster10", name: "10 人考斯特", seats: 10, description: "豪华考斯特，适合小团和公司高管团", sort_order: 1, photo: BUS_PHOTO_BY_ID.coaster10 },
+  { id: "van15", name: "15 人商务车", seats: 15, description: "丰田/金杯商务，灵活走山路", sort_order: 2, photo: BUS_PHOTO_BY_ID.van15 },
+  { id: "bus30", name: "30 人中巴", seats: 30, description: "标准旅游中巴，团建主力", sort_order: 3, photo: BUS_PHOTO_BY_ID.bus30 },
+  { id: "bus38", name: "38 人旅游大巴", seats: 38, description: "舒适大巴，长途三日线常用", sort_order: 4, photo: BUS_PHOTO_BY_ID.bus38 },
+  { id: "bus50", name: "50 人大型大巴", seats: 50, description: "满员单价最低，适合爆款一日游", sort_order: 5, photo: BUS_PHOTO_BY_ID.bus50 },
 ];
 
 const GUIDES = [
@@ -96,8 +97,9 @@ async function run() {
     });
   });
 
-  const insertBus = db.prepare("INSERT INTO bus_types (id,name,seats,description,sort_order) VALUES (@id,@name,@seats,@description,@sort_order)");
+  const insertBus = db.prepare("INSERT INTO bus_types (id,name,seats,description,sort_order,photo) VALUES (@id,@name,@seats,@description,@sort_order,@photo)");
   BUSES.forEach((b) => insertBus.run(b));
+  backfillBusPhotos(db);
 
   const insertGuide = db.prepare("INSERT INTO guides (name,phone,gender,years,languages,specialties,rating,bio,status) VALUES (?,?,?,?,?,?,?,?,?)");
   GUIDES.forEach((g) => insertGuide.run(g.name, g.phone, g.gender, g.years, g.languages, g.specialties, g.rating, g.bio, "idle"));
@@ -138,8 +140,8 @@ async function run() {
     r.buses.forEach((b) => insertRb.run(rid, b));
   }
 
-  const insertSch = db.prepare(`INSERT INTO schedules (route_id,start_date,end_date,organizer_type,organizer_id,organizer_name,company_name,bus_type_id,min_group_size,max_seats,meetup_point,meetup_time,status,share_token,notes,cost_transport,cost_ticket,cost_hotel,cost_meal,cost_guide,cost_other,guide_id)
-    VALUES (@route_id,@start_date,@end_date,@organizer_type,@organizer_id,@organizer_name,@company_name,@bus_type_id,@min_group_size,@max_seats,@meetup_point,@meetup_time,@status,@share_token,@notes,@cost_transport,@cost_ticket,@cost_hotel,@cost_meal,@cost_guide,@cost_other,@guide_id)`);
+  const insertSch = db.prepare(`INSERT INTO schedules (route_id,start_date,end_date,organizer_type,organizer_id,organizer_name,company_name,bus_type_id,min_group_size,max_seats,meetup_point,meetup_time,status,share_token,notes,cost_transport,cost_ticket,cost_hotel,cost_meal,cost_guide,cost_other,guide_id,plate_no,consult_group)
+    VALUES (@route_id,@start_date,@end_date,@organizer_type,@organizer_id,@organizer_name,@company_name,@bus_type_id,@min_group_size,@max_seats,@meetup_point,@meetup_time,@status,@share_token,@notes,@cost_transport,@cost_ticket,@cost_hotel,@cost_meal,@cost_guide,@cost_other,@guide_id,@plate_no,@consult_group)`);
 
   const upcoming = (daysFromNow, length) => {
     const start = dayjs().add(daysFromNow, "day").format("YYYY-MM-DD");
@@ -148,12 +150,12 @@ async function run() {
   };
 
   const schedulesSeed = [
-    { code: "R01", ...upcoming(7, 1), organizer_type: "individual", organizer_id: userIds["13700137000"], organizer_name: "领队老周", company_name: null, bus_type_id: "bus30", meetup_point: "东直门东方银座C口", meetup_time: "07:30", notes: "周末人气场，可积分抵现", cost_transport: 1800, cost_ticket: 1200, cost_hotel: 0, cost_meal: 0, cost_guide: 400, cost_other: 120 },
-    { code: "R01", ...upcoming(14, 1), organizer_type: "company", organizer_id: userIds["13900139000"], organizer_name: "华创团建", company_name: "北京华创科技有限公司", bus_type_id: "bus50", meetup_point: "国贸桥下大巴停靠点", meetup_time: "07:10", notes: "公司团建，统一挂账，活动后结算", cost_transport: 2200, cost_ticket: 2000, cost_hotel: 0, cost_meal: 800, cost_guide: 500, cost_other: 200 },
-    { code: "R05", ...upcoming(10, 1), organizer_type: "individual", organizer_id: userIds["13800138000"], organizer_name: "林北野", company_name: null, bus_type_id: "bus30", meetup_point: "丽泽桥西南角", meetup_time: "07:00", notes: "夏季漂流专场", cost_transport: 1600, cost_ticket: 1500, cost_hotel: 0, cost_meal: 0, cost_guide: 400, cost_other: 80 },
-    { code: "R16", ...upcoming(21, 2), organizer_type: "individual", organizer_id: userIds["13700137000"], organizer_name: "领队老周", company_name: null, bus_type_id: "coaster10", meetup_point: "东直门东方银座C口", meetup_time: "07:30", notes: "精品小团，考斯特", cost_transport: 2800, cost_ticket: 3600, cost_hotel: 2400, cost_meal: 600, cost_guide: 800, cost_other: 200 },
-    { code: "R24", ...upcoming(30, 3), organizer_type: "company", organizer_id: userIds["13900139000"], organizer_name: "华创团建", company_name: "北京华创科技有限公司", bus_type_id: "bus38", meetup_point: "东直门东方银座C口", meetup_time: "06:30", notes: "公司三日坝上", cost_transport: 6800, cost_ticket: 4200, cost_hotel: 9600, cost_meal: 3600, cost_guide: 1500, cost_other: 800 },
-    { code: "R04", ...upcoming(5, 1), organizer_type: "individual", organizer_id: userIds["13800138000"], organizer_name: "林北野", company_name: null, bus_type_id: "bus30", meetup_point: "国贸桥下大巴停靠点", meetup_time: "07:00", notes: "即将成团", cost_transport: 1900, cost_ticket: 2200, cost_hotel: 0, cost_meal: 0, cost_guide: 450, cost_other: 100 },
+    { code: "R01", ...upcoming(7, 1), organizer_type: "individual", organizer_id: userIds["13700137000"], organizer_name: "领队老周", company_name: null, bus_type_id: "bus30", meetup_point: "东直门东方银座C口", meetup_time: "07:30", notes: "周末人气场，可积分抵现", cost_transport: 1800, cost_ticket: 1200, cost_hotel: 0, cost_meal: 0, cost_guide: 400, cost_other: 120, plate_no: "京A·D83001", consult_group: "慕田峪周末团咨询" },
+    { code: "R01", ...upcoming(14, 1), organizer_type: "company", organizer_id: userIds["13900139000"], organizer_name: "华创团建", company_name: "北京华创科技有限公司", bus_type_id: "bus50", meetup_point: "国贸桥下大巴停靠点", meetup_time: "07:10", notes: "公司团建，统一挂账，活动后结算", cost_transport: 2200, cost_ticket: 2000, cost_hotel: 0, cost_meal: 800, cost_guide: 500, cost_other: 200, plate_no: "京B·H52008", consult_group: "华创团建本团群" },
+    { code: "R05", ...upcoming(10, 1), organizer_type: "individual", organizer_id: userIds["13800138000"], organizer_name: "林北野", company_name: null, bus_type_id: "bus30", meetup_point: "丽泽桥西南角", meetup_time: "07:00", notes: "夏季漂流专场", cost_transport: 1600, cost_ticket: 1500, cost_hotel: 0, cost_meal: 0, cost_guide: 400, cost_other: 80, plate_no: "", consult_group: "" },
+    { code: "R16", ...upcoming(21, 2), organizer_type: "individual", organizer_id: userIds["13700137000"], organizer_name: "领队老周", company_name: null, bus_type_id: "coaster10", meetup_point: "东直门东方银座C口", meetup_time: "07:30", notes: "精品小团，考斯特", cost_transport: 2800, cost_ticket: 3600, cost_hotel: 2400, cost_meal: 600, cost_guide: 800, cost_other: 200, plate_no: "京A·C10086", consult_group: "古北小团咨询" },
+    { code: "R24", ...upcoming(30, 3), organizer_type: "company", organizer_id: userIds["13900139000"], organizer_name: "华创团建", company_name: "北京华创科技有限公司", bus_type_id: "bus38", meetup_point: "东直门东方银座C口", meetup_time: "06:30", notes: "公司三日坝上", cost_transport: 6800, cost_ticket: 4200, cost_hotel: 9600, cost_meal: 3600, cost_guide: 1500, cost_other: 800, plate_no: "", consult_group: "" },
+    { code: "R04", ...upcoming(5, 1), organizer_type: "individual", organizer_id: userIds["13800138000"], organizer_name: "林北野", company_name: null, bus_type_id: "bus30", meetup_point: "国贸桥下大巴停靠点", meetup_time: "07:00", notes: "即将成团", cost_transport: 1900, cost_ticket: 2200, cost_hotel: 0, cost_meal: 0, cost_guide: 450, cost_other: 100, plate_no: "", consult_group: "" },
   ];
 
   const schIds = [];
@@ -183,6 +185,8 @@ async function run() {
       cost_guide: s.cost_guide,
       cost_other: s.cost_other,
       guide_id: null,
+      plate_no: s.plate_no || "",
+      consult_group: s.consult_group || "",
     });
     schIds.push(Number(info.lastInsertRowid));
   }

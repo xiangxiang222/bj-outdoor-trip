@@ -14,7 +14,7 @@
     <view class="seat-front">车头</view>
     <view class="seat-row" wx:for="{{seatRows}}" wx:key="row">
       <block wx:for="{{item.seats}}" wx:for-item="seat" wx:key="no">
-        <view class="seat {{seat.taken ? 'taken' : ''}} {{form.seatNo==seat.no ? 'on' : ''}}" bindtap="pickSeat" data-no="{{seat.no}}" data-taken="{{seat.taken}}">{{seat.col}}</view>
+        <view class="seat {{seat.taken ? 'taken' : ''}} {{seat.locked ? 'locked' : ''}} {{form.seatNo==seat.no ? 'on' : ''}}" bindtap="pickSeat" data-no="{{seat.no}}" data-taken="{{seat.taken}}">{{seat.locked ? '锁' : seat.col}}</view>
         <view wx:if="{{seat.aisleAfter}}" class="seat-aisle"></view>
       </block>
     </view>

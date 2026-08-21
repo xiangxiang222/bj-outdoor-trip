@@ -32,10 +32,10 @@
             <button
               type="button"
               class="seat"
-              :class="{ taken: seat.taken, on: form.seatNo === seat.no, mine: seat.mine }"
+              :class="{ taken: seat.taken, on: form.seatNo === seat.no, mine: seat.mine, locked: seat.locked }"
               :disabled="seat.taken"
               @click="form.seatNo = form.seatNo === seat.no ? '' : seat.no"
-            >{{ seat.col }}</button>
+            >{{ seat.locked ? "锁" : seat.col }}</button>
             <i v-if="seat.aisleAfter" class="seat-aisle" />
           </template>
         </div>

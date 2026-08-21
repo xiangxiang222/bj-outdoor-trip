@@ -233,8 +233,10 @@ async function run(opts) {
     assert(meta.name === "北野行", "品牌名不是北野行");
     assert(Array.isArray(meta.insurance) && meta.insurance.length >= 2, "保险方案缺失");
     assert(meta.waiverText && meta.cancelPolicy && Array.isArray(meta.faqs), "行前政策缺失");
+    assert(meta.contacts && meta.contacts.officialWechat, "官方联系方式缺失");
     const forecast = apiOk(await request("GET", "/api/weather?region=北京怀柔"), "weather");
     assert(forecast.summary && Array.isArray(forecast.alerts), "天气提醒不完整");
+    assert(Array.isArray(forecast.hourly) && forecast.hourly.length > 0, "缺少分时天气");
     assert(Array.isArray(meta.days) && meta.days.includes(1), "天数选项缺失");
     const buses = apiOk(await request("GET", "/api/buses"), "buses");
     assert(buses.length > 0, "没有车型");
@@ -257,6 +259,10 @@ async function run(opts) {
     assert(missing.status === 404, "不存在的线路应 404");
     const schedules = apiOk(await request("GET", "/api/schedules"), "schedules");
     assert(Array.isArray(schedules), "排期不是数组");
+    if (schedules[0]) {
+      assert(schedules[0].bus && schedules[0].bus.seats, "排期未带车型座位数");
+      assert(schedules[0].meetupMapUrl, "集合点地图链接缺失");
+    }
   });
 
   await step("鉴权：验证码图、注册、密码登录、短信、微信", async () => {
@@ -437,6 +443,16 @@ async function run(opts) {
       "re-enroll"
     );
     ctx.enrollmentId = again.enrollmentId;
+    const trip = apiOk(await request("GET", "/api/schedules/" + ctx.ownScheduleId), "schedule after enroll");
+    const mine = (trip.chain || []).find((c) => Number(c.enrollmentId) === Number(ctx.enrollmentId));
+    assert(mine && mine.lifeStage, "名单应带年龄段");
+    assert(mine.canPay, "待支付报名应可代付");
+    const profile = apiOk(await request("GET", "/api/users/" + mine.userId), "user profile");
+    assert(profile.nickname && !profile.phone, "公开主页不应含手机号");
+    apiOk(
+      await request("POST", "/api/pay/for-enrollment", { token: ctx.token, body: { enrollmentId: ctx.enrollmentId } }),
+      "pay for enrollment"
+    );
     const trips = apiOk(await request("GET", "/api/me/trips", { token: ctx.token }), "my trips");
     assert(trips.some((t) => Number(t.id) === Number(ctx.enrollmentId)), "即将出行没有刚报的名");
   });
@@ -722,6 +738,20 @@ async function run(opts) {
       "admin cost"
     );
     assert(cost.cost === 1650, "成本合计应为 1650");
+    apiOk(
+      await request("PUT", "/api/admin/schedules/" + published.id + "/trip", {
+        token: ctx.adminToken,
+        body: { plateNo: "京A·E2E001", consultGroup: "走查咨询群" },
+      }),
+      "admin trip vehicle"
+    );
+    apiOk(
+      await request("POST", "/api/admin/schedules/" + published.id + "/seats/lock", {
+        token: ctx.adminToken,
+        body: { seatNo: "1D", locked: true },
+      }),
+      "admin lock seat"
+    );
     apiOk(await request("GET", "/api/admin/schedules", { token: ctx.adminToken }), "admin schedules");
     apiOk(await request("GET", "/api/admin/enrollments", { token: ctx.adminToken }), "admin enrollments");
     apiOk(await request("GET", "/api/admin/users", { token: ctx.adminToken }), "admin users");

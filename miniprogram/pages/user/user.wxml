@@ -1,0 +1,13 @@
+<view wx:if="{{err}}" class="muted pad">{{err}}</view>
+<view wx:elif="{{u}}">
+  <view class="card">
+    <view class="pad guide-row">
+      <view class="guide-face">{{u.initial}}</view>
+      <view class="guide-body">
+        <view class="row"><text class="title">{{u.nickname}}</text><text class="tag" wx:if="{{u.lifeStage}}">{{u.lifeStage}}</text></view>
+        <view class="muted">{{u.genderText}}<text wx:if="{{u.hometown}}"> · {{u.hometown}}</text> · 已出行 {{u.tripCount}} 次</view>
+      </view>
+    </view>
+  </view>
+  <view class="pad muted">公开资料不含手机号与精确年龄，仅展示年龄段。</view>
+</view>

@@ -201,6 +201,9 @@ function seedMinimal() {
     ).lastInsertRowid
   );
 
+  const { backfillBusPhotos } = require("../src/seed/bus-art");
+  backfillBusPhotos(db);
+
   return {
     db,
     adminId,

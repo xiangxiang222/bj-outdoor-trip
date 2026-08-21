@@ -1,6 +1,6 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
-const { parseIdCard, maskIdCard, ageBucketOf, AGE_BUCKETS, PROVINCES, makeIdCard } = require("../src/services/idcard");
+const { parseIdCard, maskIdCard, ageBucketOf, lifeStageOf, AGE_BUCKETS, PROVINCES, makeIdCard } = require("../src/services/idcard");
 
 describe("parseIdCard", () => {
   it("rejects empty and short values", () => {
@@ -85,6 +85,10 @@ describe("ageBucketOf", () => {
     assert.equal(ageBucketOf(65).key, "56-65");
     assert.equal(ageBucketOf(80).key, "66+");
     assert.equal(ageBucketOf(-1).key, "66+");
+    assert.equal(lifeStageOf(12).label, "少年");
+    assert.equal(lifeStageOf(30).label, "青年");
+    assert.equal(lifeStageOf(40).label, "中年");
+    assert.equal(lifeStageOf(70).label, "老年");
     assert.equal(AGE_BUCKETS.length, 8);
     assert.equal(PROVINCES["11"], "北京市");
   });

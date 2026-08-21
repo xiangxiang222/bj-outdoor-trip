@@ -31,9 +31,10 @@
           <span v-else>未匹配</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="380" fixed="right">
+      <el-table-column label="操作" width="460" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="cost(row)">成本</el-button>
+          <el-button size="small" @click="openTrip(row)">车辆座位</el-button>
           <el-button size="small" @click="demo(row)">画像</el-button>
           <el-button size="small" type="success" :disabled="row.status === 'cancelled'" @click="settle(row)">结算</el-button>
           <el-button size="small" @click="openSplit(row)">分账</el-button>
@@ -123,6 +124,26 @@
       </template>
     </el-dialog>
 
+    <el-dialog v-model="showTrip" title="车辆、锁定座位与调座" width="560px">
+      <el-form label-width="110px" v-if="cur">
+        <el-form-item label="车牌号"><el-input v-model="tripForm.plateNo" placeholder="确认后填写" /></el-form-item>
+        <el-form-item label="本团咨询群"><el-input v-model="tripForm.consultGroup" placeholder="群名或口令" /></el-form-item>
+        <el-form-item label="锁定座位">
+          <el-input v-model="tripForm.lockedText" placeholder="如 3A,3B 空位可锁给工作人员" />
+        </el-form-item>
+        <el-form-item label="调换座位">
+          <el-select v-model="tripForm.enrollmentId" placeholder="出行人" clearable style="width:180px">
+            <el-option v-for="c in chain" :key="c.id" :label="(c.seatNo || '-') + ' ' + c.name" :value="c.id" />
+          </el-select>
+          <el-input v-model="tripForm.toSeat" placeholder="目标座位 2C" style="width:120px;margin-left:8px" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showTrip = false">关闭</el-button>
+        <el-button type="success" @click="saveTrip">保存</el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="showGuide" :title="guideDetail?.name || '导游详情'" width="480px">
       <template v-if="guideDetail">
         <p>评分 {{ guideDetail.rating }} · 从业 {{ guideDetail.years }} 年 · 已带团 {{ guideDetail.tripCount }} 次</p>
@@ -152,6 +173,9 @@ const showNew = ref(false);
 const showDissolve = ref(false);
 const showSplit = ref(false);
 const showGuide = ref(false);
+const showTrip = ref(false);
+const tripForm = ref({ plateNo: "", consultGroup: "", lockedText: "", enrollmentId: null, toSeat: "" });
+const chain = ref([]);
 const guideDetail = ref(null);
 const splitRows = ref([]);
 const splitScheduleId = ref(0);
@@ -190,6 +214,52 @@ onMounted(load);
 const activeCount = computed(() => list.value.filter((s) => s.status !== "cancelled").length);
 function open() { showNew.value = true; }
 function cost(row) { cur.value = JSON.parse(JSON.stringify(row)); showCost.value = true; }
+async function openTrip(row) {
+  cur.value = row;
+  tripForm.value = {
+    plateNo: row.bus?.plateNo || "",
+    consultGroup: row.consultGroup || "",
+    lockedText: "",
+    enrollmentId: null,
+    toSeat: "",
+  };
+  try {
+    const seats = (await http.get(`/schedules/${row.id}/seats`)).data;
+    tripForm.value.lockedText = (seats.lockedSeats || []).join(",");
+  } catch {
+    tripForm.value.lockedText = "";
+  }
+  try {
+    chain.value = ((await http.get("/schedules/" + row.id)).data.chain || []).filter((c) => !c.waitlisted);
+  } catch {
+    chain.value = [];
+  }
+  showTrip.value = true;
+}
+async function saveTrip() {
+  try {
+    await http.put(`/admin/schedules/${cur.value.id}/trip`, {
+      plateNo: tripForm.value.plateNo,
+      consultGroup: tripForm.value.consultGroup,
+    });
+    const lockedSeats = String(tripForm.value.lockedText || "")
+      .split(/[,，\s]+/)
+      .map((s) => s.trim().toUpperCase())
+      .filter(Boolean);
+    await http.post(`/admin/schedules/${cur.value.id}/seats/lock`, { lockedSeats });
+    if (tripForm.value.enrollmentId && tripForm.value.toSeat) {
+      await http.post(`/admin/schedules/${cur.value.id}/seats/assign`, {
+        enrollmentId: tripForm.value.enrollmentId,
+        seatNo: tripForm.value.toSeat,
+      });
+    }
+    showTrip.value = false;
+    ElMessage.success("行程车辆与座位已更新");
+    load();
+  } catch (e) {
+    ElMessage.error(e.message || "保存失败");
+  }
+}
 async function saveCost() {
   await http.put(`/admin/schedules/${cur.value.id}/cost`, cur.value.costBreakdown);
   showCost.value = false;
