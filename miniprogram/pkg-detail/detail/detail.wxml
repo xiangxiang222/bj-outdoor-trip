@@ -34,6 +34,8 @@
     <view class="pad">
       <view class="row"><text>{{item.startDate}}</text><text class="tag">{{item.organizerType=='company'?'公司团':'个人拼团'}}</text></view>
       <view class="muted">{{item.enrolled}}/{{item.maxSeats}} · {{item.bus.name}}</view>
+      <view wx:if="{{item.guide}}" class="guide-hit" catchtap="goGuide" data-id="{{item.guide.id}}">导游 {{item.guide.name}} · 查看详情</view>
+      <view wx:else class="muted guide-hit" catchtap="goGuides">成团后匹配导游 · 先看看领队</view>
     </view>
   </view>
 </view>

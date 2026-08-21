@@ -7,4 +7,11 @@ Page({
       .catch(() => this.setData({ list: [] }));
   },
   go(e) { wx.navigateTo({ url: "/pages/schedule/schedule?id=" + e.currentTarget.dataset.id }); },
+  goGuide(e) {
+    const id = e.currentTarget.dataset.id;
+    if (id) wx.navigateTo({ url: "/pages/guide/guide?id=" + id });
+  },
+  goGuides() {
+    wx.navigateTo({ url: "/pages/guides/guides" });
+  },
 });

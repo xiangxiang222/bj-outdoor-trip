@@ -55,6 +55,8 @@
           <span class="tag">{{ s.startDate }}</span>
         </div>
         <div class="muted" style="margin:6px 0">{{ s.organizerType === "company" ? s.companyName : s.organizerName }} · 余 {{ s.remain }} 座<template v-if="s.guaranteed"> · 铁定出发</template></div>
+        <p v-if="s.guide" class="guide-hit" @click.stop="$router.push('/m/guide/' + s.guide.id)">导游 {{ s.guide.name }} · 查看详情</p>
+        <p v-else class="muted guide-hit" @click.stop="$router.push('/m/guides')">成团后匹配导游 · 先看看领队</p>
         <div class="progress"><i :style="{ width: Math.min(100, ((s.enrolled || 0) / (s.maxSeats || 1)) * 100) + '%' }"></i></div>
         <div class="row" style="margin-top:8px">
           <span class="muted">{{ s.enrolled }}/{{ s.maxSeats }} · 成团 {{ s.minGroupSize }}</span>

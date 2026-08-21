@@ -327,6 +327,12 @@ button, input, textarea, select { font-family: inherit; }
 .faq-item:last-child { border-bottom: 0; }
 .pack-item { display: flex; gap: 8px; padding: 4px 0; font-size: 14px; }
 .nav-link { color: var(--leaf); font-size: 13px; }
+.guide-hit {
+  margin: 6px 0 0;
+  color: var(--leaf);
+  font-size: 13px;
+  cursor: pointer;
+}
 .guide-row { display: flex; gap: 12px; align-items: center; }
 .guide-face {
   width: 48px;

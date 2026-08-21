@@ -85,6 +85,8 @@
           <span class="tag">{{ organizerTypeText(s.organizerType) }}</span>
         </div>
         <div class="muted">{{ s.bus?.name }} · {{ s.meetupPoint }} {{ s.meetupTime }}</div>
+        <p v-if="s.guide" class="guide-hit" @click.stop="$router.push('/m/guide/' + s.guide.id)">导游 {{ s.guide.name }} · 查看详情</p>
+        <p v-else class="muted guide-hit" @click.stop="$router.push('/m/guides')">成团后匹配导游 · 先看看领队</p>
         <div class="progress"><i :style="{ width: Math.min(100, (s.enrolled / s.maxSeats) * 100) + '%' }"></i></div>
         <div class="row muted"><span>已报 {{ s.enrolled }}/{{ s.maxSeats }} · 成团 {{ s.minGroupSize }} 人</span><span>当前约 ¥{{ s.quote.price }}</span></div>
       </div>

@@ -66,6 +66,13 @@ Page({
   goSch(e) {
     wx.navigateTo({ url: "/pages/schedule/schedule?id=" + e.currentTarget.dataset.id });
   },
+  goGuide(e) {
+    const id = e.currentTarget.dataset.id;
+    if (id) wx.navigateTo({ url: "/pages/guide/guide?id=" + id });
+  },
+  goGuides() {
+    wx.navigateTo({ url: "/pages/guides/guides" });
+  },
   goLogin() {
     wx.navigateTo({
       url: "/pages/login/login?redirect=" + encodeURIComponent(detailUrl(this.data.id)),
