@@ -9,6 +9,12 @@ export function genderText(gender) {
   return gender ? "未填" : "";
 }
 
+export function insuranceText(code) {
+  if (code === "plus") return "升级高额险";
+  if (code === "outdoor") return "户外意外险";
+  return "未加购";
+}
+
 export function enrollStatusText(row) {
   if (row?.status === "cancelled") {
     return row.pay_status === "refunded" ? "已取消 · 已退款" : "已取消";

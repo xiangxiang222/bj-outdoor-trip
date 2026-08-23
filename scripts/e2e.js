@@ -521,7 +521,7 @@ async function run(opts) {
   );
 
   await step(
-    "导游端：验证码登录、行程名单、签到",
+    "导游端：验证码登录、行程名单、游客详情、签到",
     async () => {
       const cap = await readCaptcha(request);
       const guide = apiOk(
@@ -536,6 +536,13 @@ async function run(opts) {
       assert(hit, "导游未分配到走查行程");
       const detail = apiOk(await request("GET", "/api/guide/schedules/" + ctx.ownScheduleId, { token: guide.token }), "guide roster");
       assert(detail.roster && detail.roster.length >= 1, "导游名单为空");
+      const traveler = apiOk(
+        await request("GET", "/api/guide/schedules/" + ctx.ownScheduleId + "/travelers/" + detail.roster[0].id, {
+          token: guide.token,
+        }),
+        "guide traveler"
+      );
+      assert(traveler.phone && traveler.idCard, "游客详情缺少联系方式或证件");
       apiOk(
         await request("POST", "/api/guide/schedules/" + ctx.ownScheduleId + "/checkin", {
           token: guide.token,

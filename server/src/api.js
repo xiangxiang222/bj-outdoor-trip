@@ -9,7 +9,7 @@ const multer = require("multer");
 const { getDb, toRoute } = require("./db");
 const config = require("./config");
 const { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide } = require("./middleware/auth");
-const { parseIdCard, maskIdCard } = require("./services/idcard");
+const { parseIdCard, maskIdCard, lifeStageFromPerson } = require("./services/idcard");
 const { buildDemographics } = require("./services/biz");
 const { code2session } = require("./services/wechat");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
@@ -1213,20 +1213,27 @@ router.get("/guide/schedules/:id", authGuide, (req, res) => {
   const roster = db()
     .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status='joined' ORDER BY id")
     .all(sch.id)
-    .map((e) => ({
-      id: e.id,
-      name: e.traveler_name,
-      phone: e.traveler_phone,
-      gender: e.gender,
-      seatNo: e.seat_no,
-      payStatus: e.pay_status,
-      insurance: e.insurance_code,
-      emergencyName: e.emergency_name,
-      emergencyPhone: e.emergency_phone,
-      checkinAt: e.checkin_at,
-      idCard: maskIdCard(e.id_card),
-    }));
+    .map((e) => guideRosterItem(e, req));
   res.json({ ok: true, data: { ...scheduleView(sch, req), roster } });
+});
+
+router.get("/guide/schedules/:id/travelers/:enrollmentId", authGuide, (req, res) => {
+  const sch = ensureGuideSchedule(req, res);
+  if (!sch) return;
+  const en = db()
+    .prepare("SELECT * FROM enrollments WHERE id=? AND schedule_id=? AND status='joined'")
+    .get(req.params.enrollmentId, sch.id);
+  if (!en) return res.status(404).json({ ok: false, message: "名单中没有该游客" });
+  const user = en.user_id ? db().prepare("SELECT * FROM users WHERE id=? AND deleted_at IS NULL").get(en.user_id) : null;
+  const routeRow = db().prepare("SELECT title FROM routes WHERE id=?").get(sch.route_id);
+  res.json({
+    ok: true,
+    data: {
+      ...guideRosterItem(en, req),
+      profile: publicUserProfile(user, req),
+      schedule: { id: sch.id, title: routeRow?.title || "", startDate: sch.start_date },
+    },
+  });
 });
 
 router.post("/guide/schedules/:id/checkin", authGuide, (req, res) => {
@@ -1247,6 +1254,30 @@ function ensureGuideSchedule(req, res) {
     return null;
   }
   return sch;
+}
+
+function guideRosterItem(e, req) {
+  const user = e.user_id ? db().prepare("SELECT * FROM users WHERE id=?").get(e.user_id) : null;
+  const alive = user && !user.deleted_at;
+  const stage = lifeStageFromPerson({ idCard: e.id_card, birthday: e.birthday || user?.birthday });
+  return {
+    id: e.id,
+    userId: e.user_id || null,
+    name: e.traveler_name,
+    nickname: alive ? user.nickname || "" : "",
+    avatar: alive ? attachAssetHost(req, user.avatar) || "" : "",
+    phone: e.traveler_phone,
+    gender: e.gender || (alive ? user.gender : "") || "",
+    hometown: e.hometown || (alive ? user.hometown : "") || "",
+    lifeStage: stage.label || "",
+    seatNo: e.seat_no,
+    payStatus: e.pay_status,
+    insurance: e.insurance_code,
+    emergencyName: e.emergency_name,
+    emergencyPhone: e.emergency_phone,
+    checkinAt: e.checkin_at,
+    idCard: maskIdCard(e.id_card),
+  };
 }
 
 router.put("/guide/schedules/:id/trip", authGuide, (req, res) => {

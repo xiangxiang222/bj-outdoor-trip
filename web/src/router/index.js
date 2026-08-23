@@ -35,6 +35,7 @@ const routes = [
     children: [
       { path: "", name: "guide-home", component: () => import("@/views/guide/Home.vue") },
       { path: "schedule/:id", name: "guide-schedule", component: () => import("@/views/guide/Schedule.vue") },
+      { path: "schedule/:id/traveler/:enrollmentId", name: "guide-traveler", component: () => import("@/views/guide/Traveler.vue") },
     ],
   },
   {

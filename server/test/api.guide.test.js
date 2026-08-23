@@ -50,6 +50,24 @@ describe("guide portal", () => {
     assert.ok(first.phone);
     assert.equal(first.emergencyName, "紧急联系人");
     assert.ok(first.emergencyPhone);
+    assert.ok(first.userId);
+    assert.ok(first.hometown);
+    const traveler = await agent
+      .get(`/api/guide/schedules/${seed.individualScheduleId}/travelers/${first.id}`)
+      .set(gauth)
+      .expect(200);
+    assert.equal(traveler.body.data.phone, first.phone);
+    assert.equal(traveler.body.data.emergencyName, "紧急联系人");
+    assert.match(traveler.body.data.idCard, /\*/);
+    assert.ok(traveler.body.data.profile);
+    assert.equal(traveler.body.data.profile.id, first.userId);
+    assert.ok(!("isVirtual" in traveler.body.data));
+    await agent.get(`/api/guide/schedules/${seed.individualScheduleId}/travelers/${first.id}`).expect(401);
+    await agent
+      .get(`/api/guide/schedules/${seed.individualScheduleId}/travelers/999999`)
+      .set(gauth)
+      .expect(404);
+
     const checked = await agent
       .post(`/api/guide/schedules/${seed.individualScheduleId}/checkin`)
       .set(gauth)

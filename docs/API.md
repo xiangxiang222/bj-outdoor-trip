@@ -90,13 +90,14 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/guide/login` | `phone` `captchaToken` `captcha`。演示：`13700001101` |
 | GET | `/guide/me` | 当前导游 |
 | GET | `/guide/schedules` | 已分配行程 |
-| GET | `/guide/schedules/:id` | 名单含手机、座位、紧急联系人 |
+| GET | `/guide/schedules/:id` | 名单含手机、座位、紧急联系人、籍贯、年龄段、关联用户 |
+| GET | `/guide/schedules/:id/travelers/:enrollmentId` | 本团游客详情：报名资料 + 公开主页（相册/行程）。身份证掩码。仅已分配导游 |
 | POST | `/guide/schedules/:id/checkin` | body：`enrollmentId` |
 | PUT | `/guide/schedules/:id/trip` | 车牌、本团咨询群 |
 | POST | `/guide/schedules/:id/seats/lock` | `seatNo`+`locked` 或 `lockedSeats` 数组 |
 | POST | `/guide/schedules/:id/seats/assign` | `enrollmentId` `seatNo`，空位调座或两人互换 |
 
-H5 入口 `/g`。出行名单中的游客手机与紧急联系人号码在导游端渲染为 `tel:` 链接，手机浏览器可直接唤起拨号。
+H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急联系人号码为 `tel:` 链接，手机可直接拨打。车辆与咨询群保存后只读，点「修改」再改。
 
 ### 报名 body
 
