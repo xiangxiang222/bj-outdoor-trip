@@ -1,0 +1,8 @@
+<view class="card" wx:if="{{!list.length}}"><view class="pad muted">还没有优惠券</view></view>
+<view class="card" wx:for="{{list}}" wx:key="id" bindtap="open" data-code="{{item.campaignCode}}" data-status="{{item.status}}" data-schedule="{{item.scheduleId}}">
+  <view class="pad">
+    <view class="title">{{item.label}}</view>
+    <view>{{item.name}}</view>
+    <view class="muted">{{item.routeTitle}} · {{item.startDate}}</view>
+  </view>
+</view>

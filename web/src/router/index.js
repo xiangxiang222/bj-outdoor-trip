@@ -14,6 +14,7 @@ const routes = [
       { path: "schedule/:id", name: "schedule", component: () => import("@/views/mobile/ScheduleDetail.vue") },
       { path: "enroll/:id", name: "enroll", component: () => import("@/views/mobile/Enroll.vue") },
       { path: "coupon/:code", name: "coupon", component: () => import("@/views/mobile/Coupon.vue") },
+      { path: "coupons", name: "coupons", component: () => import("@/views/mobile/Coupons.vue") },
       { path: "open/:id", name: "open", component: () => import("@/views/mobile/OpenSchedule.vue") },
       { path: "publish", name: "publish", component: () => import("@/views/mobile/Publish.vue") },
       { path: "chain", name: "chain", component: () => import("@/views/mobile/Chain.vue") },

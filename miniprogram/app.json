@@ -9,6 +9,7 @@
     "pages/schedule/schedule",
     "pages/enroll/enroll",
     "pages/coupon/coupon",
+    "pages/coupons/coupons",
     "pages/open/open",
     "pages/login/login",
     "pages/member/member",

@@ -179,9 +179,10 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | GET | `/admin/schedules/:id/splits` | 分账明细 |
 | POST | `/admin/schedules/:id/split` | 对已支付金额发起分账（已有记录则复用） |
 | GET | `/admin/coupons` | Query：`scheduleId`。公开券列表 |
-| POST | `/admin/coupons` | 发行。`scheduleId` `kind=percent|amount`；折扣填 `fold`（8=8折）且必填 `capAmount`；立减填 `value`；`total` |
+| POST | `/admin/coupons` | 发行。`scheduleId` `kind=percent|amount` `audience=public|member|directed`；折扣填 `fold`（8=8折）且必填 `capAmount`；立减填 `value`；`total` |
 | GET | `/admin/coupons/:id` | 台账 `holders` + 短链/落地页/二维码 `share` |
 | PUT | `/admin/coupons/:id` | `status=on|paused|off`，可改名称与发行量（不得小于已领） |
+| POST | `/admin/coupons/:id/grant` | 定向发放。`phones`/`phonesText`/`userIds`/`allMembers`，可选 `sms`（默认 true）。一人一码，写入 `sms_logs` 场景 `coupon`，每手机每天最多 1 条 |
 | GET | `/admin/enrollments` | Query：`scheduleId` `q` `payStatus` `status` |
 | POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款标记退款） |
 | GET | `/admin/users` | Query：`q`。不含已注销、不含证件；带 `isMember` `isVirtual` |

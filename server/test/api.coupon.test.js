@@ -234,4 +234,64 @@ describe("coupons", () => {
     assert.equal(mine.body.data.length, 1);
     assert.equal(mine.body.data[0].status, "unused");
   });
+
+  it("member-only campaign rejects non-members and directed needs grant", async () => {
+    const admin = await loginAdmin(agent);
+    const memberCamp = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      scheduleId: seed.individualScheduleId,
+      kind: "amount",
+      value: 20,
+      total: 5,
+      audience: "member",
+    }).expect(200);
+    const cap = await issueCaptcha(agent);
+    const guest = await agent.post("/api/auth/register").send({
+      phone: "13600136021",
+      password: "123456",
+      nickname: "非会员",
+      captchaToken: cap.token,
+      captcha: cap.code,
+    }).expect(200);
+    const denied = await agent
+      .post(`/api/coupons/${memberCamp.body.data.code}/claim`)
+      .set(auth(guest.body.data.token));
+    assert.equal(denied.status, 400);
+    assert.match(denied.body.message, /会员/);
+    const memberToken = await loginUser(agent);
+    await agent.post(`/api/coupons/${memberCamp.body.data.code}/claim`).set(auth(memberToken)).expect(200);
+
+    const directed = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      scheduleId: seed.individualScheduleId,
+      kind: "amount",
+      value: 25,
+      total: 5,
+      audience: "directed",
+      name: "定向券",
+    }).expect(200);
+    const self = await agent.post(`/api/coupons/${directed.body.data.code}/claim`).set(auth(memberToken));
+    assert.equal(self.status, 400);
+    const granted = await agent
+      .post(`/api/admin/coupons/${directed.body.data.id}/grant`)
+      .set(auth(admin))
+      .send({ phones: ["13800138000"], sms: true })
+      .expect(200);
+    assert.equal(granted.body.data.granted, 1);
+    assert.equal(granted.body.data.sms, 1);
+    const sms = seed.db.prepare("SELECT * FROM sms_logs WHERE scene='coupon' AND phone=?").get("13800138000");
+    assert.ok(sms);
+    assert.match(sms.content, /\/c\/U/);
+    const uc = seed.db.prepare("SELECT * FROM user_coupons WHERE user_id=? AND campaign_id=?").get(
+      seed.userId,
+      directed.body.data.id
+    );
+    const page = await agent.get(`/api/coupons/${uc.code}`).set(auth(memberToken)).expect(200);
+    assert.equal(page.body.data.claimedByMe, true);
+    const again = await agent
+      .post(`/api/admin/coupons/${directed.body.data.id}/grant`)
+      .set(auth(admin))
+      .send({ phones: ["13800138000"], sms: true })
+      .expect(200);
+    assert.equal(again.body.data.granted, 0);
+    assert.equal(again.body.data.skipped, 1);
+  });
 });

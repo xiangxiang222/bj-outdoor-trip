@@ -50,6 +50,8 @@ const statusText = computed(() => {
 const cta = computed(() => {
   if (data.value?.myCoupon?.status === "used" || data.value?.myCoupon?.status === "held") return "已用于报名";
   if (data.value?.claimedByMe) return "已领取，去报名";
+  if (data.value?.audience === "directed") return "该券需由后台发放";
+  if (data.value?.audience === "member") return "会员领取并报名";
   return "领取并报名";
 });
 
@@ -60,6 +62,10 @@ async function load() {
   try {
     data.value = (await http.get("/coupons/" + route.params.code)).data;
   } catch (e) {
+    if (/请先登录/.test(e.message || "")) {
+      requireLogin(store, router, route);
+      return;
+    }
     err.value = e.message || "优惠券不存在";
   }
 }
@@ -73,6 +79,10 @@ async function claim() {
   }
   if (data.value?.claimedByMe) {
     goEnroll();
+    return;
+  }
+  if (data.value && data.value.claimable === false) {
+    err.value = data.value.audience === "directed" ? "该券需由后台发放" : (data.value.audience === "member" ? "仅会员可领取" : "暂不可领取");
     return;
   }
   loading.value = true;
@@ -91,7 +101,8 @@ async function claim() {
 function goEnroll() {
   const id = data.value?.scheduleId;
   if (!id) return;
-  router.push("/m/enroll/" + id + "?coupon=" + encodeURIComponent(data.value.code));
+  const code = data.value.myCoupon?.code || data.value.code;
+  router.push("/m/enroll/" + id + "?coupon=" + encodeURIComponent(code));
 }
 
 function goTrip() {

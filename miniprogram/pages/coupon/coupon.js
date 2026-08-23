@@ -30,6 +30,10 @@ Page({
       this.goEnroll();
       return;
     }
+    if (d && d.claimable === false) {
+      wx.showToast({ title: d.audience === "directed" ? "需后台发放" : "暂不可领取", icon: "none" });
+      return;
+    }
     try {
       const res = await request("/coupons/" + this.data.code + "/claim", "POST", {});
       this.setData({ data: res.data });
@@ -42,7 +46,8 @@ Page({
   goEnroll() {
     const id = this.data.data && this.data.data.scheduleId;
     if (!id) return;
-    wx.navigateTo({ url: "/pages/enroll/enroll?id=" + id + "&coupon=" + this.data.code });
+    const code = (this.data.data.myCoupon && this.data.data.myCoupon.code) || this.data.code;
+    wx.navigateTo({ url: "/pages/enroll/enroll?id=" + id + "&coupon=" + code });
   },
   goTrip() {
     const id = this.data.data && this.data.data.scheduleId;

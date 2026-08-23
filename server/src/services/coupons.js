@@ -2,7 +2,8 @@ const dayjs = require("dayjs");
 const { customAlphabet } = require("nanoid");
 const QRCode = require("qrcode");
 const { getDb } = require("../db");
-const { quoteForSchedule, enrolledCount, attachAssetHost } = require("./helpers");
+const { quoteForSchedule, enrolledCount, attachAssetHost, isMember } = require("./helpers");
+const { sendSms } = require("./sms");
 const config = require("../config");
 
 const campaignNano = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 6);
@@ -123,6 +124,8 @@ function createCampaign(body = {}) {
   if (!Number.isFinite(total) || total < 1) fail(400, "请填写发行数量");
   const floorPrice = Math.max(0, Number(body.floorPrice || body.floor_price || 0) || 0);
   const name = String(body.name || "").trim() || `${campaignLabel({ kind, value })}券`;
+  const audience =
+    body.audience === "member" || body.audience === "directed" ? body.audience : "public";
   const code = newCampaignCode();
   const info = db
     .prepare(
@@ -143,7 +146,7 @@ function createCampaign(body = {}) {
       body.claimEnd || body.claim_end || null,
       body.useStart || body.use_start || null,
       body.useEnd || body.use_end || null,
-      "public",
+      audience,
       "on"
     );
   return publicAdminCampaign(loadCampaign(Number(info.lastInsertRowid)));
@@ -190,26 +193,102 @@ function expireIfNeeded(coupon, campaign) {
   return coupon;
 }
 
+function loadUserCouponByCode(code) {
+  const c = String(code || "")
+    .trim()
+    .toUpperCase();
+  if (!c) return null;
+  return getDb().prepare("SELECT * FROM user_coupons WHERE upper(code)=?").get(c);
+}
+
+function couponOrigin(req) {
+  if (!req) return "";
+  return `${req.protocol}://${req.get("host")}`;
+}
+
+function couponSmsCountToday(phone) {
+  const day = dayjs().format("YYYY-MM-DD");
+  return getDb()
+    .prepare("SELECT COUNT(*) AS c FROM sms_logs WHERE phone=? AND scene='coupon' AND created_at LIKE ?")
+    .get(phone, `${day}%`).c;
+}
+
+function resolveGrantTargets(body = {}) {
+  const db = getDb();
+  const map = new Map();
+  function add(user) {
+    if (!user || user.deleted_at) return;
+    if (Number(user.is_virtual || 0) === 1) return;
+    map.set(Number(user.id), user);
+  }
+  for (const id of body.userIds || body.user_ids || []) {
+    const user = db.prepare("SELECT * FROM users WHERE id=?").get(Number(id));
+    if (!user || user.deleted_at) fail(400, `用户 ${id} 不存在`);
+    add(user);
+  }
+  const phones = [];
+  if (Array.isArray(body.phones)) phones.push(...body.phones);
+  if (body.phonesText || body.phones_text) {
+    String(body.phonesText || body.phones_text)
+      .split(/[\s,，;；]+/)
+      .forEach((p) => phones.push(p));
+  }
+  for (const raw of phones) {
+    const phone = String(raw || "").trim();
+    if (!phone) continue;
+    if (!/^1\d{10}$/.test(phone)) fail(400, `手机号 ${phone} 不正确`);
+    const user = db.prepare("SELECT * FROM users WHERE phone=? AND deleted_at IS NULL").get(phone);
+    if (!user) fail(400, `手机号 ${phone} 未注册`);
+    add(user);
+  }
+  if (body.allMembers || body.all_members) {
+    const rows = db
+      .prepare("SELECT * FROM users WHERE deleted_at IS NULL AND IFNULL(is_virtual,0)=0 AND is_member=1")
+      .all();
+    rows.filter((u) => isMember(u)).forEach(add);
+  }
+  return [...map.values()];
+}
+
+function insertUserCoupon(campaignId, userId) {
+  const db = getDb();
+  const instance = "U" + instanceNano();
+  const info = db
+    .prepare("INSERT INTO user_coupons (campaign_id,user_id,code,status) VALUES (?,?,?,?)")
+    .run(campaignId, userId, instance, "unused");
+  db.prepare("UPDATE coupon_campaigns SET claimed=claimed+1 WHERE id=?").run(campaignId);
+  return db.prepare("SELECT * FROM user_coupons WHERE id=?").get(Number(info.lastInsertRowid));
+}
+
 function claimCampaign(userId, code) {
   const db = getDb();
   const run = db.transaction(() => {
-    const campaign = loadCampaignByCode(code);
+    let campaign = loadCampaignByCode(code);
+    let instance = null;
+    if (!campaign) {
+      instance = loadUserCouponByCode(code);
+      if (!instance) fail(404, "优惠券不存在");
+      if (Number(instance.user_id) !== Number(userId)) fail(403, "这不是你的优惠券");
+      campaign = loadCampaign(instance.campaign_id);
+    }
     if (!campaign) fail(404, "优惠券不存在");
-    const exist = db.prepare("SELECT * FROM user_coupons WHERE campaign_id=? AND user_id=?").get(campaign.id, userId);
+    const exist =
+      instance ||
+      db.prepare("SELECT * FROM user_coupons WHERE campaign_id=? AND user_id=?").get(campaign.id, userId);
     if (exist) {
       return { campaign, coupon: expireIfNeeded(exist, campaign), already: true };
+    }
+    const audience = campaign.audience || "public";
+    if (audience === "directed") fail(400, "该券需由后台发放");
+    if (audience === "member") {
+      const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
+      if (!isMember(user)) fail(400, "仅会员可领取");
     }
     if (campaign.status !== "on") fail(400, campaign.status === "paused" ? "该券已暂停领取" : "该券已停用");
     if (!inWindow(campaign.claim_start, campaign.claim_end)) fail(400, "不在领取时间内");
     if (Number(campaign.claimed) >= Number(campaign.total)) fail(400, "该券已领完");
-    const instance = "U" + instanceNano();
-    const info = db
-      .prepare("INSERT INTO user_coupons (campaign_id,user_id,code,status) VALUES (?,?,?,?)")
-      .run(campaign.id, userId, instance, "unused");
-    db.prepare("UPDATE coupon_campaigns SET claimed=claimed+1 WHERE id=?").run(campaign.id);
-    const coupon = db.prepare("SELECT * FROM user_coupons WHERE id=?").get(Number(info.lastInsertRowid));
-    const fresh = loadCampaign(campaign.id);
-    return { campaign: fresh, coupon, already: false };
+    const coupon = insertUserCoupon(campaign.id, userId);
+    return { campaign: loadCampaign(campaign.id), coupon, already: false };
   });
   try {
     return run();
@@ -223,6 +302,71 @@ function claimCampaign(userId, code) {
     }
     throw e;
   }
+}
+
+function grantCoupons(campaignId, body = {}, req) {
+  const db = getDb();
+  const campaign = loadCampaign(campaignId);
+  if (!campaign) fail(404, "优惠券不存在");
+  if (campaign.status === "off") fail(400, "该券已停用");
+  const targets = resolveGrantTargets(body);
+  if (!targets.length) fail(400, "请选择用户、填写已注册手机号，或发给全部会员");
+  const granted = [];
+  let skipped = 0;
+  const run = db.transaction(() => {
+    for (const user of targets) {
+      const exist = db.prepare("SELECT * FROM user_coupons WHERE campaign_id=? AND user_id=?").get(campaign.id, user.id);
+      if (exist) {
+        skipped += 1;
+        continue;
+      }
+      const fresh = loadCampaign(campaign.id);
+      if (Number(fresh.claimed) >= Number(fresh.total)) fail(400, "发放数量超过剩余张数");
+      const coupon = insertUserCoupon(campaign.id, user.id);
+      granted.push({
+        userId: user.id,
+        nickname: user.nickname,
+        phone: user.phone,
+        code: coupon.code,
+      });
+    }
+  });
+  run();
+  const send = body.sms !== false && body.sms !== 0 && body.sms !== "0";
+  let sms = 0;
+  let skippedSms = 0;
+  if (send && granted.length) {
+    const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(campaign.schedule_id);
+    const route = sch ? db.prepare("SELECT title FROM routes WHERE id=?").get(sch.route_id) : null;
+    const origin = couponOrigin(req);
+    const label = campaignLabel(campaign);
+    for (const row of granted) {
+      if (!/^1\d{10}$/.test(row.phone || "")) {
+        skippedSms += 1;
+        continue;
+      }
+      if (couponSmsCountToday(row.phone) >= 1) {
+        skippedSms += 1;
+        continue;
+      }
+      const shortUrl = origin ? `${origin}/c/${row.code}` : `/c/${row.code}`;
+      sendSms({
+        phone: row.phone,
+        scene: "coupon",
+        content: `【北野行】您的${label}已到账，用于「${route?.title || "活动"}」${sch?.start_date || ""}出发：${shortUrl}`,
+        refType: "coupon",
+        refId: campaign.id,
+      });
+      sms += 1;
+    }
+  }
+  return {
+    campaign: publicAdminCampaign(loadCampaign(campaign.id)),
+    granted: granted.length,
+    skipped,
+    sms,
+    skippedSms,
+  };
 }
 
 function resolveCouponForEnroll({ userId, couponCode, scheduleId, company }) {
@@ -352,6 +496,7 @@ function publicCampaignDTO(row, req, extras = {}) {
     useStart: row.use_start || "",
     useEnd: row.use_end || "",
     scheduleId: row.schedule_id,
+    audience: row.audience || "public",
     schedule: sch ? scheduleCover(sch, req) : null,
     ...extras,
   };
@@ -394,27 +539,45 @@ function quotePreview(campaign, user) {
 }
 
 function publicGet(code, user, req) {
-  const campaign = loadCampaignByCode(code);
+  const raw = String(code || "")
+    .trim()
+    .toUpperCase();
+  let campaign = loadCampaignByCode(raw);
+  let instance = null;
+  if (!campaign) {
+    instance = loadUserCouponByCode(raw);
+    if (!instance) fail(404, "优惠券不存在");
+    if (!user) fail(401, "请先登录查看该券");
+    if (Number(instance.user_id) !== Number(user.id)) fail(403, "这不是你的优惠券");
+    campaign = loadCampaign(instance.campaign_id);
+  }
   if (!campaign) fail(404, "优惠券不存在");
-  let myCoupon = null;
-  if (user) {
+  let myCoupon = instance || null;
+  if (user && !myCoupon) {
     const row = getDb()
       .prepare("SELECT * FROM user_coupons WHERE campaign_id=? AND user_id=?")
       .get(campaign.id, user.id);
     if (row) myCoupon = expireIfNeeded(row, campaign);
+  } else if (myCoupon) {
+    myCoupon = expireIfNeeded(myCoupon, campaign);
   }
   const quote = user ? quotePreview(campaign, user) : quotePreview(campaign, null);
+  const audience = campaign.audience || "public";
+  const already = !!(myCoupon && myCoupon.status !== "expired" && myCoupon.status !== "void");
+  const memberOk = audience !== "member" || isMember(user);
   return publicCampaignDTO(campaign, req, {
-    claimedByMe: !!(myCoupon && myCoupon.status !== "expired" && myCoupon.status !== "void"),
+    claimedByMe: already,
     myCoupon: myCoupon
       ? { code: myCoupon.code, status: myCoupon.status, usedEnrollmentId: myCoupon.used_enrollment_id || null }
       : null,
     quote,
     claimable:
+      audience !== "directed" &&
+      memberOk &&
       campaign.status === "on" &&
       remainOf(campaign) > 0 &&
       inWindow(campaign.claim_start, campaign.claim_end) &&
-      !(myCoupon && myCoupon.status !== "expired" && myCoupon.status !== "void"),
+      !already,
   });
 }
 
@@ -530,6 +693,7 @@ module.exports = {
   createCampaign,
   updateCampaign,
   claimCampaign,
+  grantCoupons,
   resolveCouponForEnroll,
   decideCouponPrice,
   attachCouponToEnrollment,

@@ -31,10 +31,10 @@
 
     <div class="card" v-if="store.token && store.profile" @click="$router.push('/m/user/' + store.profile.id)"><div class="pad">个人主页 · 相册与行程</div></div>
     <div class="card" @click="goAuth('/m/orders')"><div class="pad">我的报名</div></div>
-    <div class="card" v-if="coupons.length" @click="$router.push('/m/coupon/' + coupons[0].campaignCode)">
+    <div class="card" @click="goAuth('/m/coupons')">
       <div class="pad">
-        <div>我的优惠券 {{ coupons.length }} 张可用</div>
-        <p class="muted" style="margin:6px 0 0">{{ coupons[0].label }} · {{ coupons[0].routeTitle }}</p>
+        <div>我的优惠券<template v-if="coupons.length"> {{ coupons.length }} 张可用</template></div>
+        <p v-if="coupons.length" class="muted" style="margin:6px 0 0">{{ coupons[0].label }} · {{ coupons[0].routeTitle }}</p>
       </div>
     </div>
     <div class="card" @click="goAuth('/m/favorites')"><div class="pad">我的收藏</div></div>

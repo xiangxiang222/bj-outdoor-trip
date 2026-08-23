@@ -55,6 +55,7 @@ const title = computed(() => {
     schedule: "活动报名",
     enroll: "报名",
     coupon: "优惠券",
+    coupons: "我的优惠券",
     open: "发布排期",
     chain: "进行中的团",
     mine: "我的",

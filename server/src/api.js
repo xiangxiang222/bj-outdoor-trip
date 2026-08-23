@@ -42,6 +42,7 @@ const {
   createCampaign,
   updateCampaign,
   claimCampaign,
+  grantCoupons,
   publicGet,
   publicSummaryForSchedule,
   listMine,
@@ -1797,6 +1798,15 @@ router.put("/admin/coupons/:id", authAdmin, (req, res) => {
   try {
     const data = updateCampaign(req.params.id, req.body || {});
     res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/admin/coupons/:id/grant", authAdmin, (req, res) => {
+  try {
+    const data = grantCoupons(req.params.id, req.body || {}, req);
+    res.json({ ok: true, data, message: `已发放 ${data.granted} 张` });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }
