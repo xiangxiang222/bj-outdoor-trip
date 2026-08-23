@@ -127,14 +127,52 @@ describe("social homepage leaders referral virtual fallback", () => {
     assert.equal(gone.body.data.transferred[0].scheduleId, seed.companyScheduleId);
   });
 
-  it("lets ops generate virtual users who yield seats to real enrollments", async () => {
+  it("lets ops set realistic virtual enrollments on a schedule and yield seats to real users", async () => {
     const admin = await loginAdmin(agent);
-    const made = await agent.post("/api/admin/virtual-users").set(auth(admin)).send({ count: 6, perSchedule: 4 }).expect(200);
+    const missing = await agent.post("/api/admin/virtual-users").set(auth(admin)).send({ count: 6 }).expect(400);
+    assert.match(missing.body.message, /行程/);
+    const made = await agent
+      .post(`/api/admin/schedules/${seed.individualScheduleId}/virtual-users`)
+      .set(auth(admin))
+      .send({ count: 6 })
+      .expect(200);
+    assert.equal(made.body.data.count, 6);
     assert.ok(made.body.data.created >= 1);
-    assert.ok(made.body.data.joined >= 1);
-    const list = await agent.get("/api/schedules").expect(200);
-    const hit = (list.body.data || []).find((s) => s.virtualEnrolled > 0);
-    assert.ok(hit, "virtual users should join a recruiting schedule");
+    const rows = getDb()
+      .prepare(
+        `SELECT e.traveler_name, e.traveler_phone, e.emergency_name, e.emergency_phone, e.id_card, u.nickname
+         FROM enrollments e JOIN users u ON u.id=e.user_id
+         WHERE e.schedule_id=? AND e.status='joined' AND IFNULL(u.is_virtual,0)=1`
+      )
+      .all(seed.individualScheduleId);
+    assert.equal(rows.length, 6);
+    for (const row of rows) {
+      assert.doesNotMatch(row.traveler_name, /^山友\d+$/);
+      assert.ok(row.traveler_name.length >= 2);
+      assert.doesNotMatch(row.traveler_phone, /^19988/);
+      assert.match(row.traveler_phone, /^1\d{10}$/);
+      assert.notEqual(row.emergency_name, "虚拟紧急联系人");
+      assert.notEqual(row.emergency_phone, row.traveler_phone);
+      assert.match(row.id_card, /^\d{17}[\dX]$/);
+      assert.doesNotMatch(row.nickname, /^山友\d+$/);
+    }
+    const pub = await agent.get(`/api/schedules/${seed.individualScheduleId}`).expect(200);
+    assert.equal(pub.body.data.virtualEnrolled, undefined);
+    const lowered = await agent
+      .post("/api/admin/virtual-users")
+      .set(auth(admin))
+      .send({ scheduleId: seed.individualScheduleId, count: 3 })
+      .expect(200);
+    assert.equal(lowered.body.data.count, 3);
+    const raised = await agent
+      .post(`/api/admin/schedules/${seed.individualScheduleId}/virtual-users`)
+      .set(auth(admin))
+      .send({ count: 5 })
+      .expect(200);
+    assert.equal(raised.body.data.count, 5);
+    const adminList = await agent.get("/api/admin/schedules").set(auth(admin)).expect(200);
+    const hit = (adminList.body.data || []).find((s) => Number(s.id) === Number(seed.individualScheduleId));
+    assert.equal(hit.virtualEnrolled, 5);
     getDb().prepare("UPDATE schedules SET max_seats=?, min_group_size=? WHERE id=?").run(hit.virtualEnrolled, 8, hit.id);
     const token = await loginUser(agent);
     const enrolled = await agent
@@ -150,5 +188,12 @@ describe("social homepage leaders referral virtual fallback", () => {
       )
       .expect(200);
     assert.equal(enrolled.body.data.waitlisted, false);
+    const stillVirtual = getDb()
+      .prepare(
+        `SELECT COUNT(*) AS c FROM enrollments e JOIN users u ON u.id=e.user_id
+         WHERE e.schedule_id=? AND e.status='joined' AND IFNULL(u.is_virtual,0)=1`
+      )
+      .get(hit.id).c;
+    assert.equal(stillVirtual, 4);
   });
 });

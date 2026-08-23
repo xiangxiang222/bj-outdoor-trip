@@ -28,7 +28,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/guides/recruit` | 推荐领队文案与奖励（200 元），登录后带推荐码 |
 | GET | `/guides/:id` | 导游详情、带团次数、近期行程。停用或不存在返回 404 |
 | GET | `/routes` | 上架线路。Query：`days`（`multi` 表示 4 日及以上）`category` `tag` `city` `difficulty` `q` |
-| GET | `/schedules` | Query：`routeId` `organizerType` `city` `tag` `offerType` `month` `date`（不含已解散、待审核） |
+| GET | `/schedules` | Query：`routeId` `organizerType` `city` `tag` `offerType` `month` `date`（不含已解散、待审核）。不含 `virtualEnrolled` |
 | GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条） |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
 | GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`myEnrollment`、本团群二维码、候选团选项 |
@@ -162,7 +162,7 @@ H5 入口 `/g`。
 | POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` |
 | PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换 |
 | DELETE | `/admin/routes/:id` | 下架 |
-| POST | `/admin/schedules` | 后台发布排期 |
+| POST | `/admin/schedules` | 后台发布排期。可选 `virtualCount` 发布后立即设置虚拟报名 |
 | POST | `/admin/schedules/:id/review` | 用户发团审核。`status=approved|rejected` |
 | GET | `/admin/schedules` | 含成本、收入、利润、导游 |
 | POST | `/admin/schedules/dissolve-all` | 解散全部进行中的团。body：`reason` |
@@ -177,7 +177,8 @@ H5 入口 `/g`。
 | GET | `/admin/enrollments` | Query：`scheduleId` `q` `payStatus` `status` |
 | POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款标记退款） |
 | GET | `/admin/users` | Query：`q`。不含已注销、不含证件；带 `isMember` `isVirtual` |
-| POST | `/admin/virtual-users` | `{ count, perSchedule }` 批量虚拟用户并随机报名 |
+| POST | `/admin/virtual-users` | `{ scheduleId, count }` 将该团虚拟报名人数设为 `count`（可增可减） |
+| POST | `/admin/schedules/:id/virtual-users` | `{ count }` 同上，按路径指定行程 |
 | POST | `/admin/users/:id/member` | `action=grant` 开通/续费，`revoke` 取消会员 |
 | POST | `/admin/users/:id/points` | `delta` 非零整数、`reason` |
 | POST | `/admin/users/:id/close` | 注销该用户 |

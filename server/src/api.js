@@ -35,7 +35,7 @@ const { addPhoto, removePhoto, ensureReferralCode } = require("./services/profil
 const { leadersOf, applyLeader, settleLeaderRewards, recruitPayload } = require("./services/leaders");
 const { referralCard, groupQrPayload, settleEnrollReferrals } = require("./services/referral");
 const { optionsForSchedule, setFallbacks, listFallbacks } = require("./services/fallback");
-const { generateVirtualUsers } = require("./services/virtual");
+const { generateVirtualUsers, setVirtualUsersForSchedule } = require("./services/virtual");
 const { deleteAccount } = require("./services/account");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -234,8 +234,9 @@ function scheduleView(sch, req) {
     guide,
     leaders,
     leaderRecruitCopy,
-    realEnrolled: realLive,
-    virtualEnrolled: virtualLive,
+    ...(req.adminId
+      ? { realEnrolled: realLive, virtualEnrolled: virtualLive }
+      : {}),
     canEnrollDirect: Math.max(0, sch.max_seats - live - lockedCount) > 0 || virtualLive > 0,
     cost,
     cost,
@@ -1555,7 +1556,27 @@ router.post("/admin/schedules", authAdmin, (req, res) => {
       notes || ""
     );
   applyScheduleExtras(info.lastInsertRowid, { ...(req.body || {}), reviewStatus: "approved" }, route);
-  res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(info.lastInsertRowid), req) });
+  const createdId = info.lastInsertRowid;
+  const virtualRaw = (req.body || {}).virtualCount;
+  let virtual = null;
+  if (virtualRaw != null && virtualRaw !== "" && Number(virtualRaw) > 0) {
+    try {
+      virtual = setVirtualUsersForSchedule(createdId, virtualRaw);
+    } catch (e) {
+      const view = scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(createdId), req);
+      return res.status(e.status || 400).json({
+        ok: false,
+        message: `拼团已发布，但虚拟报名未写入：${e.message}`,
+        data: view,
+      });
+    }
+  }
+  const view = scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(createdId), req);
+  res.json({
+    ok: true,
+    data: view,
+    message: virtual ? `已发布，并设置 ${virtual.count} 名虚拟报名` : undefined,
+  });
 });
 
 router.get("/admin/schedules", authAdmin, (req, res) => {
@@ -1716,15 +1737,20 @@ router.get("/admin/users", authAdmin, (req, res) => {
   res.json({ ok: true, data: rows });
 });
 
-router.post("/admin/virtual-users", authAdmin, (req, res) => {
+function virtualUsersHandler(req, res) {
   try {
     const body = req.body || {};
-    const data = generateVirtualUsers({ count: body.count, perSchedule: body.perSchedule });
-    res.json({ ok: true, data, message: `已生成 ${data.created} 名虚拟用户，随机报名 ${data.joined} 人次` });
+    const scheduleId = req.params.id || body.scheduleId || body.schedule_id;
+    const data = generateVirtualUsers({ scheduleId, count: body.count });
+    const extra = data.capped ? `（座位上限 ${data.maxVirtual}，已按可报名人数截取）` : "";
+    res.json({ ok: true, data, message: `已将本团虚拟报名设为 ${data.count} 人${extra}` });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }
-});
+}
+
+router.post("/admin/virtual-users", authAdmin, virtualUsersHandler);
+router.post("/admin/schedules/:id/virtual-users", authAdmin, virtualUsersHandler);
 
 router.post("/admin/users/:id/member", authAdmin, (req, res) => {
   const user = managedUser(req.params.id);

@@ -23,8 +23,12 @@
       <el-table-column label="车型" width="120">
         <template #default="{ row }">{{ row.bus?.name }}</template>
       </el-table-column>
-      <el-table-column label="人数" width="110">
-        <template #default="{ row }">{{ row.enrolled }}/{{ row.maxSeats }}<span v-if="row.waitlistCount" class="muted"> +{{ row.waitlistCount }}候</span></template>
+      <el-table-column label="人数" width="130">
+        <template #default="{ row }">
+          {{ row.enrolled }}/{{ row.maxSeats }}
+          <span v-if="row.virtualEnrolled" class="muted"> 虚{{ row.virtualEnrolled }}</span>
+          <span v-if="row.waitlistCount" class="muted"> +{{ row.waitlistCount }}候</span>
+        </template>
       </el-table-column>
       <el-table-column prop="revenue" label="收入" width="80" />
       <el-table-column prop="cost" label="成本" width="80" />
@@ -35,12 +39,13 @@
           <span v-else>未匹配</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="460" fixed="right">
+      <el-table-column label="操作" width="520" fixed="right">
         <template #default="{ row }">
           <el-button v-if="row.reviewStatus === 'pending'" size="small" type="success" @click="review(row, 'approved')">通过</el-button>
           <el-button v-if="row.reviewStatus === 'pending'" size="small" type="warning" @click="review(row, 'rejected')">驳回</el-button>
           <el-button size="small" @click="cost(row)">成本</el-button>
           <el-button size="small" @click="openTrip(row)">车辆座位</el-button>
+          <el-button size="small" :disabled="row.status === 'cancelled'" @click="openVirtual(row)">虚拟</el-button>
           <el-button size="small" @click="demo(row)">画像</el-button>
           <el-button size="small" type="success" :disabled="row.status === 'cancelled'" @click="settle(row)">结算</el-button>
           <el-button size="small" @click="openSplit(row)">分账</el-button>
@@ -104,6 +109,10 @@
             <el-option label="全价团" value="full" />
           </el-select>
         </el-form-item>
+        <el-form-item label="虚拟报名">
+          <el-input-number v-model="neu.virtualCount" :min="0" :max="80" />
+          <p class="muted" style="margin:6px 0 0">发布后先占若干看起来像真人的报名，之后仍可在列表里改人数。</p>
+        </el-form-item>
         <el-form-item label="备注"><el-input v-model="neu.notes" type="textarea" :rows="2" /></el-form-item>
       </el-form>
       <template #footer>
@@ -158,6 +167,22 @@
       </template>
     </el-dialog>
 
+    <el-dialog v-model="showVirtual" title="本团虚拟报名" width="480px">
+      <p v-if="cur">
+        「{{ cur.route?.title }} {{ cur.startDate }}」当前真实 {{ cur.realEnrolled || 0 }} 人、虚拟 {{ cur.virtualEnrolled || 0 }} 人、座位 {{ cur.maxSeats }}。
+      </p>
+      <p class="muted">用常见姓名、籍贯、手机和紧急联系人占座，前台名单看起来像真人报名。人数可随时改；真人占座时会自动腾出虚拟座位。</p>
+      <el-form label-width="120px">
+        <el-form-item label="虚拟报名人数">
+          <el-input-number v-model="virtualCount" :min="0" :max="80" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showVirtual = false">取消</el-button>
+        <el-button type="success" :loading="savingVirtual" @click="saveVirtual">确定</el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="showGuide" :title="guideDetail?.name || '导游详情'" width="480px">
       <template v-if="guideDetail">
         <p>评分 {{ guideDetail.rating }} · 从业 {{ guideDetail.years }} 年 · 已带团 {{ guideDetail.tripCount }} 次</p>
@@ -188,6 +213,9 @@ const showDissolve = ref(false);
 const showSplit = ref(false);
 const showGuide = ref(false);
 const showTrip = ref(false);
+const showVirtual = ref(false);
+const virtualCount = ref(0);
+const savingVirtual = ref(false);
 const tripForm = ref({ plateNo: "", consultGroup: "", lockedText: "", enrollmentId: null, toSeat: "" });
 const chain = ref([]);
 const guideDetail = ref(null);
@@ -209,6 +237,7 @@ const neu = ref({
   notes: "",
   companyName: "",
   offerType: "full",
+  virtualCount: 0,
 });
 
 async function openGuide(row) {
@@ -228,6 +257,24 @@ async function load() {
 onMounted(load);
 const activeCount = computed(() => list.value.filter((s) => s.status !== "cancelled").length);
 function open() { showNew.value = true; }
+function openVirtual(row) {
+  cur.value = row;
+  virtualCount.value = Number(row.virtualEnrolled || 0);
+  showVirtual.value = true;
+}
+async function saveVirtual() {
+  savingVirtual.value = true;
+  try {
+    const res = await http.post(`/admin/schedules/${cur.value.id}/virtual-users`, { count: virtualCount.value });
+    showVirtual.value = false;
+    ElMessage.success(res.message || "已更新虚拟报名");
+    await load();
+  } catch (e) {
+    ElMessage.error(e.message || "设置失败");
+  } finally {
+    savingVirtual.value = false;
+  }
+}
 function cost(row) { cur.value = JSON.parse(JSON.stringify(row)); showCost.value = true; }
 async function openTrip(row) {
   cur.value = row;
@@ -360,9 +407,10 @@ async function review(row, status) {
   load();
 }
 async function create() {
-  await http.post("/admin/schedules", neu.value);
+  const res = await http.post("/admin/schedules", neu.value);
   showNew.value = false;
-  ElMessage.success("已发布拼团");
+  neu.value.virtualCount = 0;
+  ElMessage.success(res.message || "已发布拼团");
   load();
 }
 </script>
