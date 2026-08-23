@@ -7,6 +7,7 @@
         <el-button type="success" @click="open">发布拼团</el-button>
       </div>
     </div>
+    <p class="admin-scroll-hint">表格较宽时可左右滑动，操作在最右侧。</p>
     <el-table :data="list" stripe>
       <el-table-column prop="route.title" label="线路" min-width="160" />
       <el-table-column prop="startDate" label="出发" width="120" />
@@ -39,7 +40,7 @@
           <span v-else>未匹配</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="520" fixed="right">
+      <el-table-column label="操作" width="520">
         <template #default="{ row }">
           <el-button v-if="row.reviewStatus === 'pending'" size="small" type="success" @click="review(row, 'approved')">通过</el-button>
           <el-button v-if="row.reviewStatus === 'pending'" size="small" type="warning" @click="review(row, 'rejected')">驳回</el-button>

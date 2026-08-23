@@ -494,6 +494,23 @@ button, input, textarea, select { font-family: inherit; }
   overflow: auto;
   background: #f6f3ee;
 }
+.admin-scroll-hint {
+  margin: -4px 0 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.admin-main .el-table.is-scrolling-left::after,
+.admin-main .el-table.is-scrolling-middle::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 4;
+  width: 36px;
+  height: 100%;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, rgba(246, 243, 238, 0.95));
+}
 .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .kpi .card { padding: 16px; }
 .kpi .n { font-size: 28px; font-weight: 700; color: var(--forest); }

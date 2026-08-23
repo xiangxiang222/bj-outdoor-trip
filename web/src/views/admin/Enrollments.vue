@@ -18,6 +18,7 @@
         <el-button type="success" @click="load">查询</el-button>
       </div>
     </div>
+    <p class="admin-scroll-hint">表格较宽时可左右滑动，操作在最右侧。</p>
     <el-table :data="list" stripe>
       <el-table-column prop="title" label="线路" min-width="160" />
       <el-table-column prop="start_date" label="日期" width="120" />
@@ -41,7 +42,7 @@
         <template #default="{ row }">{{ row.insurance_code === "plus" ? "升级" : row.insurance_code === "outdoor" ? "意外" : "无" }}</template>
       </el-table-column>
       <el-table-column prop="pay_amount" label="金额" width="90" />
-      <el-table-column label="操作" width="100" fixed="right">
+      <el-table-column label="操作" width="100">
         <template #default="{ row }">
           <el-button size="small" type="danger" :disabled="row.status === 'cancelled'" @click="cancel(row)">取消</el-button>
         </template>

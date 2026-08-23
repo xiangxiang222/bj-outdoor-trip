@@ -7,6 +7,7 @@
         <el-button type="success" @click="load">查询</el-button>
       </div>
     </div>
+    <p class="admin-scroll-hint">表格较宽时可左右滑动，操作在最右侧。</p>
     <el-table :data="list" stripe>
       <el-table-column prop="nickname" label="昵称" min-width="120" />
       <el-table-column prop="phone" label="手机" width="130" />
@@ -22,7 +23,7 @@
       <el-table-column prop="member_expire_at" label="到期" width="120" />
       <el-table-column prop="points" label="积分" width="80" />
       <el-table-column prop="company_name" label="公司" min-width="140" />
-      <el-table-column label="操作" width="280" fixed="right">
+      <el-table-column label="操作" width="280">
         <template #default="{ row }">
           <el-button size="small" type="success" @click="grant(row)">{{ row.isMember ? "续费" : "开通" }}</el-button>
           <el-button v-if="row.isMember" size="small" @click="revoke(row)">取消会员</el-button>
