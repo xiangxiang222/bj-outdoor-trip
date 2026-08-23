@@ -42,10 +42,20 @@
     </div></div>
 
     <div class="h2">出行名单</div>
+    <p class="muted" style="margin:0 0 8px">手机上点号码即可拨打</p>
     <div class="card">
       <div class="pad chain-item" v-for="r in s.roster" :key="r.id">
         <span>{{ r.seatNo || "-" }}</span>
-        <span>{{ r.name }} · {{ r.phone }}<div class="muted">紧急 {{ r.emergencyName || "未填" }} {{ r.emergencyPhone || "" }}</div></span>
+        <span>
+          {{ r.name }} ·
+          <a v-if="telHref(r.phone)" class="tel-link" :href="telHref(r.phone)" @click.stop>{{ r.phone }}</a>
+          <template v-else>{{ r.phone }}</template>
+          <div class="muted">
+            紧急 {{ r.emergencyName || "未填" }}
+            <a v-if="telHref(r.emergencyPhone)" class="tel-link" :href="telHref(r.emergencyPhone)" @click.stop>{{ r.emergencyPhone }}</a>
+            <template v-else>{{ r.emergencyPhone || "" }}</template>
+          </div>
+        </span>
         <button v-if="!r.checkinAt" class="btn" style="padding:4px 10px" @click="checkin(r)">签到</button>
         <span v-else class="muted">已签</span>
       </div>
@@ -69,6 +79,12 @@ const plateNo = ref("");
 const consultGroup = ref("");
 const seatChart = ref(null);
 const pickFrom = ref(null);
+function telHref(phone) {
+  const n = String(phone || "").replace(/[\s-]+/g, "");
+  if (!/^1\d{10}$/.test(n) && !/^\+?\d{7,15}$/.test(n)) return "";
+  return `tel:${n}`;
+}
+
 const checked = computed(() => (s.value?.roster || []).filter((r) => r.checkinAt).length);
 const seatRows = computed(() => {
   const list = seatChart.value?.seats || [];
@@ -153,3 +169,15 @@ async function checkin(row) {
   }
 }
 </script>
+
+<style scoped>
+.tel-link {
+  color: var(--leaf);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+  padding: 4px 0;
+  -webkit-tap-highlight-color: rgba(64, 145, 108, 0.25);
+}
+.muted .tel-link { color: var(--leaf); }
+</style>

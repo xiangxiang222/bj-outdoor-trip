@@ -96,7 +96,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/guide/schedules/:id/seats/lock` | `seatNo`+`locked` 或 `lockedSeats` 数组 |
 | POST | `/guide/schedules/:id/seats/assign` | `enrollmentId` `seatNo`，空位调座或两人互换 |
 
-H5 入口 `/g`。
+H5 入口 `/g`。出行名单中的游客手机与紧急联系人号码在导游端渲染为 `tel:` 链接，手机浏览器可直接唤起拨号。
 
 ### 报名 body
 
