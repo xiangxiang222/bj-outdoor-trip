@@ -45,7 +45,7 @@ HTML 报告生成在 `server/coverage/index.html`，用浏览器打开即可。�
 
 未达标时 `npm run test:coverage` 以非 0 退出。排除项：进程入口 `src/index.js`、会联网的全量 seed `src/seed/run.js` 与 `refresh-images.js`。
 
-当前约 **128** 条服务端用例 + **3** 条 H5 用例。
+当前约 **128** 条服务端用例 + **7** 条 H5 用例。
 
 ## 3. 只跑某一类用例
 
@@ -114,7 +114,8 @@ npx vitest run src/utils/auth.test.js
 
 ### 4.4 前端
 
-`web/src/utils/auth.test.js`：已登录放行；未登录 `replace` 到 `/m/login` 并带 `redirect`。
+`web/src/utils/auth.test.js`：已登录放行；未登录 `replace` 到 `/m/login` 并带 `redirect`。  
+`web/src/utils/media.test.js`：首页轮播把绝对地址收成 `/static/...`，缺图回退 SVG。
 
 Vue 页面与小程序以手动/演示验收为主（依赖浏览器与微信开发者工具）；完整接口顺序见第 8 节走查。
 

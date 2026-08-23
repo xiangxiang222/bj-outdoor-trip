@@ -1,6 +1,6 @@
 const { request } = require("../../utils/request");
 const lite = require("../../data/routes-lite");
-const { withLocalMediaList, detailUrl } = require("../../utils/media");
+const { withLocalMediaList, detailUrl, withAbsSlides } = require("../../utils/media");
 const { OFFER_TYPES, countOn, buildCalendar } = require("../../utils/offer");
 
 function asList(rows) {
@@ -61,8 +61,15 @@ Page({
         request("/guides").catch(() => ({ data: [] })),
       ]);
       const home = homeRes.data || {};
+      const baseUrl = getApp().globalData.baseUrl;
       if (home.brand && !Array.isArray(home.brand.slides)) {
         home.brand.slides = (home.brand.gallery || []).map((url) => ({ url, routeId: 0, title: "" }));
+      }
+      if (home.brand && Array.isArray(home.brand.slides)) {
+        home.brand.slides = withAbsSlides(home.brand.slides, baseUrl);
+      }
+      if (Array.isArray(home.cities)) {
+        home.cities = home.cities.map((c) => Object.assign({}, c, { slides: withAbsSlides(c.slides, baseUrl) }));
       }
       const firstCity = home.cities && home.cities[0];
       const city = firstCity ? firstCity.name : "";

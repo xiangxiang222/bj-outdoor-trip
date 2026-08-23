@@ -163,7 +163,7 @@ function buildHome(req) {
 
   function toSlide(r) {
     const url = attachAssetHost(req, resolveStoredMedia(r.cover, { code: r.code }));
-    return { routeId: r.id, title: r.title, region: cityOf(r.region), url };
+    return { routeId: r.id, title: r.title, region: cityOf(r.region), url, code: r.code || "" };
   }
 
   function addCitySlide(name, slide) {

@@ -13,7 +13,7 @@
 </scroll-view>
 <swiper wx:if="{{citySlides.length}}" class="city-swipe" autoplay circular interval="4000">
   <swiper-item wx:for="{{citySlides}}" wx:key="routeId" bindtap="goRoute" data-id="{{item.routeId}}">
-    <image class="brand-img" src="{{item.url}}" mode="aspectFill" style="height:280rpx" />
+    <image class="brand-img" src="{{item.url}}" mode="aspectFill" />
     <view class="swipe-cap">{{item.title}}</view>
   </swiper-item>
 </swiper>

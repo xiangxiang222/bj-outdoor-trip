@@ -31,6 +31,18 @@ function detailUrl(id) {
   return "/pkg-detail/detail/detail?id=" + id;
 }
 
+function absMedia(url, baseUrl) {
+  const u = String(url || "");
+  if (!u) return "";
+  if (/^https?:\/\//.test(u)) return u;
+  if (u.startsWith("/")) return String(baseUrl || "").replace(/\/$/, "") + u;
+  return u;
+}
+
+function withAbsSlides(slides, baseUrl) {
+  return (Array.isArray(slides) ? slides : []).map((s) => Object.assign({}, s, { url: absMedia(s && s.url, baseUrl) }));
+}
+
 function shareCover(cover) {
   const c = cover ? String(cover) : "";
   if (/^https?:\/\//.test(c)) return c;
@@ -38,4 +50,4 @@ function shareCover(cover) {
   return "";
 }
 
-module.exports = { localCover, withLocalMedia, withLocalMediaList, detailUrl, packedThumb, shareCover };
+module.exports = { localCover, withLocalMedia, withLocalMediaList, detailUrl, packedThumb, shareCover, absMedia, withAbsSlides };

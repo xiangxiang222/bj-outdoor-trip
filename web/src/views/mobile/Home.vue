@@ -1,8 +1,19 @@
 <template>
   <div>
     <div class="brand-hero" @click="goSlide(brandSlide)">
-      <div class="swipe" v-if="brandSlide">
-        <img :src="brandSlide.url" :alt="brandSlide.title || '北野行'" />
+      <div
+        v-if="brandSlide"
+        class="swipe"
+        role="img"
+        :aria-label="brandSlide.title || '北野行'"
+        :style="slideBg(brandSlide)"
+      >
+        <img
+          :key="mediaSrc(brandSlide.url)"
+          :src="mediaSrc(brandSlide.url)"
+          :alt="brandSlide.title || '北野行'"
+          @error="onSlideError($event, brandSlide)"
+        />
       </div>
       <div class="brand-cap">
         <div class="home-kicker">{{ home.brand?.kicker || "北野行" }}</div>
@@ -19,8 +30,13 @@
         @click="pickCity(c.name)"
       >{{ c.name }}</div>
     </div>
-    <div class="swipe city-swipe" v-if="citySlide" @click="goSlide(citySlide)">
-      <img :src="citySlide.url" :alt="citySlide.title || city" />
+    <div class="swipe city-swipe" v-if="citySlide" :style="slideBg(citySlide)" @click="goSlide(citySlide)">
+      <img
+        :key="mediaSrc(citySlide.url)"
+        :src="mediaSrc(citySlide.url)"
+        :alt="citySlide.title || city"
+        @error="onSlideError($event, citySlide)"
+      />
       <div class="city-swipe-cap">{{ citySlide.title || city }}</div>
     </div>
 
@@ -186,6 +202,7 @@ import { useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { OFFER_TYPES } from "@/utils/offer";
+import { mediaSrc, slideBg, slideFallback } from "@/utils/media";
 
 const router = useRouter();
 const store = useUserStore();
@@ -284,6 +301,13 @@ function pickCity(name) {
 }
 function goSlide(slide) {
   if (slide?.routeId) router.push("/m/route/" + slide.routeId);
+}
+function onSlideError(e, slide) {
+  const fb = slideFallback(slide);
+  if (!fb || e.target.dataset.fallback === "1") return;
+  e.target.dataset.fallback = "1";
+  e.target.src = fb;
+  if (e.target.parentElement) e.target.parentElement.style.backgroundImage = `url("${fb}")`;
 }
 function goRoutes(query) {
   router.push({ path: "/m/routes", query });
