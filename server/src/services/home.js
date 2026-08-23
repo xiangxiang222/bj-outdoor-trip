@@ -1,6 +1,6 @@
 const dayjs = require("dayjs");
 const { getDb } = require("../db");
-const { attachAssetHost } = require("./helpers");
+const { attachAssetHost, resolveStoredMedia } = require("./helpers");
 const { OFFER_TYPES } = require("./offer");
 
 const TAG_PALETTE = ["#2d6a4f", "#bc4749", "#1d6a9f", "#c77d3a", "#6b4c9a", "#3d6b4f", "#8b5a2b", "#1b3a5f", "#40916c"];
@@ -151,43 +151,39 @@ function buildHome(req) {
   const routes = db.prepare("SELECT * FROM routes WHERE status='on' ORDER BY id").all();
   const schedules = db
     .prepare(
-      `SELECT s.*, r.title AS route_title, r.cover AS route_cover, r.days AS route_days, r.region AS route_region, r.gallery_json
+      `SELECT s.*, r.title AS route_title, r.cover AS route_cover, r.days AS route_days, r.region AS route_region, r.gallery_json, r.code AS route_code
        FROM schedules s JOIN routes r ON r.id=s.route_id
        WHERE ${approvedScheduleSql()} AND s.start_date>=date('now','-1 day')
        ORDER BY s.start_date`
     )
     .all();
 
-  const brandGallery = [];
-  for (const r of routes) {
-    const cover = attachAssetHost(req, r.cover);
-    if (cover && !brandGallery.includes(cover)) brandGallery.push(cover);
-    if (brandGallery.length >= 6) break;
+  const brandSlides = [];
+  const cityMap = new Map();
+
+  function toSlide(r) {
+    const url = attachAssetHost(req, resolveStoredMedia(r.cover, { code: r.code }));
+    return { routeId: r.id, title: r.title, region: cityOf(r.region), url };
   }
 
-  const cityMap = new Map();
-  function addCity(name, cover, extraGallery) {
-    if (!name) return;
-    if (!cityMap.has(name)) cityMap.set(name, { name, gallery: [], count: 0 });
+  function addCitySlide(name, slide) {
+    if (!name || !slide) return;
+    if (!cityMap.has(name)) cityMap.set(name, { name, slides: [], gallery: [], count: 0 });
     const row = cityMap.get(name);
-    const imgs = [cover, ...(extraGallery || [])].map((u) => attachAssetHost(req, u)).filter(Boolean);
-    for (const img of imgs) {
-      if (!row.gallery.includes(img) && row.gallery.length < 8) row.gallery.push(img);
-    }
+    if (row.slides.some((s) => Number(s.routeId) === Number(slide.routeId))) return;
+    row.slides.push(slide);
+    row.gallery.push(slide.url);
+  }
+
+  for (const r of routes) {
+    const slide = toSlide(r);
+    brandSlides.push(slide);
+    addCitySlide(cityOf(r.region), slide);
   }
   for (const s of schedules) {
     const name = s.city || cityOf(s.route_region);
-    let gallery = [];
-    try {
-      gallery = JSON.parse(s.gallery_json || "[]");
-    } catch {
-      gallery = [];
-    }
-    addCity(name, s.route_cover, gallery);
+    if (!cityMap.has(name)) cityMap.set(name, { name, slides: [], gallery: [], count: 0 });
     cityMap.get(name).count += 1;
-  }
-  if (!cityMap.size) {
-    for (const r of routes) addCity(cityOf(r.region), r.cover, JSON.parse(r.gallery_json || "[]"));
   }
 
   const thumbsFor = (pred) =>
@@ -197,7 +193,7 @@ function buildHome(req) {
       .map((s) => ({
         scheduleId: s.id,
         title: s.route_title,
-        cover: attachAssetHost(req, s.route_cover),
+        cover: attachAssetHost(req, resolveStoredMedia(s.route_cover, { code: s.route_code })),
       }));
 
   const durations = [
@@ -211,8 +207,9 @@ function buildHome(req) {
   return {
     brand: {
       kicker: "北野行",
-      lead: "说走就走的京郊山野。图片可轮播，城市随发团自动出现。",
-      gallery: brandGallery,
+      lead: "说走就走的京郊山野。全部景点轮流展示，点图进线路详情。",
+      slides: brandSlides,
+      gallery: brandSlides.map((s) => s.url),
     },
     cities: [...cityMap.values()],
     tags: listPlayTags(db).map((t) => mapPlayTag(t, req)),

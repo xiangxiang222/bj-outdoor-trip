@@ -140,7 +140,7 @@ describe("helpers service", () => {
     assert.equal(attachAssetHost(req, ""), "");
     assert.equal(attachAssetHost(req, "https://cdn.example/a.jpg"), "https://cdn.example/a.jpg");
     assert.equal(attachAssetHost(req, "/static/a.jpg"), "http://127.0.0.1:3780/static/a.jpg");
-    assert.match(attachAssetHost(req, "/static/photos/shangfangCave.jpg"), /^https:\/\//);
+    assert.equal(attachAssetHost(req, "/static/photos/shangfangCave.jpg"), "http://127.0.0.1:3780/static/photos/shangfangCave.jpg");
   });
 
   it("rewrites loopback media urls using forwarded host", () => {

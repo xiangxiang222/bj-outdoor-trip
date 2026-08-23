@@ -217,8 +217,10 @@ button, input, textarea, select { font-family: inherit; }
   padding: 18px 16px;
   margin-bottom: 12px;
 }
-.brand-hero { position: relative; border-radius: 16px; overflow: hidden; margin-bottom: 10px; min-height: 160px; background: #1b4332; }
+.brand-hero { position: relative; border-radius: 16px; overflow: hidden; margin-bottom: 10px; min-height: 160px; background: #1b4332; cursor: pointer; }
+.brand-hero .swipe, .city-swipe { cursor: pointer; }
 .brand-hero .swipe img, .city-swipe img { width: 100%; height: 180px; object-fit: cover; display: block; }
+.swipe-cap, .city-swipe-cap { position: absolute; left: 12px; bottom: 10px; color: #fff; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,.5); }
 .brand-cap {
   position: absolute; left: 0; right: 0; bottom: 0;
   padding: 14px 16px;

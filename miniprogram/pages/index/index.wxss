@@ -15,7 +15,15 @@
   text-shadow: 0 2rpx 8rpx rgba(0,0,0,.45);
 }
 .city-bar { white-space: nowrap; padding: 8rpx 8rpx 0; }
-.city-swipe { height: 280rpx; margin: 0 16rpx 16rpx; border-radius: 16rpx; overflow: hidden; }
+.city-swipe { height: 280rpx; margin: 0 16rpx 16rpx; border-radius: 16rpx; overflow: hidden; position: relative; }
+.swipe-cap {
+  position: absolute;
+  left: 16rpx;
+  bottom: 16rpx;
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 2rpx 8rpx rgba(0,0,0,.5);
+}
 .month-grid { display: flex; flex-wrap: wrap; padding: 0 12rpx 12rpx; }
 .month-cell { width: 13%; margin: 4rpx 0.5%; background: #fff; border-radius: 8rpx; padding: 8rpx 0; text-align: center; font-size: 22rpx; }
 .month-cell.on { background: #d8f3dc; }

@@ -54,6 +54,7 @@ const {
   virtualEnrolledCount,
   waitlistCount,
   loadRouteBundle,
+  resolveStoredMedia,
   quoteForSchedule,
   maybeMatchGuide,
   addPoints,
@@ -125,8 +126,16 @@ function grantMembership(userId) {
 
 function mapRoute(row, req, extra) {
   const r = toRoute(row, extra);
-  r.cover = attachAssetHost(req, r.cover);
-  r.gallery = (r.gallery || []).map((g) => attachAssetHost(req, g));
+  r.cover = attachAssetHost(req, resolveStoredMedia(r.cover, { code: r.code }));
+  const seen = new Set();
+  r.gallery = (r.gallery || [])
+    .map((g) => resolveStoredMedia(g, { code: r.code }))
+    .filter((g) => {
+      if (!g || seen.has(g)) return false;
+      seen.add(g);
+      return true;
+    })
+    .map((g) => attachAssetHost(req, g));
   return r;
 }
 

@@ -19,7 +19,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
 | GET | `/meta` | 品牌名、演示短信码、会员年费/95折/赠团文案、积分规则、保险方案、可选天数、退改说明、风险告知、常见问题、官方账号、公共规则、推荐领队文案 |
-| GET | `/home` | 首页：品牌轮播、随发团出现的城市及相册、玩法标签、节日、月份、天数缩略图。Query：`month=YYYY-MM` 返回该月日历 |
+| GET | `/home` | 首页：全部上架景点轮播（`brand.slides`，含 `routeId`/`title`/`url`）、按城市分组的景点轮播、玩法标签、节日、月份、天数缩略图。Query：`month=YYYY-MM` 返回该月日历 |
 | GET | `/play-tags` | 想怎么玩标签（名称、颜色、配图） |
 | GET | `/users/:id` | 用户公开主页：昵称、头像、相册、拟出行/已参与/关注的线路。不含手机号 |
 | GET | `/weather` | 目的地天气（含 `hourly` 分时气温/降水）。Query：`region` `date`。生产默认走 Open-Meteo 实时预报；本地开发默认 mock。`WEATHER_LIVE=1` 强制实时，`WEATHER_LIVE=0` 强制模拟 |

@@ -14,8 +14,12 @@ describe("homepage and publish review", () => {
     const res = await agent.get("/api/home").expect(200);
     const d = res.body.data;
     assert.equal(d.brand.kicker, "北野行");
-    assert.ok(Array.isArray(d.cities));
+    assert.ok(d.brand.slides.length >= 1);
+    assert.ok(d.brand.slides.every((s) => s.routeId && s.url && s.title));
+    assert.equal(d.brand.gallery.length, d.brand.slides.length);
     assert.ok(d.cities.some((c) => c.name === "怀柔"));
+    assert.ok(d.cities.every((c) => (c.slides || []).every((s) => s.routeId && s.url)));
+    assert.ok(!JSON.stringify(d.brand.slides).includes("wikimedia"));
     assert.ok(d.tags.length >= 5);
     assert.ok(d.tags.some((t) => t.name === "徒步" && t.color));
     assert.ok(d.festivals.length >= 1);

@@ -28,10 +28,13 @@ function localizeMedia(value) {
   if (out.cover) out.cover = toPath(out.cover);
   if (out.avatar) out.avatar = toPath(out.avatar);
   if (out.photo) out.photo = toPath(out.photo);
-  if (Array.isArray(out.gallery)) out.gallery = out.gallery.map(toPath);
+  if (out.url && typeof out.url === "string") out.url = toPath(out.url);
+  if (Array.isArray(out.gallery)) {
+    out.gallery = out.gallery.map((g) => (typeof g === "string" ? toPath(g) : localizeMedia(g)));
+  }
   if (Array.isArray(out.photos)) out.photos = out.photos.map(toPath);
   Object.keys(out).forEach((key) => {
-    if (key === "cover" || key === "avatar" || key === "gallery" || key === "photo" || key === "photos") return;
+    if (key === "cover" || key === "avatar" || key === "gallery" || key === "photo" || key === "photos" || key === "url") return;
     if (out[key] && typeof out[key] === "object") out[key] = localizeMedia(out[key]);
   });
   return out;

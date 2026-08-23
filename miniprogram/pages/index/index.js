@@ -20,6 +20,7 @@ Page({
     guides: [],
     city: "",
     cityGallery: [],
+    citySlides: [],
     monthKey: "",
     monthDays: [],
     festivalKey: "",
@@ -60,7 +61,11 @@ Page({
         request("/guides").catch(() => ({ data: [] })),
       ]);
       const home = homeRes.data || {};
-      const city = home.cities && home.cities[0] ? home.cities[0].name : "";
+      if (home.brand && !Array.isArray(home.brand.slides)) {
+        home.brand.slides = (home.brand.gallery || []).map((url) => ({ url, routeId: 0, title: "" }));
+      }
+      const firstCity = home.cities && home.cities[0];
+      const city = firstCity ? firstCity.name : "";
       const rows = asList(routesRes.data);
       if (rows.length) this.applyRoutes(rows);
       else if (!this.data.theme) this.applyRoutes(asList(lite));
@@ -68,7 +73,8 @@ Page({
       this.setData({
         home,
         city,
-        cityGallery: (home.cities && home.cities[0] && home.cities[0].gallery) || [],
+        citySlides: (firstCity && firstCity.slides) || [],
+        cityGallery: (firstCity && firstCity.gallery) || [],
         monthKey: (home.months && home.months[0] && home.months[0].key) || "",
         monthDays: home.monthDays || [],
         allSchedules,
@@ -87,7 +93,11 @@ Page({
   setCity(e) {
     const name = e.currentTarget.dataset.name;
     const hit = (this.data.home.cities || []).find((c) => c.name === name);
-    this.setData({ city: name, cityGallery: (hit && hit.gallery) || [] });
+    this.setData({
+      city: name,
+      citySlides: (hit && hit.slides) || [],
+      cityGallery: (hit && hit.gallery) || [],
+    });
   },
   setOffer(e) {
     const key = e.currentTarget.dataset.key;
@@ -120,7 +130,8 @@ Page({
     if (id) wx.navigateTo({ url: detailUrl(id) });
   },
   goRoute(e) {
-    wx.navigateTo({ url: detailUrl(e.currentTarget.dataset.id) });
+    const id = e.currentTarget.dataset.id;
+    if (id) wx.navigateTo({ url: detailUrl(id) });
   },
   goGroup(e) {
     wx.navigateTo({ url: "/pages/schedule/schedule?id=" + e.currentTarget.dataset.id });

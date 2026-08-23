@@ -1,10 +1,10 @@
+const fs = require("fs");
+const path = require("path");
 const { getDb } = require("../db");
 const { pickTier } = require("./biz");
 const config = require("../config");
 const dayjs = require("dayjs");
 const { applyOfferQuote, liveMemberPrice } = require("./offer");
-const { PHOTO } = require("../seed/routes-data");
-const { COMMONS_FILES, commonsUrl } = require("../seed/fetch-place-photos");
 
 function isMember(user) {
   if (!user) return false;
@@ -161,14 +161,33 @@ function photoKeyFromUrl(url) {
   return m ? m[1] : "";
 }
 
+function staticRel(url) {
+  const m = String(url || "").match(/\/static\/[^?#]+/);
+  return m ? m[0].replace(/^\//, "") : "";
+}
+
+function mediaExists(rel) {
+  if (!rel) return false;
+  try {
+    const p = path.join(config.publicDir, rel);
+    return fs.existsSync(p) && fs.statSync(p).size > 1000;
+  } catch {
+    return false;
+  }
+}
+
+function resolveStoredMedia(url, { code } = {}) {
+  const raw = String(url || "");
+  const key = photoKeyFromUrl(raw);
+  if (key && mediaExists(`static/photos/${key}.jpg`)) return `/static/photos/${key}.jpg`;
+  const rel = staticRel(raw);
+  if (rel && mediaExists(rel)) return `/${rel}`;
+  if (code && mediaExists(`static/routes/${code}.svg`)) return `/static/routes/${code}.svg`;
+  return raw;
+}
+
 function publicMediaUrl(url) {
-  const key = photoKeyFromUrl(url);
-  if (!key) return url;
-  const remote = PHOTO[key];
-  if (typeof remote === "string" && remote.startsWith("https://")) return remote;
-  const fileTitle = COMMONS_FILES[key];
-  if (fileTitle) return commonsUrl(fileTitle);
-  return url;
+  return resolveStoredMedia(url);
 }
 
 module.exports = {
@@ -183,6 +202,7 @@ module.exports = {
   addPoints,
   attachAssetHost,
   publicMediaUrl,
+  resolveStoredMedia,
   publicBase,
   config,
 };

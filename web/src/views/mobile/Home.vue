@@ -1,12 +1,12 @@
 <template>
   <div>
-    <div class="brand-hero">
-      <div class="swipe" v-if="home.brand?.gallery?.length">
-        <img :src="home.brand.gallery[heroIndex]" alt="北野行" />
+    <div class="brand-hero" @click="goSlide(brandSlide)">
+      <div class="swipe" v-if="brandSlide">
+        <img :src="brandSlide.url" :alt="brandSlide.title || '北野行'" />
       </div>
       <div class="brand-cap">
         <div class="home-kicker">{{ home.brand?.kicker || "北野行" }}</div>
-        <div class="home-lead">{{ home.brand?.lead || "说走就走的京郊山野" }}</div>
+        <div class="home-lead">{{ brandSlide?.title || home.brand?.lead || "说走就走的京郊山野" }}</div>
       </div>
     </div>
 
@@ -16,12 +16,12 @@
         :class="{ on: city === c.name }"
         v-for="c in home.cities || []"
         :key="c.name"
-        @click="city = c.name"
+        @click="pickCity(c.name)"
       >{{ c.name }}</div>
     </div>
-    <div class="swipe city-swipe" v-if="cityGallery.length">
-      <img :src="cityGallery[cityHeroIndex]" :alt="city" />
-      <div class="city-swipe-cap">{{ city }}</div>
+    <div class="swipe city-swipe" v-if="citySlide" @click="goSlide(citySlide)">
+      <img :src="citySlide.url" :alt="citySlide.title || city" />
+      <div class="city-swipe-cap">{{ citySlide.title || city }}</div>
     </div>
 
     <div v-if="upcoming.length" class="card" @click="$router.push('/m/schedule/' + upcoming[0].scheduleId)">
@@ -212,9 +212,24 @@ const groups = computed(() =>
     .filter((s) => !offerFilter.value || s.offerType === offerFilter.value)
     .slice(0, 6)
 );
-const cityGallery = computed(() => {
+const citySlides = computed(() => {
   const hit = (home.value.cities || []).find((c) => c.name === city.value);
-  return hit?.gallery || [];
+  if (hit?.slides?.length) return hit.slides;
+  return (hit?.gallery || []).map((url) => ({ url, routeId: 0, title: city.value }));
+});
+const brandSlides = computed(() => {
+  if (home.value.brand?.slides?.length) return home.value.brand.slides;
+  return (home.value.brand?.gallery || []).map((url) => ({ url, routeId: 0, title: "" }));
+});
+const brandSlide = computed(() => {
+  const list = brandSlides.value;
+  if (!list.length) return null;
+  return list[heroIndex.value % list.length];
+});
+const citySlide = computed(() => {
+  const list = citySlides.value;
+  if (!list.length) return null;
+  return list[cityHeroIndex.value % list.length];
 });
 const activeFestival = computed(() => (home.value.festivals || []).find((f) => f.key === festivalKey.value));
 const calendar = computed(() => {
@@ -252,9 +267,9 @@ onMounted(async () => {
     }
   }
   heroTimer = setInterval(() => {
-    const n = home.value.brand?.gallery?.length || 0;
+    const n = brandSlides.value.length;
     if (n) heroIndex.value = (heroIndex.value + 1) % n;
-    const cn = cityGallery.value.length;
+    const cn = citySlides.value.length;
     if (cn) cityHeroIndex.value = (cityHeroIndex.value + 1) % cn;
   }, 4000);
 });
@@ -262,6 +277,13 @@ onUnmounted(() => clearInterval(heroTimer));
 
 function countOn(date) {
   return schedules.value.filter((s) => s.startDate === date && s.status !== "cancelled").length;
+}
+function pickCity(name) {
+  city.value = name;
+  cityHeroIndex.value = 0;
+}
+function goSlide(slide) {
+  if (slide?.routeId) router.push("/m/route/" + slide.routeId);
 }
 function goRoutes(query) {
   router.push({ path: "/m/routes", query });
