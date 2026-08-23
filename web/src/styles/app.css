@@ -463,17 +463,37 @@ button, input, textarea, select { font-family: inherit; }
   background: rgba(0,0,0,.78); color: #fff; padding: 10px 16px; border-radius: 8px; z-index: 50;
 }
 
+.admin-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: #f6f3ee;
+}
 .admin-side {
-  width: 220px; background: #14281d; color: #d8f3dc; min-height: 100vh;
+  width: 220px;
+  flex: 0 0 220px;
+  background: #14281d;
+  color: #d8f3dc;
+  height: 100vh;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
 }
 .admin-side a { display: block; padding: 12px 20px; color: #d8f3dc; opacity: .8; }
-.admin-side a.router-link-active { background: #1b4332; opacity: 1; }
+.admin-side a.router-link-exact-active { background: #1b4332; opacity: 1; }
 .admin-me {
   margin: 24px 20px 16px;
   font-size: 12px;
   opacity: .55;
 }
-.admin-main { flex: 1; background: #f6f3ee; min-height: 100vh; }
+.admin-main {
+  flex: 1;
+  min-width: 0;
+  height: 100vh;
+  overflow: auto;
+  background: #f6f3ee;
+}
 .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .kpi .card { padding: 16px; }
 .kpi .n { font-size: 28px; font-weight: 700; color: var(--forest); }
