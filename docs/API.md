@@ -40,6 +40,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/schedules/:id/reviews` | 该团评价列表。`{ list, count, avg }` |
 | GET | `/schedules/:id/poster` | 分享 URL + QR DataURL（**无需登录**） |
 | GET | `/share/:token` | 302 到 `/m/schedule/:id?token=` |
+| GET | `/coupons/:code` | 公开券详情、剩余、报价预览。登录后带 `claimedByMe`。可选用户 token |
+| POST | `/coupons/:code/claim` | 用户。领取（已领则幂等返回）。每人每活动 1 张，库存按领取扣 |
 
 ## 登录与资料
 
@@ -54,6 +56,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/auth/wechat` | 否 | `code` `nickname` `avatar` |
 | GET | `/me` | 用户 | 当前用户（证件掩码） |
 | GET | `/me/trips` | 用户 | 即将出行：已报名且团未解散、出发日 ≥ 昨天的 `joined`/`waitlist` |
+| GET | `/me/coupons` | 用户 | 我领取的券（含未用/已用/候补占用） |
 | GET | `/me/referral` | 用户 | 推荐码、专属二维码、5% 按人结算明细。Query：`scheduleId` |
 | POST | `/me/photos` | 用户 | `{ url }` 写入个人相册 |
 | DELETE | `/me/photos/:id` | 用户 | 删除自己的相册照片 |
@@ -70,7 +73,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/trips` | 用户 | 发团（类似后台编辑线路）。提交后 `reviewStatus=pending`，审核通过才上首页 |
 | POST | `/upload` | 用户 | 发团封面。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
-| POST | `/enroll` | 用户 | 报名占座。可选 `referrerCode` `autoAlt` `fallbackScheduleIds`。须紧急联系人、健康声明、风险确认 |
+| POST | `/enroll` | 用户 | 报名占座。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds`。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补 `held`，占座成功才 `used`。须紧急联系人、健康声明、风险确认 |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。报名流程默认不调用 |
 | POST | `/pay/for-enrollment` | 用户 | 行程页待支付代付。任何人可替 `unpaid` 且已占座的报名支付（演示立即成功）。公司挂账不可用 |
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
@@ -175,6 +178,10 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/schedules/:id/settle` | 公司团挂账结算，并模拟分账 |
 | GET | `/admin/schedules/:id/splits` | 分账明细 |
 | POST | `/admin/schedules/:id/split` | 对已支付金额发起分账（已有记录则复用） |
+| GET | `/admin/coupons` | Query：`scheduleId`。公开券列表 |
+| POST | `/admin/coupons` | 发行。`scheduleId` `kind=percent|amount`；折扣填 `fold`（8=8折）且必填 `capAmount`；立减填 `value`；`total` |
+| GET | `/admin/coupons/:id` | 台账 `holders` + 短链/落地页/二维码 `share` |
+| PUT | `/admin/coupons/:id` | `status=on|paused|off`，可改名称与发行量（不得小于已领） |
 | GET | `/admin/enrollments` | Query：`scheduleId` `q` `payStatus` `status` |
 | POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款标记退款） |
 | GET | `/admin/users` | Query：`q`。不含已注销、不含证件；带 `isMember` `isVirtual` |
@@ -188,4 +195,5 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 ## 静态资源
 
 - `GET /static/...` 对应 `server/public/static`
+- `GET /c/:code` 优惠券短链，302 到 `/m/coupon/:code`（不走 `/api`）
 - 线路封面可能是 `/static/photos/*.jpg`、`/static/routes/Rxx.svg` 或后台上传的 `/static/uploads/*`

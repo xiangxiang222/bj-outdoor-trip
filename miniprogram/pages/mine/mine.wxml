@@ -15,6 +15,9 @@
   </view>
 </view>
 <view class="card" bindtap="go" data-url="/pages/orders/orders"><view class="pad">我的报名</view></view>
+<view class="card" wx:if="{{coupon}}" bindtap="goCoupon">
+  <view class="pad">我的优惠券 {{coupon.label}} · {{coupon.routeTitle}}</view>
+</view>
 <view class="card" wx:if="{{user}}" bindtap="goHome"><view class="pad">个人主页 · 相册与行程</view></view>
 <view class="card" bindtap="go" data-url="/pages/favorites/favorites"><view class="pad">我的收藏</view></view>
 <view class="card" bindtap="openMember"><view class="pad">{{user.isMember ? '会员中心' : '开通会员'}}</view></view>

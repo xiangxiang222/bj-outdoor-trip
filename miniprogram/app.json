@@ -8,6 +8,7 @@
     "pages/chain/chain",
     "pages/schedule/schedule",
     "pages/enroll/enroll",
+    "pages/coupon/coupon",
     "pages/open/open",
     "pages/login/login",
     "pages/member/member",

@@ -19,21 +19,23 @@ function applyOfferQuote(base, schedule, userIsMember) {
   const origin = Number(base.originPrice || 0);
   const offerType = schedule && schedule.offer_type ? schedule.offer_type : "full";
   const meta = offerMeta(offerType);
-  let current = origin;
+  let tripPrice = origin;
   const override = schedule && schedule.offer_price;
   if (offerType === "free") {
-    current = 0;
+    tripPrice = 0;
   } else if (override != null && override !== "" && Number.isFinite(Number(override))) {
-    current = Number(override);
+    tripPrice = Number(override);
   } else if (meta.rate < 1) {
-    current = Math.round(origin * meta.rate);
+    tripPrice = Math.round(origin * meta.rate);
   }
-  if (userIsMember && current > 0) current = liveMemberPrice(current);
+  let price = tripPrice;
+  if (userIsMember && tripPrice > 0) price = liveMemberPrice(tripPrice);
   return {
     ...base,
     originPrice: origin,
     memberPrice: liveMemberPrice(origin),
-    price: current,
+    tripPrice,
+    price,
     offerType: meta.key,
     offerLabel: meta.label,
     offerColor: meta.color,

@@ -7,6 +7,7 @@
       <router-link to="/admin/routes">线路管理</router-link>
       <router-link to="/admin/schedules">拼团与成本</router-link>
       <router-link to="/admin/enrollments">报名与收款</router-link>
+      <router-link to="/admin/coupons">优惠券</router-link>
       <router-link to="/admin/users">用户与会员</router-link>
       <router-link to="/admin/tags">玩法标签</router-link>
       <router-link v-if="me.role === 'admin'" to="/admin/staff">管理员</router-link>

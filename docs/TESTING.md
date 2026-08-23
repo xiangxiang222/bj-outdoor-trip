@@ -45,7 +45,7 @@ HTML 报告生成在 `server/coverage/index.html`，用浏览器打开即可。�
 
 未达标时 `npm run test:coverage` 以非 0 退出。排除项：进程入口 `src/index.js`、会联网的全量 seed `src/seed/run.js` 与 `refresh-images.js`。
 
-当前约 **128** 条服务端用例 + **7** 条 H5 用例。
+当前约 **155** 条服务端用例 + **7** 条 H5 用例。
 
 ## 3. 只跑某一类用例
 
@@ -106,6 +106,8 @@ npx vitest run src/utils/auth.test.js
 | `api.auth.test.js` | meta、短信、图片验证码注册/登录、微信演示登录、改资料、注销 |
 | `api.routes.test.js` | 筛选、收藏标记、名单脱敏、分享 302、开团校验、海报 QR、导游列表与详情（无需登录） |
 | `api.enroll.test.js` | 个人占座（`needPay: false`）、紧急联系人/健康/免责、`/me/trips`、公司挂账与结算权限、满员、成团导游、取消报名（出发当天不可取消）、会员购买、收藏 |
+| `api.coupon.test.js` | 公开限量领取、每人一张、会员与券取低不叠、赠团不核销、候补占用/递补核销/取消退券、公司团与暂停领取 |
+| `coupons.service.test.js` | 折扣封顶、立减与保底价 |
 | `api.reviews.test.js` | 仅报名成功可评、每团一条、线路/排期列表、候补与取消不可评 |
 | `api.dissolve.test.js` | 发起人解散、非发起人 403、后台解散单团与全部、重复解散 |
 | `api.admin.test.js` | 看板、线路增改下架、封面上传、排期成本利润、后台结算、报名脱敏、用户列表 |

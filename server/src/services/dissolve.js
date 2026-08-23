@@ -1,6 +1,7 @@
 const { getDb } = require("../db");
 const { addPoints } = require("./helpers");
 const { buildCancelSms, sendSms } = require("./sms");
+const { releaseCouponByEnrollment } = require("./coupons");
 
 function fail(status, message) {
   const err = new Error(message);
@@ -42,6 +43,7 @@ function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
     for (const en of enrollments) {
       const paid = en.pay_status === "paid" && Number(en.pay_amount || 0) > 0;
       db.prepare("UPDATE enrollments SET status='cancelled', pay_status=? WHERE id=?").run(paid ? "refunded" : en.pay_status, en.id);
+      releaseCouponByEnrollment(en.id);
       if (paid) {
         refunded += 1;
         refundAmount += Number(en.pay_amount);

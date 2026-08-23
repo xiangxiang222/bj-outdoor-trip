@@ -17,6 +17,7 @@ Page({
   data: {
     s: null,
     id: "",
+    coupon: "",
     showDissolve: false,
     reason: "",
     seatRows: [],
@@ -31,7 +32,7 @@ Page({
     leaderSlots: [{ slot: 1, label: "领队1", leader: null }, { slot: 2, label: "领队2", leader: null }],
   },
   onLoad(q) {
-    this.setData({ id: q.id });
+    this.setData({ id: q.id, coupon: q.coupon || "" });
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
   },
   onShow() { this.load(); },
@@ -184,7 +185,15 @@ Page({
     if (!text) return;
     wx.setClipboardData({ data: String(text), success: () => wx.showToast({ title: "已复制", icon: "none" }) });
   },
-  enroll() { wx.navigateTo({ url: "/pages/enroll/enroll?id=" + this.data.id }); },
+  enroll() {
+    let url = "/pages/enroll/enroll?id=" + this.data.id;
+    if (this.data.coupon) url += "&coupon=" + this.data.coupon;
+    wx.navigateTo({ url });
+  },
+  goCoupon() {
+    const c = this.data.s && this.data.s.coupon;
+    if (c && c.code) wx.navigateTo({ url: "/pages/coupon/coupon?code=" + c.code });
+  },
   goGuide() {
     const g = this.data.s && this.data.s.guide;
     if (g && g.id) wx.navigateTo({ url: "/pages/guide/guide?id=" + g.id });

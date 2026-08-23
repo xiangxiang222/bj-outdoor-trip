@@ -207,6 +207,7 @@ function createSchema(db) {
       emergency_phone TEXT,
       waiver_accepted_at TEXT,
       health_declared_at TEXT,
+      coupon_id INTEGER,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
@@ -279,6 +280,38 @@ function createSchema(db) {
       ref_id INTEGER,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
+
+    CREATE TABLE IF NOT EXISTS coupon_campaigns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE,
+      schedule_id INTEGER,
+      name TEXT,
+      kind TEXT,
+      value INTEGER,
+      cap_amount INTEGER DEFAULT 0,
+      floor_price INTEGER DEFAULT 0,
+      total INTEGER,
+      claimed INTEGER DEFAULT 0,
+      per_user_limit INTEGER DEFAULT 1,
+      claim_start TEXT,
+      claim_end TEXT,
+      use_start TEXT,
+      use_end TEXT,
+      audience TEXT DEFAULT 'public',
+      status TEXT DEFAULT 'on',
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+
+    CREATE TABLE IF NOT EXISTS user_coupons (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER,
+      user_id INTEGER,
+      code TEXT UNIQUE,
+      status TEXT DEFAULT 'unused',
+      used_enrollment_id INTEGER,
+      used_at TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
   `);
 }
 
@@ -320,6 +353,7 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "users", "referral_code", "TEXT");
   addColumnIfMissing(db, "enrollments", "referrer_user_id", "INTEGER");
   addColumnIfMissing(db, "enrollments", "auto_alt", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "enrollments", "coupon_id", "INTEGER");
   db.exec(`
     CREATE TABLE IF NOT EXISTS user_photos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -398,6 +432,43 @@ function migrateSchema(db) {
     WHERE id NOT IN (SELECT MIN(id) FROM reviews GROUP BY user_id, schedule_id);
   `);
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_reviews_user_schedule ON reviews(user_id, schedule_id)");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS coupon_campaigns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT UNIQUE,
+      schedule_id INTEGER,
+      name TEXT,
+      kind TEXT,
+      value INTEGER,
+      cap_amount INTEGER DEFAULT 0,
+      floor_price INTEGER DEFAULT 0,
+      total INTEGER,
+      claimed INTEGER DEFAULT 0,
+      per_user_limit INTEGER DEFAULT 1,
+      claim_start TEXT,
+      claim_end TEXT,
+      use_start TEXT,
+      use_end TEXT,
+      audience TEXT DEFAULT 'public',
+      status TEXT DEFAULT 'on',
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE TABLE IF NOT EXISTS user_coupons (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER,
+      user_id INTEGER,
+      code TEXT UNIQUE,
+      status TEXT DEFAULT 'unused',
+      used_enrollment_id INTEGER,
+      used_at TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_coupon_campaigns_code ON coupon_campaigns(code);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_user_coupons_code ON user_coupons(code);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_user_coupons_campaign_user ON user_coupons(campaign_id, user_id);
+    CREATE INDEX IF NOT EXISTS idx_user_coupons_user ON user_coupons(user_id);
+    CREATE INDEX IF NOT EXISTS idx_coupon_campaigns_schedule ON coupon_campaigns(schedule_id);
+  `);
 }
 
 let _db;

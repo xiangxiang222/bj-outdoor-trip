@@ -47,6 +47,12 @@
         <p class="muted" v-if="s.status === 'cancelled'" style="color:var(--clay)">
           本团已解散。理由：{{ s.cancelReason }}
         </p>
+        <div v-if="s.coupon" class="card" style="margin:12px 0 0;background:#fff7e6" @click="$router.push('/m/coupon/' + s.coupon.code)">
+          <div class="pad">
+            <strong>{{ s.coupon.label }}</strong>
+            <span class="muted"> 余 {{ s.coupon.remain }}/{{ s.coupon.total }} · 点此领取</span>
+          </div>
+        </div>
         <div class="leader-board">
           <div class="leader-slot" v-for="slot in leaderSlots" :key="slot.slot">
             <template v-if="slot.leader">
@@ -190,7 +196,7 @@
       <button class="btn ghost" style="flex:1" @click="$router.push('/m/stats/' + s.id)">本团画像</button>
       <button class="btn ghost" style="flex:1" @click="share">分享到微信</button>
     </div>
-    <button v-if="s.status !== 'cancelled' && s.reviewStatus !== 'pending' && s.reviewStatus !== 'rejected'" class="btn block clay" @click="$router.push('/m/enroll/' + s.id + (route.query.ref ? ('?ref=' + route.query.ref) : ''))">
+    <button v-if="s.status !== 'cancelled' && s.reviewStatus !== 'pending' && s.reviewStatus !== 'rejected'" class="btn block clay" @click="$router.push(enrollHref)">
       {{ s.canEnrollDirect === false && s.remain <= 0 ? "已满员，去候补" : "立即报名" }}
     </button>
     <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>
@@ -269,6 +275,13 @@ const heroIndex = ref(0);
 const busPhotoIndex = ref(0);
 let heroTimer = 0;
 const gallery = computed(() => s.value?.gallery?.length ? s.value.gallery : (s.value?.route?.cover ? [s.value.route.cover] : []));
+const enrollHref = computed(() => {
+  const q = new URLSearchParams();
+  if (route.query.ref) q.set("ref", String(route.query.ref));
+  if (route.query.coupon) q.set("coupon", String(route.query.coupon));
+  const s = q.toString();
+  return "/m/enroll/" + (route.params.id || "") + (s ? "?" + s : "");
+});
 const busPhotos = computed(() => s.value?.bus?.photos || []);
 const busText = computed(() => {
   const b = s.value?.bus;

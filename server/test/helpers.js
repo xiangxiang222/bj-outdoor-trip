@@ -17,6 +17,8 @@ function wipe(db) {
     DELETE FROM favorites;
     DELETE FROM points_ledger;
     DELETE FROM payments;
+    DELETE FROM user_coupons;
+    DELETE FROM coupon_campaigns;
     DELETE FROM enrollments;
     DELETE FROM schedules;
     DELETE FROM route_buses;

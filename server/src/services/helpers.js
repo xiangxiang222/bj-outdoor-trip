@@ -63,7 +63,7 @@ function loadRouteBundle(routeId) {
 function quoteForSchedule(schedule, people, user) {
   const bundle = loadRouteBundle(schedule.route_id);
   if (!bundle) {
-    return { people, tierMin: 0, price: 0, originPrice: 0, memberPrice: 0, isMember: isMember(user) };
+    return { people, tierMin: 0, price: 0, originPrice: 0, memberPrice: 0, tripPrice: 0, isMember: isMember(user) };
   }
   const tier = pickTier(
     bundle.tiers.map((t) => ({ minPeople: t.min_people, price: t.price, memberPrice: t.member_price })),

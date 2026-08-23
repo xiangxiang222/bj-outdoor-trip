@@ -8,6 +8,7 @@
       <p v-else-if="s.organizerType === 'company'">公司团：报名后挂账，由 {{ s.companyName || "公司" }} 统一支付。</p>
       <p v-else class="muted">个人拼团先报名占座，费用待出行前支付。早报名早选座。</p>
       <p class="price">当前档位 ¥{{ quote }} / 人</p>
+      <p v-if="couponHint" class="muted" style="color:var(--leaf)">{{ couponHint }}</p>
     </div></div>
 
     <label>出行人姓名</label>
@@ -102,6 +103,8 @@ const router = useRouter();
 const store = useUserStore();
 const s = ref(null);
 const quote = ref(0);
+const couponHint = ref("");
+const couponCode = ref("");
 const err = ref("");
 const loading = ref(false);
 const idHint = ref("");
@@ -148,6 +151,22 @@ onMounted(async () => {
   if (!requireLogin(store, router, route)) return;
   s.value = (await http.get("/schedules/" + route.params.id)).data;
   quote.value = s.value.quote.price;
+  couponCode.value = String(route.query.coupon || "");
+  if (couponCode.value) {
+    try {
+      const c = (await http.get("/coupons/" + couponCode.value)).data;
+      const q = c.quote || {};
+      if (q.applyCoupon) {
+        quote.value = q.couponPay;
+        couponHint.value = `已带优惠券 ${c.label}，团费 ¥${q.couponPay}（保险另计）`;
+      } else {
+        couponHint.value = q.reason || "当前价格不核销此券";
+      }
+    } catch (e) {
+      couponHint.value = e.message || "优惠券不可用";
+      couponCode.value = "";
+    }
+  }
   const opts = s.value.fallbackOptions || {};
   fallbackOptions.value = [...(opts.sameRoute || []), ...(opts.otherRecruiting || [])];
   try {
@@ -223,6 +242,7 @@ async function submit() {
       ...form.value,
       seatNo: form.value.seatNo || undefined,
       referrerCode: route.query.ref,
+      couponCode: couponCode.value || undefined,
     });
     router.push("/m/schedule/" + route.params.id + "?joined=1");
   } catch (e) {

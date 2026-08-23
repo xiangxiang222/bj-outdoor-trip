@@ -40,7 +40,7 @@
           <span v-else>未匹配</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="520">
+      <el-table-column label="操作" width="580">
         <template #default="{ row }">
           <el-button v-if="row.reviewStatus === 'pending'" size="small" type="success" @click="review(row, 'approved')">通过</el-button>
           <el-button v-if="row.reviewStatus === 'pending'" size="small" type="warning" @click="review(row, 'rejected')">驳回</el-button>
@@ -50,6 +50,7 @@
           <el-button size="small" @click="demo(row)">画像</el-button>
           <el-button size="small" type="success" :disabled="row.status === 'cancelled'" @click="settle(row)">结算</el-button>
           <el-button size="small" @click="openSplit(row)">分账</el-button>
+          <el-button size="small" :disabled="row.organizerType === 'company' || row.status === 'cancelled'" @click="$router.push('/admin/coupons?scheduleId=' + row.id)">优惠券</el-button>
           <el-button size="small" type="danger" :disabled="row.status === 'cancelled'" @click="openDissolve(row)">解散</el-button>
         </template>
       </el-table-column>
@@ -198,10 +199,13 @@
 
 <script setup>
 import { computed, nextTick, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import * as echarts from "echarts";
 import { ElMessage } from "element-plus";
 import { organizerTypeText, scheduleStatusText } from "@/utils/labels";
 import http from "@/api/http";
+
+const $router = useRouter();
 
 const meetupPoints = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
 const list = ref([]);

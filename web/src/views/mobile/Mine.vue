@@ -31,6 +31,12 @@
 
     <div class="card" v-if="store.token && store.profile" @click="$router.push('/m/user/' + store.profile.id)"><div class="pad">个人主页 · 相册与行程</div></div>
     <div class="card" @click="goAuth('/m/orders')"><div class="pad">我的报名</div></div>
+    <div class="card" v-if="coupons.length" @click="$router.push('/m/coupon/' + coupons[0].campaignCode)">
+      <div class="pad">
+        <div>我的优惠券 {{ coupons.length }} 张可用</div>
+        <p class="muted" style="margin:6px 0 0">{{ coupons[0].label }} · {{ coupons[0].routeTitle }}</p>
+      </div>
+    </div>
     <div class="card" @click="goAuth('/m/favorites')"><div class="pad">我的收藏</div></div>
     <div class="card" @click="goReferral"><div class="pad">推荐报名 · 按人数结 5%</div></div>
     <div class="card" @click="openMember"><div class="pad">{{ store.profile?.isMember ? "会员中心" : "开通会员" }}</div></div>
@@ -50,6 +56,7 @@ const store = useUserStore();
 const router = useRouter();
 const opening = ref(false);
 const upcoming = ref([]);
+const coupons = ref([]);
 onMounted(async () => {
   await store.fetchMe().catch(() => {});
   if (!store.token) return;
@@ -57,6 +64,12 @@ onMounted(async () => {
     upcoming.value = (await http.get("/me/trips")).data || [];
   } catch {
     upcoming.value = [];
+  }
+  try {
+    const rows = (await http.get("/me/coupons")).data || [];
+    coupons.value = rows.filter((c) => c.status === "unused");
+  } catch {
+    coupons.value = [];
   }
 });
 

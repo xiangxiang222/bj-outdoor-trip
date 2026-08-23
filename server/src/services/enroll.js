@@ -8,6 +8,13 @@ const { assertSeatAvailable, firstFreeSeat } = require("./seats");
 const { kickVirtualSeat, trimVirtuals } = require("./virtual");
 const { findReferrer, recordEnrollReferral } = require("./referral");
 const { setFallbacks } = require("./fallback");
+const {
+  resolveCouponForEnroll,
+  decideCouponPrice,
+  attachCouponToEnrollment,
+  redeemHeldForEnrollment,
+  releaseCouponByEnrollment,
+} = require("./coupons");
 const config = require("../config");
 
 function fail(status, message) {
@@ -41,6 +48,7 @@ function enrollUser({
   referrerCode,
   autoAlt,
   fallbackScheduleIds,
+  couponCode,
 }) {
   const db = getDb();
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
@@ -91,12 +99,19 @@ function enrollUser({
   const referrerId = referrer && Number(referrer.id) !== Number(user.id) ? referrer.id : null;
   const quote = quoteForSchedule(sch, Math.max(waitlisted ? occupied : occupied + 1, 1), user);
   const company = sch.organizer_type === "company";
+  const couponPack = couponCode
+    ? resolveCouponForEnroll({ userId: user.id, couponCode, scheduleId: sch.id, company })
+    : null;
+  const couponDecision = couponPack
+    ? decideCouponPrice({ quote, user, campaign: couponPack.campaign, waitlisted })
+    : { applyCoupon: false, giftWouldApply: false, tripPrice: quote.tripPrice, memberPay: quote.price, couponPay: quote.price, reason: "" };
+  const billed = couponDecision.applyCoupon ? couponDecision.couponPay : Number(quote.price || 0);
   const payable =
-    quote.price <= 0
+    billed <= 0
       ? { price: 0, offsetYuan: 0, pointsUsed: 0, payAmount: 0 }
       : calcPayable({
-          basePrice: quote.price,
-          memberPrice: quote.price,
+          basePrice: billed,
+          memberPrice: billed,
           isMember: false,
           points: 0,
           pointsConfig: config.points,
@@ -104,18 +119,20 @@ function enrollUser({
   const insurance = pickInsurance(insuranceCode);
   let tripPay = payable.payAmount;
   let giftApplied = false;
+  const memberTripPay = Number(quote.price || 0);
   if (
     !company &&
     !waitlisted &&
     quote.isMember &&
     Number(user.member_gift_left || 0) > 0 &&
-    tripPay > 0 &&
-    tripPay <= Number(config.member.giftMaxPrice || 100)
+    memberTripPay > 0 &&
+    memberTripPay <= Number(config.member.giftMaxPrice || 100)
   ) {
     tripPay = 0;
     giftApplied = true;
     db.prepare("UPDATE users SET member_gift_left=member_gift_left-1 WHERE id=?").run(user.id);
   }
+  const couponApplied = !!(couponPack && couponDecision.applyCoupon && !giftApplied);
   const payAmount = company ? 0 : tripPay + insurance.fee;
   const payStatus = company ? "company_pending" : payAmount === 0 ? "paid" : "unpaid";
   const status = waitlisted ? "waitlist" : "joined";
@@ -153,6 +170,9 @@ function enrollUser({
       autoAlt ? 1 : 0
     );
   const enrollmentId = Number(info.lastInsertRowid);
+  if (couponApplied) {
+    attachCouponToEnrollment(couponPack.coupon.id, enrollmentId, waitlisted);
+  }
   if (!waitlisted) {
     maybeMatchGuide(sch.id);
     trimVirtuals(sch.id);
@@ -174,7 +194,16 @@ function enrollUser({
     waitlistPosition: position,
     seatNo: seat,
     insurance,
-    quote: { ...payable, payAmount, insuranceFee: insurance.fee, giftApplied, originPrice: quote.originPrice },
+    quote: {
+      ...payable,
+      payAmount,
+      insuranceFee: insurance.fee,
+      giftApplied,
+      originPrice: quote.originPrice,
+      tripPrice: quote.tripPrice,
+      couponApplied,
+      couponSkipReason: couponPack && !couponApplied ? couponDecision.reason : "",
+    },
     needPay: false,
     message: waitlisted
       ? `本车已满，已加入候补（第 ${position} 位），有人取消后自动递补`
@@ -200,6 +229,7 @@ function promoteWaitlist(scheduleId) {
     seat,
     next.id
   );
+  redeemHeldForEnrollment(next.id);
   maybeMatchGuide(scheduleId);
   const route = db.prepare("SELECT title FROM routes WHERE id=?").get(sch.route_id);
   sendSms({
@@ -232,6 +262,7 @@ function cancelEnrollment(enrollmentId, userId, options = {}) {
 
   const run = db.transaction(() => {
     db.prepare("UPDATE enrollments SET status='cancelled', pay_status=? WHERE id=?").run(nextPay, en.id);
+    releaseCouponByEnrollment(en.id);
     if (paid) {
       db.prepare(
         `INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark) VALUES (?,?,?,?,?,?,?,?)`

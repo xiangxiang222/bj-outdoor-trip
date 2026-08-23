@@ -1,0 +1,20 @@
+<view class="card" wx:if="{{data}}" style="background:#1b4332;color:#fff">
+  <view class="pad">
+    <view class="muted" style="color:#fff;opacity:.85">本团优惠券</view>
+    <view class="title" style="color:#fff;font-size:48rpx">{{data.label}}</view>
+    <view>{{data.name}}</view>
+    <view>余 {{data.remain}}/{{data.total}}</view>
+  </view>
+</view>
+<view class="card" wx:if="{{data && data.schedule}}">
+  <view class="pad">
+    <view class="title">{{data.schedule.title}}</view>
+    <view class="muted">{{data.schedule.startDate}} 出发</view>
+    <view class="price" wx:if="{{data.quote}}">团价 ¥{{data.quote.tripPrice}}<text wx:if="{{data.quote.applyCoupon}}"> → 券后 ¥{{data.quote.couponPay}}</text></view>
+    <view class="muted" wx:if="{{data.quote && data.quote.reason}}">{{data.quote.reason}}</view>
+    <view class="muted">保险另计。与会员 95 折取更低，不叠加。</view>
+  </view>
+</view>
+<view class="pad" wx:if="{{err}}" style="color:#bc4749">{{err}}</view>
+<view class="btn" wx:if="{{data}}" bindtap="claim">{{data.claimedByMe ? '已领取，去报名' : '领取并报名'}}</view>
+<view class="btn ghost" wx:if="{{data && data.schedule}}" bindtap="goTrip">查看行程</view>

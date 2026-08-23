@@ -767,6 +767,25 @@ async function run(opts) {
     apiOk(await request("GET", "/api/admin/enrollments", { token: ctx.adminToken }), "admin enrollments");
     apiOk(await request("GET", "/api/admin/users", { token: ctx.adminToken }), "admin users");
     apiOk(await request("GET", "/api/admin/me", { token: ctx.adminToken }), "admin me");
+    const coupon = apiOk(
+      await request("POST", "/api/admin/coupons", {
+        token: ctx.adminToken,
+        body: { scheduleId: published.id, kind: "amount", value: 20, total: 5, name: "走查券" },
+      }),
+      "admin create coupon"
+    );
+    const jump = await request("GET", "/c/" + coupon.code);
+    assert(jump.status === 302 && /\/m\/coupon\//.test(jump.location || ""), "短链应跳转领取页");
+    apiOk(await request("GET", "/api/coupons/" + coupon.code), "public coupon");
+    apiOk(await request("POST", "/api/coupons/" + coupon.code + "/claim", { token: ctx.token }), "claim coupon");
+    apiOk(await request("GET", "/api/me/coupons", { token: ctx.token }), "my coupons");
+    apiOk(
+      await request("PUT", "/api/admin/coupons/" + coupon.id, {
+        token: ctx.adminToken,
+        body: { status: "paused" },
+      }),
+      "pause coupon"
+    );
     apiOk(await request("DELETE", "/api/admin/routes/" + created.id, { token: ctx.adminToken }), "admin off-shelf");
     if (live) {
       const all = apiOk(await request("GET", "/api/admin/schedules", { token: ctx.adminToken }), "admin schedules cleanup");
@@ -851,7 +870,7 @@ async function run(opts) {
   }, { skip: live && !opts.unsafe, reason: live ? "线上默认跳过，加 --unsafe 才执行" : "" });
 
   await step("H5 页面可打开", async () => {
-    const pages = ["/m", "/m/login", "/m/official", "/m/rules", "/m/routes", "/m/guides", "/m/mine", "/admin/login", "/g/login"];
+    const pages = ["/m", "/m/login", "/m/official", "/m/rules", "/m/routes", "/m/guides", "/m/mine", "/m/coupon/x", "/admin/login", "/g/login"];
     for (const p of pages) {
       const res = await request("GET", p, { follow: true });
       assert(res.status === 200, p + " 返回 " + res.status);

@@ -5,6 +5,7 @@ Page({
   data: {
     id: "",
     ref: "",
+    coupon: "",
     s: null,
     idHint: "",
     idOk: false,
@@ -16,12 +17,13 @@ Page({
   },
   onLoad(q) {
     if (!app.globalData.token) {
-      wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/enroll/enroll?id=" + q.id) });
+      wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/enroll/enroll?id=" + q.id + (q.coupon ? "&coupon=" + q.coupon : "")) });
       return;
     }
     this.setData({
       id: q.id,
       ref: q.ref || "",
+      coupon: q.coupon || "",
       "form.travelerName": (app.globalData.user || {}).nickname || "",
       "form.travelerPhone": (app.globalData.user || {}).phone || "",
     });
@@ -117,6 +119,7 @@ Page({
         ...this.data.form,
         idCard: parsed.idCard,
         referrerCode: this.data.ref,
+        couponCode: this.data.coupon || undefined,
       });
       if (res.data.needPay) {
         const pay = res.data.wechatPay;

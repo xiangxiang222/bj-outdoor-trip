@@ -1,10 +1,11 @@
 const { request, setAuth, showError } = require("../../utils/request");
 const app = getApp();
 Page({
-  data: { user: null, upcoming: null },
+  data: { user: null, upcoming: null, coupon: null },
   onShow() {
     this.setData({ user: app.globalData.user });
     this.loadUpcoming();
+    this.loadCoupon();
   },
   async loadUpcoming() {
     if (!app.globalData.token) {
@@ -22,6 +23,23 @@ Page({
   goUpcoming() {
     const u = this.data.upcoming;
     if (u && u.scheduleId) wx.navigateTo({ url: "/pages/schedule/schedule?id=" + u.scheduleId });
+  },
+  async loadCoupon() {
+    if (!app.globalData.token) {
+      this.setData({ coupon: null });
+      return;
+    }
+    try {
+      const res = await request("/me/coupons");
+      const rows = (res.data || []).filter((c) => c.status === "unused");
+      this.setData({ coupon: rows[0] || null });
+    } catch {
+      this.setData({ coupon: null });
+    }
+  },
+  goCoupon() {
+    const c = this.data.coupon;
+    if (c && c.campaignCode) wx.navigateTo({ url: "/pages/coupon/coupon?code=" + c.campaignCode });
   },
   goHome() {
     const u = this.data.user;

@@ -39,6 +39,18 @@ const { generateVirtualUsers, setVirtualUsersForSchedule } = require("./services
 const { deleteAccount } = require("./services/account");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
+  createCampaign,
+  updateCampaign,
+  claimCampaign,
+  publicGet,
+  publicSummaryForSchedule,
+  listMine,
+  listAdmin,
+  adminDetail,
+  sharePayload,
+  loadCampaign,
+} = require("./services/coupons");
+const {
   publicStaff,
   getStaff,
   listStaff,
@@ -439,6 +451,33 @@ router.get("/me", authUser, (req, res) => {
   res.json({ ok: true, data: userPublic(user, req) });
 });
 
+router.get("/me/coupons", authUser, (req, res) => {
+  res.json({ ok: true, data: listMine(req.userId) });
+});
+
+router.get("/coupons/:code", optionalUser, (req, res) => {
+  try {
+    const user = req.userId ? db().prepare("SELECT * FROM users WHERE id=?").get(req.userId) : null;
+    res.json({ ok: true, data: publicGet(req.params.code, user, req) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/coupons/:code/claim", authUser, (req, res) => {
+  try {
+    const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+    const claimed = claimCampaign(req.userId, req.params.code);
+    res.json({
+      ok: true,
+      data: publicGet(claimed.campaign.code, user, req),
+      message: claimed.already ? "已领取过该券" : "领取成功",
+    });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
 router.get("/me/trips", authUser, (req, res) => {
   const rows = db()
     .prepare(
@@ -756,6 +795,7 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
       consultGroupQr: await groupQrPayload(groupText),
       myEnrollment,
       fallbackOptions: optionsForSchedule(sch.id),
+      coupon: publicSummaryForSchedule(sch.id, req),
     },
   });
 });
@@ -998,6 +1038,7 @@ router.post("/enroll", authUser, (req, res) => {
       referrerCode,
       autoAlt,
       fallbackScheduleIds,
+      couponCode,
     } = req.body || {};
     const data = enrollUser({
       userId: req.userId,
@@ -1015,6 +1056,7 @@ router.post("/enroll", authUser, (req, res) => {
       referrerCode: referrerCode || req.query.ref,
       autoAlt,
       fallbackScheduleIds,
+      couponCode: couponCode || req.query.coupon,
     });
     res.json({ ok: true, data });
   } catch (e) {
@@ -1721,6 +1763,39 @@ router.get("/admin/schedules/:id/splits", authAdmin, (req, res) => {
 router.post("/admin/schedules/:id/split", authAdmin, (req, res) => {
   try {
     const data = createSplitsForSchedule(req.params.id, { remark: "后台发起分账" });
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.get("/admin/coupons", authAdmin, (req, res) => {
+  res.json({ ok: true, data: listAdmin(req.query.scheduleId || req.query.schedule_id) });
+});
+
+router.post("/admin/coupons", authAdmin, (req, res) => {
+  try {
+    const data = createCampaign(req.body || {});
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.get("/admin/coupons/:id", authAdmin, async (req, res) => {
+  try {
+    const data = adminDetail(req.params.id, req);
+    data.share = await sharePayload(loadCampaign(req.params.id), req);
+    delete data.req;
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.put("/admin/coupons/:id", authAdmin, (req, res) => {
+  try {
+    const data = updateCampaign(req.params.id, req.body || {});
     res.json({ ok: true, data });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
