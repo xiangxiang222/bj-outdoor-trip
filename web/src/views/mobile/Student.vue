@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p class="muted">认证通过后，发团勾选「适用学生价」的团会按学生折扣报价。发团时也可限制仅学生报名（后续开放）。</p>
+    <p class="muted">认证通过后，发团勾选「适用学生价」的团会按学生折扣报价。部分团只对学生或指定高校开放，认证学校需与开团名单对得上。</p>
     <p v-if="store.profile?.isStudent" style="color:var(--leaf)">已认证{{ store.profile.school ? " · " + store.profile.school : "" }}</p>
     <p v-else-if="store.profile?.studentStatus === 'pending'" class="muted">审核中{{ store.profile.school ? " · " + store.profile.school : "" }}</p>
     <label>学校</label>

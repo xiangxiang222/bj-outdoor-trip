@@ -11,6 +11,7 @@
         <div class="row">
           <strong>
             <span class="offer-chip inline" :style="{ background: s.offerColor }">{{ s.offerLabel }}</span>
+            <span v-if="s.eligibility?.label" class="offer-chip inline" style="background:#1d4e89">{{ s.eligibility.label }}</span>
             {{ s.route.title }}
           </strong>
           <span class="tag">{{ s.startDate }}</span>

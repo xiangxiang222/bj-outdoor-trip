@@ -3,6 +3,7 @@ const { attachAssetHost, addPoints } = require("./helpers");
 const { leaderRecruitCopy } = require("./policy");
 const config = require("../config");
 const { ensureReferralCode } = require("./profile");
+const { assertEnrollLimit } = require("./eligibility");
 
 function fail(status, message) {
   const err = new Error(message);
@@ -75,6 +76,7 @@ function applyLeader(scheduleId, userId, { leadRef } = {}) {
   if (sch.status === "cancelled") fail(400, "该拼团已解散");
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
   if (!user || user.deleted_at) fail(401, "请先登录");
+  assertEnrollLimit(user, sch);
   const exist = db.prepare("SELECT id FROM schedule_leaders WHERE schedule_id=? AND user_id=? AND status='assigned'").get(scheduleId, userId);
   if (exist) fail(400, "你已经是本团领队");
   const slots = emptySlots(scheduleId);

@@ -88,7 +88,7 @@
           <strong>{{ s.route?.title }}</strong>
           <span class="tag">{{ s.startDate }}</span>
         </div>
-        <p class="muted" style="margin:6px 0">{{ s.city || s.route?.region }} · {{ s.organizerType === "company" ? s.companyName : s.organizerName }} · 余 {{ s.remain }} 座</p>
+        <p class="muted" style="margin:6px 0">{{ s.city || s.route?.region }} · {{ s.organizerType === "company" ? s.companyName : s.organizerName }} · 余 {{ s.remain }} 座<template v-if="s.eligibility?.label"> · {{ s.eligibility.label }}</template></p>
         <TripPrices :quote="s.quote" compact />
       </div>
     </div>
@@ -104,7 +104,7 @@
       <router-link class="cta-row" to="/m/mine">推荐报名 · 把好团推给朋友，按人数结 5%</router-link>
       <router-link class="cta-row" to="/m/guides">推荐领队 · 首次带队完成后奖励 200 元</router-link>
       <a v-if="!store.profile?.isMember" class="cta-row" @click.prevent="goMember">会员注册 · 年费 99，线路 95 折</a>
-      <router-link v-if="!store.profile?.isStudent && store.profile?.studentStatus !== 'pending'" class="cta-row" to="/m/student">学生注册 · 认证后享学生价</router-link>
+      <router-link v-if="!store.profile?.isStudent && store.profile?.studentStatus !== 'pending'" class="cta-row" to="/m/student">学生注册 · 认证后享学生价，部分团仅限高校</router-link>
       <router-link v-if="store.profile?.studentStatus === 'pending'" class="cta-row muted" to="/m/student">学生认证审核中</router-link>
       <router-link v-if="store.profile?.groupStatus !== 'approved' && store.profile?.groupStatus !== 'pending'" class="cta-row" to="/m/group">团体注册 · 学生会 / 跑团 / 品牌</router-link>
       <router-link v-if="store.profile?.groupStatus === 'pending'" class="cta-row muted" to="/m/group">团体认证审核中</router-link>

@@ -39,6 +39,11 @@
           <span>已报名 {{ s.enrolled }}/{{ s.maxSeats }}，最低成团 {{ s.minGroupSize }}<template v-if="s.waitlistCount"> · 候补 {{ s.waitlistCount }}</template></span>
           <TripPrices :quote="s.quote" compact />
         </div>
+        <p class="muted" v-if="s.eligibility?.enabled">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? " 已认证学生可报" : "" }}</p>
+        <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" class="muted" style="color:var(--clay)">
+          {{ s.eligibility.reason }}
+          <router-link to="/m/student">去学生认证</router-link>
+        </p>
         <p class="muted" v-if="s.reviewStatus === 'pending'" style="color:#c77d3a">本团正在审核，通过后才会出现在首页，暂不能报名。</p>
         <p class="muted" v-else-if="s.reviewStatus === 'rejected'" style="color:var(--clay)">本团未通过审核。</p>
         <p class="muted" v-if="s.status === 'cancelled'" style="color:var(--clay)">

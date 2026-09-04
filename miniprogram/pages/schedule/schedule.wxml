@@ -24,6 +24,8 @@
         <text class="price">¥{{s.quote.price}}</text>
       </view>
     </view>
+    <view class="muted" wx:if="{{s.eligibility.enabled}}">{{s.eligibility.label}}{{s.eligibility.schools.length ? ' 已认证学生可报' : ''}}</view>
+    <view class="muted" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" style="color:#bc4749">{{s.eligibility.reason}}</view>
     <view class="muted" wx:if="{{s.reviewStatus=='pending'}}" style="color:#c77d3a">本团正在审核，通过后才会出现在首页。</view>
     <view class="muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">本团已解散。理由：{{s.cancelReason}}</view>
     <view class="card" wx:if="{{s.coupon}}" bindtap="goCoupon">

@@ -113,6 +113,10 @@ Page({
       wx.showToast({ title: "该拼团已解散", icon: "none" });
       return;
     }
+    if (this.data.s && this.data.s.eligibility && this.data.s.eligibility.enabled && !this.data.s.eligibility.canEnroll) {
+      wx.showModal({ title: "暂不能报名", content: this.data.s.eligibility.reason || "请先完成学生认证", showCancel: false });
+      return;
+    }
     if (!this.data.form.travelerName || !this.data.form.travelerPhone) {
       wx.showToast({ title: "请填写姓名和手机", icon: "none" });
       return;

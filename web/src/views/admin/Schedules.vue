@@ -24,6 +24,9 @@
       <el-table-column label="车型" width="120">
         <template #default="{ row }">{{ row.bus?.name }}</template>
       </el-table-column>
+      <el-table-column label="报名限制" width="140">
+        <template #default="{ row }">{{ row.eligibility?.label || "—" }}</template>
+      </el-table-column>
       <el-table-column label="人数" width="130">
         <template #default="{ row }">
           {{ row.enrolled }}/{{ row.maxSeats }}
@@ -47,6 +50,7 @@
           <el-button v-if="canOps" size="small" @click="cost(row)">成本</el-button>
           <el-button v-if="canField" size="small" @click="openTrip(row)">车辆座位</el-button>
           <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openVirtual(row)">虚拟</el-button>
+          <el-button v-if="canOps" size="small" @click="openLimit(row)">限制</el-button>
           <el-button size="small" @click="demo(row)">画像</el-button>
           <el-button v-if="canOps" size="small" type="success" :disabled="row.status === 'cancelled'" @click="settle(row)">结算</el-button>
           <el-button v-if="canOps" size="small" @click="openSplit(row)">分账</el-button>
@@ -109,8 +113,15 @@
             <el-option label="特惠团" value="deal" />
             <el-option label="免费团" value="free" />
             <el-option label="全家团" value="family" />
+            <el-option label="组合团" value="combo" />
             <el-option label="全价团" value="full" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="仅学生">
+          <el-switch v-model="neu.studentOnly" />
+        </el-form-item>
+        <el-form-item label="限定高校">
+          <el-input v-model="neu.schools" placeholder="逗号分隔，如 北京大学,清华大学" />
         </el-form-item>
         <el-form-item label="虚拟报名">
           <el-input-number v-model="neu.virtualCount" :min="0" :max="80" />
@@ -170,6 +181,21 @@
       </template>
     </el-dialog>
 
+    <el-dialog v-model="showLimit" title="报名限制" width="480px">
+      <p v-if="cur">「{{ cur.route?.title }} {{ cur.startDate }}」可限制仅学生，或只让名单里的高校报名。</p>
+      <el-form label-width="100px">
+        <el-form-item label="仅学生">
+          <el-switch v-model="limitForm.studentOnly" />
+        </el-form-item>
+        <el-form-item label="限定高校">
+          <el-input v-model="limitForm.schools" type="textarea" :rows="2" placeholder="逗号分隔，如 北京大学,清华大学。留空则不限学校。" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showLimit = false">取消</el-button>
+        <el-button type="success" :loading="savingLimit" @click="saveLimit">保存</el-button>
+      </template>
+    </el-dialog>
     <el-dialog v-model="showVirtual" title="本团虚拟报名" width="480px">
       <p v-if="cur">
         「{{ cur.route?.title }} {{ cur.startDate }}」当前真实 {{ cur.realEnrolled || 0 }} 人、虚拟 {{ cur.virtualEnrolled || 0 }} 人、座位 {{ cur.maxSeats }}。
@@ -223,6 +249,9 @@ const showDissolve = ref(false);
 const showSplit = ref(false);
 const showGuide = ref(false);
 const showTrip = ref(false);
+const showLimit = ref(false);
+const savingLimit = ref(false);
+const limitForm = ref({ studentOnly: false, schools: "" });
 const showVirtual = ref(false);
 const virtualCount = ref(0);
 const savingVirtual = ref(false);
@@ -247,8 +276,34 @@ const neu = ref({
   notes: "",
   companyName: "",
   offerType: "full",
+  studentOnly: false,
+  schools: "",
   virtualCount: 0,
 });
+function openLimit(row) {
+  cur.value = row;
+  limitForm.value = {
+    studentOnly: !!row.eligibility?.studentOnly,
+    schools: (row.eligibility?.schools || []).join("，"),
+  };
+  showLimit.value = true;
+}
+async function saveLimit() {
+  savingLimit.value = true;
+  try {
+    await http.put(`/admin/schedules/${cur.value.id}/limit`, {
+      studentOnly: limitForm.value.studentOnly,
+      schools: limitForm.value.schools,
+    });
+    showLimit.value = false;
+    ElMessage.success("报名限制已更新");
+    await load();
+  } catch (e) {
+    ElMessage.error(e.message || "保存失败");
+  } finally {
+    savingLimit.value = false;
+  }
+}
 
 async function openGuide(row) {
   if (!row.guide?.id) return;

@@ -58,6 +58,8 @@ Page({
       meetupTime: "07:30",
       description: "",
       comboRule: { require: "student_or_group", school: "" },
+      studentOnly: false,
+      schools: "",
     },
   },
   onLoad(q) {
@@ -112,6 +114,9 @@ Page({
   },
   setComboSchool(e) {
     this.setData({ "form.comboRule.school": e.detail.value });
+  },
+  toggleStudentOnly() {
+    this.setData({ "form.studentOnly": !this.data.form.studentOnly });
   },
   setDate(e) {
     const i = Number(e.detail.value);

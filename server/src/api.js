@@ -41,6 +41,7 @@ const { drawPre, drawPost, lotteryState } = require("./services/lottery");
 const { completeTrip, afterTripState } = require("./services/aftertrip");
 const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
+const { parseEnrollLimit, eligibilityView, applyEnrollLimit } = require("./services/eligibility");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
   createCampaign,
@@ -234,6 +235,7 @@ function scheduleView(sch, req) {
   const realLive = realEnrolledCount(sch.id);
   const virtualLive = virtualEnrolledCount(sch.id);
   const leaders = leadersOf(sch.id, req);
+  const viewer = req.userId ? db().prepare("SELECT * FROM users WHERE id=?").get(req.userId) : null;
   return {
     id: sch.id,
     routeId: sch.route_id,
@@ -295,7 +297,8 @@ function scheduleView(sch, req) {
     offerColor: quote.offerColor || offerMeta(sch.offer_type).color,
     playTags: resolvePlayTags(sch, mappedRoute, req),
     reviewStatus: sch.review_status || "approved",
-    combo: comboView(sch, req.userId ? db().prepare("SELECT * FROM users WHERE id=?").get(req.userId) : null),
+    combo: comboView(sch, viewer),
+    eligibility: eligibilityView(sch, viewer),
   };
 }
 
@@ -318,11 +321,25 @@ function applyScheduleExtras(id, body, route) {
   const memberOn = flagOn(body.memberPriceOn ?? body.member_price_on) ? 1 : 0;
   const studentOn = flagOn(body.studentPriceOn ?? body.student_price_on) ? 1 : 0;
   const comboRule = JSON.stringify(parseComboRule(body.comboRule || body.combo_rule || {}));
+  const limit = parseEnrollLimit(body);
   db()
     .prepare(
-      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=? WHERE id=?"
+      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=?, student_only=?, schools_json=? WHERE id=?"
     )
-    .run(offerType, offerPrice, reviewStatus, JSON.stringify(playTagIds), city, channel, memberOn, studentOn, comboRule, id);
+    .run(
+      offerType,
+      offerPrice,
+      reviewStatus,
+      JSON.stringify(playTagIds),
+      city,
+      channel,
+      memberOn,
+      studentOn,
+      comboRule,
+      limit.studentOnly ? 1 : 0,
+      JSON.stringify(limit.schools),
+      id
+    );
 }
 
 router.get("/meta", (req, res) => {
@@ -1131,6 +1148,7 @@ router.post("/trips", authUser, (req, res) => {
   applyScheduleExtras(
     schInfo.lastInsertRowid,
     {
+      ...b,
       offerType: b.offerType,
       offerPrice: b.offerType === "free" ? 0 : b.offerPrice,
       playTagIds,
@@ -1819,6 +1837,13 @@ router.post("/admin/schedules/:id/review", authAdmin, requireCap("ops"), (req, r
 });
 
 router.post("/admin/schedules/:id/dissolve", authAdmin, requireCap("ops"), dissolveHandler("admin"));
+
+router.put("/admin/schedules/:id/limit", authAdmin, requireCap("ops"), (req, res) => {
+  const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
+  if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
+  applyEnrollLimit(sch.id, req.body || {});
+  res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id), req) });
+});
 
 router.put("/admin/schedules/:id/cost", authAdmin, requireCap("ops"), (req, res) => {
   const b = req.body || {};

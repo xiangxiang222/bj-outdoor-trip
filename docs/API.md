@@ -31,7 +31,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/schedules` | Query：`routeId` `organizerType` `city` `tag` `offerType` `month` `date`（不含已解散、待审核）。不含 `virtualEnrolled` |
 | GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条） |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
-| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`myEnrollment`、本团群二维码、候选团选项 |
+| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`myEnrollment`、本团群二维码、候选团选项、`eligibility`（仅学生/高校限制） |
 | GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
 | POST | `/schedules/:id/seats/pick` | 已报名用户改座 |
 | POST | `/schedules/:id/leaders/apply` | 报名领队（最多两位） |
@@ -69,8 +69,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 
 | 方法 | 路径 | 鉴权 | 说明 |
 | --- | --- | --- | --- |
-| POST | `/schedules` | 用户 | 基于已有线路开团。可带 `offerType` `playTagIds` |
-| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。提交后 `reviewStatus=pending`，审核通过才上首页 |
+| POST | `/schedules` | 用户 | 基于已有线路开团。可带 `offerType` `playTagIds` `studentOnly` `schools` |
+| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `studentOnly` `schools` `comboRule`。提交后 `reviewStatus=pending`，审核通过才上首页 |
 | POST | `/upload` | 用户 | 发团封面。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
 | POST | `/enroll` | 用户 | 报名占座。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds`。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补 `held`，占座成功才 `used`。须紧急联系人、健康声明、风险确认 |
@@ -171,6 +171,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | GET | `/admin/schedules` | 含成本、收入、利润、导游 |
 | POST | `/admin/schedules/dissolve-all` | 解散全部进行中的团。body：`reason` |
 | POST | `/admin/schedules/:id/dissolve` | 解散单团。body：`reason` |
+| PUT | `/admin/schedules/:id/limit` | 报名限制。`studentOnly`、`schools`（数组或逗号分隔）。填高校则自动仅学生 |
 | PUT | `/admin/schedules/:id/cost` | `transport` `ticket` `hotel` `meal` `guide` `other` |
 | PUT | `/admin/schedules/:id/trip` | `plateNo` `busPhoto` `consultGroup` |
 | POST | `/admin/schedules/:id/seats/lock` | 锁定空座位 |

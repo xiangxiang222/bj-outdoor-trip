@@ -57,6 +57,10 @@
     <input class="input" type="number" v-model.number="form.originPrice" />
     <label class="check-row"><input type="checkbox" v-model="form.memberPriceOn" /> 适用会员价</label>
     <label class="check-row"><input type="checkbox" v-model="form.studentPriceOn" /> 适用学生价</label>
+    <label class="check-row"><input type="checkbox" v-model="form.studentOnly" /> 仅已认证学生可报名</label>
+    <label>限定高校（可空，逗号分隔）</label>
+    <input class="input" v-model="form.schools" placeholder="例如：北京大学,清华大学" />
+    <p class="muted">填了高校后，只有认证学校匹配的学生能报，未认证或外校会被拦住。</p>
     <label v-if="form.offerType !== 'free'">现价（可空，早鸟/特惠将按折扣算）</label>
     <input v-if="form.offerType !== 'free'" class="input" type="number" v-model.number="form.offerPrice" />
     <label>出发日期</label>
@@ -121,6 +125,8 @@ const form = ref({
   offerPrice: null,
   memberPriceOn: true,
   studentPriceOn: true,
+  studentOnly: false,
+  schools: "",
   startDate: route.query.date || "",
   organizerType: "individual",
   companyName: store.profile?.companyName || "",

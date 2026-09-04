@@ -17,6 +17,7 @@ const {
 } = require("./coupons");
 const config = require("../config");
 const { assertComboEnroll, parseComboWant } = require("./combo");
+const { assertEnrollLimit } = require("./eligibility");
 const { resolveSupplies } = require("./supplies");
 
 function fail(status, message) {
@@ -62,6 +63,7 @@ function enrollUser({
   if (!sch) fail(400, "排期不存在");
   if (sch.status === "cancelled") fail(400, "该拼团已解散，无法报名");
   if ((sch.review_status || "approved") !== "approved") fail(400, "该团正在审核或未通过，暂不能报名");
+  assertEnrollLimit(user, sch);
   assertComboEnroll(user, sch);
   const combo = sch.offer_type === "combo" ? parseComboWant(comboWant) : null;
   if (!travelerName || !travelerPhone) fail(400, "请填写出行人姓名和手机");

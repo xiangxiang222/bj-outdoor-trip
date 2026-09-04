@@ -10,6 +10,11 @@
       <TripPrices v-if="s.quote" :quote="s.quote" />
       <p class="price">你应付 ¥{{ quote }} / 人</p>
       <p v-if="couponHint" class="muted" style="color:var(--leaf)">{{ couponHint }}</p>
+      <p v-if="s.eligibility?.enabled" class="muted">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? " 已认证学生" : "" }}</p>
+      <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" style="color:var(--clay)">
+        {{ s.eligibility.reason }}
+        <router-link to="/m/student">去学生认证</router-link>
+      </p>
     </div></div>
 
     <label>出行人姓名</label>
@@ -124,8 +129,8 @@
       </label>
     </div></div>
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
-    <button v-if="s.status !== 'cancelled'" class="btn block" style="margin-top:16px" :disabled="loading" @click="submit">
-      {{ s.remain <= 0 ? "加入候补" : "加入报名（暂不付款）" }}
+    <button v-if="s.status !== 'cancelled'" class="btn block" style="margin-top:16px" :disabled="loading || (s.eligibility?.enabled && !s.eligibility.canEnroll)" @click="submit">
+      {{ s.eligibility?.enabled && !s.eligibility.canEnroll ? "暂不符合报名条件" : s.remain <= 0 ? "加入候补" : "加入报名（暂不付款）" }}
     </button>
   </div>
 </template>
@@ -259,6 +264,10 @@ async function submit() {
   err.value = "";
   if (s.value.status === "cancelled") {
     err.value = "该拼团已解散，无法报名";
+    return;
+  }
+  if (s.value.eligibility?.enabled && !s.value.eligibility.canEnroll) {
+    err.value = s.value.eligibility.reason || "暂不符合本团报名条件";
     return;
   }
   if (!form.value.travelerName || !form.value.travelerPhone) {
