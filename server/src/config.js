@@ -43,6 +43,13 @@ module.exports = {
       { code: "plus", name: "升级高额险", fee: 48, cover: "意外身故/伤残 50 万，医疗 5 万" },
     ],
   },
+  supplies: {
+    items: [
+      { code: "nongfu", name: "农夫山泉 550ml", fee: 2, hint: "车上现结也可，报名先加上方便清点" },
+      { code: "bread", name: "面包一份", fee: 8, hint: "简单垫垫肚子" },
+      { code: "bar", name: "能量棒", fee: 6, hint: "徒步中补一口" },
+    ],
+  },
   split: {
     platformRate: 0.08,
   },

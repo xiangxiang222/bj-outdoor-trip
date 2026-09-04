@@ -339,6 +339,7 @@ router.get("/meta", (req, res) => {
       memberCopy: "限时开通会员 年费 99元 赠送一次100以内的团 线路享受额外95折",
       points: config.points,
       insurance: config.insurance.plans,
+      supplies: config.supplies.items,
       days: [1, 2, 3, 5],
       cancelPolicy,
       waiverText,
@@ -1163,6 +1164,7 @@ router.post("/enroll", authUser, (req, res) => {
       fallbackScheduleIds,
       couponCode,
       joinMode,
+      supplies,
       comboWant,
       wantGender,
       wantSchool,
@@ -1186,6 +1188,7 @@ router.post("/enroll", authUser, (req, res) => {
       fallbackScheduleIds,
       couponCode: couponCode || req.query.coupon,
       joinMode,
+      supplies,
       comboWant: comboWant || { wantGender, wantSchool, note: comboNote },
     });
     res.json({ ok: true, data });
@@ -1231,7 +1234,7 @@ router.post("/pay/company-settle", authUser, (req, res) => {
   const quote = quoteForSchedule(sch, enrolledCount(sch.id), null);
   let total = 0;
   for (const en of pending) {
-    const amount = quote.originPrice + Number(en.insurance_fee || 0);
+    const amount = quote.originPrice + Number(en.insurance_fee || 0) + Number(en.supplies_fee || 0);
     total += amount;
     db().prepare("UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=?").run(amount, en.id);
     db().prepare("INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark) VALUES (?,?,?,?,?,?,?,?)").run(
@@ -1880,7 +1883,7 @@ router.post("/admin/schedules/:id/settle", authAdmin, (req, res) => {
   const pending = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending' AND status='joined'").all(sch.id);
   const quote = quoteForSchedule(sch, enrolledCount(sch.id), null);
   for (const en of pending) {
-    const amount = quote.originPrice + Number(en.insurance_fee || 0);
+    const amount = quote.originPrice + Number(en.insurance_fee || 0) + Number(en.supplies_fee || 0);
     db().prepare("UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=?").run(amount, en.id);
   }
   maybeMatchGuide(sch.id);

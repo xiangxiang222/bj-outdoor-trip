@@ -30,6 +30,20 @@
     </view>
   </view>
 </view>
+<view class="card" wx:if="{{supplies.length}}">
+  <view class="pad">车上加购（费用计入应付）</view>
+  <view class="pad row" wx:for="{{supplies}}" wx:key="code">
+    <view>
+      <view>{{item.name}} ¥{{item.fee}}</view>
+      <view class="muted">{{item.hint}}</view>
+    </view>
+    <view>
+      <text class="btn ghost" catchtap="decSupply" data-code="{{item.code}}">−</text>
+      {{item.qty}}
+      <text class="btn ghost" catchtap="incSupply" data-code="{{item.code}}">+</text>
+    </view>
+  </view>
+</view>
 <view class="card" wx:if="{{plans.length}}">
   <view class="pad">出行保险</view>
   <view class="pad" wx:for="{{plans}}" wx:key="code" bindtap="pickIns" data-code="{{item.code}}">

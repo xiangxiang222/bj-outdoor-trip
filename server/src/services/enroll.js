@@ -17,6 +17,7 @@ const {
 } = require("./coupons");
 const config = require("../config");
 const { assertComboEnroll, parseComboWant } = require("./combo");
+const { resolveSupplies } = require("./supplies");
 
 function fail(status, message) {
   const err = new Error(message);
@@ -52,6 +53,7 @@ function enrollUser({
   couponCode,
   joinMode,
   comboWant,
+  supplies,
 }) {
   const db = getDb();
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
@@ -124,6 +126,7 @@ function enrollUser({
           pointsConfig: config.points,
         });
   const insurance = pickInsurance(insuranceCode);
+  const supply = resolveSupplies(supplies);
   let tripPay = payable.payAmount;
   let giftApplied = false;
   const memberTripPay = Number(quote.price || 0);
@@ -140,14 +143,14 @@ function enrollUser({
     db.prepare("UPDATE users SET member_gift_left=member_gift_left-1 WHERE id=?").run(user.id);
   }
   const couponApplied = !!(couponPack && couponDecision.applyCoupon && !giftApplied);
-  const payAmount = company ? 0 : tripPay + insurance.fee;
+  const payAmount = company ? 0 : tripPay + insurance.fee + supply.fee;
   const payStatus = company ? "company_pending" : payAmount === 0 ? "paid" : "unpaid";
   const status = waitlisted ? "waitlist" : "joined";
   const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
   const info = db
     .prepare(
-      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,waitlisted_at,seat_no,insurance_code,insurance_fee,emergency_name,emergency_phone,waiver_accepted_at,health_declared_at,referrer_user_id,auto_alt,combo_json)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,waitlisted_at,seat_no,insurance_code,insurance_fee,emergency_name,emergency_phone,waiver_accepted_at,health_declared_at,referrer_user_id,auto_alt,combo_json,supplies_json,supplies_fee)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       sch.id,
@@ -175,7 +178,9 @@ function enrollUser({
       now,
       referrerId,
       autoAlt ? 1 : 0,
-      combo ? JSON.stringify(combo) : null
+      combo ? JSON.stringify(combo) : null,
+      supply.items.length ? JSON.stringify(supply.items) : null,
+      supply.fee
     );
   const enrollmentId = Number(info.lastInsertRowid);
   if (couponApplied) {
@@ -202,10 +207,12 @@ function enrollUser({
     waitlistPosition: position,
     seatNo: seat,
     insurance,
+    supplies: supply,
     quote: {
       ...payable,
       payAmount,
       insuranceFee: insurance.fee,
+      suppliesFee: supply.fee,
       giftApplied,
       originPrice: quote.originPrice,
       tripPrice: quote.tripPrice,

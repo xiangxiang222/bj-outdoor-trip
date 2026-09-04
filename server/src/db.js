@@ -353,6 +353,8 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "student_price_on", "INTEGER DEFAULT 1");
   addColumnIfMissing(db, "schedules", "combo_rule_json", "TEXT DEFAULT '{}'");
   addColumnIfMissing(db, "enrollments", "combo_json", "TEXT");
+  addColumnIfMissing(db, "enrollments", "supplies_json", "TEXT");
+  addColumnIfMissing(db, "enrollments", "supplies_fee", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "users", "is_student", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "users", "student_status", "TEXT");
   addColumnIfMissing(db, "users", "school", "TEXT");

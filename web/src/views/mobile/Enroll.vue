@@ -71,6 +71,22 @@
     <input class="input" v-model="form.emergencyName" placeholder="家人或同伴姓名" />
     <label>紧急联系人手机</label>
     <input class="input" v-model="form.emergencyPhone" maxlength="11" placeholder="不能与出行人同一号码" />
+    <div v-if="supplyItems.length" class="card"><div class="pad">
+      <div class="h2" style="margin-top:0">车上加购</div>
+      <p class="muted">上车再买也行。先加上方便领队清点。费用计入应付。</p>
+      <div v-for="p in supplyItems" :key="p.code" class="row" style="margin:8px 0">
+        <span>
+          <strong>{{ p.name }}</strong>
+          <em> ¥{{ p.fee }}</em>
+          <small class="muted"> {{ p.hint }}</small>
+        </span>
+        <span>
+          <button class="btn ghost" type="button" @click="setQty(p.code, -1)">−</button>
+          {{ supplyQty[p.code] || 0 }}
+          <button class="btn ghost" type="button" @click="setQty(p.code, 1)">+</button>
+        </span>
+      </div>
+    </div></div>
     <div v-if="plans.length" class="card"><div class="pad">
       <div class="h2" style="margin-top:0">出行保险</div>
       <label v-for="p in plans" :key="p.code" class="ins-opt">
@@ -155,6 +171,12 @@ const form = ref({
 const fallbackOptions = ref([]);
 const waiver = ref("");
 const cancelSummary = ref("出发日前可取消；出发当天不可取消。解散则报名作废。");
+const supplyItems = computed(() => store.meta?.supplies || []);
+const supplyQty = ref({});
+function setQty(code, delta) {
+  const n = Math.min(10, Math.max(0, Number(supplyQty.value[code] || 0) + delta));
+  supplyQty.value = { ...supplyQty.value, [code]: n };
+}
 const plans = computed(() =>
   store.meta?.insurance?.length
     ? store.meta.insurance
@@ -272,6 +294,9 @@ async function submit() {
       seatNo: form.value.seatNo || undefined,
       referrerCode: route.query.ref,
       couponCode: couponCode.value || undefined,
+      supplies: supplyItems.value
+        .map((p) => ({ code: p.code, qty: Number(supplyQty.value[p.code] || 0) }))
+        .filter((p) => p.qty > 0),
     });
     router.push("/m/schedule/" + route.params.id + "?joined=1");
   } catch (e) {

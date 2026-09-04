@@ -15,6 +15,7 @@ Page({
     genderIndex: 0,
     seatRows: [],
     plans: [],
+    supplies: [],
     waiver: "",
     cancelSummary: "出发日前可取消；出发当天不可取消。",
   },
@@ -35,6 +36,7 @@ Page({
       const data = (r && r.data) || {};
       this.setData({
         plans: data.insurance || [],
+        supplies: (data.supplies || []).map((p) => Object.assign({}, p, { qty: 0 })),
         waiver: data.waiverText || "",
         cancelSummary: (data.cancelPolicy && data.cancelPolicy.summary) || this.data.cancelSummary,
       });
@@ -49,6 +51,20 @@ Page({
       });
       this.setData({ seatRows: groups });
     }).catch(() => {});
+  },
+  incSupply(e) {
+    const code = e.currentTarget.dataset.code;
+    const supplies = this.data.supplies.map((p) =>
+      p.code === code ? Object.assign({}, p, { qty: Math.min(10, (p.qty || 0) + 1) }) : p
+    );
+    this.setData({ supplies });
+  },
+  decSupply(e) {
+    const code = e.currentTarget.dataset.code;
+    const supplies = this.data.supplies.map((p) =>
+      p.code === code ? Object.assign({}, p, { qty: Math.max(0, (p.qty || 0) - 1) }) : p
+    );
+    this.setData({ supplies });
   },
   pickIns(e) {
     this.setData({ "form.insuranceCode": e.currentTarget.dataset.code });
@@ -129,6 +145,7 @@ Page({
         idCard: parsed.idCard,
         referrerCode: this.data.ref,
         couponCode: this.data.coupon || undefined,
+        supplies: (this.data.supplies || []).filter((p) => p.qty > 0).map((p) => ({ code: p.code, qty: p.qty })),
       });
       if (res.data.needPay) {
         const pay = res.data.wechatPay;
