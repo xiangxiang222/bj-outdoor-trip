@@ -9,7 +9,7 @@
     <label>匹配已有线路</label>
     <input class="input" v-model="keyword" placeholder="输入关键词，点下方选用" @input="searchRoutes" />
     <div class="chips" v-if="hits.length">
-      <div class="chip" v-for="r in hits" :key="r.id" @click="useRoute(r)">{{ r.title }}</div>
+      <div class="chip" v-for="r in hits" :key="r.id" @click="applyMatchedRoute(r)">{{ r.title }}</div>
     </div>
     <label>线路标题</label>
     <input class="input" v-model="form.title" placeholder="例如：慕田峪长城一日" />
@@ -141,7 +141,7 @@ async function searchRoutes() {
     hits.value = [];
   }
 }
-function useRoute(r) {
+function applyMatchedRoute(r) {
   form.value.title = r.title || form.value.title;
   form.value.subtitle = r.subtitle || "";
   form.value.cover = r.cover || "";
