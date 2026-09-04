@@ -13,7 +13,7 @@ describe("homepage and publish review", () => {
   it("returns home payload with cities, tags, festivals and durations", async () => {
     const res = await agent.get("/api/home").expect(200);
     const d = res.body.data;
-    assert.equal(d.brand.kicker, "北野行");
+    assert.equal(d.brand.kicker, "同行者众");
     assert.ok(d.brand.slides.length >= 1);
     assert.ok(d.brand.slides.every((s) => s.routeId && s.url && s.title && s.code));
     assert.equal(d.brand.gallery.length, d.brand.slides.length);
@@ -26,6 +26,35 @@ describe("homepage and publish review", () => {
     assert.equal(d.durations.length, 4);
     assert.equal(d.durations[3].key, "multi");
     assert.ok(d.offers.some((o) => o.key === "early"));
+    assert.ok(d.offers.some((o) => o.key === "family"));
+  });
+
+  it("accepts student apply, feedback and photographer enroll waive", async () => {
+    const token = await loginUser(agent);
+    const stu = await agent.post("/api/me/student").set(auth(token)).send({ school: "北京大学" }).expect(200);
+    assert.equal(stu.body.data.studentStatus, "pending");
+    await agent.post("/api/feedback").set(auth(token)).send({ kind: "suggest", content: "希望增加夜观星空" }).expect(200);
+    const admin = await loginAdmin(agent);
+    await agent.post(`/api/admin/users/${seed.userId}/verify`).set(auth(admin)).send({ kind: "student", action: "approve" }).expect(200);
+    const me = await agent.get("/api/me").set(auth(token)).expect(200);
+    assert.equal(me.body.data.isStudent, true);
+    const enrolled = await agent
+      .post("/api/enroll")
+      .set(auth(token))
+      .send({
+        scheduleId: seed.individualScheduleId,
+        travelerName: "林北野",
+        travelerPhone: "13800138000",
+        idCard: "110101199205121219",
+        emergencyName: "紧急",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
+        joinMode: "photographer",
+      })
+      .expect(200);
+    assert.equal(enrolled.body.data.payStatus, "paid");
+    assert.equal(enrolled.body.data.quote.payAmount, 0);
   });
 
   it("lists play tags publicly", async () => {

@@ -7,7 +7,8 @@
       <p v-else-if="s.remain <= 0">本车已满（{{ s.enrolled }}/{{ s.maxSeats }}）。仍可加入候补，有人取消后按顺序递补。</p>
       <p v-else-if="s.organizerType === 'company'">公司团：报名后挂账，由 {{ s.companyName || "公司" }} 统一支付。</p>
       <p v-else class="muted">个人拼团先报名占座，费用待出行前支付。早报名早选座。</p>
-      <p class="price">当前档位 ¥{{ quote }} / 人</p>
+      <TripPrices v-if="s.quote" :quote="s.quote" />
+      <p class="price">你应付 ¥{{ quote }} / 人</p>
       <p v-if="couponHint" class="muted" style="color:var(--leaf)">{{ couponHint }}</p>
     </div></div>
 
@@ -23,6 +24,13 @@
       <option value="adult">成人</option>
       <option value="child">儿童</option>
     </select>
+    <label>报名身份</label>
+    <select class="select" v-model="form.joinMode">
+      <option value="chain">普通报名</option>
+      <option value="assistant">辅助领队（免个人团费）</option>
+      <option value="photographer">摄影师（免个人团费）</option>
+    </select>
+    <p class="muted"><router-link to="/m/official#rules">辅助领队 / 摄影师职责说明</router-link></p>
     <div v-if="s.remain > 0 && seatRows.length" class="card"><div class="pad">
       <div class="h2" style="margin-top:0">选座位</div>
       <p class="muted">车头朝上，中间为过道。不选则自动分配空位。</p>
@@ -97,6 +105,7 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import { parseIdCard } from "@/utils/idcard";
+import TripPrices from "@/components/TripPrices.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -114,6 +123,7 @@ const form = ref({
   travelerPhone: store.profile?.phone || "",
   idCard: "",
   travelerType: "adult",
+  joinMode: "chain",
   seatNo: "",
   insuranceCode: "outdoor",
   emergencyName: "",

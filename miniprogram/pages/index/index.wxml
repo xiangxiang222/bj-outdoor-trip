@@ -1,150 +1,78 @@
 <swiper class="brand-hero" autoplay circular interval="4000">
-  <swiper-item wx:for="{{home.brand.slides}}" wx:key="routeId" bindtap="goRoute" data-id="{{item.routeId}}">
+  <swiper-item wx:for="{{home.brand.slides}}" wx:key="title">
     <image class="brand-img" src="{{item.url}}" mode="aspectFill" />
   </swiper-item>
 </swiper>
 <view class="brand-cap">
-  <view class="home-kicker">{{home.brand.kicker}}</view>
-  <view class="home-lead">{{home.brand.lead}}</view>
+  <view class="home-kicker">{{home.brand.kicker || '同行者众'}}</view>
+  <view class="home-lead">{{home.brand.lead || '在山野，遇见爱'}}</view>
 </view>
 
+<view class="pad" style="padding-bottom:0"><view class="title">去哪儿玩？</view></view>
 <scroll-view scroll-x class="city-bar">
   <view class="chip {{city==item.name?'on':''}}" wx:for="{{home.cities}}" wx:key="name" bindtap="setCity" data-name="{{item.name}}">{{item.name}}</view>
 </scroll-view>
-<swiper wx:if="{{citySlides.length}}" class="city-swipe" autoplay circular interval="4000">
-  <swiper-item wx:for="{{citySlides}}" wx:key="routeId" bindtap="goRoute" data-id="{{item.routeId}}">
-    <image class="brand-img" src="{{item.url}}" mode="aspectFill" />
-    <view class="swipe-cap">{{item.title}}</view>
-  </swiper-item>
-</swiper>
 
-<view class="card" wx:if="{{upcoming}}" bindtap="goUpcoming">
-  <view class="pad">
-    <view class="muted">即将出行</view>
-    <view class="title">{{upcoming.title}}</view>
-    <view class="muted">{{upcoming.startDate}} · {{upcoming.meetupPoint}} {{upcoming.meetupTime}}</view>
-  </view>
-</view>
-
-<view class="pad" style="padding-bottom:0"><view class="title">出发日历</view><view class="muted">最近十五日，没团可点发团</view></view>
-<view class="cal">
-  <view class="cal-day {{item.count ? 'on' : ''}}" wx:for="{{calendar}}" wx:key="date" bindtap="goDay" data-date="{{item.date}}" data-count="{{item.count}}">
+<view class="pad" style="padding-bottom:0"><view class="title">哪天玩？</view></view>
+<view class="fold" bindtap="toggleFold" data-key="days">最近十五天 {{fold.days ? '收起' : '展开'}}</view>
+<view class="cal" wx:if="{{fold.days}}">
+  <view class="cal-day {{date==item.date?'on':''}}" wx:for="{{calendar}}" wx:key="date" bindtap="setDate" data-date="{{item.date}}">
     <view class="cal-n">{{item.label}}</view>
-    <view class="muted">{{item.count ? item.count + '团' : '发团'}}</view>
+    <view class="muted">{{item.count ? item.count + '团' : '—'}}</view>
   </view>
 </view>
+<view class="fold" bindtap="toggleFold" data-key="month">按月选择 {{fold.month ? '收起' : '展开'}}</view>
+<block wx:if="{{fold.month}}">
+  <view class="chips">
+    <view class="chip {{monthKey==item.key?'on':''}}" wx:for="{{home.months}}" wx:key="key" bindtap="pickMonth" data-key="{{item.key}}">{{item.label}}</view>
+  </view>
+  <view class="month-grid">
+    <view class="month-cell {{date==item.date?'on':''}}" wx:for="{{monthDays}}" wx:key="date" bindtap="setDate" data-date="{{item.date}}">{{item.label}}</view>
+  </view>
+</block>
+<view class="fold" bindtap="toggleFold" data-key="fest">按节日 {{fold.fest ? '收起' : '展开'}}</view>
+<block wx:if="{{fold.fest}}">
+  <view class="chips">
+    <view class="chip {{festivalKey==item.key?'on':''}}" wx:for="{{home.festivals}}" wx:key="key" bindtap="setFestival" data-key="{{item.key}}">{{item.name}}</view>
+  </view>
+</block>
 
-<view class="pad" style="padding-bottom:0"><view class="title">按月</view></view>
+<view class="pad" style="padding-bottom:0"><view class="title">想怎么玩？</view></view>
 <view class="chips">
-  <view class="chip {{monthKey==item.key?'on':''}}" wx:for="{{home.months}}" wx:key="key" bindtap="pickMonth" data-key="{{item.key}}">{{item.label}}</view>
-</view>
-<view class="month-grid">
-  <view class="month-cell {{item.hasTrip?'on':''}}" wx:for="{{monthDays}}" wx:key="date" bindtap="goDay" data-date="{{item.date}}" data-count="{{item.count}}">
-    {{item.label}}
-    <view class="muted">{{item.hasTrip ? item.count + '团' : '发团'}}</view>
-  </view>
+  <view class="chip {{tag==item.name?'on':''}}" wx:for="{{home.tags}}" wx:key="id" bindtap="setTag" data-name="{{item.name}}">{{item.name}}</view>
 </view>
 
-<view class="pad" style="padding-bottom:0"><view class="title">按节日</view></view>
-<view class="chips">
-  <view class="chip {{festivalKey==item.key?'on':''}}" wx:for="{{home.festivals}}" wx:key="key" bindtap="setFestival" data-key="{{item.key}}">{{item.name}}</view>
-</view>
-<view class="chips" wx:if="{{festivalDates.length}}">
-  <view class="chip" wx:for="{{festivalDates}}" wx:key="date" bindtap="goFestivalDay" data-date="{{item.date}}">{{item.label}}</view>
+<view class="picked" wx:if="{{picked.length}}">
+  <view class="picked-chip" wx:for="{{picked}}" wx:key="key" bindtap="clearPick" data-key="{{item.key}}">{{item.label}} ×</view>
 </view>
 
-<view class="home-grid">
-  <view class="home-tile" wx:for="{{home.durations}}" wx:key="key" bindtap="goDays" data-days="{{item.days}}">
-    <view class="home-tile-title">{{item.label}}</view>
-    <view class="muted">{{item.hint}}</view>
-    <view class="tile-thumbs">
-      <image wx:for="{{item.thumbs}}" wx:for-item="thumb" wx:key="scheduleId" src="{{thumb.cover}}" mode="aspectFill" catchtap="goGroup" data-id="{{thumb.scheduleId}}" />
-    </view>
-  </view>
-</view>
-
-<view class="pad" style="padding-bottom:0"><view class="title">想怎么玩</view></view>
-<view class="chips">
-  <view class="play-tag" wx:for="{{home.tags}}" wx:key="id" style="background:{{item.color}}" bindtap="goPlace" data-c="{{item.name}}">{{item.name}}</view>
-</view>
-
-<view wx:if="{{theme}}" class="card" bindtap="goTheme">
-  <image class="cover" src="{{theme.cover}}" mode="aspectFill" />
-  <view class="pad">
-    <view class="muted">本周推荐 · {{theme.days}}日 · {{theme.region}}</view>
-    <view class="title">{{theme.title}}</view>
-  </view>
-</view>
-
-<view class="row pad" style="padding-bottom:0">
-  <view class="title">开团招募</view>
-  <view class="muted" bindtap="goChain">全部拼团</view>
-</view>
 <view class="chips">
   <view class="offer-chip" wx:for="{{offers}}" wx:key="key" style="background:{{item.color}}" bindtap="setOffer" data-key="{{item.key}}">{{item.label}}</view>
   <view class="offer-chip publish" bindtap="goPublish">发团</view>
 </view>
+
 <view class="card" wx:for="{{groups}}" wx:key="id" bindtap="goGroup" data-id="{{item.id}}">
+  <image wx:if="{{item.route.cover}}" class="cover" src="{{item.route.cover}}" mode="aspectFill" style="height:280rpx" />
   <view class="pad">
     <view class="row">
-      <view>
-        <text class="offer-chip inline" style="background:{{item.offerColor}}">{{item.offerLabel}}</text>
-        <text class="title">{{item.route.title}}</text>
-      </view>
+      <text class="title">{{item.route.title}}</text>
       <text class="tag">{{item.startDate}}</text>
     </view>
-    <view class="muted">{{item.organizerType=='company'?item.companyName:item.organizerName}} · 余 {{item.remain}} 座<text wx:if="{{item.guaranteed}}"> · 铁定出发</text></view>
-    <view wx:if="{{item.guide}}" class="guide-hit" catchtap="goGuide" data-id="{{item.guide.id}}">导游 {{item.guide.name}} · 查看详情</view>
-    <view wx:else class="muted guide-hit" catchtap="goGuides">成团后匹配导游 · 先看看领队</view>
-    <view class="progress"><view class="bar" style="width:{{item.enrolled/item.maxSeats*100}}%"></view></view>
-    <view class="row">
-      <text class="muted">{{item.enrolled}}/{{item.maxSeats}}</text>
-      <view>
-        <text wx:if="{{item.quote.originPrice > item.quote.price}}" class="price-origin">¥{{item.quote.originPrice}}</text>
-        <text class="price">¥{{item.quote.price}}</text>
-      </view>
+    <view class="muted">{{item.city}} · 余 {{item.remain}} 座</view>
+    <view class="prices">
+      <text>原价 ¥{{item.quote.originPrice}}</text>
+      <text>会员 ¥{{item.quote.memberPrice}}</text>
+      <text>学生 ¥{{item.quote.studentPrice}}</text>
     </view>
   </view>
 </view>
-<view wx:if="{{!groups.length}}" class="card">
+<view wx:if="{{!groups.length}}" class="card" bindtap="goPublish">
   <view class="pad">
-    <view class="muted">暂时没有招募中的团，可以发一个新团。</view>
-    <view class="btn ghost" bindtap="goPublish" style="margin:16rpx 0 0">去发团</view>
+    <view class="title">还没有符合条件的团</view>
+    <view class="muted">发一个新团，审核通过后会出现在这里。</view>
   </view>
 </view>
 
-<view class="row pad" style="padding-bottom:0">
-  <view class="title">周末短途</view>
-  <view class="muted" bindtap="goAllOneDay">1 日线路</view>
-</view>
-<view class="card" wx:for="{{weekend}}" wx:key="id" bindtap="goRoute" data-id="{{item.id}}">
-  <image class="cover" src="{{item.cover}}" mode="aspectFill" style="height:240rpx" />
-  <view class="pad">
-    <view class="row"><text class="title">{{item.title}}</text><text class="tag">{{item.region}}</text></view>
-    <view>
-      <text wx:if="{{item.fromPrice > item.memberFromPrice}}" class="price-origin">¥{{item.fromPrice}}</text>
-      <text class="price">¥{{item.memberFromPrice || item.fromPrice}} 起</text>
-    </view>
-  </view>
-</view>
-
-<view class="row pad" style="padding-bottom:0">
-  <view class="title">领队导游</view>
-  <view class="muted" bindtap="goGuides">全部导游</view>
-</view>
-<view class="card" wx:for="{{guides}}" wx:key="id" bindtap="goGuide" data-id="{{item.id}}">
-  <view class="pad guide-row">
-    <view class="guide-face">{{item.initial}}</view>
-    <view class="guide-body">
-      <view class="row"><text class="title">{{item.name}}</text><text class="muted">{{item.rating}} 分</text></view>
-      <view class="muted">{{item.years}}年 · {{item.specialties}}</view>
-    </view>
-  </view>
-</view>
-
-<view class="home-member" bindtap="goMember">
-  <view class="title">限时开通会员</view>
-  <view class="muted">年费 99 元，赠送一次 100 以内的团，线路额外 95 折</view>
-</view>
-
-<view wx:if="{{err}}" class="muted pad">{{err}}</view>
+<view class="cta" bindtap="goMember">会员注册</view>
+<view class="cta" bindtap="goOfficial">联系我们</view>
+<view class="cta" bindtap="goFeedback">功能建议与找 BUG</view>

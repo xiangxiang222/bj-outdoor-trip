@@ -11,6 +11,7 @@
 | [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | H5 / 小程序使用说明 |
 | [docs/API.md](docs/API.md) | REST 接口一览 |
 | [docs/TESTING.md](docs/TESTING.md) | 单元测试、覆盖率、全功能走查 |
+| [docs/REGISTER.md](docs/REGISTER.md) | 上线前：域名、备案、小程序、支付、短信要注册的官网 |
 
 ## 怎么跑起来
 

@@ -348,6 +348,24 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "review_status", "TEXT DEFAULT 'approved'");
   addColumnIfMissing(db, "schedules", "play_tags_json", "TEXT DEFAULT '[]'");
   addColumnIfMissing(db, "schedules", "city", "TEXT");
+  addColumnIfMissing(db, "schedules", "channel", "TEXT DEFAULT 'trip'");
+  addColumnIfMissing(db, "schedules", "member_price_on", "INTEGER DEFAULT 1");
+  addColumnIfMissing(db, "schedules", "student_price_on", "INTEGER DEFAULT 1");
+  addColumnIfMissing(db, "users", "is_student", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "users", "student_status", "TEXT");
+  addColumnIfMissing(db, "users", "school", "TEXT");
+  addColumnIfMissing(db, "users", "group_status", "TEXT");
+  addColumnIfMissing(db, "users", "group_name", "TEXT");
+  addColumnIfMissing(db, "users", "group_kind", "TEXT");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS feedbacks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      kind TEXT,
+      content TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+  `);
   addColumnIfMissing(db, "users", "member_gift_left", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "users", "is_virtual", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "users", "referral_code", "TEXT");

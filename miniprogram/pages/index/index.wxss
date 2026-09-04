@@ -37,6 +37,11 @@
 .price-origin { color: #6b705c; text-decoration: line-through; margin-right: 8rpx; font-weight: 400; }
 .tile-thumbs { display: flex; gap: 8rpx; margin-top: 12rpx; }
 .tile-thumbs image { width: 72rpx; height: 72rpx; border-radius: 12rpx; }
+.fold { padding: 12rpx 24rpx; color: #1b4332; font-weight: 650; }
+.picked { padding: 8rpx 16rpx; }
+.picked-chip { display: inline-block; background: #d8f3dc; border-radius: 999rpx; padding: 6rpx 16rpx; margin: 6rpx; font-size: 24rpx; }
+.cta { margin: 16rpx; padding: 24rpx; background: #fff; border-radius: 16rpx; }
+.prices { display: flex; gap: 16rpx; margin-top: 8rpx; font-size: 24rpx; color: #bc4749; }
 .home-kicker { font-size: 36rpx; font-weight: 700; }
 .home-lead { margin-top: 12rpx; font-size: 26rpx; opacity: .88; line-height: 1.5; }
 .home-grid {

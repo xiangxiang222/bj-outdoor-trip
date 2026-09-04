@@ -49,6 +49,7 @@ function enrollUser({
   autoAlt,
   fallbackScheduleIds,
   couponCode,
+  joinMode,
 }) {
   const db = getDb();
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
@@ -105,7 +106,9 @@ function enrollUser({
   const couponDecision = couponPack
     ? decideCouponPrice({ quote, user, campaign: couponPack.campaign, waitlisted })
     : { applyCoupon: false, giftWouldApply: false, tripPrice: quote.tripPrice, memberPay: quote.price, couponPay: quote.price, reason: "" };
-  const billed = couponDecision.applyCoupon ? couponDecision.couponPay : Number(quote.price || 0);
+  const role = ["assistant", "photographer"].includes(String(joinMode || "")) ? String(joinMode) : "chain";
+  const roleWaive = role !== "chain";
+  const billed = roleWaive ? 0 : couponDecision.applyCoupon ? couponDecision.couponPay : Number(quote.price || 0);
   const payable =
     billed <= 0
       ? { price: 0, offsetYuan: 0, pointsUsed: 0, payAmount: 0 }
@@ -156,7 +159,7 @@ function enrollUser({
       payAmount,
       0,
       "",
-      "chain",
+      role,
       status,
       waitlisted ? now : null,
       seat,
@@ -209,9 +212,13 @@ function enrollUser({
       ? `本车已满，已加入候补（第 ${position} 位），有人取消后自动递补`
       : company
         ? "已加入公司团，费用由公司统一支付"
-        : giftApplied
-          ? "已用会员赠送名额占座，本团免费"
-          : "已报名占座，费用待出行前支付",
+        : roleWaive
+          ? role === "photographer"
+            ? "已报名摄影师，免个人团费"
+            : "已报名辅助领队，免个人团费"
+          : giftApplied
+            ? "已用会员赠送名额占座，本团免费"
+            : "已报名占座，费用待出行前支付",
   };
 }
 

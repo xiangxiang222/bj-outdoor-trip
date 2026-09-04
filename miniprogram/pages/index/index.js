@@ -1,6 +1,4 @@
 const { request } = require("../../utils/request");
-const lite = require("../../data/routes-lite");
-const { withLocalMediaList, detailUrl, withAbsSlides } = require("../../utils/media");
 const { OFFER_TYPES, countOn, buildCalendar } = require("../../utils/offer");
 
 function asList(rows) {
@@ -9,102 +7,83 @@ function asList(rows) {
 
 Page({
   data: {
-    home: { brand: { kicker: "北野行", lead: "说走就走的京郊山野", gallery: [] }, cities: [], tags: [], festivals: [], months: [], durations: [] },
-    theme: null,
+    home: { brand: { kicker: "同行者众", lead: "在山野，遇见爱", slides: [] }, cities: [], tags: [], festivals: [], months: [] },
     groups: [],
-    weekend: [],
-    err: "",
-    upcoming: null,
-    calendar: [],
     allSchedules: [],
-    guides: [],
+    calendar: [],
     city: "",
-    cityGallery: [],
-    citySlides: [],
+    date: "",
+    tag: "",
     monthKey: "",
     monthDays: [],
     festivalKey: "",
-    festivalDates: [],
-    offers: OFFER_TYPES,
     offerFilter: "",
+    offers: OFFER_TYPES.filter((o) => o.key !== "full"),
+    fold: { days: true, month: false, fest: false },
+    picked: [],
   },
   onLoad() {
-    this.applyRoutes(asList(lite));
     this.load();
-  },
-  onShow() {
-    this.loadUpcoming();
   },
   onPullDownRefresh() {
     this.load().then(() => wx.stopPullDownRefresh());
   },
-  applyRoutes(rows) {
-    const raw = withLocalMediaList(asList(rows));
-    const theme = raw.find((r) => r.days === 3) || raw.find((r) => r.days === 2) || raw[0] || null;
-    const weekend = raw.filter((r) => r.days === 1).slice(0, 4);
-    this.setData({ theme, weekend, err: raw.length ? "" : "暂无线路" });
-  },
   applyGroups() {
-    const offerFilter = this.data.offerFilter;
-    const groups = (this.data.allSchedules || [])
+    const { city, date, tag, offerFilter, festivalKey, home, allSchedules } = this.data;
+    const fest = (home.festivals || []).find((f) => f.key === festivalKey);
+    const festDates = new Set(((fest && fest.dates) || []).map((d) => d.date));
+    const groups = (allSchedules || [])
       .filter((s) => s.status !== "cancelled" && Number(s.remain) > 0)
-      .filter((s) => !offerFilter || s.offerType === offerFilter)
-      .slice(0, 6);
-    this.setData({ groups });
+      .filter((s) => (s.channel || "trip") !== "activity")
+      .filter((s) => !city || s.city === city)
+      .filter((s) => !date || s.startDate === date)
+      .filter((s) => !festivalKey || !festDates.size || festDates.has(s.startDate))
+      .filter((s) => !tag || (s.playTags || []).some((t) => t.name === tag))
+      .filter((s) => !offerFilter || s.offerType === offerFilter);
+    const picked = [];
+    if (city) picked.push({ key: "city", label: city });
+    if (date) picked.push({ key: "date", label: date.slice(5) });
+    if (tag) picked.push({ key: "tag", label: tag });
+    if (offerFilter) {
+      const o = this.data.offers.find((x) => x.key === offerFilter);
+      if (o) picked.push({ key: "offer", label: o.label });
+    }
+    this.setData({ groups, picked });
   },
   async load() {
     try {
-      const [homeRes, routesRes, schRes, guideRes] = await Promise.all([
+      const [homeRes, schRes] = await Promise.all([
         request("/home").catch(() => ({ data: {} })),
-        request("/routes"),
-        request("/schedules").catch(() => ({ data: [] })),
-        request("/guides").catch(() => ({ data: [] })),
+        request("/schedules?channel=trip").catch(() => ({ data: [] })),
       ]);
       const home = homeRes.data || {};
-      const baseUrl = getApp().globalData.baseUrl;
-      if (home.brand && !Array.isArray(home.brand.slides)) {
-        home.brand.slides = (home.brand.gallery || []).map((url) => ({ url, routeId: 0, title: "" }));
-      }
-      if (home.brand && Array.isArray(home.brand.slides)) {
-        home.brand.slides = withAbsSlides(home.brand.slides, baseUrl);
-      }
-      if (Array.isArray(home.cities)) {
-        home.cities = home.cities.map((c) => Object.assign({}, c, { slides: withAbsSlides(c.slides, baseUrl) }));
-      }
-      const firstCity = home.cities && home.cities[0];
-      const city = firstCity ? firstCity.name : "";
-      const rows = asList(routesRes.data);
-      if (rows.length) this.applyRoutes(rows);
-      else if (!this.data.theme) this.applyRoutes(asList(lite));
       const allSchedules = asList(schRes.data);
       this.setData({
         home,
-        city,
-        citySlides: (firstCity && firstCity.slides) || [],
-        cityGallery: (firstCity && firstCity.gallery) || [],
         monthKey: (home.months && home.months[0] && home.months[0].key) || "",
         monthDays: home.monthDays || [],
         allSchedules,
         calendar: buildCalendar(allSchedules),
-        guides: asList(guideRes.data)
-          .slice(0, 4)
-          .map((g) => Object.assign({}, g, { initial: String(g.name || "导").slice(0, 1) })),
       });
       this.applyGroups();
-      await this.loadUpcoming();
     } catch (err) {
-      if (!this.data.theme) this.applyRoutes(asList(lite));
-      if (!this.data.theme) this.setData({ err: (err && err.message) || "加载失败" });
+      wx.showToast({ title: (err && err.message) || "加载失败", icon: "none" });
     }
   },
   setCity(e) {
     const name = e.currentTarget.dataset.name;
-    const hit = (this.data.home.cities || []).find((c) => c.name === name);
-    this.setData({
-      city: name,
-      citySlides: (hit && hit.slides) || [],
-      cityGallery: (hit && hit.gallery) || [],
-    });
+    this.setData({ city: this.data.city === name ? "" : name });
+    this.applyGroups();
+  },
+  setDate(e) {
+    const d = e.currentTarget.dataset.date;
+    this.setData({ date: this.data.date === d ? "" : d });
+    this.applyGroups();
+  },
+  setTag(e) {
+    const name = e.currentTarget.dataset.name;
+    this.setData({ tag: this.data.tag === name ? "" : name });
+    this.applyGroups();
   },
   setOffer(e) {
     const key = e.currentTarget.dataset.key;
@@ -113,92 +92,44 @@ Page({
   },
   setFestival(e) {
     const key = e.currentTarget.dataset.key;
-    const on = this.data.festivalKey === key ? "" : key;
-    const f = (this.data.home.festivals || []).find((x) => x.key === on);
-    this.setData({ festivalKey: on, festivalDates: (f && f.dates) || [] });
+    this.setData({ festivalKey: this.data.festivalKey === key ? "" : key });
+    this.applyGroups();
+  },
+  toggleFold(e) {
+    const key = e.currentTarget.dataset.key;
+    this.setData({ ["fold." + key]: !this.data.fold[key] });
+  },
+  clearPick(e) {
+    const key = e.currentTarget.dataset.key;
+    if (key === "city") this.setData({ city: "" });
+    if (key === "date") this.setData({ date: "" });
+    if (key === "tag") this.setData({ tag: "" });
+    if (key === "offer") this.setData({ offerFilter: "" });
+    this.applyGroups();
   },
   async pickMonth(e) {
     const key = e.currentTarget.dataset.key;
     const res = await request("/home?month=" + key);
     this.setData({ monthKey: key, monthDays: (res.data && res.data.monthDays) || [] });
   },
-  goDays(e) {
-    const app = getApp();
-    app.globalData.routeFilter = { days: e.currentTarget.dataset.days, tag: "" };
-    wx.switchTab({ url: "/pages/routes/routes" });
-  },
-  goPlace(e) {
-    const app = getApp();
-    app.globalData.routeFilter = { days: 0, tag: e.currentTarget.dataset.c };
-    wx.switchTab({ url: "/pages/routes/routes" });
-  },
-  goTheme() {
-    const id = this.data.theme && this.data.theme.id;
-    if (id) wx.navigateTo({ url: detailUrl(id) });
-  },
-  goRoute(e) {
-    const id = e.currentTarget.dataset.id;
-    if (id) wx.navigateTo({ url: detailUrl(id) });
-  },
   goGroup(e) {
     wx.navigateTo({ url: "/pages/schedule/schedule?id=" + e.currentTarget.dataset.id });
   },
-  goChain() {
-    wx.switchTab({ url: "/pages/chain/chain" });
-  },
-  goAllOneDay() {
+  goPublish() {
     const app = getApp();
-    app.globalData.routeFilter = { days: 1, tag: "" };
-    wx.switchTab({ url: "/pages/routes/routes" });
-  },
-  goPublish(date) {
-    const app = getApp();
-    const q = typeof date === "string" ? "?date=" + date : "";
     if (!app.globalData.token) {
-      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/publish/publish" + q) });
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/publish/publish") });
       return;
     }
-    wx.navigateTo({ url: "/pages/publish/publish" + q });
-  },
-  goGuides() {
-    wx.navigateTo({ url: "/pages/guides/guides" });
-  },
-  goGuide(e) {
-    wx.navigateTo({ url: "/pages/guide/guide?id=" + e.currentTarget.dataset.id });
+    wx.navigateTo({ url: "/pages/publish/publish" });
   },
   goMember() {
     wx.navigateTo({ url: "/pages/member/member" });
   },
-  async loadUpcoming() {
-    const app = getApp();
-    if (!app.globalData.token) {
-      this.setData({ upcoming: null });
-      return;
-    }
-    try {
-      const res = await request("/me/trips");
-      const list = asList(res.data);
-      this.setData({ upcoming: list[0] || null });
-    } catch (err) {
-      this.setData({ upcoming: null });
-    }
+  goOfficial() {
+    wx.switchTab({ url: "/pages/official/official" });
   },
-  goUpcoming() {
-    const u = this.data.upcoming;
-    if (u && u.scheduleId) wx.navigateTo({ url: "/pages/schedule/schedule?id=" + u.scheduleId });
-  },
-  goFestivalDay(e) {
-    this.goDay({ currentTarget: { dataset: { date: e.currentTarget.dataset.date, count: countOn(this.data.allSchedules, e.currentTarget.dataset.date) } } });
-  },
-  goDay(e) {
-    const date = e.currentTarget.dataset.date;
-    const count = Number(e.currentTarget.dataset.count || 0);
-    if (!count) {
-      this.goPublish(date);
-      return;
-    }
-    const hit = (this.data.allSchedules || []).find((s) => s.startDate === date && s.status !== "cancelled");
-    if (hit) wx.navigateTo({ url: "/pages/schedule/schedule?id=" + hit.id });
-    else wx.switchTab({ url: "/pages/chain/chain" });
+  goFeedback() {
+    wx.navigateTo({ url: "/pages/feedback/feedback" });
   },
 });

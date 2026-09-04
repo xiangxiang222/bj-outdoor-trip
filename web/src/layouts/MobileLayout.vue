@@ -1,7 +1,7 @@
 <template>
   <div class="mp-phone">
     <div class="mp-status">
-      <span>北野行</span>
+      <span>同行者众</span>
       <span class="mp-capsule">微信小程序演示</span>
     </div>
     <div class="mp-nav">
@@ -16,9 +16,9 @@
     </div>
     <nav class="mp-tab">
       <router-link to="/m" :class="{ active: $route.path === '/m' }"><span class="ico">⛰</span>首页</router-link>
-      <router-link to="/m/official" :class="{ active: $route.path.startsWith('/m/official') }"><span class="ico">☎</span>官方</router-link>
-      <router-link to="/m/rules" :class="{ active: $route.path.startsWith('/m/rules') }"><span class="ico">☰</span>规则</router-link>
-      <router-link to="/m/mine" :class="{ active: $route.path.startsWith('/m/mine') || $route.path.startsWith('/m/login') || $route.path.startsWith('/m/orders') || $route.path.startsWith('/m/member') || $route.path.startsWith('/m/favorites') }"><span class="ico">☺</span>我的</router-link>
+      <router-link to="/m/activities" :class="{ active: $route.path.startsWith('/m/activities') }"><span class="ico">✦</span>活动</router-link>
+      <router-link to="/m/official" :class="{ active: $route.path.startsWith('/m/official') || $route.path.startsWith('/m/rules') }"><span class="ico">☎</span>官方</router-link>
+      <router-link to="/m/mine" :class="{ active: $route.path.startsWith('/m/mine') || $route.path.startsWith('/m/login') || $route.path.startsWith('/m/orders') || $route.path.startsWith('/m/member') || $route.path.startsWith('/m/favorites') || $route.path.startsWith('/m/student') || $route.path.startsWith('/m/group') }"><span class="ico">☺</span>我的</router-link>
     </nav>
   </div>
 </template>
@@ -33,7 +33,7 @@ const router = useRouter();
 const store = useUserStore();
 onMounted(() => store.fetchMeta());
 
-const tabNames = new Set(["home", "official", "rules", "mine"]);
+const tabNames = new Set(["home", "activities", "official", "rules", "mine"]);
 const showBack = computed(() => !tabNames.has(route.name));
 
 function goBack() {
@@ -47,9 +47,14 @@ function goBack() {
 
 const title = computed(() => {
   const map = {
-    home: "北野行",
+    home: "同行者众",
+    activities: "活动",
     official: "官方",
-    rules: "规则",
+    rules: "官方",
+    student: "学生认证",
+    group: "团体认证",
+    feedback: "建议与 BUG",
+    lottery: "抽奖",
     routes: "线路列表",
     route: "线路详情",
     schedule: "活动报名",
@@ -68,7 +73,7 @@ const title = computed(() => {
     guide: "导游详情",
     user: "个人主页",
   };
-  return map[route.name] || "北野行";
+  return map[route.name] || "同行者众";
 });
-const subtitle = computed(() => "北京周边 1 / 2 / 3 / 多日短途游");
+const subtitle = computed(() => "在山野，遇见爱");
 </script>

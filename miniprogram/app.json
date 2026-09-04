@@ -2,8 +2,10 @@
   "pages": [
     "pages/index/index",
     "pages/official/official",
-    "pages/rules/rules",
+    "pages/activities/activities",
     "pages/mine/mine",
+    "pages/rules/rules",
+    "pages/feedback/feedback",
     "pages/routes/routes",
     "pages/chain/chain",
     "pages/schedule/schedule",
@@ -26,7 +28,7 @@
   ],
   "window": {
     "navigationBarBackgroundColor": "#1b4332",
-    "navigationBarTitleText": "北野行",
+    "navigationBarTitleText": "同行者众",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#f4efe6"
   },
@@ -36,8 +38,8 @@
     "backgroundColor": "#ffffff",
     "list": [
       { "pagePath": "pages/index/index", "text": "首页", "iconPath": "images/home.png", "selectedIconPath": "images/home-on.png" },
+      { "pagePath": "pages/activities/activities", "text": "活动", "iconPath": "images/activities.png", "selectedIconPath": "images/activities-on.png" },
       { "pagePath": "pages/official/official", "text": "官方", "iconPath": "images/official.png", "selectedIconPath": "images/official-on.png" },
-      { "pagePath": "pages/rules/rules", "text": "规则", "iconPath": "images/rules.png", "selectedIconPath": "images/rules-on.png" },
       { "pagePath": "pages/mine/mine", "text": "我的", "iconPath": "images/mine.png", "selectedIconPath": "images/mine-on.png" }
     ]
   },

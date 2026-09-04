@@ -15,10 +15,13 @@
     <div><span class="play-tag sm" v-for="t in r.playTags || r.tags" :key="t.id || t" :style="{ background: t.color || '#2d6a4f' }">{{ t.name || t }}</span></div>
     <div class="row" style="margin:10px 0">
       <div>
-        <div class="price-pair">
-          <s v-if="r.priceTiers?.[0]?.price > r.priceTiers?.[0]?.memberPrice" class="price-origin">¥{{ r.priceTiers[0].price }}</s>
-          <span class="price">¥{{ r.priceTiers?.[0]?.memberPrice || r.priceTiers?.[0]?.price }} <small>起</small></span>
-        </div>
+        <TripPrices
+          :origin="r.priceTiers?.[0]?.price"
+          :member-price="r.priceTiers?.[0]?.memberPrice"
+          :student-price="r.priceTiers?.[0]?.studentPrice"
+          :trip-price="r.priceTiers?.[0]?.price"
+          compact
+        />
         <div class="muted">会员额外 95 折</div>
       </div>
       <button class="btn ghost" @click="fav">{{ r.favored ? "已收藏" : "收藏" }}</button>
@@ -61,7 +64,7 @@
     <div class="card"><div class="pad">
       <div class="row" v-for="t in r.priceTiers" :key="t.minPeople" style="padding:6px 0;border-bottom:1px dashed var(--line)">
         <span>{{ t.minPeople }} 人起</span>
-        <span>¥{{ t.price }} / 会员 ¥{{ t.memberPrice }}</span>
+        <span>¥{{ t.price }} / 会员 ¥{{ t.memberPrice }} / 学生 ¥{{ t.studentPrice }}</span>
       </div>
       <p class="muted">个人拼团先报名占座，按当前人数档位计价，出行前付款；公司开团可先上车，结束后按最终人数统一支付。</p>
     </div></div>
@@ -138,6 +141,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { organizerTypeText, starText } from "@/utils/labels";
 import WeatherChart from "@/components/WeatherChart.vue";
+import TripPrices from "@/components/TripPrices.vue";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 

@@ -1,0 +1,9 @@
+<view class="pad muted">约掼蛋、跑步、看电影，或品牌发布招募。</view>
+<view class="btn" bindtap="goPublish">发布活动</view>
+<view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
+  <view class="pad">
+    <view class="title">{{item.route.title}}</view>
+    <view class="muted">{{item.startDate}} · {{item.city}}</view>
+  </view>
+</view>
+<view wx:if="{{!list.length}}" class="pad muted">还没有活动。</view>

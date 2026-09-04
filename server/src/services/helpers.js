@@ -13,6 +13,10 @@ function isMember(user) {
   return !dayjs(user.member_expire_at).isBefore(dayjs(), "day");
 }
 
+function isStudent(user) {
+  return !!(user && (user.student_status === "approved" || user.is_student === 1));
+}
+
 function enrolledCount(scheduleId, includeCancelled = false) {
   const db = getDb();
   const sql = includeCancelled
@@ -63,13 +67,14 @@ function loadRouteBundle(routeId) {
 function quoteForSchedule(schedule, people, user) {
   const bundle = loadRouteBundle(schedule.route_id);
   if (!bundle) {
-    return { people, tierMin: 0, price: 0, originPrice: 0, memberPrice: 0, tripPrice: 0, isMember: isMember(user) };
+    return { people, tierMin: 0, price: 0, originPrice: 0, memberPrice: 0, studentPrice: 0, tripPrice: 0, isMember: isMember(user), isStudent: isStudent(user) };
   }
   const tier = pickTier(
     bundle.tiers.map((t) => ({ minPeople: t.min_people, price: t.price, memberPrice: t.member_price })),
     people
   );
   const member = isMember(user);
+  const student = isStudent(user);
   const origin = Number(tier.price);
   return applyOfferQuote(
     {
@@ -79,9 +84,11 @@ function quoteForSchedule(schedule, people, user) {
       originPrice: origin,
       memberPrice: liveMemberPrice(origin),
       isMember: member,
+      isStudent: student,
     },
     schedule,
-    member
+    member,
+    student
   );
 }
 
@@ -192,6 +199,7 @@ function publicMediaUrl(url) {
 
 module.exports = {
   isMember,
+  isStudent,
   enrolledCount,
   realEnrolledCount,
   virtualEnrolledCount,

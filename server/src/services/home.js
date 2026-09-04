@@ -25,6 +25,11 @@ const CITY_RULES = [
   ["房山", "房山"],
   ["门头沟", "门头沟"],
   ["海淀", "海淀"],
+  ["朝阳", "朝阳"],
+  ["通州", "通州"],
+  ["大兴", "大兴"],
+  ["丰台", "丰台"],
+  ["石景山", "石景山"],
   ["平谷", "平谷"],
   ["蓟州", "蓟州"],
   ["涞源", "涞源"],
@@ -158,8 +163,9 @@ function buildHome(req) {
     )
     .all();
 
-  const brandSlides = [];
+  const scenicSlides = [];
   const cityMap = new Map();
+  const BEIJING_DISTRICTS = ["怀柔", "延庆", "昌平", "密云", "房山", "门头沟", "海淀", "朝阳", "通州", "大兴", "平谷"];
 
   function toSlide(r) {
     const url = attachAssetHost(req, resolveStoredMedia(r.cover, { code: r.code }));
@@ -177,8 +183,11 @@ function buildHome(req) {
 
   for (const r of routes) {
     const slide = toSlide(r);
-    brandSlides.push(slide);
+    scenicSlides.push(slide);
     addCitySlide(cityOf(r.region), slide);
+  }
+  for (const name of BEIJING_DISTRICTS) {
+    if (!cityMap.has(name)) cityMap.set(name, { name, slides: [], gallery: [], count: 0 });
   }
   for (const s of schedules) {
     const name = s.city || cityOf(s.route_region);
@@ -204,10 +213,19 @@ function buildHome(req) {
   ];
 
   const scheduleDates = schedules.map((s) => s.start_date);
+  const intros = [
+    { title: "找一条山野路线，周末就出发", kicker: "同行者众" },
+    { title: "约掼蛋、跑步、看电影也可以", kicker: "活动不只户外" },
+    { title: "在山野，遇见爱", kicker: "同行者众" },
+  ];
+  const brandSlides = intros.map((intro, i) => {
+    const src = scenicSlides[i % Math.max(scenicSlides.length, 1)] || { url: "", routeId: 0, code: "", title: "" };
+    return { ...src, title: intro.title, kicker: intro.kicker };
+  });
   return {
     brand: {
-      kicker: "北野行",
-      lead: "说走就走的京郊山野。全部景点轮流展示，点图进线路详情。",
+      kicker: "同行者众",
+      lead: "在山野，遇见爱",
       slides: brandSlides,
       gallery: brandSlides.map((s) => s.url),
     },

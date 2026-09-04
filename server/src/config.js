@@ -33,6 +33,9 @@ module.exports = {
     giftMaxPrice: 100,
     giftTrips: 1,
   },
+  student: {
+    discountRate: 0.9,
+  },
   insurance: {
     plans: [
       { code: "none", name: "暂不购买", fee: 0, cover: "出行风险自担" },

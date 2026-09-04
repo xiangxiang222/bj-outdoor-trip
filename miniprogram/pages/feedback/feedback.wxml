@@ -1,0 +1,5 @@
+<picker range="{{kinds}}" range-key="label" bindchange="onKind">
+  <view class="pad">类型：{{kinds[kindIndex].label}}</view>
+</picker>
+<textarea class="input" placeholder="写清页面和问题" value="{{content}}" bindinput="onInput" />
+<button bindtap="submit">提交</button>

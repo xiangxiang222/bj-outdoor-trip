@@ -13,3 +13,15 @@
   <view class="pad">官方用户群 {{contacts.officialGroup}}</view>
   <view class="pad muted">{{contacts.hint}}</view>
 </view>
+<view class="card">
+  <view class="pad">
+    <view class="title">{{rules.title || '统一规则'}}</view>
+    <view class="muted">{{rules.summary}}</view>
+  </view>
+</view>
+<view class="card" wx:for="{{rules.sections}}" wx:key="title">
+  <view class="pad">
+    <view class="title">{{item.title}}</view>
+    <view class="muted" wx:for="{{item.items}}" wx:for-item="line" wx:key="*this">{{line}}</view>
+  </view>
+</view>

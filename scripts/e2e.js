@@ -230,7 +230,7 @@ async function run(opts) {
 
   await step("公开：品牌、车型、导游、线路、排期", async () => {
     const meta = apiOk(await request("GET", "/api/meta"), "meta");
-    assert(meta.name === "北野行", "品牌名不是北野行");
+    assert(meta.name === "同行者众", "品牌名不是同行者众");
     assert(Array.isArray(meta.insurance) && meta.insurance.length >= 2, "保险方案缺失");
     assert(meta.waiverText && meta.cancelPolicy && Array.isArray(meta.faqs), "行前政策缺失");
     assert(meta.contacts && meta.contacts.officialWechat, "官方联系方式缺失");

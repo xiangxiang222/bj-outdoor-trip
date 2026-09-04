@@ -2,8 +2,8 @@
   <div>
     <div class="card">
       <div class="pad">
-        <strong>北野行官方</strong>
-        <p class="muted">各平台账号与联系方式。添加官方微信后可拉入用户群。</p>
+        <strong>官方账号</strong>
+        <p class="muted">各平台联系方式。规则统一放在本页，线路里不再重复写。</p>
       </div>
     </div>
     <div class="card" v-for="a in accounts" :key="a.platform">
@@ -28,6 +28,28 @@
         <p class="muted">{{ contacts.hint }}</p>
       </div>
     </div>
+
+    <div id="rules" class="card">
+      <div class="pad">
+        <strong>{{ rules.title || "统一规则" }}</strong>
+        <p class="muted">{{ rules.summary }}</p>
+      </div>
+    </div>
+    <div class="card" v-for="sec in rules.sections || []" :key="sec.title">
+      <div class="pad">
+        <div class="h2" style="margin-top:0">{{ sec.title }}</div>
+        <p v-for="(it, i) in sec.items" :key="i" class="muted">{{ i + 1 }}. {{ it }}</p>
+      </div>
+    </div>
+    <div class="card" v-if="faqs.length">
+      <div class="pad">
+        <div class="h2" style="margin-top:0">常见问题</div>
+        <div class="faq-item" v-for="f in faqs" :key="f.q">
+          <strong>{{ f.q }}</strong>
+          <p class="muted">{{ f.a }}</p>
+        </div>
+      </div>
+    </div>
     <p v-if="msg" class="muted">{{ msg }}</p>
   </div>
 </template>
@@ -38,12 +60,16 @@ import http from "@/api/http";
 
 const accounts = ref([]);
 const contacts = ref({});
+const rules = ref({ title: "", summary: "", sections: [] });
+const faqs = ref([]);
 const msg = ref("");
 
 onMounted(async () => {
   const meta = (await http.get("/meta")).data || {};
   accounts.value = meta.officialAccounts || [];
   contacts.value = meta.contacts || {};
+  rules.value = meta.commonRules || rules.value;
+  faqs.value = meta.faqs || [];
 });
 
 async function copy(text) {

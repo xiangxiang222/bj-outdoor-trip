@@ -40,6 +40,9 @@
     <div class="card" @click="goAuth('/m/favorites')"><div class="pad">我的收藏</div></div>
     <div class="card" @click="goReferral"><div class="pad">推荐报名 · 按人数结 5%</div></div>
     <div class="card" @click="openMember"><div class="pad">{{ store.profile?.isMember ? "会员中心" : "开通会员" }}</div></div>
+    <div class="card" @click="goAuth('/m/student')"><div class="pad">{{ store.profile?.isStudent ? "学生已认证" : store.profile?.studentStatus === "pending" ? "学生认证审核中" : "学生认证" }}</div></div>
+    <div class="card" @click="goAuth('/m/group')"><div class="pad">{{ store.profile?.groupStatus === "approved" ? "团体已认证" : store.profile?.groupStatus === "pending" ? "团体认证审核中" : "团体认证" }}</div></div>
+    <div class="card" @click="goAuth('/m/feedback')"><div class="pad">功能建议与找 BUG</div></div>
     <div class="card" @click="$router.push('/m/routes')"><div class="pad">去选线路开团</div></div>
     <button v-if="store.token" class="btn ghost block" @click="store.logout(); $router.replace('/m/mine')">退出登录</button>
     <button v-if="store.token" class="btn ghost block" style="color:var(--clay);margin-top:8px" @click="closeAccount">注销账号</button>

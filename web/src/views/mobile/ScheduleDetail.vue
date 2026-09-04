@@ -37,10 +37,7 @@
         <div class="progress"><i :style="{ width: Math.min(100, (s.enrolled / s.maxSeats) * 100) + '%' }"></i></div>
         <div class="row">
           <span>已报名 {{ s.enrolled }}/{{ s.maxSeats }}，最低成团 {{ s.minGroupSize }}<template v-if="s.waitlistCount"> · 候补 {{ s.waitlistCount }}</template></span>
-          <span class="price-pair">
-            <s v-if="s.quote.originPrice > s.quote.price" class="price-origin">¥{{ s.quote.originPrice }}</s>
-            <span class="price">¥{{ s.quote.price }}</span>
-          </span>
+          <TripPrices :quote="s.quote" compact />
         </div>
         <p class="muted" v-if="s.reviewStatus === 'pending'" style="color:#c77d3a">本团正在审核，通过后才会出现在首页，暂不能报名。</p>
         <p class="muted" v-else-if="s.reviewStatus === 'rejected'" style="color:var(--clay)">本团未通过审核。</p>
@@ -246,6 +243,7 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { payStatusText, scheduleStatusText, starText } from "@/utils/labels";
 import WeatherChart from "@/components/WeatherChart.vue";
+import TripPrices from "@/components/TripPrices.vue";
 
 const route = useRoute();
 const router = useRouter();

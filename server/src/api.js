@@ -29,7 +29,7 @@ const {
   monthDays,
   randomTagColor,
 } = require("./services/home");
-const { offerMeta, liveMemberPrice } = require("./services/offer");
+const { offerMeta, liveMemberPrice, liveStudentPrice, flagOn } = require("./services/offer");
 const { publicUserProfile, payEnrollment, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
 const { addPhoto, removePhoto, ensureReferralCode } = require("./services/profile");
 const { leadersOf, applyLeader, settleLeaderRewards, recruitPayload } = require("./services/leaders");
@@ -62,6 +62,7 @@ const {
 } = require("./services/staff");
 const {
   isMember,
+  isStudent,
   enrolledCount,
   realEnrolledCount,
   virtualEnrolledCount,
@@ -119,6 +120,12 @@ function userPublic(u, req) {
     points: u.points,
     companyName: u.company_name,
     role: u.role,
+    isStudent: isStudent(u),
+    studentStatus: u.student_status || "",
+    school: u.school || "",
+    groupStatus: u.group_status || "",
+    groupName: u.group_name || "",
+    groupKind: u.group_kind || "",
     referralCode: ensureReferralCode(u.id),
     idCardMasked: maskIdCard(u.id_card),
   };
@@ -170,6 +177,7 @@ function mapRouteSummary(row, req, extra) {
     minGroupSize: r.minGroupSize,
     fromPrice: extra.fromPrice,
     memberFromPrice: extra.memberFromPrice,
+    studentFromPrice: extra.studentFromPrice,
     priceTiers: extra.priceTiers,
     upcoming: extra.upcoming,
     playTags: extra.playTags || [],
@@ -274,6 +282,9 @@ function scheduleView(sch, req) {
     profit: revenue - cost,
     guaranteed: sch.status !== "cancelled" && realLive >= Number(sch.min_group_size),
     city: sch.city || cityOf(mappedRoute?.region),
+    channel: sch.channel === "activity" ? "activity" : "trip",
+    memberPriceOn: flagOn(sch.member_price_on),
+    studentPriceOn: flagOn(sch.student_price_on),
     offerType: quote.offerType || sch.offer_type || "full",
     offerLabel: quote.offerLabel || offerMeta(sch.offer_type).label,
     offerColor: quote.offerColor || offerMeta(sch.offer_type).color,
@@ -297,17 +308,23 @@ function applyScheduleExtras(id, body, route) {
   const reviewStatus = body.reviewStatus || body.review_status || "approved";
   const playTagIds = Array.isArray(body.playTagIds) ? body.playTagIds : parseIdList(body.play_tags_json);
   const city = body.city || cityOf(route?.region);
+  const channel = body.channel === "activity" ? "activity" : "trip";
+  const memberOn = flagOn(body.memberPriceOn ?? body.member_price_on) ? 1 : 0;
+  const studentOn = flagOn(body.studentPriceOn ?? body.student_price_on) ? 1 : 0;
   db()
-    .prepare("UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=? WHERE id=?")
-    .run(offerType, offerPrice, reviewStatus, JSON.stringify(playTagIds), city, id);
+    .prepare(
+      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=? WHERE id=?"
+    )
+    .run(offerType, offerPrice, reviewStatus, JSON.stringify(playTagIds), city, channel, memberOn, studentOn, id);
 }
 
 router.get("/meta", (req, res) => {
   res.json({
     ok: true,
     data: {
-      name: "北野行",
-      slogan: "说走就走的京郊山野",
+      name: "同行者众",
+      slogan: "在山野，遇见爱",
+      studentDiscountRate: config.student.discountRate,
       smsDemoCode: config.demoSmsCode,
       wechatPayMock: config.wechat.mock,
       memberAnnualFee: config.member.annualFee,
@@ -568,6 +585,31 @@ router.put("/me", authUser, (req, res) => {
   res.json({ ok: true, data: userPublic(user, req) });
 });
 
+router.post("/me/student", authUser, (req, res) => {
+  const school = String((req.body || {}).school || "").trim();
+  if (!school) return res.status(400).json({ ok: false, message: "请填写学校" });
+  db().prepare("UPDATE users SET school=?, student_status='pending', is_student=0 WHERE id=?").run(school, req.userId);
+  const next = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+  res.json({ ok: true, data: userPublic(next, req), message: "已提交学生认证，待后台审核" });
+});
+
+router.post("/me/group", authUser, (req, res) => {
+  const name = String((req.body || {}).name || (req.body || {}).groupName || "").trim();
+  const kind = String((req.body || {}).kind || (req.body || {}).groupKind || "组织").trim();
+  if (!name) return res.status(400).json({ ok: false, message: "请填写团体名称" });
+  db().prepare("UPDATE users SET group_name=?, group_kind=?, group_status='pending' WHERE id=?").run(name, kind, req.userId);
+  const next = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+  res.json({ ok: true, data: userPublic(next, req), message: "已提交团体认证，待后台审核" });
+});
+
+router.post("/feedback", authUser, (req, res) => {
+  const kind = (req.body || {}).kind === "bug" ? "bug" : "suggest";
+  const content = String((req.body || {}).content || "").trim();
+  if (content.length < 4) return res.status(400).json({ ok: false, message: "请写清楚建议或问题" });
+  db().prepare("INSERT INTO feedbacks (user_id,kind,content) VALUES (?,?,?)").run(req.userId, kind, content);
+  res.json({ ok: true, message: "已收到，谢谢反馈" });
+});
+
 router.get("/weather", async (req, res) => {
   try {
     const data = await forecast({ region: req.query.region || req.query.place, date: req.query.date });
@@ -690,7 +732,8 @@ router.get("/routes", (req, res) => {
     return mapRouteSummary(row, req, {
       fromPrice: tiers[0]?.price,
       memberFromPrice: liveMemberPrice(tiers[0]?.price),
-      priceTiers: tiers.map((t) => ({ minPeople: t.min_people, price: t.price, memberPrice: liveMemberPrice(t.price) })),
+      studentFromPrice: liveStudentPrice(tiers[0]?.price),
+      priceTiers: tiers.map((t) => ({ minPeople: t.min_people, price: t.price, memberPrice: liveMemberPrice(t.price), studentPrice: liveStudentPrice(t.price) })),
       upcoming: schedules,
       playTags,
     });
@@ -716,7 +759,7 @@ router.get("/routes/:id", optionalUser, (req, res) => {
   res.json({
     ok: true,
     data: mapRoute(row, req, {
-      priceTiers: bundle.tiers.map((t) => ({ minPeople: t.min_people, maxPeople: t.max_people, price: t.price, memberPrice: liveMemberPrice(t.price) })),
+      priceTiers: bundle.tiers.map((t) => ({ minPeople: t.min_people, maxPeople: t.max_people, price: t.price, memberPrice: liveMemberPrice(t.price), studentPrice: liveStudentPrice(t.price) })),
       buses: bundle.buses,
       schedules,
       favored,
@@ -726,7 +769,7 @@ router.get("/routes/:id", optionalUser, (req, res) => {
 });
 
 router.get("/schedules", (req, res) => {
-  const { routeId, organizerType, city, tag, offerType, month, date } = req.query;
+  const { routeId, organizerType, city, tag, offerType, month, date, channel } = req.query;
   let sql = "SELECT * FROM schedules WHERE start_date>=date('now','-1 day') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved'";
   const args = [];
   if (routeId) {
@@ -748,6 +791,10 @@ router.get("/schedules", (req, res) => {
   if (month) {
     sql += " AND start_date LIKE ?";
     args.push(`${month}%`);
+  }
+  if (channel === "activity" || channel === "trip") {
+    sql += " AND IFNULL(channel,'trip')=?";
+    args.push(channel);
   }
   sql += " ORDER BY start_date";
   let rows = db().prepare(sql).all(...args).map((s) => scheduleView(s, req));
@@ -1014,6 +1061,9 @@ router.post("/trips", authUser, (req, res) => {
       offerPrice: b.offerType === "free" ? 0 : b.offerPrice,
       playTagIds,
       city,
+      channel: b.channel,
+      memberPriceOn: b.memberPriceOn,
+      studentPriceOn: b.studentPriceOn,
       reviewStatus: "pending",
     },
     route
@@ -1040,6 +1090,7 @@ router.post("/enroll", authUser, (req, res) => {
       autoAlt,
       fallbackScheduleIds,
       couponCode,
+      joinMode,
     } = req.body || {};
     const data = enrollUser({
       userId: req.userId,
@@ -1058,6 +1109,7 @@ router.post("/enroll", authUser, (req, res) => {
       autoAlt,
       fallbackScheduleIds,
       couponCode: couponCode || req.query.coupon,
+      joinMode,
     });
     res.json({ ok: true, data });
   } catch (e) {
@@ -1379,6 +1431,11 @@ function adminUserView(user) {
     gender: user.gender,
     is_member: user.is_member,
     isMember: isMember(user),
+    isStudent: isStudent(user),
+    studentStatus: user.student_status || "",
+    school: user.school || "",
+    groupStatus: user.group_status || "",
+    groupName: user.group_name || "",
     member_expire_at: user.member_expire_at,
     points: user.points,
     company_name: user.company_name,
@@ -1850,7 +1907,7 @@ router.post("/admin/enrollments/:id/cancel", authAdmin, (req, res) => {
 router.get("/admin/users", authAdmin, (req, res) => {
   const q = String(req.query.q || "").trim();
   let sql =
-    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual FROM users WHERE deleted_at IS NULL";
+    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,group_status,group_name FROM users WHERE deleted_at IS NULL";
   const args = [];
   if (q) {
     sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ?)";
@@ -1858,7 +1915,18 @@ router.get("/admin/users", authAdmin, (req, res) => {
     args.push(like, like, like);
   }
   sql += " ORDER BY id DESC";
-  const rows = db().prepare(sql).all(...args).map((u) => ({ ...u, isMember: isMember(u), isVirtual: !!u.is_virtual }));
+  const rows = db()
+    .prepare(sql)
+    .all(...args)
+    .map((u) => ({
+      ...u,
+      isMember: isMember(u),
+      isStudent: isStudent(u),
+      studentStatus: u.student_status || "",
+      groupStatus: u.group_status || "",
+      groupName: u.group_name || "",
+      isVirtual: !!u.is_virtual,
+    }));
   res.json({ ok: true, data: rows });
 });
 
@@ -1876,6 +1944,24 @@ function virtualUsersHandler(req, res) {
 
 router.post("/admin/virtual-users", authAdmin, virtualUsersHandler);
 router.post("/admin/schedules/:id/virtual-users", authAdmin, virtualUsersHandler);
+
+router.post("/admin/users/:id/verify", authAdmin, (req, res) => {
+  const user = managedUser(req.params.id);
+  if (!user) return res.status(404).json({ ok: false, message: "用户不存在" });
+  const kind = (req.body || {}).kind;
+  const action = (req.body || {}).action || "approve";
+  if (kind === "student") {
+    if (action === "approve") db().prepare("UPDATE users SET student_status='approved', is_student=1 WHERE id=?").run(user.id);
+    else db().prepare("UPDATE users SET student_status='rejected', is_student=0 WHERE id=?").run(user.id);
+  } else if (kind === "group") {
+    if (action === "approve") db().prepare("UPDATE users SET group_status='approved' WHERE id=?").run(user.id);
+    else db().prepare("UPDATE users SET group_status='rejected' WHERE id=?").run(user.id);
+  } else {
+    return res.status(400).json({ ok: false, message: "请选择学生或团体认证" });
+  }
+  const next = db().prepare("SELECT * FROM users WHERE id=?").get(user.id);
+  res.json({ ok: true, data: adminUserView(next) });
+});
 
 router.post("/admin/users/:id/member", authAdmin, (req, res) => {
   const user = managedUser(req.params.id);

@@ -1,11 +1,15 @@
 const { request } = require("../../utils/request");
 
 Page({
-  data: { accounts: [], contacts: {} },
+  data: { accounts: [], contacts: {}, rules: { title: "", summary: "", sections: [] } },
   onShow() {
     request("/meta").then((r) => {
       const d = (r && r.data) || {};
-      this.setData({ accounts: d.officialAccounts || [], contacts: d.contacts || {} });
+      this.setData({
+        accounts: d.officialAccounts || [],
+        contacts: d.contacts || {},
+        rules: d.commonRules || { title: "", summary: "", sections: [] },
+      });
     }).catch(() => {});
   },
   copy(e) {

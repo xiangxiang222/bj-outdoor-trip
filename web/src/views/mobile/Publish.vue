@@ -1,6 +1,16 @@
 <template>
   <div>
-    <p class="muted">填写线路与出发信息，提交后需管理员审核才会出现在首页。发团规则见「规则」页；成团后最多两位领队。</p>
+    <p class="muted">提交后需管理员审核。规则见「官方」页。可按关键词先匹配已有线路。</p>
+    <label>类型</label>
+    <select class="select" v-model="form.channel">
+      <option value="trip">户外线路（上首页）</option>
+      <option value="activity">其它活动（上活动页）</option>
+    </select>
+    <label>匹配已有线路</label>
+    <input class="input" v-model="keyword" placeholder="输入关键词，点下方选用" @input="searchRoutes" />
+    <div class="chips" v-if="hits.length">
+      <div class="chip" v-for="r in hits" :key="r.id" @click="useRoute(r)">{{ r.title }}</div>
+    </div>
     <label>线路标题</label>
     <input class="input" v-model="form.title" placeholder="例如：慕田峪长城一日" />
     <label>副标题</label>
@@ -34,6 +44,8 @@
     </select>
     <label>原价（元）</label>
     <input class="input" type="number" v-model.number="form.originPrice" />
+    <label class="check-row"><input type="checkbox" v-model="form.memberPriceOn" /> 适用会员价</label>
+    <label class="check-row"><input type="checkbox" v-model="form.studentPriceOn" /> 适用学生价</label>
     <label v-if="form.offerType !== 'free'">现价（可空，早鸟/特惠将按折扣算）</label>
     <input v-if="form.offerType !== 'free'" class="input" type="number" v-model.number="form.offerPrice" />
     <label>出发日期</label>
@@ -83,16 +95,21 @@ const err = ref("");
 const loading = ref(false);
 const offers = OFFER_TYPES;
 const meetups = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
+const keyword = ref("");
+const hits = ref([]);
 const form = ref({
   title: "",
   subtitle: "",
   cover: "",
+  channel: route.query.channel === "activity" ? "activity" : "trip",
   days: 1,
   city: "",
   playTagIds: [],
   offerType: "full",
   originPrice: 199,
   offerPrice: null,
+  memberPriceOn: true,
+  studentPriceOn: true,
   startDate: route.query.date || "",
   organizerType: "individual",
   companyName: store.profile?.companyName || "",
@@ -112,6 +129,28 @@ onMounted(async () => {
   form.value.busTypeId = buses.value[0]?.id || "";
 });
 
+async function searchRoutes() {
+  const q = keyword.value.trim();
+  if (!q) {
+    hits.value = [];
+    return;
+  }
+  try {
+    hits.value = ((await http.get("/routes", { params: { q } })).data || []).slice(0, 8);
+  } catch {
+    hits.value = [];
+  }
+}
+function useRoute(r) {
+  form.value.title = r.title || form.value.title;
+  form.value.subtitle = r.subtitle || "";
+  form.value.cover = r.cover || "";
+  form.value.days = r.days || 1;
+  form.value.city = r.region || form.value.city;
+  form.value.originPrice = r.fromPrice || form.value.originPrice;
+  keyword.value = r.title;
+  hits.value = [];
+}
 function toggleTag(id) {
   const ids = form.value.playTagIds;
   form.value.playTagIds = ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];

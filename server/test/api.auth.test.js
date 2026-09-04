@@ -12,7 +12,7 @@ describe("auth and profile API", () => {
 
   it("returns product meta", async () => {
     const res = await agent.get("/api/meta").expect(200);
-    assert.equal(res.body.data.name, "北野行");
+    assert.equal(res.body.data.name, "同行者众");
     assert.deepEqual(res.body.data.days, [1, 2, 3, 5]);
     assert.equal(res.body.data.smsDemoCode, "888888");
   });

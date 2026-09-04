@@ -23,8 +23,16 @@
       <el-table-column prop="member_expire_at" label="到期" width="120" />
       <el-table-column prop="points" label="积分" width="80" />
       <el-table-column prop="company_name" label="公司" min-width="140" />
-      <el-table-column label="操作" width="280">
+      <el-table-column label="学生" width="110">
+        <template #default="{ row }">{{ row.isStudent ? "已认证" : row.studentStatus === "pending" ? "待审" : "—" }}</template>
+      </el-table-column>
+      <el-table-column label="团体" min-width="120">
+        <template #default="{ row }">{{ row.groupStatus === "approved" ? row.groupName || "已认证" : row.groupStatus === "pending" ? "待审" : "—" }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="360">
         <template #default="{ row }">
+          <el-button v-if="row.studentStatus === 'pending'" size="small" @click="verify(row, 'student')">过学生</el-button>
+          <el-button v-if="row.groupStatus === 'pending'" size="small" @click="verify(row, 'group')">过团体</el-button>
           <el-button size="small" type="success" @click="grant(row)">{{ row.isMember ? "续费" : "开通" }}</el-button>
           <el-button v-if="row.isMember" size="small" @click="revoke(row)">取消会员</el-button>
           <el-button size="small" @click="openPoints(row)">积分</el-button>
@@ -68,6 +76,16 @@ onMounted(load);
 
 async function load() {
   list.value = (await http.get("/admin/users", { params: { q: q.value } })).data;
+}
+
+async function verify(row, kind) {
+  try {
+    await http.post(`/admin/users/${row.id}/verify`, { kind, action: "approve" });
+    ElMessage.success(kind === "student" ? "学生已通过" : "团体已通过");
+    await load();
+  } catch (e) {
+    ElMessage.error(e.message);
+  }
 }
 
 async function grant(row) {

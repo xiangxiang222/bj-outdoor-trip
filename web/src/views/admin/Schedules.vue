@@ -108,6 +108,7 @@
             <el-option label="早鸟团" value="early" />
             <el-option label="特惠团" value="deal" />
             <el-option label="免费团" value="free" />
+            <el-option label="全家团" value="family" />
             <el-option label="全价团" value="full" />
           </el-select>
         </el-form-item>
