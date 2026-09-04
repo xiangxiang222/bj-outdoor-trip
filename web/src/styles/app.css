@@ -51,11 +51,11 @@ button, input, textarea, select { font-family: inherit; }
   border-radius: 8px;
 }
 .brand-mark.sm { width: 36px; height: 36px; flex: 0 0 36px; }
-.brand-mark.md { width: 88px; height: 88px; }
-.brand-mark.lg { width: 180px; height: 180px; margin: 0 auto 12px; }
+.brand-mark.md { width: 88px; height: 88px; margin: 0 auto 10px; }
+.brand-mark.lg { width: 140px; height: 140px; margin: 0 auto 12px; }
 .brand-lockup { display: flex; align-items: center; gap: 8px; font-weight: 700; }
 .admin-brand { padding: 20px 16px 12px; }
-.admin-brand img { width: 100%; height: auto; border-radius: 10px; background: #fff; }
+.admin-brand img { width: 88px; height: 88px; margin: 0 auto; display: block; border-radius: 10px; background: #fff; object-fit: contain; }
 .admin-brand-sub { margin-top: 8px; font-size: 12px; opacity: .6; }
 .mp-status {
   height: 52px;
