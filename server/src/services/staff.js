@@ -1,8 +1,39 @@
 const bcrypt = require("bcryptjs");
 const { getDb } = require("../db");
 
-const ROLES = new Set(["admin", "operator"]);
+const ROLES = new Set(["admin", "operator", "leader", "photographer"]);
 const USERNAME_RE = /^[a-zA-Z][a-zA-Z0-9_]{2,31}$/;
+const ROLE_LABELS = {
+  admin: "超级管理员",
+  operator: "运营",
+  leader: "领队",
+  photographer: "摄影",
+};
+const CAPS = {
+  admin: ["staff", "ops", "field", "roster", "photo"],
+  operator: ["ops", "field", "roster", "photo"],
+  leader: ["field", "roster", "photo"],
+  photographer: ["roster", "photo"],
+};
+
+function capsOf(role) {
+  return CAPS[role] || [];
+}
+
+function hasCap(role, cap) {
+  return capsOf(role).includes(cap);
+}
+
+function roleLabel(role) {
+  return ROLE_LABELS[role] || ROLE_LABELS.admin;
+}
+
+function requireCap(...needed) {
+  return (req, res, next) => {
+    if (needed.every((cap) => hasCap(req.adminRole, cap))) return next();
+    res.status(403).json({ ok: false, message: "当前角色无权做这项操作" });
+  };
+}
 
 function fail(status, message) {
   const err = new Error(message);
@@ -17,6 +48,8 @@ function publicStaff(row) {
     username: row.username,
     name: row.name,
     role: row.role || "admin",
+    roleLabel: roleLabel(row.role || "admin"),
+    caps: capsOf(row.role || "admin"),
     status: row.status || "on",
     createdAt: row.created_at,
   };
@@ -54,7 +87,7 @@ function assertKeepAdmin(id, nextRole, nextStatus) {
 
 function normalizeRole(role) {
   const value = role || "admin";
-  if (!ROLES.has(value)) fail(400, "角色只能是管理员或运营");
+  if (!ROLES.has(value)) fail(400, "角色只能是超级管理员、运营、领队或摄影");
   return value;
 }
 
@@ -132,6 +165,8 @@ function changeOwnPassword(id, oldPassword, newPassword) {
 }
 
 module.exports = {
+  ROLES,
+  ROLE_LABELS,
   publicStaff,
   getStaff,
   listStaff,
@@ -139,4 +174,8 @@ module.exports = {
   updateStaff,
   deleteStaff,
   changeOwnPassword,
+  capsOf,
+  hasCap,
+  roleLabel,
+  requireCap,
 };

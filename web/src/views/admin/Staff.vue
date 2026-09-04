@@ -7,12 +7,12 @@
         <el-button type="success" @click="openCreate">新增账号</el-button>
       </div>
     </div>
-    <p class="muted">管理员可管理全部后台账号；运营可处理线路、拼团、报名和会员，但不能增删其他管理员。表格较宽时可左右滑动，操作在最右侧。</p>
+    <p class="muted">超级管理员可管全部后台账号。运营管线路、拼团、报名和会员。领队管现场车辆座位。摄影可看团和名单、上传照片。表格较宽时可左右滑动。</p>
     <el-table :data="list" stripe>
       <el-table-column prop="username" label="账号" width="140" />
       <el-table-column prop="name" label="姓名" width="140" />
       <el-table-column label="角色" width="100">
-        <template #default="{ row }">{{ row.role === "operator" ? "运营" : "管理员" }}</template>
+        <template #default="{ row }">{{ row.roleLabel || roleLabel(row.role) }}</template>
       </el-table-column>
       <el-table-column label="状态" width="90">
         <template #default="{ row }">{{ row.status === "off" ? "停用" : "启用" }}</template>
@@ -38,8 +38,7 @@
         <el-form-item label="姓名"><el-input v-model="form.name" maxlength="20" /></el-form-item>
         <el-form-item label="角色">
           <el-select v-model="form.role">
-            <el-option label="管理员" value="admin" />
-            <el-option label="运营" value="operator" />
+            <el-option v-for="o in ROLE_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
           </el-select>
         </el-form-item>
         <el-form-item v-if="!form.id" label="密码">
@@ -78,6 +77,7 @@
 import { onMounted, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import http from "@/api/http";
+import { ROLE_OPTIONS, roleLabel } from "@/utils/staff";
 
 const list = ref([]);
 const me = ref({ id: 0, role: "admin" });

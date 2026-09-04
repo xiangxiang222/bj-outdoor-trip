@@ -44,7 +44,7 @@
       <el-table-column prop="pay_amount" label="金额" width="90" />
       <el-table-column label="操作" width="100">
         <template #default="{ row }">
-          <el-button size="small" type="danger" :disabled="row.status === 'cancelled'" @click="cancel(row)">取消</el-button>
+          <el-button v-if="canOps" size="small" type="danger" :disabled="row.status === 'cancelled'" @click="cancel(row)">取消</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -52,19 +52,27 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import http from "@/api/http";
 import { genderText, payStatusText } from "@/utils/labels";
+import { hasCap } from "@/utils/staff";
 
 const list = ref([]);
 const q = ref("");
 const payStatus = ref("");
 const status = ref("");
+const me = ref({ caps: [] });
+const canOps = computed(() => hasCap(me.value, "ops"));
 
 onMounted(load);
 
 async function load() {
+  try {
+    me.value = (await http.get("/admin/me")).data;
+  } catch {
+    me.value = { caps: [] };
+  }
   list.value = (
     await http.get("/admin/enrollments", {
       params: { q: q.value, payStatus: payStatus.value, status: status.value },

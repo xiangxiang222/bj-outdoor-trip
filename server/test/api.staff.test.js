@@ -16,6 +16,8 @@ describe("admin staff and user ops", () => {
     const me = await agent.get("/api/admin/me").set(auth(adminToken)).expect(200);
     assert.equal(me.body.data.username, "admin");
     assert.equal(me.body.data.role, "admin");
+    assert.equal(me.body.data.roleLabel, "超级管理员");
+    assert.ok(me.body.data.caps.includes("staff"));
     assert.equal(me.body.data.status, "on");
     assert.equal(me.body.data.password_hash, undefined);
     const list = await agent.get("/api/admin/staff").set(auth(adminToken)).expect(200);
@@ -143,5 +145,45 @@ describe("admin staff and user ops", () => {
     const cancelled = await agent.post(`/api/admin/enrollments/${id}/cancel`).set(auth(adminToken)).expect(200);
     assert.equal(cancelled.body.data.status, "cancelled");
     await agent.post(`/api/admin/enrollments/${id}/cancel`).set(auth(adminToken)).expect(400);
+  });
+
+  it("lets leaders lock seats but blocks photographers from money and staff", async () => {
+    const leader = await agent
+      .post("/api/admin/staff")
+      .set(auth(adminToken))
+      .send({ username: "lead_one", name: "领队甲", password: "lead123456", role: "leader" })
+      .expect(200);
+    assert.equal(leader.body.data.role, "leader");
+    assert.ok(leader.body.data.caps.includes("field"));
+    assert.ok(!leader.body.data.caps.includes("ops"));
+
+    const photo = await agent
+      .post("/api/admin/staff")
+      .set(auth(adminToken))
+      .send({ username: "pic_one", name: "摄影甲", password: "pic123456", role: "photographer" })
+      .expect(200);
+    assert.equal(photo.body.data.roleLabel, "摄影");
+
+    const leadLogin = await agent.post("/api/admin/login").send({ username: "lead_one", password: "lead123456" }).expect(200);
+    const leadToken = leadLogin.body.data.token;
+    await agent.get("/api/admin/schedules").set(auth(leadToken)).expect(200);
+    await agent.get("/api/admin/enrollments").set(auth(leadToken)).expect(200);
+    await agent.get("/api/admin/users").set(auth(leadToken)).expect(403);
+    await agent.get("/api/admin/dashboard").set(auth(leadToken)).expect(403);
+    await agent
+      .post(`/api/admin/schedules/${seed.individualScheduleId}/seats/lock`)
+      .set(auth(leadToken))
+      .send({ seatNo: "1A", locked: true })
+      .expect(200);
+
+    const picLogin = await agent.post("/api/admin/login").send({ username: "pic_one", password: "pic123456" }).expect(200);
+    const picToken = picLogin.body.data.token;
+    await agent.get("/api/admin/schedules").set(auth(picToken)).expect(200);
+    await agent
+      .post(`/api/admin/schedules/${seed.individualScheduleId}/seats/lock`)
+      .set(auth(picToken))
+      .send({ seatNo: "1B", locked: true })
+      .expect(403);
+    await agent.post("/api/admin/staff").set(auth(picToken)).send({ username: "x", name: "x", password: "123456" }).expect(403);
   });
 });

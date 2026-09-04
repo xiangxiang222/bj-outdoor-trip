@@ -63,6 +63,7 @@ const {
   updateStaff,
   deleteStaff,
   changeOwnPassword,
+  requireCap,
 } = require("./services/staff");
 const {
   isMember,
@@ -1491,14 +1492,6 @@ router.post("/guide/schedules/:id/seats/assign", authGuide, (req, res) => {
   }
 });
 
-function staffAdminOnly(req, res) {
-  if (req.adminRole !== "admin") {
-    res.status(403).json({ ok: false, message: "仅管理员可管理后台账号" });
-    return false;
-  }
-  return true;
-}
-
 function managedUser(id) {
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(id);
   if (!user || user.deleted_at) return null;
@@ -1550,13 +1543,11 @@ router.put("/admin/me/password", authAdmin, (req, res) => {
   }
 });
 
-router.get("/admin/staff", authAdmin, (req, res) => {
-  if (!staffAdminOnly(req, res)) return;
+router.get("/admin/staff", authAdmin, requireCap("staff"), (req, res) => {
   res.json({ ok: true, data: listStaff() });
 });
 
-router.post("/admin/staff", authAdmin, (req, res) => {
-  if (!staffAdminOnly(req, res)) return;
+router.post("/admin/staff", authAdmin, requireCap("staff"), (req, res) => {
   try {
     res.json({ ok: true, data: createStaff(req.body || {}) });
   } catch (e) {
@@ -1564,8 +1555,7 @@ router.post("/admin/staff", authAdmin, (req, res) => {
   }
 });
 
-router.put("/admin/staff/:id", authAdmin, (req, res) => {
-  if (!staffAdminOnly(req, res)) return;
+router.put("/admin/staff/:id", authAdmin, requireCap("staff"), (req, res) => {
   try {
     res.json({ ok: true, data: updateStaff(Number(req.params.id), req.body || {}, req.adminId) });
   } catch (e) {
@@ -1573,8 +1563,7 @@ router.put("/admin/staff/:id", authAdmin, (req, res) => {
   }
 });
 
-router.delete("/admin/staff/:id", authAdmin, (req, res) => {
-  if (!staffAdminOnly(req, res)) return;
+router.delete("/admin/staff/:id", authAdmin, requireCap("staff"), (req, res) => {
   try {
     res.json({ ok: true, data: deleteStaff(Number(req.params.id), req.adminId) });
   } catch (e) {
@@ -1582,7 +1571,7 @@ router.delete("/admin/staff/:id", authAdmin, (req, res) => {
   }
 });
 
-router.get("/admin/dashboard", authAdmin, (req, res) => {
+router.get("/admin/dashboard", authAdmin, requireCap("ops"), (req, res) => {
   const routeCount = db().prepare("SELECT COUNT(*) c FROM routes").get().c;
   const userCount = db().prepare("SELECT COUNT(*) c FROM users WHERE deleted_at IS NULL").get().c;
   const enrollCount = db().prepare("SELECT COUNT(*) c FROM enrollments WHERE status!='cancelled'").get().c;
@@ -1608,7 +1597,7 @@ router.get("/admin/dashboard", authAdmin, (req, res) => {
   res.json({ ok: true, data: { routeCount, userCount, enrollCount, revenue, pending, byRoute, byDay } });
 });
 
-router.post("/admin/upload", authAdmin, (req, res) => {
+router.post("/admin/upload", authAdmin, requireCap("photo"), (req, res) => {
   uploadImage.single("file")(req, res, (err) => {
     if (err) {
       const message = err.code === "LIMIT_FILE_SIZE" ? "图片不能超过 5MB" : err.message || "上传失败";
@@ -1619,11 +1608,11 @@ router.post("/admin/upload", authAdmin, (req, res) => {
   });
 });
 
-router.get("/admin/play-tags", authAdmin, (req, res) => {
+router.get("/admin/play-tags", authAdmin, requireCap("roster"), (req, res) => {
   res.json({ ok: true, data: db().prepare("SELECT * FROM play_tags ORDER BY sort_order, id").all().map((t) => mapPlayTag(t, req)) });
 });
 
-router.post("/admin/play-tags", authAdmin, (req, res) => {
+router.post("/admin/play-tags", authAdmin, requireCap("ops"), (req, res) => {
   const b = req.body || {};
   const name = String(b.name || "").trim();
   if (!name) return res.status(400).json({ ok: false, message: "请填写标签名" });
@@ -1633,7 +1622,7 @@ router.post("/admin/play-tags", authAdmin, (req, res) => {
   res.json({ ok: true, data: mapPlayTag(db().prepare("SELECT * FROM play_tags WHERE id=?").get(info.lastInsertRowid), req) });
 });
 
-router.put("/admin/play-tags/:id", authAdmin, (req, res) => {
+router.put("/admin/play-tags/:id", authAdmin, requireCap("ops"), (req, res) => {
   const row = db().prepare("SELECT * FROM play_tags WHERE id=?").get(req.params.id);
   if (!row) return res.status(404).json({ ok: false, message: "标签不存在" });
   const b = req.body || {};
@@ -1643,12 +1632,12 @@ router.put("/admin/play-tags/:id", authAdmin, (req, res) => {
   res.json({ ok: true, data: mapPlayTag(db().prepare("SELECT * FROM play_tags WHERE id=?").get(row.id), req) });
 });
 
-router.delete("/admin/play-tags/:id", authAdmin, (req, res) => {
+router.delete("/admin/play-tags/:id", authAdmin, requireCap("ops"), (req, res) => {
   db().prepare("UPDATE play_tags SET status='off' WHERE id=?").run(req.params.id);
   res.json({ ok: true });
 });
 
-router.get("/admin/routes", authAdmin, (req, res) => {
+router.get("/admin/routes", authAdmin, requireCap("roster"), (req, res) => {
   const rows = db()
     .prepare("SELECT * FROM routes ORDER BY id")
     .all()
@@ -1659,7 +1648,7 @@ router.get("/admin/routes", authAdmin, (req, res) => {
   res.json({ ok: true, data: rows });
 });
 
-router.post("/admin/routes", authAdmin, (req, res) => {
+router.post("/admin/routes", authAdmin, requireCap("ops"), (req, res) => {
   const b = req.body || {};
   const info = db()
     .prepare(
@@ -1698,7 +1687,7 @@ router.post("/admin/routes", authAdmin, (req, res) => {
   res.json({ ok: true, data: { id } });
 });
 
-router.put("/admin/routes/:id", authAdmin, (req, res) => {
+router.put("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
   const b = req.body || {};
   const id = req.params.id;
   db().prepare(
@@ -1740,12 +1729,12 @@ router.put("/admin/routes/:id", authAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
-router.delete("/admin/routes/:id", authAdmin, (req, res) => {
+router.delete("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
   db().prepare("UPDATE routes SET status='off' WHERE id=?").run(req.params.id);
   res.json({ ok: true });
 });
 
-router.post("/admin/schedules", authAdmin, (req, res) => {
+router.post("/admin/schedules", authAdmin, requireCap("ops"), (req, res) => {
   const admin = db().prepare("SELECT * FROM admin_users WHERE id=?").get(req.adminId);
   const { routeId, startDate, organizerType, busTypeId, minGroupSize, meetupPoint, meetupTime, notes, companyName } = req.body || {};
   const route = db().prepare("SELECT * FROM routes WHERE id=?").get(routeId);
@@ -1801,12 +1790,12 @@ router.post("/admin/schedules", authAdmin, (req, res) => {
   });
 });
 
-router.get("/admin/schedules", authAdmin, (req, res) => {
+router.get("/admin/schedules", authAdmin, requireCap("roster"), (req, res) => {
   const rows = db().prepare("SELECT * FROM schedules ORDER BY start_date DESC").all().map((s) => scheduleView(s, req));
   res.json({ ok: true, data: rows });
 });
 
-router.post("/admin/schedules/dissolve-all", authAdmin, (req, res) => {
+router.post("/admin/schedules/dissolve-all", authAdmin, requireCap("ops"), (req, res) => {
   try {
     const data = dissolveAllSchedules({
       reason: (req.body || {}).reason,
@@ -1818,7 +1807,7 @@ router.post("/admin/schedules/dissolve-all", authAdmin, (req, res) => {
   }
 });
 
-router.post("/admin/schedules/:id/review", authAdmin, (req, res) => {
+router.post("/admin/schedules/:id/review", authAdmin, requireCap("ops"), (req, res) => {
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
   const status = (req.body || {}).status === "rejected" ? "rejected" : "approved";
@@ -1829,9 +1818,9 @@ router.post("/admin/schedules/:id/review", authAdmin, (req, res) => {
   res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id), req) });
 });
 
-router.post("/admin/schedules/:id/dissolve", authAdmin, dissolveHandler("admin"));
+router.post("/admin/schedules/:id/dissolve", authAdmin, requireCap("ops"), dissolveHandler("admin"));
 
-router.put("/admin/schedules/:id/cost", authAdmin, (req, res) => {
+router.put("/admin/schedules/:id/cost", authAdmin, requireCap("ops"), (req, res) => {
   const b = req.body || {};
   db().prepare(
     "UPDATE schedules SET cost_transport=?, cost_ticket=?, cost_hotel=?, cost_meal=?, cost_guide=?, cost_other=? WHERE id=?"
@@ -1839,7 +1828,7 @@ router.put("/admin/schedules/:id/cost", authAdmin, (req, res) => {
   res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id), req) });
 });
 
-router.put("/admin/schedules/:id/trip", authAdmin, (req, res) => {
+router.put("/admin/schedules/:id/trip", authAdmin, requireCap("field"), (req, res) => {
   try {
     const exists = db().prepare("SELECT id FROM schedules WHERE id=?").get(req.params.id);
     if (!exists) return res.status(404).json({ ok: false, message: "排期不存在" });
@@ -1850,7 +1839,7 @@ router.put("/admin/schedules/:id/trip", authAdmin, (req, res) => {
   }
 });
 
-router.post("/admin/schedules/:id/seats/lock", authAdmin, (req, res) => {
+router.post("/admin/schedules/:id/seats/lock", authAdmin, requireCap("field"), (req, res) => {
   try {
     const exists = db().prepare("SELECT id FROM schedules WHERE id=?").get(req.params.id);
     if (!exists) return res.status(404).json({ ok: false, message: "排期不存在" });
@@ -1864,7 +1853,7 @@ router.post("/admin/schedules/:id/seats/lock", authAdmin, (req, res) => {
   }
 });
 
-router.post("/admin/schedules/:id/seats/assign", authAdmin, (req, res) => {
+router.post("/admin/schedules/:id/seats/assign", authAdmin, requireCap("field"), (req, res) => {
   try {
     const exists = db().prepare("SELECT id FROM schedules WHERE id=?").get(req.params.id);
     if (!exists) return res.status(404).json({ ok: false, message: "排期不存在" });
@@ -1876,7 +1865,7 @@ router.post("/admin/schedules/:id/seats/assign", authAdmin, (req, res) => {
   }
 });
 
-router.post("/admin/schedules/:id/settle", authAdmin, (req, res) => {
+router.post("/admin/schedules/:id/settle", authAdmin, requireCap("ops"), (req, res) => {
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
   if (!sch) return res.status(400).json({ ok: false, message: "排期不存在" });
   if (sch.status === "cancelled") return res.status(400).json({ ok: false, message: "该拼团已解散" });
@@ -1896,11 +1885,11 @@ router.post("/admin/schedules/:id/settle", authAdmin, (req, res) => {
   res.json({ ok: true, data: { count: pending.length, price: quote.originPrice, splits: splits?.splits || [] } });
 });
 
-router.get("/admin/schedules/:id/splits", authAdmin, (req, res) => {
+router.get("/admin/schedules/:id/splits", authAdmin, requireCap("ops"), (req, res) => {
   res.json({ ok: true, data: listSplits(req.params.id) });
 });
 
-router.post("/admin/schedules/:id/split", authAdmin, (req, res) => {
+router.post("/admin/schedules/:id/split", authAdmin, requireCap("ops"), (req, res) => {
   try {
     const data = createSplitsForSchedule(req.params.id, { remark: "后台发起分账" });
     res.json({ ok: true, data });
@@ -1909,11 +1898,11 @@ router.post("/admin/schedules/:id/split", authAdmin, (req, res) => {
   }
 });
 
-router.get("/admin/coupons", authAdmin, (req, res) => {
+router.get("/admin/coupons", authAdmin, requireCap("ops"), (req, res) => {
   res.json({ ok: true, data: listAdmin(req.query.scheduleId || req.query.schedule_id) });
 });
 
-router.post("/admin/coupons", authAdmin, (req, res) => {
+router.post("/admin/coupons", authAdmin, requireCap("ops"), (req, res) => {
   try {
     const data = createCampaign(req.body || {});
     res.json({ ok: true, data });
@@ -1922,7 +1911,7 @@ router.post("/admin/coupons", authAdmin, (req, res) => {
   }
 });
 
-router.get("/admin/coupons/:id", authAdmin, async (req, res) => {
+router.get("/admin/coupons/:id", authAdmin, requireCap("ops"), async (req, res) => {
   try {
     const data = adminDetail(req.params.id, req);
     data.share = await sharePayload(loadCampaign(req.params.id), req);
@@ -1933,7 +1922,7 @@ router.get("/admin/coupons/:id", authAdmin, async (req, res) => {
   }
 });
 
-router.put("/admin/coupons/:id", authAdmin, (req, res) => {
+router.put("/admin/coupons/:id", authAdmin, requireCap("ops"), (req, res) => {
   try {
     const data = updateCampaign(req.params.id, req.body || {});
     res.json({ ok: true, data });
@@ -1942,7 +1931,7 @@ router.put("/admin/coupons/:id", authAdmin, (req, res) => {
   }
 });
 
-router.post("/admin/coupons/:id/grant", authAdmin, (req, res) => {
+router.post("/admin/coupons/:id/grant", authAdmin, requireCap("ops"), (req, res) => {
   try {
     const data = grantCoupons(req.params.id, req.body || {}, req);
     res.json({ ok: true, data, message: `已发放 ${data.granted} 张` });
@@ -1951,7 +1940,7 @@ router.post("/admin/coupons/:id/grant", authAdmin, (req, res) => {
   }
 });
 
-router.get("/admin/enrollments", authAdmin, (req, res) => {
+router.get("/admin/enrollments", authAdmin, requireCap("roster"), (req, res) => {
   const { scheduleId, payStatus, status, q } = req.query;
   let sql = `SELECT e.*, s.start_date, r.title FROM enrollments e JOIN schedules s ON s.id=e.schedule_id JOIN routes r ON r.id=s.route_id WHERE 1=1`;
   const args = [];
@@ -1977,7 +1966,7 @@ router.get("/admin/enrollments", authAdmin, (req, res) => {
   res.json({ ok: true, data: rows });
 });
 
-router.post("/admin/enrollments/:id/cancel", authAdmin, (req, res) => {
+router.post("/admin/enrollments/:id/cancel", authAdmin, requireCap("ops"), (req, res) => {
   try {
     const data = cancelEnrollment(Number(req.params.id), 0, { admin: true, force: true });
     res.json({ ok: true, data });
@@ -1986,7 +1975,7 @@ router.post("/admin/enrollments/:id/cancel", authAdmin, (req, res) => {
   }
 });
 
-router.get("/admin/users", authAdmin, (req, res) => {
+router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
   const q = String(req.query.q || "").trim();
   let sql =
     "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,group_status,group_name FROM users WHERE deleted_at IS NULL";
@@ -2024,10 +2013,10 @@ function virtualUsersHandler(req, res) {
   }
 }
 
-router.post("/admin/virtual-users", authAdmin, virtualUsersHandler);
-router.post("/admin/schedules/:id/virtual-users", authAdmin, virtualUsersHandler);
+router.post("/admin/virtual-users", authAdmin, requireCap("ops"), virtualUsersHandler);
+router.post("/admin/schedules/:id/virtual-users", authAdmin, requireCap("ops"), virtualUsersHandler);
 
-router.post("/admin/users/:id/verify", authAdmin, (req, res) => {
+router.post("/admin/users/:id/verify", authAdmin, requireCap("ops"), (req, res) => {
   const user = managedUser(req.params.id);
   if (!user) return res.status(404).json({ ok: false, message: "用户不存在" });
   const kind = (req.body || {}).kind;
@@ -2045,7 +2034,7 @@ router.post("/admin/users/:id/verify", authAdmin, (req, res) => {
   res.json({ ok: true, data: adminUserView(next) });
 });
 
-router.post("/admin/users/:id/member", authAdmin, (req, res) => {
+router.post("/admin/users/:id/member", authAdmin, requireCap("ops"), (req, res) => {
   const user = managedUser(req.params.id);
   if (!user) return res.status(404).json({ ok: false, message: "用户不存在" });
   const action = (req.body || {}).action || "grant";
@@ -2060,7 +2049,7 @@ router.post("/admin/users/:id/member", authAdmin, (req, res) => {
   res.json({ ok: true, data: adminUserView(next) });
 });
 
-router.post("/admin/users/:id/points", authAdmin, (req, res) => {
+router.post("/admin/users/:id/points", authAdmin, requireCap("ops"), (req, res) => {
   const user = managedUser(req.params.id);
   if (!user) return res.status(404).json({ ok: false, message: "用户不存在" });
   const delta = Number((req.body || {}).delta);
@@ -2075,7 +2064,7 @@ router.post("/admin/users/:id/points", authAdmin, (req, res) => {
   res.json({ ok: true, data: adminUserView(next) });
 });
 
-router.post("/admin/users/:id/close", authAdmin, (req, res) => {
+router.post("/admin/users/:id/close", authAdmin, requireCap("ops"), (req, res) => {
   try {
     deleteAccount(Number(req.params.id));
     res.json({ ok: true, data: { deleted: true } });
@@ -2084,7 +2073,7 @@ router.post("/admin/users/:id/close", authAdmin, (req, res) => {
   }
 });
 
-router.get("/admin/schedules/:id/demographics", authAdmin, (req, res) => {
+router.get("/admin/schedules/:id/demographics", authAdmin, requireCap("roster"), (req, res) => {
   const list = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status='joined'").all(req.params.id);
   res.json({ ok: true, data: buildDemographics(list) });
 });
