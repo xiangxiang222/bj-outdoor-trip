@@ -27,6 +27,7 @@ describe("homepage and publish review", () => {
     assert.equal(d.durations[3].key, "multi");
     assert.ok(d.offers.some((o) => o.key === "early"));
     assert.ok(d.offers.some((o) => o.key === "family"));
+    assert.ok(d.offers.some((o) => o.key === "combo"));
   });
 
   it("accepts student apply, feedback and photographer enroll waive", async () => {

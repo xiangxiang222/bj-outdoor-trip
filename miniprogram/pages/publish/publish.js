@@ -29,7 +29,10 @@ Page({
     tags: [],
     offers: OFFER_TYPES,
     offerLabels: OFFER_TYPES.map((o) => o.label),
-    offerIndex: 3,
+    offerIndex: 5,
+    comboRequireLabels: ["学生或学生组织", "仅已认证学生", "仅已认证学生组织"],
+    comboRequireKeys: ["student_or_group", "student", "group"],
+    comboRequireIndex: 0,
     dayLabels: DAY_LABELS,
     dayIndex: 0,
     dates: [],
@@ -54,6 +57,7 @@ Page({
       meetupPoint: MEETUPS[0],
       meetupTime: "07:30",
       description: "",
+      comboRule: { require: "student_or_group", school: "" },
     },
   },
   onLoad(q) {
@@ -101,6 +105,13 @@ Page({
   setOffer(e) {
     const i = Number(e.detail.value);
     this.setData({ offerIndex: i, "form.offerType": OFFER_TYPES[i].key });
+  },
+  setComboRequire(e) {
+    const i = Number(e.detail.value);
+    this.setData({ comboRequireIndex: i, "form.comboRule.require": this.data.comboRequireKeys[i] });
+  },
+  setComboSchool(e) {
+    this.setData({ "form.comboRule.school": e.detail.value });
   },
   setDate(e) {
     const i = Number(e.detail.value);

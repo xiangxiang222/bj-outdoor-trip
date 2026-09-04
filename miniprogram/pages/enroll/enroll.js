@@ -9,7 +9,10 @@ Page({
     s: null,
     idHint: "",
     idOk: false,
-    form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", seatNo: "", insuranceCode: "outdoor", emergencyName: "", emergencyPhone: "", waiverAccepted: false, healthOk: false },
+    form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", seatNo: "", insuranceCode: "outdoor", emergencyName: "", emergencyPhone: "", waiverAccepted: false, healthOk: false, wantGender: "any", wantSchool: "", comboNote: "" },
+    genderLabels: ["不限", "女生", "男生"],
+    genderKeys: ["any", "female", "male"],
+    genderIndex: 0,
     seatRows: [],
     plans: [],
     waiver: "",
@@ -62,6 +65,12 @@ Page({
   setEmergencyPhone(e) { this.setData({ "form.emergencyPhone": e.detail.value }); },
   toggleHealth() { this.setData({ "form.healthOk": !this.data.form.healthOk }); },
   toggleWaiver() { this.setData({ "form.waiverAccepted": !this.data.form.waiverAccepted }); },
+  setWantGender(e) {
+    const i = Number(e.detail.value);
+    this.setData({ genderIndex: i, "form.wantGender": this.data.genderKeys[i] });
+  },
+  setWantSchool(e) { this.setData({ "form.wantSchool": e.detail.value }); },
+  setComboNote(e) { this.setData({ "form.comboNote": e.detail.value }); },
   setId(e) {
     this.setData({ "form.idCard": e.detail.value });
     this.checkId(e.detail.value);

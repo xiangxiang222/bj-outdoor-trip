@@ -124,6 +124,18 @@
       <button class="btn ghost" @click="loadReferral">生成我的推荐码</button>
     </div></div>
 
+    <div class="h2" v-if="s.combo?.enabled">组合团 · 另一半条件</div>
+    <div class="card" v-if="s.combo?.enabled"><div class="pad">
+      <p class="muted">只对学生或已认证学生组织开放。每人写下希望另一半满足的条件。</p>
+      <p v-if="s.combo.rule?.school" class="muted">开团要求：{{ s.combo.rule.school }}</p>
+      <div v-for="(m, i) in s.combo.mates" :key="i" class="chain-item">
+        <span>{{ m.name }}</span>
+        <span class="muted">{{ m.school }} · 希望{{ m.wantGender === "female" ? "女生" : m.wantGender === "male" ? "男生" : "不限" }}<template v-if="m.wantSchool"> · {{ m.wantSchool }}</template></span>
+        <span v-if="m.note">{{ m.note }}</span>
+      </div>
+      <p v-if="!s.combo.mates?.length" class="muted">还没有人写下条件。</p>
+    </div></div>
+
     <div class="h2">报名名单</div>
     <div class="card"><div class="pad">
       <div class="chain-item" v-for="c in s.chain" :key="c.index">

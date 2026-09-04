@@ -42,6 +42,17 @@
     <select class="select" v-model="form.offerType">
       <option v-for="o in offers" :key="o.key" :value="o.key">{{ o.label }}</option>
     </select>
+    <div v-if="form.offerType === 'combo'" class="card"><div class="pad">
+      <p class="muted">组合团目前只对学生或已认证的学生组织开放。写下对另一半的要求，报名的人会看到。</p>
+      <label>另一半身份</label>
+      <select class="select" v-model="form.comboRule.require">
+        <option value="student_or_group">学生或学生组织</option>
+        <option value="student">仅已认证学生</option>
+        <option value="group">仅已认证学生组织</option>
+      </select>
+      <label>另一半学校（可空）</label>
+      <input class="input" v-model="form.comboRule.school" placeholder="例如：北京大学" />
+    </div></div>
     <label>原价（元）</label>
     <input class="input" type="number" v-model.number="form.originPrice" />
     <label class="check-row"><input type="checkbox" v-model="form.memberPriceOn" /> 适用会员价</label>
@@ -119,6 +130,7 @@ const form = ref({
   meetupTime: "07:30",
   description: "",
   notes: "",
+  comboRule: { require: "student_or_group", school: "" },
 });
 
 onMounted(async () => {

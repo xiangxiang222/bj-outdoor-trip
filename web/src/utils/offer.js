@@ -3,6 +3,7 @@ export const OFFER_TYPES = [
   { key: "deal", label: "特惠团", color: "#bc4749" },
   { key: "free", label: "免费团", color: "#40916c" },
   { key: "family", label: "全家团", color: "#c77d3a" },
+  { key: "combo", label: "组合团", color: "#7b2d8e" },
   { key: "full", label: "全价团", color: "#1b4332" },
 ];
 

@@ -68,6 +68,15 @@
   <view class="pad">3. 候选团 / 4. 替代团请在报名页勾选，不成团自动转团多退少补</view>
   <view wx:if="{{s.myEnrollment.status=='joined'}}" class="btn" bindtap="goAfter">完成活动 / 评选</view>
 </view>
+<view class="pad title" wx:if="{{s.combo.enabled}}">组合团 · 另一半条件</view>
+<view class="card" wx:if="{{s.combo.enabled}}">
+  <view class="pad muted">只对学生或已认证学生组织开放。</view>
+  <view class="pad" wx:for="{{s.combo.mates}}" wx:key="index">
+    <view>{{item.name}} {{item.school}}</view>
+    <view class="muted">希望{{item.wantGender=='female'?'女生':(item.wantGender=='male'?'男生':'不限')}}{{item.wantSchool ? ' · ' + item.wantSchool : ''}}</view>
+    <view wx:if="{{item.note}}">{{item.note}}</view>
+  </view>
+</view>
 <view class="pad title">报名名单</view>
 <view class="pad chain-line" wx:for="{{s.chain}}" wx:key="index">
   <text class="nav-link" wx:if="{{item.userId}}" catchtap="goUser" data-id="{{item.userId}}">{{item.index}}. {{item.name}}</text>

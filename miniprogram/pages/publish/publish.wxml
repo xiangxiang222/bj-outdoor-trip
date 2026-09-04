@@ -13,6 +13,13 @@
 <picker mode="selector" range="{{offerLabels}}" value="{{offerIndex}}" bindchange="setOffer">
   <view class="input">{{offerLabels[offerIndex]}}</view>
 </picker>
+<view class="card" wx:if="{{form.offerType=='combo'}}">
+  <view class="pad muted">组合团只对学生或已认证学生组织开放。</view>
+  <picker range="{{comboRequireLabels}}" value="{{comboRequireIndex}}" bindchange="setComboRequire">
+    <view class="input">另一半身份：{{comboRequireLabels[comboRequireIndex]}}</view>
+  </picker>
+  <input class="input" placeholder="另一半学校（可空）" value="{{form.comboRule.school}}" bindinput="setComboSchool" />
+</view>
 <input class="input" type="number" placeholder="原价（元）" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
 <view class="label">出发日期</view>
 <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">

@@ -31,6 +31,22 @@
       <option value="photographer">摄影师（免个人团费）</option>
     </select>
     <p class="muted"><router-link to="/m/official#rules">辅助领队 / 摄影师职责说明</router-link></p>
+    <div v-if="s.combo?.enabled" class="card"><div class="pad">
+      <div class="h2" style="margin-top:0">组合团 · 另一半条件</div>
+      <p class="muted">本团只对学生或已认证学生组织开放。写下你希望另一半满足的条件，方便互相看见。</p>
+      <p v-if="s.combo.rule?.school" class="muted">开团要求另一半来自 {{ s.combo.rule.school }}</p>
+      <p v-if="!s.combo.canJoin" style="color:var(--clay)">请先完成学生或学生组织认证再报名。</p>
+      <label>希望另一半</label>
+      <select class="select" v-model="form.wantGender">
+        <option value="any">不限</option>
+        <option value="female">女生</option>
+        <option value="male">男生</option>
+      </select>
+      <label>希望学校（可空）</label>
+      <input class="input" v-model="form.wantSchool" placeholder="例如：清华大学" />
+      <label>一句话</label>
+      <input class="input" v-model="form.comboNote" placeholder="例如：想找同校第一次走长城" />
+    </div></div>
     <div v-if="s.remain > 0 && seatRows.length" class="card"><div class="pad">
       <div class="h2" style="margin-top:0">选座位</div>
       <p class="muted">车头朝上，中间为过道。不选则自动分配空位。</p>
@@ -132,6 +148,9 @@ const form = ref({
   healthOk: false,
   autoAlt: false,
   fallbackScheduleIds: [],
+  wantGender: "any",
+  wantSchool: "",
+  comboNote: "",
 });
 const fallbackOptions = ref([]);
 const waiver = ref("");

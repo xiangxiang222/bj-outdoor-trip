@@ -40,6 +40,7 @@ const { deleteAccount } = require("./services/account");
 const { drawPre, drawPost, lotteryState } = require("./services/lottery");
 const { completeTrip, afterTripState } = require("./services/aftertrip");
 const { listPosts, submitPost, votePost } = require("./services/contest");
+const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
   createCampaign,
@@ -293,6 +294,7 @@ function scheduleView(sch, req) {
     offerColor: quote.offerColor || offerMeta(sch.offer_type).color,
     playTags: resolvePlayTags(sch, mappedRoute, req),
     reviewStatus: sch.review_status || "approved",
+    combo: comboView(sch, req.userId ? db().prepare("SELECT * FROM users WHERE id=?").get(req.userId) : null),
   };
 }
 
@@ -314,11 +316,12 @@ function applyScheduleExtras(id, body, route) {
   const channel = body.channel === "activity" ? "activity" : "trip";
   const memberOn = flagOn(body.memberPriceOn ?? body.member_price_on) ? 1 : 0;
   const studentOn = flagOn(body.studentPriceOn ?? body.student_price_on) ? 1 : 0;
+  const comboRule = JSON.stringify(parseComboRule(body.comboRule || body.combo_rule || {}));
   db()
     .prepare(
-      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=? WHERE id=?"
+      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=? WHERE id=?"
     )
-    .run(offerType, offerPrice, reviewStatus, JSON.stringify(playTagIds), city, channel, memberOn, studentOn, id);
+    .run(offerType, offerPrice, reviewStatus, JSON.stringify(playTagIds), city, channel, memberOn, studentOn, comboRule, id);
 }
 
 router.get("/meta", (req, res) => {
@@ -968,6 +971,13 @@ router.get("/schedules/:id/poster", async (req, res) => {
 
 router.post("/schedules", authUser, (req, res) => {
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+  if (offerMeta((req.body || {}).offerType || (req.body || {}).offer_type).key === "combo") {
+    try {
+      assertCanOpenCombo(user);
+    } catch (e) {
+      return res.status(e.status || 400).json({ ok: false, message: e.message });
+    }
+  }
   const { routeId, startDate, organizerType, busTypeId, minGroupSize, meetupPoint, meetupTime, notes, companyName } = req.body || {};
   const route = db().prepare("SELECT * FROM routes WHERE id=?").get(routeId);
   if (!route) return res.status(400).json({ ok: false, message: "线路不存在" });
@@ -1034,6 +1044,13 @@ router.post("/upload", authUser, (req, res) => {
 router.post("/trips", authUser, (req, res) => {
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
   const b = req.body || {};
+  if (offerMeta(b.offerType || b.offer_type).key === "combo") {
+    try {
+      assertCanOpenCombo(user);
+    } catch (e) {
+      return res.status(e.status || 400).json({ ok: false, message: e.message });
+    }
+  }
   const title = String(b.title || "").trim();
   if (!title) return res.status(400).json({ ok: false, message: "请填写线路标题" });
   if (!b.startDate) return res.status(400).json({ ok: false, message: "请选择出发日期" });
@@ -1146,6 +1163,10 @@ router.post("/enroll", authUser, (req, res) => {
       fallbackScheduleIds,
       couponCode,
       joinMode,
+      comboWant,
+      wantGender,
+      wantSchool,
+      comboNote,
     } = req.body || {};
     const data = enrollUser({
       userId: req.userId,
@@ -1165,6 +1186,7 @@ router.post("/enroll", authUser, (req, res) => {
       fallbackScheduleIds,
       couponCode: couponCode || req.query.coupon,
       joinMode,
+      comboWant: comboWant || { wantGender, wantSchool, note: comboNote },
     });
     res.json({ ok: true, data });
   } catch (e) {

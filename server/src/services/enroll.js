@@ -16,6 +16,7 @@ const {
   releaseCouponByEnrollment,
 } = require("./coupons");
 const config = require("../config");
+const { assertComboEnroll, parseComboWant } = require("./combo");
 
 function fail(status, message) {
   const err = new Error(message);
@@ -50,6 +51,7 @@ function enrollUser({
   fallbackScheduleIds,
   couponCode,
   joinMode,
+  comboWant,
 }) {
   const db = getDb();
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
@@ -58,6 +60,8 @@ function enrollUser({
   if (!sch) fail(400, "排期不存在");
   if (sch.status === "cancelled") fail(400, "该拼团已解散，无法报名");
   if ((sch.review_status || "approved") !== "approved") fail(400, "该团正在审核或未通过，暂不能报名");
+  assertComboEnroll(user, sch);
+  const combo = sch.offer_type === "combo" ? parseComboWant(comboWant) : null;
   if (!travelerName || !travelerPhone) fail(400, "请填写出行人姓名和手机");
   if (!idCard) fail(400, "请填写身份证号，用于实名与籍贯统计");
   const parsed = parseIdCard(idCard);
@@ -142,8 +146,8 @@ function enrollUser({
   const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
   const info = db
     .prepare(
-      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,waitlisted_at,seat_no,insurance_code,insurance_fee,emergency_name,emergency_phone,waiver_accepted_at,health_declared_at,referrer_user_id,auto_alt)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,waitlisted_at,seat_no,insurance_code,insurance_fee,emergency_name,emergency_phone,waiver_accepted_at,health_declared_at,referrer_user_id,auto_alt,combo_json)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       sch.id,
@@ -170,7 +174,8 @@ function enrollUser({
       now,
       now,
       referrerId,
-      autoAlt ? 1 : 0
+      autoAlt ? 1 : 0,
+      combo ? JSON.stringify(combo) : null
     );
   const enrollmentId = Number(info.lastInsertRowid);
   if (couponApplied) {

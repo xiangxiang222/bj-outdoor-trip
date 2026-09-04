@@ -8,6 +8,16 @@
 <view class="pad" style="color:{{idOk ? '#6b705c' : '#bc4749'}};font-size:24rpx" wx:if="{{idHint}}">{{idHint}}</view>
 <input class="input" placeholder="紧急联系人姓名" value="{{form.emergencyName}}" bindinput="setEmergencyName" />
 <input class="input" placeholder="紧急联系人手机（不能与出行人相同）" type="number" maxlength="11" value="{{form.emergencyPhone}}" bindinput="setEmergencyPhone" />
+<view class="card" wx:if="{{s.combo.enabled}}">
+  <view class="pad title">组合团 · 另一半条件</view>
+  <view class="pad muted">只对学生或已认证学生组织开放。</view>
+  <view class="pad muted" wx:if="{{!s.combo.canJoin}}" style="color:#bc4749">请先完成学生或学生组织认证。</view>
+  <picker range="{{genderLabels}}" value="{{genderIndex}}" bindchange="setWantGender">
+    <view class="input">希望另一半：{{genderLabels[genderIndex]}}</view>
+  </picker>
+  <input class="input" placeholder="希望学校（可空）" value="{{form.wantSchool}}" bindinput="setWantSchool" />
+  <input class="input" placeholder="一句话，例如想找同校" value="{{form.comboNote}}" bindinput="setComboNote" />
+</view>
 <view class="card" wx:if="{{s.remain>0 && seatRows.length}}">
   <view class="pad">选座位（不选则自动分配）</view>
   <view class="seat-map">
