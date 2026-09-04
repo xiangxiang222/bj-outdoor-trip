@@ -120,12 +120,12 @@ Page({
   onShareAppMessage() {
     const r = this.data.r || {};
     return {
-      title: "北野行 · " + (r.title || "一起出发"),
+      title: "同行者众 · " + (r.title || "一起出发"),
       path: detailUrl(this.data.id),
       imageUrl: shareCover(r.cover),
     };
   },
   onShareTimeline() {
-    return { title: (this.data.r && this.data.r.title) || "北野行", query: "id=" + this.data.id };
+    return { title: (this.data.r && this.data.r.title) || "同行者众", query: "id=" + this.data.id };
   },
 });

@@ -1,6 +1,7 @@
 <template>
   <div style="max-width:360px;margin:12vh auto;background:#fff;padding:32px;border-radius:16px">
-    <h2>北野行管理后台</h2>
+    <img class="brand-mark lg" src="/brand/logo.jpg" alt="同行者众" />
+    <h2>管理后台</h2>
     <el-input v-model="username" placeholder="账号" style="margin:8px 0" />
     <el-input v-model="password" type="password" placeholder="密码" style="margin:8px 0" />
     <el-button type="success" style="width:100%;margin-top:12px" @click="login">登录</el-button>

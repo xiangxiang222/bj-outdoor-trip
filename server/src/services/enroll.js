@@ -256,7 +256,7 @@ function promoteWaitlist(scheduleId) {
   sendSms({
     phone: next.traveler_phone,
     scene: "waitlist",
-    content: `【北野行】您候补的「${route?.title || "活动"}」${sch.start_date}已有空位，已为您递补占座。请留意集合通知。`,
+    content: `【同行者众】您候补的「${route?.title || "活动"}」${sch.start_date}已有空位，已为您递补占座。请留意集合通知。`,
     refType: "enrollment",
     refId: next.id,
   });

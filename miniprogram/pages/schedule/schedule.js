@@ -25,7 +25,7 @@ Page({
     reviews: { list: [], count: 0, avg: 0 },
     packing: [],
     cancelSummary: "",
-    contacts: { officialWechat: "beiyexing", officialWechatName: "北野行官方", officialGroup: "北野行户外交流群" },
+    contacts: { officialWechat: "同行者众", officialWechatName: "同行者众官方", officialGroup: "同行者众户外交流群" },
     gallery: [],
     busPhotos: [],
     busText: "",
@@ -226,8 +226,8 @@ Page({
   onShareAppMessage() {
     const s = this.data.s;
     const title = s && s.route
-      ? (s.organizerName || "北野行") + "邀请你报名「" + s.route.title + "」"
-      : "北野行 · 一起出发";
+      ? (s.organizerName || "同行者众") + "邀请你报名「" + s.route.title + "」"
+      : "同行者众 · 一起出发";
     return {
       title,
       path: "/pages/schedule/schedule?id=" + this.data.id,
@@ -237,7 +237,7 @@ Page({
   onShareTimeline() {
     const s = this.data.s;
     return {
-      title: (s && s.route && s.route.title) || "北野行",
+      title: (s && s.route && s.route.title) || "同行者众",
       query: "id=" + this.data.id,
     };
   },

@@ -1,7 +1,10 @@
 <template>
   <div class="mp-phone">
     <div class="mp-status">
-      <span>北野行导游端</span>
+      <span class="brand-lockup">
+        <img class="brand-mark sm" src="/brand/logo.jpg" alt="" />
+        同行者众导游端
+      </span>
       <span class="mp-capsule">带团工作台</span>
     </div>
     <div class="mp-nav">

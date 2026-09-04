@@ -1,7 +1,10 @@
 <template>
   <div class="mp-phone">
     <div class="mp-status">
-      <span>同行者众</span>
+      <span class="brand-lockup">
+        <img class="brand-mark sm" src="/brand/logo.jpg" alt="" />
+        同行者众
+      </span>
       <span class="mp-capsule">微信小程序演示</span>
     </div>
     <div class="mp-nav">

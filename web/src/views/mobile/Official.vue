@@ -1,7 +1,8 @@
 <template>
   <div>
     <div class="card">
-      <div class="pad">
+      <div class="pad" style="text-align:center">
+        <img class="brand-mark lg" src="/brand/logo.jpg" alt="同行者众" />
         <strong>官方账号</strong>
         <p class="muted">各平台联系方式。规则统一放在本页，线路里不再重复写。</p>
       </div>

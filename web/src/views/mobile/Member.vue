@@ -5,7 +5,7 @@
         <div class="row">
           <div>
             <div style="font-size:20px;font-weight:700">{{ store.profile.nickname }}</div>
-            <div style="opacity:.85">北野行会员</div>
+            <div style="opacity:.85">同行者众会员</div>
           </div>
           <span class="tag" style="background:#ffd166;color:#1b4332">会员</span>
         </div>
@@ -17,7 +17,7 @@
     </div>
 
     <div class="card"><div class="pad">
-      <h3 style="margin-top:0">{{ store.profile?.isMember ? "会员权益" : "开通北野行会员" }}</h3>
+      <h3 style="margin-top:0">{{ store.profile?.isMember ? "会员权益" : "开通同行者众会员" }}</h3>
       <p>年费 ¥{{ fee }}，线路额外 95 折，赠送一次 100 元以内的团，积分 1.2 倍加速。</p>
       <ul>
         <li>会员价自动按 95 折计算</li>

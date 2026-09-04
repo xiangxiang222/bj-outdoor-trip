@@ -280,7 +280,7 @@ const dissolving = ref(false);
 const weather = ref(null);
 const reviews = ref({ list: [], count: 0, avg: 0 });
 const cancelPolicy = ref({ summary: "", items: [] });
-const contacts = ref({ officialWechat: "beiyexing", officialWechatName: "北野行官方", officialGroup: "北野行户外交流群", hint: "" });
+const contacts = ref({ officialWechat: "同行者众", officialWechatName: "同行者众官方", officialGroup: "同行者众户外交流群", hint: "" });
 const packing = computed(() => s.value?.route?.packingList || []);
 const referral = ref({});
 const fallbackIds = ref([]);
@@ -497,7 +497,7 @@ async function share() {
   shareText.value = `${s.value.organizerName}邀请你参加「${s.value.route.title}」${s.value.startDate}出发，已有${s.value.enrolled}人报名：${url}`;
   if (navigator.share) {
     try {
-      await navigator.share({ title: "北野行 · " + s.value.route.title, text: shareText.value, url });
+      await navigator.share({ title: "同行者众 · " + s.value.route.title, text: shareText.value, url });
       return;
     } catch (e) {
       if (e && e.name === "AbortError") return;

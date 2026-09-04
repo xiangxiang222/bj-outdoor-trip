@@ -105,7 +105,7 @@ describe("auth and profile API", () => {
   it("logs in by sms and auto-creates user", async () => {
     await agent.post("/api/auth/sms").send({ phone: "13500135000", scene: "login" }).expect(200);
     const res = await agent.post("/api/auth/login-sms").send({ phone: "13500135000", code: "888888" }).expect(200);
-    assert.match(res.body.data.user.nickname, /北野行5000/);
+    assert.match(res.body.data.user.nickname, /同行者众5000/);
     await agent.post("/api/auth/login-sms").send({ phone: "13500135000", code: "000000" }).expect(400);
   });
 

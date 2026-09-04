@@ -3,5 +3,5 @@ const { createApp } = require("./app");
 
 const app = createApp();
 app.listen(config.port, "0.0.0.0", () => {
-  console.log(`北野行 API 已启动 http://localhost:${config.port}`);
+  console.log(`同行者众 API 已启动 http://localhost:${config.port}`);
 });

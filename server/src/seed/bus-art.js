@@ -23,7 +23,7 @@ function busSvg(label, color) {
   <circle cx="280" cy="520" r="28" fill="#d8d2c2"/>
   <circle cx="880" cy="520" r="58" fill="#1b4332"/>
   <circle cx="880" cy="520" r="28" fill="#d8d2c2"/>
-  <text x="120" y="160" font-family="PingFang SC, sans-serif" font-size="36" fill="#1b4332">北野行用车</text>
+  <text x="120" y="160" font-family="PingFang SC, sans-serif" font-size="36" fill="#1b4332">同行者众用车</text>
   <text x="120" y="480" font-family="PingFang SC, sans-serif" font-size="44" font-weight="700" fill="#fff">${label}</text>
 </svg>`;
 }

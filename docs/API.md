@@ -1,4 +1,4 @@
-# 北野行 · HTTP API
+# 同行者众 · HTTP API
 
 Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.212/api`。JSON 请求与响应。成功时 `ok: true`，失败时 HTTP 4xx 且 `ok: false`，`message` 为中文原因。
 

@@ -1,8 +1,10 @@
 <template>
   <div class="admin-shell">
     <aside class="admin-side">
-      <div style="padding:24px 20px 8px;font-weight:700;font-size:18px">北野行后台</div>
-      <div style="padding:0 20px 16px;font-size:12px;opacity:.6">线路 · 排期 · 财务 · 账号</div>
+      <div class="admin-brand">
+        <img src="/brand/logo.jpg" alt="同行者众" />
+        <div class="admin-brand-sub">后台 · 线路 · 排期 · 财务</div>
+      </div>
       <router-link v-if="can('ops')" to="/admin">数据看板</router-link>
       <router-link v-if="can('ops')" to="/admin/routes">线路管理</router-link>
       <router-link v-if="can('roster')" to="/admin/schedules">拼团与成本</router-link>

@@ -24,7 +24,7 @@ describe("trip page extras", () => {
     assert.ok(weather.body.data.hourly[0].hour);
 
     const meta = await agent.get("/api/meta").expect(200);
-    assert.equal(meta.body.data.contacts.officialWechat, "beiyexing");
+    assert.equal(meta.body.data.contacts.officialWechat, "同行者众");
   });
 
   it("shows age band on roster, public user page without phone, and allows anyone to pay unpaid", async () => {

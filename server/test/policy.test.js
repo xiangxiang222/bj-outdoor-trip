@@ -11,7 +11,7 @@ describe("trip policies", () => {
     assert.equal(pin.precise, true);
     assert.ok(pin.lat && pin.lng);
     assert.match(pin.url, /marker/);
-    assert.equal(contacts.officialWechat, "beiyexing");
+    assert.equal(contacts.officialWechat, "同行者众");
   });
 
   it("exposes cancel policy, waiver and faqs on /meta", async () => {

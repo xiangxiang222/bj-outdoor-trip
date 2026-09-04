@@ -353,7 +353,7 @@ function grantCoupons(campaignId, body = {}, req) {
       sendSms({
         phone: row.phone,
         scene: "coupon",
-        content: `【北野行】您的${label}已到账，用于「${route?.title || "活动"}」${sch?.start_date || ""}出发：${shortUrl}`,
+        content: `【同行者众】您的${label}已到账，用于「${route?.title || "活动"}」${sch?.start_date || ""}出发：${shortUrl}`,
         refType: "coupon",
         refId: campaign.id,
       });

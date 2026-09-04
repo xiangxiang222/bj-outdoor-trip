@@ -249,7 +249,7 @@ async function run() {
   enrollSome(schIds[4], 12, true);
   enrollSome(schIds[5], 16, false);
 
-  db.prepare("INSERT INTO settings (key,value) VALUES (?,?)").run("site_name", "北野行");
+  db.prepare("INSERT INTO settings (key,value) VALUES (?,?)").run("site_name", "同行者众");
   db.prepare("INSERT INTO settings (key,value) VALUES (?,?)").run("member_annual_fee", String(config.member.annualFee));
   db.prepare("INSERT INTO settings (key,value) VALUES (?,?)").run("wx_pay_mock", "1");
 

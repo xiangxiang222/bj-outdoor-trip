@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 北野行功能走查：按真实使用顺序打一遍公开接口、用户端、后台和 H5 页面。
+ * 同行者众功能走查：按真实使用顺序打一遍公开接口、用户端、后台和 H5 页面。
  *
  * 用法（仓库根目录）：
  *   npm run test:e2e                 隔离临时库，不碰开发/线上数据
@@ -225,7 +225,7 @@ async function run(opts) {
     }
   }
 
-  console.log(bold(live ? "北野行功能走查 · 线上 " + opts.base : "北野行功能走查 · 隔离临时库"));
+  console.log(bold(live ? "同行者众功能走查 · 线上 " + opts.base : "同行者众功能走查 · 隔离临时库"));
   console.log("");
 
   await step("公开：品牌、车型、导游、线路、排期", async () => {

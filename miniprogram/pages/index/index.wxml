@@ -4,6 +4,7 @@
   </swiper-item>
 </swiper>
 <view class="brand-cap">
+  <image class="brand-logo" src="/images/logo.jpg" mode="aspectFit" />
   <view class="home-kicker">{{home.brand.kicker || '同行者众'}}</view>
   <view class="home-lead">{{home.brand.lead || '在山野，遇见爱'}}</view>
 </view>

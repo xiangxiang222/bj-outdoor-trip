@@ -85,26 +85,26 @@ function meetupMapUrl(point) {
 }
 
 const contacts = {
-  officialWechat: "beiyexing",
-  officialWechatName: "北野行官方",
-  officialGroup: "北野行户外交流群",
+  officialWechat: "同行者众",
+  officialWechatName: "同行者众官方",
+  officialGroup: "同行者众户外交流群",
   hint: "添加官方微信后拉入用户群。本团咨询群由领队确认后显示在行程页。",
 };
 
 const officialAccounts = [
-  { platform: "微信公众号", name: "北野行官方", id: "beiyexing", remark: "活动预告与成团通知" },
-  { platform: "微信小程序", name: "北野行", id: "北野行", remark: "报名、选座、查看行程" },
-  { platform: "视频号", name: "北野行", id: "北野行", remark: "线路实拍与行前说明" },
-  { platform: "小红书", name: "北野行户外", id: "@beiyexing", remark: "目的地攻略与成团日记" },
-  { platform: "抖音", name: "北野行户外", id: "@beiyexing", remark: "短视频看路况与风景" },
-  { platform: "微博", name: "北野行", id: "@北野行", remark: "天气与集合点提醒" },
+  { platform: "微信公众号", name: "同行者众官方", id: "同行者众", remark: "活动预告与成团通知" },
+  { platform: "微信小程序", name: "同行者众", id: "同行者众", remark: "报名、选座、查看行程" },
+  { platform: "视频号", name: "同行者众", id: "同行者众", remark: "线路实拍与行前说明" },
+  { platform: "小红书", name: "同行者众户外", id: "@同行者众", remark: "目的地攻略与成团日记" },
+  { platform: "抖音", name: "同行者众户外", id: "@同行者众", remark: "短视频看路况与风景" },
+  { platform: "微博", name: "同行者众", id: "@同行者众", remark: "天气与集合点提醒" },
 ];
 
 const leaderRecruitCopy = "推荐领队 首次带队完成后 奖励推荐者200元";
 
 const commonRules = {
   title: "各线路公共规则",
-  summary: "以下规则适用于北野行全部线路；各团行程页的装备、集合点以当次排期为准。",
+  summary: "以下规则适用于同行者众全部线路；各团行程页的装备、集合点以当次排期为准。",
   sections: [
     {
       title: "成团与出发",

@@ -16,6 +16,7 @@
         />
       </div>
       <div class="brand-cap">
+        <img class="brand-mark md" src="/brand/logo.jpg" alt="同行者众" />
         <div class="home-kicker">{{ brandSlide?.kicker || home.brand?.kicker || "同行者众" }}</div>
         <div class="home-lead">{{ brandSlide?.title || home.brand?.lead || "在山野，遇见爱" }}</div>
       </div>

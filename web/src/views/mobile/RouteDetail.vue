@@ -224,7 +224,7 @@ async function fav() {
 
 async function share() {
   const url = location.origin + "/m/route/" + r.value.id;
-  const text = `【北野行】${r.value.title}，北京周边${r.value.days}日游，最低 ¥${r.value.priceTiers[0].price} 起，点击报名：${url}`;
+  const text = `【同行者众】${r.value.title}，北京周边${r.value.days}日游，最低 ¥${r.value.priceTiers[0].price} 起，点击报名：${url}`;
   try {
     if (navigator.share) await navigator.share({ title: r.value.title, text, url });
     else {

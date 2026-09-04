@@ -449,7 +449,7 @@ router.post("/auth/register", (req, res) => {
   if (!consumeCaptcha(captchaToken, captcha)) return res.status(400).json({ ok: false, message: "验证码错误或已过期" });
   const info = db()
     .prepare("INSERT INTO users (phone,password_hash,nickname) VALUES (?,?,?)")
-    .run(phone, bcrypt.hashSync(password, 10), nickname || `北野行${phone.slice(-4)}`);
+    .run(phone, bcrypt.hashSync(password, 10), nickname || `同行者众${phone.slice(-4)}`);
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(info.lastInsertRowid);
   res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req) } });
 });
@@ -469,7 +469,7 @@ router.post("/auth/login-sms", (req, res) => {
   if (!consumeSms(phone, code, "login")) return res.status(400).json({ ok: false, message: "验证码错误或已过期" });
   let user = db().prepare("SELECT * FROM users WHERE phone=? AND deleted_at IS NULL").get(phone);
   if (!user) {
-    const info = db().prepare("INSERT INTO users (phone,nickname) VALUES (?,?)").run(phone, `北野行${phone.slice(-4)}`);
+    const info = db().prepare("INSERT INTO users (phone,nickname) VALUES (?,?)").run(phone, `同行者众${phone.slice(-4)}`);
     user = db().prepare("SELECT * FROM users WHERE id=?").get(info.lastInsertRowid);
   }
   res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req) } });

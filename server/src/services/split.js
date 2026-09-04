@@ -31,7 +31,7 @@ function createSplitsForSchedule(scheduleId, { remark } = {}) {
   if (guideShare > total - platform) guideShare = Math.max(0, total - platform);
   const merchant = Math.max(0, total - platform - guideShare);
   const rows = [
-    { party: "platform", name: "北野行平台", amount: platform, rate: platformRate, remark: remark || "技术服务费" },
+    { party: "platform", name: "同行者众平台", amount: platform, rate: platformRate, remark: remark || "技术服务费" },
     { party: "guide", name: guide?.name ? `导游 ${guide.name}` : "导游劳务", amount: guideShare, rate: 0, remark: "向导劳务" },
     {
       party: "merchant",
