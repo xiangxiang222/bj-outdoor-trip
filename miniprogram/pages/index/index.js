@@ -129,6 +129,9 @@ Page({
   goOfficial() {
     wx.switchTab({ url: "/pages/official/official" });
   },
+  goLottery() {
+    wx.navigateTo({ url: "/pages/lottery/lottery" });
+  },
   goFeedback() {
     wx.navigateTo({ url: "/pages/feedback/feedback" });
   },

@@ -198,6 +198,9 @@ Page({
     const g = this.data.s && this.data.s.guide;
     if (g && g.id) wx.navigateTo({ url: "/pages/guide/guide?id=" + g.id });
   },
+  goAfter() {
+    wx.navigateTo({ url: "/pages/after/after?id=" + this.data.id });
+  },
   stats() { wx.navigateTo({ url: "/pages/stats/stats?id=" + this.data.id }); },
   toggleDissolve() { this.setData({ showDissolve: !this.data.showDissolve }); },
   setReason(e) { this.setData({ reason: e.detail.value }); },

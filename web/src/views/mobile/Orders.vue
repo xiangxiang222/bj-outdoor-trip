@@ -14,6 +14,11 @@
           取消报名
         </button>
       </div>
+      <div v-if="o.canComplete || o.completed" class="pad" style="padding-top:0">
+        <button class="btn block" type="button" @click.stop="$router.push('/m/after/' + o.schedule_id)">
+          {{ o.completed ? "评价 / 抽奖 / 评选" : "完成活动" }}
+        </button>
+      </div>
       <div v-if="o.canReview" class="pad" style="padding-top:0" @click.stop>
         <button v-if="reviewing !== o.id" class="btn ghost block" @click="openReview(o)">去评价</button>
         <div v-else>

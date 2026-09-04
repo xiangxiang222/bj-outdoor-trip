@@ -55,6 +55,7 @@ const title = computed(() => {
     group: "团体认证",
     feedback: "建议与 BUG",
     lottery: "抽奖",
+    after: "完成活动",
     routes: "线路列表",
     route: "线路详情",
     schedule: "活动报名",

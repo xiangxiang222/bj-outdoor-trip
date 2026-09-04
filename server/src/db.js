@@ -372,6 +372,34 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "enrollments", "referrer_user_id", "INTEGER");
   addColumnIfMissing(db, "enrollments", "auto_alt", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "enrollments", "coupon_id", "INTEGER");
+  addColumnIfMissing(db, "enrollments", "completed_at", "TEXT");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS lottery_draws (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      schedule_id INTEGER DEFAULT 0,
+      phase TEXT,
+      prize_key TEXT,
+      prize_label TEXT,
+      doubled INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      UNIQUE(user_id, schedule_id, phase)
+    );
+    CREATE TABLE IF NOT EXISTS contest_posts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      schedule_id INTEGER,
+      user_id INTEGER,
+      url TEXT,
+      caption TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE TABLE IF NOT EXISTS contest_votes (
+      post_id INTEGER,
+      user_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      PRIMARY KEY (post_id, user_id)
+    );
+  `);
   db.exec(`
     CREATE TABLE IF NOT EXISTS user_photos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

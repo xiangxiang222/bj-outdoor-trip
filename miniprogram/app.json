@@ -6,6 +6,8 @@
     "pages/mine/mine",
     "pages/rules/rules",
     "pages/feedback/feedback",
+    "pages/lottery/lottery",
+    "pages/after/after",
     "pages/routes/routes",
     "pages/chain/chain",
     "pages/schedule/schedule",

@@ -23,6 +23,11 @@ Page({
         wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/orders/orders") });
       });
   },
+  goAfter(e) {
+    const sid = e.currentTarget.dataset.sid;
+    if (!sid) return;
+    wx.navigateTo({ url: "/pages/after/after?id=" + sid });
+  },
   go(e) {
     const id = e.currentTarget.dataset.id;
     if (!id) return;

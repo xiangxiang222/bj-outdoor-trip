@@ -1,0 +1,49 @@
+<view class="card" wx:if="{{s}}"><view class="pad">
+  <view class="title">{{s.title}}</view>
+  <view class="muted">{{s.startDate}} · 回来的大巴上可点完成，然后评价、抽奖、评选。</view>
+  <view wx:if="{{s.completed}}" style="color:#2d6a4f">已完成活动</view>
+  <view wx:elif="{{!s.joined}}" class="muted">报名参加后才能完成活动。</view>
+</view></view>
+<view class="pad" wx:if="{{msg}}">{{msg}}</view>
+<view class="btn" wx:if="{{s.canComplete}}" bindtap="complete">完成活动</view>
+
+<block wx:if="{{s.completed}}">
+  <view class="pad title">评价领队和路线</view>
+  <view class="card"><view class="pad">
+    <view wx:if="{{s.reviewedByMe}}" class="muted">你已评价。</view>
+    <block wx:else>
+      <view class="star-pick">
+        <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="star {{rating >= n ? 'on' : ''}}" bindtap="pickStar" data-n="{{n}}">★</text>
+      </view>
+      <textarea class="input" placeholder="这次出行怎么样（选填）" value="{{reviewText}}" bindinput="setReview" />
+      <view class="btn" bindtap="submitReview">提交评价</view>
+    </block>
+  </view></view>
+
+  <view class="pad title">第二次抽奖</view>
+  <view class="card"><view class="pad">
+    <view class="muted" wx:if="{{s.lottery.pre}}">第一次抽到：{{s.lottery.pre.prizeLabel}}</view>
+    <view wx:if="{{s.lottery.post}}" class="title">{{s.lottery.post.prizeLabel}}{{s.lottery.post.doubled ? ' · 已翻倍' : ''}}</view>
+    <view class="btn" wx:else bindtap="drawPost">抽第二次</view>
+  </view></view>
+
+  <view class="pad title">评选 · 分享投票</view>
+  <view class="card"><view class="pad">
+    <view class="muted">把朋友圈 / 小红书 / 视频号分享链接贴上来，团友投票。</view>
+    <input class="input" placeholder="https://" value="{{shareUrl}}" bindinput="setUrl" />
+    <input class="input" placeholder="今天这团最想安利的一点" value="{{caption}}" bindinput="setCaption" />
+    <view class="btn ghost" bindtap="submitPost">提交评选</view>
+  </view></view>
+  <view class="card" wx:for="{{posts}}" wx:key="id">
+    <view class="pad">
+      <view class="row">
+        <view class="title">{{item.name}}</view>
+        <view class="muted">{{item.votes}} 票</view>
+      </view>
+      <view class="muted">{{item.caption}}</view>
+      <view class="nav-link" bindtap="openUrl" data-url="{{item.url}}">打开分享</view>
+      <view class="btn ghost" wx:if="{{!item.mine && !item.voted}}" bindtap="vote" data-id="{{item.id}}">投票</view>
+      <view class="muted" wx:elif="{{item.voted}}">已投</view>
+    </view>
+  </view>
+</block>

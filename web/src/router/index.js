@@ -14,6 +14,7 @@ const routes = [
       { path: "group", name: "group", component: () => import("@/views/mobile/Group.vue") },
       { path: "feedback", name: "feedback", component: () => import("@/views/mobile/Feedback.vue") },
       { path: "lottery", name: "lottery", component: () => import("@/views/mobile/Lottery.vue") },
+      { path: "after/:id", name: "after", component: () => import("@/views/mobile/After.vue") },
       { path: "routes", name: "routes", component: () => import("@/views/mobile/RouteList.vue") },
       { path: "route/:id", name: "route", component: () => import("@/views/mobile/RouteDetail.vue") },
       { path: "schedule/:id", name: "schedule", component: () => import("@/views/mobile/ScheduleDetail.vue") },

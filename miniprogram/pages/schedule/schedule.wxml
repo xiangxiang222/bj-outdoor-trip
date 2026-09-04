@@ -66,6 +66,7 @@
   <image wx:if="{{s.consultGroupQr}}" src="{{s.consultGroupQr}}" style="width:280rpx;height:280rpx;margin:16rpx" />
   <view class="pad muted">{{s.consultGroup || contacts.officialWechat}}</view>
   <view class="pad">3. 候选团 / 4. 替代团请在报名页勾选，不成团自动转团多退少补</view>
+  <view wx:if="{{s.myEnrollment.status=='joined'}}" class="btn" bindtap="goAfter">完成活动 / 评选</view>
 </view>
 <view class="pad title">报名名单</view>
 <view class="pad chain-line" wx:for="{{s.chain}}" wx:key="index">

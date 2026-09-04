@@ -8,6 +8,7 @@
     <view class="price">¥{{item.pay_amount}}</view>
   </view>
   <view wx:if="{{item.canCancel}}" class="btn ghost" catchtap="cancel" data-id="{{item.id}}" style="color:#bc4749">取消报名</view>
+  <view wx:if="{{item.canComplete || item.completed}}" class="btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{item.completed ? '评价 / 抽奖 / 评选' : '完成活动'}}</view>
   <view wx:if="{{item.canReview}}">
     <view wx:if="{{reviewingId != item.id}}" class="btn ghost" catchtap="openReview" data-id="{{item.id}}">去评价</view>
     <view wx:else class="pad">

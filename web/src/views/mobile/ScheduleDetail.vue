@@ -112,6 +112,7 @@
         <span>如本团未成团，自动加入相同行程的其他日期</span>
       </label>
       <button class="btn ghost block" style="margin-top:8px" :disabled="savingFallbacks" @click="saveFallbacks">保存备选</button>
+      <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
     </div></div>
 
     <div class="h2">推荐报名</div>

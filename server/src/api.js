@@ -37,6 +37,9 @@ const { referralCard, groupQrPayload, settleEnrollReferrals } = require("./servi
 const { optionsForSchedule, setFallbacks, listFallbacks } = require("./services/fallback");
 const { generateVirtualUsers, setVirtualUsersForSchedule } = require("./services/virtual");
 const { deleteAccount } = require("./services/account");
+const { drawPre, drawPost, lotteryState } = require("./services/lottery");
+const { completeTrip, afterTripState } = require("./services/aftertrip");
+const { listPosts, submitPost, votePost } = require("./services/contest");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
   createCampaign,
@@ -608,6 +611,58 @@ router.post("/feedback", authUser, (req, res) => {
   if (content.length < 4) return res.status(400).json({ ok: false, message: "请写清楚建议或问题" });
   db().prepare("INSERT INTO feedbacks (user_id,kind,content) VALUES (?,?,?)").run(req.userId, kind, content);
   res.json({ ok: true, message: "已收到，谢谢反馈" });
+});
+
+router.get("/lottery", authUser, (req, res) => {
+  res.json({ ok: true, data: lotteryState(req.userId, Number(req.query.scheduleId || 0)) });
+});
+
+router.post("/lottery/draw", authUser, (req, res) => {
+  try {
+    const phase = (req.body || {}).phase === "post" ? "post" : "pre";
+    const scheduleId = Number((req.body || {}).scheduleId || req.query.scheduleId || 0);
+    const data = phase === "post" ? drawPost(req.userId, scheduleId) : drawPre(req.userId, scheduleId);
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.get("/schedules/:id/after", optionalUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: afterTripState(req.userId, req.params.id) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/schedules/:id/complete", authUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: completeTrip(req.userId, req.params.id) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.get("/schedules/:id/contest", optionalUser, (req, res) => {
+  res.json({ ok: true, data: listPosts(Number(req.params.id), req.userId) });
+});
+
+router.post("/schedules/:id/contest", authUser, (req, res) => {
+  try {
+    const data = submitPost(req.userId, req.params.id, req.body || {});
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/contest/:id/vote", authUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: votePost(req.userId, req.params.id) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 router.get("/weather", async (req, res) => {
@@ -1193,6 +1248,8 @@ router.get("/orders", authUser, (req, res) => {
       canCancel: canCancelEnrollment(e, e.schedule_status, e.start_date),
       reviewed: reviewed.has(e.schedule_id),
       canReview: e.status === "joined" && !reviewed.has(e.schedule_id),
+      completed: !!e.completed_at,
+      canComplete: e.status === "joined" && !e.completed_at && !dayjs(e.start_date).isAfter(dayjs(), "day"),
     }));
   res.json({ ok: true, data: rows });
 });

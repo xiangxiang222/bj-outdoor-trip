@@ -1,0 +1,16 @@
+<view class="card"><view class="pad">
+  <view class="title">活动抽奖</view>
+  <view class="muted">报名前可抽一次。出行回来后到「我的报名」点完成活动，再抽第二次。两次奖品一致且不是谢谢参与，即可翻倍。</view>
+</view></view>
+<view class="card" wx:if="{{state.pre}}"><view class="pad">
+  <view class="muted">第一次（报名前）</view>
+  <view class="title">{{state.pre.prizeLabel}}</view>
+</view></view>
+<view class="card" wx:if="{{state.post}}"><view class="pad">
+  <view class="muted">第二次（参团后）</view>
+  <view class="title">{{state.post.prizeLabel}}{{state.post.doubled ? ' · 已翻倍' : ''}}</view>
+</view></view>
+<view class="pad" wx:if="{{msg}}">{{msg}}</view>
+<view class="btn" wx:if="{{state.canPre}}" bindtap="draw">报名前抽一次</view>
+<view class="pad muted" wx:elif="{{!state.pre}}">请先登录后再抽。</view>
+<view class="pad muted" wx:else>第一次已抽过。出行回来后到「我的报名」点完成活动。</view>
