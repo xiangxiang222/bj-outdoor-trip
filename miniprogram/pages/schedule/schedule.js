@@ -29,6 +29,7 @@ Page({
     gallery: [],
     busPhotos: [],
     busText: "",
+    isActivity: false,
     leaderSlots: [{ slot: 1, label: "领队1", leader: null }, { slot: 2, label: "领队2", leader: null }],
   },
   onLoad(q) {
@@ -48,6 +49,7 @@ Page({
         gallery: (s.gallery && s.gallery.length ? s.gallery : (s.route && s.route.cover ? [s.route.cover] : [])),
         busPhotos: (s.bus && s.bus.photos) || [],
         busText: busLine(s),
+        isActivity: s.channel === "activity",
         leaderSlots: [1, 2].map((slot) => ({
           slot,
           label: "领队" + slot,
@@ -56,7 +58,7 @@ Page({
       });
       const region = s && s.route && [s.route.region, s.route.title].filter(Boolean).join(" ");
       const date = s && s.startDate;
-      if (region) {
+      if (region && s.channel !== "activity") {
         request("/weather?region=" + encodeURIComponent(region) + "&date=" + (date || "")).then((w) => {
           this.setData({ weather: w.data }, () => {
             wx.nextTick(() => this.drawWeather());

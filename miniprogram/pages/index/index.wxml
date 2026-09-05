@@ -6,6 +6,13 @@
 <view class="brand-cap">
   <view class="home-lead">{{home.brand.lead || '在山野，遇见爱'}}</view>
 </view>
+<view class="card" wx:if="{{upcoming}}" bindtap="goUpcoming">
+  <view class="pad">
+    <view class="muted">即将出行 · 看行程</view>
+    <view class="title">{{upcoming.title}}</view>
+    <view class="muted">{{upcoming.startDate}} · {{upcoming.meetupPoint}} {{upcoming.meetupTime}}</view>
+  </view>
+</view>
 
 <view class="pad" style="padding-bottom:0"><view class="title">去哪儿玩？</view></view>
 <scroll-view scroll-x class="city-bar">

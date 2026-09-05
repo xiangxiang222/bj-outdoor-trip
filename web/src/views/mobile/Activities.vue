@@ -88,7 +88,7 @@ function priceOf(s) {
   return s.quote?.tripPrice ?? s.quote?.originPrice ?? 0;
 }
 function goPublish(preset) {
-  const path = preset ? `/m/publish?channel=activity&title=${encodeURIComponent(preset)}` : "/m/publish?channel=activity";
+  const path = preset ? `/m/publish?channel=activity&kind=${encodeURIComponent(preset)}` : "/m/publish?channel=activity";
   if (!store.token) router.push({ path: "/m/login", query: { redirect: path } });
   else router.push(path);
 }

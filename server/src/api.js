@@ -1073,19 +1073,28 @@ router.post("/trips", authUser, (req, res) => {
   const title = String(b.title || "").trim();
   if (!title) return res.status(400).json({ ok: false, message: "请填写线路标题" });
   if (!b.startDate) return res.status(400).json({ ok: false, message: "请选择出发日期" });
-  const bus = db().prepare("SELECT * FROM bus_types WHERE id=?").get(b.busTypeId);
+  const isActivity = b.channel === "activity";
+  let bus = b.busTypeId ? db().prepare("SELECT * FROM bus_types WHERE id=?").get(b.busTypeId) : null;
+  if (!bus && isActivity) {
+    bus = db().prepare("SELECT * FROM bus_types ORDER BY seats ASC, id LIMIT 1").get();
+  }
   if (!bus) return res.status(400).json({ ok: false, message: "请选择车型" });
-  const days = String(b.days) === "multi" ? 5 : Number(b.days) || 1;
-  const city = b.city || "北京";
+  const days = isActivity ? 1 : String(b.days) === "multi" ? 5 : Number(b.days) || 1;
+  const city = b.city || (isActivity ? "朝阳" : "北京");
   const playTagIds = Array.isArray(b.playTagIds) ? b.playTagIds.map(Number).filter((n) => n > 0) : [];
   const tagNames = tagsForIds(playTagIds, req).map((t) => t.name);
   const originPrice = Number(b.originPrice || b.price || 0);
   if (originPrice < 0) return res.status(400).json({ ok: false, message: "价格不正确" });
   const memberPrice = liveMemberPrice(originPrice);
-  const type = b.organizerType === "company" ? "company" : "individual";
+  const type = isActivity ? "individual" : b.organizerType === "company" ? "company" : "individual";
   if (type === "company" && !(b.companyName || user.company_name)) {
     return res.status(400).json({ ok: false, message: "公司开团请填写公司名称" });
   }
+  const kinds = ["掼蛋", "跑步", "电影", "招募"];
+  const activityKind = kinds.includes(String(b.activityKind || "").trim())
+    ? String(b.activityKind).trim()
+    : kinds.find((k) => title.includes(k)) || "";
+  const category = isActivity ? activityKind || b.category || "同城" : tagNames[0] || b.category || "山水";
   const cover = b.cover || "";
   const routeInfo = db()
     .prepare(
@@ -1099,13 +1108,13 @@ router.post("/trips", authUser, (req, res) => {
       days,
       Number(b.distanceKm) || 0,
       b.difficulty || "休闲",
-      tagNames[0] || b.category || "山水",
+      category,
       city,
       b.season || "四季",
-      JSON.stringify(tagNames),
+      JSON.stringify(isActivity ? (activityKind ? [activityKind] : tagNames) : tagNames),
       cover,
       JSON.stringify(cover ? [cover] : []),
-      Number(b.minGroupSize) || 10,
+      Number(b.minGroupSize) || (isActivity ? 4 : 10),
       b.description || "",
       JSON.stringify(b.highlights || []),
       JSON.stringify(b.itinerary || []),
@@ -1123,6 +1132,10 @@ router.post("/trips", authUser, (req, res) => {
   db().prepare("INSERT INTO route_buses (route_id, bus_type_id) VALUES (?,?)").run(routeId, bus.id);
   const route = db().prepare("SELECT * FROM routes WHERE id=?").get(routeId);
   const end = dayjs(b.startDate).add(days - 1, "day").format("YYYY-MM-DD");
+  const minGroup = Number(b.minGroupSize) || (isActivity ? 4 : 10);
+  const maxSeats = isActivity
+    ? Math.max(minGroup, Number(b.maxSeats || b.max_seats || 12) || 12)
+    : bus.seats;
   const schInfo = db()
     .prepare(
       `INSERT INTO schedules (route_id,start_date,end_date,organizer_type,organizer_id,organizer_name,company_name,bus_type_id,min_group_size,max_seats,meetup_point,meetup_time,status,share_token,notes)
@@ -1137,10 +1150,10 @@ router.post("/trips", authUser, (req, res) => {
       user.nickname,
       b.companyName || user.company_name,
       bus.id,
-      Number(b.minGroupSize) || 10,
-      bus.seats,
+      minGroup,
+      maxSeats,
       b.meetupPoint || "",
-      b.meetupTime || "07:30",
+      b.meetupTime || (isActivity ? "19:30" : "07:30"),
       "recruiting",
       nanoid(10),
       b.notes || ""
@@ -1149,8 +1162,8 @@ router.post("/trips", authUser, (req, res) => {
     schInfo.lastInsertRowid,
     {
       ...b,
-      offerType: b.offerType,
-      offerPrice: b.offerType === "free" ? 0 : b.offerPrice,
+      offerType: b.offerType || (isActivity && originPrice === 0 ? "free" : b.offerType),
+      offerPrice: (b.offerType || (isActivity && originPrice === 0 ? "free" : "")) === "free" ? 0 : b.offerPrice,
       playTagIds,
       city,
       channel: b.channel,
@@ -1161,7 +1174,13 @@ router.post("/trips", authUser, (req, res) => {
     route
   );
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(schInfo.lastInsertRowid);
-  res.json({ ok: true, data: { ...scheduleView(sch, req), message: "已提交，待管理员审核后才会出现在首页" } });
+  res.json({
+    ok: true,
+    data: {
+      ...scheduleView(sch, req),
+      message: isActivity ? "已提交，待管理员审核后才会出现在活动页" : "已提交，待管理员审核后才会出现在首页",
+    },
+  });
 });
 
 router.post("/enroll", authUser, (req, res) => {
@@ -1280,7 +1299,8 @@ router.get("/orders", authUser, (req, res) => {
   const reviewed = reviewedScheduleIds(req.userId);
   const rows = db()
     .prepare(
-      `SELECT e.*, s.start_date, s.end_date, s.organizer_type, s.status AS schedule_status, s.route_id, r.title, r.cover, r.days
+      `SELECT e.*, s.start_date, s.end_date, s.organizer_type, s.status AS schedule_status, s.route_id,
+              s.meetup_point, s.meetup_time, s.city, IFNULL(s.channel,'trip') AS channel, r.title, r.cover, r.days
        FROM enrollments e JOIN schedules s ON s.id=e.schedule_id JOIN routes r ON r.id=s.route_id
        WHERE e.user_id=? ORDER BY e.id DESC`
     )

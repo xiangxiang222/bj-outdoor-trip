@@ -61,6 +61,12 @@ Page({
   async after(res) {
     setAuth(res.data.token, res.data.user);
     const redirect = this.data.redirect;
+    const path = (redirect || "").split("?")[0];
+    const tabs = ["/pages/index/index", "/pages/activities/activities", "/pages/orders/orders", "/pages/mine/mine"];
+    if (tabs.includes(path)) {
+      wx.switchTab({ url: path });
+      return;
+    }
     if (redirect && (redirect.startsWith("/pages/") || redirect.startsWith("/pkg-detail/"))) {
       wx.redirectTo({ url: redirect, fail: () => wx.switchTab({ url: "/pages/mine/mine" }) });
       return;

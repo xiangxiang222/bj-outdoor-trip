@@ -20,8 +20,8 @@
         </div>
         <p class="muted">{{ s.startDate }} {{ s.endDate !== s.startDate ? "至 " + s.endDate : "" }}</p>
         <p>
-          <a v-if="busPhotos.length" class="nav-link" href="#" @click.prevent="showBus = true">{{ busText }}</a>
-          <span v-else>{{ busText }}</span>
+          <a v-if="!isActivity && busPhotos.length" class="nav-link" href="#" @click.prevent="showBus = true">{{ busText }}</a>
+          <span v-else-if="!isActivity">{{ busText }}</span>
         </p>
         <p>
           集合：{{ s.meetupPoint }} {{ s.meetupTime }}
@@ -44,7 +44,7 @@
           {{ s.eligibility.reason }}
           <router-link to="/m/student">去学生认证</router-link>
         </p>
-        <p class="muted" v-if="s.reviewStatus === 'pending'" style="color:#c77d3a">本团正在审核，通过后才会出现在首页，暂不能报名。</p>
+        <p class="muted" v-if="s.reviewStatus === 'pending'" style="color:#c77d3a">本团正在审核，通过后才会出现在{{ isActivity ? "活动页" : "首页" }}，暂不能报名。</p>
         <p class="muted" v-else-if="s.reviewStatus === 'rejected'" style="color:var(--clay)">本团未通过审核。</p>
         <p class="muted" v-if="s.status === 'cancelled'" style="color:var(--clay)">
           本团已解散。理由：{{ s.cancelReason }}
@@ -55,7 +55,7 @@
             <span class="muted"> 余 {{ s.coupon.remain }}/{{ s.coupon.total }} · 点此领取</span>
           </div>
         </div>
-        <div class="leader-board">
+        <div class="leader-board" v-if="!isActivity">
           <div class="leader-slot" v-for="slot in leaderSlots" :key="slot.slot">
             <template v-if="slot.leader">
               <a class="nav-link" href="#" @click.prevent="openLeader(slot.leader)">
@@ -68,7 +68,7 @@
           </div>
           <p class="muted">{{ s.leaderRecruitCopy }}</p>
         </div>
-        <div v-if="weather" class="weather" :class="weather.alerts?.[0]?.level">
+        <div v-if="!isActivity && weather" class="weather" :class="weather.alerts?.[0]?.level">
           <strong>{{ weather.place }} {{ weather.summary }}</strong>
           <span>{{ weather.tmin }}~{{ weather.tmax }}℃ · 风 {{ weather.wind }}km/h</span>
           <WeatherChart :hourly="weather.hourly" :label="weather.place + '分时气温'" />
@@ -77,7 +77,7 @@
       </div>
     </div>
 
-    <div class="h2">座位图</div>
+    <div class="h2">{{ isActivity ? "人数与位置" : "座位图" }}</div>
     <div class="card"><div class="pad">
       <div class="seat-map">
         <div class="seat-front">车头</div>
@@ -267,6 +267,7 @@ const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const s = ref(null);
+const isActivity = computed(() => s.value?.channel === "activity");
 const msg = ref("");
 const showDissolve = ref(false);
 const showShare = ref(false);

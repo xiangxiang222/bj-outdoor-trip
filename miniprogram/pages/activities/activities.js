@@ -28,7 +28,7 @@ Page({
   goPublish() {
     const app = getApp();
     const kind = this.data.kind;
-    const url = "/pages/publish/publish?channel=activity" + (kind ? "&title=" + encodeURIComponent(kind) : "");
+    const url = "/pages/publish/publish?channel=activity" + (kind ? "&kind=" + encodeURIComponent(kind) : "");
     if (!app.globalData.token) {
       wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(url) });
       return;

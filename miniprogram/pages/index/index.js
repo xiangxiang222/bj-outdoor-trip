@@ -21,6 +21,7 @@ Page({
     offers: OFFER_TYPES.filter((o) => o.key !== "full"),
     fold: { days: true, month: false, fest: false },
     picked: [],
+    upcoming: null,
   },
   onLoad() {
     this.load();
@@ -66,6 +67,7 @@ Page({
         calendar: buildCalendar(allSchedules),
       });
       this.applyGroups();
+      this.loadUpcoming();
     } catch (err) {
       wx.showToast({ title: (err && err.message) || "加载失败", icon: "none" });
     }
@@ -122,6 +124,22 @@ Page({
       return;
     }
     wx.navigateTo({ url: "/pages/publish/publish" });
+  },
+  loadUpcoming() {
+    const app = getApp();
+    if (!app.globalData.token) {
+      this.setData({ upcoming: null });
+      return;
+    }
+    request("/me/trips")
+      .then((r) => {
+        const list = Array.isArray(r.data) ? r.data : [];
+        this.setData({ upcoming: list[0] || null });
+      })
+      .catch(() => this.setData({ upcoming: null }));
+  },
+  goUpcoming() {
+    wx.switchTab({ url: "/pages/orders/orders" });
   },
   goMember() {
     wx.navigateTo({ url: "/pages/member/member" });

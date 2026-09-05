@@ -110,26 +110,25 @@ describe("homepage and publish review", () => {
 
   it("city activities stay off the trip list and route catalog", async () => {
     const token = await loginUser(agent);
-    const buses = await agent.get("/api/buses").expect(200);
     const start = seed.db.prepare("SELECT date('now','+4 day') AS d").get().d;
     const created = await agent
       .post("/api/trips")
       .set(auth(token))
       .send({
-        title: "周五夜掼蛋局",
+        title: "朝阳夜跑局",
+        activityKind: "跑步",
         city: "朝阳",
-        days: 1,
-        originPrice: 0,
         startDate: start,
-        busTypeId: buses.body.data[0].id,
-        meetupPoint: "三里屯太古里南区",
+        meetupPoint: "奥林匹克森林公园南门",
         meetupTime: "19:30",
-        offerType: "free",
         channel: "activity",
         minGroupSize: 4,
+        maxSeats: 12,
       })
       .expect(200);
     assert.equal(created.body.data.channel, "activity");
+    assert.equal(created.body.data.maxSeats, 12);
+    assert.equal(created.body.data.meetupPoint, "奥林匹克森林公园南门");
     const admin = await loginAdmin(agent);
     await agent.post(`/api/admin/schedules/${created.body.data.id}/review`).set(auth(admin)).send({ status: "approved" }).expect(200);
     const trips = await agent.get("/api/schedules?channel=trip").expect(200);
@@ -139,8 +138,8 @@ describe("homepage and publish review", () => {
     assert.ok(hit);
     assert.equal(hit.channel, "activity");
     const routes = await agent.get("/api/routes").expect(200);
-    assert.equal(routes.body.data.some((r) => r.title === "周五夜掼蛋局"), false);
+    assert.equal(routes.body.data.some((r) => r.title === "朝阳夜跑局"), false);
     const home = await agent.get("/api/home").expect(200);
-    assert.equal(home.body.data.brand.slides.some((s) => s.title === "周五夜掼蛋局"), false);
+    assert.equal(home.body.data.brand.slides.some((s) => s.title === "朝阳夜跑局"), false);
   });
 });

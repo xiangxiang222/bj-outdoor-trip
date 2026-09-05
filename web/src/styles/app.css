@@ -122,7 +122,7 @@ button, input, textarea, select { font-family: inherit; }
   height: 64px;
   background: #fff;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
   z-index: 8;
@@ -698,6 +698,9 @@ button, input, textarea, select { font-family: inherit; }
 .act-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; background: var(--mint); }
 .act-card:not(:has(.act-thumb)) { grid-template-columns: 56px 1fr; }
 .act-empty { cursor: default; }
+.act-card.inner { box-shadow: none; padding: 0; margin: 0; background: transparent; cursor: inherit; }
+.trip-sec { font-size: 13px; font-weight: 650; color: var(--muted); margin: 12px 4px 8px; }
+.trip-soon { cursor: pointer; }
 .svc-hero { text-align: center; }
 .svc-hero .brand-mark { margin-bottom: 8px; }
 .svc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; }

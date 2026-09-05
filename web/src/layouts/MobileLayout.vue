@@ -26,6 +26,10 @@
         <svg class="tab-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v3H8V4Zm-3 5h14v11H5V9Zm3 3h3v3H8v-3Z" /></svg>
         活动
       </router-link>
+      <router-link to="/m/orders" :class="{ active: $route.path.startsWith('/m/orders') }">
+        <svg class="tab-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h2v2h6V3h2v2h3v16H4V5h3V3zm12 6H5v12h14V9ZM8 12h3v3H8v-3Zm5 0h3v3h-3v-3Z" /></svg>
+        行程
+      </router-link>
       <router-link to="/m/mine" :class="{ active: mineActive }">
         <svg class="tab-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5Z" /></svg>
         我的
@@ -44,10 +48,10 @@ const router = useRouter();
 const store = useUserStore();
 onMounted(() => store.fetchMeta());
 
-const tabNames = new Set(["home", "activities", "mine"]);
+const tabNames = new Set(["home", "activities", "orders", "mine"]);
 const showBack = computed(() => !tabNames.has(route.name));
 const mineActive = computed(() =>
-  ["/m/mine", "/m/login", "/m/orders", "/m/member", "/m/favorites", "/m/student", "/m/group", "/m/official", "/m/feedback"].some(
+  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/student", "/m/group", "/m/official", "/m/feedback"].some(
     (p) => route.path === p || route.path.startsWith(p + "/")
   )
 );
@@ -83,7 +87,7 @@ const title = computed(() => {
     mine: "我的",
     login: "登录 / 注册",
     member: "会员中心",
-    orders: "我的报名",
+    orders: "行程",
     favorites: "我的收藏",
     stats: "本团画像",
     guides: "领队导游",
@@ -100,6 +104,8 @@ const subtitle = computed(() => {
     official: "加微信、看规则、找客服",
     rules: "加微信、看规则、找客服",
     mine: "报名、会员与客服",
+    orders: "待出行的山野团和同城局",
+    publish: "提交后需管理员审核",
   };
   return map[route.name] || "在山野，遇见爱";
 });

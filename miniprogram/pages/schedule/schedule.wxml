@@ -11,8 +11,8 @@
     </view>
     <view class="tag">{{s.status=='cancelled'?'已解散':(s.organizerType=='company'?'公司统一支付':'先报名后付款')}}</view>
     <view>{{s.startDate}}</view>
-    <view class="nav-link" wx:if="{{busPhotos.length}}" bindtap="previewBus">{{busText}}</view>
-    <view wx:else>{{busText}}</view>
+    <view class="nav-link" wx:if="{{!isActivity && busPhotos.length}}" bindtap="previewBus">{{busText}}</view>
+    <view wx:elif="{{!isActivity}}">{{busText}}</view>
     <view class="muted">集合 {{s.meetupPoint}} {{s.meetupTime}} <text class="nav-link" catchtap="openMap">打开地图</text></view>
     <view class="muted" wx:if="{{s.guaranteed}}" style="color:#2d6a4f">已成团 · 铁定出发</view>
     <view class="muted">发起人 <text class="nav-link" wx:if="{{s.organizerId}}" catchtap="goUser" data-id="{{s.organizerId}}">{{s.organizerName}}</text><text wx:else>{{s.organizerName}}</text></view>
@@ -26,20 +26,22 @@
     </view>
     <view class="muted" wx:if="{{s.eligibility.enabled}}">{{s.eligibility.label}}{{s.eligibility.schools.length ? ' 已认证学生可报' : ''}}</view>
     <view class="muted" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" style="color:#bc4749">{{s.eligibility.reason}}</view>
-    <view class="muted" wx:if="{{s.reviewStatus=='pending'}}" style="color:#c77d3a">本团正在审核，通过后才会出现在首页。</view>
+    <view class="muted" wx:if="{{s.reviewStatus=='pending'}}" style="color:#c77d3a">本团正在审核，通过后才会出现在{{isActivity ? '活动页' : '首页'}}。</view>
     <view class="muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">本团已解散。理由：{{s.cancelReason}}</view>
     <view class="card" wx:if="{{s.coupon}}" bindtap="goCoupon">
       <view class="pad">{{s.coupon.label}} 余 {{s.coupon.remain}}/{{s.coupon.total}} · 点此领取</view>
     </view>
     <view class="muted" wx:elif="{{s.guide}}" bindtap="goGuide">已匹配导游：{{s.guide.name}} <text class="nav-link">查看详情</text></view>
-    <view class="leader-slot" wx:for="{{leaderSlots}}" wx:key="slot">
-      <view wx:if="{{item.leader}}" bindtap="openLeader" data-kind="{{item.leader.kind}}" data-id="{{item.leader.id}}" data-userid="{{item.leader.userId}}">
-        <text class="nav-link">{{item.label}} {{item.leader.name}}</text>
+    <block wx:if="{{!isActivity}}">
+      <view class="leader-slot" wx:for="{{leaderSlots}}" wx:key="slot">
+        <view wx:if="{{item.leader}}" bindtap="openLeader" data-kind="{{item.leader.kind}}" data-id="{{item.leader.id}}" data-userid="{{item.leader.userId}}">
+          <text class="nav-link">{{item.label}} {{item.leader.name}}</text>
+        </view>
+        <view wx:else bindtap="applyLeader">{{item.label}} · 报名领队</view>
       </view>
-      <view wx:else bindtap="applyLeader">{{item.label}} · 报名领队</view>
-    </view>
-    <view class="muted">{{s.leaderRecruitCopy}}</view>
-    <view class="weather" wx:if="{{weather}}">
+      <view class="muted">{{s.leaderRecruitCopy}}</view>
+    </block>
+    <view class="weather" wx:if="{{!isActivity && weather}}">
       <view>{{weather.place}} {{weather.summary}}</view>
       <view class="muted">{{weather.tmin}}~{{weather.tmax}}℃ · 风 {{weather.wind}}km/h</view>
       <canvas wx:if="{{weather.hourly && weather.hourly.length}}" type="2d" id="weatherChart" class="wx-chart" disable-scroll="true"></canvas>

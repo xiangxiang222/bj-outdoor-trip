@@ -1,40 +1,70 @@
-<view class="pad muted">填写线路与出发信息，提交后需管理员审核才会出现在首页。</view>
-<input class="input" placeholder="线路标题" value="{{form.title}}" bindinput="setField" data-k="title" />
-<input class="input" placeholder="城市，如怀柔" value="{{form.city}}" bindinput="setField" data-k="city" />
-<view class="label">天数</view>
-<picker mode="selector" range="{{dayLabels}}" value="{{dayIndex}}" bindchange="setDay">
-  <view class="input">{{dayLabels[dayIndex]}}</view>
+<view class="pad muted">{{form.channel=='activity' ? '提交后需审核，通过后出现在活动 Tab。' : '填写线路与出发信息，提交后需管理员审核才会出现在首页。'}}</view>
+
+<view class="label">类型</view>
+<picker mode="selector" range="{{channelLabels}}" value="{{channelIndex}}" bindchange="setChannel">
+  <view class="input">{{channelLabels[channelIndex]}}</view>
 </picker>
-<view class="label">想怎么玩</view>
-<view class="chips">
-  <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}};opacity:{{item.on?1:0.4}}" bindtap="toggleTag" data-id="{{item.id}}">{{item.name}}</view>
-</view>
-<view class="label">团型</view>
-<picker mode="selector" range="{{offerLabels}}" value="{{offerIndex}}" bindchange="setOffer">
-  <view class="input">{{offerLabels[offerIndex]}}</view>
-</picker>
-<view class="card" wx:if="{{form.offerType=='combo'}}">
-  <view class="pad muted">组合团只对学生或已认证学生组织开放。</view>
-  <picker range="{{comboRequireLabels}}" value="{{comboRequireIndex}}" bindchange="setComboRequire">
-    <view class="input">另一半身份：{{comboRequireLabels[comboRequireIndex]}}</view>
+
+<block wx:if="{{form.channel=='activity'}}">
+  <view class="label">玩法</view>
+  <view class="kind-grid">
+    <view class="act-kind {{form.activityKind==item.key?'on':''}}" wx:for="{{kinds}}" wx:key="key" bindtap="pickKind" data-key="{{item.key}}">
+      <view class="emoji">{{item.emoji}}</view>
+      <view>{{item.label}}</view>
+    </view>
+  </view>
+  <input class="input" placeholder="标题，例如周五夜掼蛋" value="{{form.title}}" bindinput="setField" data-k="title" />
+  <input class="input" placeholder="地点，例如三里屯太古里" value="{{form.meetupPoint}}" bindinput="setField" data-k="meetupPoint" />
+  <input class="input" placeholder="城区，如朝阳" value="{{form.city}}" bindinput="setField" data-k="city" />
+  <view class="label">日期</view>
+  <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
+    <view class="input">{{dateLabels[dateIndex]}}</view>
   </picker>
-  <input class="input" placeholder="另一半学校（可空）" value="{{form.comboRule.school}}" bindinput="setComboSchool" />
-</view>
-<input class="input" type="number" placeholder="原价（元）" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
-<view class="pad" bindtap="toggleStudentOnly">{{form.studentOnly ? '☑' : '☐'}} 仅已认证学生可报名</view>
-<input class="input" placeholder="限定高校，逗号分隔，可空" value="{{form.schools}}" bindinput="setField" data-k="schools" />
-<view class="label">出发日期</view>
-<picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
-  <view class="input">{{dateLabels[dateIndex]}}</view>
-</picker>
-<view class="label">车型</view>
-<picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">
-  <view class="input">{{busNames[busIndex]}}</view>
-</picker>
-<input class="input" type="number" placeholder="最低成团人数" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
-<view class="label">集合点</view>
-<picker mode="selector" range="{{meetupNames}}" value="{{meetupIndex}}" bindchange="setMeetup">
-  <view class="input">{{meetupNames[meetupIndex]}}</view>
-</picker>
-<textarea class="input" placeholder="介绍" value="{{form.description}}" bindinput="setField" data-k="description" />
+  <input class="input" placeholder="时间 19:30" value="{{form.meetupTime}}" bindinput="setField" data-k="meetupTime" />
+  <input class="input" type="number" placeholder="最少几人成局" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
+  <input class="input" type="number" placeholder="人数上限" value="{{form.maxSeats}}" bindinput="setField" data-k="maxSeats" />
+  <input class="input" type="number" placeholder="费用（元，0 为免费）" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
+  <textarea class="input" placeholder="介绍：带什么、几点开始、怎么找人" value="{{form.description}}" bindinput="setField" data-k="description" />
+</block>
+
+<block wx:else>
+  <input class="input" placeholder="线路标题" value="{{form.title}}" bindinput="setField" data-k="title" />
+  <input class="input" placeholder="城市，如怀柔" value="{{form.city}}" bindinput="setField" data-k="city" />
+  <view class="label">天数</view>
+  <picker mode="selector" range="{{dayLabels}}" value="{{dayIndex}}" bindchange="setDay">
+    <view class="input">{{dayLabels[dayIndex]}}</view>
+  </picker>
+  <view class="label">想怎么玩</view>
+  <view class="chips">
+    <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}};opacity:{{item.on?1:0.4}}" bindtap="toggleTag" data-id="{{item.id}}">{{item.name}}</view>
+  </view>
+  <view class="label">团型</view>
+  <picker mode="selector" range="{{offerLabels}}" value="{{offerIndex}}" bindchange="setOffer">
+    <view class="input">{{offerLabels[offerIndex]}}</view>
+  </picker>
+  <view class="card" wx:if="{{form.offerType=='combo'}}">
+    <view class="pad muted">组合团只对学生或已认证学生组织开放。</view>
+    <picker range="{{comboRequireLabels}}" value="{{comboRequireIndex}}" bindchange="setComboRequire">
+      <view class="input">另一半身份：{{comboRequireLabels[comboRequireIndex]}}</view>
+    </picker>
+    <input class="input" placeholder="另一半学校（可空）" value="{{form.comboRule.school}}" bindinput="setComboSchool" />
+  </view>
+  <input class="input" type="number" placeholder="原价（元）" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
+  <view class="pad" bindtap="toggleStudentOnly">{{form.studentOnly ? '☑' : '☐'}} 仅已认证学生可报名</view>
+  <input class="input" placeholder="限定高校，逗号分隔，可空" value="{{form.schools}}" bindinput="setField" data-k="schools" />
+  <view class="label">出发日期</view>
+  <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
+    <view class="input">{{dateLabels[dateIndex]}}</view>
+  </picker>
+  <view class="label">车型</view>
+  <picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">
+    <view class="input">{{busNames[busIndex]}}</view>
+  </picker>
+  <input class="input" type="number" placeholder="最低成团人数" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
+  <view class="label">集合点</view>
+  <picker mode="selector" range="{{meetupNames}}" value="{{meetupIndex}}" bindchange="setMeetup">
+    <view class="input">{{meetupNames[meetupIndex]}}</view>
+  </picker>
+  <textarea class="input" placeholder="介绍" value="{{form.description}}" bindinput="setField" data-k="description" />
+</block>
 <view class="btn" bindtap="submit">提交审核</view>

@@ -123,7 +123,7 @@ npm run test:coverage
 npm run test:e2e
 ```
 
-服务端使用临时 SQLite，不会覆盖 `server/data/app.sqlite`。当前 **128** 条服务端用例 + **3** 条 H5 用例。打已启动服务（本机或线上）用 `npm run test:e2e:live`。说明见 [docs/TESTING.md](docs/TESTING.md)。
+服务端使用临时 SQLite，不会覆盖 `server/data/app.sqlite`。当前 **171** 条服务端用例 + **14** 条 H5 用例。打已启动服务（本机或线上）用 `npm run test:e2e:live`。说明见 [docs/TESTING.md](docs/TESTING.md)。
 
 ## 支付说明
 

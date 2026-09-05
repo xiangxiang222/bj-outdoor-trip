@@ -48,6 +48,9 @@ Page({
   goOfficial() {
     wx.navigateTo({ url: "/pages/official/official" });
   },
+  goTrips() {
+    wx.switchTab({ url: "/pages/orders/orders" });
+  },
   login() { wx.navigateTo({ url: "/pages/login/login" }); },
   register() { wx.navigateTo({ url: "/pages/login/login?tab=register" }); },
   go(e) {

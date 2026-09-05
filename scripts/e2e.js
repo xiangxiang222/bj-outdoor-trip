@@ -870,7 +870,7 @@ async function run(opts) {
   }, { skip: live && !opts.unsafe, reason: live ? "线上默认跳过，加 --unsafe 才执行" : "" });
 
   await step("H5 页面可打开", async () => {
-    const pages = ["/m", "/m/login", "/m/activities", "/m/official", "/m/rules", "/m/routes", "/m/guides", "/m/mine", "/m/coupon/x", "/admin/login", "/g/login"];
+    const pages = ["/m", "/m/login", "/m/activities", "/m/orders", "/m/official", "/m/rules", "/m/routes", "/m/guides", "/m/mine", "/m/coupon/x", "/admin/login", "/g/login"];
     for (const p of pages) {
       const res = await request("GET", p, { follow: true });
       assert(res.status === 200, p + " 返回 " + res.status);

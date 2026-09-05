@@ -30,7 +30,7 @@
     </div>
 
     <div class="card" v-if="store.token && store.profile" @click="$router.push('/m/user/' + store.profile.id)"><div class="pad">个人主页 · 相册与行程</div></div>
-    <div class="card" @click="goAuth('/m/orders')"><div class="pad">我的报名</div></div>
+    <div class="card" @click="$router.push('/m/orders')"><div class="pad">我的行程 · 待出行与历史报名</div></div>
     <div class="card" @click="goAuth('/m/coupons')">
       <div class="pad">
         <div>我的优惠券<template v-if="coupons.length"> {{ coupons.length }} 张可用</template></div>

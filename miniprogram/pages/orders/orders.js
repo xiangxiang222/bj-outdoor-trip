@@ -1,37 +1,65 @@
 const { request, showError } = require("../../utils/request");
 const { enrollStatusText } = require("../../utils/labels");
-const { detailUrl } = require("../../utils/media");
 const app = getApp();
+
+function ymd() {
+  const d = new Date();
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  return d.getFullYear() + "-" + (m < 10 ? "0" + m : m) + "-" + (day < 10 ? "0" + day : day);
+}
+
+function decorate(item) {
+  const cancelled = item.status === "cancelled" || item.schedule_status === "cancelled";
+  const date = String(item.start_date || "").slice(0, 10);
+  return Object.assign({}, item, {
+    statusText: enrollStatusText(item),
+    kindLabel: item.channel === "activity" ? "同城局" : "山野团",
+    upcoming: !cancelled && date >= ymd(),
+  });
+}
+
 Page({
-  data: { list: [], reviewingId: 0, rating: 5, content: "" },
+  data: { loggedIn: false, upcoming: [], past: [], reviewingId: 0, rating: 5, content: "" },
   onShow() {
     if (!app.globalData.token) {
-      wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/orders/orders") });
+      this.setData({ loggedIn: false, upcoming: [], past: [] });
       return;
     }
+    this.setData({ loggedIn: true });
     this.load();
   },
   load() {
     request("/orders")
       .then((r) => {
-        const list = (r.data || []).map((item) =>
-          Object.assign({}, item, { statusText: enrollStatusText(item) })
-        );
-        this.setData({ list, reviewingId: 0, content: "" });
+        const list = (r.data || []).map(decorate);
+        this.setData({
+          upcoming: list.filter((x) => x.upcoming),
+          past: list.filter((x) => !x.upcoming),
+          reviewingId: 0,
+          content: "",
+        });
       })
-      .catch(() => {
-        wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/orders/orders") });
-      });
+      .catch(() => this.setData({ upcoming: [], past: [] }));
+  },
+  goLogin() {
+    wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/orders/orders") });
+  },
+  goHomeTab() {
+    wx.switchTab({ url: "/pages/index/index" });
+  },
+  goActTab() {
+    wx.switchTab({ url: "/pages/activities/activities" });
   },
   goAfter(e) {
     const sid = e.currentTarget.dataset.sid;
     if (!sid) return;
     wx.navigateTo({ url: "/pages/after/after?id=" + sid });
   },
-  go(e) {
+  goSchedule(e) {
     const id = e.currentTarget.dataset.id;
     if (!id) return;
-    wx.navigateTo({ url: detailUrl(id) });
+    wx.navigateTo({ url: "/pages/schedule/schedule?id=" + id });
   },
   openReview(e) {
     this.setData({ reviewingId: Number(e.currentTarget.dataset.id), rating: 5, content: "" });
@@ -47,7 +75,7 @@ Page({
   },
   async submitReview(e) {
     const id = Number(e.currentTarget.dataset.id);
-    const item = (this.data.list || []).find((row) => Number(row.id) === id);
+    const item = [].concat(this.data.upcoming, this.data.past).find((row) => Number(row.id) === id);
     if (!item) return;
     try {
       await request("/reviews", "POST", {

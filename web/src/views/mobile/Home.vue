@@ -20,6 +20,14 @@
       </div>
     </div>
 
+    <div v-if="upcoming" class="card trip-soon" @click="$router.push('/m/orders')">
+      <div class="pad">
+        <div class="muted">即将出行 · 看行程</div>
+        <strong>{{ upcoming.title }}</strong>
+        <p class="muted" style="margin:6px 0 0">{{ upcoming.startDate }} · {{ upcoming.meetupPoint }} {{ upcoming.meetupTime }}</p>
+      </div>
+    </div>
+
     <div class="filter-block">
       <div class="h2">去哪儿玩？</div>
       <div class="chips city-bar">
@@ -137,6 +145,7 @@ const festivalKey = ref("");
 const offerFilter = ref("");
 const heroIndex = ref(0);
 const tick = ref(0);
+const upcoming = ref(null);
 const fold = reactive({ days: true, month: false, fest: false });
 const offers = OFFER_TYPES.filter((o) => o.key !== "full");
 
@@ -197,7 +206,15 @@ onMounted(async () => {
   monthKey.value = home.value.months?.[0]?.key || "";
   monthDays.value = home.value.monthDays || [];
   schedules.value = schRes.data || [];
-  if (store.token) store.fetchMe().catch(() => {});
+  if (store.token) {
+    store.fetchMe().catch(() => {});
+    try {
+      const trips = (await http.get("/me/trips")).data || [];
+      upcoming.value = trips[0] || null;
+    } catch {
+      upcoming.value = null;
+    }
+  }
   heroTimer = setInterval(() => {
     const n = brandSlides.value.length;
     if (n) heroIndex.value = (heroIndex.value + 1) % n;
