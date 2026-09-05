@@ -65,20 +65,31 @@ function enrollUser({
   if ((sch.review_status || "approved") !== "approved") fail(400, "该团正在审核或未通过，暂不能报名");
   assertEnrollLimit(user, sch);
   assertComboEnroll(user, sch);
-  const combo = sch.offer_type === "combo" ? parseComboWant(comboWant) : null;
+  const isActivity = sch.channel === "activity";
+  const combo = !isActivity && sch.offer_type === "combo" ? parseComboWant(comboWant) : null;
   if (!travelerName || !travelerPhone) fail(400, "请填写出行人姓名和手机");
-  if (!idCard) fail(400, "请填写身份证号，用于实名与籍贯统计");
-  const parsed = parseIdCard(idCard);
-  if (!parsed.valid) fail(400, parsed.error || "身份证号不正确");
-  if (!emergencyName || !emergencyPhone) fail(400, "请填写紧急联系人姓名和手机");
-  if (!/^1\d{10}$/.test(String(emergencyPhone))) fail(400, "紧急联系人手机号不正确");
-  if (String(emergencyPhone) === String(travelerPhone)) fail(400, "紧急联系人不能与出行人使用同一手机号");
-  if (!truthy(waiverAccepted)) fail(400, "请阅读并确认户外活动风险告知");
-  if (!truthy(healthOk)) fail(400, "请确认本人健康状况适合本次活动");
-  const exist = db
-    .prepare("SELECT id FROM enrollments WHERE schedule_id=? AND upper(id_card)=? AND status!='cancelled'")
-    .get(sch.id, parsed.idCard);
-  if (exist) fail(400, "该身份证已在本团报名");
+  if (isActivity && !/^1\d{10}$/.test(String(travelerPhone))) fail(400, "手机号不正确");
+
+  let parsed = { valid: true, idCard: "", gender: "", birthday: "", hometown: "" };
+  if (isActivity) {
+    const existUser = db
+      .prepare("SELECT id FROM enrollments WHERE schedule_id=? AND user_id=? AND status!='cancelled'")
+      .get(sch.id, user.id);
+    if (existUser) fail(400, "你已报名本局");
+  } else {
+    if (!idCard) fail(400, "请填写身份证号，用于实名与籍贯统计");
+    parsed = parseIdCard(idCard);
+    if (!parsed.valid) fail(400, parsed.error || "身份证号不正确");
+    if (!emergencyName || !emergencyPhone) fail(400, "请填写紧急联系人姓名和手机");
+    if (!/^1\d{10}$/.test(String(emergencyPhone))) fail(400, "紧急联系人手机号不正确");
+    if (String(emergencyPhone) === String(travelerPhone)) fail(400, "紧急联系人不能与出行人使用同一手机号");
+    if (!truthy(waiverAccepted)) fail(400, "请阅读并确认户外活动风险告知");
+    if (!truthy(healthOk)) fail(400, "请确认本人健康状况适合本次活动");
+    const exist = db
+      .prepare("SELECT id FROM enrollments WHERE schedule_id=? AND upper(id_card)=? AND status!='cancelled'")
+      .get(sch.id, parsed.idCard);
+    if (exist) fail(400, "该身份证已在本团报名");
+  }
 
   const occupied = enrolledCount(sch.id);
   let waitlisted = occupied >= Number(sch.max_seats);
@@ -91,7 +102,7 @@ function enrollUser({
     }
   }
   if (!waitlisted) {
-    if (seatNo) {
+    if (!isActivity && seatNo) {
       try {
         seat = assertSeatAvailable(sch.id, sch.max_seats, seatNo);
       } catch (e) {
@@ -114,7 +125,11 @@ function enrollUser({
   const couponDecision = couponPack
     ? decideCouponPrice({ quote, user, campaign: couponPack.campaign, waitlisted })
     : { applyCoupon: false, giftWouldApply: false, tripPrice: quote.tripPrice, memberPay: quote.price, couponPay: quote.price, reason: "" };
-  const role = ["assistant", "photographer"].includes(String(joinMode || "")) ? String(joinMode) : "chain";
+  const role = isActivity
+    ? "chain"
+    : ["assistant", "photographer"].includes(String(joinMode || ""))
+      ? String(joinMode)
+      : "chain";
   const roleWaive = role !== "chain";
   const billed = roleWaive ? 0 : couponDecision.applyCoupon ? couponDecision.couponPay : Number(quote.price || 0);
   const payable =
@@ -127,8 +142,8 @@ function enrollUser({
           points: 0,
           pointsConfig: config.points,
         });
-  const insurance = pickInsurance(insuranceCode);
-  const supply = resolveSupplies(supplies);
+  const insurance = pickInsurance(isActivity ? "none" : insuranceCode);
+  const supply = resolveSupplies(isActivity ? [] : supplies);
   let tripPay = payable.payAmount;
   let giftApplied = false;
   const memberTripPay = Number(quote.price || 0);
@@ -163,7 +178,7 @@ function enrollUser({
       parsed.gender,
       parsed.birthday,
       parsed.hometown,
-      travelerType || "adult",
+      isActivity ? "adult" : travelerType || "adult",
       payStatus,
       payAmount,
       0,
@@ -174,12 +189,12 @@ function enrollUser({
       seat,
       insurance.code,
       insurance.fee,
-      String(emergencyName).trim(),
-      String(emergencyPhone).trim(),
-      now,
-      now,
+      isActivity ? "" : String(emergencyName).trim(),
+      isActivity ? "" : String(emergencyPhone).trim(),
+      isActivity ? null : now,
+      isActivity ? null : now,
       referrerId,
-      autoAlt ? 1 : 0,
+      isActivity ? 0 : autoAlt ? 1 : 0,
       combo ? JSON.stringify(combo) : null,
       supply.items.length ? JSON.stringify(supply.items) : null,
       supply.fee
@@ -193,7 +208,7 @@ function enrollUser({
     trimVirtuals(sch.id);
   }
   if (referrerId && !waitlisted) recordEnrollReferral(referrerId, enrollmentId, payAmount);
-  if (fallbackScheduleIds && fallbackScheduleIds.length) {
+  if (!isActivity && fallbackScheduleIds && fallbackScheduleIds.length) {
     try {
       setFallbacks(enrollmentId, user.id, { scheduleIds: fallbackScheduleIds, autoAlt });
     } catch {
@@ -223,7 +238,9 @@ function enrollUser({
     },
     needPay: false,
     message: waitlisted
-      ? `本车已满，已加入候补（第 ${position} 位），有人取消后自动递补`
+      ? isActivity
+        ? `本局已满，已加入候补（第 ${position} 位），有人取消后自动递补`
+        : `本车已满，已加入候补（第 ${position} 位），有人取消后自动递补`
       : company
         ? "已加入公司团，费用由公司统一支付"
         : roleWaive
@@ -232,7 +249,9 @@ function enrollUser({
             : "已报名辅助领队，免个人团费"
           : giftApplied
             ? "已用会员赠送名额占座，本团免费"
-            : "已报名占座，费用待出行前支付",
+            : isActivity && payAmount === 0
+              ? "已报名，到场即可"
+              : "已报名占座，费用待出行前支付",
   };
 }
 

@@ -15,12 +15,13 @@ function decorate(item) {
   return Object.assign({}, item, {
     statusText: enrollStatusText(item),
     kindLabel: item.channel === "activity" ? "同城局" : "山野团",
+    moneyText: item.channel === "activity" && Number(item.pay_amount || 0) === 0 ? "免费" : "¥" + item.pay_amount,
     upcoming: !cancelled && date >= ymd(),
   });
 }
 
 Page({
-  data: { loggedIn: false, upcoming: [], past: [], reviewingId: 0, rating: 5, content: "" },
+  data: { loggedIn: false, tab: "upcoming", upcoming: [], restUpcoming: [], nextTrip: null, past: [], reviewingId: 0, rating: 5, content: "" },
   onShow() {
     if (!app.globalData.token) {
       this.setData({ loggedIn: false, upcoming: [], past: [] });
@@ -33,9 +34,14 @@ Page({
     request("/orders")
       .then((r) => {
         const list = (r.data || []).map(decorate);
+        const upcoming = list.filter((x) => x.upcoming);
+        const past = list.filter((x) => !x.upcoming);
         this.setData({
-          upcoming: list.filter((x) => x.upcoming),
-          past: list.filter((x) => !x.upcoming),
+          upcoming,
+          restUpcoming: upcoming.slice(1),
+          nextTrip: upcoming[0] || null,
+          past,
+          tab: upcoming.length || !past.length ? "upcoming" : "past",
           reviewingId: 0,
           content: "",
         });
@@ -44,6 +50,9 @@ Page({
   },
   goLogin() {
     wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/orders/orders") });
+  },
+  setTab(e) {
+    this.setData({ tab: e.currentTarget.dataset.tab });
   },
   goHomeTab() {
     wx.switchTab({ url: "/pages/index/index" });

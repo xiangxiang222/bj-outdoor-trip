@@ -1,28 +1,10 @@
 const { request, setAuth, showError } = require("../../utils/request");
 const app = getApp();
 Page({
-  data: { user: null, upcoming: null, coupon: null },
+  data: { user: null, coupon: null },
   onShow() {
     this.setData({ user: app.globalData.user });
-    this.loadUpcoming();
     this.loadCoupon();
-  },
-  async loadUpcoming() {
-    if (!app.globalData.token) {
-      this.setData({ upcoming: null });
-      return;
-    }
-    try {
-      const res = await request("/me/trips");
-      const list = Array.isArray(res.data) ? res.data : [];
-      this.setData({ upcoming: list[0] || null });
-    } catch (err) {
-      this.setData({ upcoming: null });
-    }
-  },
-  goUpcoming() {
-    const u = this.data.upcoming;
-    if (u && u.scheduleId) wx.navigateTo({ url: "/pages/schedule/schedule?id=" + u.scheduleId });
   },
   async loadCoupon() {
     if (!app.globalData.token) {
@@ -47,9 +29,6 @@ Page({
   },
   goOfficial() {
     wx.navigateTo({ url: "/pages/official/official" });
-  },
-  goTrips() {
-    wx.switchTab({ url: "/pages/orders/orders" });
   },
   login() { wx.navigateTo({ url: "/pages/login/login" }); },
   register() { wx.navigateTo({ url: "/pages/login/login?tab=register" }); },

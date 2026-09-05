@@ -1,1 +1,7 @@
 /* inherit */
+.mine-hero { background: linear-gradient(135deg, #1b4332, #40916c); color: #fff; }
+.mine-hero .muted { color: rgba(255,255,255,.85); }
+.cell-label { margin: 24rpx 32rpx 8rpx; font-size: 24rpx; color: #6b705c; font-weight: 650; }
+.cell-group { background: #fffdf8; border-radius: 16rpx; margin: 0 16rpx 8rpx; overflow: hidden; }
+.cell { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 24rpx; border-bottom: 1rpx solid #e6dfd2; }
+.cell:last-child { border-bottom: 0; }
