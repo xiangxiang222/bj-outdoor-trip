@@ -13,3 +13,9 @@ export function slideBg(slide) {
   if (!src) return {};
   return { backgroundImage: `url("${src.replace(/"/g, "")}")` };
 }
+
+export function slideRouteTarget(slide) {
+  const id = Number(slide?.routeId);
+  if (!Number.isInteger(id) || id <= 0) return "";
+  return `/m/route/${id}`;
+}

@@ -1,5 +1,6 @@
 const { request } = require("../../utils/request");
 const { OFFER_TYPES, countOn, buildCalendar } = require("../../utils/offer");
+const { detailUrl } = require("../../utils/media");
 
 function asList(rows) {
   return Array.isArray(rows) && rows.length ? rows : [];
@@ -7,6 +8,7 @@ function asList(rows) {
 
 Page({
   data: {
+    heroIndex: 0,
     home: { brand: { kicker: "同行者众", lead: "在山野，遇见爱", slides: [] }, cities: [], tags: [], festivals: [], months: [] },
     groups: [],
     allSchedules: [],
@@ -116,6 +118,21 @@ Page({
   },
   goGroup(e) {
     wx.navigateTo({ url: "/pages/schedule/schedule?id=" + e.currentTarget.dataset.id });
+  },
+  onHeroChange(e) {
+    this.setData({ heroIndex: Number(e.detail.current) || 0 });
+  },
+  goSlide(e) {
+    const id = Number(e.currentTarget.dataset.id);
+    if (!Number.isInteger(id) || id <= 0) return;
+    wx.navigateTo({ url: detailUrl(id) });
+  },
+  goCurrentSlide() {
+    const slides = (this.data.home.brand && this.data.home.brand.slides) || [];
+    const slide = slides[this.data.heroIndex] || slides[0];
+    const id = Number(slide && slide.routeId);
+    if (!Number.isInteger(id) || id <= 0) return;
+    wx.navigateTo({ url: detailUrl(id) });
   },
   goPublish() {
     const app = getApp();
