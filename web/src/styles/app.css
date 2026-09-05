@@ -26,16 +26,20 @@ button, input, textarea, select { font-family: inherit; }
 
 .mp-phone {
   max-width: 430px;
+  height: 100vh;
   min-height: 100vh;
   margin: 0 auto;
   background: var(--cream);
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 @media (min-width: 960px) {
   body { background: #0f2419; }
   .mp-phone {
     margin: 24px auto;
+    height: calc(100vh - 48px);
     min-height: calc(100vh - 48px);
     border-radius: 28px;
     box-shadow: 0 30px 80px rgba(0,0,0,.35);
@@ -67,6 +71,7 @@ button, input, textarea, select { font-family: inherit; }
   background: var(--forest);
   color: #fff;
   font-size: 13px;
+  flex: none;
 }
 .mp-capsule {
   border: 1px solid rgba(255,255,255,.35);
@@ -83,6 +88,7 @@ button, input, textarea, select { font-family: inherit; }
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: none;
 }
 .mp-nav h1 { font-size: 18px; margin: 0; font-weight: 650; }
 .mp-nav .sub { font-size: 12px; opacity: .75; }
@@ -100,15 +106,19 @@ button, input, textarea, select { font-family: inherit; }
 }
 
 .mp-body {
-  padding: 12px 14px 88px;
-  min-height: calc(100vh - 140px);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 14px 16px;
 }
 
 .mp-tab {
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  flex: none;
+  position: relative;
+  bottom: auto;
+  left: auto;
+  right: auto;
   height: 64px;
   background: #fff;
   display: grid;

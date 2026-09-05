@@ -250,8 +250,8 @@ async function run() {
   enrollSome(schIds[5], 16, false);
 
   const activitySeed = [
-    { code: "A01", title: "周五夜掼蛋局", subtitle: "三缺一，来就能上桌", category: "掼蛋", region: "朝阳", meetup_point: "三里屯太古里南区", meetup_time: "19:30", daysFromNow: 5, notes: "自带零食，茶位 AA", enroll: 3 },
-    { code: "A02", title: "朝阳公园夜跑 5 公里", subtitle: "轻松配速，跑完喝水", category: "跑步", region: "朝阳", meetup_point: "朝阳公园南门", meetup_time: "19:00", daysFromNow: 3, notes: "配速 6:30 左右", enroll: 5 },
+    { code: "A01", title: "周五夜掼蛋局", subtitle: "三缺一，来就能上桌", category: "掼蛋", region: "朝阳", meetup_point: "三里屯太古里南区", meetup_time: "19:30", daysFromNow: 1, notes: "自带零食，茶位 AA", enroll: 3 },
+    { code: "A02", title: "朝阳公园夜跑 5 公里", subtitle: "轻松配速，跑完喝水", category: "跑步", region: "朝阳", meetup_point: "朝阳公园南门", meetup_time: "19:00", daysFromNow: 2, notes: "配速 6:30 左右", enroll: 5 },
     { code: "A03", title: "周末电影场", subtitle: "看完附近吃碗面", category: "电影", region: "海淀", meetup_point: "五道口购物中心", meetup_time: "14:00", daysFromNow: 8, notes: "场次以群里确认为准", enroll: 2 },
     { code: "A04", title: "高校跑团招募领队", subtitle: "这学期带两次晨跑", category: "招募", region: "海淀", meetup_point: "北京大学东南门", meetup_time: "10:00", daysFromNow: 12, notes: "学生组织公开招募", enroll: 4 },
   ];
