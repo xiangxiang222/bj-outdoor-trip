@@ -1,6 +1,6 @@
 # 部署（含只用 iPhone）
 
-改代码、推到 GitHub 的 `main` 之后，**部署发生在 GitHub Actions 的云主机上**，不发生在你的 iPhone 或 Cursor 云环境里。手机没有系统 SSH 不影响自动上线。
+改代码、**合并（或直接推）到 GitHub 的 `main`** 之后，**部署发生在 GitHub Actions 的云主机上**，不发生在你的 iPhone 或 Cursor 云环境里。功能分支和 Pull Request 不会自动上线。手机没有系统 SSH 不影响自动上线。
 
 线上地址：<http://192.144.167.212/m>
 
@@ -16,7 +16,13 @@
 
 ## 一次性：让 GitHub 能登录腾讯云
 
-仓库已有 `.github/workflows/deploy.yml`。它需要一个 Secret，名字必须是 **`DEPLOY_SSH_KEY`**，内容是能登录服务器 `ubuntu@192.144.167.212` 的 **SSH 私钥全文**（含头尾 `BEGIN` / `END` 那两行）。
+仓库已有 `.github/workflows/deploy.yml`。它需要一个 **Actions Secret**，名字必须是 **`DEPLOY_SSH_KEY`**，内容是能登录服务器 `ubuntu@192.144.167.212` 的 **SSH 私钥全文**（含头尾 `BEGIN` / `END` 那两行）。
+
+注意：
+
+- 配在 **Settings → Secrets and variables → Actions**，**不是** Deploy keys（Deploy keys 是仓库拉代码用的公钥，Actions 读不到）。
+- 服务器用户必须是 **`ubuntu`**，不要写成 `root`。公钥进 `ubuntu` 的 `~/.ssh/authorized_keys`。
+- 私钥只放进 GitHub Secret，**不要**发到聊天、不要提交进仓库。若私钥已经泄露，在服务器删掉对应公钥并重新 `ssh-keygen`。
 
 下面两步都在 **手机 Safari** 就能做完，不需要 Mac。
 
@@ -84,3 +90,7 @@ GitHub Secret 用的可以是同一把私钥，也可以是上面那种「只给
 | Actions 报「缺少 GitHub Secret：DEPLOY_SSH_KEY」 | 还没在仓库 Settings → Secrets 里添加，或名字写错 |
 | `Permission denied (publickey)` | 私钥和服务器 `authorized_keys` 不是一对，或用户不是 `ubuntu` |
 | 页面还是旧版 | 部署没成功，或手机浏览器缓存；先看 Actions 是否绿灯再强刷 |
+| `Permission denied` 且密钥看起来对 | 密钥加给了 `root`，或贴进了 Deploy keys；改成 `ubuntu` + Actions Secret |
+| 功能分支已推但线上没变 | 只有 `main` 会触发 Deploy；先合并 PR |
+
+线上进程：PM2 名 `beiyexing`，目录 `/var/www/beiyexing`。部署脚本不会在已有数据库上执行 `npm run seed`。
