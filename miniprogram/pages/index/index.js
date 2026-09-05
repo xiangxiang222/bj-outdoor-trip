@@ -127,7 +127,7 @@ Page({
     wx.navigateTo({ url: "/pages/member/member" });
   },
   goOfficial() {
-    wx.switchTab({ url: "/pages/official/official" });
+    wx.navigateTo({ url: "/pages/official/official" });
   },
   goLottery() {
     wx.navigateTo({ url: "/pages/lottery/lottery" });

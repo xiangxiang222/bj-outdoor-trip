@@ -1,9 +1,9 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/official/official",
     "pages/activities/activities",
     "pages/mine/mine",
+    "pages/official/official",
     "pages/rules/rules",
     "pages/feedback/feedback",
     "pages/lottery/lottery",
@@ -41,7 +41,6 @@
     "list": [
       { "pagePath": "pages/index/index", "text": "首页", "iconPath": "images/home.png", "selectedIconPath": "images/home-on.png" },
       { "pagePath": "pages/activities/activities", "text": "活动", "iconPath": "images/activities.png", "selectedIconPath": "images/activities-on.png" },
-      { "pagePath": "pages/official/official", "text": "官方", "iconPath": "images/official.png", "selectedIconPath": "images/official-on.png" },
       { "pagePath": "pages/mine/mine", "text": "我的", "iconPath": "images/mine.png", "selectedIconPath": "images/mine-on.png" }
     ]
   },

@@ -378,7 +378,7 @@ router.get("/home", (req, res) => {
   if (req.query.month) {
     const dates = db()
       .prepare(
-        "SELECT start_date FROM schedules WHERE IFNULL(review_status,'approved')='approved' AND status!='cancelled'"
+        "SELECT start_date FROM schedules WHERE IFNULL(review_status,'approved')='approved' AND status!='cancelled' AND IFNULL(channel,'trip')!='activity'"
       )
       .all()
       .map((r) => r.start_date);
@@ -770,7 +770,7 @@ router.get("/guides/:id", (req, res) => {
 
 router.get("/routes", (req, res) => {
   const { days, category, q, difficulty, tag, city } = req.query;
-  let sql = "SELECT * FROM routes WHERE status='on'";
+  let sql = "SELECT * FROM routes WHERE status='on' AND id NOT IN (SELECT DISTINCT route_id FROM schedules WHERE IFNULL(channel,'trip')='activity')";
   const args = [];
   if (String(days) === "multi") {
     sql += " AND days>=4";

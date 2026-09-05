@@ -19,6 +19,7 @@
   <view class="pad">我的优惠券<text wx:if="{{coupon}}"> {{coupon.label}}</text></view>
 </view>
 <view class="card" wx:if="{{user}}" bindtap="goHome"><view class="pad">个人主页 · 相册与行程</view></view>
+<view class="card" bindtap="goOfficial"><view class="pad">客服与规则 · 加微信、FAQ</view></view>
 <view class="card" bindtap="go" data-url="/pages/favorites/favorites"><view class="pad">我的收藏</view></view>
 <view class="card" bindtap="openMember"><view class="pad">{{user.isMember ? '会员中心' : '开通会员'}}</view></view>
 <view class="btn ghost" wx:if="{{user}}" bindtap="out">退出</view>

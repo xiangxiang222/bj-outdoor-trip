@@ -1,0 +1,33 @@
+.svc-hero {
+  margin: 16rpx;
+  padding: 32rpx 24rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #1b4332, #40916c);
+  color: #fff;
+  text-align: center;
+}
+.svc-hero .logo { width: 120rpx; height: 120rpx; border-radius: 16rpx; background: #fff; margin-bottom: 12rpx; }
+.svc-hero .muted.light { color: rgba(255,255,255,.85); }
+.row-btns { display: flex; gap: 12rpx; padding: 0 16rpx; }
+.row-btns .btn { flex: 1; margin: 0; }
+.svc-grid { display: flex; flex-wrap: wrap; padding: 8rpx 16rpx 16rpx; gap: 12rpx; }
+.svc-tile {
+  width: 48%;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx 20rpx;
+  font-weight: 650;
+  color: #1b4332;
+}
+.follow-grid { display: flex; flex-wrap: wrap; padding: 0 16rpx 16rpx; gap: 12rpx; }
+.follow-card {
+  width: 48%;
+  box-sizing: border-box;
+  background: #fffdf8;
+  border-radius: 20rpx;
+  padding: 20rpx;
+}
+.tiny { font-size: 20rpx; }
+.acc { padding: 20rpx 24rpx; border-bottom: 1rpx dashed #e6dfd2; }
+.acc:last-child { border-bottom: 0; }

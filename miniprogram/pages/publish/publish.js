@@ -47,6 +47,7 @@ Page({
       title: "",
       city: "",
       days: 1,
+      channel: "trip",
       playTagIds: [],
       offerType: "full",
       originPrice: 199,
@@ -79,6 +80,12 @@ Page({
       dateLabels: dates.map((d) => d.label),
       dateIndex,
       "form.startDate": dates[dateIndex].value,
+      "form.channel": q.channel === "activity" ? "activity" : "trip",
+      "form.title": q.title ? decodeURIComponent(q.title) : "",
+      "form.offerType": q.channel === "activity" ? "free" : this.data.form.offerType,
+      "form.originPrice": q.channel === "activity" ? 0 : this.data.form.originPrice,
+      "form.minGroupSize": q.channel === "activity" ? 4 : this.data.form.minGroupSize,
+      "form.meetupTime": q.channel === "activity" ? "19:30" : this.data.form.meetupTime,
     });
     this.boot();
   },

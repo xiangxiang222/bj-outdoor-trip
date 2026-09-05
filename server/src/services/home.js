@@ -154,11 +154,14 @@ function buildHome(req) {
   const db = getDb();
   ensureDefaultPlayTags(db);
   const routes = db.prepare("SELECT * FROM routes WHERE status='on' ORDER BY id").all();
+  const activityRouteIds = new Set(
+    db.prepare("SELECT DISTINCT route_id FROM schedules WHERE IFNULL(channel,'trip')='activity'").all().map((r) => r.route_id)
+  );
   const schedules = db
     .prepare(
       `SELECT s.*, r.title AS route_title, r.cover AS route_cover, r.days AS route_days, r.region AS route_region, r.gallery_json, r.code AS route_code
        FROM schedules s JOIN routes r ON r.id=s.route_id
-       WHERE ${approvedScheduleSql()} AND s.start_date>=date('now','-1 day')
+       WHERE ${approvedScheduleSql()} AND s.start_date>=date('now','-1 day') AND IFNULL(s.channel,'trip')!='activity'
        ORDER BY s.start_date`
     )
     .all();
@@ -182,6 +185,7 @@ function buildHome(req) {
   }
 
   for (const r of routes) {
+    if (activityRouteIds.has(r.id)) continue;
     const slide = toSlide(r);
     scenicSlides.push(slide);
     addCitySlide(cityOf(r.region), slide);

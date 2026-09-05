@@ -45,6 +45,9 @@ Page({
     const u = this.data.user;
     if (u && u.id) wx.navigateTo({ url: "/pages/user/user?id=" + u.id });
   },
+  goOfficial() {
+    wx.navigateTo({ url: "/pages/official/official" });
+  },
   login() { wx.navigateTo({ url: "/pages/login/login" }); },
   register() { wx.navigateTo({ url: "/pages/login/login?tab=register" }); },
   go(e) {

@@ -107,4 +107,40 @@ describe("homepage and publish review", () => {
     const after = await agent.get("/api/schedules").expect(200);
     assert.ok(after.body.data.some((s) => s.id === created.body.data.id));
   });
+
+  it("city activities stay off the trip list and route catalog", async () => {
+    const token = await loginUser(agent);
+    const buses = await agent.get("/api/buses").expect(200);
+    const start = seed.db.prepare("SELECT date('now','+4 day') AS d").get().d;
+    const created = await agent
+      .post("/api/trips")
+      .set(auth(token))
+      .send({
+        title: "周五夜掼蛋局",
+        city: "朝阳",
+        days: 1,
+        originPrice: 0,
+        startDate: start,
+        busTypeId: buses.body.data[0].id,
+        meetupPoint: "三里屯太古里南区",
+        meetupTime: "19:30",
+        offerType: "free",
+        channel: "activity",
+        minGroupSize: 4,
+      })
+      .expect(200);
+    assert.equal(created.body.data.channel, "activity");
+    const admin = await loginAdmin(agent);
+    await agent.post(`/api/admin/schedules/${created.body.data.id}/review`).set(auth(admin)).send({ status: "approved" }).expect(200);
+    const trips = await agent.get("/api/schedules?channel=trip").expect(200);
+    assert.equal(trips.body.data.some((s) => s.id === created.body.data.id), false);
+    const acts = await agent.get("/api/schedules?channel=activity").expect(200);
+    const hit = acts.body.data.find((s) => s.id === created.body.data.id);
+    assert.ok(hit);
+    assert.equal(hit.channel, "activity");
+    const routes = await agent.get("/api/routes").expect(200);
+    assert.equal(routes.body.data.some((r) => r.title === "周五夜掼蛋局"), false);
+    const home = await agent.get("/api/home").expect(200);
+    assert.equal(home.body.data.brand.slides.some((s) => s.title === "周五夜掼蛋局"), false);
+  });
 });

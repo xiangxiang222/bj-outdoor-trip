@@ -1,10 +1,10 @@
 <template>
   <div>
-    <p class="muted">提交后需管理员审核。规则见「官方」页。可按关键词先匹配已有线路。</p>
+    <p class="muted">提交后需管理员审核。规则在「我的 → 客服与规则」。可按关键词先匹配已有线路。</p>
     <label>类型</label>
     <select class="select" v-model="form.channel">
       <option value="trip">户外线路（上首页）</option>
-      <option value="activity">其它活动（上活动页）</option>
+      <option value="activity">同城局（上活动 Tab）</option>
     </select>
     <label>匹配已有线路</label>
     <input class="input" v-model="keyword" placeholder="输入关键词，点下方选用" @input="searchRoutes" />
@@ -112,16 +112,17 @@ const offers = OFFER_TYPES;
 const meetups = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
 const keyword = ref("");
 const hits = ref([]);
+const isActivity = route.query.channel === "activity";
 const form = ref({
-  title: "",
+  title: String(route.query.title || ""),
   subtitle: "",
   cover: "",
-  channel: route.query.channel === "activity" ? "activity" : "trip",
+  channel: isActivity ? "activity" : "trip",
   days: 1,
-  city: "",
+  city: isActivity ? "朝阳" : "",
   playTagIds: [],
-  offerType: "full",
-  originPrice: 199,
+  offerType: isActivity ? "free" : "full",
+  originPrice: isActivity ? 0 : 199,
   offerPrice: null,
   memberPriceOn: true,
   studentPriceOn: true,
@@ -131,9 +132,9 @@ const form = ref({
   organizerType: "individual",
   companyName: store.profile?.companyName || "",
   busTypeId: "",
-  minGroupSize: 10,
+  minGroupSize: isActivity ? 4 : 10,
   meetupPoint: meetups[0],
-  meetupTime: "07:30",
+  meetupTime: isActivity ? "19:30" : "07:30",
   description: "",
   notes: "",
   comboRule: { require: "student_or_group", school: "" },

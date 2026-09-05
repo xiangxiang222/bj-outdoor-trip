@@ -1,0 +1,47 @@
+.act-hero {
+  margin: 16rpx;
+  padding: 28rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #1b4332, #40916c);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+.act-hero .muted.light { color: rgba(255,255,255,.85); }
+.btn.gold { background: #ffd166; color: #1b4332; margin: 0; padding: 16rpx 24rpx; }
+.kind-grid { display: flex; gap: 12rpx; padding: 0 16rpx 16rpx; }
+.act-kind {
+  flex: 1;
+  background: #fff;
+  border: 1rpx solid #e6dfd2;
+  border-radius: 20rpx;
+  padding: 16rpx 8rpx;
+  text-align: center;
+  font-size: 24rpx;
+}
+.act-kind.on { border-color: #2d6a4f; background: #d8f3dc; }
+.act-kind .emoji { font-size: 36rpx; }
+.tiny { font-size: 20rpx; }
+.act-card {
+  margin: 0 16rpx 16rpx;
+  padding: 20rpx;
+  background: #fffdf8;
+  border-radius: 24rpx;
+  display: flex;
+  gap: 20rpx;
+  align-items: center;
+}
+.act-date {
+  width: 96rpx;
+  text-align: center;
+  background: #d8f3dc;
+  border-radius: 16rpx;
+  padding: 12rpx 0;
+  color: #1b4332;
+}
+.act-date .day { font-size: 40rpx; font-weight: 700; }
+.act-main { flex: 1; }
+.meta { margin-top: 8rpx; color: #1b4332; font-size: 24rpx; font-weight: 650; }
+.meta text { margin-right: 16rpx; }

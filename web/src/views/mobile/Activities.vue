@@ -1,23 +1,57 @@
 <template>
-  <div>
-    <p class="muted">约掼蛋、跑步、看电影，或品牌发布招募。户外路线请走首页。</p>
-    <button class="btn block" type="button" @click="goPublish">发布活动</button>
-    <div class="chips" style="margin:12px 0">
-      <div class="chip" :class="{ on: !kind }" @click="kind = ''">全部</div>
-      <div class="chip" :class="{ on: kind === k }" v-for="k in kinds" :key="k" @click="kind = k">{{ k }}</div>
+  <div class="act-page">
+    <div class="act-hero">
+      <div>
+        <strong>同城也能约</strong>
+        <p>掼蛋、跑步、看电影，或发个招募。山野线路请回首页。</p>
+      </div>
+      <button class="btn" type="button" @click="goPublish()">发起一局</button>
     </div>
-    <div class="trip-card" v-for="s in list" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
-      <img v-if="s.route?.cover" class="trip-swipe" :src="s.route.cover" :alt="s.route.title" />
-      <div class="pad">
+    <p class="act-week muted" v-if="rows.length">本周 {{ weekCount }} 场 · 共 {{ rows.length }} 场可报</p>
+
+    <div class="act-kinds">
+      <button
+        class="act-kind"
+        type="button"
+        :class="{ on: kind === k.key }"
+        v-for="k in kinds"
+        :key="k.key"
+        @click="kind = kind === k.key ? '' : k.key"
+      >
+        <span>{{ k.emoji }}</span>
+        <em>{{ k.label }}</em>
+        <small>{{ k.hint }}</small>
+      </button>
+    </div>
+
+    <article class="act-card" v-for="s in list" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
+      <div class="act-date">
+        <b>{{ dateOf(s).day }}</b>
+        <span>{{ dateOf(s).weekday }}</span>
+        <small>{{ dateOf(s).month }}</small>
+      </div>
+      <div class="act-main">
         <div class="row">
           <strong>{{ s.route?.title }}</strong>
-          <span class="tag">{{ s.startDate }}</span>
+          <span class="tag" v-if="kindOf(s)">{{ kindOf(s).label }}</span>
         </div>
-        <p class="muted" style="margin:6px 0">{{ s.city }} · {{ s.organizerName }}</p>
-        <TripPrices :quote="s.quote" compact />
+        <p class="muted">{{ s.meetupTime || "" }} {{ s.city }} · {{ s.organizerName }}</p>
+        <p class="act-meta">
+          <span v-if="isFree(s)">免费</span>
+          <span v-else>¥{{ priceOf(s) }} 起</span>
+          <span>余 {{ s.remain }} 人</span>
+        </p>
+      </div>
+      <img v-if="s.route?.cover" class="act-thumb" :src="s.route.cover" :alt="s.route.title" />
+    </article>
+
+    <div v-if="!list.length" class="card act-empty">
+      <div class="pad">
+        <strong>{{ kind ? `还没有「${kind}」局` : "还没有同城局" }}</strong>
+        <p class="muted">发起一局，审核通过后会出现在这里。户外团请回首页发团。</p>
+        <button class="btn ghost block" type="button" @click="goPublish(kind)">去发起</button>
       </div>
     </div>
-    <div v-if="!list.length" class="card"><div class="pad muted">还没有活动，先发一个。</div></div>
   </div>
 </template>
 
@@ -26,25 +60,35 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
-import TripPrices from "@/components/TripPrices.vue";
+import { ACTIVITY_KINDS, activityKindOf, filterActivities, formatActivityDate, isThisWeek } from "@/utils/activityKind";
 
 const router = useRouter();
 const store = useUserStore();
 const rows = ref([]);
 const kind = ref("");
-const kinds = ["掼蛋", "跑步", "电影", "招募"];
+const kinds = ACTIVITY_KINDS;
 
-const list = computed(() => {
-  if (!kind.value) return rows.value;
-  return rows.value.filter((s) => (s.route?.title || "").includes(kind.value) || (s.playTags || []).some((t) => t.name === kind.value));
-});
+const list = computed(() => filterActivities(rows.value, kind.value));
+const weekCount = computed(() => rows.value.filter((s) => isThisWeek(s.startDate)).length);
 
 onMounted(async () => {
   rows.value = (await http.get("/schedules", { params: { channel: "activity" } }).catch(() => ({ data: [] }))).data || [];
 });
 
-function goPublish() {
-  const path = "/m/publish?channel=activity";
+function kindOf(s) {
+  return activityKindOf(s);
+}
+function dateOf(s) {
+  return formatActivityDate(s.startDate);
+}
+function isFree(s) {
+  return Number(s.quote?.tripPrice ?? s.quote?.originPrice ?? 0) === 0 || s.offerType === "free";
+}
+function priceOf(s) {
+  return s.quote?.tripPrice ?? s.quote?.originPrice ?? 0;
+}
+function goPublish(preset) {
+  const path = preset ? `/m/publish?channel=activity&title=${encodeURIComponent(preset)}` : "/m/publish?channel=activity";
   if (!store.token) router.push({ path: "/m/login", query: { redirect: path } });
   else router.push(path);
 }

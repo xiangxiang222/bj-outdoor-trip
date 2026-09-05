@@ -9,6 +9,7 @@
 | [docs/DESIGN.md](docs/DESIGN.md) | 完整设计：架构、领域模型、支付/会员/拼团、数据表 |
 | [docs/ADMIN_GUIDE.md](docs/ADMIN_GUIDE.md) | 管理后台操作说明 |
 | [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | H5 / 小程序使用说明 |
+| [docs/MOBILE_LAYOUT.md](docs/MOBILE_LAYOUT.md) | 底栏与活动/官方页优化说明 |
 | [docs/API.md](docs/API.md) | REST 接口一览 |
 | [docs/TESTING.md](docs/TESTING.md) | 单元测试、覆盖率、全功能走查 |
 | [docs/REGISTER.md](docs/REGISTER.md) | 上线前：域名、备案、小程序、支付、短信要注册的官网 |

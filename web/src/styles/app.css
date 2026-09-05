@@ -112,9 +112,10 @@ button, input, textarea, select { font-family: inherit; }
   height: 64px;
   background: #fff;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom);
+  z-index: 8;
 }
 .mp-tab a {
   display: flex;
@@ -126,7 +127,11 @@ button, input, textarea, select { font-family: inherit; }
   gap: 2px;
 }
 .mp-tab a.active { color: var(--leaf); font-weight: 600; }
-.mp-tab .ico { font-size: 18px; }
+.mp-tab .tab-ico {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
 
 .card {
   background: var(--paper);
@@ -623,6 +628,120 @@ button, input, textarea, select { font-family: inherit; }
   cursor: pointer;
 }
 .publish-guide { cursor: pointer; }
+.act-hero, .svc-hero {
+  background: linear-gradient(135deg, #1b4332, #40916c);
+  color: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.act-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.act-hero p, .svc-hero p { margin: 6px 0 0; font-size: 13px; opacity: .88; }
+.act-hero .btn { flex: none; background: #ffd166; color: #1b4332; }
+.act-week { margin: 0 0 8px; }
+.act-kinds {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.act-kind {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px 4px;
+  text-align: center;
+  cursor: pointer;
+}
+.act-kind span { display: block; font-size: 18px; line-height: 1.2; }
+.act-kind em { display: block; font-style: normal; font-size: 12px; font-weight: 650; color: var(--forest); }
+.act-kind small { display: block; color: var(--muted); font-size: 10px; }
+.act-kind.on { border-color: var(--leaf); background: var(--mint); }
+.act-card {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  background: var(--paper);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+.act-date {
+  text-align: center;
+  background: var(--mint);
+  border-radius: 12px;
+  padding: 8px 0;
+  color: var(--forest);
+}
+.act-date b { display: block; font-size: 20px; line-height: 1; }
+.act-date span, .act-date small { display: block; font-size: 11px; }
+.act-main p { margin: 4px 0 0; }
+.act-meta { display: flex; gap: 10px; font-size: 12px; color: var(--forest); font-weight: 650; }
+.act-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; background: var(--mint); }
+.act-card:not(:has(.act-thumb)) { grid-template-columns: 56px 1fr; }
+.act-empty { cursor: default; }
+.svc-hero { text-align: center; }
+.svc-hero .brand-mark { margin-bottom: 8px; }
+.svc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; }
+.svc-hint { margin: 0 0 12px; }
+.svc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.svc-tile {
+  display: block;
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 12px;
+  font-weight: 650;
+  color: var(--forest);
+  box-shadow: var(--shadow);
+}
+.follow-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.follow-card {
+  text-align: left;
+  border: 0;
+  background: var(--paper);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 12px;
+  cursor: pointer;
+}
+.follow-card em, .follow-card span, .follow-card small { display: block; font-style: normal; margin-top: 2px; }
+.acc-card { padding: 4px 8px 8px; }
+.acc-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  border: 0;
+  border-bottom: 1px dashed var(--line);
+  background: transparent;
+  padding: 12px 6px;
+  cursor: pointer;
+}
+.acc-head:last-child { border-bottom: 0; }
+.acc-head p { margin: 6px 0 0; }
+.acc-head i { color: var(--muted); font-style: normal; font-size: 18px; }
+@media (max-width: 380px) {
+  .svc-actions { grid-template-columns: 1fr; }
+}
 .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .kpi .card { padding: 16px; }
 .kpi .n { font-size: 28px; font-weight: 700; color: var(--forest); }

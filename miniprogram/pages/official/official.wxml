@@ -1,27 +1,47 @@
-<view class="card" wx:for="{{accounts}}" wx:key="platform">
-  <view class="pad contact-row">
-    <view>
-      <view class="title">{{item.platform}}</view>
-      <view>{{item.name}} {{item.id}}</view>
-      <view class="muted">{{item.remark}}</view>
-    </view>
-    <text class="nav-link" catchtap="copy" data-text="{{item.id}}">复制</text>
+<view class="svc-hero">
+  <image class="logo" src="/images/logo.jpg" mode="aspectFit" />
+  <view class="title">需要人时，先加官方微信</view>
+  <view class="muted light">账号、规则和常见问题都在这页。</view>
+</view>
+<view class="row-btns">
+  <view class="btn" bindtap="copy" data-text="{{contacts.officialWechat}}" data-toast="已复制微信号">复制官方微信</view>
+  <view class="btn ghost" bindtap="copy" data-text="{{contacts.officialGroup}}" data-toast="已复制群名">复制用户群名</view>
+</view>
+<view class="pad muted">{{contacts.hint}}</view>
+<view class="svc-grid">
+  <view class="svc-tile" bindtap="go" data-url="/pages/feedback/feedback">意见反馈</view>
+  <view class="svc-tile" bindtap="go" data-url="/pages/lottery/lottery">报名前抽奖</view>
+  <view class="svc-tile" bindtap="jumpRules">平台规则</view>
+</view>
+<view class="pad title">关注我们</view>
+<view class="follow-grid">
+  <view class="follow-card" wx:for="{{accounts}}" wx:key="platform" bindtap="copy" data-text="{{item.id}}" data-toast="已复制">
+    <view class="title">{{item.platform}}</view>
+    <view>{{item.name}}</view>
+    <view class="muted">{{item.id}}</view>
+    <view class="muted tiny">{{item.remark}}</view>
   </view>
 </view>
-<view class="card" wx:if="{{contacts.officialWechat}}">
-  <view class="pad contact-row">官方微信 {{contacts.officialWechatName}} {{contacts.officialWechat}} <text class="nav-link" catchtap="copy" data-text="{{contacts.officialWechat}}">复制</text></view>
-  <view class="pad">官方用户群 {{contacts.officialGroup}}</view>
-  <view class="pad muted">{{contacts.hint}}</view>
-</view>
+<view class="pad title">常见问题</view>
 <view class="card">
-  <view class="pad">
-    <view class="title">{{rules.title || '统一规则'}}</view>
-    <view class="muted">{{rules.summary}}</view>
+  <view class="acc {{openFaq==index?'on':''}}" wx:for="{{faqs}}" wx:key="q" bindtap="toggleFaq" data-index="{{index}}">
+    <view class="row">
+      <view class="title">{{item.q}}</view>
+      <text>{{openFaq==index?'–':'+'}}</text>
+    </view>
+    <view class="muted" wx:if="{{openFaq==index}}">{{item.a}}</view>
   </view>
 </view>
-<view class="card" wx:for="{{rules.sections}}" wx:key="title">
-  <view class="pad">
-    <view class="title">{{item.title}}</view>
-    <view class="muted" wx:for="{{item.items}}" wx:for-item="line" wx:key="*this">{{line}}</view>
+<view id="rules" class="pad title">{{rules.title || '平台规则'}}</view>
+<view class="pad muted">{{rules.summary}}</view>
+<view class="card">
+  <view class="acc {{openRule==index?'on':''}}" wx:for="{{rules.sections}}" wx:key="title" bindtap="toggleRule" data-index="{{index}}">
+    <view class="row">
+      <view class="title">{{item.title}}</view>
+      <text>{{openRule==index?'–':'+'}}</text>
+    </view>
+    <view wx:if="{{openRule==index}}">
+      <view class="muted" wx:for="{{item.items}}" wx:for-item="line" wx:for-index="n" wx:key="n">{{n + 1}}. {{line}}</view>
+    </view>
   </view>
 </view>

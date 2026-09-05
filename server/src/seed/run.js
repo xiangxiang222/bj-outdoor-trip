@@ -249,6 +249,77 @@ async function run() {
   enrollSome(schIds[4], 12, true);
   enrollSome(schIds[5], 16, false);
 
+  const activitySeed = [
+    { code: "A01", title: "周五夜掼蛋局", subtitle: "三缺一，来就能上桌", category: "掼蛋", region: "朝阳", meetup_point: "三里屯太古里南区", meetup_time: "19:30", daysFromNow: 5, notes: "自带零食，茶位 AA", enroll: 3 },
+    { code: "A02", title: "朝阳公园夜跑 5 公里", subtitle: "轻松配速，跑完喝水", category: "跑步", region: "朝阳", meetup_point: "朝阳公园南门", meetup_time: "19:00", daysFromNow: 3, notes: "配速 6:30 左右", enroll: 5 },
+    { code: "A03", title: "周末电影场", subtitle: "看完附近吃碗面", category: "电影", region: "海淀", meetup_point: "五道口购物中心", meetup_time: "14:00", daysFromNow: 8, notes: "场次以群里确认为准", enroll: 2 },
+    { code: "A04", title: "高校跑团招募领队", subtitle: "这学期带两次晨跑", category: "招募", region: "海淀", meetup_point: "北京大学东南门", meetup_time: "10:00", daysFromNow: 12, notes: "学生组织公开招募", enroll: 4 },
+  ];
+  for (const a of activitySeed) {
+    const info = insertRoute.run({
+      code: a.code,
+      title: a.title,
+      subtitle: a.subtitle,
+      days: 1,
+      distance_km: 0,
+      difficulty: "休闲",
+      category: a.category,
+      region: a.region,
+      season: "四季",
+      tags_json: JSON.stringify([a.category]),
+      cover: "",
+      gallery_json: "[]",
+      min_group_size: 4,
+      description: a.subtitle,
+      highlights_json: JSON.stringify([a.notes]),
+      itinerary_json: "[]",
+      fee_include: "场地 AA",
+      fee_exclude: "个人消费",
+      equipment: "",
+      notices: a.notes,
+      meetup_json: JSON.stringify([{ id: "custom", name: a.meetup_point }]),
+    });
+    const rid = Number(info.lastInsertRowid);
+    insertTier.run(rid, 4, null, 0, 0);
+    insertRb.run(rid, "coaster10");
+    const when = upcoming(a.daysFromNow, 1);
+    const sch = insertSch.run({
+      route_id: rid,
+      start_date: when.start,
+      end_date: when.end,
+      organizer_type: "individual",
+      organizer_id: userIds["13800138000"],
+      organizer_name: "林北野",
+      company_name: null,
+      bus_type_id: "coaster10",
+      min_group_size: 4,
+      max_seats: 10,
+      meetup_point: a.meetup_point,
+      meetup_time: a.meetup_time,
+      status: "recruiting",
+      share_token: nanoid(10),
+      notes: a.notes,
+      cost_transport: 0,
+      cost_ticket: 0,
+      cost_hotel: 0,
+      cost_meal: 0,
+      cost_guide: 0,
+      cost_other: 0,
+      guide_id: null,
+      plate_no: "",
+      consult_group: "",
+    });
+    const sid = Number(sch.lastInsertRowid);
+    db.prepare("UPDATE schedules SET offer_type=?, offer_price=?, city=?, channel=?, review_status='approved' WHERE id=?").run(
+      "free",
+      0,
+      a.region,
+      "activity",
+      sid
+    );
+    enrollSome(sid, a.enroll, false);
+  }
+
   db.prepare("INSERT INTO settings (key,value) VALUES (?,?)").run("site_name", "同行者众");
   db.prepare("INSERT INTO settings (key,value) VALUES (?,?)").run("member_annual_fee", String(config.member.annualFee));
   db.prepare("INSERT INTO settings (key,value) VALUES (?,?)").run("wx_pay_mock", "1");

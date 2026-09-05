@@ -108,7 +108,7 @@
       <router-link v-if="store.profile?.groupStatus !== 'approved' && store.profile?.groupStatus !== 'pending'" class="cta-row" to="/m/group">团体注册 · 学生会 / 跑团 / 品牌</router-link>
       <router-link v-if="store.profile?.groupStatus === 'pending'" class="cta-row muted" to="/m/group">团体认证审核中</router-link>
       <router-link class="cta-row" to="/m/lottery">抽奖 · 报名前可抽一次，出行后再抽</router-link>
-      <router-link class="cta-row" to="/m/official">联系我们</router-link>
+      <router-link class="cta-row" to="/m/official">联系客服 · 加官方微信与用户群</router-link>
       <router-link class="cta-row" to="/m/feedback">功能建议与找 BUG</router-link>
     </div>
   </div>
