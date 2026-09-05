@@ -1,13 +1,18 @@
 <template>
   <div class="mp-phone">
-    <div class="mp-status">
-      <span class="brand-lockup">
-        <img class="brand-mark sm" src="/brand/logo.jpg" alt="" />
-        同行者众
-      </span>
+    <div class="mp-status" :class="{ 'is-home': isHome }">
+      <router-link to="/m" class="brand-lockup" aria-label="同行者众 首页">
+        <span class="brand-mark-frame" aria-hidden="true">
+          <img src="/brand/mark.png" alt="" />
+        </span>
+        <span class="brand-type">
+          <span class="brand-name">同行者众</span>
+          <span v-if="isHome" class="brand-tagline">在山野，遇见爱</span>
+        </span>
+      </router-link>
       <span class="mp-capsule">微信小程序演示</span>
     </div>
-    <div class="mp-nav">
+    <div v-if="!isHome" class="mp-nav">
       <button v-if="showBack" class="nav-back" type="button" aria-label="返回" @click="goBack">‹</button>
       <div>
         <h1>{{ title }}</h1>
@@ -51,6 +56,7 @@ onMounted(() => store.fetchMeta());
 watch(() => route.path, () => clearChrome());
 
 const tabNames = new Set(["home", "activities", "orders", "mine"]);
+const isHome = computed(() => route.name === "home");
 const showBack = computed(() => !tabNames.has(route.name));
 const mineActive = computed(() =>
   ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/student", "/m/group", "/m/official", "/m/feedback"].some(

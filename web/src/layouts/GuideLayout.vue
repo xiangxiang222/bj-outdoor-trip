@@ -1,10 +1,15 @@
 <template>
   <div class="mp-phone">
-    <div class="mp-status">
-      <span class="brand-lockup">
-        <img class="brand-mark sm" src="/brand/logo.jpg" alt="" />
-        同行者众导游端
-      </span>
+    <div class="mp-status is-home">
+      <router-link to="/g" class="brand-lockup" aria-label="同行者众导游端">
+        <span class="brand-mark-frame" aria-hidden="true">
+          <img src="/brand/mark.png" alt="" />
+        </span>
+        <span class="brand-type">
+          <span class="brand-name">同行者众</span>
+          <span class="brand-tagline">导游端</span>
+        </span>
+      </router-link>
       <span class="mp-capsule">带团工作台</span>
     </div>
     <div class="mp-nav">
