@@ -3,11 +3,11 @@
     <div class="mp-status" :class="{ 'is-home': isHome }">
       <router-link to="/m" class="brand-lockup" aria-label="同行者众 首页">
         <span class="brand-mark-frame" aria-hidden="true">
-          <img src="/brand/mark.png" alt="" />
+          <BrandMark />
         </span>
         <span class="brand-type">
           <span class="brand-name">同行者众</span>
-          <span v-if="isHome" class="brand-tagline">在山野，遇见爱</span>
+          <span v-if="isHome" class="brand-tagline">清北同学的山野局</span>
         </span>
       </router-link>
       <span class="mp-capsule">微信小程序演示</span>
@@ -47,6 +47,7 @@
 import { computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
+import BrandMark from "@/components/BrandMark.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -105,10 +106,11 @@ const title = computed(() => {
 });
 const subtitle = computed(() => {
   const map = {
-    home: "在山野，遇见爱",
+    home: "清北同学的山野局",
     activities: "掼蛋、跑步、看电影，户外请走首页",
     official: "加微信、看规则、找客服",
     rules: "加微信、看规则、找客服",
+    student: "清华、北大同学先认证",
     mine: "报名、会员与客服",
     orders: "待出行的山野团和同城局",
     publish: "提交后需管理员审核",

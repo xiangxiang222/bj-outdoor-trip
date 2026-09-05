@@ -42,6 +42,55 @@
 .picked-chip { display: inline-block; background: #d8f3dc; border-radius: 999rpx; padding: 6rpx 16rpx; margin: 6rpx; font-size: 24rpx; }
 .cta { margin: 16rpx; padding: 24rpx; background: #fff; border-radius: 16rpx; }
 .prices { display: flex; gap: 16rpx; margin-top: 8rpx; font-size: 24rpx; color: #bc4749; }
+.kicker-row { display: flex; align-items: center; gap: 12rpx; margin-bottom: 12rpx; }
+.enamel {
+  font-size: 20rpx;
+  font-weight: 650;
+  letter-spacing: 6rpx;
+  padding: 6rpx 16rpx 6rpx 20rpx;
+  border-radius: 999rpx;
+  color: #fff;
+}
+.enamel.thu { background: rgba(107, 33, 120, .94); }
+.enamel.pku { background: rgba(130, 26, 42, .94); }
+.enamel-x { font-size: 22rpx; opacity: .8; }
+.campus-card {
+  margin: 16rpx;
+  padding: 28rpx 28rpx 28rpx 32rpx;
+  background: #fffdf8;
+  border-radius: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  position: relative;
+  overflow: hidden;
+}
+.campus-card::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 8rpx;
+  background: linear-gradient(180deg, #6b2178, #821a2a);
+}
+.qb-seals { display: flex; gap: 10rpx; margin-bottom: 10rpx; }
+.qb-seal {
+  width: 48rpx; height: 48rpx; border-radius: 50%;
+  color: #fff; font-size: 24rpx; font-weight: 700;
+  text-align: center; line-height: 48rpx;
+}
+.qb-seal.thu { background: #6b2178; }
+.qb-seal.pku { background: #821a2a; }
+.campus-title { font-size: 34rpx; font-weight: 700; letter-spacing: 4rpx; }
+.campus-cta {
+  flex-shrink: 0;
+  padding: 12rpx 22rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(90deg, #6b2178, #821a2a);
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 650;
+}
 .home-kicker { font-size: 36rpx; font-weight: 700; }
 .home-lead { margin-top: 12rpx; font-size: 26rpx; opacity: .88; line-height: 1.5; }
 .home-grid {

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="store.token && store.profile" class="card" style="background:linear-gradient(135deg,#1b4332,#40916c);color:#fff">
+    <div v-if="store.token && store.profile" class="card" style="background:linear-gradient(118deg,#3a1848,#161218 48%,#4a1420);color:#fff">
       <div class="pad">
         <div class="row">
           <div>

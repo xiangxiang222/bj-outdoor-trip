@@ -1,9 +1,9 @@
 <template>
   <div class="svc-page">
     <div class="svc-hero">
-      <img class="brand-mark md" src="/brand/logo.jpg" alt="同行者众" />
-      <strong>需要人时，先加官方微信</strong>
-      <p class="muted">账号、规则和常见问题都收在这页。线路详情不再重复写一遍。</p>
+      <BrandMark size="lg" />
+      <strong>清北出发，先进官方微信</strong>
+      <p class="muted">初期先给清华、北大同学用。账号、规则和常见问题都收在这页。</p>
     </div>
 
     <div class="svc-actions">
@@ -76,6 +76,7 @@
 import { onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import http from "@/api/http";
+import BrandMark from "@/components/BrandMark.vue";
 
 const route = useRoute();
 const accounts = ref([]);

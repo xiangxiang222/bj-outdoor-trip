@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="home-page">
     <div class="brand-hero">
       <div
         v-if="brandSlide"
@@ -16,9 +16,33 @@
         />
       </div>
       <div class="brand-cap">
-        <div class="home-lead">{{ brandSlide?.title || home.brand?.lead || "在山野，遇见爱" }}</div>
+        <div class="home-kicker-row">
+          <span class="enamel thu">紫荆</span>
+          <span class="enamel-x">×</span>
+          <span class="enamel pku">未名</span>
+        </div>
+        <div class="home-kicker">{{ brandSlide?.title || home.brand?.lead || "出校门，进山野" }}</div>
       </div>
     </div>
+
+    <div class="home-pad">
+    <section class="campus-card">
+      <div>
+        <div class="qb-seals" aria-hidden="true">
+          <span class="qb-seal thu">清</span>
+          <span class="qb-seal pku">北</span>
+        </div>
+        <strong>出校门，进山野</strong>
+        <p>初期先给清华、北大同学用。周末从五道口、东南门出发，认证后走学生价。</p>
+      </div>
+      <router-link
+        v-if="store.profile?.studentStatus !== 'pending' && !store.profile?.isStudent"
+        class="campus-cta"
+        to="/m/student"
+      >学生认证</router-link>
+      <span v-else-if="store.profile?.isStudent" class="muted">已认证{{ store.profile.school ? " · " + store.profile.school : "" }}</span>
+      <router-link v-else-if="store.profile?.studentStatus === 'pending'" class="campus-cta" to="/m/student">审核中</router-link>
+    </section>
 
     <div v-if="upcoming" class="card trip-soon" @click="$router.push('/m/orders')">
       <div class="pad">
@@ -118,6 +142,7 @@
       <router-link class="cta-row" to="/m/lottery">抽奖 · 报名前可抽一次，出行后再抽</router-link>
       <router-link class="cta-row" to="/m/official">联系客服 · 加官方微信与用户群</router-link>
       <router-link class="cta-row" to="/m/feedback">功能建议与找 BUG</router-link>
+    </div>
     </div>
   </div>
 </template>

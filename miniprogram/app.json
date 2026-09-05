@@ -29,14 +29,14 @@
     { "root": "pkg-detail", "name": "detail", "pages": ["detail/detail"] }
   ],
   "window": {
-    "navigationBarBackgroundColor": "#1b4332",
+    "navigationBarBackgroundColor": "#3a1848",
     "navigationBarTitleText": "同行者众",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#f4efe6"
   },
   "tabBar": {
     "color": "#6b705c",
-    "selectedColor": "#2d6a4f",
+    "selectedColor": "#6b2178",
     "backgroundColor": "#ffffff",
     "list": [
       { "pagePath": "pages/index/index", "text": "首页", "iconPath": "images/home.png", "selectedIconPath": "images/home-on.png" },
