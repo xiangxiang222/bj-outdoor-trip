@@ -2,8 +2,8 @@
   <div class="svc-page">
     <div class="svc-hero">
       <BrandMark size="lg" />
-      <strong>清北出发，先进官方微信</strong>
-      <p class="muted">初期先给清华、北大同学用。账号、规则和常见问题都收在这页。</p>
+      <strong>需要人时，先加官方微信</strong>
+      <p class="muted">账号、规则和常见问题都收在这页。线路详情不再重复写一遍。</p>
     </div>
 
     <div class="svc-actions">

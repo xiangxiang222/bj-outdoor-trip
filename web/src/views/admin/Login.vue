@@ -1,8 +1,7 @@
 <template>
   <div style="max-width:360px;margin:12vh auto;background:#fff;padding:32px;border-radius:16px;text-align:center">
     <BrandMark size="lg" />
-    <h2>同行者众 · 后台</h2>
-    <p style="color:#6b705c;font-size:13px;margin:-8px 0 16px">清北同学的山野局</p>
+    <h2>管理后台</h2>
     <el-input v-model="username" placeholder="账号" style="margin:8px 0" />
     <el-input v-model="password" type="password" placeholder="密码" style="margin:8px 0" />
     <el-button type="success" style="width:100%;margin-top:12px" @click="login">登录</el-button>

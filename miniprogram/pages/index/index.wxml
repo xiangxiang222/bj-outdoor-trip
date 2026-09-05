@@ -4,21 +4,12 @@
   </swiper-item>
 </swiper>
 <view class="brand-cap">
-  <view class="kicker-row">
-    <text class="enamel thu">紫荆</text>
-    <text class="enamel-x">×</text>
-    <text class="enamel pku">未名</text>
-  </view>
-  <view class="home-kicker">{{home.brand.lead || '出校门，进山野'}}</view>
+  <view class="home-kicker">{{home.brand.lead || '在山野，遇见爱'}}</view>
 </view>
 <view class="campus-card">
   <view>
-    <view class="qb-seals">
-      <text class="qb-seal thu">清</text>
-      <text class="qb-seal pku">北</text>
-    </view>
-    <view class="campus-title">出校门，进山野</view>
-    <view class="muted">初期先给清华、北大同学用。周末从五道口、东南门出发。</view>
+    <view class="campus-title">在山野，遇见爱</view>
+    <view class="muted">学生认证后可走学生价，部分团仅限高校。</view>
   </view>
   <view class="campus-cta" bindtap="goStudent">学生认证</view>
 </view>

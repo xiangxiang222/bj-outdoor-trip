@@ -7,7 +7,7 @@
         </span>
         <span class="brand-type">
           <span class="brand-name">同行者众</span>
-          <span v-if="isHome" class="brand-tagline">清北同学的山野局</span>
+          <span v-if="isHome" class="brand-tagline">在山野，遇见爱</span>
         </span>
       </router-link>
       <span class="mp-capsule">微信小程序演示</span>
@@ -106,11 +106,11 @@ const title = computed(() => {
 });
 const subtitle = computed(() => {
   const map = {
-    home: "清北同学的山野局",
+    home: "在山野，遇见爱",
     activities: "掼蛋、跑步、看电影，户外请走首页",
     official: "加微信、看规则、找客服",
     rules: "加微信、看规则、找客服",
-    student: "清华、北大同学先认证",
+    student: "认证后可走学生价",
     mine: "报名、会员与客服",
     orders: "待出行的山野团和同城局",
     publish: "提交后需管理员审核",

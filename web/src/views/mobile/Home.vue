@@ -16,24 +16,15 @@
         />
       </div>
       <div class="brand-cap">
-        <div class="home-kicker-row">
-          <span class="enamel thu">紫荆</span>
-          <span class="enamel-x">×</span>
-          <span class="enamel pku">未名</span>
-        </div>
-        <div class="home-kicker">{{ brandSlide?.title || home.brand?.lead || "出校门，进山野" }}</div>
+        <div class="home-kicker">{{ brandSlide?.title || home.brand?.lead || "在山野，遇见爱" }}</div>
       </div>
     </div>
 
     <div class="home-pad">
     <section class="campus-card">
       <div>
-        <div class="qb-seals" aria-hidden="true">
-          <span class="qb-seal thu">清</span>
-          <span class="qb-seal pku">北</span>
-        </div>
-        <strong>出校门，进山野</strong>
-        <p>初期先给清华、北大同学用。周末从五道口、东南门出发，认证后走学生价。</p>
+        <strong>在山野，遇见爱</strong>
+        <p>学生认证后可走学生价，部分团仅限高校。周末进山，先看好集合点。</p>
       </div>
       <router-link
         v-if="store.profile?.studentStatus !== 'pending' && !store.profile?.isStudent"

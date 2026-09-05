@@ -3,7 +3,7 @@
     <aside class="admin-side">
       <div class="admin-brand">
         <BrandMark size="md" />
-        <div class="admin-brand-sub">清北同学的山野局 · 后台</div>
+        <div class="admin-brand-sub">后台 · 线路 · 排期 · 财务</div>
       </div>
       <router-link v-if="can('ops')" to="/admin">数据看板</router-link>
       <router-link v-if="can('ops')" to="/admin/routes">线路管理</router-link>
