@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="home-page">
     <div class="brand-hero">
       <div
         v-if="brandSlide"
@@ -16,9 +16,24 @@
         />
       </div>
       <div class="brand-cap">
-        <div class="home-lead">{{ brandSlide?.title || home.brand?.lead || "在山野，遇见爱" }}</div>
+        <div class="home-kicker">{{ brandSlide?.title || home.brand?.lead || "在山野，遇见爱" }}</div>
       </div>
     </div>
+
+    <div class="home-pad">
+    <section class="campus-card">
+      <div>
+        <strong>在山野，遇见爱</strong>
+        <p>学生认证后可走学生价，部分团仅限高校。周末进山，先看好集合点。</p>
+      </div>
+      <router-link
+        v-if="store.profile?.studentStatus !== 'pending' && !store.profile?.isStudent"
+        class="campus-cta"
+        to="/m/student"
+      >学生认证</router-link>
+      <span v-else-if="store.profile?.isStudent" class="muted">已认证{{ store.profile.school ? " · " + store.profile.school : "" }}</span>
+      <router-link v-else-if="store.profile?.studentStatus === 'pending'" class="campus-cta" to="/m/student">审核中</router-link>
+    </section>
 
     <div v-if="upcoming" class="card trip-soon" @click="$router.push('/m/orders')">
       <div class="pad">
@@ -112,6 +127,7 @@
     <p class="home-foot muted">
       <router-link to="/m/official">客服与规则</router-link>
     </p>
+    </div>
   </div>
 </template>
 

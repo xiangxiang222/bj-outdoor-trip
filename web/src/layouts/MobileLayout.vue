@@ -3,7 +3,7 @@
     <div class="mp-status" :class="{ 'is-home': isHome }">
       <router-link to="/m" class="brand-lockup" aria-label="同行者众 首页">
         <span class="brand-mark-frame" aria-hidden="true">
-          <img src="/brand/mark.png" alt="" />
+          <BrandMark />
         </span>
         <span class="brand-type">
           <span class="brand-name">同行者众</span>
@@ -47,6 +47,7 @@
 import { computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
+import BrandMark from "@/components/BrandMark.vue";
 import { chromeTitle, chromeSubtitle, clearChrome } from "@/utils/pageChrome";
 
 const route = useRoute();
@@ -111,6 +112,7 @@ const subtitle = computed(() => {
     activities: "掼蛋、跑步、看电影，户外请走首页",
     official: "加微信、看规则、找客服",
     rules: "加微信、看规则、找客服",
+    student: "认证后可走学生价",
     mine: "账号、权益与客服",
     orders: "下一趟，以及走过的局",
     publish: "提交后需管理员审核",

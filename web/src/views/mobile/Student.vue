@@ -4,7 +4,7 @@
     <p v-if="store.profile?.isStudent" style="color:var(--leaf)">已认证{{ store.profile.school ? " · " + store.profile.school : "" }}</p>
     <p v-else-if="store.profile?.studentStatus === 'pending'" class="muted">审核中{{ store.profile.school ? " · " + store.profile.school : "" }}</p>
     <label>学校</label>
-    <input class="input" v-model="school" placeholder="例如：北京大学" />
+    <input class="input" v-model="school" placeholder="填写学校全称" />
     <p v-if="msg" :style="ok ? 'color:var(--leaf)' : 'color:var(--clay)'">{{ msg }}</p>
     <button class="btn block" type="button" :disabled="loading || store.profile?.isStudent" @click="submit">{{ loading ? "提交中…" : "提交认证" }}</button>
   </div>

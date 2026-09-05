@@ -3,7 +3,7 @@
     <div class="mp-status is-home">
       <router-link to="/g" class="brand-lockup" aria-label="同行者众导游端">
         <span class="brand-mark-frame" aria-hidden="true">
-          <img src="/brand/mark.png" alt="" />
+          <BrandMark />
         </span>
         <span class="brand-type">
           <span class="brand-name">同行者众</span>
@@ -28,6 +28,7 @@
 <script setup>
 import { computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import BrandMark from "@/components/BrandMark.vue";
 const route = useRoute();
 const router = useRouter();
 const showBack = computed(() => route.name === "guide-schedule" || route.name === "guide-traveler");

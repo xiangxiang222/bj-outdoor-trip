@@ -4,7 +4,14 @@
   </swiper-item>
 </swiper>
 <view class="brand-cap">
-  <view class="home-lead">{{home.brand.lead || '在山野，遇见爱'}}</view>
+  <view class="home-kicker">{{home.brand.lead || '在山野，遇见爱'}}</view>
+</view>
+<view class="campus-card">
+  <view>
+    <view class="campus-title">在山野，遇见爱</view>
+    <view class="muted">学生认证后可走学生价，部分团仅限高校。</view>
+  </view>
+  <view class="campus-cta" bindtap="goStudent">学生认证</view>
 </view>
 <view class="card" wx:if="{{upcoming}}" bindtap="goUpcoming">
   <view class="pad">

@@ -144,4 +144,12 @@ Page({
   goOfficial() {
     wx.navigateTo({ url: "/pages/official/official" });
   },
+  goStudent() {
+    const app = getApp();
+    if (!app.globalData.token) {
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/mine/mine") });
+      return;
+    }
+    wx.switchTab({ url: "/pages/mine/mine" });
+  },
 });

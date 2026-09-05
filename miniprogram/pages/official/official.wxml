@@ -1,5 +1,5 @@
 <view class="svc-hero">
-  <image class="logo" src="/images/logo.jpg" mode="aspectFit" />
+  <image class="logo" src="/images/mark.png" mode="aspectFit" />
   <view class="title">需要人时，先加官方微信</view>
   <view class="muted light">账号、规则和常见问题都在这页。</view>
 </view>
