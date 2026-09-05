@@ -18,16 +18,17 @@
         <div class="tag-row">
           <span class="play-tag sm" v-for="t in s.playTags || s.route.tags || []" :key="t.id || t" :style="{ background: t.color || '#2d6a4f' }">{{ t.name || t }}</span>
         </div>
-        <p class="muted">{{ s.startDate }} {{ s.endDate !== s.startDate ? "至 " + s.endDate : "" }}</p>
-        <p>
-          <a v-if="!isActivity && busPhotos.length" class="nav-link" href="#" @click.prevent="showBus = true">{{ busText }}</a>
-          <span v-else-if="!isActivity">{{ busText }}</span>
+        <p v-if="isActivity" class="muted">{{ whenLabel }} {{ s.meetupTime }}</p>
+        <p v-else class="muted">{{ s.startDate }} {{ s.endDate !== s.startDate ? "至 " + s.endDate : "" }}</p>
+        <p v-if="!isActivity">
+          <a v-if="busPhotos.length" class="nav-link" href="#" @click.prevent="showBus = true">{{ busText }}</a>
+          <span v-else>{{ busText }}</span>
         </p>
         <p>
-          集合：{{ s.meetupPoint }} {{ s.meetupTime }}
+          {{ isActivity ? "地点" : "集合" }}：{{ s.meetupPoint }} {{ isActivity ? "" : s.meetupTime }}
           <a v-if="s.meetupMapUrl" class="nav-link" :href="s.meetupMapUrl" target="_blank" rel="noreferrer">打开地图</a>
         </p>
-        <p v-if="s.guaranteed" class="muted" style="color:var(--leaf)">已成团 · 铁定出发（人数已达最低成团线）</p>
+        <p v-if="s.guaranteed && !isActivity" class="muted" style="color:var(--leaf)">已成团 · 铁定出发（人数已达最低成团线）</p>
         <p>
           发起人：
           <a v-if="s.organizerId" class="nav-link" href="#" @click.prevent="goUser(s.organizerId)">{{ s.organizerName }}</a>
@@ -36,9 +37,13 @@
         </p>
         <div class="progress"><i :style="{ width: Math.min(100, (s.enrolled / s.maxSeats) * 100) + '%' }"></i></div>
         <div class="row">
-          <span>已报名 {{ s.enrolled }}/{{ s.maxSeats }}，最低成团 {{ s.minGroupSize }}<template v-if="s.waitlistCount"> · 候补 {{ s.waitlistCount }}</template></span>
-          <TripPrices :quote="s.quote" compact />
+          <span v-if="isActivity">还缺 {{ remainSeats }} 人 · 已有 {{ s.enrolled }}/{{ s.maxSeats }}<template v-if="s.waitlistCount"> · 候补 {{ s.waitlistCount }}</template></span>
+          <span v-else>已报名 {{ s.enrolled }}/{{ s.maxSeats }}，最低成团 {{ s.minGroupSize }}<template v-if="s.waitlistCount"> · 候补 {{ s.waitlistCount }}</template></span>
+          <span v-if="isActivity && isFree" class="tag">免费</span>
+          <span v-else-if="isActivity" class="price">¥{{ s.quote?.price }}</span>
+          <TripPrices v-else :quote="s.quote" compact />
         </div>
+        <p v-if="isActivity && s.minGroupSize" class="muted">满 {{ s.minGroupSize }} 人成局</p>
         <p class="muted" v-if="s.eligibility?.enabled">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? " 已认证学生可报" : "" }}</p>
         <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" class="muted" style="color:var(--clay)">
           {{ s.eligibility.reason }}
@@ -77,7 +82,15 @@
       </div>
     </div>
 
-    <div class="h2">{{ isActivity ? "人数与位置" : "座位图" }}</div>
+    <div class="card" v-if="isActivity && (s.route?.description || s.notes)">
+      <div class="pad">
+        <p v-if="s.route?.description" style="margin-top:0;white-space:pre-wrap">{{ s.route.description }}</p>
+        <p v-if="s.notes" class="muted">{{ s.notes }}</p>
+      </div>
+    </div>
+
+    <template v-if="!isActivity">
+    <div class="h2">座位图</div>
     <div class="card"><div class="pad">
       <div class="seat-map">
         <div class="seat-front" v-if="!isActivity">车头</div>
@@ -99,9 +112,18 @@
       </div>
       <p class="muted">{{ seatHint }}</p>
     </div></div>
+    </template>
 
     <div class="h2" v-if="s.myEnrollment">报名后</div>
     <div class="card" v-if="s.myEnrollment"><div class="pad">
+      <template v-if="isActivity">
+        <p style="margin-top:0">已报名。到场时找发起人即可。</p>
+        <p>本局微信群</p>
+        <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本局群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
+        <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
+        <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
+      </template>
+      <template v-else>
       <p>1. 座位图可改座，早报名早选座。</p>
       <p>2. 本团微信群</p>
       <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本团群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
@@ -118,8 +140,10 @@
       </label>
       <button class="btn ghost block" style="margin-top:8px" :disabled="savingFallbacks" @click="saveFallbacks">保存备选</button>
       <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
+      </template>
     </div></div>
 
+    <template v-if="!isActivity">
     <div class="h2">推荐报名</div>
     <div class="card"><div class="pad" style="text-align:center">
       <p class="muted">推荐成功后按人数结算报名费的 5%</p>
@@ -128,6 +152,7 @@
       <p v-if="referral.code">我的推荐码 {{ referral.code }} · 待结 ¥{{ referral.pending || 0 }} / 已结 ¥{{ referral.earned || 0 }}</p>
       <button class="btn ghost" @click="loadReferral">生成我的推荐码</button>
     </div></div>
+    </template>
 
     <div class="h2" v-if="s.combo?.enabled">组合团 · 另一半条件</div>
     <div class="card" v-if="s.combo?.enabled"><div class="pad">
@@ -149,11 +174,11 @@
           <a v-if="c.userId" class="nav-link" href="#" @click.prevent="goUser(c.userId)">{{ c.name }}</a>
           <span v-else>{{ c.name }}</span>
           {{ c.gender === "female" ? "女" : c.gender === "male" ? "男" : "" }}
-          <span v-if="c.lifeStage" class="muted"> · {{ c.lifeStage }}</span>
+          <span v-if="!isActivity && c.lifeStage" class="muted"> · {{ c.lifeStage }}</span>
         </span>
         <span v-if="c.waitlisted" class="muted">候补</span>
         <span
-          v-else
+          v-else-if="!isActivity || !isFree"
           :class="{ 'pay-paid': c.payStatus === 'paid', 'pay-unpaid': c.canPay }"
           @click="c.canPay && payFor(c)"
         >{{ (c.seatNo ? c.seatNo + " · " : "") + payText(c.payStatus) }}{{ c.canPay ? " · 去支付" : "" }}</span>
@@ -174,6 +199,7 @@
     </div>
     <p class="muted" v-else>还没有评价。</p>
 
+    <template v-if="!isActivity">
     <div class="h2">装备清单</div>
     <div class="card"><div class="pad">
       <label class="pack-item" v-for="item in packing" :key="item">
@@ -188,6 +214,8 @@
       <p class="muted" style="margin-top:0">{{ cancelPolicy.summary }}</p>
       <p v-for="(it, i) in cancelPolicy.items" :key="i" class="muted">{{ i + 1 }}. {{ it }}</p>
     </div></div>
+    </template>
+    <p v-else class="muted">出发日前可取消；当天不可取消。</p>
 
     <div class="h2">联系官方与本团</div>
     <div class="card"><div class="pad">
@@ -207,17 +235,23 @@
       <p class="muted">{{ contacts.hint }}</p>
     </div></div>
 
-    <div style="display:flex;gap:8px;margin:12px 0">
+    <div v-if="!isActivity" style="display:flex;gap:8px;margin:12px 0">
       <button class="btn ghost" style="flex:1" @click="$router.push('/m/stats/' + s.id)">本团画像</button>
       <button class="btn ghost" style="flex:1" @click="share">分享到微信</button>
     </div>
-    <button v-if="s.status !== 'cancelled' && s.reviewStatus !== 'pending' && s.reviewStatus !== 'rejected'" class="btn block clay" @click="$router.push(enrollHref)">
-      {{ s.canEnrollDirect === false && s.remain <= 0 ? "已满员，去候补" : "立即报名" }}
+    <div v-else style="margin:12px 0">
+      <button class="btn ghost block" @click="share">分享到微信</button>
+    </div>
+    <div class="enroll-dock">
+    <button v-if="!s.myEnrollment && s.status !== 'cancelled' && s.reviewStatus !== 'pending' && s.reviewStatus !== 'rejected'" class="btn block clay" @click="$router.push(enrollHref)">
+      {{ s.canEnrollDirect === false && s.remain <= 0 ? "已满员，去候补" : isActivity ? "报名本局" : "立即报名" }}
     </button>
+    <p v-else-if="s.myEnrollment" class="muted" style="text-align:center;margin:0 0 8px">已报名<template v-if="isActivity">，到场找发起人即可</template></p>
     <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>
     <button v-if="s.isOrganizer && s.status !== 'cancelled'" class="btn ghost block" style="margin-top:8px;color:var(--clay)" @click="showDissolve = true">解散拼团</button>
-    <p class="muted" style="margin-top:8px">{{ s.notes }}</p>
+    <p v-if="!isActivity && s.notes" class="muted" style="margin-top:8px">{{ s.notes }}</p>
     <p v-if="msg" class="muted">{{ msg }}</p>
+    </div>
 
     <div v-if="showShare" class="card" style="margin-top:12px">
       <div class="pad" style="text-align:center">
@@ -260,6 +294,8 @@ import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { payStatusText, scheduleStatusText, starText } from "@/utils/labels";
+import { formatActivityDate, activityKindOf } from "@/utils/activityKind";
+import { setChrome } from "@/utils/pageChrome";
 import WeatherChart from "@/components/WeatherChart.vue";
 import TripPrices from "@/components/TripPrices.vue";
 
@@ -268,6 +304,16 @@ const router = useRouter();
 const store = useUserStore();
 const s = ref(null);
 const isActivity = computed(() => s.value?.channel === "activity");
+const isFree = computed(() => {
+  const q = s.value?.quote || {};
+  return Number(q.price || 0) === 0 && Number(q.originPrice || 0) === 0 && Number(q.tripPrice || 0) === 0;
+});
+const remainSeats = computed(() => Math.max(0, Number(s.value?.maxSeats || 0) - Number(s.value?.enrolled || 0)));
+const whenLabel = computed(() => {
+  const d = formatActivityDate(s.value?.startDate);
+  return [d.month + d.day + "日", d.weekday].filter(Boolean).join(" ");
+});
+const kindTag = computed(() => activityKindOf(s.value)?.label || "");
 const msg = ref("");
 const showDissolve = ref(false);
 const showShare = ref(false);
@@ -340,6 +386,7 @@ const seatHint = computed(() => {
 const statusTag = computed(() => {
   if (!s.value) return "";
   if (s.value.status === "cancelled") return scheduleStatusText("cancelled");
+  if (isActivity.value) return isFree.value ? "免费局" : kindTag.value || "同城局";
   return s.value.organizerType === "company" ? "公司统一支付" : "先报名后付款";
 });
 
@@ -358,15 +405,21 @@ async function load() {
   heroIndex.value = 0;
   fallbackIds.value = (s.value.myEnrollment?.fallbacks || []).map((f) => f.id);
   autoAlt.value = !!s.value.myEnrollment?.autoAlt;
-  try {
-    seatChart.value = (await http.get("/schedules/" + route.params.id + "/seats")).data;
-  } catch {
+  setChrome(isActivity.value ? "局详情" : "行程详情", isActivity.value ? "时间、地点、还缺几人" : "座位、集合与报名");
+  if (!isActivity.value) {
+    try {
+      seatChart.value = (await http.get("/schedules/" + route.params.id + "/seats")).data;
+    } catch {
+      seatChart.value = null;
+    }
+    try {
+      const region = [s.value.route?.region, s.value.route?.title].filter(Boolean).join(" ");
+      weather.value = (await http.get("/weather", { params: { region, date: s.value.startDate } })).data;
+    } catch {
+      weather.value = null;
+    }
+  } else {
     seatChart.value = null;
-  }
-  try {
-    const region = [s.value.route?.region, s.value.route?.title].filter(Boolean).join(" ");
-    weather.value = (await http.get("/weather", { params: { region, date: s.value.startDate } })).data;
-  } catch {
     weather.value = null;
   }
   try {
@@ -405,7 +458,7 @@ function onSeat(seat) {
     pickSeat(seat.no);
     return;
   }
-  msg.value = "早报名早选座";
+  msg.value = isActivity.value ? "请先报名" : "早报名早选座";
 }
 
 async function pickSeat(seatNo) {

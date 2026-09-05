@@ -1,11 +1,11 @@
 <template>
   <div>
-    <div v-if="store.token && store.profile" class="card" style="background:linear-gradient(135deg,#1b4332,#40916c);color:#fff">
+    <div v-if="store.token && store.profile" class="card mine-hero">
       <div class="pad">
         <div class="row">
           <div>
-            <div style="font-size:20px;font-weight:700">{{ store.profile.nickname }}</div>
-            <div style="opacity:.85">{{ store.profile.phone || "未绑定手机" }}</div>
+            <div class="mine-name">{{ store.profile.nickname }}</div>
+            <div class="muted" style="opacity:.85">{{ store.profile.phone || "未绑定手机" }}</div>
           </div>
           <span class="tag" style="background:#ffd166;color:#1b4332">{{ store.profile.isMember ? "会员" : "普通用户" }}</span>
         </div>
@@ -21,32 +21,56 @@
       <button class="btn ghost block" style="margin-top:8px" @click="goLogin('', 'register')">注册</button>
     </div></div>
 
-    <div v-if="upcoming.length" class="card" @click="$router.push('/m/schedule/' + upcoming[0].scheduleId)">
-      <div class="pad">
-        <div class="muted">即将出行</div>
-        <strong>{{ upcoming[0].title }}</strong>
-        <p class="muted" style="margin:6px 0 0">{{ upcoming[0].startDate }} · {{ upcoming[0].meetupPoint }} {{ upcoming[0].meetupTime }}</p>
-      </div>
+    <p class="cell-label">出行</p>
+    <div class="cell-group">
+      <button v-if="store.token && store.profile" class="cell" type="button" @click="$router.push('/m/user/' + store.profile.id)">
+        <span>个人主页</span><i>相册与过往 ›</i>
+      </button>
+      <button class="cell" type="button" @click="goAuth('/m/favorites')">
+        <span>我的收藏</span><i>›</i>
+      </button>
     </div>
 
-    <div class="card" v-if="store.token && store.profile" @click="$router.push('/m/user/' + store.profile.id)"><div class="pad">个人主页 · 相册与行程</div></div>
-    <div class="card" @click="$router.push('/m/orders')"><div class="pad">我的行程 · 待出行与历史报名</div></div>
-    <div class="card" @click="goAuth('/m/coupons')">
-      <div class="pad">
-        <div>我的优惠券<template v-if="coupons.length"> {{ coupons.length }} 张可用</template></div>
-        <p v-if="coupons.length" class="muted" style="margin:6px 0 0">{{ coupons[0].label }} · {{ coupons[0].routeTitle }}</p>
-      </div>
+    <p class="cell-label">权益</p>
+    <div class="cell-group">
+      <button class="cell" type="button" @click="goAuth('/m/coupons')">
+        <span>优惠券</span>
+        <i>{{ coupons.length ? coupons.length + " 张可用 ›" : "›" }}</i>
+      </button>
+      <button class="cell" type="button" @click="openMember">
+        <span>{{ store.profile?.isMember ? "会员中心" : "开通会员" }}</span><i>年费 99 · 95 折 ›</i>
+      </button>
+      <button class="cell" type="button" @click="goAuth('/m/student')">
+        <span>{{ store.profile?.isStudent ? "学生已认证" : store.profile?.studentStatus === "pending" ? "学生认证审核中" : "学生认证" }}</span><i>›</i>
+      </button>
+      <button class="cell" type="button" @click="goAuth('/m/group')">
+        <span>{{ store.profile?.groupStatus === "approved" ? "团体已认证" : store.profile?.groupStatus === "pending" ? "团体认证审核中" : "团体认证" }}</span><i>›</i>
+      </button>
+      <button class="cell" type="button" @click="goReferral">
+        <span>推荐报名</span><i>按人数结 5% ›</i>
+      </button>
+      <button class="cell" type="button" @click="goAuth('/m/guides')">
+        <span>推荐领队</span><i>首次带队奖 200 ›</i>
+      </button>
+      <button class="cell" type="button" @click="goAuth('/m/lottery')">
+        <span>抽奖</span><i>›</i>
+      </button>
     </div>
-    <div class="card" @click="goAuth('/m/favorites')"><div class="pad">我的收藏</div></div>
-    <div class="card" @click="goReferral"><div class="pad">推荐报名 · 按人数结 5%</div></div>
-    <div class="card" @click="openMember"><div class="pad">{{ store.profile?.isMember ? "会员中心" : "开通会员" }}</div></div>
-    <div class="card" @click="goAuth('/m/student')"><div class="pad">{{ store.profile?.isStudent ? "学生已认证" : store.profile?.studentStatus === "pending" ? "学生认证审核中" : "学生认证" }}</div></div>
-    <div class="card" @click="goAuth('/m/group')"><div class="pad">{{ store.profile?.groupStatus === "approved" ? "团体已认证" : store.profile?.groupStatus === "pending" ? "团体认证审核中" : "团体认证" }}</div></div>
-    <div class="h2">服务</div>
-    <div class="card tap" @click="$router.push('/m/official')"><div class="pad">客服与规则 · 加微信、FAQ、平台规则</div></div>
-    <div class="card tap" @click="goAuth('/m/feedback')"><div class="pad">功能建议与找 BUG</div></div>
-    <div class="card tap" @click="$router.push('/m/routes')"><div class="pad">去选线路开团</div></div>
-    <button v-if="store.token" class="btn ghost block" @click="store.logout(); $router.replace('/m/mine')">退出登录</button>
+
+    <p class="cell-label">服务</p>
+    <div class="cell-group">
+      <button class="cell" type="button" @click="$router.push('/m/official')">
+        <span>客服与规则</span><i>加微信、FAQ ›</i>
+      </button>
+      <button class="cell" type="button" @click="goAuth('/m/feedback')">
+        <span>功能建议与找 BUG</span><i>›</i>
+      </button>
+      <button class="cell" type="button" @click="goAuth('/m/publish')">
+        <span>去发团 / 发起一局</span><i>›</i>
+      </button>
+    </div>
+
+    <button v-if="store.token" class="btn ghost block" style="margin-top:16px" @click="store.logout(); $router.replace('/m/mine')">退出登录</button>
     <button v-if="store.token" class="btn ghost block" style="color:var(--clay);margin-top:8px" @click="closeAccount">注销账号</button>
   </div>
 </template>
@@ -60,16 +84,10 @@ import { useUserStore } from "@/stores/user";
 const store = useUserStore();
 const router = useRouter();
 const opening = ref(false);
-const upcoming = ref([]);
 const coupons = ref([]);
 onMounted(async () => {
   await store.fetchMe().catch(() => {});
   if (!store.token) return;
-  try {
-    upcoming.value = (await http.get("/me/trips")).data || [];
-  } catch {
-    upcoming.value = [];
-  }
   try {
     const rows = (await http.get("/me/coupons")).data || [];
     coupons.value = rows.filter((c) => c.status === "unused");

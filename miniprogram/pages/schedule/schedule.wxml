@@ -9,17 +9,23 @@
       <text class="offer-chip inline" wx:if="{{s.offerLabel}}" style="background:{{s.offerColor}}">{{s.offerLabel}}</text>
       {{s.route.title}}
     </view>
-    <view class="tag">{{s.status=='cancelled'?'已解散':(s.organizerType=='company'?'公司统一支付':'先报名后付款')}}</view>
-    <view>{{s.startDate}}</view>
+    <view class="tag">{{statusTag}}</view>
+    <view wx:if="{{isActivity}}">{{whenLabel}} {{s.meetupTime}}</view>
+    <view wx:else>{{s.startDate}}</view>
     <view class="nav-link" wx:if="{{!isActivity && busPhotos.length}}" bindtap="previewBus">{{busText}}</view>
     <view wx:elif="{{!isActivity}}">{{busText}}</view>
-    <view class="muted">集合 {{s.meetupPoint}} {{s.meetupTime}} <text class="nav-link" catchtap="openMap">打开地图</text></view>
-    <view class="muted" wx:if="{{s.guaranteed}}" style="color:#2d6a4f">已成团 · 铁定出发</view>
+    <view class="muted">{{isActivity ? '地点' : '集合'}} {{s.meetupPoint}} <text wx:if="{{!isActivity}}">{{s.meetupTime}}</text> <text class="nav-link" catchtap="openMap">打开地图</text></view>
+    <view class="muted" wx:if="{{s.guaranteed && !isActivity}}" style="color:#2d6a4f">已成团 · 铁定出发</view>
     <view class="muted">发起人 <text class="nav-link" wx:if="{{s.organizerId}}" catchtap="goUser" data-id="{{s.organizerId}}">{{s.organizerName}}</text><text wx:else>{{s.organizerName}}</text></view>
     <view class="progress"><view class="bar" style="width:{{s.enrolled/s.maxSeats*100}}%"></view></view>
     <view class="row">
-      <text>已报 {{s.enrolled}}/{{s.maxSeats}} 成团{{s.minGroupSize}}{{s.waitlistCount ? ' · 候补' + s.waitlistCount : ''}}</text>
-      <view>
+      <text wx:if="{{isActivity}}">还缺 {{remainSeats}} 人 · 已有 {{s.enrolled}}/{{s.maxSeats}}</text>
+      <text wx:else>已报 {{s.enrolled}}/{{s.maxSeats}} 成团{{s.minGroupSize}}{{s.waitlistCount ? ' · 候补' + s.waitlistCount : ''}}</text>
+      <view wx:if="{{isActivity}}">
+        <text wx:if="{{isFree}}" class="tag">免费</text>
+        <text wx:else class="price">¥{{s.quote.price}}</text>
+      </view>
+      <view wx:else>
         <text wx:if="{{s.quote.originPrice > s.quote.price}}" class="price-origin">¥{{s.quote.originPrice}}</text>
         <text class="price">¥{{s.quote.price}}</text>
       </view>
@@ -49,7 +55,12 @@
     </view>
   </view>
 </view>
-<view class="pad title">{{isActivity ? '人数与位置' : '座位图'}}</view>
+<view class="card" wx:if="{{isActivity && (s.route.description || s.notes)}}">
+  <view class="pad" wx:if="{{s.route.description}}">{{s.route.description}}</view>
+  <view class="pad muted" wx:if="{{s.notes}}">{{s.notes}}</view>
+</view>
+<block wx:if="{{!isActivity}}">
+<view class="pad title">座位图</view>
 <view class="seat-map" wx:if="{{seatRows.length}}">
   <view class="seat-front" wx:if="{{!isActivity}}">车头</view>
   <view class="seat-row" wx:for="{{seatRows}}" wx:key="row">
@@ -63,14 +74,24 @@
     </block>
   </view>
 </view>
+</block>
 <view class="card" wx:if="{{s.myEnrollment}}">
   <view class="pad title">报名后</view>
+  <block wx:if="{{isActivity}}">
+    <view class="pad">已报名。到场时找发起人即可。</view>
+    <view class="pad">本局微信群</view>
+    <image wx:if="{{s.consultGroupQr}}" src="{{s.consultGroupQr}}" style="width:280rpx;height:280rpx;margin:16rpx" />
+    <view class="pad muted">{{s.consultGroup || contacts.officialWechat}}</view>
+    <view wx:if="{{s.myEnrollment.status=='joined'}}" class="btn" bindtap="goAfter">完成活动 / 评选</view>
+  </block>
+  <block wx:else>
   <view class="pad">1. 点空位可选座 · 早报名早选座</view>
   <view class="pad">2. 本团微信群</view>
   <image wx:if="{{s.consultGroupQr}}" src="{{s.consultGroupQr}}" style="width:280rpx;height:280rpx;margin:16rpx" />
   <view class="pad muted">{{s.consultGroup || contacts.officialWechat}}</view>
   <view class="pad">3. 候选团 / 4. 替代团请在报名页勾选，不成团自动转团多退少补</view>
   <view wx:if="{{s.myEnrollment.status=='joined'}}" class="btn" bindtap="goAfter">完成活动 / 评选</view>
+  </block>
 </view>
 <view class="pad title" wx:if="{{s.combo.enabled}}">组合团 · 另一半条件</view>
 <view class="card" wx:if="{{s.combo.enabled}}">
@@ -85,10 +106,10 @@
 <view class="pad chain-line" wx:for="{{s.chain}}" wx:key="index">
   <text class="nav-link" wx:if="{{item.userId}}" catchtap="goUser" data-id="{{item.userId}}">{{item.index}}. {{item.name}}</text>
   <text wx:else>{{item.index}}. {{item.name}}</text>
-  <text> {{item.lifeStage}}</text>
+  <text wx:if="{{!isActivity && item.lifeStage}}"> {{item.lifeStage}}</text>
   <text wx:if="{{item.waitlisted}}" class="muted"> 候补</text>
-  <text wx:elif="{{item.canPay}}" class="pay-unpaid" catchtap="payFor" data-id="{{item.enrollmentId}}" data-name="{{item.name}}"> {{item.payText}} · 去支付</text>
-  <text wx:else class="{{item.payStatus=='paid' ? 'pay-paid' : 'muted'}}"> {{item.payText}}</text>
+  <text wx:elif="{{!isActivity || !isFree && item.canPay}}" class="pay-unpaid" catchtap="payFor" data-id="{{item.enrollmentId}}" data-name="{{item.name}}"> {{item.payText}} · 去支付</text>
+  <text wx:elif="{{!isActivity || !isFree}}" class="{{item.payStatus=='paid' ? 'pay-paid' : 'muted'}}"> {{item.payText}}</text>
 </view>
 <view class="pad title">本团评价 <text class="muted" wx:if="{{reviews.count}}">{{reviews.avg}}分 · {{reviews.count}}条</text></view>
 <view class="pad muted" wx:if="{{!reviews.list.length}}">还没有评价。</view>
@@ -99,10 +120,13 @@
     <view class="muted">{{item.createdAt}}</view>
   </view>
 </view>
+<block wx:if="{{!isActivity}}">
 <view class="pad title">装备清单</view>
 <view class="pad" wx:for="{{packing}}" wx:key="*this">· {{item}}</view>
 <view class="pad title">退改说明</view>
 <view class="pad muted">{{cancelSummary}}</view>
+</block>
+<view class="pad muted" wx:else>出发日前可取消；当天不可取消。</view>
 <view class="pad title">联系官方与本团</view>
 <view class="card">
   <view class="pad contact-row">官方微信 {{contacts.officialWechatName}} {{contacts.officialWechat}} <text class="nav-link" catchtap="copyText" data-text="{{contacts.officialWechat}}">复制</text></view>
@@ -110,8 +134,9 @@
   <view class="pad contact-row" wx:if="{{s.consultGroup}}">本团咨询群 {{s.consultGroup}} <text class="nav-link" catchtap="copyText" data-text="{{s.consultGroup}}">复制</text></view>
   <view class="pad muted" wx:else>本团咨询群确认后会显示。</view>
 </view>
-<view class="btn" wx:if="{{s.status!='cancelled' && s.reviewStatus!='pending' && s.reviewStatus!='rejected'}}" bindtap="enroll">{{s.remain<=0?'已满员，去候补':'立即报名'}}</view>
-<view class="btn ghost" bindtap="stats">本团画像</view>
+<view class="btn" wx:if="{{!s.myEnrollment && s.status!='cancelled' && s.reviewStatus!='pending' && s.reviewStatus!='rejected'}}" bindtap="enroll">{{s.remain<=0?'已满员，去候补':(isActivity?'报名本局':'立即报名')}}</view>
+<view class="pad muted" wx:elif="{{s.myEnrollment}}" style="text-align:center">已报名<template wx:if="{{isActivity}}">，到场找发起人即可</template></view>
+<view class="btn ghost" wx:if="{{!isActivity}}" bindtap="stats">本团画像</view>
 <button class="btn ghost" open-type="share">分享到微信</button>
 <view class="btn clay" wx:if="{{s.isOrganizer && s.status!='cancelled'}}" bindtap="toggleDissolve">解散拼团</view>
 

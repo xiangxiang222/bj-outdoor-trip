@@ -1,11 +1,15 @@
 <view class="pad" wx:if="{{s}}">{{s.route.title}} {{s.startDate}}</view>
 <view class="pad muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">本团已解散，无法报名。理由：{{s.cancelReason}}</view>
+<view class="pad muted" wx:elif="{{isActivity && s.remain<=0}}">本局已满，仍可加入候补，有人取消后按顺序递补。</view>
 <view class="pad muted" wx:elif="{{s.remain<=0}}">本车已满，仍可加入候补，有人取消后按顺序递补。</view>
-<view class="pad muted" wx:else>{{s.organizerType=='company'?'公司团：先报名，公司统一支付':'个人拼团：先报名占座，出行前付款'}}</view>
+<view class="pad muted" wx:elif="{{isActivity && isFree}}">免费局，填姓名和手机即可。</view>
+<view class="pad muted" wx:elif="{{s.organizerType=='company'}}">公司团：先报名，公司统一支付</view>
+<view class="pad muted" wx:else>{{isActivity ? '报名后按报价，出行前付款' : '个人拼团：先报名占座，出行前付款'}}</view>
 <view class="pad muted" wx:if="{{s.eligibility.enabled}}">{{s.eligibility.label}}</view>
 <view class="pad" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" style="color:#bc4749">{{s.eligibility.reason}}</view>
-<input class="input" placeholder="姓名（与身份证一致）" value="{{form.travelerName}}" bindinput="setName" />
+<input class="input" placeholder="{{isActivity ? '怎么称呼' : '姓名（与身份证一致）'}}" value="{{form.travelerName}}" bindinput="setName" />
 <input class="input" placeholder="手机号" type="number" maxlength="11" value="{{form.travelerPhone}}" bindinput="setPhone" />
+<block wx:if="{{!isActivity}}">
 <input class="input" placeholder="18位身份证号" maxlength="18" value="{{form.idCard}}" bindinput="setId" />
 <view class="pad" style="color:{{idOk ? '#6b705c' : '#bc4749'}};font-size:24rpx" wx:if="{{idHint}}">{{idHint}}</view>
 <input class="input" placeholder="紧急联系人姓名" value="{{form.emergencyName}}" bindinput="setEmergencyName" />
@@ -60,4 +64,6 @@
   <view class="pad" bindtap="toggleWaiver">{{form.waiverAccepted ? '☑' : '☐'}} 已阅读风险告知与退改说明，自愿参加</view>
   <view class="pad muted">{{cancelSummary}}</view>
 </view>
-<view class="btn" wx:if="{{s.status!='cancelled' && !(s.eligibility.enabled && !s.eligibility.canEnroll)}}" bindtap="submit">{{s.remain<=0?'加入候补':'确认报名'}}</view>
+</block>
+<view class="pad muted" wx:else>出发日前可取消；到场找发起人。</view>
+<view class="btn" wx:if="{{s.status!='cancelled' && !(s.eligibility.enabled && !s.eligibility.canEnroll)}}" bindtap="submit">{{s.remain<=0?'加入候补':(isActivity?'报名本局':'确认报名')}}</view>

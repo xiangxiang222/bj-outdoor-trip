@@ -1,4 +1,4 @@
-<view class="card" wx:if="{{user}}">
+<view class="card mine-hero" wx:if="{{user}}">
   <view class="pad">
     <view class="title">{{user.nickname}}</view>
     <view class="muted">{{user.phone}}</view>
@@ -7,20 +7,26 @@
 </view>
 <view class="btn" wx:if="{{!user}}" bindtap="login">登录</view>
 <view class="btn ghost" wx:if="{{!user}}" bindtap="register">注册</view>
-<view class="card" wx:if="{{upcoming}}" bindtap="goUpcoming">
-  <view class="pad">
-    <view class="muted">即将出行</view>
-    <view class="title">{{upcoming.title}}</view>
-    <view class="muted">{{upcoming.startDate}} · {{upcoming.meetupPoint}} {{upcoming.meetupTime}}</view>
-  </view>
+
+<view class="cell-label">出行</view>
+<view class="cell-group">
+  <view class="cell" wx:if="{{user}}" bindtap="goHome"><text>个人主页</text><text class="muted">相册与过往 ›</text></view>
+  <view class="cell" bindtap="go" data-url="/pages/favorites/favorites"><text>我的收藏</text><text class="muted">›</text></view>
 </view>
-<view class="card" bindtap="goTrips"><view class="pad">我的行程 · 待出行与历史报名</view></view>
-<view class="card" bindtap="go" data-url="/pages/coupons/coupons">
-  <view class="pad">我的优惠券<text wx:if="{{coupon}}"> {{coupon.label}}</text></view>
+
+<view class="cell-label">权益</view>
+<view class="cell-group">
+  <view class="cell" bindtap="go" data-url="/pages/coupons/coupons"><text>优惠券</text><text class="muted">{{coupon ? coupon.label : ''}} ›</text></view>
+  <view class="cell" bindtap="openMember"><text>{{user.isMember ? '会员中心' : '开通会员'}}</text><text class="muted">年费 99 ›</text></view>
+  <view class="cell" bindtap="go" data-url="/pages/lottery/lottery"><text>抽奖</text><text class="muted">›</text></view>
 </view>
-<view class="card" wx:if="{{user}}" bindtap="goHome"><view class="pad">个人主页 · 相册与行程</view></view>
-<view class="card" bindtap="goOfficial"><view class="pad">客服与规则 · 加微信、FAQ</view></view>
-<view class="card" bindtap="go" data-url="/pages/favorites/favorites"><view class="pad">我的收藏</view></view>
-<view class="card" bindtap="openMember"><view class="pad">{{user.isMember ? '会员中心' : '开通会员'}}</view></view>
+
+<view class="cell-label">服务</view>
+<view class="cell-group">
+  <view class="cell" bindtap="goOfficial"><text>客服与规则</text><text class="muted">加微信、FAQ ›</text></view>
+  <view class="cell" bindtap="go" data-url="/pages/feedback/feedback"><text>功能建议与找 BUG</text><text class="muted">›</text></view>
+  <view class="cell" bindtap="go" data-url="/pages/publish/publish"><text>去发团 / 发起一局</text><text class="muted">›</text></view>
+</view>
+
 <view class="btn ghost" wx:if="{{user}}" bindtap="out">退出</view>
 <view class="btn ghost" wx:if="{{user}}" bindtap="closeAccount" style="color:#bc4749">注销账号</view>
