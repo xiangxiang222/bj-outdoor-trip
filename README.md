@@ -78,7 +78,7 @@ npm run dev
 
 ## 品牌
 
-图形标是圆角 SVG：门楼、宝塔、山丘与徒步人（`web/src/components/BrandMark.vue`）。顶栏夜色紫红渐变。产品文案只用「同行者众」和「在山野，遇见爱」，不要写校名，不要用官方校徽。favicon 为 `/brand/mark.svg`。
+产品标识用原来的 `web/public/brand/logo.jpg`（紫红徒步人 + 山丘）。顶栏夜色紫红渐变只改配色，不改 logo。产品文案只用「同行者众」和「在山野，遇见爱」。favicon 为 `/brand/logo.jpg`。
 
 ## 第一阶段功能
 

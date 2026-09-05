@@ -33,9 +33,9 @@ bj-outdoor-trip/
     src/views/admin         Element Plus 后台（/admin）
     src/views/guide         导游工作台（/g）
     src/layouts             MobileLayout / AdminLayout / GuideLayout
-    src/components          BrandMark、TripPrices、WeatherChart
+    src/components          TripPrices、WeatherChart
     src/styles/app.css      色板与顶栏
-    public/brand            mark.svg / mark.png / logo.jpg
+    public/brand            logo.jpg（原标识）与 mark.png（顶栏裁切）
     src/utils/*.test.js     Vitest
   miniprogram/              微信原生小程序，打同一套 API
 ```
@@ -127,7 +127,7 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 
 ## 6. 后台与导游端
 
-后台 `/admin`：看板、线路、拼团与成本、报名、优惠券、用户与会员、玩法标签、管理员。登录页与侧栏用 `BrandMark`。侧栏副标题「后台 · 线路 · 排期 · 财务」。
+后台 `/admin`：看板、线路、拼团与成本、报名、优惠券、用户与会员、玩法标签、管理员。登录页与侧栏用原来的 `logo.jpg`。侧栏副标题「后台 · 线路 · 排期 · 财务」。
 
 导游 `/g`：图片验证码登录 → 行程列表 → 名单签到 / 游客详情 / 锁座调座 / 车牌。演示号 `13700001101`。
 
@@ -137,11 +137,10 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 
 | 文件 | 用途 |
 | --- | --- |
-| `web/src/components/BrandMark.vue` | H5 / 后台 / 导游端 SVG 图形标 |
-| `web/public/brand/mark.svg` | favicon（`web/index.html`）与同源静态 |
-| `web/public/brand/mark.png` `logo.jpg` | 位图备份 |
-| `server/public/static/brand/mark.svg` 等 | API 托管的同一套标 |
-| `miniprogram/images/mark.png` | 官方页图标 |
+| `web/public/brand/logo.jpg` | 产品标识（客服页、后台、favicon） |
+| `web/public/brand/mark.png` | 顶栏小标：从 logo 裁出徒步人与山丘 |
+| `server/public/static/brand/` | API 托管的同一套图 |
+| `miniprogram/images/logo.jpg` | 小程序官方页 |
 
 色板在 `web/src/styles/app.css`：`--thu` `#6b2178`、`--pku` `#821a2a`、`--night` `#161218`，以及原有森林绿系。顶栏是紫→红渐变，上沿 3px 双色细线。产品文案只用「同行者众」「在山野，遇见爱」，不要写校名或官方校徽。
 

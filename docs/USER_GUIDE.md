@@ -198,7 +198,7 @@
 | 看大图 | 页面灯箱 | `wx.previewImage` |
 | 集合点 | 打开高德搜索 | 复制地址后自行搜地图 |
 | 学生 / 团体认证 | `/m/student`、`/m/group` | 尚无独立页；首页学生按钮跳「我的」 |
-| 图形标 | SVG `BrandMark` | `images/mark.png`（官方页） |
+| 图形标 | 原 logo 裁切 `/brand/mark.png` | `images/logo.jpg`（官方页） |
 
 小程序默认请求线上 `http://192.144.167.212`。本地联调时把 `miniprogram/config.js` 里的 `USE_LOCAL_API` 改为 `true`（开发者工具走 `127.0.0.1:3780`，真机走局域网地址）。真机访问 HTTP IP 需关闭合法域名校验。
 

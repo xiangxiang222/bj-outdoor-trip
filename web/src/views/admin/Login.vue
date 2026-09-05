@@ -1,6 +1,6 @@
 <template>
   <div style="max-width:360px;margin:12vh auto;background:#fff;padding:32px;border-radius:16px;text-align:center">
-    <BrandMark size="lg" />
+    <img class="brand-mark lg" src="/brand/logo.jpg" alt="同行者众" />
     <h2>管理后台</h2>
     <el-input v-model="username" placeholder="账号" style="margin:8px 0" />
     <el-input v-model="password" type="password" placeholder="密码" style="margin:8px 0" />
@@ -14,7 +14,6 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
-import BrandMark from "@/components/BrandMark.vue";
 const username = ref("admin");
 const password = ref("admin123");
 const err = ref("");

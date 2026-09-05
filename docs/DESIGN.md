@@ -58,7 +58,7 @@
 | `web/src/views/mobile` | 用户端页面 |
 | `web/src/views/admin` | 后台页面 |
 | `web/src/views/guide` | 导游工作台 |
-| `web/src/components/BrandMark.vue` | 图形标 |
+| `web/src/styles/app.css` | 色板与顶栏（含夜色紫红渐变） |
 | `web/src/utils/pageChrome.js` | 子页覆盖顶栏标题 |
 | `miniprogram/` | 原生小程序，打同一套 API |
 | `scripts/deploy.sh` | 同步到腾讯云并 PM2 启动（进程名 `beiyexing`，目录 `/var/www/beiyexing`） |
@@ -253,8 +253,8 @@ User 1──n Favorite / PointsLedger / Review
 ### 6.1 视觉规范
 
 - **名称**：同行者众。口号：在山野，遇见爱。
-- **图形标**：圆角方形 SVG（`BrandMark.vue`）。浅色天空、左侧门楼（紫）、右侧宝塔（红）、绿色山丘、两名徒步剪影。不要使用任何学校官方校徽。
-- **顶栏**：夜色底，紫 `#6B2178` → 红 `#821A2A` 水平渐变；上沿 3px 双色细线。首页不重复第二行标题。
+- **标识**：沿用原来的 `web/public/brand/logo.jpg`（绿丘、紫红徒步人、线描山峰）。顶栏小标是该图左侧图形的裁切 `mark.png`，旁边用活字写「同行者众」，避免 logo 里的字和标题叠两遍。
+- **顶栏配色**：夜色底，紫 `#6B2178` → 红 `#821A2A` 水平渐变；上沿 3px 双色细线。首页不重复第二行标题。不改 logo 图形本身。
 - **CSS 变量**（`web/src/styles/app.css`）：`--thu`、`--pku`、`--night`，以及原森林绿 `--forest` / `--leaf` / `--cream`。
 - **Tab 选中色**：紫。小程序 `navigationBarBackgroundColor` `#3a1848`，`selectedColor` `#6b2178`。
 - **首页学生卡**：双色左边条 +「学生认证」CTA。文案只谈学生价与高校限制，不写具体校名。

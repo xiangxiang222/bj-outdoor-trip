@@ -2,7 +2,7 @@
   <div class="admin-shell">
     <aside class="admin-side">
       <div class="admin-brand">
-        <BrandMark size="md" />
+        <img src="/brand/logo.jpg" alt="同行者众" />
         <div class="admin-brand-sub">后台 · 线路 · 排期 · 财务</div>
       </div>
       <router-link v-if="can('ops')" to="/admin">数据看板</router-link>
@@ -31,8 +31,6 @@ import { onMounted, ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import http from "@/api/http";
 import { capsOf, hasCap, roleLabel } from "@/utils/staff";
-import BrandMark from "@/components/BrandMark.vue";
-
 const router = useRouter();
 const route = useRoute();
 const me = ref({

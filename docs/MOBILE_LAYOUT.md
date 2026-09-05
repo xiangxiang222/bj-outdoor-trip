@@ -104,11 +104,11 @@
 
 H5 `MobileLayout`：
 
-- 状态栏 lockup：`BrandMark` + 活字「同行者众」；仅首页加口号「在山野，遇见爱」
+- 状态栏 lockup：原 logo 图形（`/brand/mark.png`，从 `logo.jpg` 裁出徒步人与山丘）+ 活字「同行者众」；仅首页加口号「在山野，遇见爱」
 - 首页隐藏 `.mp-nav` 第二行，避免品牌名出现三次
 - 顶栏夜色渐变 + 3px 紫红细线；「我的」资料卡复用同一套夜色（`.mine-hero`）
 - 子页标题由路由表或 `setChrome()`（`web/src/utils/pageChrome.js`）覆盖，例如局详情「时间、地点、还缺几人」
 
 小程序：导航栏 `#3a1848`，Tab 选中 `#6b2178`。首页同样是全幅轮播 + 学生认证卡 + 折叠「哪天玩」。
 
-图形标源文件：`web/src/components/BrandMark.vue`、`web/public/brand/mark.svg`、`server/public/static/brand/`、`miniprogram/images/mark.png`。不要替换成官方校徽，也不要在界面写校名。
+图形标就是原来的 `logo.jpg`。顶栏小标是同一套图的裁切 `web/public/brand/mark.png`，不要换成别的校徽或建筑合标。夜色顶栏只改配色。
