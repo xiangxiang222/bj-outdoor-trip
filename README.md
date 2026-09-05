@@ -13,6 +13,7 @@
 | [docs/API.md](docs/API.md) | REST 接口一览 |
 | [docs/TESTING.md](docs/TESTING.md) | 单元测试、覆盖率、全功能走查 |
 | [docs/REGISTER.md](docs/REGISTER.md) | 上线前：域名、备案、小程序、支付、短信要注册的官网 |
+| [docs/DEPLOY.md](docs/DEPLOY.md) | 推 main 自动部署；只用 iPhone 如何开通一次 |
 
 ## 怎么跑起来
 
@@ -52,7 +53,9 @@ npm run dev
 | 管理后台 | http://192.144.167.212/admin |
 | 导游端 | http://192.144.167.212/g |
 
-部署：推到 GitHub 的 `main` 会跑自动部署；也可在项目根目录执行 `./scripts/deploy.sh`（同步到腾讯云、构建、PM2 进程名 `beiyexing`）。仓库需配置 Secret `DEPLOY_SSH_KEY`（服务器 `ubuntu` 用户私钥）。**不要**在生产库执行 `npm run seed`（会清空业务数据）。部署脚本仅在目标机还没有数据库文件时才会 seed。
+部署发生在 GitHub Actions 上，**不需要 iPhone 能 SSH**。推到 `main` 会自动上线；也可在 Actions 里手动 Run workflow，或在能登录服务器的电脑上执行 `./scripts/deploy.sh`（同步到腾讯云、构建、PM2 进程名 `beiyexing`）。
+
+第一次需要在仓库配置 Secret `DEPLOY_SSH_KEY`（服务器 `ubuntu` 用户私钥）。**只用手机也可以配完**，步骤见 [docs/DEPLOY.md](docs/DEPLOY.md)。**不要**在生产库执行 `npm run seed`（会清空业务数据）。部署脚本仅在目标机还没有数据库文件时才会 seed。
 
 ## 30 条线路从哪来
 

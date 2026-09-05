@@ -9,5 +9,6 @@
 | [接口文档](./API.md) | HTTP API 一览、鉴权、错误码约定 |
 | [单元测试文档](./TESTING.md) | 单元测试、覆盖率、全功能走查（e2e） |
 | [上线注册清单](./REGISTER.md) | 域名、ICP、小程序 AppId、微信支付、短信签名/运营商报备的官网入口与顺序 |
+| [部署](./DEPLOY.md) | 推 main 后 GitHub Actions 自动部署；只用 iPhone 如何开通一次 |
 
 日常启动与部署仍以仓库根目录 [README.md](../README.md) 为准。

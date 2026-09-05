@@ -16,6 +16,8 @@ jobs:
         run: |
           if [ -z "$DEPLOY_SSH_KEY" ]; then
             echo "缺少 GitHub Secret：DEPLOY_SSH_KEY（腾讯云 ubuntu 用户的 SSH 私钥全文）"
+            echo "只用手机也可以配：见 docs/DEPLOY.md"
+            echo "添加后打开 Actions → Deploy → Run workflow，不必再推代码。"
             exit 1
           fi
           mkdir -p ~/.ssh
@@ -23,11 +25,9 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H 192.144.167.212 >> ~/.ssh/known_hosts
       - name: Sync and restart
-        env:
-          DEPLOY_HOST: 192.144.167.212
-          DEPLOY_USER: ubuntu
-          DEPLOY_DIR: /var/www/beiyexing
-          DEPLOY_SSH_KEY: ${{ github.workspace }}/../home/runner/.ssh/id_ed25519
         run: |
+          export DEPLOY_HOST=192.144.167.212
+          export DEPLOY_USER=ubuntu
+          export DEPLOY_DIR=/var/www/beiyexing
           export DEPLOY_SSH_KEY="$HOME/.ssh/id_ed25519"
           bash scripts/deploy.sh
