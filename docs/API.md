@@ -213,7 +213,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 
 ## 静态资源
 
-- `GET /static/...` 对应 `server/public/static`（含 `/static/brand/mark.svg`）
+- `GET /static/...` 对应 `server/public/static`（含 `/static/brand/logo.jpg`）
 - `GET /c/:code` 优惠券短链，302 到 `/m/coupon/:code`（不走 `/api`）
-- H5 favicon：`/brand/mark.svg`（Vite `web/public`）
+- H5 favicon：`/brand/logo.jpg`（Vite `web/public`）
 - 线路封面可能是 `/static/photos/*.jpg`、`/static/routes/Rxx.svg` 或后台上传的 `/static/uploads/*`

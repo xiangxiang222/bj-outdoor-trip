@@ -3,7 +3,7 @@
     <div class="mp-status" :class="{ 'is-home': isHome }">
       <router-link to="/m" class="brand-lockup" aria-label="同行者众 首页">
         <span class="brand-mark-frame" aria-hidden="true">
-          <BrandMark />
+          <img src="/brand/mark.png" alt="" />
         </span>
         <span class="brand-type">
           <span class="brand-name">同行者众</span>
@@ -47,7 +47,6 @@
 import { computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
-import BrandMark from "@/components/BrandMark.vue";
 import { chromeTitle, chromeSubtitle, clearChrome } from "@/utils/pageChrome";
 
 const route = useRoute();
