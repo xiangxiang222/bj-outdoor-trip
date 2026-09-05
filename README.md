@@ -52,7 +52,7 @@ npm run dev
 | 管理后台 | http://192.144.167.212/admin |
 | 导游端 | http://192.144.167.212/g |
 
-部署：在项目根目录执行 `./scripts/deploy.sh`（同步到腾讯云、构建、PM2 进程名 `beiyexing`）。**不要**在生产库执行 `npm run seed`（会清空业务数据）。部署脚本仅在目标机还没有数据库文件时才会 seed。
+部署：推到 GitHub 的 `main` 会跑自动部署；也可在项目根目录执行 `./scripts/deploy.sh`（同步到腾讯云、构建、PM2 进程名 `beiyexing`）。仓库需配置 Secret `DEPLOY_SSH_KEY`（服务器 `ubuntu` 用户私钥）。**不要**在生产库执行 `npm run seed`（会清空业务数据）。部署脚本仅在目标机还没有数据库文件时才会 seed。
 
 ## 30 条线路从哪来
 
