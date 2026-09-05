@@ -64,21 +64,20 @@ button, input, textarea, select { font-family: inherit; }
   color: inherit;
 }
 .brand-mark-frame {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
-  border-radius: 9px;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 10px;
   overflow: hidden;
-  background: #fffef8;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+  background: var(--cream);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
 }
 .brand-mark-frame img {
   display: block;
-  width: 118%;
-  height: 118%;
-  margin: -9% 0 0 -9%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  object-position: 46% 58%;
+  object-position: 50% 52%;
 }
 .brand-type {
   display: flex;
