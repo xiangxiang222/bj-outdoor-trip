@@ -51,34 +51,87 @@ button, input, textarea, select { font-family: inherit; }
 .brand-mark {
   display: block;
   object-fit: contain;
-  background: #fff;
+  background: #fffef8;
   border-radius: 8px;
 }
-.brand-mark.sm { width: 36px; height: 36px; flex: 0 0 36px; }
 .brand-mark.md { width: 88px; height: 88px; margin: 0 auto 10px; }
 .brand-mark.lg { width: 140px; height: 140px; margin: 0 auto 12px; }
-.brand-lockup { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  color: inherit;
+}
+.brand-mark-frame {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #fffef8;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+.brand-mark-frame img {
+  display: block;
+  width: 118%;
+  height: 118%;
+  margin: -9% 0 0 -9%;
+  object-fit: cover;
+  object-position: 46% 58%;
+}
+.brand-type {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+.brand-name {
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  line-height: 1.15;
+  margin-right: -0.08em;
+  color: #fffef8;
+  -webkit-font-smoothing: antialiased;
+}
+.brand-tagline {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  color: rgba(216, 243, 220, 0.72);
+  -webkit-font-smoothing: antialiased;
+}
 .admin-brand { padding: 20px 16px 12px; }
 .admin-brand img { width: 88px; height: 88px; margin: 0 auto; display: block; border-radius: 10px; background: #fff; object-fit: contain; }
 .admin-brand-sub { margin-top: 8px; font-size: 12px; opacity: .6; }
 .mp-status {
-  height: 52px;
-  padding: 0 16px;
+  height: 48px;
+  padding: 0 12px 0 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   background: var(--forest);
-  color: #fff;
+  color: #fffef8;
   font-size: 13px;
   flex: none;
 }
+.mp-status.is-home {
+  height: 56px;
+  padding: 8px 12px 8px 14px;
+}
 .mp-capsule {
-  border: 1px solid rgba(255,255,255,.35);
-  border-radius: 14px;
-  padding: 2px 10px;
-  font-size: 11px;
-  opacity: .85;
+  flex: none;
+  white-space: nowrap;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: rgba(255, 253, 248, 0.78);
 }
 
 .mp-nav {
