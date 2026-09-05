@@ -38,7 +38,7 @@
                 </div>
                 <p class="muted">{{ o.meetup_time || "" }} {{ o.meetup_point || o.city || "" }}</p>
                 <p class="act-meta">
-                  <span>{{ enrollStatusText(o) }}</span>
+                  <span>{{ statusLine(o) }}</span>
                   <span v-if="o.channel !== 'activity' && o.seat_no">{{ o.seat_no }} 座</span>
                   <span>{{ moneyText(o) }}</span>
                 </p>
@@ -67,7 +67,7 @@
               <strong>{{ o.title }}</strong>
               <span class="tag">{{ o.status === "cancelled" ? "已取消" : kindLabel(o) }}</span>
             </div>
-            <p class="muted" style="margin:6px 0 0">{{ o.start_date }} · {{ enrollStatusText(o) }} · {{ moneyText(o) }}</p>
+            <p class="muted" style="margin:6px 0 0">{{ o.start_date }} · {{ statusLine(o) }} · {{ moneyText(o) }}</p>
           </div>
           <div v-if="o.canComplete || o.completed" class="pad" style="padding-top:0">
             <button class="btn block" type="button" @click.stop="$router.push('/m/after/' + o.schedule_id)">
@@ -143,6 +143,10 @@ function kindLabel(o) {
 function moneyText(o) {
   if (o.channel === "activity" && Number(o.pay_amount || 0) === 0) return "免费";
   return "¥" + o.pay_amount;
+}
+function statusLine(o) {
+  if (o.channel === "activity" && o.status === "joined") return "已报名";
+  return enrollStatusText(o);
 }
 function goLogin() {
   router.push({ path: "/m/login", query: { redirect: "/m/orders" } });

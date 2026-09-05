@@ -174,7 +174,7 @@
           <a v-if="c.userId" class="nav-link" href="#" @click.prevent="goUser(c.userId)">{{ c.name }}</a>
           <span v-else>{{ c.name }}</span>
           {{ c.gender === "female" ? "女" : c.gender === "male" ? "男" : "" }}
-          <span v-if="c.lifeStage" class="muted"> · {{ c.lifeStage }}</span>
+          <span v-if="!isActivity && c.lifeStage" class="muted"> · {{ c.lifeStage }}</span>
         </span>
         <span v-if="c.waitlisted" class="muted">候补</span>
         <span
@@ -243,9 +243,10 @@
       <button class="btn ghost block" @click="share">分享到微信</button>
     </div>
     <div class="enroll-dock">
-    <button v-if="s.status !== 'cancelled' && s.reviewStatus !== 'pending' && s.reviewStatus !== 'rejected'" class="btn block clay" @click="$router.push(enrollHref)">
+    <button v-if="!s.myEnrollment && s.status !== 'cancelled' && s.reviewStatus !== 'pending' && s.reviewStatus !== 'rejected'" class="btn block clay" @click="$router.push(enrollHref)">
       {{ s.canEnrollDirect === false && s.remain <= 0 ? "已满员，去候补" : isActivity ? "报名本局" : "立即报名" }}
     </button>
+    <p v-else-if="s.myEnrollment" class="muted" style="text-align:center;margin:0 0 8px">已报名<template v-if="isActivity">，到场找发起人即可</template></p>
     <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>
     <button v-if="s.isOrganizer && s.status !== 'cancelled'" class="btn ghost block" style="margin-top:8px;color:var(--clay)" @click="showDissolve = true">解散拼团</button>
     <p v-if="!isActivity && s.notes" class="muted" style="margin-top:8px">{{ s.notes }}</p>

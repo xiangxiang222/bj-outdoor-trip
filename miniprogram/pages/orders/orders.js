@@ -13,7 +13,7 @@ function decorate(item) {
   const cancelled = item.status === "cancelled" || item.schedule_status === "cancelled";
   const date = String(item.start_date || "").slice(0, 10);
   return Object.assign({}, item, {
-    statusText: enrollStatusText(item),
+    statusText: item.channel === "activity" && item.status === "joined" ? "已报名" : enrollStatusText(item),
     kindLabel: item.channel === "activity" ? "同城局" : "山野团",
     moneyText: item.channel === "activity" && Number(item.pay_amount || 0) === 0 ? "免费" : "¥" + item.pay_amount,
     upcoming: !cancelled && date >= ymd(),
