@@ -49,9 +49,9 @@
     </view>
   </view>
 </view>
-<view class="pad title">座位图</view>
+<view class="pad title">{{isActivity ? '人数与位置' : '座位图'}}</view>
 <view class="seat-map" wx:if="{{seatRows.length}}">
-  <view class="seat-front">车头</view>
+  <view class="seat-front" wx:if="{{!isActivity}}">车头</view>
   <view class="seat-row" wx:for="{{seatRows}}" wx:key="row">
     <block wx:for="{{item.seats}}" wx:for-item="seat" wx:key="no">
       <view class="seat {{seat.locked ? 'locked' : (seat.taken ? 'taken' : '')}} {{seat.mine ? 'mine' : ''}}" catchtap="onSeat" data-userid="{{seat.occupant.userId}}" data-no="{{seat.no}}" data-taken="{{seat.taken}}" data-locked="{{seat.locked}}">

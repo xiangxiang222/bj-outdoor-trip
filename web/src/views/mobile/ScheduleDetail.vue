@@ -80,7 +80,7 @@
     <div class="h2">{{ isActivity ? "人数与位置" : "座位图" }}</div>
     <div class="card"><div class="pad">
       <div class="seat-map">
-        <div class="seat-front">车头</div>
+        <div class="seat-front" v-if="!isActivity">车头</div>
         <div class="seat-row" v-for="row in seatRows" :key="row[0].row">
           <template v-for="seat in row" :key="seat.no">
             <span
@@ -333,7 +333,8 @@ const candidateOptions = computed(() => {
   return [...(opts.sameRoute || []), ...(opts.otherRecruiting || [])];
 });
 const seatHint = computed(() => {
-  if (s.value?.myEnrollment?.status === "joined") return "点空位即可改座。占用位显示性别与年龄段。";
+  if (s.value?.myEnrollment?.status === "joined") return isActivity.value ? "点空位即可改位置。" : "点空位即可改座。占用位显示性别与年龄段。";
+  if (isActivity.value) return "点格子看谁来了。报名前会提示先报名。";
   return "早报名早选座。报名前点空位会提示先报名；占用位可看个人主页。";
 });
 const statusTag = computed(() => {
