@@ -7,52 +7,68 @@
 </view>
 
 <block wx:else>
-  <view class="pad muted" wx:if="{{upcoming.length}}">待出行 {{upcoming.length}}</view>
-  <view class="card" wx:for="{{upcoming}}" wx:key="id">
-    <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
-      <view class="row">
-        <view class="title">{{item.title}}</view>
-        <view class="tag">{{item.kindLabel}}</view>
-      </view>
-      <view class="muted">{{item.meetup_time}} {{item.meetup_point}}</view>
-      <view class="muted">{{item.statusText}} · ¥{{item.pay_amount}}</view>
-    </view>
-    <view wx:if="{{item.canCancel}}" class="btn ghost" catchtap="cancel" data-id="{{item.id}}" style="color:#bc4749">取消报名</view>
+  <view class="chips">
+    <view class="chip {{tab=='upcoming'?'on':''}}" bindtap="setTab" data-tab="upcoming">待出行 {{upcoming.length}}</view>
+    <view class="chip {{tab=='past'?'on':''}}" bindtap="setTab" data-tab="past">历史 {{past.length}}</view>
   </view>
 
-  <view class="card" wx:if="{{!upcoming.length && !past.length}}">
-    <view class="pad">
-      <view class="title">还没有行程</view>
-      <view class="muted">去首页报团，或去活动页约一局。</view>
-      <view class="btn" bindtap="goHomeTab">去首页</view>
-      <view class="btn ghost" bindtap="goActTab">去同城局</view>
-    </view>
-  </view>
-  <view class="pad muted" wx:elif="{{!upcoming.length}}">最近没有待出行。历史报名在下面。</view>
-
-  <view class="pad muted" wx:if="{{past.length}}">历史 {{past.length}}</view>
-  <view class="card" wx:for="{{past}}" wx:key="id">
-    <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
-      <view class="row">
-        <view class="title">{{item.title}}</view>
-        <view class="tag">{{item.status=='cancelled'?'已取消':item.kindLabel}}</view>
+  <block wx:if="{{tab=='upcoming'}}">
+    <view class="card" wx:if="{{nextTrip}}" bindtap="goSchedule" data-id="{{nextTrip.schedule_id}}">
+      <view class="pad">
+        <view class="muted">下一趟 · {{nextTrip.kindLabel}}</view>
+        <view class="title">{{nextTrip.title}}</view>
+        <view class="muted">{{nextTrip.start_date}} {{nextTrip.meetup_time}} · {{nextTrip.meetup_point}}</view>
       </view>
-      <view class="muted">{{item.start_date}} · {{item.statusText}} · ¥{{item.pay_amount}}</view>
+      <view wx:if="{{nextTrip.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{nextTrip.id}}">取消报名</view>
     </view>
-    <view wx:if="{{item.canComplete || item.completed}}" class="btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{item.completed ? '评价 / 抽奖 / 评选' : '完成活动'}}</view>
-    <view wx:if="{{item.canReview}}">
-      <view wx:if="{{reviewingId != item.id}}" class="btn ghost" catchtap="openReview" data-id="{{item.id}}">去评价</view>
-      <view wx:else class="pad">
-        <view class="star-pick">
-          <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="star {{rating >= n ? 'on' : ''}}" catchtap="pickStar" data-n="{{n}}">★</text>
-        </view>
-        <textarea class="input" placeholder="这次出行怎么样（选填）" value="{{content}}" bindinput="setContent" />
+    <view class="card" wx:for="{{restUpcoming}}" wx:key="id">
+      <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
         <view class="row">
-          <view class="btn ghost" style="flex:1;margin:0 8rpx 0 0" catchtap="closeReview">取消</view>
-          <view class="btn" style="flex:1;margin:0 0 0 8rpx" catchtap="submitReview" data-id="{{item.id}}">提交评价</view>
+          <view class="title">{{item.title}}</view>
+          <view class="tag">{{item.kindLabel}}</view>
         </view>
+        <view class="muted">{{item.meetup_time}} {{item.meetup_point}}</view>
+        <view class="muted">{{item.statusText}} · {{item.moneyText}}</view>
+      </view>
+      <view wx:if="{{item.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{item.id}}">取消报名</view>
+    </view>
+
+    <view class="card" wx:if="{{!upcoming.length && !past.length}}">
+      <view class="pad">
+        <view class="title">还没有行程</view>
+        <view class="muted">去首页报团，或去活动页约一局。</view>
+        <view class="btn" bindtap="goHomeTab">去首页</view>
+        <view class="btn ghost" bindtap="goActTab">去同城局</view>
       </view>
     </view>
-    <view wx:elif="{{item.reviewed}}" class="pad muted">已评价</view>
-  </view>
+    <view class="pad muted" wx:elif="{{!upcoming.length}}">最近没有待出行。点「历史」看过往报名。</view>
+  </block>
+
+  <block wx:else>
+    <view class="card" wx:for="{{past}}" wx:key="id">
+      <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
+        <view class="row">
+          <view class="title">{{item.title}}</view>
+          <view class="tag">{{item.status=='cancelled'?'已取消':item.kindLabel}}</view>
+        </view>
+        <view class="muted">{{item.start_date}} · {{item.statusText}} · {{item.moneyText}}</view>
+      </view>
+      <view wx:if="{{item.canComplete || item.completed}}" class="btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{item.completed ? '评价 / 抽奖 / 评选' : '完成活动'}}</view>
+      <view wx:if="{{item.canReview}}">
+        <view wx:if="{{reviewingId != item.id}}" class="btn ghost" catchtap="openReview" data-id="{{item.id}}">去评价</view>
+        <view wx:else class="pad">
+          <view class="star-pick">
+            <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="star {{rating >= n ? 'on' : ''}}" catchtap="pickStar" data-n="{{n}}">★</text>
+          </view>
+          <textarea class="input" placeholder="这次出行怎么样（选填）" value="{{content}}" bindinput="setContent" />
+          <view class="row">
+            <view class="btn ghost" style="flex:1;margin:0 8rpx 0 0" catchtap="closeReview">取消</view>
+            <view class="btn" style="flex:1;margin:0 0 0 8rpx" catchtap="submitReview" data-id="{{item.id}}">提交评价</view>
+          </view>
+        </view>
+      </view>
+      <view wx:elif="{{item.reviewed}}" class="pad muted">已评价</view>
+    </view>
+    <view class="pad muted" wx:if="{{!past.length}}">还没有历史报名。</view>
+  </block>
 </block>

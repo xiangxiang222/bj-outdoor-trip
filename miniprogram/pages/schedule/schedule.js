@@ -2,6 +2,7 @@ const { request } = require("../../utils/request");
 const { payStatusText, starText } = require("../../utils/labels");
 const { shareCover } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
+const { dateOf } = require("../../utils/activity-kind");
 const app = getApp();
 
 function busLine(s) {
@@ -30,6 +31,10 @@ Page({
     busPhotos: [],
     busText: "",
     isActivity: false,
+    isFree: false,
+    remainSeats: 0,
+    whenLabel: "",
+    statusTag: "",
     leaderSlots: [{ slot: 1, label: "领队1", leader: null }, { slot: 2, label: "领队2", leader: null }],
   },
   onLoad(q) {
@@ -43,22 +48,37 @@ Page({
       if (s && s.chain) {
         s.chain = s.chain.map((c) => Object.assign({}, c, { payText: payStatusText(c.payStatus) }));
       }
+      const isActivity = s.channel === "activity";
+      const q = s.quote || {};
+      const isFree = Number(q.price || 0) === 0 && Number(q.originPrice || 0) === 0;
+      const remainSeats = Math.max(0, Number(s.maxSeats || 0) - Number(s.enrolled || 0));
+      const d = dateOf(s.startDate);
+      const whenLabel = (d.month || "") + (d.day || "") + "日 " + (d.weekday || "");
+      let statusTag = "先报名后付款";
+      if (s.status === "cancelled") statusTag = "已解散";
+      else if (isActivity) statusTag = isFree ? "免费局" : "同城局";
+      else if (s.organizerType === "company") statusTag = "公司统一支付";
       this.setData({
         s,
         packing: (s.route && s.route.packingList) || [],
         gallery: (s.gallery && s.gallery.length ? s.gallery : (s.route && s.route.cover ? [s.route.cover] : [])),
         busPhotos: (s.bus && s.bus.photos) || [],
         busText: busLine(s),
-        isActivity: s.channel === "activity",
+        isActivity,
+        isFree,
+        remainSeats,
+        whenLabel,
+        statusTag,
         leaderSlots: [1, 2].map((slot) => ({
           slot,
           label: "领队" + slot,
           leader: ((s.leaders || []).find((l) => Number(l.slot) === slot)) || null,
         })),
       });
+      wx.setNavigationBarTitle({ title: isActivity ? "局详情" : "行程详情" });
       const region = s && s.route && [s.route.region, s.route.title].filter(Boolean).join(" ");
       const date = s && s.startDate;
-      if (region && s.channel !== "activity") {
+      if (region && !isActivity) {
         request("/weather?region=" + encodeURIComponent(region) + "&date=" + (date || "")).then((w) => {
           this.setData({ weather: w.data }, () => {
             wx.nextTick(() => this.drawWeather());
@@ -67,6 +87,10 @@ Page({
       }
     });
     request("/schedules/" + this.data.id + "/seats").then((r) => {
+      if (this.data.isActivity) {
+        this.setData({ seatRows: [] });
+        return;
+      }
       const seats = (r.data && r.data.seats) || [];
       const groups = [];
       seats.forEach((seat) => {

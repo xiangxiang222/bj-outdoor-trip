@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { harness, loginUser, loginCompany, auth, ID, issueCaptcha } = require("./http");
+const { harness, loginUser, loginCompany, loginAdmin, auth, ID, issueCaptcha } = require("./http");
 
 describe("enroll pay member favorites", () => {
   let agent;
@@ -418,5 +418,65 @@ describe("enroll pay member favorites", () => {
     const sch = await agent.get(`/api/schedules/${seed.individualScheduleId}`).expect(200);
     assert.equal(sch.body.data.guaranteed, false);
     assert.match(sch.body.data.meetupMapUrl, /amap/);
+  });
+
+  it("city activity enrolls with name and phone only", async () => {
+    const token = await loginUser(agent);
+    const start = seed.db.prepare("SELECT date('now','+3 day') AS d").get().d;
+    const created = await agent
+      .post("/api/trips")
+      .set(auth(token))
+      .send({
+        title: "周五夜掼蛋局",
+        activityKind: "掼蛋",
+        city: "朝阳",
+        startDate: start,
+        meetupPoint: "三里屯太古里南区",
+        meetupTime: "19:30",
+        channel: "activity",
+        minGroupSize: 4,
+        maxSeats: 10,
+      })
+      .expect(200);
+    const admin = await loginAdmin(agent);
+    await agent
+      .post(`/api/admin/schedules/${created.body.data.id}/review`)
+      .set(auth(admin))
+      .send({ status: "approved" })
+      .expect(200);
+
+    const incomplete = await agent.post("/api/enroll").set(auth(token)).send({
+      scheduleId: created.body.data.id,
+      travelerName: "林北野",
+    });
+    assert.equal(incomplete.status, 400);
+
+    const joined = await agent
+      .post("/api/enroll")
+      .set(auth(token))
+      .send({
+        scheduleId: created.body.data.id,
+        travelerName: "林北野",
+        travelerPhone: "13800138000",
+      })
+      .expect(200);
+    assert.equal(joined.body.data.status, "joined");
+    assert.equal(joined.body.data.quote.payAmount, 0);
+    assert.match(joined.body.data.message, /已报名/);
+    assert.doesNotMatch(joined.body.data.message, /本车|选座|占座/);
+
+    const row = seed.db.prepare("SELECT * FROM enrollments WHERE id=?").get(joined.body.data.enrollmentId);
+    assert.equal(row.id_card, "");
+    assert.equal(row.emergency_name, "");
+    assert.equal(row.waiver_accepted_at, null);
+    assert.equal(row.insurance_code, "none");
+
+    const dup = await agent.post("/api/enroll").set(auth(token)).send({
+      scheduleId: created.body.data.id,
+      travelerName: "林北野",
+      travelerPhone: "13800138000",
+    });
+    assert.equal(dup.status, 400);
+    assert.match(dup.body.message, /已报名/);
   });
 });

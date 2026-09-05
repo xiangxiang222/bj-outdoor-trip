@@ -51,33 +51,35 @@
     </div>
 
     <div class="filter-block">
-      <div class="h2">哪天玩？</div>
-      <button class="fold-head" type="button" @click="fold.days = !fold.days">最近十五天 <span>{{ fold.days ? "收起" : "展开" }}</span></button>
-      <div class="cal" v-if="fold.days">
-        <div class="cal-day" :class="{ on: date === d.date }" v-for="d in calendar" :key="d.date" @click="toggleDate(d.date)">
-          <span class="n">{{ d.label }}</span>
-          <span class="muted">{{ d.count ? d.count + " 团" : "—" }}</span>
+      <button class="fold-head" type="button" @click="fold.when = !fold.when">哪天玩？ <span>{{ fold.when ? "收起" : dateHint }}</span></button>
+      <div v-if="fold.when">
+        <button class="fold-head" type="button" @click="fold.days = !fold.days">最近十五天 <span>{{ fold.days ? "收起" : "展开" }}</span></button>
+        <div class="cal" v-if="fold.days">
+          <div class="cal-day" :class="{ on: date === d.date }" v-for="d in calendar" :key="d.date" @click="toggleDate(d.date)">
+            <span class="n">{{ d.label }}</span>
+            <span class="muted">{{ d.count ? d.count + " 团" : "—" }}</span>
+          </div>
         </div>
-      </div>
-      <button class="fold-head" type="button" @click="fold.month = !fold.month">按月选择 <span>{{ fold.month ? "收起" : "展开" }}</span></button>
-      <div v-if="fold.month">
-        <div class="chips">
-          <div class="chip" :class="{ on: monthKey === m.key }" v-for="m in home.months || []" :key="m.key" @click="pickMonth(m.key)">{{ m.label }}</div>
+        <button class="fold-head" type="button" @click="fold.month = !fold.month">按月选择 <span>{{ fold.month ? "收起" : "展开" }}</span></button>
+        <div v-if="fold.month">
+          <div class="chips">
+            <div class="chip" :class="{ on: monthKey === m.key }" v-for="m in home.months || []" :key="m.key" @click="pickMonth(m.key)">{{ m.label }}</div>
+          </div>
+          <div class="month-grid" v-if="monthDays.length">
+            <button class="month-cell" type="button" :class="{ on: date === d.date }" v-for="d in monthDays" :key="d.date" @click="toggleDate(d.date)">
+              {{ d.label }}
+              <small>{{ d.hasTrip ? d.count + "团" : "" }}</small>
+            </button>
+          </div>
         </div>
-        <div class="month-grid" v-if="monthDays.length">
-          <button class="month-cell" type="button" :class="{ on: date === d.date }" v-for="d in monthDays" :key="d.date" @click="toggleDate(d.date)">
-            {{ d.label }}
-            <small>{{ d.hasTrip ? d.count + "团" : "" }}</small>
-          </button>
-        </div>
-      </div>
-      <button class="fold-head" type="button" @click="fold.fest = !fold.fest">按节日 <span>{{ fold.fest ? "收起" : "展开" }}</span></button>
-      <div v-if="fold.fest">
-        <div class="chips">
-          <div class="chip" :class="{ on: festivalKey === f.key }" v-for="f in home.festivals || []" :key="f.key" @click="festivalKey = festivalKey === f.key ? '' : f.key">{{ f.name }}</div>
-        </div>
-        <div class="chips" v-if="activeFestival">
-          <div class="chip" :class="{ on: date === d.date }" v-for="d in activeFestival.dates" :key="d.date" @click="toggleDate(d.date)">{{ d.label }}</div>
+        <button class="fold-head" type="button" @click="fold.fest = !fold.fest">按节日 <span>{{ fold.fest ? "收起" : "展开" }}</span></button>
+        <div v-if="fold.fest">
+          <div class="chips">
+            <div class="chip" :class="{ on: festivalKey === f.key }" v-for="f in home.festivals || []" :key="f.key" @click="festivalKey = festivalKey === f.key ? '' : f.key">{{ f.name }}</div>
+          </div>
+          <div class="chips" v-if="activeFestival">
+            <div class="chip" :class="{ on: date === d.date }" v-for="d in activeFestival.dates" :key="d.date" @click="toggleDate(d.date)">{{ d.label }}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -122,18 +124,9 @@
       </div>
     </div>
 
-    <div class="cta-list">
-      <router-link class="cta-row" to="/m/mine">推荐报名 · 把好团推给朋友，按人数结 5%</router-link>
-      <router-link class="cta-row" to="/m/guides">推荐领队 · 首次带队完成后奖励 200 元</router-link>
-      <a v-if="!store.profile?.isMember" class="cta-row" @click.prevent="goMember">会员注册 · 年费 99，线路 95 折</a>
-      <router-link v-if="!store.profile?.isStudent && store.profile?.studentStatus !== 'pending'" class="cta-row" to="/m/student">学生注册 · 认证后享学生价，部分团仅限高校</router-link>
-      <router-link v-if="store.profile?.studentStatus === 'pending'" class="cta-row muted" to="/m/student">学生认证审核中</router-link>
-      <router-link v-if="store.profile?.groupStatus !== 'approved' && store.profile?.groupStatus !== 'pending'" class="cta-row" to="/m/group">团体注册 · 学生会 / 跑团 / 品牌</router-link>
-      <router-link v-if="store.profile?.groupStatus === 'pending'" class="cta-row muted" to="/m/group">团体认证审核中</router-link>
-      <router-link class="cta-row" to="/m/lottery">抽奖 · 报名前可抽一次，出行后再抽</router-link>
-      <router-link class="cta-row" to="/m/official">联系客服 · 加官方微信与用户群</router-link>
-      <router-link class="cta-row" to="/m/feedback">功能建议与找 BUG</router-link>
-    </div>
+    <p class="home-foot muted">
+      <router-link to="/m/official">客服与规则</router-link>
+    </p>
     </div>
   </div>
 </template>
@@ -162,7 +155,7 @@ const offerFilter = ref("");
 const heroIndex = ref(0);
 const tick = ref(0);
 const upcoming = ref(null);
-const fold = reactive({ days: true, month: false, fest: false });
+const fold = reactive({ when: false, days: true, month: false, fest: false });
 const offers = OFFER_TYPES.filter((o) => o.key !== "full");
 
 const brandSlides = computed(() => {
@@ -209,6 +202,12 @@ const picked = computed(() => {
     if (o) rows.push({ key: "offer", label: o.label, clear: () => { offerFilter.value = ""; } });
   }
   return rows;
+});
+const dateHint = computed(() => {
+  if (date.value) return date.value.slice(5);
+  if (monthPicked.value && monthKey.value) return monthKey.value.slice(5) + "月";
+  if (festivalKey.value && activeFestival.value) return activeFestival.value.name;
+  return "展开日历";
 });
 
 let heroTimer;
@@ -272,13 +271,6 @@ async function pickMonth(key) {
   fold.month = true;
   const res = await http.get("/home", { params: { month: key } });
   monthDays.value = res.data?.monthDays || [];
-}
-function goMember() {
-  if (!store.token) {
-    router.push({ path: "/m/login", query: { redirect: "/m/member" } });
-    return;
-  }
-  router.push("/m/member");
 }
 function cardGallery(s) {
   const g = s.gallery || s.route?.gallery || [];

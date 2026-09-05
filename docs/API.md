@@ -73,7 +73,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `studentOnly` `schools` `comboRule`。提交后 `reviewStatus=pending`，审核通过才上首页 |
 | POST | `/upload` | 用户 | 发团封面。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
-| POST | `/enroll` | 用户 | 报名占座。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds`。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补 `held`，占座成功才 `used`。须紧急联系人、健康声明、风险确认 |
+| POST | `/enroll` | 用户 | 报名占座。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds`。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补 `held`，占座成功才 `used`。山野团须紧急联系人、健康声明、风险确认与身份证。`channel=activity` 的同城局只须姓名和 11 位手机，按账号去重 |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。报名流程默认不调用 |
 | POST | `/pay/for-enrollment` | 用户 | 行程页待支付代付。任何人可替 `unpaid` 且已占座的报名支付（演示立即成功）。公司挂账不可用 |
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
@@ -121,6 +121,8 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 ```
 
 身份证须 18 位且校验码正确。紧急联系人手机须 11 位且不能与出行人相同。`waiverAccepted`、`healthOk` 须为真。同团同一证件不可重复（已取消的不计）。已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序自动递补。当前实现报名时 `points_used=0`，不读取抵现开关。
+
+同城局（`schedules.channel=activity`）不校验身份证、紧急联系人与弃权书；同一用户对同一局未取消的报名不可重复。候补文案为「本局已满」。
 
 排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`；名单项含 `waitlisted`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`。
 

@@ -2,13 +2,17 @@
   <div v-if="s">
     <div class="card"><div class="pad">
       <strong>{{ s.route.title }}</strong>
-      <p class="muted">{{ s.startDate }} · {{ s.bus?.name }}</p>
+      <p class="muted">{{ s.startDate }}{{ isActivity ? "" : " · " + (s.bus?.name || "") }} {{ s.meetupTime || "" }}</p>
       <p v-if="s.status === 'cancelled'" style="color:var(--clay)">本团已解散。理由：{{ s.cancelReason }}</p>
+      <p v-else-if="isActivity && s.remain <= 0">本局已满（{{ s.enrolled }}/{{ s.maxSeats }}）。仍可加入候补，有人取消后按顺序递补。</p>
       <p v-else-if="s.remain <= 0">本车已满（{{ s.enrolled }}/{{ s.maxSeats }}）。仍可加入候补，有人取消后按顺序递补。</p>
       <p v-else-if="s.organizerType === 'company'">公司团：报名后挂账，由 {{ s.companyName || "公司" }} 统一支付。</p>
+      <p v-else-if="isActivity && isFree" class="muted">免费局，填姓名和手机即可。</p>
+      <p v-else-if="isActivity" class="muted">报名后按下面金额，出行前支付。</p>
       <p v-else class="muted">个人拼团先报名占座，费用待出行前支付。早报名早选座。</p>
-      <TripPrices v-if="s.quote" :quote="s.quote" />
-      <p class="price">你应付 ¥{{ quote }} / 人</p>
+      <TripPrices v-if="!isActivity && s.quote" :quote="s.quote" />
+      <p v-if="isActivity && isFree" class="price">免费</p>
+      <p v-else class="price">你应付 ¥{{ quote }} / 人</p>
       <p v-if="couponHint" class="muted" style="color:var(--leaf)">{{ couponHint }}</p>
       <p v-if="s.eligibility?.enabled" class="muted">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? " 已认证学生" : "" }}</p>
       <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" style="color:var(--clay)">
@@ -17,10 +21,12 @@
       </p>
     </div></div>
 
-    <label>出行人姓名</label>
-    <input class="input" v-model="form.travelerName" placeholder="与身份证一致" />
+    <label>{{ isActivity ? "怎么称呼" : "出行人姓名" }}</label>
+    <input class="input" v-model="form.travelerName" :placeholder="isActivity ? '群里好认就行' : '与身份证一致'" />
     <label>手机号</label>
     <input class="input" v-model="form.travelerPhone" placeholder="接收集合通知" />
+
+    <template v-if="!isActivity">
     <label>身份证号</label>
     <input class="input" v-model="form.idCard" maxlength="18" placeholder="18位身份证号，末位数字或X" @blur="checkId" />
     <p v-if="idHint" :style="idOk ? '' : 'color:var(--clay)'" class="muted">{{ idHint }}</p>
@@ -128,9 +134,11 @@
         <span>{{ opt.title }} {{ opt.startDate }}</span>
       </label>
     </div></div>
+    </template>
+    <p v-else class="muted">出发日前可取消；到场找发起人。</p>
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
     <button v-if="s.status !== 'cancelled'" class="btn block" style="margin-top:16px" :disabled="loading || (s.eligibility?.enabled && !s.eligibility.canEnroll)" @click="submit">
-      {{ s.eligibility?.enabled && !s.eligibility.canEnroll ? "暂不符合报名条件" : s.remain <= 0 ? "加入候补" : "加入报名（暂不付款）" }}
+      {{ s.eligibility?.enabled && !s.eligibility.canEnroll ? "暂不符合报名条件" : s.remain <= 0 ? "加入候补" : isActivity ? "报名本局" : "加入报名（暂不付款）" }}
     </button>
   </div>
 </template>
@@ -142,12 +150,18 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import { parseIdCard } from "@/utils/idcard";
+import { setChrome } from "@/utils/pageChrome";
 import TripPrices from "@/components/TripPrices.vue";
 
 const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const s = ref(null);
+const isActivity = computed(() => s.value?.channel === "activity");
+const isFree = computed(() => {
+  const q = s.value?.quote || {};
+  return Number(q.price || 0) === 0 && Number(q.originPrice || 0) === 0;
+});
 const quote = ref(0);
 const couponHint = ref("");
 const couponCode = ref("");
@@ -207,6 +221,8 @@ onMounted(async () => {
   if (!requireLogin(store, router, route)) return;
   s.value = (await http.get("/schedules/" + route.params.id)).data;
   quote.value = s.value.quote.price;
+  setChrome(isActivity.value ? "报名本局" : "报名", isActivity.value ? "姓名和手机即可" : "实名、保险与选座");
+  if (isActivity.value) form.value.insuranceCode = "none";
   couponCode.value = String(route.query.coupon || "");
   if (couponCode.value) {
     try {
@@ -235,10 +251,12 @@ onMounted(async () => {
   } catch {
     /* use defaults */
   }
-  try {
-    seatChart.value = (await http.get("/schedules/" + route.params.id + "/seats")).data;
-  } catch {
-    seatChart.value = null;
+  if (!isActivity.value) {
+    try {
+      seatChart.value = (await http.get("/schedules/" + route.params.id + "/seats")).data;
+    } catch {
+      seatChart.value = null;
+    }
   }
 });
 
@@ -274,39 +292,53 @@ async function submit() {
     err.value = "请填写出行人姓名和手机";
     return;
   }
-  const parsed = checkId();
-  if (!parsed.valid) {
-    err.value = parsed.error;
-    return;
-  }
-  if (!form.value.emergencyName || !form.value.emergencyPhone) {
-    err.value = "请填写紧急联系人姓名和手机";
-    return;
-  }
-  if (form.value.emergencyPhone === form.value.travelerPhone) {
-    err.value = "紧急联系人不能与出行人使用同一手机号";
-    return;
-  }
-  if (!form.value.healthOk) {
-    err.value = "请确认健康状况适合本次活动";
-    return;
-  }
-  if (!form.value.waiverAccepted) {
-    err.value = "请阅读并确认户外活动风险告知";
-    return;
+  if (isActivity.value) {
+    if (!/^1\d{10}$/.test(String(form.value.travelerPhone))) {
+      err.value = "手机号不正确";
+      return;
+    }
+  } else {
+    const parsed = checkId();
+    if (!parsed.valid) {
+      err.value = parsed.error;
+      return;
+    }
+    if (!form.value.emergencyName || !form.value.emergencyPhone) {
+      err.value = "请填写紧急联系人姓名和手机";
+      return;
+    }
+    if (form.value.emergencyPhone === form.value.travelerPhone) {
+      err.value = "紧急联系人不能与出行人使用同一手机号";
+      return;
+    }
+    if (!form.value.healthOk) {
+      err.value = "请确认健康状况适合本次活动";
+      return;
+    }
+    if (!form.value.waiverAccepted) {
+      err.value = "请阅读并确认户外活动风险告知";
+      return;
+    }
   }
   loading.value = true;
   try {
-    await http.post("/enroll", {
-      scheduleId: Number(route.params.id),
-      ...form.value,
-      seatNo: form.value.seatNo || undefined,
-      referrerCode: route.query.ref,
-      couponCode: couponCode.value || undefined,
-      supplies: supplyItems.value
-        .map((p) => ({ code: p.code, qty: Number(supplyQty.value[p.code] || 0) }))
-        .filter((p) => p.qty > 0),
-    });
+    const payload = isActivity.value
+      ? {
+          scheduleId: Number(route.params.id),
+          travelerName: form.value.travelerName,
+          travelerPhone: form.value.travelerPhone,
+        }
+      : {
+          scheduleId: Number(route.params.id),
+          ...form.value,
+          seatNo: form.value.seatNo || undefined,
+          referrerCode: route.query.ref,
+          couponCode: couponCode.value || undefined,
+          supplies: supplyItems.value
+            .map((p) => ({ code: p.code, qty: Number(supplyQty.value[p.code] || 0) }))
+            .filter((p) => p.qty > 0),
+        };
+    await http.post("/enroll", payload);
     router.push("/m/schedule/" + route.params.id + "?joined=1");
   } catch (e) {
     err.value = e.message;

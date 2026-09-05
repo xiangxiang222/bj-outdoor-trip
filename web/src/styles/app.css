@@ -925,6 +925,58 @@ button, input, textarea, select { font-family: inherit; }
 @media (max-width: 380px) {
   .svc-actions { grid-template-columns: 1fr; }
 }
+.home-foot { text-align: center; margin: 8px 0 4px; }
+.home-foot a { color: var(--leaf); }
+.mine-hero { background: linear-gradient(118deg,#3a1848,#161218 48%,#4a1420); color: #fff; }
+.mine-name { font-size: 20px; font-weight: 700; }
+.cell-label {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--muted);
+  margin: 16px 4px 8px;
+}
+.cell-group {
+  background: var(--paper);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.cell {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cell:last-child { border-bottom: 0; }
+.cell i { font-style: normal; color: var(--muted); font-size: 13px; flex: none; }
+.enroll-dock {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: linear-gradient(to top, var(--cream) 72%, rgba(244, 239, 230, 0));
+  padding: 16px 0 4px;
+}
+.cancel-link {
+  display: inline-block;
+  margin: 0 16px 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--clay);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
 .kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .kpi .card { padding: 16px; }
 .kpi .n { font-size: 28px; font-weight: 700; color: var(--forest); }

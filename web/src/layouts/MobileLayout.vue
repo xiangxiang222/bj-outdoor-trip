@@ -44,15 +44,17 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from "vue";
+import { computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import BrandMark from "@/components/BrandMark.vue";
+import { chromeTitle, chromeSubtitle, clearChrome } from "@/utils/pageChrome";
 
 const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
 onMounted(() => store.fetchMeta());
+watch(() => route.path, () => clearChrome());
 
 const tabNames = new Set(["home", "activities", "orders", "mine"]);
 const isHome = computed(() => route.name === "home");
@@ -85,7 +87,7 @@ const title = computed(() => {
     after: "完成活动",
     routes: "线路列表",
     route: "线路详情",
-    schedule: "活动报名",
+    schedule: "详情",
     enroll: "报名",
     coupon: "优惠券",
     coupons: "我的优惠券",
@@ -102,7 +104,7 @@ const title = computed(() => {
     user: "个人主页",
     publish: "发布",
   };
-  return map[route.name] || "同行者众";
+  return chromeTitle.value || map[route.name] || "同行者众";
 });
 const subtitle = computed(() => {
   const map = {
@@ -111,10 +113,10 @@ const subtitle = computed(() => {
     official: "加微信、看规则、找客服",
     rules: "加微信、看规则、找客服",
     student: "认证后可走学生价",
-    mine: "报名、会员与客服",
-    orders: "待出行的山野团和同城局",
+    mine: "账号、权益与客服",
+    orders: "下一趟，以及走过的局",
     publish: "提交后需管理员审核",
   };
-  return map[route.name] || "在山野，遇见爱";
+  return chromeSubtitle.value || map[route.name] || "在山野，遇见爱";
 });
 </script>

@@ -107,9 +107,4 @@
   box-sizing: border-box;
 }
 .home-tile-title { font-size: 32rpx; font-weight: 700; color: #1b4332; }
-.home-member {
-  margin: 16rpx;
-  padding: 28rpx;
-  border-radius: 20rpx;
-  background: linear-gradient(135deg, #fff6d6, #ffe08a);
-}
+.home-foot { text-align: center; padding: 16rpx; color: #2d6a4f; }

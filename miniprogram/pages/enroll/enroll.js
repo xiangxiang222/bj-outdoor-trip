@@ -9,6 +9,8 @@ Page({
     s: null,
     idHint: "",
     idOk: false,
+    isActivity: false,
+    isFree: false,
     form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", seatNo: "", insuranceCode: "outdoor", emergencyName: "", emergencyPhone: "", waiverAccepted: false, healthOk: false, wantGender: "any", wantSchool: "", comboNote: "" },
     genderLabels: ["不限", "女生", "男生"],
     genderKeys: ["any", "female", "male"],
@@ -31,7 +33,31 @@ Page({
       "form.travelerName": (app.globalData.user || {}).nickname || "",
       "form.travelerPhone": (app.globalData.user || {}).phone || "",
     });
-    request("/schedules/" + q.id).then((r) => this.setData({ s: r.data }));
+    request("/schedules/" + q.id).then((r) => {
+      const s = r.data;
+      const isActivity = s && s.channel === "activity";
+      const qte = (s && s.quote) || {};
+      const isFree = Number(qte.price || 0) === 0 && Number(qte.originPrice || 0) === 0;
+      this.setData({
+        s,
+        isActivity,
+        isFree,
+        "form.insuranceCode": isActivity ? "none" : this.data.form.insuranceCode,
+      });
+      wx.setNavigationBarTitle({ title: isActivity ? "报名本局" : "报名" });
+      if (!isActivity) {
+        request("/schedules/" + q.id + "/seats").then((seatRes) => {
+          const seats = (seatRes.data && seatRes.data.seats) || [];
+          const groups = [];
+          seats.forEach((seat) => {
+            const last = groups[groups.length - 1];
+            if (!last || last.row !== seat.row) groups.push({ row: seat.row, seats: [seat] });
+            else last.seats.push(seat);
+          });
+          this.setData({ seatRows: groups });
+        }).catch(() => {});
+      }
+    });
     request("/meta").then((r) => {
       const data = (r && r.data) || {};
       this.setData({
@@ -40,16 +66,6 @@ Page({
         waiver: data.waiverText || "",
         cancelSummary: (data.cancelPolicy && data.cancelPolicy.summary) || this.data.cancelSummary,
       });
-    }).catch(() => {});
-    request("/schedules/" + q.id + "/seats").then((r) => {
-      const seats = (r.data && r.data.seats) || [];
-      const groups = [];
-      seats.forEach((seat) => {
-        const last = groups[groups.length - 1];
-        if (!last || last.row !== seat.row) groups.push({ row: seat.row, seats: [seat] });
-        else last.seats.push(seat);
-      });
-      this.setData({ seatRows: groups });
     }).catch(() => {});
   },
   incSupply(e) {
@@ -121,6 +137,12 @@ Page({
       wx.showToast({ title: "请填写姓名和手机", icon: "none" });
       return;
     }
+    if (this.data.isActivity) {
+      if (!/^1\d{10}$/.test(String(this.data.form.travelerPhone))) {
+        wx.showToast({ title: "手机号不正确", icon: "none" });
+        return;
+      }
+    } else {
     const parsed = this.checkId();
     if (!parsed.valid) {
       wx.showModal({ title: "身份证号不正确", content: parsed.error, showCancel: false });
@@ -142,15 +164,23 @@ Page({
       wx.showToast({ title: "请确认风险告知", icon: "none" });
       return;
     }
+    }
     try {
-      const res = await request("/enroll", "POST", {
-        scheduleId: Number(this.data.id),
-        ...this.data.form,
-        idCard: parsed.idCard,
-        referrerCode: this.data.ref,
-        couponCode: this.data.coupon || undefined,
-        supplies: (this.data.supplies || []).filter((p) => p.qty > 0).map((p) => ({ code: p.code, qty: p.qty })),
-      });
+      const payload = this.data.isActivity
+        ? {
+            scheduleId: Number(this.data.id),
+            travelerName: this.data.form.travelerName,
+            travelerPhone: this.data.form.travelerPhone,
+          }
+        : {
+            scheduleId: Number(this.data.id),
+            ...this.data.form,
+            idCard: this.checkId().idCard,
+            referrerCode: this.data.ref,
+            couponCode: this.data.coupon || undefined,
+            supplies: (this.data.supplies || []).filter((p) => p.qty > 0).map((p) => ({ code: p.code, qty: p.qty })),
+          };
+      const res = await request("/enroll", "POST", payload);
       if (res.data.needPay) {
         const pay = res.data.wechatPay;
         if (pay.mock) {

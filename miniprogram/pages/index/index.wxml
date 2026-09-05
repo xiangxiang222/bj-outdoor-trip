@@ -26,7 +26,8 @@
   <view class="chip {{city==item.name?'on':''}}" wx:for="{{home.cities}}" wx:key="name" bindtap="setCity" data-name="{{item.name}}">{{item.name}}</view>
 </scroll-view>
 
-<view class="pad" style="padding-bottom:0"><view class="title">哪天玩？</view></view>
+<view class="fold" bindtap="toggleFold" data-key="when">哪天玩？ {{fold.when ? '收起' : '展开日历'}}</view>
+<block wx:if="{{fold.when}}">
 <view class="fold" bindtap="toggleFold" data-key="days">最近十五天 {{fold.days ? '收起' : '展开'}}</view>
 <view class="cal" wx:if="{{fold.days}}">
   <view class="cal-day {{date==item.date?'on':''}}" wx:for="{{calendar}}" wx:key="date" bindtap="setDate" data-date="{{item.date}}">
@@ -48,6 +49,7 @@
   <view class="chips">
     <view class="chip {{festivalKey==item.key?'on':''}}" wx:for="{{home.festivals}}" wx:key="key" bindtap="setFestival" data-key="{{item.key}}">{{item.name}}</view>
   </view>
+</block>
 </block>
 
 <view class="pad" style="padding-bottom:0"><view class="title">想怎么玩？</view></view>
@@ -85,8 +87,4 @@
     <view class="muted">发一个新团，审核通过后会出现在这里。</view>
   </view>
 </view>
-
-<view class="cta" bindtap="goMember">会员注册</view>
-<view class="cta" bindtap="goLottery">抽奖 · 报名前可抽一次</view>
-<view class="cta" bindtap="goOfficial">联系我们</view>
-<view class="cta" bindtap="goFeedback">功能建议与找 BUG</view>
+<view class="home-foot muted" bindtap="goOfficial">客服与规则</view>

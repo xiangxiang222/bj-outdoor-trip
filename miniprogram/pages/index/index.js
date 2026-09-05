@@ -19,7 +19,7 @@ Page({
     festivalKey: "",
     offerFilter: "",
     offers: OFFER_TYPES.filter((o) => o.key !== "full"),
-    fold: { days: true, month: false, fest: false },
+    fold: { when: false, days: true, month: false, fest: false },
     picked: [],
     upcoming: null,
   },
@@ -141,9 +141,6 @@ Page({
   goUpcoming() {
     wx.switchTab({ url: "/pages/orders/orders" });
   },
-  goMember() {
-    wx.navigateTo({ url: "/pages/member/member" });
-  },
   goOfficial() {
     wx.navigateTo({ url: "/pages/official/official" });
   },
@@ -154,11 +151,5 @@ Page({
       return;
     }
     wx.switchTab({ url: "/pages/mine/mine" });
-  },
-  goLottery() {
-    wx.navigateTo({ url: "/pages/lottery/lottery" });
-  },
-  goFeedback() {
-    wx.navigateTo({ url: "/pages/feedback/feedback" });
   },
 });
