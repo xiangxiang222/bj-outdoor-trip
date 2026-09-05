@@ -315,9 +315,16 @@ button, input, textarea, select { font-family: inherit; }
   margin-bottom: 10px;
   min-height: 180px;
   background: #161218;
-  cursor: pointer;
+  cursor: default;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+}
+.brand-hero.is-link {
+  cursor: pointer;
+}
+.brand-hero.is-link:focus-visible {
+  outline: 2px solid #c9a227;
+  outline-offset: -2px;
 }
 .home-page {
   margin: -12px -14px 0;

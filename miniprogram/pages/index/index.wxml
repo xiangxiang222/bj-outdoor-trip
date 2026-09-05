@@ -1,9 +1,9 @@
-<swiper class="brand-hero" autoplay circular interval="4000">
-  <swiper-item wx:for="{{home.brand.slides}}" wx:key="title">
+<swiper class="brand-hero" autoplay circular interval="4000" bindchange="onHeroChange">
+  <swiper-item wx:for="{{home.brand.slides}}" wx:key="title" bindtap="goSlide" data-id="{{item.routeId}}">
     <image class="brand-img" src="{{item.url}}" mode="aspectFill" />
   </swiper-item>
 </swiper>
-<view class="brand-cap">
+<view class="brand-cap" bindtap="goCurrentSlide">
   <view class="home-kicker">{{home.brand.lead || '在山野，遇见爱'}}</view>
 </view>
 <view class="campus-card">

@@ -1,6 +1,15 @@
 <template>
   <div class="home-page">
-    <div class="brand-hero">
+    <div
+      class="brand-hero"
+      :class="{ 'is-link': brandSlideTarget }"
+      :role="brandSlideTarget ? 'link' : undefined"
+      :tabindex="brandSlideTarget ? 0 : undefined"
+      :aria-label="brandSlideTarget ? (brandSlide?.title || '打开线路详情') : undefined"
+      @click="goSlide"
+      @keydown.enter.prevent="goSlide"
+      @keydown.space.prevent="goSlide"
+    >
       <div
         v-if="brandSlide"
         class="swipe"
@@ -137,7 +146,7 @@ import { useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { OFFER_TYPES } from "@/utils/offer";
-import { mediaSrc, slideBg, slideFallback } from "@/utils/media";
+import { mediaSrc, slideBg, slideFallback, slideRouteTarget } from "@/utils/media";
 import TripPrices from "@/components/TripPrices.vue";
 
 const router = useRouter();
@@ -167,6 +176,7 @@ const brandSlide = computed(() => {
   if (!list.length) return null;
   return list[heroIndex.value % list.length];
 });
+const brandSlideTarget = computed(() => slideRouteTarget(brandSlide.value));
 const activeFestival = computed(() => (home.value.festivals || []).find((f) => f.key === festivalKey.value));
 const calendar = computed(() => {
   const days = [];
@@ -249,6 +259,10 @@ function toggleDate(d) {
 }
 function toggleTag(name) {
   tag.value = tag.value === name ? "" : name;
+}
+function goSlide() {
+  const path = brandSlideTarget.value;
+  if (path) router.push(path);
 }
 function onSlideError(e, slide) {
   const fb = slideFallback(slide);
