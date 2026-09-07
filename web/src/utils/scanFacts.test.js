@@ -23,6 +23,8 @@ describe("scanFacts", () => {
 
   it("turns enroll and publish into ticket states", () => {
     expect(ticketState({ reviewStatus: "pending", isOrganizer: true }).kind).toBe("posted");
+    expect(ticketState({ reviewStatus: "pending" }, { posted: "1" }).kind).toBe("posted");
+    expect(ticketState({ reviewStatus: "approved", channel: "trip" }, { posted: "1" })).toBe(null);
     expect(ticketState({ myEnrollment: { status: "waitlist" } }).title).toBe("候补票");
     expect(ticketState({ channel: "activity", myEnrollment: { status: "joined" } }).title).toBe("已报名");
     expect(ticketState({ channel: "trip" }, { joined: "1" }).kind).toBe("joined");

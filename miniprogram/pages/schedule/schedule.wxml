@@ -17,7 +17,7 @@
       </view>
       <view class="fact-row">
         <text class="fact-k">{{isActivity ? '地点' : '集合'}}</text>
-        <text class="fact-v">{{s.meetupPoint}} <text wx:if="{{!isActivity}}">{{s.meetupTime}}</text></text>
+        <text class="fact-v">{{s.meetupPoint}}<text wx:if="{{!isActivity}}"> {{s.meetupTime}}</text></text>
         <text class="nav-link" catchtap="openMap">地图</text>
       </view>
       <view class="fact-row">

@@ -25,7 +25,7 @@
           </div>
           <div class="fact-row">
             <span class="fact-k">{{ isActivity ? "地点" : "集合" }}</span>
-            <span class="fact-v">{{ s.meetupPoint }}<template v-if="!isActivity && s.meetupTime"> {{ s.meetupTime }}</template></span>
+            <span class="fact-v">{{ placeText }}</span>
             <a v-if="s.meetupMapUrl" class="nav-link" :href="s.meetupMapUrl" target="_blank" rel="noreferrer">地图</a>
           </div>
           <div class="fact-row">
@@ -345,6 +345,11 @@ const whenText = computed(() => {
   return [s.value.startDate + end, s.value.meetupTime].filter(Boolean).join(" ");
 });
 const peopleText = computed(() => peopleLine(s.value));
+const placeText = computed(() => {
+  if (!s.value) return "";
+  if (isActivity.value) return s.value.meetupPoint || "";
+  return [s.value.meetupPoint, s.value.meetupTime].filter(Boolean).join(" ");
+});
 const trusts = computed(() => trustChips(s.value));
 const ticket = computed(() => ticketState(s.value, route.query));
 const priceDock = computed(() => dockPrice(s.value));

@@ -63,7 +63,8 @@ function ticketState(row, query) {
   query = query || {};
   if (!row) return null;
   const posted = String(query.posted || "") === "1";
-  if (posted || (row.reviewStatus === "pending" && row.isOrganizer)) {
+  const pending = row.reviewStatus === "pending" || row.review_status === "pending";
+  if (pending && (posted || row.isOrganizer)) {
     return { kind: "posted", title: "已提交审核", sub: "通过后会出现在列表里。现在可以先发给朋友预览。", share: true, trips: false };
   }
   const en = row.myEnrollment;
