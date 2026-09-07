@@ -1,12 +1,13 @@
 const { request } = require("../../utils/request");
 const { KINDS, isThisWeek, decorate } = require("../../utils/activity-kind");
+const { decorateFeed } = require("../../utils/feed-card");
 
 Page({
   data: { rows: [], list: [], kinds: KINDS, kind: "", weekCount: 0 },
   onShow() {
     request("/schedules?channel=activity")
       .then((r) => {
-        const rows = ((r && r.data) || []).map(decorate);
+        const rows = ((r && r.data) || []).map((s) => decorateFeed(decorate(s), "activity"));
         this.setData({ rows, weekCount: rows.filter((s) => isThisWeek(s.startDate)).length });
         this.apply();
       })

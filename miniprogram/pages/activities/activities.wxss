@@ -2,7 +2,7 @@
   margin: 16rpx;
   padding: 28rpx;
   border-radius: 24rpx;
-  background: linear-gradient(135deg, #1b4332, #40916c);
+  background: linear-gradient(118deg, #3a1848 0%, #161218 48%, #4a1420 100%);
   color: #fff;
   display: flex;
   align-items: center;
@@ -10,7 +10,7 @@
   gap: 16rpx;
 }
 .act-hero .muted.light { color: rgba(255,255,255,.85); }
-.btn.gold { background: #ffd166; color: #1b4332; margin: 0; padding: 16rpx 24rpx; }
+.btn.gold { background: #c6f24a; color: #141414; margin: 0; padding: 16rpx 24rpx; }
 .kind-grid { display: flex; gap: 12rpx; padding: 0 16rpx 16rpx; }
 .act-kind {
   flex: 1;
@@ -21,7 +21,7 @@
   text-align: center;
   font-size: 24rpx;
 }
-.act-kind.on { border-color: #2d6a4f; background: #d8f3dc; }
+.act-kind.on { border-color: #c6f24a; background: #c6f24a; }
 .act-kind .emoji { font-size: 36rpx; }
 .tiny { font-size: 20rpx; }
 .act-card {

@@ -243,7 +243,7 @@
       <button class="btn ghost block" @click="share">分享到微信</button>
     </div>
     <div class="enroll-dock">
-    <button v-if="!s.myEnrollment && s.status !== 'cancelled' && s.reviewStatus !== 'pending' && s.reviewStatus !== 'rejected'" class="btn block clay" @click="$router.push(enrollHref)">
+    <button v-if="!s.myEnrollment && s.status !== 'cancelled' && s.reviewStatus !== 'pending' && s.reviewStatus !== 'rejected'" class="btn block" @click="$router.push(enrollHref)">
       {{ s.canEnrollDirect === false && s.remain <= 0 ? "已满员，去候补" : isActivity ? "报名本局" : "立即报名" }}
     </button>
     <p v-else-if="s.myEnrollment" class="muted" style="text-align:center;margin:0 0 8px">已报名<template v-if="isActivity">，到场找发起人即可</template></p>

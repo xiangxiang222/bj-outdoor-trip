@@ -14,6 +14,7 @@ function countOn(schedules, date) {
 function buildCalendar(schedules) {
   const days = [];
   const now = new Date();
+  const weeks = ["日", "一", "二", "三", "四", "五", "六"];
   for (let i = 0; i < 15; i++) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
     const key =
@@ -22,7 +23,13 @@ function buildCalendar(schedules) {
       String(d.getMonth() + 1).padStart(2, "0") +
       "-" +
       String(d.getDate()).padStart(2, "0");
-    days.push({ date: key, label: d.getMonth() + 1 + "/" + d.getDate(), count: countOn(schedules, key) });
+    days.push({
+      date: key,
+      label: d.getMonth() + 1 + "/" + d.getDate(),
+      n: d.getDate(),
+      w: i === 0 ? "今" : "周" + weeks[d.getDay()],
+      count: countOn(schedules, key),
+    });
   }
   return days;
 }
