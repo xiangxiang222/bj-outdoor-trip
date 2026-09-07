@@ -7,7 +7,8 @@
       </div>
       <button class="btn" type="button" @click="goPublish()">发起一局</button>
     </div>
-    <p class="act-week muted" v-if="rows.length">本周 {{ weekCount }} 场 · 共 {{ rows.length }} 场可报</p>
+
+    <input class="feed-search" v-model="query" type="search" placeholder="搜局、城区、主理人" />
 
     <div class="act-kinds">
       <button
@@ -24,9 +25,25 @@
       </button>
     </div>
 
+    <div class="feed-toolbar">
+      <div class="hint">本周 {{ weekCount }} 场 · 共 {{ list.length }} 场</div>
+      <div class="tools">
+        <button class="tool-btn" type="button" @click="sort = cycleSort(sort)">{{ sortLabel(sort) }}</button>
+        <button class="tool-btn play" type="button" @click="goPublish()">发起</button>
+      </div>
+    </div>
+
+    <div class="picked" v-if="picked.length">
+      <span class="picked-chip" v-for="p in picked" :key="p.key">
+        {{ p.label }}
+        <button type="button" aria-label="去掉" @click="p.clear()">×</button>
+      </span>
+    </div>
+
     <article class="feed-card" v-for="s in list" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
       <div class="feed-cover">
         <img v-if="coverOf(s)" :src="coverOf(s)" :alt="s.route?.title || ''" />
+        <div v-else class="feed-ph">{{ coverMark(s) }}</div>
         <div class="feed-boarded">{{ boardedLine(s, "activity") }}</div>
       </div>
       <div class="feed-body">
@@ -57,16 +74,30 @@ import { useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { ACTIVITY_KINDS, activityKindOf, filterActivities, isThisWeek } from "@/utils/activityKind";
-import { boardedLine, coverOf, feedWhen, hostName, taglineOf } from "@/utils/feedCard";
+import { boardedLine, coverMark, coverOf, feedWhen, hostName, taglineOf } from "@/utils/feedCard";
+import { cycleSort, processFeed, sortLabel } from "@/utils/feedList";
 
 const router = useRouter();
 const store = useUserStore();
 const rows = ref([]);
 const kind = ref("");
+const query = ref("");
+const sort = ref("soon");
 const kinds = ACTIVITY_KINDS;
 
-const list = computed(() => filterActivities(rows.value, kind.value));
-const weekCount = computed(() => rows.value.filter((s) => isThisWeek(s.startDate)).length);
+const listable = computed(() => processFeed(rows.value, {
+  channel: "activity",
+  query: query.value,
+  sort: sort.value,
+}));
+const list = computed(() => filterActivities(listable.value, kind.value));
+const weekCount = computed(() => processFeed(rows.value, { channel: "activity" }).filter((s) => isThisWeek(s.startDate)).length);
+const picked = computed(() => {
+  const chips = [];
+  if (query.value.trim()) chips.push({ key: "q", label: "搜 " + query.value.trim(), clear: () => { query.value = ""; } });
+  if (sort.value !== "soon") chips.push({ key: "sort", label: sortLabel(sort.value), clear: () => { sort.value = "soon"; } });
+  return chips;
+});
 
 onMounted(async () => {
   rows.value = (await http.get("/schedules", { params: { channel: "activity" } }).catch(() => ({ data: [] }))).data || [];

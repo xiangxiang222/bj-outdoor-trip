@@ -11,6 +11,7 @@
     <template v-else>
       <div class="chips">
         <div class="chip" :class="{ on: tab === 'upcoming' }" @click="tab = 'upcoming'">待出行 {{ upcoming.length }}</div>
+        <div class="chip" :class="{ on: tab === 'waitlist' }" @click="tab = 'waitlist'">候补 {{ waitlist.length }}</div>
         <div class="chip" :class="{ on: tab === 'past' }" @click="tab = 'past'">历史 {{ past.length }}</div>
       </div>
 
@@ -47,7 +48,7 @@
           </div>
           <button v-if="o.canCancel" class="cancel-link" type="button" :disabled="cancelling === o.id" @click.stop="cancel(o)">取消报名</button>
         </article>
-        <div v-if="!upcoming.length && !past.length" class="card act-empty">
+        <div v-if="!upcoming.length && !waitlist.length && !past.length" class="card act-empty">
           <div class="pad">
             <strong>还没有行程</strong>
             <p class="muted">去首页报一个山野团，或去活动页约一局。</p>
@@ -56,7 +57,27 @@
           </div>
         </div>
         <div v-else-if="!upcoming.length" class="card">
-          <div class="pad muted">最近没有待出行。点上面「历史」看过往报名。</div>
+          <div class="pad muted">{{ waitlist.length ? "没有已占座的行程。候补在「候补」里。" : "最近没有待出行。点上面「历史」看过往报名。" }}</div>
+        </div>
+      </template>
+
+      <template v-else-if="tab === 'waitlist'">
+        <article class="card" v-for="o in waitlist" :key="o.id">
+          <div class="pad tap" @click="goSchedule(o)">
+            <div class="row">
+              <strong>{{ o.title }}</strong>
+              <span class="tag">候补</span>
+            </div>
+            <p class="muted" style="margin:6px 0 0">{{ o.start_date }} {{ o.meetup_time || "" }} · {{ o.meetup_point || o.city || "" }}</p>
+            <p class="act-meta">
+              <span>{{ statusLine(o) }}</span>
+              <span>{{ moneyText(o) }}</span>
+            </p>
+          </div>
+          <button v-if="o.canCancel" class="cancel-link" type="button" :disabled="cancelling === o.id" @click.stop="cancel(o)">取消候补</button>
+        </article>
+        <div v-if="!waitlist.length" class="card">
+          <div class="pad muted">还没有候补。满员团仍可报名进候补，有人取消后按顺序递补。</div>
         </div>
       </template>
 
@@ -99,7 +120,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
@@ -117,15 +138,14 @@ const submitting = ref(false);
 const form = ref({ rating: 5, content: "" });
 const tab = ref("upcoming");
 
-const upcoming = computed(() => splitTrips(list.value).upcoming);
-const past = computed(() => splitTrips(list.value).past);
+const split = computed(() => splitTrips(list.value));
+const upcoming = computed(() => split.value.upcoming);
+const waitlist = computed(() => split.value.waitlist);
+const past = computed(() => split.value.past);
 const nextTrip = computed(() => upcoming.value[0] || null);
 const restUpcoming = computed(() => upcoming.value.slice(1));
 
 onMounted(load);
-watch(upcoming, (rows) => {
-  if (!rows.length && past.value.length) tab.value = "past";
-}, { once: true });
 
 async function load() {
   if (!store.token) {
@@ -133,6 +153,10 @@ async function load() {
     return;
   }
   list.value = (await http.get("/orders")).data || [];
+  if (tab.value !== "upcoming") return;
+  const { upcoming: u, waitlist: w, past: p } = splitTrips(list.value);
+  if (!u.length && w.length) tab.value = "waitlist";
+  else if (!u.length && !w.length && p.length) tab.value = "past";
 }
 function dateOf(o) {
   return formatActivityDate(o.start_date);

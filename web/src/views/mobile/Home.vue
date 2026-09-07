@@ -52,6 +52,8 @@
       </div>
     </div>
 
+    <input class="feed-search" v-model="query" type="search" placeholder="搜线路、城区、主理人" />
+
     <div class="chips city-bar">
       <div class="chip" :class="{ on: !city }" @click="city = ''">热门</div>
       <div class="chip" :class="{ on: city === c.name }" v-for="c in home.cities || []" :key="c.name" @click="toggleCity(c.name)">{{ c.name }}</div>
@@ -62,23 +64,23 @@
       <div class="chip" :class="{ on: tag === t.name }" v-for="t in home.tags || []" :key="t.id" @click="toggleTag(t.name)">{{ t.name }}</div>
     </div>
 
-    <div class="cal">
-      <div class="cal-day" :class="{ on: date === d.date }" v-for="d in calendar" :key="d.date" @click="toggleDate(d.date)">
-        <span class="muted">{{ d.w }}</span>
-        <span class="n">{{ d.n }}</span>
-        <span class="muted">{{ d.count ? d.count + "团" : "—" }}</span>
-      </div>
-    </div>
-
     <div class="feed-toolbar">
       <div class="hint">看看最近都在忙什么</div>
       <div class="tools">
+        <button class="tool-btn" type="button" @click="sort = cycleSort(sort)">{{ sortLabel(sort) }}</button>
         <button class="tool-btn" type="button" @click="fold.extra = !fold.extra">{{ fold.extra ? "收起" : "筛选" }}</button>
         <button class="tool-btn play" type="button" @click="goPublish()">发团</button>
       </div>
     </div>
 
     <div v-if="fold.extra">
+      <div class="cal">
+        <div class="cal-day" :class="{ on: date === d.date }" v-for="d in calendar" :key="d.date" @click="toggleDate(d.date)">
+          <span class="muted">{{ d.w }}</span>
+          <span class="n">{{ d.n }}</span>
+          <span class="muted">{{ d.count ? d.count + "团" : "—" }}</span>
+        </div>
+      </div>
       <div class="chips">
         <div class="chip" :class="{ on: monthKey === m.key && monthPicked }" v-for="m in home.months || []" :key="m.key" @click="pickMonth(m.key)">{{ m.label }}</div>
       </div>
@@ -109,6 +111,7 @@
     <article class="feed-card" v-for="s in groups" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
       <div class="feed-cover">
         <img v-if="coverOf(s)" :src="coverOf(s)" :alt="s.route?.title || ''" />
+        <div v-else class="feed-ph">{{ coverMark(s) }}</div>
         <div class="feed-boarded">{{ boardedLine(s) }}</div>
       </div>
       <div class="feed-body">
@@ -147,7 +150,8 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { OFFER_TYPES } from "@/utils/offer";
 import { mediaSrc, slideBg, slideFallback, slideRouteTarget } from "@/utils/media";
-import { boardedLine, coverOf, feedWhen, hostName, isFreeOffer, taglineOf } from "@/utils/feedCard";
+import { boardedLine, coverMark, coverOf, feedWhen, hostName, isFreeOffer, taglineOf } from "@/utils/feedCard";
+import { cycleSort, processFeed, sortLabel } from "@/utils/feedList";
 
 const router = useRouter();
 const store = useUserStore();
@@ -161,6 +165,8 @@ const monthPicked = ref(false);
 const monthDays = ref([]);
 const festivalKey = ref("");
 const offerFilter = ref("");
+const query = ref("");
+const sort = ref("soon");
 const heroIndex = ref(0);
 const upcoming = ref(null);
 const fold = reactive({ extra: false });
@@ -195,15 +201,18 @@ const calendar = computed(() => {
 });
 const groups = computed(() => {
   const festDates = new Set((activeFestival.value?.dates || []).map((d) => d.date));
-  return schedules.value
-    .filter((s) => s.status !== "cancelled" && Number(s.remain) > 0)
-    .filter((s) => (s.channel || "trip") !== "activity")
-    .filter((s) => !city.value || s.city === city.value)
-    .filter((s) => !date.value || s.startDate === date.value)
-    .filter((s) => !festivalKey.value || !festDates.size || festDates.has(s.startDate))
-    .filter((s) => !tag.value || (s.playTags || []).some((t) => t.name === tag.value))
-    .filter((s) => !offerFilter.value || s.offerType === offerFilter.value)
-    .filter((s) => !monthPicked.value || date.value || String(s.startDate || "").startsWith(monthKey.value));
+  return processFeed(schedules.value, {
+    query: query.value,
+    sort: sort.value,
+    city: city.value,
+    tag: tag.value,
+    date: date.value,
+    festivalDates: festivalKey.value ? festDates : null,
+    offerFilter: offerFilter.value,
+    monthKey: monthKey.value,
+    monthPicked: monthPicked.value,
+    channel: "trip",
+  });
 });
 const picked = computed(() => {
   const rows = [];
@@ -216,6 +225,8 @@ const picked = computed(() => {
     const o = offers.find((x) => x.key === offerFilter.value);
     if (o) rows.push({ key: "offer", label: o.label, clear: () => { offerFilter.value = ""; } });
   }
+  if (query.value.trim()) rows.push({ key: "q", label: "搜 " + query.value.trim(), clear: () => { query.value = ""; } });
+  if (sort.value !== "soon") rows.push({ key: "sort", label: sortLabel(sort.value), clear: () => { sort.value = "soon"; } });
   return rows;
 });
 

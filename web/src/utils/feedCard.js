@@ -9,8 +9,9 @@ export function feedWhen(iso, time) {
 
 export function boardedLine(row, channel) {
   const activity = channel === "activity" || row?.channel === "activity";
-  const n = Number(row?.enrolled) || 0;
   const remain = Number(row?.remain);
+  if (Number.isFinite(remain) && remain <= 0) return "已满·可候补";
+  const n = Number(row?.enrolled) || 0;
   if (n > 0) return activity ? `${n}人已报名` : `${n}人已上车`;
   if (Number.isFinite(remain)) return activity ? `余 ${remain} 人` : `余 ${remain} 座`;
   return "";
@@ -41,4 +42,9 @@ export function isFreeOffer(row) {
   const q = row?.quote || {};
   const price = Number(q.tripPrice ?? q.originPrice ?? 0);
   return price === 0 || row?.offerType === "free";
+}
+
+export function coverMark(row) {
+  const t = String(row?.route?.title || row?.title || "").trim();
+  return t.slice(0, 1) || "局";
 }

@@ -18,32 +18,53 @@
         <div class="tag-row">
           <span class="play-tag sm" v-for="t in s.playTags || s.route.tags || []" :key="t.id || t" :style="{ background: t.color || '#2d6a4f' }">{{ t.name || t }}</span>
         </div>
-        <p v-if="isActivity" class="muted">{{ whenLabel }} {{ s.meetupTime }}</p>
-        <p v-else class="muted">{{ s.startDate }} {{ s.endDate !== s.startDate ? "至 " + s.endDate : "" }}</p>
+        <div class="fact-list">
+          <div class="fact-row">
+            <span class="fact-k">时间</span>
+            <span class="fact-v">{{ whenText }}</span>
+          </div>
+          <div class="fact-row">
+            <span class="fact-k">{{ isActivity ? "地点" : "集合" }}</span>
+            <span class="fact-v">{{ placeText }}</span>
+            <a v-if="s.meetupMapUrl" class="nav-link" :href="s.meetupMapUrl" target="_blank" rel="noreferrer">地图</a>
+          </div>
+          <div class="fact-row">
+            <span class="fact-k">人数</span>
+            <span class="fact-v">{{ peopleText }}</span>
+          </div>
+          <div class="fact-row">
+            <span class="fact-k">发起</span>
+            <span class="fact-v">
+              <a v-if="s.organizerId" class="nav-link" href="#" @click.prevent="goUser(s.organizerId)">{{ s.organizerName }}</a>
+              <span v-else>{{ s.organizerName }}</span>
+              <span v-if="s.companyName">（{{ s.companyName }}）</span>
+            </span>
+          </div>
+        </div>
+        <p v-if="s.guaranteed && !isActivity" class="muted" style="color:var(--leaf)">已成团 · 铁定出发（人数已达最低成团线）</p>
+        <div class="trust-row">
+          <span class="trust-chip" v-for="c in trusts" :key="c">{{ c }}</span>
+        </div>
+        <div v-if="ticket" class="ticket-card" :class="{ wait: ticket.kind === 'waitlist', posted: ticket.kind === 'posted' }">
+          <strong>{{ ticket.title }}</strong>
+          <p class="muted" style="margin:6px 0 0">{{ ticket.sub }}</p>
+          <div class="ticket-actions">
+            <button v-if="ticket.trips" class="btn ghost" type="button" @click="$router.push('/m/orders')">看行程</button>
+            <button v-if="ticket.share" class="btn" type="button" @click="share">去分享</button>
+          </div>
+        </div>
         <p v-if="!isActivity">
           <a v-if="busPhotos.length" class="nav-link" href="#" @click.prevent="showBus = true">{{ busText }}</a>
           <span v-else>{{ busText }}</span>
         </p>
-        <p>
-          {{ isActivity ? "地点" : "集合" }}：{{ s.meetupPoint }} {{ isActivity ? "" : s.meetupTime }}
-          <a v-if="s.meetupMapUrl" class="nav-link" :href="s.meetupMapUrl" target="_blank" rel="noreferrer">打开地图</a>
-        </p>
-        <p v-if="s.guaranteed && !isActivity" class="muted" style="color:var(--leaf)">已成团 · 铁定出发（人数已达最低成团线）</p>
-        <p>
-          发起人：
-          <a v-if="s.organizerId" class="nav-link" href="#" @click.prevent="goUser(s.organizerId)">{{ s.organizerName }}</a>
-          <span v-else>{{ s.organizerName }}</span>
-          <span v-if="s.companyName">（{{ s.companyName }}）</span>
-        </p>
         <div class="progress"><i :style="{ width: Math.min(100, (s.enrolled / s.maxSeats) * 100) + '%' }"></i></div>
         <div class="row">
-          <span v-if="isActivity">还缺 {{ remainSeats }} 人 · 已有 {{ s.enrolled }}/{{ s.maxSeats }}<template v-if="s.waitlistCount"> · 候补 {{ s.waitlistCount }}</template></span>
-          <span v-else>已报名 {{ s.enrolled }}/{{ s.maxSeats }}，最低成团 {{ s.minGroupSize }}<template v-if="s.waitlistCount"> · 候补 {{ s.waitlistCount }}</template></span>
+          <span v-if="s.minGroupSize" class="muted">{{ isActivity ? "满 " + s.minGroupSize + " 人成局" : "最低成团 " + s.minGroupSize }}</span>
+          <span v-else></span>
           <span v-if="isActivity && isFree" class="tag">免费</span>
           <span v-else-if="isActivity" class="price">¥{{ s.quote?.price }}</span>
           <TripPrices v-else :quote="s.quote" compact />
         </div>
-        <p v-if="isActivity && s.minGroupSize" class="muted">满 {{ s.minGroupSize }} 人成局</p>
         <p class="muted" v-if="s.eligibility?.enabled">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? " 已认证学生可报" : "" }}</p>
         <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" class="muted" style="color:var(--clay)">
           {{ s.eligibility.reason }}
@@ -243,10 +264,14 @@
       <button class="btn ghost block" @click="share">分享到微信</button>
     </div>
     <div class="enroll-dock">
-    <button v-if="!s.myEnrollment && s.status !== 'cancelled' && s.reviewStatus !== 'pending' && s.reviewStatus !== 'rejected'" class="btn block" @click="$router.push(enrollHref)">
-      {{ s.canEnrollDirect === false && s.remain <= 0 ? "已满员，去候补" : isActivity ? "报名本局" : "立即报名" }}
-    </button>
-    <p v-else-if="s.myEnrollment" class="muted" style="text-align:center;margin:0 0 8px">已报名<template v-if="isActivity">，到场找发起人即可</template></p>
+    <div v-if="showEnroll" class="enroll-bar">
+      <div class="enroll-price">
+        <b>{{ priceDock.main }}</b>
+        <small v-if="priceDock.sub">{{ priceDock.sub }}</small>
+      </div>
+      <button class="btn" type="button" @click="$router.push(enrollHref)">{{ ctaText }}</button>
+    </div>
+    <p v-else-if="s.myEnrollment" class="muted" style="text-align:center;margin:0 0 8px">{{ ticket?.title || "已报名" }}<template v-if="isActivity && s.myEnrollment.status !== 'waitlist'">，到场找发起人即可</template></p>
     <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>
     <button v-if="s.isOrganizer && s.status !== 'cancelled'" class="btn ghost block" style="margin-top:8px;color:var(--clay)" @click="showDissolve = true">解散拼团</button>
     <p v-if="!isActivity && s.notes" class="muted" style="margin-top:8px">{{ s.notes }}</p>
@@ -295,6 +320,7 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { payStatusText, scheduleStatusText, starText } from "@/utils/labels";
 import { formatActivityDate, activityKindOf } from "@/utils/activityKind";
+import { canShowEnroll, dockPrice, enrollCta, peopleLine, ticketState, trustChips } from "@/utils/scanFacts";
 import { setChrome } from "@/utils/pageChrome";
 import WeatherChart from "@/components/WeatherChart.vue";
 import TripPrices from "@/components/TripPrices.vue";
@@ -308,11 +334,27 @@ const isFree = computed(() => {
   const q = s.value?.quote || {};
   return Number(q.price || 0) === 0 && Number(q.originPrice || 0) === 0 && Number(q.tripPrice || 0) === 0;
 });
-const remainSeats = computed(() => Math.max(0, Number(s.value?.maxSeats || 0) - Number(s.value?.enrolled || 0)));
 const whenLabel = computed(() => {
   const d = formatActivityDate(s.value?.startDate);
   return [d.month + d.day + "日", d.weekday].filter(Boolean).join(" ");
 });
+const whenText = computed(() => {
+  if (!s.value) return "";
+  if (isActivity.value) return [whenLabel.value, s.value.meetupTime].filter(Boolean).join(" ");
+  const end = s.value.endDate && s.value.endDate !== s.value.startDate ? " 至 " + s.value.endDate : "";
+  return [s.value.startDate + end, s.value.meetupTime].filter(Boolean).join(" ");
+});
+const peopleText = computed(() => peopleLine(s.value));
+const placeText = computed(() => {
+  if (!s.value) return "";
+  if (isActivity.value) return s.value.meetupPoint || "";
+  return [s.value.meetupPoint, s.value.meetupTime].filter(Boolean).join(" ");
+});
+const trusts = computed(() => trustChips(s.value));
+const ticket = computed(() => ticketState(s.value, route.query));
+const priceDock = computed(() => dockPrice(s.value));
+const showEnroll = computed(() => canShowEnroll(s.value));
+const ctaText = computed(() => enrollCta(s.value));
 const kindTag = computed(() => activityKindOf(s.value)?.label || "");
 const msg = ref("");
 const showDissolve = ref(false);

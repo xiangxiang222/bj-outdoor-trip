@@ -15,8 +15,9 @@ function feedWhen(iso, time) {
 
 function boardedLine(row, channel) {
   const activity = channel === "activity" || (row && row.channel === "activity");
-  const n = Number(row && row.enrolled) || 0;
   const remain = Number(row && row.remain);
+  if (Number.isFinite(remain) && remain <= 0) return "已满·可候补";
+  const n = Number(row && row.enrolled) || 0;
   if (n > 0) return activity ? n + "人已报名" : n + "人已上车";
   if (Number.isFinite(remain)) return activity ? "余 " + remain + " 人" : "余 " + remain + " 座";
   return "";
@@ -44,6 +45,11 @@ function taglineOf(row) {
   return (row && row.route && row.route.subtitle) || (row && row.eligibility && row.eligibility.label) || "";
 }
 
+function coverMark(row) {
+  const t = String((row && row.route && row.route.title) || (row && row.title) || "").trim();
+  return t.slice(0, 1) || "局";
+}
+
 function decorateFeed(row, channel) {
   const quote = (row && row.quote) || {};
   const price = Number(quote.tripPrice != null ? quote.tripPrice : quote.originPrice || 0);
@@ -52,10 +58,11 @@ function decorateFeed(row, channel) {
     boarded: boardedLine(row, channel || row.channel),
     host: hostName(row),
     cover: coverOf(row),
+    coverMark: coverMark(row),
     tagline: taglineOf(row),
     free: price === 0 || row.offerType === "free",
     price,
   });
 }
 
-module.exports = { feedWhen, boardedLine, hostName, coverOf, taglineOf, decorateFeed };
+module.exports = { feedWhen, boardedLine, hostName, coverOf, coverMark, taglineOf, decorateFeed };

@@ -207,7 +207,7 @@ Page({
         maxSeats: Number(form.maxSeats) || 12,
       });
       wx.hideLoading();
-      wx.redirectTo({ url: "/pages/schedule/schedule?id=" + res.data.id });
+      wx.redirectTo({ url: "/pages/schedule/schedule?id=" + res.data.id + "&posted=1" });
     } catch (e) {
       wx.hideLoading();
       showError("提交失败", e);
