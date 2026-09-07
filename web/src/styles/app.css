@@ -776,6 +776,68 @@ button, input, textarea, select { font-family: inherit; }
   cursor: pointer;
   color: var(--forest);
 }
+.feed-search {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  background: #fff;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 14px;
+  margin: 10px 0 8px;
+  box-shadow: var(--shadow);
+}
+.feed-ph {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #6b7a5c;
+  background: #e8ece6;
+}
+.fact-list {
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fact-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 8px;
+  align-items: start;
+}
+.fact-k { font-size: 11px; color: var(--muted); padding-top: 2px; }
+.fact-v { font-size: 14px; font-weight: 650; line-height: 1.4; }
+.trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 0;
+}
+.trust-chip {
+  font-size: 11px;
+  background: #eef8c8;
+  color: #3d5a1f;
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.ticket-card {
+  margin: 12px 0 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: #141414;
+  color: #fff;
+}
+.ticket-card.wait { background: #3d5a1f; }
+.ticket-card.posted { background: #3a1848; }
+.ticket-card .muted { color: rgba(255, 255, 255, 0.72); }
+.ticket-actions { display: flex; gap: 8px; margin-top: 10px; }
+.ticket-actions .btn { flex: 1; }
 .feed-toolbar {
   display: flex;
   align-items: center;
@@ -1064,9 +1126,20 @@ button, input, textarea, select { font-family: inherit; }
   position: sticky;
   bottom: 0;
   z-index: 5;
-  background: linear-gradient(to top, var(--cream) 72%, rgba(245, 246, 243, 0));
-  padding: 16px 0 4px;
+  background: #fff;
+  box-shadow: 0 -8px 20px rgba(20, 20, 20, 0.06);
+  padding: 10px 0 calc(8px + env(safe-area-inset-bottom));
+  margin-top: 16px;
 }
+.enroll-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.enroll-price { flex: 1; min-width: 0; }
+.enroll-price b { font-size: 20px; }
+.enroll-price small { display: block; color: var(--muted); font-size: 11px; }
+.enroll-bar .btn { flex: none; min-width: 42%; margin: 0; }
 .cancel-link {
   display: inline-block;
   margin: 0 16px 12px;

@@ -21,6 +21,8 @@
   </view>
 </view>
 
+<input class="feed-search" placeholder="搜线路、城区、主理人" value="{{query}}" bindinput="onQuery" confirm-type="search" />
+
 <scroll-view scroll-x class="city-bar">
   <view class="chip {{!city?'on':''}}" bindtap="clearCity">热门</view>
   <view class="chip {{city==item.name?'on':''}}" wx:for="{{home.cities}}" wx:key="name" bindtap="setCity" data-name="{{item.name}}">{{item.name}}</view>
@@ -30,27 +32,27 @@
   <view class="chip {{tag==item.name?'on':''}}" wx:for="{{home.tags}}" wx:key="id" bindtap="setTag" data-name="{{item.name}}">{{item.name}}</view>
 </scroll-view>
 
-<scroll-view scroll-x class="cal">
-  <view class="cal-day {{date==item.date?'on':''}}" wx:for="{{calendar}}" wx:key="date" bindtap="setDate" data-date="{{item.date}}">
-    <view class="muted tiny">{{item.w}}</view>
-    <view class="cal-n">{{item.n}}</view>
-    <view class="muted tiny">{{item.count ? item.count + '团' : '—'}}</view>
-  </view>
-</scroll-view>
-
 <view class="feed-toolbar">
   <view class="hint">看看最近都在忙什么</view>
   <view class="tools">
+    <view class="tool-btn" bindtap="cycleSort">{{sortText}}</view>
     <view class="tool-btn" bindtap="toggleFold" data-key="extra">{{fold.extra ? '收起' : '筛选'}}</view>
     <view class="tool-btn play" bindtap="goPublish">发团</view>
   </view>
 </view>
 
 <block wx:if="{{fold.extra}}">
+  <scroll-view scroll-x class="cal">
+    <view class="cal-day {{date==item.date?'on':''}}" wx:for="{{calendar}}" wx:key="date" bindtap="setDate" data-date="{{item.date}}">
+      <view class="muted tiny">{{item.w}}</view>
+      <view class="cal-n">{{item.n}}</view>
+      <view class="muted tiny">{{item.count ? item.count + '团' : '—'}}</view>
+    </view>
+  </scroll-view>
   <view class="chips">
-    <view class="chip {{monthKey==item.key?'on':''}}" wx:for="{{home.months}}" wx:key="key" bindtap="pickMonth" data-key="{{item.key}}">{{item.label}}</view>
+    <view class="chip {{monthKey==item.key && monthPicked?'on':''}}" wx:for="{{home.months}}" wx:key="key" bindtap="pickMonth" data-key="{{item.key}}">{{item.label}}</view>
   </view>
-  <view class="month-grid">
+  <view class="month-grid" wx:if="{{monthPicked}}">
     <view class="month-cell {{date==item.date?'on':''}}" wx:for="{{monthDays}}" wx:key="date" bindtap="setDate" data-date="{{item.date}}">{{item.label}}</view>
   </view>
   <view class="chips">
@@ -68,6 +70,7 @@
 <view class="feed-card" wx:for="{{groups}}" wx:key="id" bindtap="goGroup" data-id="{{item.id}}">
   <view class="feed-cover">
     <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
+    <view wx:else class="feed-ph">{{item.coverMark}}</view>
     <view class="feed-boarded">{{item.boarded}}</view>
   </view>
   <view class="feed-body">

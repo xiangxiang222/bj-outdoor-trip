@@ -1,30 +1,21 @@
 const { request, showError } = require("../../utils/request");
 const { enrollStatusText } = require("../../utils/labels");
+const { splitTrips, tripKindLabel } = require("../../utils/trips");
 const app = getApp();
 
-function ymd() {
-  const d = new Date();
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  return d.getFullYear() + "-" + (m < 10 ? "0" + m : m) + "-" + (day < 10 ? "0" + day : day);
-}
-
 function decorate(item) {
-  const cancelled = item.status === "cancelled" || item.schedule_status === "cancelled";
-  const date = String(item.start_date || "").slice(0, 10);
   return Object.assign({}, item, {
     statusText: item.channel === "activity" && item.status === "joined" ? "已报名" : enrollStatusText(item),
-    kindLabel: item.channel === "activity" ? "同城局" : "山野团",
+    kindLabel: tripKindLabel(item),
     moneyText: item.channel === "activity" && Number(item.pay_amount || 0) === 0 ? "免费" : "¥" + item.pay_amount,
-    upcoming: !cancelled && date >= ymd(),
   });
 }
 
 Page({
-  data: { loggedIn: false, tab: "upcoming", upcoming: [], restUpcoming: [], nextTrip: null, past: [], reviewingId: 0, rating: 5, content: "" },
+  data: { loggedIn: false, tab: "upcoming", upcoming: [], restUpcoming: [], nextTrip: null, waitlist: [], past: [], reviewingId: 0, rating: 5, content: "" },
   onShow() {
     if (!app.globalData.token) {
-      this.setData({ loggedIn: false, upcoming: [], past: [] });
+      this.setData({ loggedIn: false, upcoming: [], waitlist: [], past: [] });
       return;
     }
     this.setData({ loggedIn: true });
@@ -34,19 +25,25 @@ Page({
     request("/orders")
       .then((r) => {
         const list = (r.data || []).map(decorate);
-        const upcoming = list.filter((x) => x.upcoming);
-        const past = list.filter((x) => !x.upcoming);
+        const split = splitTrips(list);
+        const upcoming = split.upcoming;
+        const waitlist = split.waitlist;
+        const past = split.past;
+        let tab = this.data.tab;
+        if (tab === "upcoming" && !upcoming.length && waitlist.length) tab = "waitlist";
+        else if (tab === "upcoming" && !upcoming.length && !waitlist.length && past.length) tab = "past";
         this.setData({
           upcoming,
           restUpcoming: upcoming.slice(1),
           nextTrip: upcoming[0] || null,
+          waitlist,
           past,
-          tab: upcoming.length || !past.length ? "upcoming" : "past",
+          tab,
           reviewingId: 0,
           content: "",
         });
       })
-      .catch(() => this.setData({ upcoming: [], past: [] }));
+      .catch(() => this.setData({ upcoming: [], waitlist: [], past: [] }));
   },
   goLogin() {
     wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/orders/orders") });
@@ -84,7 +81,7 @@ Page({
   },
   async submitReview(e) {
     const id = Number(e.currentTarget.dataset.id);
-    const item = [].concat(this.data.upcoming, this.data.past).find((row) => Number(row.id) === id);
+    const item = [].concat(this.data.upcoming, this.data.waitlist, this.data.past).find((row) => Number(row.id) === id);
     if (!item) return;
     try {
       await request("/reviews", "POST", {

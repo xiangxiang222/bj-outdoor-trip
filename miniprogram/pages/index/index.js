@@ -1,7 +1,8 @@
 const { request } = require("../../utils/request");
-const { OFFER_TYPES, countOn, buildCalendar } = require("../../utils/offer");
+const { OFFER_TYPES, buildCalendar } = require("../../utils/offer");
 const { detailUrl } = require("../../utils/media");
 const { decorateFeed } = require("../../utils/feed-card");
+const { cycleSort, processFeed, sortLabel } = require("../../utils/feed-list");
 
 function asList(rows) {
   return Array.isArray(rows) && rows.length ? rows : [];
@@ -18,6 +19,7 @@ Page({
     date: "",
     tag: "",
     monthKey: "",
+    monthPicked: false,
     monthDays: [],
     festivalKey: "",
     offerFilter: "",
@@ -25,6 +27,9 @@ Page({
     fold: { extra: false },
     picked: [],
     upcoming: null,
+    query: "",
+    sort: "soon",
+    sortText: "即将出发",
   },
   onLoad() {
     this.load();
@@ -33,27 +38,34 @@ Page({
     this.load().then(() => wx.stopPullDownRefresh());
   },
   applyGroups() {
-    const { city, date, tag, offerFilter, festivalKey, home, allSchedules } = this.data;
+    const { city, date, tag, offerFilter, festivalKey, home, allSchedules, query, sort, monthKey, monthPicked } = this.data;
     const fest = (home.festivals || []).find((f) => f.key === festivalKey);
     const festDates = new Set(((fest && fest.dates) || []).map((d) => d.date));
-    const groups = (allSchedules || [])
-      .filter((s) => s.status !== "cancelled" && Number(s.remain) > 0)
-      .filter((s) => (s.channel || "trip") !== "activity")
-      .filter((s) => !city || s.city === city)
-      .filter((s) => !date || s.startDate === date)
-      .filter((s) => !festivalKey || !festDates.size || festDates.has(s.startDate))
-      .filter((s) => !tag || (s.playTags || []).some((t) => t.name === tag))
-      .filter((s) => !offerFilter || s.offerType === offerFilter)
-      .map((s) => decorateFeed(s));
+    const groups = processFeed(allSchedules, {
+      query,
+      sort,
+      city,
+      tag,
+      date,
+      festivalDates: festivalKey ? festDates : null,
+      offerFilter,
+      monthKey,
+      monthPicked,
+      channel: "trip",
+    }).map((s) => decorateFeed(s));
     const picked = [];
     if (city) picked.push({ key: "city", label: city });
     if (date) picked.push({ key: "date", label: date.slice(5) });
+    if (monthPicked && !date && monthKey) picked.push({ key: "month", label: monthKey.slice(5) + "月" });
+    if (festivalKey && fest) picked.push({ key: "fest", label: fest.name });
     if (tag) picked.push({ key: "tag", label: tag });
     if (offerFilter) {
       const o = this.data.offers.find((x) => x.key === offerFilter);
       if (o) picked.push({ key: "offer", label: o.label });
     }
-    this.setData({ groups, picked });
+    if (String(query || "").trim()) picked.push({ key: "q", label: "搜 " + String(query).trim() });
+    if (sort !== "soon") picked.push({ key: "sort", label: sortLabel(sort) });
+    this.setData({ groups, picked, sortText: sortLabel(sort) });
   },
   async load() {
     try {
@@ -75,6 +87,14 @@ Page({
     } catch (err) {
       wx.showToast({ title: (err && err.message) || "加载失败", icon: "none" });
     }
+  },
+  onQuery(e) {
+    this.setData({ query: e.detail.value || "" });
+    this.applyGroups();
+  },
+  cycleSort() {
+    this.setData({ sort: cycleSort(this.data.sort) });
+    this.applyGroups();
   },
   setCity(e) {
     const name = e.currentTarget.dataset.name;
@@ -119,12 +139,17 @@ Page({
     if (key === "date") this.setData({ date: "" });
     if (key === "tag") this.setData({ tag: "" });
     if (key === "offer") this.setData({ offerFilter: "" });
+    if (key === "fest") this.setData({ festivalKey: "" });
+    if (key === "month") this.setData({ monthPicked: false });
+    if (key === "q") this.setData({ query: "" });
+    if (key === "sort") this.setData({ sort: "soon" });
     this.applyGroups();
   },
   async pickMonth(e) {
     const key = e.currentTarget.dataset.key;
     const res = await request("/home?month=" + key);
-    this.setData({ monthKey: key, monthDays: (res.data && res.data.monthDays) || [] });
+    this.setData({ monthKey: key, monthPicked: true, "fold.extra": true, monthDays: (res.data && res.data.monthDays) || [] });
+    this.applyGroups();
   },
   goGroup(e) {
     wx.navigateTo({ url: "/pages/schedule/schedule?id=" + e.currentTarget.dataset.id });

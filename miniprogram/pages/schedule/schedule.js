@@ -3,6 +3,7 @@ const { payStatusText, starText } = require("../../utils/labels");
 const { shareCover } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
 const { dateOf } = require("../../utils/activity-kind");
+const { peopleLine, trustChips, dockPrice, enrollCta, canShowEnroll, ticketState } = require("../../utils/scan-facts");
 const app = getApp();
 
 function busLine(s) {
@@ -34,11 +35,20 @@ Page({
     isFree: false,
     remainSeats: 0,
     whenLabel: "",
+    whenText: "",
+    peopleText: "",
+    trusts: [],
+    ticket: null,
+    priceDock: { free: true, main: "免费", sub: "" },
+    showEnroll: false,
+    ctaText: "立即报名",
     statusTag: "",
+    posted: "",
+    joinedHint: "",
     leaderSlots: [{ slot: 1, label: "领队1", leader: null }, { slot: 2, label: "领队2", leader: null }],
   },
   onLoad(q) {
-    this.setData({ id: q.id, coupon: q.coupon || "" });
+    this.setData({ id: q.id, coupon: q.coupon || "", posted: q.posted || "", joinedHint: q.joined || "" });
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
   },
   onShow() { this.load(); },
@@ -54,10 +64,14 @@ Page({
       const remainSeats = Math.max(0, Number(s.maxSeats || 0) - Number(s.enrolled || 0));
       const d = dateOf(s.startDate);
       const whenLabel = (d.month || "") + (d.day || "") + "日 " + (d.weekday || "");
+      const whenText = isActivity
+        ? (whenLabel + " " + (s.meetupTime || "")).trim()
+        : [s.startDate + (s.endDate && s.endDate !== s.startDate ? " 至 " + s.endDate : ""), s.meetupTime].filter(Boolean).join(" ");
       let statusTag = "先报名后付款";
       if (s.status === "cancelled") statusTag = "已解散";
       else if (isActivity) statusTag = isFree ? "免费局" : "同城局";
       else if (s.organizerType === "company") statusTag = "公司统一支付";
+      const ticket = ticketState(s, { posted: this.data.posted, joined: this.data.joinedHint });
       this.setData({
         s,
         packing: (s.route && s.route.packingList) || [],
@@ -68,6 +82,13 @@ Page({
         isFree,
         remainSeats,
         whenLabel,
+        whenText,
+        peopleText: peopleLine(s),
+        trusts: trustChips(s),
+        ticket,
+        priceDock: dockPrice(s),
+        showEnroll: canShowEnroll(s),
+        ctaText: enrollCta(s),
         statusTag,
         leaderSlots: [1, 2].map((slot) => ({
           slot,
@@ -210,6 +231,9 @@ Page({
     const text = e.currentTarget.dataset.text;
     if (!text) return;
     wx.setClipboardData({ data: String(text), success: () => wx.showToast({ title: "已复制", icon: "none" }) });
+  },
+  goOrders() {
+    wx.switchTab({ url: "/pages/orders/orders" });
   },
   enroll() {
     let url = "/pages/enroll/enroll?id=" + this.data.id;

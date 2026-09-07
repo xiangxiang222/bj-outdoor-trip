@@ -10,17 +10,45 @@
       {{s.route.title}}
     </view>
     <view class="tag">{{statusTag}}</view>
-    <view wx:if="{{isActivity}}">{{whenLabel}} {{s.meetupTime}}</view>
-    <view wx:else>{{s.startDate}}</view>
+    <view class="fact-list">
+      <view class="fact-row">
+        <text class="fact-k">时间</text>
+        <text class="fact-v">{{whenText}}</text>
+      </view>
+      <view class="fact-row">
+        <text class="fact-k">{{isActivity ? '地点' : '集合'}}</text>
+        <text class="fact-v">{{s.meetupPoint}} <text wx:if="{{!isActivity}}">{{s.meetupTime}}</text></text>
+        <text class="nav-link" catchtap="openMap">地图</text>
+      </view>
+      <view class="fact-row">
+        <text class="fact-k">人数</text>
+        <text class="fact-v">{{peopleText}}</text>
+      </view>
+      <view class="fact-row">
+        <text class="fact-k">发起</text>
+        <text class="fact-v">
+          <text class="nav-link" wx:if="{{s.organizerId}}" catchtap="goUser" data-id="{{s.organizerId}}">{{s.organizerName}}</text>
+          <text wx:else>{{s.organizerName}}</text>
+        </text>
+      </view>
+    </view>
+    <view class="muted" wx:if="{{s.guaranteed && !isActivity}}" style="color:#2d6a4f">已成团 · 铁定出发</view>
+    <view class="trust-row">
+      <view class="trust-chip" wx:for="{{trusts}}" wx:key="*this">{{item}}</view>
+    </view>
+    <view class="ticket-card {{ticket.kind=='waitlist'?'wait':(ticket.kind=='posted'?'posted':'')}}" wx:if="{{ticket}}">
+      <view class="title">{{ticket.title}}</view>
+      <view class="muted">{{ticket.sub}}</view>
+      <view class="ticket-actions">
+        <view wx:if="{{ticket.trips}}" class="btn ghost" catchtap="goOrders">看行程</view>
+        <button wx:if="{{ticket.share}}" class="btn" open-type="share">去分享</button>
+      </view>
+    </view>
     <view class="nav-link" wx:if="{{!isActivity && busPhotos.length}}" bindtap="previewBus">{{busText}}</view>
     <view wx:elif="{{!isActivity}}">{{busText}}</view>
-    <view class="muted">{{isActivity ? '地点' : '集合'}} {{s.meetupPoint}} <text wx:if="{{!isActivity}}">{{s.meetupTime}}</text> <text class="nav-link" catchtap="openMap">打开地图</text></view>
-    <view class="muted" wx:if="{{s.guaranteed && !isActivity}}" style="color:#2d6a4f">已成团 · 铁定出发</view>
-    <view class="muted">发起人 <text class="nav-link" wx:if="{{s.organizerId}}" catchtap="goUser" data-id="{{s.organizerId}}">{{s.organizerName}}</text><text wx:else>{{s.organizerName}}</text></view>
     <view class="progress"><view class="bar" style="width:{{s.enrolled/s.maxSeats*100}}%"></view></view>
     <view class="row">
-      <text wx:if="{{isActivity}}">还缺 {{remainSeats}} 人 · 已有 {{s.enrolled}}/{{s.maxSeats}}</text>
-      <text wx:else>已报 {{s.enrolled}}/{{s.maxSeats}} 成团{{s.minGroupSize}}{{s.waitlistCount ? ' · 候补' + s.waitlistCount : ''}}</text>
+      <text wx:if="{{s.minGroupSize}}" class="muted">{{isActivity ? '满 ' + s.minGroupSize + ' 人成局' : '最低成团 ' + s.minGroupSize}}</text>
       <view wx:if="{{isActivity}}">
         <text wx:if="{{isFree}}" class="tag">免费</text>
         <text wx:else class="price">¥{{s.quote.price}}</text>
@@ -134,8 +162,16 @@
   <view class="pad contact-row" wx:if="{{s.consultGroup}}">本团咨询群 {{s.consultGroup}} <text class="nav-link" catchtap="copyText" data-text="{{s.consultGroup}}">复制</text></view>
   <view class="pad muted" wx:else>本团咨询群确认后会显示。</view>
 </view>
-<view class="btn" wx:if="{{!s.myEnrollment && s.status!='cancelled' && s.reviewStatus!='pending' && s.reviewStatus!='rejected'}}" bindtap="enroll">{{s.remain<=0?'已满员，去候补':(isActivity?'报名本局':'立即报名')}}</view>
-<view class="pad muted" wx:elif="{{s.myEnrollment}}" style="text-align:center">已报名<template wx:if="{{isActivity}}">，到场找发起人即可</template></view>
+<view class="enroll-dock">
+  <view class="enroll-bar" wx:if="{{showEnroll}}">
+    <view class="enroll-price">
+      <text class="strong">{{priceDock.main}}</text>
+      <view class="muted" wx:if="{{priceDock.sub}}">{{priceDock.sub}}</view>
+    </view>
+    <view class="btn dock-cta" bindtap="enroll">{{ctaText}}</view>
+  </view>
+  <view class="pad muted" wx:elif="{{s.myEnrollment}}" style="text-align:center">{{ticket.title || '已报名'}}<text wx:if="{{isActivity && s.myEnrollment.status != 'waitlist'}}">，到场找发起人即可</text></view>
+</view>
 <view class="btn ghost" wx:if="{{!isActivity}}" bindtap="stats">本团画像</view>
 <button class="btn ghost" open-type="share">分享到微信</button>
 <view class="btn clay" wx:if="{{s.isOrganizer && s.status!='cancelled'}}" bindtap="toggleDissolve">解散拼团</view>

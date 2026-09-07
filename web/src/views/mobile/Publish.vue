@@ -288,7 +288,7 @@ async function submit() {
       }
     }
     const res = await http.post("/trips", payload);
-    router.push("/m/schedule/" + res.data.id);
+    router.push("/m/schedule/" + res.data.id + "?posted=1");
   } catch (e) {
     err.value = e.message;
   } finally {

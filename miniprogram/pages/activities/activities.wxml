@@ -5,7 +5,7 @@
   </view>
   <view class="btn gold" bindtap="goPublish">发起一局</view>
 </view>
-<view class="pad muted" wx:if="{{rows.length}}">本周 {{weekCount}} 场 · 共 {{rows.length}} 场可报</view>
+<input class="feed-search" placeholder="搜局、城区、主理人" value="{{query}}" bindinput="onQuery" confirm-type="search" />
 <view class="kind-grid">
   <view class="act-kind {{kind==item.key?'on':''}}" wx:for="{{kinds}}" wx:key="key" bindtap="setKind" data-key="{{item.key}}">
     <view class="emoji">{{item.emoji}}</view>
@@ -13,9 +13,20 @@
     <view class="muted tiny">{{item.hint}}</view>
   </view>
 </view>
+<view class="feed-toolbar">
+  <view class="hint">本周 {{weekCount}} 场 · 共 {{list.length}} 场</view>
+  <view class="tools">
+    <view class="tool-btn" bindtap="cycleSort">{{sortText}}</view>
+    <view class="tool-btn play" bindtap="goPublish">发起</view>
+  </view>
+</view>
+<view class="picked" wx:if="{{picked.length}}">
+  <view class="picked-chip" wx:for="{{picked}}" wx:key="key" bindtap="clearPick" data-key="{{item.key}}">{{item.label}} ×</view>
+</view>
 <view class="feed-card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
   <view class="feed-cover">
     <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
+    <view wx:else class="feed-ph">{{item.coverMark}}</view>
     <view class="feed-boarded">{{item.boarded}}</view>
   </view>
   <view class="feed-body">

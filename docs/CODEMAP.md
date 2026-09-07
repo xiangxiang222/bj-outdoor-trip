@@ -92,9 +92,9 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 
 | 路径 | 页面 | 说明 |
 | --- | --- | --- |
-| `/m` | Home | 山野发现：夜色顶栏 lockup、全幅轮播、学生认证卡、折叠日历、正在拼的团 |
-| `/m/activities` | Activities | 同城局列表（`GET /schedules?channel=activity`） |
-| `/m/orders` | Orders | 下一趟 + 待出行/历史 |
+| `/m` | Home | 山野发现：搜索、城市/玩法、排序（即将出发/快满员/最新）、满员可候补仍出现在列表，日历进筛选 |
+| `/m/activities` | Activities | 同城局：搜索、分类、同一套 feed 排序；含候补 |
+| `/m/orders` | Orders | 下一趟 + 待出行/候补/历史 |
 | `/m/mine` | Mine | WeUI 分组：出行 / 权益 / 服务 |
 | `/m/official` | Official | 客服与规则；`/m/rules` 重定向到 `#rules` |
 | `/m/student` | Student | 填学校全称，待后台审核 |
