@@ -1,14 +1,14 @@
-page { background: #f4efe6; color: #1a1a1a; }
-.card { background: #fffdf8; border-radius: 16px; margin: 16rpx; overflow: hidden; }
+page { background: #f5f6f3; color: #141414; }
+.card { background: #fff; border-radius: 16px; margin: 16rpx; overflow: hidden; }
 .pad { padding: 24rpx; }
 .cover { width: 100%; height: 320rpx; background: #d8f3dc; }
 .title { font-size: 32rpx; font-weight: 650; }
-.muted { color: #6b705c; font-size: 24rpx; }
+.muted { color: #7a7d74; font-size: 24rpx; }
 .label { margin: 12rpx 32rpx 0; color: #6b705c; font-size: 24rpx; }
 .price { color: #bc4749; font-weight: 700; }
-.tag { display: inline-block; background: #d8f3dc; color: #1b4332; border-radius: 999rpx; padding: 4rpx 14rpx; font-size: 22rpx; margin-right: 8rpx; }
-.btn { background: #2d6a4f; color: #fff; text-align: center; border-radius: 999rpx; padding: 20rpx; margin: 16rpx; }
-.btn.ghost { background: #fff; color: #2d6a4f; border: 1px solid #2d6a4f; }
+.tag { display: inline-block; background: #eef8c8; color: #3d5a1f; border-radius: 999rpx; padding: 4rpx 14rpx; font-size: 22rpx; margin-right: 8rpx; }
+.btn { background: #c6f24a; color: #141414; text-align: center; border-radius: 999rpx; padding: 20rpx; margin: 16rpx; }
+.btn.ghost { background: #fff; color: #141414; border: 1px solid #eceee8; }
 .btn.clay { background: #bc4749; }
 button.btn {
   font-size: 28rpx;
@@ -17,8 +17,8 @@ button.btn {
 }
 button.btn::after { border: none; }
 .row { display: flex; justify-content: space-between; align-items: center; }
-.chip { display: inline-block; padding: 10rpx 22rpx; border: 1px solid #e6dfd2; border-radius: 999rpx; margin: 8rpx; background: #fff; font-size: 24rpx; }
-.chip.on { background: #1b4332; color: #fff; }
+.chip { display: inline-block; padding: 10rpx 22rpx; border: 1px solid #eceee8; border-radius: 999rpx; margin: 8rpx; background: #fff; font-size: 24rpx; }
+.chip.on { background: #c6f24a; color: #141414; border-color: #c6f24a; font-weight: 700; }
 .chips { padding: 8rpx 8rpx 0; }
 .progress { height: 12rpx; background: #eee; border-radius: 99rpx; overflow: hidden; margin: 12rpx 0; }
 .bar { height: 100%; background: #2d6a4f; }
@@ -53,7 +53,7 @@ button.btn::after { border: none; }
 .chain-line { font-size: 26rpx; }
 .cal { display: flex; gap: 8rpx; padding: 8rpx 16rpx 16rpx; overflow-x: auto; }
 .cal-day { min-width: 88rpx; padding: 12rpx 8rpx; border: 1px solid #e6dfd2; border-radius: 12rpx; text-align: center; background: #fff; }
-.cal-day.on { border-color: #2d6a4f; background: #d8f3dc; }
+.cal-day.on { border-color: #c6f24a; background: #c6f24a; }
 .cal-n { font-weight: 700; color: #1b4332; }
 .faq-item { padding: 12rpx 0; border-bottom: 1px dashed #e6dfd2; }
 .faq-item:last-child { border-bottom: 0; }
@@ -81,5 +81,66 @@ button.btn::after { border: none; }
   text-align: center;
   font-size: 24rpx;
 }
-.act-kind.on { border-color: #2d6a4f; background: #d8f3dc; }
+.act-kind.on { border-color: #c6f24a; background: #c6f24a; }
 .act-kind .emoji { font-size: 36rpx; }
+.feed-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 24rpx 16rpx;
+}
+.feed-toolbar .hint { font-size: 26rpx; font-weight: 700; }
+.feed-toolbar .tools { display: flex; align-items: center; gap: 16rpx; }
+.tool-btn { font-size: 26rpx; color: #7a7d74; }
+.tool-btn.play {
+  background: #c6f24a;
+  color: #141414;
+  border-radius: 999rpx;
+  padding: 8rpx 22rpx;
+  font-weight: 700;
+}
+.feed-card {
+  margin: 0 16rpx 16rpx;
+  padding: 16rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  display: flex;
+  gap: 20rpx;
+}
+.feed-cover {
+  position: relative;
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 20rpx;
+  overflow: hidden;
+  background: #e8ece6;
+  flex-shrink: 0;
+}
+.feed-cover image { width: 200rpx; height: 200rpx; display: block; }
+.feed-boarded {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 8rpx 10rpx;
+  font-size: 20rpx;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(transparent, rgba(0,0,0,.66));
+}
+.feed-body { flex: 1; min-width: 0; }
+.feed-when { font-size: 22rpx; color: #7a7d74; }
+.feed-title { font-size: 30rpx; font-weight: 750; margin-top: 4rpx; }
+.feed-host { font-size: 22rpx; color: #7a7d74; margin-top: 4rpx; }
+.feed-tagline {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #3d5a1f;
+  background: #eef8c8;
+  border-radius: 12rpx;
+  padding: 6rpx 12rpx;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.feed-price { margin-top: 8rpx; font-size: 22rpx; color: #7a7d74; }
+.feed-price .strong { font-size: 28rpx; font-weight: 700; color: #141414; margin-right: 8rpx; }
+.tiny { font-size: 20rpx; }

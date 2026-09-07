@@ -8,10 +8,10 @@
 </view>
 <view class="campus-card">
   <view>
-    <view class="campus-title">在山野，遇见爱</view>
-    <view class="muted">学生认证后可走学生价，部分团仅限高校。</view>
+    <view class="campus-title">学生认证后走学生价</view>
+    <view class="muted">部分团仅限高校，周末进山先看好集合点。</view>
   </view>
-  <view class="campus-cta" bindtap="goStudent">学生认证</view>
+  <view class="campus-cta" bindtap="goStudent">去认证</view>
 </view>
 <view class="card" wx:if="{{upcoming}}" bindtap="goUpcoming">
   <view class="pad">
@@ -21,63 +21,64 @@
   </view>
 </view>
 
-<view class="pad" style="padding-bottom:0"><view class="title">去哪儿玩？</view></view>
 <scroll-view scroll-x class="city-bar">
+  <view class="chip {{!city?'on':''}}" bindtap="clearCity">热门</view>
   <view class="chip {{city==item.name?'on':''}}" wx:for="{{home.cities}}" wx:key="name" bindtap="setCity" data-name="{{item.name}}">{{item.name}}</view>
 </scroll-view>
+<scroll-view scroll-x class="city-bar">
+  <view class="chip {{!tag?'on':''}}" bindtap="clearTag">全部玩法</view>
+  <view class="chip {{tag==item.name?'on':''}}" wx:for="{{home.tags}}" wx:key="id" bindtap="setTag" data-name="{{item.name}}">{{item.name}}</view>
+</scroll-view>
 
-<view class="fold" bindtap="toggleFold" data-key="when">哪天玩？ {{fold.when ? '收起' : '展开日历'}}</view>
-<block wx:if="{{fold.when}}">
-<view class="fold" bindtap="toggleFold" data-key="days">最近十五天 {{fold.days ? '收起' : '展开'}}</view>
-<view class="cal" wx:if="{{fold.days}}">
+<scroll-view scroll-x class="cal">
   <view class="cal-day {{date==item.date?'on':''}}" wx:for="{{calendar}}" wx:key="date" bindtap="setDate" data-date="{{item.date}}">
-    <view class="cal-n">{{item.label}}</view>
-    <view class="muted">{{item.count ? item.count + '团' : '—'}}</view>
+    <view class="muted tiny">{{item.w}}</view>
+    <view class="cal-n">{{item.n}}</view>
+    <view class="muted tiny">{{item.count ? item.count + '团' : '—'}}</view>
+  </view>
+</scroll-view>
+
+<view class="feed-toolbar">
+  <view class="hint">看看最近都在忙什么</view>
+  <view class="tools">
+    <view class="tool-btn" bindtap="toggleFold" data-key="extra">{{fold.extra ? '收起' : '筛选'}}</view>
+    <view class="tool-btn play" bindtap="goPublish">发团</view>
   </view>
 </view>
-<view class="fold" bindtap="toggleFold" data-key="month">按月选择 {{fold.month ? '收起' : '展开'}}</view>
-<block wx:if="{{fold.month}}">
+
+<block wx:if="{{fold.extra}}">
   <view class="chips">
     <view class="chip {{monthKey==item.key?'on':''}}" wx:for="{{home.months}}" wx:key="key" bindtap="pickMonth" data-key="{{item.key}}">{{item.label}}</view>
   </view>
   <view class="month-grid">
     <view class="month-cell {{date==item.date?'on':''}}" wx:for="{{monthDays}}" wx:key="date" bindtap="setDate" data-date="{{item.date}}">{{item.label}}</view>
   </view>
-</block>
-<view class="fold" bindtap="toggleFold" data-key="fest">按节日 {{fold.fest ? '收起' : '展开'}}</view>
-<block wx:if="{{fold.fest}}">
   <view class="chips">
     <view class="chip {{festivalKey==item.key?'on':''}}" wx:for="{{home.festivals}}" wx:key="key" bindtap="setFestival" data-key="{{item.key}}">{{item.name}}</view>
   </view>
+  <view class="chips">
+    <view class="offer-chip" wx:for="{{offers}}" wx:key="key" style="background:{{item.color}}" bindtap="setOffer" data-key="{{item.key}}">{{item.label}}</view>
+  </view>
 </block>
-</block>
-
-<view class="pad" style="padding-bottom:0"><view class="title">想怎么玩？</view></view>
-<view class="chips">
-  <view class="chip {{tag==item.name?'on':''}}" wx:for="{{home.tags}}" wx:key="id" bindtap="setTag" data-name="{{item.name}}">{{item.name}}</view>
-</view>
 
 <view class="picked" wx:if="{{picked.length}}">
   <view class="picked-chip" wx:for="{{picked}}" wx:key="key" bindtap="clearPick" data-key="{{item.key}}">{{item.label}} ×</view>
 </view>
 
-<view class="chips">
-  <view class="offer-chip" wx:for="{{offers}}" wx:key="key" style="background:{{item.color}}" bindtap="setOffer" data-key="{{item.key}}">{{item.label}}</view>
-  <view class="offer-chip publish" bindtap="goPublish">发团</view>
-</view>
-
-<view class="card" wx:for="{{groups}}" wx:key="id" bindtap="goGroup" data-id="{{item.id}}">
-  <image wx:if="{{item.route.cover}}" class="cover" src="{{item.route.cover}}" mode="aspectFill" style="height:280rpx" />
-  <view class="pad">
-    <view class="row">
-      <text class="title">{{item.route.title}}</text>
-      <text class="tag">{{item.startDate}}</text>
-    </view>
-    <view class="muted">{{item.city}} · 余 {{item.remain}} 座</view>
-    <view class="prices">
-      <text>原价 ¥{{item.quote.originPrice}}</text>
-      <text>会员 ¥{{item.quote.memberPrice}}</text>
-      <text>学生 ¥{{item.quote.studentPrice}}</text>
+<view class="feed-card" wx:for="{{groups}}" wx:key="id" bindtap="goGroup" data-id="{{item.id}}">
+  <view class="feed-cover">
+    <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
+    <view class="feed-boarded">{{item.boarded}}</view>
+  </view>
+  <view class="feed-body">
+    <view class="feed-when">{{item.feedWhen}} · {{item.city}}</view>
+    <view class="feed-title">{{item.route.title}}</view>
+    <view class="feed-host">{{item.host}}</view>
+    <view class="feed-tagline" wx:if="{{item.tagline}}">{{item.tagline}}</view>
+    <view class="feed-price" wx:if="{{item.free}}">免费</view>
+    <view class="feed-price" wx:else>
+      <text class="strong">¥{{item.quote.originPrice}}</text>
+      <text> 会员 ¥{{item.quote.memberPrice}}</text>
     </view>
   </view>
 </view>

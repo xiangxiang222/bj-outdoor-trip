@@ -1,6 +1,7 @@
 const { request } = require("../../utils/request");
 const { OFFER_TYPES, countOn, buildCalendar } = require("../../utils/offer");
 const { detailUrl } = require("../../utils/media");
+const { decorateFeed } = require("../../utils/feed-card");
 
 function asList(rows) {
   return Array.isArray(rows) && rows.length ? rows : [];
@@ -21,7 +22,7 @@ Page({
     festivalKey: "",
     offerFilter: "",
     offers: OFFER_TYPES.filter((o) => o.key !== "full"),
-    fold: { when: false, days: true, month: false, fest: false },
+    fold: { extra: false },
     picked: [],
     upcoming: null,
   },
@@ -42,7 +43,8 @@ Page({
       .filter((s) => !date || s.startDate === date)
       .filter((s) => !festivalKey || !festDates.size || festDates.has(s.startDate))
       .filter((s) => !tag || (s.playTags || []).some((t) => t.name === tag))
-      .filter((s) => !offerFilter || s.offerType === offerFilter);
+      .filter((s) => !offerFilter || s.offerType === offerFilter)
+      .map((s) => decorateFeed(s));
     const picked = [];
     if (city) picked.push({ key: "city", label: city });
     if (date) picked.push({ key: "date", label: date.slice(5) });
@@ -79,6 +81,10 @@ Page({
     this.setData({ city: this.data.city === name ? "" : name });
     this.applyGroups();
   },
+  clearCity() {
+    this.setData({ city: "" });
+    this.applyGroups();
+  },
   setDate(e) {
     const d = e.currentTarget.dataset.date;
     this.setData({ date: this.data.date === d ? "" : d });
@@ -87,6 +93,10 @@ Page({
   setTag(e) {
     const name = e.currentTarget.dataset.name;
     this.setData({ tag: this.data.tag === name ? "" : name });
+    this.applyGroups();
+  },
+  clearTag() {
+    this.setData({ tag: "" });
     this.applyGroups();
   },
   setOffer(e) {

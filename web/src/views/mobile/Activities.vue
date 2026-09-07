@@ -24,25 +24,21 @@
       </button>
     </div>
 
-    <article class="act-card" v-for="s in list" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
-      <div class="act-date">
-        <b>{{ dateOf(s).day }}</b>
-        <span>{{ dateOf(s).weekday }}</span>
-        <small>{{ dateOf(s).month }}</small>
+    <article class="feed-card" v-for="s in list" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
+      <div class="feed-cover">
+        <img v-if="coverOf(s)" :src="coverOf(s)" :alt="s.route?.title || ''" />
+        <div class="feed-boarded">{{ boardedLine(s, "activity") }}</div>
       </div>
-      <div class="act-main">
-        <div class="row">
-          <strong>{{ s.route?.title }}</strong>
-          <span class="tag" v-if="kindOf(s)">{{ kindOf(s).label }}</span>
-        </div>
-        <p class="muted">{{ s.meetupTime || "" }} {{ s.city }} · {{ s.organizerName }}</p>
-        <p class="act-meta">
-          <span v-if="isFree(s)">免费</span>
-          <span v-else>¥{{ priceOf(s) }} 起</span>
-          <span>余 {{ s.remain }} 人</span>
+      <div class="feed-body">
+        <p class="feed-when">{{ feedWhen(s.startDate, s.meetupTime) }} · {{ s.city }}</p>
+        <h3 class="feed-title">{{ s.route?.title }}</h3>
+        <p class="feed-host">{{ hostName(s) }}<template v-if="kindOf(s)"> · {{ kindOf(s).label }}</template></p>
+        <p class="feed-tagline" v-if="taglineOf(s)">{{ taglineOf(s) }}</p>
+        <p class="feed-price">
+          <template v-if="isFree(s)">免费</template>
+          <template v-else><b>¥{{ priceOf(s) }}</b> 起</template>
         </p>
       </div>
-      <img v-if="s.route?.cover" class="act-thumb" :src="s.route.cover" :alt="s.route.title" />
     </article>
 
     <div v-if="!list.length" class="card act-empty">
@@ -60,7 +56,8 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
-import { ACTIVITY_KINDS, activityKindOf, filterActivities, formatActivityDate, isThisWeek } from "@/utils/activityKind";
+import { ACTIVITY_KINDS, activityKindOf, filterActivities, isThisWeek } from "@/utils/activityKind";
+import { boardedLine, coverOf, feedWhen, hostName, taglineOf } from "@/utils/feedCard";
 
 const router = useRouter();
 const store = useUserStore();
@@ -77,9 +74,6 @@ onMounted(async () => {
 
 function kindOf(s) {
   return activityKindOf(s);
-}
-function dateOf(s) {
-  return formatActivityDate(s.startDate);
 }
 function isFree(s) {
   return Number(s.quote?.tripPrice ?? s.quote?.originPrice ?? 0) === 0 || s.offerType === "free";

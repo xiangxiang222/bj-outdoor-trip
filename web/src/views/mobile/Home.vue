@@ -32,14 +32,14 @@
     <div class="home-pad">
     <section class="campus-card">
       <div>
-        <strong>在山野，遇见爱</strong>
-        <p>学生认证后可走学生价，部分团仅限高校。周末进山，先看好集合点。</p>
+        <strong>学生认证后走学生价</strong>
+        <p>部分团仅限高校，周末进山先看好集合点。</p>
       </div>
       <router-link
         v-if="store.profile?.studentStatus !== 'pending' && !store.profile?.isStudent"
         class="campus-cta"
         to="/m/student"
-      >学生认证</router-link>
+      >去认证</router-link>
       <span v-else-if="store.profile?.isStudent" class="muted">已认证{{ store.profile.school ? " · " + store.profile.school : "" }}</span>
       <router-link v-else-if="store.profile?.studentStatus === 'pending'" class="campus-cta" to="/m/student">审核中</router-link>
     </section>
@@ -52,51 +52,50 @@
       </div>
     </div>
 
-    <div class="filter-block">
-      <div class="h2">去哪儿玩？</div>
-      <div class="chips city-bar">
-        <div class="chip" :class="{ on: city === c.name }" v-for="c in home.cities || []" :key="c.name" @click="toggleCity(c.name)">{{ c.name }}</div>
+    <div class="chips city-bar">
+      <div class="chip" :class="{ on: !city }" @click="city = ''">热门</div>
+      <div class="chip" :class="{ on: city === c.name }" v-for="c in home.cities || []" :key="c.name" @click="toggleCity(c.name)">{{ c.name }}</div>
+    </div>
+
+    <div class="chips">
+      <div class="chip" :class="{ on: !tag }" @click="tag = ''">全部玩法</div>
+      <div class="chip" :class="{ on: tag === t.name }" v-for="t in home.tags || []" :key="t.id" @click="toggleTag(t.name)">{{ t.name }}</div>
+    </div>
+
+    <div class="cal">
+      <div class="cal-day" :class="{ on: date === d.date }" v-for="d in calendar" :key="d.date" @click="toggleDate(d.date)">
+        <span class="muted">{{ d.w }}</span>
+        <span class="n">{{ d.n }}</span>
+        <span class="muted">{{ d.count ? d.count + "团" : "—" }}</span>
       </div>
     </div>
 
-    <div class="filter-block">
-      <button class="fold-head" type="button" @click="fold.when = !fold.when">哪天玩？ <span>{{ fold.when ? "收起" : dateHint }}</span></button>
-      <div v-if="fold.when">
-        <button class="fold-head" type="button" @click="fold.days = !fold.days">最近十五天 <span>{{ fold.days ? "收起" : "展开" }}</span></button>
-        <div class="cal" v-if="fold.days">
-          <div class="cal-day" :class="{ on: date === d.date }" v-for="d in calendar" :key="d.date" @click="toggleDate(d.date)">
-            <span class="n">{{ d.label }}</span>
-            <span class="muted">{{ d.count ? d.count + " 团" : "—" }}</span>
-          </div>
-        </div>
-        <button class="fold-head" type="button" @click="fold.month = !fold.month">按月选择 <span>{{ fold.month ? "收起" : "展开" }}</span></button>
-        <div v-if="fold.month">
-          <div class="chips">
-            <div class="chip" :class="{ on: monthKey === m.key }" v-for="m in home.months || []" :key="m.key" @click="pickMonth(m.key)">{{ m.label }}</div>
-          </div>
-          <div class="month-grid" v-if="monthDays.length">
-            <button class="month-cell" type="button" :class="{ on: date === d.date }" v-for="d in monthDays" :key="d.date" @click="toggleDate(d.date)">
-              {{ d.label }}
-              <small>{{ d.hasTrip ? d.count + "团" : "" }}</small>
-            </button>
-          </div>
-        </div>
-        <button class="fold-head" type="button" @click="fold.fest = !fold.fest">按节日 <span>{{ fold.fest ? "收起" : "展开" }}</span></button>
-        <div v-if="fold.fest">
-          <div class="chips">
-            <div class="chip" :class="{ on: festivalKey === f.key }" v-for="f in home.festivals || []" :key="f.key" @click="festivalKey = festivalKey === f.key ? '' : f.key">{{ f.name }}</div>
-          </div>
-          <div class="chips" v-if="activeFestival">
-            <div class="chip" :class="{ on: date === d.date }" v-for="d in activeFestival.dates" :key="d.date" @click="toggleDate(d.date)">{{ d.label }}</div>
-          </div>
-        </div>
+    <div class="feed-toolbar">
+      <div class="hint">看看最近都在忙什么</div>
+      <div class="tools">
+        <button class="tool-btn" type="button" @click="fold.extra = !fold.extra">{{ fold.extra ? "收起" : "筛选" }}</button>
+        <button class="tool-btn play" type="button" @click="goPublish()">发团</button>
       </div>
     </div>
 
-    <div class="filter-block">
-      <div class="h2">想怎么玩？</div>
+    <div v-if="fold.extra">
       <div class="chips">
-        <div class="chip" :class="{ on: tag === t.name }" v-for="t in home.tags || []" :key="t.id" :style="tag === t.name ? { background: t.color, color: '#fff', borderColor: t.color } : {}" @click="toggleTag(t.name)">{{ t.name }}</div>
+        <div class="chip" :class="{ on: monthKey === m.key && monthPicked }" v-for="m in home.months || []" :key="m.key" @click="pickMonth(m.key)">{{ m.label }}</div>
+      </div>
+      <div class="month-grid" v-if="monthPicked && monthDays.length">
+        <button class="month-cell" type="button" :class="{ on: date === d.date }" v-for="d in monthDays" :key="d.date" @click="toggleDate(d.date)">
+          {{ d.label }}
+          <small>{{ d.hasTrip ? d.count + "团" : "" }}</small>
+        </button>
+      </div>
+      <div class="chips">
+        <div class="chip" :class="{ on: festivalKey === f.key }" v-for="f in home.festivals || []" :key="f.key" @click="festivalKey = festivalKey === f.key ? '' : f.key">{{ f.name }}</div>
+      </div>
+      <div class="chips" v-if="activeFestival">
+        <div class="chip" :class="{ on: date === d.date }" v-for="d in activeFestival.dates" :key="d.date" @click="toggleDate(d.date)">{{ d.label }}</div>
+      </div>
+      <div class="chips">
+        <div class="offer-chip" v-for="o in offers" :key="o.key" :style="{ background: o.color, opacity: offerFilter && offerFilter !== o.key ? 0.45 : 1 }" @click="offerFilter = offerFilter === o.key ? '' : o.key">{{ o.label }}</div>
       </div>
     </div>
 
@@ -107,24 +106,25 @@
       </span>
     </div>
 
-    <div class="chips">
-      <div class="offer-chip" v-for="o in offers" :key="o.key" :style="{ background: o.color, opacity: offerFilter && offerFilter !== o.key ? 0.45 : 1 }" @click="offerFilter = offerFilter === o.key ? '' : o.key">{{ o.label }}</div>
-      <div class="offer-chip publish" @click="goPublish()">发团</div>
-    </div>
-
-    <div class="trip-card" v-for="s in groups" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
-      <div class="trip-swipe" v-if="cardGallery(s).length">
-        <img :src="cardGallery(s)[cardIdx(s) % cardGallery(s).length]" :alt="s.route?.title" />
+    <article class="feed-card" v-for="s in groups" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
+      <div class="feed-cover">
+        <img v-if="coverOf(s)" :src="coverOf(s)" :alt="s.route?.title || ''" />
+        <div class="feed-boarded">{{ boardedLine(s) }}</div>
       </div>
-      <div class="pad">
-        <div class="row">
-          <strong>{{ s.route?.title }}</strong>
-          <span class="tag">{{ s.startDate }}</span>
-        </div>
-        <p class="muted" style="margin:6px 0">{{ s.city || s.route?.region }} · {{ s.organizerType === "company" ? s.companyName : s.organizerName }} · 余 {{ s.remain }} 座<template v-if="s.eligibility?.label"> · {{ s.eligibility.label }}</template></p>
-        <TripPrices :quote="s.quote" compact />
+      <div class="feed-body">
+        <p class="feed-when">{{ feedWhen(s.startDate, s.meetupTime) }} · {{ s.city || s.route?.region }}</p>
+        <h3 class="feed-title">{{ s.route?.title }}</h3>
+        <p class="feed-host">{{ hostName(s) }}<template v-if="s.meetupPoint"> · {{ s.meetupPoint }}</template></p>
+        <p class="feed-tagline" v-if="taglineOf(s)">{{ taglineOf(s) }}</p>
+        <p class="feed-price">
+          <template v-if="isFreeOffer(s)">免费</template>
+          <template v-else>
+            <b>¥{{ s.quote?.originPrice }}</b>
+            <span>会员 ¥{{ s.quote?.memberPrice }}</span>
+          </template>
+        </p>
       </div>
-    </div>
+    </article>
     <div v-if="!groups.length" class="card publish-guide" @click="goPublish()">
       <div class="pad">
         <strong>还没有符合条件的团</strong>
@@ -147,7 +147,7 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { OFFER_TYPES } from "@/utils/offer";
 import { mediaSrc, slideBg, slideFallback, slideRouteTarget } from "@/utils/media";
-import TripPrices from "@/components/TripPrices.vue";
+import { boardedLine, coverOf, feedWhen, hostName, isFreeOffer, taglineOf } from "@/utils/feedCard";
 
 const router = useRouter();
 const store = useUserStore();
@@ -162,9 +162,8 @@ const monthDays = ref([]);
 const festivalKey = ref("");
 const offerFilter = ref("");
 const heroIndex = ref(0);
-const tick = ref(0);
 const upcoming = ref(null);
-const fold = reactive({ when: false, days: true, month: false, fest: false });
+const fold = reactive({ extra: false });
 const offers = OFFER_TYPES.filter((o) => o.key !== "full");
 
 const brandSlides = computed(() => {
@@ -181,10 +180,16 @@ const activeFestival = computed(() => (home.value.festivals || []).find((f) => f
 const calendar = computed(() => {
   const days = [];
   const now = new Date();
+  const weeks = ["日", "一", "二", "三", "四", "五", "六"];
   for (let i = 0; i < 15; i++) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    days.push({ date: key, label: `${d.getMonth() + 1}/${d.getDate()}`, count: countOn(key) });
+    days.push({
+      date: key,
+      n: d.getDate(),
+      w: i === 0 ? "今" : "周" + weeks[d.getDay()],
+      count: countOn(key),
+    });
   }
   return days;
 });
@@ -213,12 +218,6 @@ const picked = computed(() => {
   }
   return rows;
 });
-const dateHint = computed(() => {
-  if (date.value) return date.value.slice(5);
-  if (monthPicked.value && monthKey.value) return monthKey.value.slice(5) + "月";
-  if (festivalKey.value && activeFestival.value) return activeFestival.value.name;
-  return "展开日历";
-});
 
 let heroTimer;
 
@@ -243,7 +242,6 @@ onMounted(async () => {
   heroTimer = setInterval(() => {
     const n = brandSlides.value.length;
     if (n) heroIndex.value = (heroIndex.value + 1) % n;
-    tick.value += 1;
   }, 4000);
 });
 onUnmounted(() => clearInterval(heroTimer));
@@ -282,17 +280,8 @@ function goPublish(when) {
 async function pickMonth(key) {
   monthKey.value = key;
   monthPicked.value = true;
-  fold.month = true;
+  fold.extra = true;
   const res = await http.get("/home", { params: { month: key } });
   monthDays.value = res.data?.monthDays || [];
-}
-function cardGallery(s) {
-  const g = s.gallery || s.route?.gallery || [];
-  if (g.length) return g;
-  return s.route?.cover ? [s.route.cover] : [];
-}
-function cardIdx(s) {
-  const n = cardGallery(s).length || 1;
-  return tick.value % n;
 }
 </script>
