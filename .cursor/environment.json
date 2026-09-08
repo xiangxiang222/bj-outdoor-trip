@@ -1,0 +1,11 @@
+{
+  "name": "同行者众 · bj-outdoor-trip",
+  "install": "npm run install:all && npm run seed",
+  "terminals": [
+    {
+      "name": "dev",
+      "command": "npm run dev"
+    }
+  ],
+  "ports": [3780, 3781]
+}
