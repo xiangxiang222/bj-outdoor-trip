@@ -19,6 +19,7 @@ const config = require("../config");
 const { assertComboEnroll, parseComboWant } = require("./combo");
 const { assertEnrollLimit } = require("./eligibility");
 const { resolveSupplies } = require("./supplies");
+const { isOversubPending } = require("./oversub");
 
 function fail(status, message) {
   const err = new Error(message);
@@ -91,28 +92,36 @@ function enrollUser({
     if (exist) fail(400, "该身份证已在本团报名");
   }
 
+  const role = isActivity
+    ? "chain"
+    : ["assistant", "photographer"].includes(String(joinMode || ""))
+      ? String(joinMode)
+      : "chain";
+  const appliedOnly = !isActivity && isOversubPending(sch) && role === "chain";
   const occupied = enrolledCount(sch.id);
-  let waitlisted = occupied >= Number(sch.max_seats);
+  let waitlisted = !appliedOnly && occupied >= Number(sch.max_seats);
   let seat = null;
-  if (waitlisted) {
-    if (kickVirtualSeat(sch.id)) {
-      waitlisted = false;
-    } else {
-      seat = null;
-    }
-  }
-  if (!waitlisted) {
-    if (!isActivity && seatNo) {
-      try {
-        seat = assertSeatAvailable(sch.id, sch.max_seats, seatNo);
-      } catch (e) {
-        if (kickVirtualSeat(sch.id)) seat = assertSeatAvailable(sch.id, sch.max_seats, seatNo);
-        else throw e;
+  if (!appliedOnly) {
+    if (waitlisted) {
+      if (kickVirtualSeat(sch.id)) {
+        waitlisted = false;
+      } else {
+        seat = null;
       }
-    } else {
-      seat = firstFreeSeat(sch.id, sch.max_seats);
-      if (!seat && kickVirtualSeat(sch.id)) seat = firstFreeSeat(sch.id, sch.max_seats);
-      if (!seat) waitlisted = true;
+    }
+    if (!waitlisted) {
+      if (!isActivity && seatNo) {
+        try {
+          seat = assertSeatAvailable(sch.id, sch.max_seats, seatNo);
+        } catch (e) {
+          if (kickVirtualSeat(sch.id)) seat = assertSeatAvailable(sch.id, sch.max_seats, seatNo);
+          else throw e;
+        }
+      } else {
+        seat = firstFreeSeat(sch.id, sch.max_seats);
+        if (!seat && kickVirtualSeat(sch.id)) seat = firstFreeSeat(sch.id, sch.max_seats);
+        if (!seat) waitlisted = true;
+      }
     }
   }
   const referrer = findReferrer(referrerCode);
@@ -125,11 +134,6 @@ function enrollUser({
   const couponDecision = couponPack
     ? decideCouponPrice({ quote, user, campaign: couponPack.campaign, waitlisted })
     : { applyCoupon: false, giftWouldApply: false, tripPrice: quote.tripPrice, memberPay: quote.price, couponPay: quote.price, reason: "" };
-  const role = isActivity
-    ? "chain"
-    : ["assistant", "photographer"].includes(String(joinMode || ""))
-      ? String(joinMode)
-      : "chain";
   const roleWaive = role !== "chain";
   const billed = roleWaive ? 0 : couponDecision.applyCoupon ? couponDecision.couponPay : Number(quote.price || 0);
   const payable =
@@ -150,6 +154,7 @@ function enrollUser({
   if (
     !company &&
     !waitlisted &&
+    !appliedOnly &&
     quote.isMember &&
     Number(user.member_gift_left || 0) > 0 &&
     memberTripPay > 0 &&
@@ -162,7 +167,7 @@ function enrollUser({
   const couponApplied = !!(couponPack && couponDecision.applyCoupon && !giftApplied);
   const payAmount = company ? 0 : tripPay + insurance.fee + supply.fee;
   const payStatus = company ? "company_pending" : payAmount === 0 ? "paid" : "unpaid";
-  const status = waitlisted ? "waitlist" : "joined";
+  const status = appliedOnly ? "applied" : waitlisted ? "waitlist" : "joined";
   const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
   const info = db
     .prepare(
@@ -201,13 +206,13 @@ function enrollUser({
     );
   const enrollmentId = Number(info.lastInsertRowid);
   if (couponApplied) {
-    attachCouponToEnrollment(couponPack.coupon.id, enrollmentId, waitlisted);
+    attachCouponToEnrollment(couponPack.coupon.id, enrollmentId, waitlisted || appliedOnly);
   }
-  if (!waitlisted) {
+  if (!waitlisted && !appliedOnly) {
     maybeMatchGuide(sch.id);
     trimVirtuals(sch.id);
   }
-  if (referrerId && !waitlisted) recordEnrollReferral(referrerId, enrollmentId, payAmount);
+  if (referrerId && !waitlisted && !appliedOnly) recordEnrollReferral(referrerId, enrollmentId, payAmount);
   if (!isActivity && fallbackScheduleIds && fallbackScheduleIds.length) {
     try {
       setFallbacks(enrollmentId, user.id, { scheduleIds: fallbackScheduleIds, autoAlt });
@@ -237,7 +242,9 @@ function enrollUser({
       couponSkipReason: couponPack && !couponApplied ? couponDecision.reason : "",
     },
     needPay: false,
-    message: waitlisted
+    message: appliedOnly
+      ? "已报名。车位有限，若报名超过座位将抽签决定出行人；未超过则全部确认。"
+      : waitlisted
       ? isActivity
         ? `本局已满，已加入候补（第 ${position} 位），有人取消后自动递补`
         : `本车已满，已加入候补（第 ${position} 位），有人取消后自动递补`
@@ -261,7 +268,10 @@ function promoteWaitlist(scheduleId) {
   if (!sch || sch.status === "cancelled") return null;
   if (enrolledCount(scheduleId) >= Number(sch.max_seats)) return null;
   const next = db
-    .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status='waitlist' ORDER BY id LIMIT 1")
+    .prepare(
+      `SELECT * FROM enrollments WHERE schedule_id=? AND status='waitlist'
+       ORDER BY CASE WHEN draw_rank IS NULL THEN 1 ELSE 0 END, draw_rank, id LIMIT 1`
+    )
     .get(scheduleId);
   if (!next) return null;
   const seat = firstFreeSeat(scheduleId, sch.max_seats);

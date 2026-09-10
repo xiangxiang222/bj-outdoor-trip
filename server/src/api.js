@@ -42,6 +42,7 @@ const { completeTrip, afterTripState } = require("./services/aftertrip");
 const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
 const { parseEnrollLimit, eligibilityView, applyEnrollLimit } = require("./services/eligibility");
+const { oversubView, isOversubPending, drawOversub } = require("./services/oversub");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
   createCampaign,
@@ -69,6 +70,7 @@ const {
 const {
   isMember,
   isStudent,
+  isAlumni,
   enrolledCount,
   realEnrolledCount,
   virtualEnrolledCount,
@@ -127,7 +129,9 @@ function userPublic(u, req) {
     companyName: u.company_name,
     role: u.role,
     isStudent: isStudent(u),
+    isAlumni: isAlumni(u),
     studentStatus: u.student_status || "",
+    campusKind: u.campus_kind === "alumni" ? "alumni" : u.student_status || u.is_student ? "student" : "",
     school: u.school || "",
     groupStatus: u.group_status || "",
     groupName: u.group_name || "",
@@ -274,7 +278,7 @@ function scheduleView(sch, req) {
     ...(req.adminId
       ? { realEnrolled: realLive, virtualEnrolled: virtualLive }
       : {}),
-    canEnrollDirect: Math.max(0, sch.max_seats - live - lockedCount) > 0 || virtualLive > 0,
+    canEnrollDirect: isOversubPending(sch) || Math.max(0, sch.max_seats - live - lockedCount) > 0 || virtualLive > 0,
     cost,
     cost,
     costBreakdown: {
@@ -299,6 +303,7 @@ function scheduleView(sch, req) {
     reviewStatus: sch.review_status || "approved",
     combo: comboView(sch, viewer),
     eligibility: eligibilityView(sch, viewer),
+    oversub: oversubView(sch),
   };
 }
 
@@ -324,7 +329,7 @@ function applyScheduleExtras(id, body, route) {
   const limit = parseEnrollLimit(body);
   db()
     .prepare(
-      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=?, student_only=?, schools_json=? WHERE id=?"
+      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=?, student_only=?, schools_json=?, alumni_ok=?, oversub=? WHERE id=?"
     )
     .run(
       offerType,
@@ -338,6 +343,8 @@ function applyScheduleExtras(id, body, route) {
       comboRule,
       limit.studentOnly ? 1 : 0,
       JSON.stringify(limit.schools),
+      limit.alumniOk ? 1 : 0,
+      limit.oversub ? 1 : 0,
       id
     );
 }
@@ -530,7 +537,7 @@ router.get("/me/trips", authUser, (req, res) => {
        FROM enrollments e
        JOIN schedules s ON s.id=e.schedule_id
        JOIN routes r ON r.id=s.route_id
-       WHERE e.user_id=? AND e.status IN ('joined','waitlist') AND s.status!='cancelled'
+       WHERE e.user_id=? AND e.status IN ('joined','waitlist','applied') AND s.status!='cancelled'
          AND s.start_date>=date('now','-1 day')
        ORDER BY s.start_date, e.id`
     )
@@ -613,9 +620,17 @@ router.put("/me", authUser, (req, res) => {
 router.post("/me/student", authUser, (req, res) => {
   const school = String((req.body || {}).school || "").trim();
   if (!school) return res.status(400).json({ ok: false, message: "请填写学校" });
-  db().prepare("UPDATE users SET school=?, student_status='pending', is_student=0 WHERE id=?").run(school, req.userId);
+  const rawKind = String((req.body || {}).campusKind || (req.body || {}).campus_kind || "student").toLowerCase();
+  const campusKind = rawKind === "alumni" ? "alumni" : "student";
+  db()
+    .prepare("UPDATE users SET school=?, campus_kind=?, student_status='pending', is_student=0 WHERE id=?")
+    .run(school, campusKind, req.userId);
   const next = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
-  res.json({ ok: true, data: userPublic(next, req), message: "已提交学生认证，待后台审核" });
+  res.json({
+    ok: true,
+    data: userPublic(next, req),
+    message: campusKind === "alumni" ? "已提交校友认证，待后台审核" : "已提交学生认证，待后台审核",
+  });
 });
 
 router.post("/me/group", authUser, (req, res) => {
@@ -886,9 +901,9 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
   const includeCancelled = sch.status === "cancelled";
   const chainSql = includeCancelled
     ? `SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar
-       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END, e.id`
+       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3 END, e.id`
     : `SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar
-       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? AND e.status!='cancelled' ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'waitlist' THEN 1 ELSE 2 END, e.id`;
+       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? AND e.status!='cancelled' ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3 END, e.id`;
   const chain = db()
     .prepare(chainSql)
     .all(sch.id)
@@ -898,7 +913,7 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
   if (req.userId) {
     const mine = db()
       .prepare(
-        "SELECT * FROM enrollments WHERE schedule_id=? AND user_id=? AND status IN ('joined','waitlist') ORDER BY id DESC LIMIT 1"
+        "SELECT * FROM enrollments WHERE schedule_id=? AND user_id=? AND status IN ('joined','waitlist','applied') ORDER BY id DESC LIMIT 1"
       )
       .get(sch.id, req.userId);
     if (mine) {
@@ -1545,7 +1560,9 @@ function adminUserView(user) {
     is_member: user.is_member,
     isMember: isMember(user),
     isStudent: isStudent(user),
+    isAlumni: isAlumni(user),
     studentStatus: user.student_status || "",
+    campusKind: user.campus_kind === "alumni" ? "alumni" : user.student_status || user.is_student ? "student" : "",
     school: user.school || "",
     groupStatus: user.group_status || "",
     groupName: user.group_name || "",
@@ -1865,6 +1882,21 @@ router.put("/admin/schedules/:id/limit", authAdmin, requireCap("ops"), (req, res
   res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id), req) });
 });
 
+router.post("/admin/schedules/:id/draw", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    const data = drawOversub(req.params.id, { force: !!(req.body || {}).force });
+    res.json({
+      ok: true,
+      data,
+      message: data.over
+        ? `报名超过座位，已抽出 ${data.winnerCount} 人出行`
+        : `报名未超过座位，已全部确认 ${data.winnerCount} 人`,
+    });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
 router.put("/admin/schedules/:id/cost", authAdmin, requireCap("ops"), (req, res) => {
   const b = req.body || {};
   db().prepare(
@@ -2023,7 +2055,7 @@ router.post("/admin/enrollments/:id/cancel", authAdmin, requireCap("ops"), (req,
 router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
   const q = String(req.query.q || "").trim();
   let sql =
-    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,group_status,group_name FROM users WHERE deleted_at IS NULL";
+    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,campus_kind,group_status,group_name FROM users WHERE deleted_at IS NULL";
   const args = [];
   if (q) {
     sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ?)";
@@ -2038,7 +2070,9 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
       ...u,
       isMember: isMember(u),
       isStudent: isStudent(u),
+      isAlumni: isAlumni(u),
       studentStatus: u.student_status || "",
+      campusKind: u.campus_kind === "alumni" ? "alumni" : u.student_status || u.is_student ? "student" : "",
       groupStatus: u.group_status || "",
       groupName: u.group_name || "",
       isVirtual: !!u.is_virtual,
@@ -2067,8 +2101,13 @@ router.post("/admin/users/:id/verify", authAdmin, requireCap("ops"), (req, res) 
   const kind = (req.body || {}).kind;
   const action = (req.body || {}).action || "approve";
   if (kind === "student") {
-    if (action === "approve") db().prepare("UPDATE users SET student_status='approved', is_student=1 WHERE id=?").run(user.id);
-    else db().prepare("UPDATE users SET student_status='rejected', is_student=0 WHERE id=?").run(user.id);
+    if (action === "approve") {
+      if (user.campus_kind === "alumni") {
+        db().prepare("UPDATE users SET student_status='approved', is_student=0 WHERE id=?").run(user.id);
+      } else {
+        db().prepare("UPDATE users SET student_status='approved', is_student=1 WHERE id=?").run(user.id);
+      }
+    } else db().prepare("UPDATE users SET student_status='rejected', is_student=0 WHERE id=?").run(user.id);
   } else if (kind === "group") {
     if (action === "approve") db().prepare("UPDATE users SET group_status='approved' WHERE id=?").run(user.id);
     else db().prepare("UPDATE users SET group_status='rejected' WHERE id=?").run(user.id);

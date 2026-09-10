@@ -68,6 +68,8 @@ Page({
       description: "",
       comboRule: { require: "student_or_group", school: "" },
       studentOnly: false,
+      alumniOk: false,
+      oversub: false,
       schools: "",
     },
   },
@@ -165,6 +167,12 @@ Page({
   },
   toggleStudentOnly() {
     this.setData({ "form.studentOnly": !this.data.form.studentOnly });
+  },
+  toggleAlumniOk() {
+    this.setData({ "form.alumniOk": !this.data.form.alumniOk });
+  },
+  toggleOversub() {
+    this.setData({ "form.oversub": !this.data.form.oversub });
   },
   setDate(e) {
     const i = Number(e.detail.value);

@@ -31,7 +31,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/schedules` | Query：`routeId` `organizerType` `city` `tag` `offerType` `month` `date` `channel=activity\|trip`（不含已解散、待审核）。含满员（`remain=0`），前端列表保留供候补。不含 `virtualEnrolled`。首页传 `channel=trip`，活动 Tab 传 `channel=activity` |
 | GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条） |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
-| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（仅学生/高校限制）。同城局名单不含年龄段展示字段的使用由前端控制 |
+| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友/高校限制）、`oversub`（报超会抽）。同城局名单不含年龄段展示字段的使用由前端控制 |
 | GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
 | POST | `/schedules/:id/seats/pick` | 已报名用户改座 |
 | POST | `/schedules/:id/leaders/apply` | 报名领队（最多两位） |
@@ -54,14 +54,14 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/auth/login` | 否 | `phone` `password` `captchaToken` `captcha` |
 | POST | `/auth/login-sms` | 否 | `phone` `code`；无用户则创建。当前 UI 未使用 |
 | POST | `/auth/wechat` | 否 | `code` `nickname` `avatar` |
-| GET | `/me` | 用户 | 当前用户（证件掩码；含学生/团体状态） |
-| GET | `/me/trips` | 用户 | 即将出行：已报名且团未解散、出发日 ≥ 昨天的 `joined`/`waitlist` |
+| GET | `/me` | 用户 | 当前用户（证件掩码；含学生/团体状态、`isAlumni`/`campusKind`） |
+| GET | `/me/trips` | 用户 | 即将出行：已报名且团未解散、出发日 ≥ 昨天的 `joined`/`waitlist`/`applied` |
 | GET | `/me/coupons` | 用户 | 我领取的券（含未用/已用/候补占用） |
 | GET | `/me/referral` | 用户 | 推荐码、专属二维码、5% 按人结算明细。Query：`scheduleId` |
 | POST | `/me/photos` | 用户 | `{ url }` 写入个人相册 |
 | DELETE | `/me/photos/:id` | 用户 | 删除自己的相册照片 |
 | PUT | `/me` | 用户 | `nickname` `gender` `birthday` `idCard` `companyName` `avatar` |
-| POST | `/me/student` | 用户 | `{ school }` 学校全称。写入 pending，待后台审核 |
+| POST | `/me/student` | 用户 | `{ school }`，可选 `campusKind=student\|alumni`。写入 pending，待后台审核 |
 | POST | `/me/group` | 用户 | `{ name, kind }` 团体认证，pending |
 | POST | `/feedback` | 用户 | `{ kind: suggest\|bug, content }`，内容至少 4 字 |
 | GET | `/lottery` | 用户 | 抽奖状态。Query：`scheduleId` |
@@ -79,11 +79,11 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 
 | 方法 | 路径 | 鉴权 | 说明 |
 | --- | --- | --- | --- |
-| POST | `/schedules` | 用户 | 基于已有线路开团。可带 `offerType` `playTagIds` `studentOnly` `schools` |
-| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `schools` `comboRule`。提交后 `review_status=pending`，审核通过才上首页或活动 Tab |
+| POST | `/schedules` | 用户 | 基于已有线路开团。可带 `offerType` `playTagIds` `studentOnly` `alumniOk` `oversub` `schools` |
+| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `schools` `comboRule`。提交后 `review_status=pending`，审核通过才上首页或活动 Tab |
 | POST | `/upload` | 用户 | 发团封面。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
-| POST | `/enroll` | 用户 | 见下方报名 body |
+| POST | `/enroll` | 用户 | 见下方报名 body。报超会抽且名单未确认时写入 `applied`（不占座）；确认后中签 `joined`、未中 `waitlist`。候补/`applied` 券为 `held` |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。报名流程默认不调用 |
 | POST | `/pay/for-enrollment` | 用户 | 行程页待支付代付。任何人可替 `unpaid` 且已占座的报名支付（演示立即成功）。公司挂账不可用 |
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
@@ -132,11 +132,11 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 
 **山野团**：身份证须 18 位且校验码正确。紧急联系人手机须 11 位且不能与出行人相同。`waiverAccepted`、`healthOk` 须为真。同团同一证件不可重复（已取消的不计）。
 
-**同城局**（`schedules.channel=activity`）：不校验身份证、紧急联系人与弃权书；同一用户对同一局未取消的报名不可重复（400「你已报名本局」）。候补文案为「本局已满」。免费成功文案「已报名，到场即可」。
+**同城局**（`schedules.channel=activity`）：不校验身份证、紧急联系人与弃权书；同一用户对同一局未取消的报名不可重复（400「你已报名本局」）。候补文案为「本局已满」。免费成功文案「已报名，到场即可」。同城局不走报超会抽。
 
-已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序自动递补。当前实现报名时 `points_used=0`，不读取抵现开关。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds`。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补 `held`，占座成功才 `used`。
+已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序（抽签团按 `draw_rank`）自动递补。报超会抽且名单未确认时 `status=applied`，不占座。当前实现报名时 `points_used=0`，不读取抵现开关。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds`。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补/`applied` `held`，占座成功才 `used`。
 
-排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`、`channel`；名单项含 `waitlisted`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`。前端有 `myEnrollment` 时不再展示报名按钮。
+排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`、`channel`、`oversub`；名单项含 `waitlisted`、`applied`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位；报超待确认时不选座。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`。前端有 `myEnrollment` 时不再展示报名按钮。
 
 报名成功示例：
 
@@ -185,7 +185,8 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | GET | `/admin/schedules` | 含成本、收入、利润、导游 |
 | POST | `/admin/schedules/dissolve-all` | 解散全部进行中的团。body：`reason` |
 | POST | `/admin/schedules/:id/dissolve` | 解散单团。body：`reason` |
-| PUT | `/admin/schedules/:id/limit` | 报名限制。`studentOnly`、`schools`（数组或逗号分隔）。填高校则自动仅学生 |
+| PUT | `/admin/schedules/:id/limit` | 报名限制。`studentOnly`、`alumniOk`、`oversub`、`schools`（数组或逗号分隔）。填高校或允许校友则自动仅师生 |
+| POST | `/admin/schedules/:id/draw` | 确认出行名单（运营）。报名未超座位则全部确认；超过则抽签。重复确认 400，`force=true` 可重抽 |
 | PUT | `/admin/schedules/:id/cost` | `transport` `ticket` `hotel` `meal` `guide` `other` |
 | PUT | `/admin/schedules/:id/trip` | `plateNo` `busPhoto` `consultGroup` |
 | POST | `/admin/schedules/:id/seats/lock` | 锁定空座位 |
@@ -200,10 +201,10 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/coupons/:id/grant` | 定向发放。`phones`/`phonesText`/`userIds`/`allMembers`，可选 `sms`（默认 true）。一人一码，写入 `sms_logs` 场景 `coupon`，每手机每天最多 1 条 |
 | GET | `/admin/enrollments` | Query：`scheduleId` `q` `payStatus` `status` |
 | POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款标记退款） |
-| GET | `/admin/users` | Query：`q`。不含已注销、不含证件；带 `isMember` `isVirtual` `isStudent` `studentStatus` `groupStatus` |
+| GET | `/admin/users` | Query：`q`。不含已注销、不含证件；带 `isMember` `isVirtual` `isStudent` `isAlumni` `campusKind` `studentStatus` `groupStatus` |
 | POST | `/admin/virtual-users` | `{ scheduleId, count }` 将该团虚拟报名人数设为 `count`（可增可减） |
 | POST | `/admin/schedules/:id/virtual-users` | `{ count }` 同上，按路径指定行程 |
-| POST | `/admin/users/:id/verify` | `{ kind: student\|group, action: approve\|reject }` |
+| POST | `/admin/users/:id/verify` | `{ kind: student\|group, action: approve\|reject }`。校友通过后 `is_student=0` |
 | POST | `/admin/users/:id/member` | `action=grant` 开通/续费，`revoke` 取消会员 |
 | POST | `/admin/users/:id/points` | `delta` 非零整数、`reason` |
 | POST | `/admin/users/:id/close` | 注销该用户 |

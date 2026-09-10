@@ -17,6 +17,8 @@ describe("scanFacts", () => {
     expect(dockPrice({ quote: { originPrice: 199, memberPrice: 189 } })).toEqual({ free: false, main: "¥199", sub: "会员 ¥189" });
     expect(enrollCta({ remain: 0, channel: "trip" })).toBe("已满员，去候补");
     expect(enrollCta({ remain: 3, channel: "activity" })).toBe("报名本局");
+    expect(enrollCta({ remain: 8, oversub: { pending: true } })).toBe("报名参加");
+    expect(peopleLine({ enrolled: 0, maxSeats: 10, oversub: { pending: true, applied: 7, label: "报超会抽" } })).toBe("已报 7/10 · 报超会抽");
     expect(canShowEnroll({ myEnrollment: { status: "joined" } })).toBe(false);
     expect(canShowEnroll({ status: "recruiting", reviewStatus: "approved" })).toBe(true);
   });
@@ -25,6 +27,7 @@ describe("scanFacts", () => {
     expect(ticketState({ reviewStatus: "pending", isOrganizer: true }).kind).toBe("posted");
     expect(ticketState({ reviewStatus: "pending" }, { posted: "1" }).kind).toBe("posted");
     expect(ticketState({ reviewStatus: "approved", channel: "trip" }, { posted: "1" })).toBe(null);
+    expect(ticketState({ myEnrollment: { status: "applied" }, oversub: { copy: "车位有限。" } }).title).toBe("已报名待确认");
     expect(ticketState({ myEnrollment: { status: "waitlist" } }).title).toBe("候补票");
     expect(ticketState({ channel: "activity", myEnrollment: { status: "joined" } }).title).toBe("已报名");
     expect(ticketState({ channel: "trip" }, { joined: "1" }).kind).toBe("joined");

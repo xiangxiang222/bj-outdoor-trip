@@ -1,17 +1,23 @@
 <template>
   <div>
-    <p class="muted">认证通过后，发团勾选「适用学生价」的团会按学生折扣报价。部分团只对学生或指定高校开放，认证学校需与开团名单对得上。</p>
-    <p v-if="store.profile?.isStudent" style="color:var(--leaf)">已认证{{ store.profile.school ? " · " + store.profile.school : "" }}</p>
+    <p class="muted">认证通过后，发团勾选「适用学生价」的团会按学生折扣报价。部分高校团只对师生或校友开放，认证学校需与开团名单对得上。校友不享受学生价。</p>
+    <p v-if="store.profile?.isAlumni" style="color:var(--leaf)">已认证校友{{ store.profile.school ? " · " + store.profile.school : "" }}</p>
+    <p v-else-if="store.profile?.isStudent" style="color:var(--leaf)">已认证师生{{ store.profile.school ? " · " + store.profile.school : "" }}</p>
     <p v-else-if="store.profile?.studentStatus === 'pending'" class="muted">审核中{{ store.profile.school ? " · " + store.profile.school : "" }}</p>
+    <label>身份</label>
+    <select class="select" v-model="campusKind" :disabled="certified">
+      <option value="student">在读师生</option>
+      <option value="alumni">校友</option>
+    </select>
     <label>学校</label>
     <input class="input" v-model="school" placeholder="填写学校全称" />
     <p v-if="msg" :style="ok ? 'color:var(--leaf)' : 'color:var(--clay)'">{{ msg }}</p>
-    <button class="btn block" type="button" :disabled="loading || store.profile?.isStudent" @click="submit">{{ loading ? "提交中…" : "提交认证" }}</button>
+    <button class="btn block" type="button" :disabled="loading || certified" @click="submit">{{ loading ? "提交中…" : "提交认证" }}</button>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
@@ -21,16 +27,18 @@ const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const school = ref(store.profile?.school || "");
+const campusKind = ref(store.profile?.campusKind === "alumni" ? "alumni" : "student");
 const msg = ref("");
 const ok = ref(false);
 const loading = ref(false);
+const certified = computed(() => !!(store.profile?.isStudent || store.profile?.isAlumni));
 
 async function submit() {
   if (!requireLogin(store, router, route)) return;
   loading.value = true;
   msg.value = "";
   try {
-    const res = await http.post("/me/student", { school: school.value });
+    const res = await http.post("/me/student", { school: school.value, campusKind: campusKind.value });
     store.setAuth(store.token, res.data);
     ok.value = true;
     msg.value = res.message || "已提交";

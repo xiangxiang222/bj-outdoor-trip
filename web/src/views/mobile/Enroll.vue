@@ -4,6 +4,7 @@
       <strong>{{ s.route.title }}</strong>
       <p class="muted">{{ s.startDate }}{{ isActivity ? "" : " · " + (s.bus?.name || "") }} {{ s.meetupTime || "" }}</p>
       <p v-if="s.status === 'cancelled'" style="color:var(--clay)">本团已解散。理由：{{ s.cancelReason }}</p>
+      <p v-else-if="s.oversub?.pending" class="muted">{{ s.oversub.copy }}</p>
       <p v-else-if="isActivity && s.remain <= 0">本局已满（{{ s.enrolled }}/{{ s.maxSeats }}）。仍可加入候补，有人取消后按顺序递补。</p>
       <p v-else-if="s.remain <= 0">本车已满（{{ s.enrolled }}/{{ s.maxSeats }}）。仍可加入候补，有人取消后按顺序递补。</p>
       <p v-else-if="s.organizerType === 'company'">公司团：报名后挂账，由 {{ s.companyName || "公司" }} 统一支付。</p>
@@ -14,10 +15,10 @@
       <p v-if="isActivity && isFree" class="price">免费</p>
       <p v-else class="price">你应付 ¥{{ quote }} / 人</p>
       <p v-if="couponHint" class="muted" style="color:var(--leaf)">{{ couponHint }}</p>
-      <p v-if="s.eligibility?.enabled" class="muted">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? " 已认证学生" : "" }}</p>
+      <p v-if="s.eligibility?.enabled" class="muted">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? (s.eligibility.alumniOk ? " 已认证师生或校友" : " 已认证学生") : "" }}</p>
       <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" style="color:var(--clay)">
         {{ s.eligibility.reason }}
-        <router-link to="/m/student">去学生认证</router-link>
+        <router-link to="/m/student">去校园认证</router-link>
       </p>
     </div></div>
 
@@ -58,7 +59,7 @@
       <label>一句话</label>
       <input class="input" v-model="form.comboNote" placeholder="例如：想找同校第一次走长城" />
     </div></div>
-    <div v-if="s.remain > 0 && seatRows.length" class="card"><div class="pad">
+    <div v-if="!s.oversub?.pending && s.remain > 0 && seatRows.length" class="card"><div class="pad">
       <div class="h2" style="margin-top:0">选座位</div>
       <p class="muted">车头朝上，中间为过道。不选则自动分配空位。</p>
       <div class="seat-map">
@@ -138,7 +139,7 @@
     <p v-else class="muted">出发日前可取消；到场找发起人。</p>
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
     <button v-if="s.status !== 'cancelled'" class="btn block" style="margin-top:16px" :disabled="loading || (s.eligibility?.enabled && !s.eligibility.canEnroll)" @click="submit">
-      {{ s.eligibility?.enabled && !s.eligibility.canEnroll ? "暂不符合报名条件" : s.remain <= 0 ? "加入候补" : isActivity ? "报名本局" : "加入报名（暂不付款）" }}
+      {{ enrollBtn }}
     </button>
   </div>
 </template>
@@ -205,6 +206,12 @@ const plans = computed(() =>
         { code: "plus", name: "升级高额险", fee: 48, cover: "意外身故/伤残 50 万，医疗 5 万" },
       ]
 );
+const enrollBtn = computed(() => {
+  if (s.value?.eligibility?.enabled && !s.value.eligibility.canEnroll) return "暂不符合报名条件";
+  if (s.value?.oversub?.pending) return "报名参加";
+  if (s.value?.remain <= 0) return "加入候补";
+  return isActivity.value ? "报名本局" : "加入报名（暂不付款）";
+});
 const seatChart = ref(null);
 const seatRows = computed(() => {
   const list = seatChart.value?.seats || [];

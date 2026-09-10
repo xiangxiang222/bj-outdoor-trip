@@ -130,7 +130,7 @@ Page({
       return;
     }
     if (this.data.s && this.data.s.eligibility && this.data.s.eligibility.enabled && !this.data.s.eligibility.canEnroll) {
-      wx.showModal({ title: "暂不能报名", content: this.data.s.eligibility.reason || "请先完成学生认证", showCancel: false });
+      wx.showModal({ title: "暂不能报名", content: this.data.s.eligibility.reason || "请先完成校园认证", showCancel: false });
       return;
     }
     if (!this.data.form.travelerName || !this.data.form.travelerPhone) {

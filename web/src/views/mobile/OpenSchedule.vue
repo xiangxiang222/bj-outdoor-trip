@@ -29,7 +29,9 @@
       <option value="free">免费团</option>
       <option value="full">全价团</option>
     </select>
-    <label class="check-row"><input type="checkbox" v-model="form.studentOnly" /> 仅已认证学生可报名</label>
+    <label class="check-row"><input type="checkbox" v-model="form.studentOnly" /> 仅已认证师生可报名</label>
+    <label class="check-row"><input type="checkbox" v-model="form.alumniOk" /> 允许已认证校友</label>
+    <label class="check-row"><input type="checkbox" v-model="form.oversub" /> 报超会抽（车位不够才抽）</label>
     <label>限定高校（可空，逗号分隔）</label>
     <input class="input" v-model="form.schools" placeholder="例如：北京大学,清华大学" />
     <label>想怎么玩</label>
@@ -69,6 +71,8 @@ const form = ref({
   offerType: "full",
   playTagIds: [],
   studentOnly: false,
+  alumniOk: false,
+  oversub: false,
   schools: "",
 });
 

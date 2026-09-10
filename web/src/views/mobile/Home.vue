@@ -36,11 +36,11 @@
         <p>部分团仅限高校，周末进山先看好集合点。</p>
       </div>
       <router-link
-        v-if="store.profile?.studentStatus !== 'pending' && !store.profile?.isStudent"
+        v-if="store.profile?.studentStatus !== 'pending' && !store.profile?.isStudent && !store.profile?.isAlumni"
         class="campus-cta"
         to="/m/student"
       >去认证</router-link>
-      <span v-else-if="store.profile?.isStudent" class="muted">已认证{{ store.profile.school ? " · " + store.profile.school : "" }}</span>
+      <span v-else-if="store.profile?.isStudent || store.profile?.isAlumni" class="muted">已认证{{ store.profile.school ? " · " + store.profile.school : "" }}</span>
       <router-link v-else-if="store.profile?.studentStatus === 'pending'" class="campus-cta" to="/m/student">审核中</router-link>
     </section>
 

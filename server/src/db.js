@@ -354,12 +354,18 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "combo_rule_json", "TEXT DEFAULT '{}'");
   addColumnIfMissing(db, "schedules", "student_only", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "schedules", "schools_json", "TEXT DEFAULT '[]'");
+  addColumnIfMissing(db, "schedules", "alumni_ok", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "schedules", "oversub", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "schedules", "drawn_at", "TEXT");
+  addColumnIfMissing(db, "schedules", "draw_over", "INTEGER");
+  addColumnIfMissing(db, "enrollments", "draw_rank", "INTEGER");
   addColumnIfMissing(db, "enrollments", "combo_json", "TEXT");
   addColumnIfMissing(db, "enrollments", "supplies_json", "TEXT");
   addColumnIfMissing(db, "enrollments", "supplies_fee", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "users", "is_student", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "users", "student_status", "TEXT");
   addColumnIfMissing(db, "users", "school", "TEXT");
+  addColumnIfMissing(db, "users", "campus_kind", "TEXT");
   addColumnIfMissing(db, "users", "group_status", "TEXT");
   addColumnIfMissing(db, "users", "group_name", "TEXT");
   addColumnIfMissing(db, "users", "group_kind", "TEXT");

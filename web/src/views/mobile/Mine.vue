@@ -41,7 +41,7 @@
         <span>{{ store.profile?.isMember ? "会员中心" : "开通会员" }}</span><i>年费 99 · 95 折 ›</i>
       </button>
       <button class="cell" type="button" @click="goAuth('/m/student')">
-        <span>{{ store.profile?.isStudent ? "学生已认证" : store.profile?.studentStatus === "pending" ? "学生认证审核中" : "学生认证" }}</span><i>›</i>
+        <span>{{ store.profile?.isAlumni ? "校友已认证" : store.profile?.isStudent ? "学生已认证" : store.profile?.studentStatus === "pending" ? "校园认证审核中" : "校园认证" }}</span><i>›</i>
       </button>
       <button class="cell" type="button" @click="goAuth('/m/group')">
         <span>{{ store.profile?.groupStatus === "approved" ? "团体已认证" : store.profile?.groupStatus === "pending" ? "团体认证审核中" : "团体认证" }}</span><i>›</i>
@@ -56,7 +56,6 @@
         <span>抽奖</span><i>›</i>
       </button>
     </div>
-
     <p class="cell-label">服务</p>
     <div class="cell-group">
       <button class="cell" type="button" @click="$router.push('/m/official')">

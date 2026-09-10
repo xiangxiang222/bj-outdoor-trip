@@ -25,12 +25,13 @@
         <template #default="{ row }">{{ row.bus?.name }}</template>
       </el-table-column>
       <el-table-column label="报名限制" width="140">
-        <template #default="{ row }">{{ row.eligibility?.label || "—" }}</template>
+        <template #default="{ row }">{{ [row.eligibility?.label, row.oversub?.enabled ? row.oversub.label : ""].filter(Boolean).join(" · ") || "—" }}</template>
       </el-table-column>
       <el-table-column label="人数" width="130">
         <template #default="{ row }">
           {{ row.enrolled }}/{{ row.maxSeats }}
           <span v-if="row.virtualEnrolled" class="muted"> 虚{{ row.virtualEnrolled }}</span>
+          <span v-if="row.oversub?.applied" class="muted"> +{{ row.oversub.applied }}待确认</span>
           <span v-if="row.waitlistCount" class="muted"> +{{ row.waitlistCount }}候</span>
         </template>
       </el-table-column>
@@ -43,7 +44,7 @@
           <span v-else>未匹配</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="580">
+      <el-table-column label="操作" width="680">
         <template #default="{ row }">
           <el-button v-if="canOps && row.reviewStatus === 'pending'" size="small" type="success" @click="review(row, 'approved')">通过</el-button>
           <el-button v-if="canOps && row.reviewStatus === 'pending'" size="small" type="warning" @click="review(row, 'rejected')">驳回</el-button>
@@ -51,6 +52,13 @@
           <el-button v-if="canField" size="small" @click="openTrip(row)">车辆座位</el-button>
           <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openVirtual(row)">虚拟</el-button>
           <el-button v-if="canOps" size="small" @click="openLimit(row)">限制</el-button>
+          <el-button
+            v-if="canOps && row.oversub?.enabled && !row.oversub?.drawn"
+            size="small"
+            type="warning"
+            :disabled="row.status === 'cancelled' || drawingId === row.id"
+            @click="confirmDraw(row)"
+          >确认出行名单</el-button>
           <el-button size="small" @click="demo(row)">画像</el-button>
           <el-button v-if="canOps" size="small" type="success" :disabled="row.status === 'cancelled'" @click="settle(row)">结算</el-button>
           <el-button v-if="canOps" size="small" @click="openSplit(row)">分账</el-button>
@@ -117,8 +125,14 @@
             <el-option label="全价团" value="full" />
           </el-select>
         </el-form-item>
-        <el-form-item label="仅学生">
+        <el-form-item label="仅师生">
           <el-switch v-model="neu.studentOnly" />
+        </el-form-item>
+        <el-form-item label="允许校友">
+          <el-switch v-model="neu.alumniOk" />
+        </el-form-item>
+        <el-form-item label="报超会抽">
+          <el-switch v-model="neu.oversub" />
         </el-form-item>
         <el-form-item label="限定高校">
           <el-input v-model="neu.schools" placeholder="逗号分隔，如 北京大学,清华大学" />
@@ -182,14 +196,21 @@
     </el-dialog>
 
     <el-dialog v-model="showLimit" title="报名限制" width="480px">
-      <p v-if="cur">「{{ cur.route?.title }} {{ cur.startDate }}」可限制仅学生，或只让名单里的高校报名。</p>
+      <p v-if="cur">「{{ cur.route?.title }} {{ cur.startDate }}」可限制师生/校友，或在报名超过座位时抽签确认出行人。</p>
       <el-form label-width="100px">
-        <el-form-item label="仅学生">
+        <el-form-item label="仅师生">
           <el-switch v-model="limitForm.studentOnly" />
+        </el-form-item>
+        <el-form-item label="允许校友">
+          <el-switch v-model="limitForm.alumniOk" />
+        </el-form-item>
+        <el-form-item label="报超会抽">
+          <el-switch v-model="limitForm.oversub" />
         </el-form-item>
         <el-form-item label="限定高校">
           <el-input v-model="limitForm.schools" type="textarea" :rows="2" placeholder="逗号分隔，如 北京大学,清华大学。留空则不限学校。" />
         </el-form-item>
+        <p class="muted">报超会抽：先报名待确认。人数超过座位才抽签，未超过则全部确认。不要对外说「抽名额」。</p>
       </el-form>
       <template #footer>
         <el-button @click="showLimit = false">取消</el-button>
@@ -228,7 +249,7 @@
 import { computed, nextTick, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import * as echarts from "echarts";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { organizerTypeText, scheduleStatusText } from "@/utils/labels";
 import http from "@/api/http";
 import { hasCap } from "@/utils/staff";
@@ -251,7 +272,8 @@ const showGuide = ref(false);
 const showTrip = ref(false);
 const showLimit = ref(false);
 const savingLimit = ref(false);
-const limitForm = ref({ studentOnly: false, schools: "" });
+const drawingId = ref(0);
+const limitForm = ref({ studentOnly: false, alumniOk: false, oversub: false, schools: "" });
 const showVirtual = ref(false);
 const virtualCount = ref(0);
 const savingVirtual = ref(false);
@@ -277,6 +299,8 @@ const neu = ref({
   companyName: "",
   offerType: "full",
   studentOnly: false,
+  alumniOk: false,
+  oversub: false,
   schools: "",
   virtualCount: 0,
 });
@@ -284,6 +308,8 @@ function openLimit(row) {
   cur.value = row;
   limitForm.value = {
     studentOnly: !!row.eligibility?.studentOnly,
+    alumniOk: !!row.eligibility?.alumniOk,
+    oversub: !!row.oversub?.enabled,
     schools: (row.eligibility?.schools || []).join("，"),
   };
   showLimit.value = true;
@@ -293,6 +319,8 @@ async function saveLimit() {
   try {
     await http.put(`/admin/schedules/${cur.value.id}/limit`, {
       studentOnly: limitForm.value.studentOnly,
+      alumniOk: limitForm.value.alumniOk,
+      oversub: limitForm.value.oversub,
       schools: limitForm.value.schools,
     });
     showLimit.value = false;
@@ -470,6 +498,27 @@ async function demo(row) {
     yAxis: {},
     series: [{ type: "bar", data: d.hometown.map((x) => x.value) }],
   });
+}
+async function confirmDraw(row) {
+  try {
+    await ElMessageBox.confirm(
+      "将按座位确认出行人。报名超过座位时抽签，未超过则全部确认。",
+      "确认出行名单",
+      { type: "warning", confirmButtonText: "确认名单", cancelButtonText: "取消" }
+    );
+  } catch {
+    return;
+  }
+  drawingId.value = row.id;
+  try {
+    const res = await http.post(`/admin/schedules/${row.id}/draw`);
+    ElMessage.success(res.message || "出行名单已确认");
+    await load();
+  } catch (e) {
+    ElMessage.error(e.message || "确认失败");
+  } finally {
+    drawingId.value = 0;
+  }
 }
 async function review(row, status) {
   await http.post(`/admin/schedules/${row.id}/review`, { status });

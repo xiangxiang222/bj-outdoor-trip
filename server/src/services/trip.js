@@ -79,6 +79,7 @@ function chainItem(e, i, req) {
     travelerType: e.traveler_type,
     status: e.status,
     waitlisted: e.status === "waitlist",
+    applied: e.status === "applied",
     seatNo: e.seat_no || "",
     createdAt: e.created_at,
     canPay: e.status === "joined" && e.pay_status === "unpaid",

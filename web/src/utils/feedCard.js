@@ -9,6 +9,10 @@ export function feedWhen(iso, time) {
 
 export function boardedLine(row, channel) {
   const activity = channel === "activity" || row?.channel === "activity";
+  if (row?.oversub?.pending) {
+    const applied = Number(row.oversub.applied || 0);
+    return applied ? `${applied}人已报名` : row.oversub.label || "报超会抽";
+  }
   const remain = Number(row?.remain);
   if (Number.isFinite(remain) && remain <= 0) return "已满·可候补";
   const n = Number(row?.enrolled) || 0;
@@ -35,7 +39,7 @@ export function coverOf(row) {
 export function taglineOf(row) {
   const tags = (row?.playTags || []).map((t) => t.name || t).filter(Boolean);
   if (tags.length) return tags.slice(0, 3).join(" · ");
-  return row?.route?.subtitle || row?.eligibility?.label || "";
+  return row?.route?.subtitle || [row?.eligibility?.label, row?.oversub?.label].filter(Boolean).join(" · ") || "";
 }
 
 export function isFreeOffer(row) {

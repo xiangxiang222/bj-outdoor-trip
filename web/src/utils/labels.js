@@ -20,6 +20,7 @@ export function enrollStatusText(row) {
     return row.pay_status === "refunded" ? "已取消 · 已退款" : "已取消";
   }
   if (row?.status === "waitlist") return "候补中";
+  if (row?.status === "applied") return "已报名待确认";
   return payStatusText(row?.pay_status);
 }
 

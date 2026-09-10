@@ -119,6 +119,8 @@ npx vitest run src/utils/activityKind.test.js
 | `api.eligibility.test.js` | 仅学生 / 高校名单 |
 | `api.combo.test.js` | 组合团 |
 | `api.trip.test.js` | 用户发团与审核 |
+| `api.oversub.test.js` | 报超会抽：未超座位全员确认、超员抽签、重复确认 400、校友资格、中签取消后按抽签顺序递补、志愿者不进抽签池 |
+| `oversub.service.test.js` | 抽签乱序可注入 rng，不改原数组 |
 | `api.coupon.test.js` | 公开限量领取、每人一张、会员与券取低不叠、赠团不核销、候补占用/递补核销/取消退券、公司团与暂停领取、仅会员领取、定向发放与演示短信 |
 | `api.reviews.test.js` | 仅报名成功可评、每团一条、线路/排期列表、候补与取消不可评 |
 | `api.lottery.test.js` | 报名前/后抽奖 |

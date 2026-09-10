@@ -79,7 +79,7 @@ const title = computed(() => {
     activities: "同城局",
     official: "客服与规则",
     rules: "客服与规则",
-    student: "学生认证",
+    student: "校园认证",
     group: "团体认证",
     feedback: "建议与 BUG",
     lottery: "抽奖",

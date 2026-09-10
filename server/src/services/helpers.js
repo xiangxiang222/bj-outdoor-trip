@@ -14,7 +14,12 @@ function isMember(user) {
 }
 
 function isStudent(user) {
-  return !!(user && (user.student_status === "approved" || user.is_student === 1));
+  if (!user || user.campus_kind === "alumni") return false;
+  return !!(user.student_status === "approved" || user.is_student === 1);
+}
+
+function isAlumni(user) {
+  return !!(user && user.campus_kind === "alumni" && user.student_status === "approved");
 }
 
 function enrolledCount(scheduleId, includeCancelled = false) {
@@ -200,6 +205,7 @@ function publicMediaUrl(url) {
 module.exports = {
   isMember,
   isStudent,
+  isAlumni,
   enrolledCount,
   realEnrolledCount,
   virtualEnrolledCount,

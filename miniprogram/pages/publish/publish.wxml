@@ -50,7 +50,9 @@
     <input class="input" placeholder="另一半学校（可空）" value="{{form.comboRule.school}}" bindinput="setComboSchool" />
   </view>
   <input class="input" type="number" placeholder="原价（元）" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
-  <view class="pad" bindtap="toggleStudentOnly">{{form.studentOnly ? '☑' : '☐'}} 仅已认证学生可报名</view>
+  <view class="pad" bindtap="toggleStudentOnly">{{form.studentOnly ? '☑' : '☐'}} 仅已认证师生可报名</view>
+  <view class="pad" bindtap="toggleAlumniOk">{{form.alumniOk ? '☑' : '☐'}} 允许已认证校友</view>
+  <view class="pad" bindtap="toggleOversub">{{form.oversub ? '☑' : '☐'}} 报超会抽（车位不够才抽）</view>
   <input class="input" placeholder="限定高校，逗号分隔，可空" value="{{form.schools}}" bindinput="setField" data-k="schools" />
   <view class="label">出发日期</view>
   <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">

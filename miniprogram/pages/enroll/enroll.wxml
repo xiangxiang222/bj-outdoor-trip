@@ -1,5 +1,6 @@
 <view class="pad" wx:if="{{s}}">{{s.route.title}} {{s.startDate}}</view>
 <view class="pad muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">本团已解散，无法报名。理由：{{s.cancelReason}}</view>
+<view class="pad muted" wx:elif="{{s.oversub.pending}}">{{s.oversub.copy}}</view>
 <view class="pad muted" wx:elif="{{isActivity && s.remain<=0}}">本局已满，仍可加入候补，有人取消后按顺序递补。</view>
 <view class="pad muted" wx:elif="{{s.remain<=0}}">本车已满，仍可加入候补，有人取消后按顺序递补。</view>
 <view class="pad muted" wx:elif="{{isActivity && isFree}}">免费局，填姓名和手机即可。</view>
@@ -24,7 +25,7 @@
   <input class="input" placeholder="希望学校（可空）" value="{{form.wantSchool}}" bindinput="setWantSchool" />
   <input class="input" placeholder="一句话，例如想找同校" value="{{form.comboNote}}" bindinput="setComboNote" />
 </view>
-<view class="card" wx:if="{{s.remain>0 && seatRows.length}}">
+<view class="card" wx:if="{{!s.oversub.pending && s.remain>0 && seatRows.length}}">
   <view class="pad">选座位（不选则自动分配）</view>
   <view class="seat-map">
     <view class="seat-front">车头</view>
@@ -66,4 +67,4 @@
 </view>
 </block>
 <view class="pad muted" wx:else>出发日前可取消；到场找发起人。</view>
-<view class="btn" wx:if="{{s.status!='cancelled' && !(s.eligibility.enabled && !s.eligibility.canEnroll)}}" bindtap="submit">{{s.remain<=0?'加入候补':(isActivity?'报名本局':'确认报名')}}</view>
+<view class="btn" wx:if="{{s.status!='cancelled' && !(s.eligibility.enabled && !s.eligibility.canEnroll)}}" bindtap="submit">{{s.oversub.pending?'报名参加':(s.remain<=0?'加入候补':(isActivity?'报名本局':'确认报名'))}}</view>

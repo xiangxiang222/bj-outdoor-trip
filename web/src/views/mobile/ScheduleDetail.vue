@@ -57,18 +57,19 @@
           <a v-if="busPhotos.length" class="nav-link" href="#" @click.prevent="showBus = true">{{ busText }}</a>
           <span v-else>{{ busText }}</span>
         </p>
-        <div class="progress"><i :style="{ width: Math.min(100, (s.enrolled / s.maxSeats) * 100) + '%' }"></i></div>
+        <div class="progress"><i :style="{ width: Math.min(100, (shownEnrolled / s.maxSeats) * 100) + '%' }"></i></div>
         <div class="row">
-          <span v-if="s.minGroupSize" class="muted">{{ isActivity ? "满 " + s.minGroupSize + " 人成局" : "最低成团 " + s.minGroupSize }}</span>
+          <span v-if="s.minGroupSize || s.oversub?.label" class="muted">{{ isActivity ? "满 " + s.minGroupSize + " 人成局" : "最低成团 " + s.minGroupSize }}<template v-if="s.oversub?.label"> · {{ s.oversub.label }}</template></span>
           <span v-else></span>
           <span v-if="isActivity && isFree" class="tag">免费</span>
           <span v-else-if="isActivity" class="price">¥{{ s.quote?.price }}</span>
           <TripPrices v-else :quote="s.quote" compact />
         </div>
-        <p class="muted" v-if="s.eligibility?.enabled">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? " 已认证学生可报" : "" }}</p>
+        <p class="muted" v-if="s.oversub?.enabled">{{ s.oversub.copy }}</p>
+        <p class="muted" v-if="s.eligibility?.enabled">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? (s.eligibility.alumniOk ? " 已认证师生或校友可报" : " 已认证学生可报") : "" }}</p>
         <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" class="muted" style="color:var(--clay)">
           {{ s.eligibility.reason }}
-          <router-link to="/m/student">去学生认证</router-link>
+          <router-link to="/m/student">去校园认证</router-link>
         </p>
         <p class="muted" v-if="s.reviewStatus === 'pending'" style="color:#c77d3a">本团正在审核，通过后才会出现在{{ isActivity ? "活动页" : "首页" }}，暂不能报名。</p>
         <p class="muted" v-else-if="s.reviewStatus === 'rejected'" style="color:var(--clay)">本团未通过审核。</p>
@@ -145,7 +146,8 @@
         <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
       </template>
       <template v-else>
-      <p>1. 座位图可改座，早报名早选座。</p>
+      <p v-if="s.myEnrollment.status === 'applied'">已报名，待确认出行名单。{{ s.oversub?.copy }}</p>
+      <p v-else>1. 座位图可改座，早报名早选座。</p>
       <p>2. 本团微信群</p>
       <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本团群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
       <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
@@ -198,6 +200,7 @@
           <span v-if="!isActivity && c.lifeStage" class="muted"> · {{ c.lifeStage }}</span>
         </span>
         <span v-if="c.waitlisted" class="muted">候补</span>
+        <span v-else-if="c.applied || c.status === 'applied'" class="muted">待确认</span>
         <span
           v-else-if="!isActivity || !isFree"
           :class="{ 'pay-paid': c.payStatus === 'paid', 'pay-unpaid': c.canPay }"
@@ -407,6 +410,10 @@ const seatRows = computed(() => {
   }
   return groups;
 });
+const shownEnrolled = computed(() => {
+  if (s.value?.oversub?.pending) return Number(s.value.oversub.applied || 0);
+  return Number(s.value?.enrolled || 0);
+});
 const isOwner = computed(() => store.profile && s.value && Number(s.value.organizerId) === Number(store.profile.id));
 const leaderSlots = computed(() => {
   const list = s.value?.leaders || [];
@@ -422,6 +429,7 @@ const candidateOptions = computed(() => {
 });
 const seatHint = computed(() => {
   if (s.value?.myEnrollment?.status === "joined") return isActivity.value ? "点空位即可改位置。" : "点空位即可改座。占用位显示性别与年龄段。";
+  if (s.value?.myEnrollment?.status === "applied" || s.value?.oversub?.pending) return "确认出行名单前先不选座。";
   if (isActivity.value) return "点格子看谁来了。报名前会提示先报名。";
   return "早报名早选座。报名前点空位会提示先报名；占用位可看个人主页。";
 });

@@ -15,6 +15,10 @@ export function peopleLine(row) {
   const remain = Number(row.remain);
   const wait = Number(row.waitlistCount || row.waitlist_count) || 0;
   const activity = row.channel === "activity";
+  if (row.oversub?.pending) {
+    const applied = Number(row.oversub.applied || 0);
+    return `已报 ${applied}/${max}` + (row.oversub.label ? ` · ${row.oversub.label}` : "");
+  }
   if (Number.isFinite(remain) && remain <= 0) {
     return wait ? `已满 · 可候补 ${wait} 人` : "已满 · 可候补";
   }
@@ -49,6 +53,7 @@ export function dockPrice(row) {
 export function enrollCta(row) {
   const remain = Number(row?.remain);
   const activity = row?.channel === "activity";
+  if (row?.oversub?.pending) return "报名参加";
   if (Number.isFinite(remain) && remain <= 0) return "已满员，去候补";
   return activity ? "报名本局" : "立即报名";
 }
@@ -86,6 +91,15 @@ export function ticketState(row, query = {}) {
       };
     }
     return null;
+  }
+  if (en.status === "applied") {
+    return {
+      kind: "applied",
+      title: "已报名待确认",
+      sub: row.oversub?.copy || "车位有限。报名人数超过座位时，将抽签决定出行人；未超过则全部确认。",
+      share: true,
+      trips: true,
+    };
   }
   if (en.status === "waitlist") {
     return {

@@ -58,7 +58,8 @@
         <text class="price">¥{{s.quote.price}}</text>
       </view>
     </view>
-    <view class="muted" wx:if="{{s.eligibility.enabled}}">{{s.eligibility.label}}{{s.eligibility.schools.length ? ' 已认证学生可报' : ''}}</view>
+    <view class="muted" wx:if="{{s.oversub.enabled}}">{{s.oversub.copy}}</view>
+    <view class="muted" wx:if="{{s.eligibility.enabled}}">{{s.eligibility.label}}{{s.eligibility.schools.length ? (s.eligibility.alumniOk ? ' 已认证师生或校友可报' : ' 已认证学生可报') : ''}}</view>
     <view class="muted" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" style="color:#bc4749">{{s.eligibility.reason}}</view>
     <view class="muted" wx:if="{{s.reviewStatus=='pending'}}" style="color:#c77d3a">本团正在审核，通过后才会出现在{{isActivity ? '活动页' : '首页'}}。</view>
     <view class="muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">本团已解散。理由：{{s.cancelReason}}</view>
@@ -136,6 +137,7 @@
   <text wx:else>{{item.index}}. {{item.name}}</text>
   <text wx:if="{{!isActivity && item.lifeStage}}"> {{item.lifeStage}}</text>
   <text wx:if="{{item.waitlisted}}" class="muted"> 候补</text>
+  <text wx:elif="{{item.applied}}" class="muted"> 待确认</text>
   <text wx:elif="{{!isActivity || !isFree && item.canPay}}" class="pay-unpaid" catchtap="payFor" data-id="{{item.enrollmentId}}" data-name="{{item.name}}"> {{item.payText}} · 去支付</text>
   <text wx:elif="{{!isActivity || !isFree}}" class="{{item.payStatus=='paid' ? 'pay-paid' : 'muted'}}"> {{item.payText}}</text>
 </view>
