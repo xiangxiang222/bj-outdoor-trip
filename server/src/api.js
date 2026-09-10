@@ -43,6 +43,7 @@ const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
 const { parseEnrollLimit, eligibilityView, applyEnrollLimit } = require("./services/eligibility");
 const { oversubView, isOversubPending, drawOversub } = require("./services/oversub");
+const { noticeCampus, noticeGroup, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
   createCampaign,
@@ -626,6 +627,7 @@ router.post("/me/student", authUser, (req, res) => {
     .prepare("UPDATE users SET school=?, campus_kind=?, student_status='pending', is_student=0 WHERE id=?")
     .run(school, campusKind, req.userId);
   const next = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+  noticeCampus(next);
   res.json({
     ok: true,
     data: userPublic(next, req),
@@ -639,6 +641,7 @@ router.post("/me/group", authUser, (req, res) => {
   if (!name) return res.status(400).json({ ok: false, message: "请填写团体名称" });
   db().prepare("UPDATE users SET group_name=?, group_kind=?, group_status='pending' WHERE id=?").run(name, kind, req.userId);
   const next = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+  noticeGroup(next);
   res.json({ ok: true, data: userPublic(next, req), message: "已提交团体认证，待后台审核" });
 });
 
@@ -2052,8 +2055,25 @@ router.post("/admin/enrollments/:id/cancel", authAdmin, requireCap("ops"), (req,
   }
 });
 
+router.get("/admin/notices", authAdmin, requireCap("ops"), (req, res) => {
+  res.json({ ok: true, data: listNotices() });
+});
+
+router.post("/admin/notices/read-all", authAdmin, requireCap("ops"), (req, res) => {
+  res.json({ ok: true, data: markAllRead(req.adminId) });
+});
+
+router.post("/admin/notices/:id/read", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    res.json({ ok: true, data: markRead(Number(req.params.id), req.adminId) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
 router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
   const q = String(req.query.q || "").trim();
+  const pending = String(req.query.pending || "").trim();
   let sql =
     "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,campus_kind,group_status,group_name FROM users WHERE deleted_at IS NULL";
   const args = [];
@@ -2062,7 +2082,10 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
     const like = `%${q}%`;
     args.push(like, like, like);
   }
-  sql += " ORDER BY id DESC";
+  if (pending === "campus") sql += " AND student_status='pending'";
+  else if (pending === "group") sql += " AND group_status='pending'";
+  sql +=
+    " ORDER BY CASE WHEN student_status='pending' THEN 0 WHEN group_status='pending' THEN 1 ELSE 2 END, id DESC";
   const rows = db()
     .prepare(sql)
     .all(...args)
@@ -2114,6 +2137,7 @@ router.post("/admin/users/:id/verify", authAdmin, requireCap("ops"), (req, res) 
   } else {
     return res.status(400).json({ ok: false, message: "请选择学生或团体认证" });
   }
+  resolveNotices(kind === "student" ? "campus" : "group", "user", user.id, req.adminId);
   const next = db().prepare("SELECT * FROM users WHERE id=?").get(user.id);
   res.json({ ok: true, data: adminUserView(next) });
 });

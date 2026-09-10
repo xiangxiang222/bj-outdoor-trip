@@ -19,6 +19,34 @@
       <div class="admin-me">{{ me.name || "管理员" }} · {{ me.roleLabel || roleLabel(me.role) }}</div>
     </aside>
     <main class="admin-main">
+      <header v-if="can('ops')" class="admin-top">
+        <span class="muted">待办会显示在这里，点消息可直接去审批。</span>
+        <div class="admin-bell-wrap">
+          <button class="admin-bell" type="button" @click="toggleNotices">
+            消息
+            <i v-if="unread">{{ unread > 9 ? "9+" : unread }}</i>
+          </button>
+          <div v-if="showNotices" class="admin-notice-panel">
+            <div class="admin-notice-head">
+              <strong>待办消息</strong>
+              <button v-if="unread" class="admin-notice-readall" type="button" @click="readAll">全部已读</button>
+            </div>
+            <button
+              v-for="n in notices"
+              :key="n.id"
+              class="admin-notice-item"
+              :class="{ unread: n.unread }"
+              type="button"
+              @click="openNotice(n)"
+            >
+              <b>{{ n.title }}</b>
+              <span>{{ n.body }}</span>
+              <small>{{ n.createdAt }}</small>
+            </button>
+            <p v-if="!notices.length" class="muted" style="margin:12px 8px">暂无消息</p>
+          </div>
+        </div>
+      </header>
       <div style="padding:20px 24px">
         <router-view />
       </div>
@@ -27,7 +55,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import http from "@/api/http";
 import { capsOf, hasCap, roleLabel } from "@/utils/staff";
@@ -39,9 +67,63 @@ const me = ref({
   caps: [],
 });
 me.value.caps = capsOf(me.value.role);
+const notices = ref([]);
+const unread = ref(0);
+const showNotices = ref(false);
+let noticeTimer = 0;
 
 function can(cap) {
   return hasCap(me.value, cap);
+}
+
+async function loadNotices() {
+  if (!can("ops")) return;
+  try {
+    const res = await http.get("/admin/notices");
+    notices.value = res.data?.list || [];
+    unread.value = Number(res.data?.unread || 0);
+  } catch {
+    /* 登录失效时由 /admin/me 处理 */
+  }
+}
+
+function toggleNotices() {
+  showNotices.value = !showNotices.value;
+  if (showNotices.value) loadNotices();
+}
+
+function noticeHref(href) {
+  const value = String(href || "").trim();
+  return value.startsWith("/admin/") ? value : "/admin/users";
+}
+
+async function openNotice(n) {
+  showNotices.value = false;
+  if (n?.id && n.unread) {
+    try {
+      await http.post(`/admin/notices/${n.id}/read`);
+    } catch {
+      /* 仍跳转审批页 */
+    }
+    n.unread = false;
+    unread.value = Math.max(0, unread.value - 1);
+  }
+  router.push(noticeHref(n?.href));
+}
+
+async function readAll() {
+  try {
+    const res = await http.post("/admin/notices/read-all");
+    notices.value = res.data?.list || [];
+    unread.value = Number(res.data?.unread || 0);
+  } catch {
+    /* ignore */
+  }
+}
+
+function onDocClick(e) {
+  const wrap = e.target?.closest?.(".admin-bell-wrap");
+  if (!wrap) showNotices.value = false;
 }
 
 onMounted(async () => {
@@ -51,9 +133,18 @@ onMounted(async () => {
     localStorage.setItem("bj_admin_name", res.data.name || "");
     localStorage.setItem("bj_admin_role", res.data.role || "admin");
     if (route.path === "/admin" && !can("ops")) router.replace("/admin/schedules");
+    await loadNotices();
+    noticeTimer = window.setInterval(loadNotices, 20000);
+    window.addEventListener("admin-notices-refresh", loadNotices);
+    document.addEventListener("click", onDocClick);
   } catch {
     out();
   }
+});
+onUnmounted(() => {
+  if (noticeTimer) window.clearInterval(noticeTimer);
+  window.removeEventListener("admin-notices-refresh", loadNotices);
+  document.removeEventListener("click", onDocClick);
 });
 
 function out() {

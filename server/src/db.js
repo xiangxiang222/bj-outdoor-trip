@@ -179,6 +179,19 @@ function createSchema(db) {
       status TEXT DEFAULT 'on'
     );
 
+    CREATE TABLE IF NOT EXISTS admin_notices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      kind TEXT,
+      title TEXT,
+      body TEXT,
+      href TEXT,
+      ref_type TEXT,
+      ref_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      read_at TEXT,
+      read_by INTEGER
+    );
+
     CREATE TABLE IF NOT EXISTS enrollments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       schedule_id INTEGER,
@@ -459,6 +472,18 @@ function migrateSchema(db) {
     UPDATE users SET referral_code='BX' || id WHERE referral_code IS NULL OR referral_code='';
   `);
   db.exec(`
+    CREATE TABLE IF NOT EXISTS admin_notices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      kind TEXT,
+      title TEXT,
+      body TEXT,
+      href TEXT,
+      ref_type TEXT,
+      ref_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      read_at TEXT,
+      read_by INTEGER
+    );
     CREATE TABLE IF NOT EXISTS play_tags (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT,

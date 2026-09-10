@@ -9,6 +9,7 @@ function wipe(db) {
     DELETE FROM contest_votes;
     DELETE FROM contest_posts;
     DELETE FROM lottery_draws;
+    DELETE FROM admin_notices;
     DELETE FROM feedbacks;
     DELETE FROM leader_referrals;
     DELETE FROM referrals;
