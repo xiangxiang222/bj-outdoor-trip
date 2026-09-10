@@ -201,7 +201,10 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/coupons/:id/grant` | 定向发放。`phones`/`phonesText`/`userIds`/`allMembers`，可选 `sms`（默认 true）。一人一码，写入 `sms_logs` 场景 `coupon`，每手机每天最多 1 条 |
 | GET | `/admin/enrollments` | Query：`scheduleId` `q` `payStatus` `status` |
 | POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款标记退款） |
-| GET | `/admin/users` | Query：`q`。不含已注销、不含证件；带 `isMember` `isVirtual` `isStudent` `isAlumni` `campusKind` `studentStatus` `groupStatus` |
+| GET | `/admin/notices` | 运营。后台待办消息。`{ list, unread }`。用户提交校园/团体认证时写入 |
+| POST | `/admin/notices/read-all` | 运营。全部标已读 |
+| POST | `/admin/notices/:id/read` | 运营。单条标已读 |
+| GET | `/admin/users` | Query：`q`、`pending=campus\|group`。不含已注销、不含证件；带 `isMember` `isVirtual` `isStudent` `isAlumni` `campusKind` `studentStatus` `groupStatus`。待审排在前面 |
 | POST | `/admin/virtual-users` | `{ scheduleId, count }` 将该团虚拟报名人数设为 `count`（可增可减） |
 | POST | `/admin/schedules/:id/virtual-users` | `{ count }` 同上，按路径指定行程 |
 | POST | `/admin/users/:id/verify` | `{ kind: student\|group, action: approve\|reject }`。校友通过后 `is_student=0` |

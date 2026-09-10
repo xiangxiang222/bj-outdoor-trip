@@ -7,8 +7,13 @@
         <el-button type="success" @click="load">查询</el-button>
       </div>
     </div>
-    <p class="admin-scroll-hint">表格较宽时可左右滑动，操作在最右侧。</p>
-    <el-table :data="list" stripe>
+    <div class="row" style="gap:8px;margin:0 0 12px">
+      <el-button size="small" :type="pending === '' ? 'success' : 'default'" @click="setPending('')">全部</el-button>
+      <el-button size="small" :type="pending === 'campus' ? 'success' : 'default'" @click="setPending('campus')">校园待审</el-button>
+      <el-button size="small" :type="pending === 'group' ? 'success' : 'default'" @click="setPending('group')">团体待审</el-button>
+    </div>
+    <p class="admin-scroll-hint">待审会排在最上面。从消息点进来会高亮对应行，操作在最右侧。</p>
+    <el-table :data="list" stripe row-key="id" :row-class-name="rowClass">
       <el-table-column prop="nickname" label="昵称" min-width="120" />
       <el-table-column prop="phone" label="手机" width="130" />
       <el-table-column label="类型" width="80">
@@ -60,28 +65,58 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import http from "@/api/http";
 import { genderText } from "@/utils/labels";
 
+const route = useRoute();
+const router = useRouter();
 const list = ref([]);
 const q = ref("");
+const pending = ref("");
+const focusId = ref("");
 const showPoints = ref(false);
 const saving = ref(false);
 const pointsRow = ref(null);
 const pointsForm = ref({ delta: 10, reason: "" });
 
-onMounted(load);
+onMounted(syncFromRoute);
+watch(() => [route.query.pending, route.query.userId], syncFromRoute);
+
+function syncFromRoute() {
+  pending.value = String(route.query.pending || "");
+  focusId.value = String(route.query.userId || "");
+  load();
+}
+
+function setPending(value) {
+  router.replace({ path: "/admin/users", query: value ? { pending: value } : {} });
+}
+
+function rowClass({ row }) {
+  if (focusId.value && String(row.id) === focusId.value) return "admin-row-focus";
+  if (row.studentStatus === "pending" || row.groupStatus === "pending") return "admin-row-pending";
+  return "";
+}
 
 async function load() {
-  list.value = (await http.get("/admin/users", { params: { q: q.value } })).data;
+  list.value = (await http.get("/admin/users", { params: { q: q.value, pending: pending.value } })).data;
+  if (focusId.value && !list.value.some((u) => String(u.id) === focusId.value)) {
+    list.value = (await http.get("/admin/users", { params: { q: q.value } })).data;
+  }
+  await nextTick();
+  if (!focusId.value) return;
+  const el = document.querySelector(".admin-row-focus");
+  if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
 }
 
 async function verify(row, kind) {
   try {
     await http.post(`/admin/users/${row.id}/verify`, { kind, action: "approve" });
     ElMessage.success(kind === "student" ? "校园认证已通过" : "团体已通过");
+    window.dispatchEvent(new Event("admin-notices-refresh"));
     await load();
   } catch (e) {
     ElMessage.error(e.message);
