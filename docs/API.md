@@ -204,7 +204,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | GET | `/admin/notices` | 运营。后台待办消息。`{ list, unread }`。用户提交校园/团体认证时写入 |
 | POST | `/admin/notices/read-all` | 运营。全部标已读 |
 | POST | `/admin/notices/:id/read` | 运营。单条标已读 |
-| GET | `/admin/users` | Query：`q`、`pending=campus\|group`。不含已注销、不含证件；带 `isMember` `isVirtual` `isStudent` `isAlumni` `campusKind` `studentStatus` `groupStatus`。待审排在前面 |
+| GET | `/admin/users` | Query：`q`、`pending=campus\|group\|any`。不含已注销、不含证件；带 `isMember` `isVirtual` `isStudent` `isAlumni` `campusKind` `school` `studentStatus` `groupStatus`。待审排在前面 |
 | POST | `/admin/virtual-users` | `{ scheduleId, count }` 将该团虚拟报名人数设为 `count`（可增可减） |
 | POST | `/admin/schedules/:id/virtual-users` | `{ count }` 同上，按路径指定行程 |
 | POST | `/admin/users/:id/verify` | `{ kind: student\|group, action: approve\|reject }`。校友通过后 `is_student=0` |

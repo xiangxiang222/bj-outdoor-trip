@@ -83,7 +83,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `trip.js` | 发团审核相关辅助 |
 | `helpers.js` | 报价、成团匹配导游、积分入账 |
 | `fallback.js` | 候选团 / 替代团 |
-| `notices.js` | 后台待办：校园/团体认证写入 `admin_notices`，点开带 `pending`/`userId` |
+| `notices.js` | 后台待办：校园/团体认证写入 `admin_notices`，点开 `/admin/verify?kind=&userId=` |
 
 路由全集中在 `api.js`，不在 services 里挂 HTTP。
 
@@ -128,7 +128,7 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 
 ## 6. 后台与导游端
 
-后台 `/admin`：看板、线路、拼团与成本、报名、优惠券、用户与会员、玩法标签、管理员。登录页与侧栏用原来的 `logo.jpg`。侧栏副标题「后台 · 线路 · 排期 · 财务」。有运营权限时顶栏有「消息」，点开跳到 `/admin/users?pending=campus|group&userId=`。
+后台 `/admin`：看板、线路、拼团与成本、报名、优惠券、用户与会员、认证审批、玩法标签、管理员。登录页与侧栏用原来的 `logo.jpg`。侧栏副标题「后台 · 线路 · 排期 · 财务」。有运营权限时顶栏有「消息」，点开跳到 `/admin/verify?kind=campus|group&userId=`。
 
 导游 `/g`：图片验证码登录 → 行程列表 → 名单签到 / 游客详情 / 锁座调座 / 车牌。演示号 `13700001101`。
 

@@ -11,8 +11,15 @@ function now() {
   return dayjs().format("YYYY-MM-DD HH:mm:ss");
 }
 
-function safeHref(href, fallback = "/admin/users") {
+function rewriteHref(href) {
   const value = String(href || "").trim();
+  const old = value.match(/^\/admin\/users\?pending=(campus|group)&userId=(\d+)/);
+  if (old) return `/admin/verify?kind=${old[1]}&userId=${old[2]}`;
+  return value;
+}
+
+function safeHref(href, fallback = "/admin/verify") {
+  const value = rewriteHref(href);
   return value.startsWith("/admin/") ? value : fallback;
 }
 
@@ -57,7 +64,7 @@ function noticeCampus(user) {
     kind: "campus",
     title: "校园认证待审",
     body: school ? `${who} 申请${school}（${kindLabel}）认证` : `${who} 申请校园认证`,
-    href: `/admin/users?pending=campus&userId=${user.id}`,
+    href: `/admin/verify?kind=campus&userId=${user.id}`,
     refType: "user",
     refId: user.id,
   });
@@ -71,7 +78,7 @@ function noticeGroup(user) {
     kind: "group",
     title: "团体认证待审",
     body: name ? `${who} 申请认证团体「${name}」` : `${who} 申请团体认证`,
-    href: `/admin/users?pending=group&userId=${user.id}`,
+    href: `/admin/verify?kind=group&userId=${user.id}`,
     refType: "user",
     refId: user.id,
   });

@@ -11,6 +11,7 @@
       <router-link v-if="can('roster')" to="/admin/enrollments">报名与收款</router-link>
       <router-link v-if="can('ops')" to="/admin/coupons">优惠券</router-link>
       <router-link v-if="can('ops')" to="/admin/users">用户与会员</router-link>
+      <router-link v-if="can('ops')" to="/admin/verify">认证审批</router-link>
       <router-link v-if="can('ops')" to="/admin/tags">玩法标签</router-link>
       <router-link v-if="can('staff')" to="/admin/staff">管理员</router-link>
       <a href="/m" target="_blank">打开用户端</a>
@@ -94,7 +95,7 @@ function toggleNotices() {
 
 function noticeHref(href) {
   const value = String(href || "").trim();
-  return value.startsWith("/admin/") ? value : "/admin/users";
+  return value.startsWith("/admin/") ? value : "/admin/verify";
 }
 
 async function openNotice(n) {

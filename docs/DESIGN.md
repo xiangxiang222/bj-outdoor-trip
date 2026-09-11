@@ -162,7 +162,7 @@ User 1──n Favorite / PointsLedger / Review
 
 - 角色：`user` / `company`（公司账号带 `company_name`）
 - 会员：年费 99 元，有效期 365 天，会员价 95 折，开通赠一次 100 元以内团。`POST /member/buy` 立即记成功支付并开通
-- 学生：`POST /me/student` 填学校全称 → `student_status=pending` → 后台 `POST /admin/users/:id/verify` `kind=student` 通过后 `is_student=1`。部分团 `studentOnly` 或 `schools` 名单（学校名包含匹配，含简称）。提交时写入 `admin_notices`，后台消息点开 `/admin/users?pending=campus&userId=`
+- 学生：`POST /me/student` 填学校全称 → `student_status=pending` → 后台 `POST /admin/users/:id/verify` `kind=student` 通过后 `is_student=1`。部分团 `studentOnly` 或 `schools` 名单（学校名包含匹配，含简称）。提交时写入 `admin_notices`，后台消息点开 `/admin/verify?kind=campus&userId=`
 - 团体：`POST /me/group` → 待审 → 后台审核，同样写入待办消息
 - 积分：消费 1 元积 1 分；会员入账 ×1.2；抵现规则仍为 **100 分 = 1 元**，最多抵应付的 **20%**，且实付至少 **1 元**。当前报名接口不扣积分
 - 注销：`users.deleted_at` 软删除，清空手机/密码/openid/证件，昵称改为「已注销用户」
