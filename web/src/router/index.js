@@ -56,6 +56,7 @@ const routes = [
       { path: "enrollments", component: () => import("@/views/admin/Enrollments.vue") },
       { path: "coupons", component: () => import("@/views/admin/Coupons.vue") },
       { path: "users", component: () => import("@/views/admin/Users.vue") },
+      { path: "verify", component: () => import("@/views/admin/Verify.vue") },
       { path: "tags", component: () => import("@/views/admin/Tags.vue") },
       { path: "staff", component: () => import("@/views/admin/Staff.vue") },
     ],

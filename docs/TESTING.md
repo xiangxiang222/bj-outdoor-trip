@@ -128,7 +128,7 @@ npx vitest run src/utils/activityKind.test.js
 | `api.split.test.js` | 演示分账 |
 | `api.dissolve.test.js` | 发起人解散、非发起人 403、后台解散单团与全部、重复解散 |
 | `api.admin.test.js` | 看板、线路增改下架、封面上传、排期成本利润、后台结算、报名脱敏、用户列表 |
-| `api.notices.test.js` | 校园/团体认证写入后台待办，点开带 `pending`/`userId`，通过后未读清零 |
+| `api.notices.test.js` | 校园/团体认证写入后台待办，点开带 `/admin/verify` 与 `kind`/`userId`，通过后未读清零 |
 | `api.guide.test.js` | 导游登录、行程名单含紧急联系人、游客详情、签到 |
 | `api.staff.test.js` | 后台账号增删改/停用、改密、运营权限、用户会员积分注销、后台代取消报名 |
 

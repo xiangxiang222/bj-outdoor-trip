@@ -7,12 +7,7 @@
         <el-button type="success" @click="load">查询</el-button>
       </div>
     </div>
-    <div class="row" style="gap:8px;margin:0 0 12px">
-      <el-button size="small" :type="pending === '' ? 'success' : 'default'" @click="setPending('')">全部</el-button>
-      <el-button size="small" :type="pending === 'campus' ? 'success' : 'default'" @click="setPending('campus')">校园待审</el-button>
-      <el-button size="small" :type="pending === 'group' ? 'success' : 'default'" @click="setPending('group')">团体待审</el-button>
-    </div>
-    <p class="admin-scroll-hint">待审会排在最上面。从消息点进来会高亮对应行，操作在最右侧。</p>
+    <p class="admin-scroll-hint">校园和团体认证请到「认证审批」。这里只管会员、积分和账号。</p>
     <el-table :data="list" stripe row-key="id" :row-class-name="rowClass">
       <el-table-column prop="nickname" label="昵称" min-width="120" />
       <el-table-column prop="phone" label="手机" width="130" />
@@ -75,7 +70,6 @@ const route = useRoute();
 const router = useRouter();
 const list = ref([]);
 const q = ref("");
-const pending = ref("");
 const focusId = ref("");
 const showPoints = ref(false);
 const saving = ref(false);
@@ -86,13 +80,14 @@ onMounted(syncFromRoute);
 watch(() => [route.query.pending, route.query.userId], syncFromRoute);
 
 function syncFromRoute() {
-  pending.value = String(route.query.pending || "");
-  focusId.value = String(route.query.userId || "");
+  const pending = String(route.query.pending || "");
+  const userId = String(route.query.userId || "");
+  if (pending === "campus" || pending === "group") {
+    router.replace({ path: "/admin/verify", query: { kind: pending, ...(userId ? { userId } : {}) } });
+    return;
+  }
+  focusId.value = userId;
   load();
-}
-
-function setPending(value) {
-  router.replace({ path: "/admin/users", query: value ? { pending: value } : {} });
 }
 
 function rowClass({ row }) {
@@ -102,7 +97,7 @@ function rowClass({ row }) {
 }
 
 async function load() {
-  list.value = (await http.get("/admin/users", { params: { q: q.value, pending: pending.value } })).data;
+  list.value = (await http.get("/admin/users", { params: { q: q.value } })).data;
   if (focusId.value && !list.value.some((u) => String(u.id) === focusId.value)) {
     list.value = (await http.get("/admin/users", { params: { q: q.value } })).data;
   }

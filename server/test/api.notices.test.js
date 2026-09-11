@@ -10,7 +10,7 @@ describe("admin review notices", () => {
     ({ agent, seed } = harness());
   });
 
-  it("pushes a campus notice that opens the pending users page", async () => {
+  it("pushes a campus notice that opens the verify page", async () => {
     const token = await loginUser(agent);
     const admin = await loginAdmin(agent);
 
@@ -25,7 +25,7 @@ describe("admin review notices", () => {
     assert.equal(box.body.data.list[0].title, "校园认证待审");
     assert.match(box.body.data.list[0].body, /北京大学/);
     assert.match(box.body.data.list[0].body, /校友/);
-    assert.equal(box.body.data.list[0].href, `/admin/users?pending=campus&userId=${seed.userId}`);
+    assert.equal(box.body.data.list[0].href, `/admin/verify?kind=campus&userId=${seed.userId}`);
 
     const pending = await agent.get("/api/admin/users?pending=campus").set(auth(admin)).expect(200);
     assert.equal(pending.body.data[0].id, seed.userId);
@@ -62,7 +62,9 @@ describe("admin review notices", () => {
     await agent.post("/api/me/group").set(auth(token)).send({ name: "北大山鹰社", kind: "社团" }).expect(200);
     const box = await agent.get("/api/admin/notices").set(auth(admin)).expect(200);
     assert.equal(box.body.data.list[0].kind, "group");
-    assert.match(box.body.data.list[0].href, /pending=group/);
+    assert.match(box.body.data.list[0].href, /\/admin\/verify\?kind=group/);
+    const any = await agent.get("/api/admin/users?pending=any").set(auth(admin)).expect(200);
+    assert.ok(any.body.data.some((u) => Number(u.id) === Number(seed.userId)));
     await agent.get("/api/admin/notices").set(auth(token)).expect(401);
   });
 });

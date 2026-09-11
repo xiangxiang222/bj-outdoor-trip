@@ -2078,12 +2078,13 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
     "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,campus_kind,group_status,group_name FROM users WHERE deleted_at IS NULL";
   const args = [];
   if (q) {
-    sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ?)";
+    sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ? OR IFNULL(school,'') LIKE ? OR IFNULL(group_name,'') LIKE ?)";
     const like = `%${q}%`;
-    args.push(like, like, like);
+    args.push(like, like, like, like, like);
   }
   if (pending === "campus") sql += " AND student_status='pending'";
   else if (pending === "group") sql += " AND group_status='pending'";
+  else if (pending === "any") sql += " AND (student_status='pending' OR group_status='pending')";
   sql +=
     " ORDER BY CASE WHEN student_status='pending' THEN 0 WHEN group_status='pending' THEN 1 ELSE 2 END, id DESC";
   const rows = db()
@@ -2096,6 +2097,7 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
       isAlumni: isAlumni(u),
       studentStatus: u.student_status || "",
       campusKind: u.campus_kind === "alumni" ? "alumni" : u.student_status || u.is_student ? "student" : "",
+      school: u.school || "",
       groupStatus: u.group_status || "",
       groupName: u.group_name || "",
       isVirtual: !!u.is_virtual,
