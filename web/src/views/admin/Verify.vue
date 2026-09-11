@@ -2,11 +2,11 @@
   <div>
     <div class="row">
       <h2>认证审批</h2>
-    </div>
-    <div class="row" style="gap:8px;margin:0 0 12px">
-      <el-button size="small" :type="kind === '' ? 'success' : 'default'" @click="setKind('')">全部待审</el-button>
-      <el-button size="small" :type="kind === 'campus' ? 'success' : 'default'" @click="setKind('campus')">校园</el-button>
-      <el-button size="small" :type="kind === 'group' ? 'success' : 'default'" @click="setKind('group')">团体</el-button>
+      <el-radio-group class="admin-verify-filter" size="small" :model-value="kind || 'all'" @change="setKind">
+        <el-radio-button label="all">全部待审</el-radio-button>
+        <el-radio-button label="campus">校园</el-radio-button>
+        <el-radio-button label="group">团体</el-radio-button>
+      </el-radio-group>
     </div>
     <p class="admin-scroll-hint">消息点进来会高亮对应申请。通过或拒绝后这条待办会消失。</p>
     <el-table :data="items" stripe row-key="key" :row-class-name="rowClass">
@@ -56,7 +56,8 @@ function syncFromRoute() {
 }
 
 function setKind(value) {
-  router.replace({ path: "/admin/verify", query: value ? { kind: value } : {} });
+  const next = value === "campus" || value === "group" ? value : "";
+  router.replace({ path: "/admin/verify", query: next ? { kind: next } : {} });
 }
 
 function rowClass({ row }) {
