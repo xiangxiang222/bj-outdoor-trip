@@ -1,28 +1,13 @@
 <template>
   <div class="admin-shell">
-    <aside class="admin-side">
-      <div class="admin-brand">
-        <img src="/brand/logo.jpg" alt="同行者众" />
-        <div class="admin-brand-sub">后台 · 线路 · 排期 · 财务</div>
+    <header class="admin-top">
+      <div class="admin-top-brand">
+        <img src="/brand/logo.jpg" alt="" />
+        <strong>同行者众</strong>
+        <em>管理后台</em>
       </div>
-      <router-link v-if="can('ops')" to="/admin">数据看板</router-link>
-      <router-link v-if="can('ops')" to="/admin/routes">线路管理</router-link>
-      <router-link v-if="can('roster')" to="/admin/schedules">拼团与成本</router-link>
-      <router-link v-if="can('roster')" to="/admin/enrollments">报名与收款</router-link>
-      <router-link v-if="can('ops')" to="/admin/coupons">优惠券</router-link>
-      <router-link v-if="can('ops')" to="/admin/users">用户与会员</router-link>
-      <router-link v-if="can('ops')" to="/admin/verify">认证审批</router-link>
-      <router-link v-if="can('ops')" to="/admin/tags">玩法标签</router-link>
-      <router-link v-if="can('staff')" to="/admin/staff">管理员</router-link>
-      <a href="/m" target="_blank">打开用户端</a>
-      <a href="/g" target="_blank">打开导游端</a>
-      <a href="#" @click.prevent="out">退出</a>
-      <div class="admin-me">{{ me.name || "管理员" }} · {{ me.roleLabel || roleLabel(me.role) }}</div>
-    </aside>
-    <main class="admin-main">
-      <header v-if="can('ops')" class="admin-top">
-        <span class="muted">待办会显示在这里，点消息可直接去审批。</span>
-        <div class="admin-bell-wrap">
+      <div class="admin-top-tools">
+        <div v-if="can('ops')" class="admin-bell-wrap">
           <button class="admin-bell" type="button" @click="toggleNotices">
             消息
             <i v-if="unread">{{ unread > 9 ? "9+" : unread }}</i>
@@ -47,11 +32,48 @@
             <p v-if="!notices.length" class="muted" style="margin:12px 8px">暂无消息</p>
           </div>
         </div>
-      </header>
-      <div style="padding:20px 24px">
-        <router-view />
+        <el-dropdown trigger="click" @command="onUserCommand">
+          <span class="admin-user">
+            {{ me.name || "管理员" }}
+            <small>{{ me.roleLabel || roleLabel(me.role) }}</small>
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="m">打开用户端</el-dropdown-item>
+              <el-dropdown-item command="g">打开导游端</el-dropdown-item>
+              <el-dropdown-item divided command="out">退出登录</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
-    </main>
+    </header>
+    <div class="admin-body">
+      <aside class="admin-side">
+        <nav v-if="can('ops') || can('roster')" class="admin-nav-group">
+          <div class="admin-nav-label">经营</div>
+          <router-link v-if="can('ops')" to="/admin">数据看板</router-link>
+          <router-link v-if="can('ops')" to="/admin/routes">线路管理</router-link>
+          <router-link v-if="can('roster')" to="/admin/schedules">拼团与成本</router-link>
+          <router-link v-if="can('roster')" to="/admin/enrollments">报名与收款</router-link>
+          <router-link v-if="can('ops')" to="/admin/coupons">优惠券</router-link>
+        </nav>
+        <nav v-if="can('ops')" class="admin-nav-group">
+          <div class="admin-nav-label">用户</div>
+          <router-link to="/admin/users">用户与会员</router-link>
+          <router-link to="/admin/verify">认证审批</router-link>
+        </nav>
+        <nav v-if="can('ops') || can('staff')" class="admin-nav-group">
+          <div class="admin-nav-label">设置</div>
+          <router-link v-if="can('ops')" to="/admin/tags">玩法标签</router-link>
+          <router-link v-if="can('staff')" to="/admin/staff">管理员</router-link>
+        </nav>
+      </aside>
+      <main class="admin-main">
+        <div class="admin-page" :class="{ dash: route.path === '/admin' }">
+          <router-view />
+        </div>
+      </main>
+    </div>
   </div>
 </template>
 
@@ -127,7 +149,14 @@ function onDocClick(e) {
   if (!wrap) showNotices.value = false;
 }
 
+function onUserCommand(cmd) {
+  if (cmd === "m") window.open("/m", "_blank");
+  else if (cmd === "g") window.open("/g", "_blank");
+  else if (cmd === "out") out();
+}
+
 onMounted(async () => {
+  document.documentElement.classList.add("admin-theme");
   try {
     const res = await http.get("/admin/me");
     me.value = res.data;
@@ -143,6 +172,7 @@ onMounted(async () => {
   }
 });
 onUnmounted(() => {
+  document.documentElement.classList.remove("admin-theme");
   if (noticeTimer) window.clearInterval(noticeTimer);
   window.removeEventListener("admin-notices-refresh", loadNotices);
   document.removeEventListener("click", onDocClick);
