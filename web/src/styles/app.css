@@ -1186,6 +1186,51 @@ html.admin-theme .el-dialog__footer {
   margin: 10px 0 8px;
   box-shadow: var(--shadow);
 }
+.home-seg {
+  display: flex;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px;
+  margin: 0 0 12px;
+}
+.home-seg button {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--muted);
+}
+.home-seg button.on {
+  background: var(--play);
+  color: var(--play-ink);
+}
+.trip-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: var(--shadow);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.trip-hint strong {
+  display: inline;
+  margin-left: 6px;
+  font-size: 13px;
+}
+.catalog-lead { margin: 0 0 10px; }
 .feed-ph {
   width: 100%;
   height: 100%;

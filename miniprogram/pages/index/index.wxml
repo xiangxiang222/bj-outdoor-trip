@@ -13,16 +13,22 @@
   </view>
   <view class="campus-cta" bindtap="goStudent">去认证</view>
 </view>
-<view class="card" wx:if="{{upcoming}}" bindtap="goUpcoming">
-  <view class="pad">
-    <view class="muted">即将出行 · 看行程</view>
-    <view class="title">{{upcoming.title}}</view>
-    <view class="muted">{{upcoming.startDate}} · {{upcoming.meetupPoint}} {{upcoming.meetupTime}}</view>
+<view class="trip-hint" wx:if="{{upcoming}}" bindtap="goUpcoming">
+  <view>
+    <text class="muted">即将出行</text>
+    <text class="trip-hint-title"> {{upcoming.startDate}} · {{upcoming.title}}</text>
   </view>
+  <text class="muted">行程 ›</text>
 </view>
 
-<input class="feed-search" placeholder="搜线路、城区、主理人" value="{{query}}" bindinput="onQuery" confirm-type="search" />
+<input class="feed-search" placeholder="{{searchHint}}" value="{{query}}" bindinput="onQuery" confirm-type="search" />
 
+<view class="home-seg">
+  <view class="home-seg-btn {{view=='trips'?'on':''}}" bindtap="setView" data-view="trips">团</view>
+  <view class="home-seg-btn {{view=='routes'?'on':''}}" bindtap="setView" data-view="routes">线路</view>
+</view>
+
+<block wx:if="{{view=='trips'}}">
 <scroll-view scroll-x class="city-bar">
   <view class="chip {{!city?'on':''}}" bindtap="clearCity">热门</view>
   <view class="chip {{city==item.name?'on':''}}" wx:for="{{home.cities}}" wx:key="name" bindtap="setCity" data-name="{{item.name}}">{{item.name}}</view>
@@ -32,15 +38,12 @@
   <view class="chip {{tag==item.name?'on':''}}" wx:for="{{home.tags}}" wx:key="id" bindtap="setTag" data-name="{{item.name}}">{{item.name}}</view>
 </scroll-view>
 
-<view class="catalog-row">
-  <view class="tool-btn ghost-line" bindtap="goRoutes">看线路</view>
-  <view class="tool-btn play" bindtap="goPublish">发团</view>
-</view>
 <view class="feed-toolbar">
   <view class="hint">看看最近都在忙什么</view>
   <view class="tools">
     <view class="tool-btn" bindtap="cycleSort">{{sortText}}</view>
     <view class="tool-btn" bindtap="toggleFold" data-key="extra">{{fold.extra ? '收起' : '筛选'}}</view>
+    <view class="tool-btn play" bindtap="goPublish">发团</view>
   </view>
 </view>
 
@@ -91,11 +94,40 @@
 <view wx:if="{{!groups.length}}" class="card">
   <view class="pad">
     <view class="title">还没有符合条件的团</view>
-    <view class="muted">可以先看官方线路，或自己发一个，审核通过后会出现在这里。</view>
+    <view class="muted">过审的团会出现在这里。也可以先看官方线路。</view>
     <view class="catalog-row" style="margin-top:16rpx">
-      <view class="tool-btn ghost-line" catchtap="goRoutes">看线路</view>
+      <view class="tool-btn ghost-line" catchtap="setView" data-view="routes">先看线路</view>
       <view class="tool-btn play" catchtap="goPublish">去发团</view>
     </view>
   </view>
 </view>
+</block>
+
+<block wx:else>
+  <view class="muted catalog-lead">官方线路。点进去看介绍，有排期就能报，没有可以自己开一团。</view>
+  <scroll-view scroll-x class="city-bar">
+    <view class="chip {{routeDays==0?'on':''}}" bindtap="setRouteDays" data-d="0">全部天数</view>
+    <view class="chip {{routeDays==1?'on':''}}" bindtap="setRouteDays" data-d="1">1日</view>
+    <view class="chip {{routeDays==2?'on':''}}" bindtap="setRouteDays" data-d="2">2日</view>
+    <view class="chip {{routeDays==3?'on':''}}" bindtap="setRouteDays" data-d="3">3日</view>
+    <view class="chip {{routeDays=='multi'?'on':''}}" bindtap="setRouteDays" data-d="multi">多日</view>
+  </scroll-view>
+  <scroll-view scroll-x class="city-bar">
+    <view class="chip {{routeTag==''?'on':''}}" bindtap="setRouteTag" data-c="">全部玩法</view>
+    <view class="play-tag" wx:for="{{routeTags}}" wx:key="id" style="background:{{item.color}};opacity:{{routeTag==item.name || routeTag=='' ? 1 : 0.45}}" bindtap="setRouteTag" data-c="{{item.name}}">{{item.name}}</view>
+  </scroll-view>
+  <view wx:if="{{routeErr}}" class="muted pad">{{routeErr}}</view>
+  <view class="card" wx:for="{{routeList}}" wx:key="id" bindtap="goRoute" data-id="{{item.id}}">
+    <image class="cover" src="{{item.cover}}" mode="aspectFill" />
+    <view class="pad">
+      <view class="title">{{item.title}}</view>
+      <view class="muted">{{item.region}} · {{item.days}}日 · {{item.difficulty}}</view>
+      <view class="price">
+        <text wx:if="{{item.fromPrice > item.memberFromPrice}}" class="price-origin">¥{{item.fromPrice}}</text>
+        ¥{{item.memberFromPrice || item.fromPrice}} 起
+      </view>
+    </view>
+  </view>
+  <view wx:if="{{!routeList.length}}" class="muted pad">没有匹配的线路</view>
+</block>
 <view class="home-foot muted" bindtap="goOfficial">客服与规则</view>

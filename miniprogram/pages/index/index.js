@@ -3,6 +3,7 @@ const { OFFER_TYPES, buildCalendar } = require("../../utils/offer");
 const { detailUrl } = require("../../utils/media");
 const { decorateFeed } = require("../../utils/feed-card");
 const { cycleSort, processFeed, sortLabel } = require("../../utils/feed-list");
+const { loadRouteCatalog } = require("../../utils/route-catalog");
 
 function asList(rows) {
   return Array.isArray(rows) && rows.length ? rows : [];
@@ -30,9 +31,23 @@ Page({
     query: "",
     sort: "soon",
     sortText: "即将出发",
+    view: "trips",
+    searchHint: "搜线路、城区、主理人",
+    routeDays: 0,
+    routeTag: "",
+    routeTags: [],
+    routeList: [],
+    routeErr: "",
   },
   onLoad() {
     this.load();
+  },
+  onShow() {
+    const app = getApp();
+    if (app.globalData.homeView === "routes") {
+      app.globalData.homeView = "";
+      this.setView({ currentTarget: { dataset: { view: "routes" } } });
+    }
   },
   onPullDownRefresh() {
     this.load().then(() => wx.stopPullDownRefresh());
@@ -90,7 +105,45 @@ Page({
   },
   onQuery(e) {
     this.setData({ query: e.detail.value || "" });
-    this.applyGroups();
+    if (this.data.view === "routes") this.loadRoutes();
+    else this.applyGroups();
+  },
+  setView(e) {
+    const view = e.currentTarget.dataset.view || "trips";
+    this.setData({
+      view,
+      routeTag: view === "routes" ? this.data.tag || "" : this.data.routeTag,
+      searchHint: view === "routes" ? "搜长城 / 十渡 / 坝上" : "搜线路、城区、主理人",
+    });
+    if (view === "routes") this.loadRoutes();
+  },
+  setRouteDays(e) {
+    const d = e.currentTarget.dataset.d;
+    this.setData({ routeDays: d === "multi" ? "multi" : Number(d) });
+    this.loadRoutes();
+  },
+  setRouteTag(e) {
+    this.setData({ routeTag: e.currentTarget.dataset.c || "" });
+    this.loadRoutes();
+  },
+  async loadRoutes() {
+    if (!this.data.routeTags.length) {
+      try {
+        const tagsRes = await request("/play-tags");
+        this.setData({ routeTags: tagsRes.data || [] });
+      } catch {
+        this.setData({ routeTags: this.data.home.tags || [] });
+      }
+    }
+    const { list, err } = await loadRouteCatalog({
+      q: String(this.data.query || "").trim(),
+      days: this.data.routeDays,
+      tag: this.data.routeTag,
+    });
+    this.setData({ routeList: list, routeErr: err });
+  },
+  goRoute(e) {
+    wx.navigateTo({ url: detailUrl(e.currentTarget.dataset.id) });
   },
   cycleSort() {
     this.setData({ sort: cycleSort(this.data.sort) });
@@ -168,13 +221,6 @@ Page({
     const id = Number(slide && slide.routeId);
     if (!Number.isInteger(id) || id <= 0) return;
     wx.navigateTo({ url: detailUrl(id) });
-  },
-  goRoutes() {
-    getApp().globalData.routeFilter = {
-      tag: this.data.tag || "",
-      q: String(this.data.query || "").trim(),
-    };
-    wx.navigateTo({ url: "/pages/routes/routes" });
   },
   goPublish() {
     const app = getApp();
