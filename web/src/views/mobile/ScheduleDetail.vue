@@ -107,14 +107,20 @@
             </div>
             <p class="muted">{{ s.leaderRecruitCopy }}</p>
           </div>
-          <div v-if="!isActivity && weather" class="weather" :class="weather.alerts?.[0]?.level">
+        </div>
+      </div>
+
+      <template v-if="!isActivity && weather">
+        <div class="h2">出行天气</div>
+        <div class="card"><div class="pad">
+          <div class="weather" :class="weather.alerts?.[0]?.level">
             <strong>{{ weather.place }} {{ weather.summary }}</strong>
             <span>{{ weather.tmin }}~{{ weather.tmax }}℃ · 风 {{ weather.wind }}km/h</span>
             <WeatherChart :hourly="weather.hourly" :label="weather.place + '分时气温'" />
             <p v-for="(a, i) in weather.alerts" :key="i">{{ a.text }}</p>
           </div>
-        </div>
-      </div>
+        </div></div>
+      </template>
 
       <template v-if="!isActivity">
         <div class="h2">座位图</div>

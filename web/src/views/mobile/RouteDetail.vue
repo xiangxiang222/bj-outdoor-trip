@@ -2,7 +2,6 @@
   <div v-if="r">
     <RouteProfile
       :route="r"
-      :weather="weather"
       :reviews="reviews"
       :faqs="faqs"
       @fav="fav"
@@ -28,7 +27,6 @@ const pageRoute = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const r = ref(null);
-const weather = ref(null);
 const reviews = ref({ list: [], count: 0, avg: 0 });
 const faqs = ref([]);
 const copied = ref(false);
@@ -36,11 +34,6 @@ const favMsg = ref("");
 
 onMounted(async () => {
   r.value = (await http.get("/routes/" + pageRoute.params.id)).data;
-  try {
-    weather.value = (await http.get("/weather", { params: { region: r.value.region } })).data;
-  } catch {
-    weather.value = null;
-  }
   try {
     reviews.value = (await http.get("/routes/" + pageRoute.params.id + "/reviews")).data;
   } catch {
