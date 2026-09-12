@@ -26,7 +26,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="show" :title="form.id ? '编辑线路' : '新增线路'" width="760px">
+    <el-dialog v-model="show" :title="form.id ? '编辑线路' : '新增线路'" width="760px" align-center :close-on-click-modal="false">
       <el-form label-width="100px">
         <el-form-item label="标题"><el-input v-model="form.title" /></el-form-item>
         <el-form-item label="副标题"><el-input v-model="form.subtitle" /></el-form-item>
@@ -116,8 +116,9 @@ async function postImage(file) {
 
 async function uploadCover(opt) {
   try {
-    form.value.cover = await postImage(opt.file);
-    opt.onSuccess?.({});
+    const url = await postImage(opt.file);
+    form.value.cover = url;
+    opt.onSuccess?.({ url });
   } catch (e) {
     ElMessage.error(e.message);
     opt.onError?.(e);
@@ -128,7 +129,7 @@ async function uploadGallery(opt) {
   try {
     const url = await postImage(opt.file);
     form.value.gallery = [...(form.value.gallery || []), url];
-    opt.onSuccess?.({});
+    opt.onSuccess?.({ url });
   } catch (e) {
     ElMessage.error(e.message);
     opt.onError?.(e);
@@ -140,13 +141,17 @@ function removeGallery(file) {
 }
 
 async function save() {
-  form.value.priceTiers = JSON.parse(tiersText.value);
-  if (!form.value.cover && form.value.gallery?.[0]) form.value.cover = form.value.gallery[0];
-  if (form.value.id) await http.put("/admin/routes/" + form.value.id, form.value);
-  else await http.post("/admin/routes", form.value);
-  show.value = false;
-  ElMessage.success("已保存");
-  load();
+  try {
+    form.value.priceTiers = JSON.parse(tiersText.value);
+    if (!form.value.cover && form.value.gallery?.[0]) form.value.cover = form.value.gallery[0];
+    if (form.value.id) await http.put("/admin/routes/" + form.value.id, form.value);
+    else await http.post("/admin/routes", form.value);
+    show.value = false;
+    ElMessage.success("已保存");
+    load();
+  } catch (e) {
+    ElMessage.error(e.message || "保存失败");
+  }
 }
 async function off(row) {
   await http.delete("/admin/routes/" + row.id);

@@ -25,7 +25,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="show" :title="form.id ? '编辑标签' : '新增标签'" width="480px">
+    <el-dialog v-model="show" :title="form.id ? '编辑标签' : '新增标签'" width="480px" align-center :close-on-click-modal="false">
       <el-form label-width="80px">
         <el-form-item label="名称"><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="颜色"><el-input v-model="form.color" placeholder="#2d6a4f" /></el-form-item>
