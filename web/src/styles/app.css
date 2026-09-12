@@ -863,6 +863,19 @@ html.admin-theme .el-dialog__footer {
   align-items: center;
   gap: 16px;
 }
+.admin-jump {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  text-decoration: none;
+  line-height: 1;
+  white-space: nowrap;
+}
+.admin-jump:hover { color: #fff; }
+.admin-drop-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
 .admin-top .el-dropdown { color: #fff; }
 .admin-user {
   display: inline-flex;
