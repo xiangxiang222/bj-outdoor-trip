@@ -124,7 +124,7 @@ npx vitest run src/utils/activityKind.test.js
 | `oversub.service.test.js` | 抽签乱序可注入 rng，不改原数组 |
 | `api.coupon.test.js` | 公开限量领取、每人一张、会员与券取低不叠、赠团不核销、候补占用/递补核销/取消退券、公司团与暂停领取、仅会员领取、定向发放与演示短信、领取后过期、通用券、叠加会员、久未参加/出行次数、人多随机发放、免费券、用户搜索选人、指定必领与预留库存 |
 | `api.reviews.test.js` | 仅报名成功可评、每团一条、线路/排期列表、候补与取消不可评 |
-| `api.lottery.test.js` | 报名前/后抽奖、本团奖池与指定中奖、库存用尽回落、报名后抽且跟团结束后领奖、后台抽奖列表 |
+| `api.lottery.test.js` | 报名前/后抽奖、本团奖池与指定中奖、库存用尽回落、报名后抽且跟团结束后领奖、后台抽奖列表、中奖人报名状态 |
 | `api.leader.test.js` | 个人领队申请、待审不能报名、通过后占位、公司账号保持 company、拒绝后可再申请 |
 | `api.social.test.js` | 相册、主页等 |
 | `api.split.test.js` | 演示分账 |
