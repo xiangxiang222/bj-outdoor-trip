@@ -1,10 +1,15 @@
 const { request } = require("../../utils/request");
+const { couponCountdown } = require("../../utils/coupon-time");
 const app = getApp();
 Page({
-  data: { code: "", data: null, err: "" },
+  data: { code: "", data: null, err: "", ttl: null },
   onLoad(q) {
     this.setData({ code: (q.code || "").toUpperCase() });
     this.load();
+    this.timer = setInterval(() => this.syncTtl(), 1000);
+  },
+  onUnload() {
+    clearInterval(this.timer);
   },
   async load() {
     if (!this.data.code) {
@@ -14,9 +19,25 @@ Page({
     try {
       const res = await request("/coupons/" + this.data.code);
       this.setData({ data: res.data, err: "" });
+      this.syncTtl();
     } catch (e) {
       this.setData({ err: e.message || "优惠券不存在" });
     }
+  },
+  syncTtl() {
+    const d = this.data.data;
+    const mine = d && d.myCoupon;
+    if (!mine || mine.status === "used" || mine.status === "held") {
+      this.setData({ ttl: null });
+      return;
+    }
+    this.setData({
+      ttl: couponCountdown({
+        ...mine,
+        validHours: d.validHours,
+        useEnd: d.useEnd,
+      }),
+    });
   },
   async claim() {
     if (!app.globalData.token) {
@@ -37,6 +58,7 @@ Page({
     try {
       const res = await request("/coupons/" + this.data.code + "/claim", "POST", {});
       this.setData({ data: res.data });
+      this.syncTtl();
       this.goEnroll();
     } catch (e) {
       wx.showModal({ title: "领取失败", content: e.message, showCancel: false });

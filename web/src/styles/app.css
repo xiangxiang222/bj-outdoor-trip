@@ -512,6 +512,9 @@ button, input, textarea, select { font-family: inherit; }
   height: 8px; background: #eee; border-radius: 99px; overflow: hidden; margin: 8px 0;
 }
 .progress > i { display: block; height: 100%; background: var(--leaf); }
+.progress.low > i { background: var(--clay); }
+.coupon-ttl { margin-top: 10px; }
+.coupon-ttl .muted { margin: 0; }
 .seat-map { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 0; }
 .seat-front {
   font-size: 12px;
