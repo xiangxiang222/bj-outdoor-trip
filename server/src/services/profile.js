@@ -75,6 +75,58 @@ function tripBuckets(userId, req) {
   return { upcoming, past, following };
 }
 
+function liveUserByNickname(db, nickname) {
+  const name = String(nickname || "").trim();
+  if (!name || name === "已注销用户") return null;
+  return (
+    db
+      .prepare(
+        `SELECT * FROM users WHERE nickname=? AND deleted_at IS NULL AND IFNULL(is_virtual,0)=0
+         ORDER BY id DESC LIMIT 1`
+      )
+      .get(name) || null
+  );
+}
+
+function resolveLiveUser(id) {
+  const db = getDb();
+  const nid = Number(id);
+  if (!Number.isFinite(nid) || nid <= 0) return null;
+  const live = db.prepare("SELECT * FROM users WHERE id=? AND deleted_at IS NULL").get(nid);
+  if (live) return live;
+  const named = db
+    .prepare(
+      `SELECT organizer_name FROM schedules
+       WHERE organizer_id=? AND IFNULL(organizer_name,'') NOT IN ('', '已注销用户')
+       LIMIT 1`
+    )
+    .get(nid);
+  return liveUserByNickname(db, named?.organizer_name);
+}
+
+function resolveLiveOrganizer(sch) {
+  const db = getDb();
+  if (!sch) return null;
+  const oid = Number(sch.organizer_id || 0);
+  if (oid > 0) {
+    const live = db.prepare("SELECT * FROM users WHERE id=? AND deleted_at IS NULL").get(oid);
+    if (live) return live;
+  } else {
+    return null;
+  }
+  return liveUserByNickname(db, sch.organizer_name);
+}
+
+function adoptOrganizer(sch) {
+  const live = resolveLiveOrganizer(sch);
+  if (live && Number(live.id) !== Number(sch.organizer_id || 0) && sch.id) {
+    getDb().prepare("UPDATE schedules SET organizer_id=? WHERE id=?").run(live.id, sch.id);
+    sch.organizer_id = live.id;
+    if (live.nickname) sch.organizer_name = live.nickname;
+  }
+  return live;
+}
+
 function publicUserProfile(user, req) {
   if (!user || user.deleted_at) return null;
   const parsed = user.id_card ? parseIdCard(user.id_card) : { valid: false };
@@ -116,6 +168,9 @@ module.exports = {
   ensureReferralCode,
   albumOf,
   tripBuckets,
+  resolveLiveUser,
+  resolveLiveOrganizer,
+  adoptOrganizer,
   publicUserProfile,
   addPhoto,
   removePhoto,
