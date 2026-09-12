@@ -37,6 +37,20 @@
   <view class="chip {{!tag?'on':''}}" bindtap="clearTag">全部玩法</view>
   <view class="chip {{tag==item.name?'on':''}}" wx:for="{{home.tags}}" wx:key="id" bindtap="setTag" data-name="{{item.name}}">{{item.name}}</view>
 </scroll-view>
+<scroll-view scroll-x class="city-bar">
+  <view class="chip {{!hostKind?'on':''}}" bindtap="clearHost">全部团</view>
+  <view class="chip {{hostKind=='company'?'on':''}}" bindtap="setHost" data-kind="company">公司</view>
+  <view class="chip {{hostKind=='campus'?'on':''}}" bindtap="setHost" data-kind="campus">高校</view>
+  <view class="chip {{hostKind=='individual'?'on':''}}" bindtap="setHost" data-kind="individual">个人</view>
+</scroll-view>
+<scroll-view scroll-x class="city-bar" wx:if="{{hostKind=='company' && hostCompanies.length}}">
+  <view class="chip {{!companyName?'on':''}}" bindtap="clearCompany">全部公司</view>
+  <view class="chip {{companyName==item?'on':''}}" wx:for="{{hostCompanies}}" wx:key="*this" bindtap="setCompany" data-name="{{item}}">{{item}}</view>
+</scroll-view>
+<scroll-view scroll-x class="city-bar" wx:if="{{hostKind=='campus' && hostSchools.length}}">
+  <view class="chip {{!school?'on':''}}" bindtap="clearSchool">全部高校</view>
+  <view class="chip {{school==item?'on':''}}" wx:for="{{hostSchools}}" wx:key="*this" bindtap="setSchool" data-name="{{item}}">{{item}}</view>
+</scroll-view>
 
 <view class="feed-toolbar">
   <view class="hint">看看最近都在忙什么</view>

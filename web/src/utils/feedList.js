@@ -35,6 +35,8 @@ export function matchesQuery(row, q) {
     row.route?.region,
     row.organizerName,
     row.companyName,
+    row.eligibility?.label,
+    ...(row.eligibility?.schools || []),
     row.meetupPoint,
     row.notes,
     tags,
@@ -68,6 +70,61 @@ export function sortFeed(rows, sortKey) {
   return list;
 }
 
+export const HOST_KINDS = [
+  { key: "", label: "全部团" },
+  { key: "company", label: "公司" },
+  { key: "campus", label: "高校" },
+  { key: "individual", label: "个人" },
+];
+
+export function companyNameOf(row) {
+  return String(row?.companyName || row?.company_name || "").trim();
+}
+
+export function schoolsOf(row) {
+  const list = row?.eligibility?.schools;
+  return (Array.isArray(list) ? list : []).map((s) => String(s || "").trim()).filter(Boolean);
+}
+
+export function isCampusTrip(row) {
+  const el = row?.eligibility || {};
+  return !!(el.studentOnly || el.alumniOk || el.enabled || schoolsOf(row).length);
+}
+
+export function matchesHost(row, opts = {}) {
+  const kind = String(opts.hostKind || "");
+  const company = String(opts.companyName || "").trim();
+  const school = String(opts.school || "").trim();
+  const organizer = row?.organizerType || row?.organizer_type || "individual";
+  if (kind === "company" && organizer !== "company") return false;
+  if (kind === "campus" && !isCampusTrip(row)) return false;
+  if (kind === "individual" && (organizer === "company" || isCampusTrip(row))) return false;
+  if (company && companyNameOf(row) !== company) return false;
+  if (school && !schoolsOf(row).includes(school)) return false;
+  return true;
+}
+
+export function hostFacets(rows) {
+  const companies = [];
+  const schools = [];
+  const seenC = new Set();
+  const seenS = new Set();
+  for (const row of (Array.isArray(rows) ? rows : []).filter(isListable)) {
+    const company = companyNameOf(row);
+    if (company && !seenC.has(company)) {
+      seenC.add(company);
+      companies.push(company);
+    }
+    for (const school of schoolsOf(row)) {
+      if (!seenS.has(school)) {
+        seenS.add(school);
+        schools.push(school);
+      }
+    }
+  }
+  return { companies, schools };
+}
+
 export function processFeed(rows, opts = {}) {
   const {
     query = "",
@@ -80,6 +137,9 @@ export function processFeed(rows, opts = {}) {
     monthKey = "",
     monthPicked = false,
     channel = null,
+    hostKind = "",
+    companyName = "",
+    school = "",
   } = opts;
   let list = (Array.isArray(rows) ? rows : []).filter(isListable);
   if (channel === "trip") list = list.filter((s) => (s.channel || "trip") !== "activity");
@@ -93,6 +153,9 @@ export function processFeed(rows, opts = {}) {
   if (offerFilter) list = list.filter((s) => s.offerType === offerFilter);
   if (monthPicked && !date && monthKey) {
     list = list.filter((s) => String(s.startDate || s.start_date || "").startsWith(monthKey));
+  }
+  if (hostKind || companyName || school) {
+    list = list.filter((s) => matchesHost(s, { hostKind, companyName, school }));
   }
   list = list.filter((s) => matchesQuery(s, query));
   return sortFeed(list, sort);

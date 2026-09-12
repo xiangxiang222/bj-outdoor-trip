@@ -2,7 +2,7 @@ const { request } = require("../../utils/request");
 const { OFFER_TYPES, buildCalendar } = require("../../utils/offer");
 const { detailUrl } = require("../../utils/media");
 const { decorateFeed } = require("../../utils/feed-card");
-const { cycleSort, processFeed, sortLabel } = require("../../utils/feed-list");
+const { cycleSort, hostFacets, processFeed, sortLabel } = require("../../utils/feed-list");
 const { loadRouteCatalog } = require("../../utils/route-catalog");
 
 function asList(rows) {
@@ -24,6 +24,11 @@ Page({
     monthDays: [],
     festivalKey: "",
     offerFilter: "",
+    hostKind: "",
+    companyName: "",
+    school: "",
+    hostCompanies: [],
+    hostSchools: [],
     offers: OFFER_TYPES.filter((o) => o.key !== "full"),
     fold: { extra: false },
     picked: [],
@@ -53,9 +58,10 @@ Page({
     this.load().then(() => wx.stopPullDownRefresh());
   },
   applyGroups() {
-    const { city, date, tag, offerFilter, festivalKey, home, allSchedules, query, sort, monthKey, monthPicked } = this.data;
+    const { city, date, tag, offerFilter, festivalKey, home, allSchedules, query, sort, monthKey, monthPicked, hostKind, companyName, school } = this.data;
     const fest = (home.festivals || []).find((f) => f.key === festivalKey);
     const festDates = new Set(((fest && fest.dates) || []).map((d) => d.date));
+    const facets = hostFacets(allSchedules);
     const groups = processFeed(allSchedules, {
       query,
       sort,
@@ -67,6 +73,9 @@ Page({
       monthKey,
       monthPicked,
       channel: "trip",
+      hostKind,
+      companyName,
+      school,
     }).map((s) => decorateFeed(s));
     const picked = [];
     if (city) picked.push({ key: "city", label: city });
@@ -78,9 +87,14 @@ Page({
       const o = this.data.offers.find((x) => x.key === offerFilter);
       if (o) picked.push({ key: "offer", label: o.label });
     }
+    if (hostKind === "company") picked.push({ key: "host", label: "公司团" });
+    if (hostKind === "campus") picked.push({ key: "host", label: "高校团" });
+    if (hostKind === "individual") picked.push({ key: "host", label: "个人拼团" });
+    if (companyName) picked.push({ key: "company", label: companyName });
+    if (school) picked.push({ key: "school", label: school });
     if (String(query || "").trim()) picked.push({ key: "q", label: "搜 " + String(query).trim() });
     if (sort !== "soon") picked.push({ key: "sort", label: sortLabel(sort) });
-    this.setData({ groups, picked, sortText: sortLabel(sort) });
+    this.setData({ groups, picked, sortText: sortLabel(sort), hostCompanies: facets.companies, hostSchools: facets.schools });
   },
   async load() {
     try {
@@ -196,6 +210,44 @@ Page({
     if (key === "month") this.setData({ monthPicked: false });
     if (key === "q") this.setData({ query: "" });
     if (key === "sort") this.setData({ sort: "soon" });
+    if (key === "host") this.setData({ hostKind: "", companyName: "", school: "" });
+    if (key === "company") this.setData({ companyName: "" });
+    if (key === "school") this.setData({ school: "" });
+    this.applyGroups();
+  },
+  clearHost() {
+    this.setData({ hostKind: "", companyName: "", school: "" });
+    this.applyGroups();
+  },
+  setHost(e) {
+    const kind = e.currentTarget.dataset.kind || "";
+    if (this.data.hostKind === kind) {
+      this.clearHost();
+      return;
+    }
+    this.setData({
+      hostKind: kind,
+      companyName: kind === "company" ? this.data.companyName : "",
+      school: kind === "campus" ? this.data.school : "",
+    });
+    this.applyGroups();
+  },
+  setCompany(e) {
+    const name = e.currentTarget.dataset.name || "";
+    this.setData({ companyName: this.data.companyName === name ? "" : name });
+    this.applyGroups();
+  },
+  clearCompany() {
+    this.setData({ companyName: "" });
+    this.applyGroups();
+  },
+  setSchool(e) {
+    const name = e.currentTarget.dataset.name || "";
+    this.setData({ school: this.data.school === name ? "" : name });
+    this.applyGroups();
+  },
+  clearSchool() {
+    this.setData({ school: "" });
     this.applyGroups();
   },
   async pickMonth(e) {

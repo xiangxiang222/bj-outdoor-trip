@@ -70,6 +70,21 @@
       <div class="chip" :class="{ on: tag === t.name }" v-for="t in home.tags || []" :key="t.id" @click="toggleTag(t.name)">{{ t.name }}</div>
     </div>
 
+    <div class="chips">
+      <div class="chip" :class="{ on: !hostKind }" @click="clearHost()">全部团</div>
+      <div class="chip" :class="{ on: hostKind === 'company' }" @click="toggleHost('company')">公司</div>
+      <div class="chip" :class="{ on: hostKind === 'campus' }" @click="toggleHost('campus')">高校</div>
+      <div class="chip" :class="{ on: hostKind === 'individual' }" @click="toggleHost('individual')">个人</div>
+    </div>
+    <div class="chips" v-if="hostKind === 'company' && hostFacets.companies.length">
+      <div class="chip" :class="{ on: !companyName }" @click="companyName = ''">全部公司</div>
+      <div class="chip" :class="{ on: companyName === n }" v-for="n in hostFacets.companies" :key="n" @click="toggleCompany(n)">{{ n }}</div>
+    </div>
+    <div class="chips" v-if="hostKind === 'campus' && hostFacets.schools.length">
+      <div class="chip" :class="{ on: !school }" @click="school = ''">全部高校</div>
+      <div class="chip" :class="{ on: school === n }" v-for="n in hostFacets.schools" :key="n" @click="toggleSchool(n)">{{ n }}</div>
+    </div>
+
     <div class="feed-toolbar">
       <div class="hint">看看最近都在忙什么</div>
       <div class="tools">
@@ -163,7 +178,7 @@ import { useUserStore } from "@/stores/user";
 import { OFFER_TYPES } from "@/utils/offer";
 import { mediaSrc, slideBg, slideFallback, slideRouteTarget } from "@/utils/media";
 import { boardedLine, coverMark, coverOf, feedWhen, hostName, isFreeOffer, taglineOf } from "@/utils/feedCard";
-import { cycleSort, processFeed, sortLabel } from "@/utils/feedList";
+import { cycleSort, hostFacets as collectHostFacets, processFeed, sortLabel } from "@/utils/feedList";
 import RouteCatalog from "@/components/RouteCatalog.vue";
 
 const pageRoute = useRoute();
@@ -179,6 +194,9 @@ const monthPicked = ref(false);
 const monthDays = ref([]);
 const festivalKey = ref("");
 const offerFilter = ref("");
+const hostKind = ref("");
+const companyName = ref("");
+const school = ref("");
 const query = ref("");
 const sort = ref("soon");
 const heroIndex = ref(0);
@@ -228,8 +246,12 @@ const groups = computed(() => {
     monthKey: monthKey.value,
     monthPicked: monthPicked.value,
     channel: "trip",
+    hostKind: hostKind.value,
+    companyName: companyName.value,
+    school: school.value,
   });
 });
+const hostFacets = computed(() => collectHostFacets(schedules.value));
 const picked = computed(() => {
   const rows = [];
   if (city.value) rows.push({ key: "city", label: city.value, clear: () => { city.value = ""; } });
@@ -241,6 +263,11 @@ const picked = computed(() => {
     const o = offers.find((x) => x.key === offerFilter.value);
     if (o) rows.push({ key: "offer", label: o.label, clear: () => { offerFilter.value = ""; } });
   }
+  if (hostKind.value === "company") rows.push({ key: "host", label: "公司团", clear: () => clearHost() });
+  if (hostKind.value === "campus") rows.push({ key: "host", label: "高校团", clear: () => clearHost() });
+  if (hostKind.value === "individual") rows.push({ key: "host", label: "个人拼团", clear: () => clearHost() });
+  if (companyName.value) rows.push({ key: "company", label: companyName.value, clear: () => { companyName.value = ""; } });
+  if (school.value) rows.push({ key: "school", label: school.value, clear: () => { school.value = ""; } });
   if (query.value.trim()) rows.push({ key: "q", label: "搜 " + query.value.trim(), clear: () => { query.value = ""; } });
   if (sort.value !== "soon") rows.push({ key: "sort", label: sortLabel(sort.value), clear: () => { sort.value = "soon"; } });
   return rows;
@@ -298,6 +325,26 @@ function toggleDate(d) {
 }
 function toggleTag(name) {
   tag.value = tag.value === name ? "" : name;
+}
+function clearHost() {
+  hostKind.value = "";
+  companyName.value = "";
+  school.value = "";
+}
+function toggleHost(kind) {
+  if (hostKind.value === kind) {
+    clearHost();
+    return;
+  }
+  hostKind.value = kind;
+  if (kind !== "company") companyName.value = "";
+  if (kind !== "campus") school.value = "";
+}
+function toggleCompany(name) {
+  companyName.value = companyName.value === name ? "" : name;
+}
+function toggleSchool(name) {
+  school.value = school.value === name ? "" : name;
 }
 function goSlide() {
   const path = brandSlideTarget.value;
