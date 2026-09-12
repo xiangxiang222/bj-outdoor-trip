@@ -54,16 +54,28 @@
           <div class="muted">可多选。未单独设封面时，会用相册第一张当封面。</div>
         </el-form-item>
         <el-form-item label="天数">
-          <el-select v-model="form.days">
+          <el-select v-model="form.days" class="field-select">
             <el-option :value="1" label="1日" />
             <el-option :value="2" label="2日" />
             <el-option :value="3" label="3日" />
             <el-option :value="5" label="多日" />
           </el-select>
         </el-form-item>
-        <el-form-item label="类型"><el-input v-model="form.category" /></el-form-item>
-        <el-form-item label="地区"><el-input v-model="form.region" /></el-form-item>
-        <el-form-item label="难度"><el-input v-model="form.difficulty" /></el-form-item>
+        <el-form-item label="类型">
+          <el-select v-model="form.category" class="field-select" clearable filterable allow-create default-first-option placeholder="可不选">
+            <el-option v-for="c in categoryOptions" :key="c" :label="c" :value="c" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="地区">
+          <el-select v-model="form.region" class="field-select" clearable filterable allow-create default-first-option placeholder="可不选">
+            <el-option v-for="r in regionOptions" :key="r" :label="r" :value="r" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="难度">
+          <el-select v-model="form.difficulty" class="field-select" clearable filterable allow-create default-first-option placeholder="可不选">
+            <el-option v-for="d in difficultyOptions" :key="d" :label="d" :value="d" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="成团人数"><el-input-number v-model="form.minGroupSize" /></el-form-item>
         <el-form-item label="介绍"><el-input type="textarea" :rows="4" v-model="form.description" /></el-form-item>
         <el-form-item label="费用含"><el-input type="textarea" v-model="form.feeInclude" /></el-form-item>
@@ -82,6 +94,7 @@
 import { computed, onMounted, ref } from "vue";
 import { ElMessage } from "element-plus";
 import http from "@/api/http";
+import { ROUTE_CATEGORIES, ROUTE_DIFFICULTIES, ROUTE_REGIONS, mergeOptions } from "@/utils/routeMeta";
 
 const list = ref([]);
 const show = ref(false);
@@ -90,6 +103,9 @@ const tiersText = ref("[]");
 const galleryList = computed(() =>
   (form.value.gallery || []).map((url, i) => ({ name: `photo-${i + 1}`, url, uid: `${i}-${url}` }))
 );
+const categoryOptions = computed(() => mergeOptions(ROUTE_CATEGORIES, list.value.map((r) => r.category), form.value.category));
+const regionOptions = computed(() => mergeOptions(ROUTE_REGIONS, list.value.map((r) => r.region), form.value.region));
+const difficultyOptions = computed(() => mergeOptions(ROUTE_DIFFICULTIES, list.value.map((r) => r.difficulty), form.value.difficulty));
 
 async function load() {
   list.value = (await http.get("/admin/routes")).data;
@@ -97,7 +113,7 @@ async function load() {
 onMounted(load);
 
 function openCreate() {
-  form.value = { days: 1, minGroupSize: 10, category: "山水", difficulty: "休闲", tags: [], highlights: [], itinerary: [], cover: "", gallery: [], meetupPoints: [], buses: ["bus30"], status: "on" };
+  form.value = { days: 1, minGroupSize: 10, category: "", region: "", difficulty: "", tags: [], highlights: [], itinerary: [], cover: "", gallery: [], meetupPoints: [], buses: ["bus30"], status: "on" };
   tiersText.value = JSON.stringify([{ minPeople: 10, price: 199, memberPrice: 189 }, { minPeople: 20, price: 179, memberPrice: 170 }, { minPeople: 30, price: 159, memberPrice: 151 }, { minPeople: 50, price: 139, memberPrice: 132 }], null, 2);
   show.value = true;
 }
@@ -171,6 +187,9 @@ async function off(row) {
   height: 100px;
   border-radius: 8px;
   display: block;
+}
+.field-select {
+  width: 100%;
 }
 .muted {
   color: #909399;
