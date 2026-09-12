@@ -7,10 +7,19 @@
     <view class="price">¥{{fromPrice}} 起</view>
     <view class="chip {{r.favored ? 'on' : ''}}" bindtap="fav">{{r.favored ? '已收藏' : '收藏'}}</view>
   </view>
-  <view class="muted">{{r.description}}</view>
 </view>
-<view class="pad"><view class="title">线路相册</view></view>
-<view class="gallery" style="display:flex;flex-wrap:wrap;padding:0 16rpx">
+<view class="pad" wx:if="{{r.story && r.story.length}}">
+  <view class="title">线路介绍</view>
+  <block wx:for="{{r.story}}" wx:key="index">
+    <view wx:if="{{item.type==='text'}}" class="story-text">{{item.body}}</view>
+    <block wx:elif="{{item.type==='image' && item.url}}">
+      <image class="story-img" src="{{item.url}}" mode="widthFix" bindtap="previewStory" data-url="{{item.url}}" show-menu-by-longpress="{{true}}" />
+      <view wx:if="{{item.caption}}" class="muted">{{item.caption}}</view>
+    </block>
+  </block>
+</view>
+<view class="pad" wx:if="{{r.gallery && r.gallery.length}}"><view class="title">线路相册</view></view>
+<view class="gallery" style="display:flex;flex-wrap:wrap;padding:0 16rpx" wx:if="{{r.gallery && r.gallery.length}}">
   <image wx:for="{{r.gallery}}" wx:key="thumb" src="{{item.thumb}}" mode="aspectFill" style="width:48%;height:200rpx;margin:1%;border-radius:12rpx" bindtap="preview" data-index="{{index}}" show-menu-by-longpress="{{true}}" />
 </view>
 <view class="pad"><view class="title">亮点</view>
@@ -20,6 +29,7 @@
   <view wx:for="{{r.itinerary}}" wx:key="time">
     <view>{{item.time}} {{item.title}}</view>
     <view class="muted">{{item.detail}}</view>
+    <image wx:if="{{item.photo}}" class="story-img" src="{{item.photo}}" mode="widthFix" bindtap="previewStory" data-url="{{item.photo}}" />
   </view>
 </view>
 <view class="pad"><view class="title">阶梯价</view>

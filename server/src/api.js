@@ -43,6 +43,7 @@ const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
 const { parseEnrollLimit, eligibilityView, applyEnrollLimit } = require("./services/eligibility");
 const { oversubView, isOversubPending, drawOversub } = require("./services/oversub");
+const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
 const { noticeCampus, noticeGroup, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -159,14 +160,23 @@ function mapRoute(row, req, extra) {
   const r = toRoute(row, extra);
   r.cover = attachAssetHost(req, resolveStoredMedia(r.cover, { code: r.code }));
   const seen = new Set();
-  r.gallery = (r.gallery || [])
+  const gallery = (r.gallery || [])
     .map((g) => resolveStoredMedia(g, { code: r.code }))
     .filter((g) => {
       if (!g || seen.has(g)) return false;
       seen.add(g);
       return true;
-    })
-    .map((g) => attachAssetHost(req, g));
+    });
+  r.story = storyOf({ story: r.story, description: r.description, gallery }).map((block) =>
+    block.type === "image"
+      ? { ...block, url: attachAssetHost(req, resolveStoredMedia(block.url, { code: r.code })) || block.url }
+      : block
+  );
+  r.gallery = gallery.map((g) => attachAssetHost(req, g));
+  r.itinerary = (r.itinerary || []).map((it) => ({
+    ...it,
+    photo: it.photo ? attachAssetHost(req, resolveStoredMedia(it.photo, { code: r.code })) || "" : "",
+  }));
   return r;
 }
 
@@ -1711,8 +1721,8 @@ router.post("/admin/routes", authAdmin, requireCap("ops"), (req, res) => {
   const b = req.body || {};
   const info = db()
     .prepare(
-      `INSERT INTO routes (code,title,subtitle,days,distance_km,difficulty,category,region,season,tags_json,cover,gallery_json,min_group_size,description,highlights_json,itinerary_json,fee_include,fee_exclude,equipment,notices,meetup_json,status)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO routes (code,title,subtitle,days,distance_km,difficulty,category,region,season,tags_json,cover,gallery_json,min_group_size,description,story_json,highlights_json,itinerary_json,fee_include,fee_exclude,equipment,notices,meetup_json,status)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       b.code || `R${Date.now()}`,
@@ -1729,8 +1739,9 @@ router.post("/admin/routes", authAdmin, requireCap("ops"), (req, res) => {
       JSON.stringify(b.gallery || []),
       b.minGroupSize || 10,
       b.description || "",
+      JSON.stringify(normalizeStory(b.story)),
       JSON.stringify(b.highlights || []),
-      JSON.stringify(b.itinerary || []),
+      JSON.stringify(normalizeItinerary(b.itinerary)),
       b.feeInclude || "",
       b.feeExclude || "",
       b.equipment || "",
@@ -1750,7 +1761,7 @@ router.put("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
   const b = req.body || {};
   const id = req.params.id;
   db().prepare(
-    `UPDATE routes SET title=?, subtitle=?, days=?, distance_km=?, difficulty=?, category=?, region=?, season=?, tags_json=?, cover=?, gallery_json=?, min_group_size=?, description=?, highlights_json=?, itinerary_json=?, fee_include=?, fee_exclude=?, equipment=?, notices=?, meetup_json=?, status=? WHERE id=?`
+    `UPDATE routes SET title=?, subtitle=?, days=?, distance_km=?, difficulty=?, category=?, region=?, season=?, tags_json=?, cover=?, gallery_json=?, min_group_size=?, description=?, story_json=?, highlights_json=?, itinerary_json=?, fee_include=?, fee_exclude=?, equipment=?, notices=?, meetup_json=?, status=? WHERE id=?`
   ).run(
     b.title,
     b.subtitle,
@@ -1765,8 +1776,9 @@ router.put("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
     JSON.stringify(b.gallery || []),
     b.minGroupSize,
     b.description,
+    JSON.stringify(normalizeStory(b.story)),
     JSON.stringify(b.highlights || []),
-    JSON.stringify(b.itinerary || []),
+    JSON.stringify(normalizeItinerary(b.itinerary)),
     b.feeInclude,
     b.feeExclude,
     b.equipment,

@@ -66,8 +66,12 @@ describe("admin API", () => {
         gallery: [],
         minGroupSize: 8,
         description: "介绍",
+        story: [
+          { type: "text", body: "先看城墙" },
+          { type: "image", url: "/static/photos/wall1.jpg", caption: "慕田峪" },
+        ],
         highlights: ["亮点"],
-        itinerary: [],
+        itinerary: [{ time: "07:30", title: "出发", detail: "集合", photo: "/static/photos/wall1.jpg" }],
         feeInclude: "车",
         feeExclude: "餐",
         equipment: "鞋",
@@ -78,6 +82,10 @@ describe("admin API", () => {
         buses: ["coaster10"],
       })
       .expect(200);
+
+    const after = await agent.get(`/api/routes/${id}`).expect(200);
+    assert.equal(after.body.data.story[0].body, "先看城墙");
+    assert.match(after.body.data.itinerary[0].photo || "", /wall1/);
 
     await agent.delete(`/api/admin/routes/${id}`).set(auth(adminToken)).expect(200);
     const publicList = await agent.get("/api/routes").expect(200);

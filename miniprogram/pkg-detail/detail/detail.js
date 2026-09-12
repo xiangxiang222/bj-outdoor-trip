@@ -8,11 +8,30 @@ function localDetail(id) {
   return (Array.isArray(details) ? details : []).find((row) => String(row.id) === String(id)) || null;
 }
 
+function composeLocalStory(r) {
+  if (Array.isArray(r.story) && r.story.length) return r.story;
+  const paras = String(r.description || "")
+    .split(/\n\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const photos = (r.gallery || [])
+    .map((g) => (typeof g === "string" ? g : (g && (g.src || g.origin || g.thumb)) || ""))
+    .filter(Boolean)
+    .slice(0, 3);
+  const blocks = [];
+  paras.forEach((body, i) => {
+    blocks.push({ type: "text", body });
+    if (photos[i]) blocks.push({ type: "image", url: photos[i] });
+  });
+  return blocks;
+}
+
 Page({
   data: { r: {}, fromPrice: 0, id: "", err: "", reviews: { list: [], count: 0, avg: 0 }, faqs: [] },
   onLoad(q) {
     const id = q.id;
     const local = withLocalMedia(localDetail(id) || { id });
+    local.story = composeLocalStory(local);
     this.setData({
       id,
       r: local,
@@ -32,6 +51,7 @@ Page({
           gallery: local.gallery,
         })
       );
+      r.story = composeLocalStory(r);
       this.setData({
         r,
         fromPrice: ((r.priceTiers && r.priceTiers[0]) || {}).price || this.data.fromPrice,
@@ -97,6 +117,10 @@ Page({
       }
       wx.showToast({ title: e.message, icon: "none" });
     }
+  },
+  previewStory(e) {
+    const url = e.currentTarget.dataset.url;
+    if (url) wx.previewImage({ urls: [url], current: url });
   },
   preview(e) {
     const index = Number(e.currentTarget.dataset.index) || 0;
