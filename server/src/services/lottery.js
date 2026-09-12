@@ -266,6 +266,21 @@ function requireCompleted(userId, scheduleId) {
   return en;
 }
 
+function eligibleAfterTripLottery(userId, scheduleId) {
+  const rows = getDb()
+    .prepare("SELECT status, pay_status FROM enrollments WHERE user_id=? AND schedule_id=?")
+    .all(userId, scheduleId);
+  return rows.some((en) => {
+    if (en.pay_status === "refunded") return false;
+    if (en.pay_status === "paid" || en.pay_status === "company_pending") return true;
+    return en.status === "joined";
+  });
+}
+
+function requireAfterTripLottery(userId, scheduleId) {
+  if (!eligibleAfterTripLottery(userId, scheduleId)) fail(400, "交费后才能参加行后抽奖");
+}
+
 function tripHasEnded(scheduleId) {
   const sch = getDb().prepare("SELECT start_date, end_date FROM schedules WHERE id=?").get(scheduleId);
   if (!sch) fail(404, "行程不存在");
@@ -389,7 +404,8 @@ function drawPost(userId, scheduleId) {
     if (!allowsEnroll(mode)) fail(400, "本团只开放报名前抽奖");
     requireEnrolled(userId, sid);
   } else {
-    requireCompleted(userId, sid);
+    if (!tripHasEnded(sid)) fail(400, "行程结束后才能抽");
+    requireAfterTripLottery(userId, sid);
   }
   const exist = getDraw(userId, sid, "post");
   if (exist) return drawPayload(exist, prizes, campaign, { already: true });
@@ -416,7 +432,7 @@ function drawPost(userId, scheduleId) {
 function claimPrizes(userId, scheduleId) {
   const sid = Number(scheduleId);
   if (!sid) fail(400, "请选择行程");
-  requireJoined(userId, sid);
+  requireAfterTripLottery(userId, sid);
   if (!tripHasEnded(sid)) fail(400, "跟团结束后才能领奖");
   const { campaign, prizes } = resolvePool(sid);
   if (!campaign || Number(campaign.enabled) !== 1) fail(400, "本团没有待领奖品");
@@ -473,19 +489,14 @@ function canPostDraw(userId, sid, campaign) {
       )
       .get(userId, sid);
   }
-  const en = getDb()
-    .prepare("SELECT completed_at FROM enrollments WHERE user_id=? AND schedule_id=? AND status='joined'")
-    .get(userId, sid);
-  return !!(en && en.completed_at);
+  if (!tripHasEnded(sid)) return false;
+  return eligibleAfterTripLottery(userId, sid);
 }
 
 function canClaimDraws(userId, sid, campaign, prizes) {
   if (!userId || !sid || !campaign || Number(campaign.enabled) !== 1) return false;
   if (!tripHasEnded(sid)) return false;
-  const joined = getDb()
-    .prepare("SELECT id FROM enrollments WHERE user_id=? AND schedule_id=? AND status='joined'")
-    .get(userId, sid);
-  if (!joined) return false;
+  if (!eligibleAfterTripLottery(userId, sid)) return false;
   const pending = getDb()
     .prepare(
       "SELECT prize_key FROM lottery_draws WHERE user_id=? AND schedule_id=? AND IFNULL(campaign_id,0)=? AND claimed_at IS NULL"
@@ -573,7 +584,7 @@ function lotteryState(userId, scheduleId) {
       ? canClaim
         ? "跟团已结束，可以领奖"
         : "中奖后先记账，跟团结束后再领奖"
-      : "",
+      : "交过费即可在行程结束后抽，不用签到",
   };
   if (!sid) {
     data.title = "平台抽奖";

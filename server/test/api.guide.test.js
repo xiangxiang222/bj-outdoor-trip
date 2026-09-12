@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { harness, loginUser, issueCaptcha, auth, ID } = require("./http");
+const { harness, loginUser, loginAdmin, issueCaptcha, auth, ID } = require("./http");
 
 describe("guide portal", () => {
   let agent;
@@ -74,6 +74,58 @@ describe("guide portal", () => {
       .send({ enrollmentId: first.id })
       .expect(200);
     assert.ok(checked.body.data.checkinAt);
+
+    const started = await agent.post(`/api/guide/schedules/${seed.individualScheduleId}/start`).set(gauth).expect(200);
+    assert.ok(started.body.data.startedAt);
+    const startedAgain = await agent.post(`/api/guide/schedules/${seed.individualScheduleId}/start`).set(gauth).expect(200);
+    assert.equal(startedAgain.body.data.already, true);
+
+    const opened = await agent
+      .post(`/api/guide/schedules/${seed.individualScheduleId}/checkins`)
+      .set(gauth)
+      .send({ stopKey: "depart" })
+      .expect(200);
+    assert.equal(opened.body.data.checkin.openSession.title, "出发前上车");
+    const againOpen = await agent
+      .post(`/api/guide/schedules/${seed.individualScheduleId}/checkins`)
+      .set(gauth)
+      .send({ stopKey: "depart" });
+    assert.equal(againOpen.status, 400);
+
+    const marked = await agent
+      .post(`/api/guide/schedules/${seed.individualScheduleId}/checkin`)
+      .set(gauth)
+      .send({ enrollmentId: first.id })
+      .expect(200);
+    assert.ok(marked.body.data.sessionId);
+    const round = await agent.get(`/api/guide/schedules/${seed.individualScheduleId}`).set(gauth).expect(200);
+    assert.equal(round.body.data.roster.find((r) => r.id === first.id).sessionChecked, true);
+
+    const sessionId = round.body.data.checkin.openSession.id;
+    const confirmed = await agent
+      .post(`/api/guide/schedules/${seed.individualScheduleId}/checkins/${sessionId}/confirm`)
+      .set(gauth)
+      .expect(200);
+    assert.equal(confirmed.body.data.checkin.openSession, null);
+    assert.equal(confirmed.body.data.checkin.sessions[0].status, "confirmed");
+
+    const stopRound = await agent
+      .post(`/api/guide/schedules/${seed.individualScheduleId}/checkins`)
+      .set(gauth)
+      .send({ stopKey: "stop-0" })
+      .expect(200);
+    assert.match(stopRound.body.data.checkin.openSession.title, /出发/);
+
+    const admin = await loginAdmin(agent);
+    const adminView = await agent
+      .get(`/api/admin/schedules/${seed.individualScheduleId}/checkin`)
+      .set(auth(admin))
+      .expect(200);
+    assert.ok(adminView.body.data.checkin.openSession);
+    await agent
+      .post(`/api/admin/schedules/${seed.individualScheduleId}/checkins/${adminView.body.data.checkin.openSession.id}/confirm`)
+      .set(auth(admin))
+      .expect(200);
 
     const user = await agent.get("/api/guide/me").set(auth(userToken));
     assert.equal(user.status, 401);

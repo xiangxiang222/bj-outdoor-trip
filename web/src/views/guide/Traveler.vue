@@ -50,10 +50,12 @@
       </div>
       <div class="trip-kv">
         <span class="muted">签到</span>
-        <strong>{{ t.checkinAt ? "已签到" : "未签到" }}</strong>
+        <strong>{{ t.openSession ? (t.sessionChecked ? "本轮已到" : "本轮未到") : (t.checkinAt ? "已签到" : "未签到") }}</strong>
       </div>
       <p v-if="msg" class="muted">{{ msg }}</p>
-      <button v-if="!t.checkinAt" class="btn block" style="margin-top:12px" type="button" @click="checkin">签到</button>
+      <button v-if="t.openSession && !t.sessionChecked" class="btn block" style="margin-top:12px" type="button" @click="checkin">本轮签到</button>
+      <button v-else-if="t.openSession && t.sessionChecked" class="btn ghost block" style="margin-top:12px" type="button" @click="uncheckin">撤销本轮</button>
+      <button v-else-if="!t.checkinAt" class="btn block" style="margin-top:12px" type="button" @click="checkin">签到</button>
     </div></div>
 
     <template v-if="t.profile">
@@ -110,6 +112,19 @@ async function checkin() {
   try {
     await http.post(`/guide/schedules/${route.params.id}/checkin`, { enrollmentId: Number(route.params.enrollmentId) });
     msg.value = "已签到";
+    await load();
+  } catch (e) {
+    msg.value = e.message;
+  }
+}
+
+async function uncheckin() {
+  try {
+    await http.post(`/guide/schedules/${route.params.id}/checkin`, {
+      enrollmentId: Number(route.params.enrollmentId),
+      marked: false,
+    });
+    msg.value = "已撤销";
     await load();
   } catch (e) {
     msg.value = e.message;

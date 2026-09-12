@@ -5,7 +5,8 @@
         <strong>{{ s.route.title }}</strong>
         <p>{{ s.startDate }} · {{ s.bus?.name }}<template v-if="s.bus?.seats"> · {{ s.bus.seats }}座</template><template v-if="s.bus?.plateNo"> · {{ s.bus.plateNo }}</template></p>
         <p>集合 {{ s.meetupPoint }} {{ s.meetupTime }}</p>
-        <p>已报 {{ s.enrolled }} / {{ s.maxSeats }} · 已签到 {{ checked }}</p>
+        <p>已报 {{ s.enrolled }} / {{ s.maxSeats }} · {{ checkinLine }}</p>
+        <p v-if="s.startedAt" class="muted" style="color:var(--leaf)">已正式开团 {{ s.startedAt }}</p>
         <div v-if="weather" class="weather" :class="weather.alerts?.[0]?.level">
           <strong>{{ weather.summary }} {{ weather.tmin }}~{{ weather.tmax }}℃ · 风 {{ weather.wind }}km/h</strong>
           <WeatherChart :hourly="weather.hourly" :label="'分时气温'" />
@@ -13,6 +14,26 @@
         </div>
       </div>
     </div>
+
+    <div class="h2">正式开团与签到</div>
+    <div class="card"><div class="pad">
+      <p class="muted" style="margin:0 0 10px">出发前上车、每个休息点都可以再开一轮。核对名单后点确认，下一轮才能发起。没上车的交费客行程结束后仍可抽奖。</p>
+      <button v-if="!s.startedAt" class="btn block" type="button" :disabled="starting" @click="startOfficial">{{ starting ? "开团中…" : "正式开团" }}</button>
+      <template v-if="openSession">
+        <p><strong>本轮 {{ openSession.title }}</strong> · 已到 {{ openSession.markedCount }} / {{ openSession.total }}</p>
+        <button class="btn block" type="button" :disabled="confirming" @click="confirmRound">{{ confirming ? "确认中…" : "确认本轮签到" }}</button>
+      </template>
+      <template v-else>
+        <label>签到点</label>
+        <select class="input" v-model="stopKey">
+          <option v-for="st in stops" :key="st.key" :value="st.key">{{ st.time ? st.time + " " : "" }}{{ st.title }}</option>
+        </select>
+        <button class="btn block" type="button" style="margin-top:10px" :disabled="opening" @click="openRound">{{ opening ? "发起中…" : "发起签到" }}</button>
+      </template>
+      <div v-if="pastSessions.length" class="muted" style="margin-top:12px">
+        <div v-for="sess in pastSessions" :key="sess.id">{{ sess.title }} · 已确认 {{ sess.markedCount }}/{{ sess.total }}</div>
+      </div>
+    </div></div>
 
     <div class="h2">车辆与本团群</div>
     <div class="card"><div class="pad">
@@ -75,8 +96,10 @@
             <template v-else>{{ r.emergencyPhone || "" }}</template>
           </div>
         </span>
-        <button v-if="!r.checkinAt" class="btn" style="padding:4px 10px" @click="checkin(r)">签到</button>
-        <span v-else class="muted">已签</span>
+        <button v-if="openSession && !r.sessionChecked" class="btn" style="padding:4px 10px" type="button" @click="checkin(r)">签到</button>
+        <button v-else-if="openSession && r.sessionChecked" class="btn ghost" style="padding:4px 10px" type="button" @click="uncheckin(r)">已到</button>
+        <span v-else-if="r.checkinAt" class="muted">已签</span>
+        <button v-else class="btn" style="padding:4px 10px" type="button" @click="checkin(r)">签到</button>
       </div>
       <p v-if="!s.roster?.length" class="muted pad">还没有有效报名。</p>
     </div>
@@ -105,7 +128,21 @@ const tripSaving = ref(false);
 const tripMsg = ref("");
 const tripLoaded = ref(false);
 const tripCanCancel = computed(() => !!(s.value?.bus?.plateNo || s.value?.consultGroup));
-const checked = computed(() => (s.value?.roster || []).filter((r) => r.checkinAt).length);
+const openSession = computed(() => s.value?.checkin?.openSession || null);
+const stops = computed(() => s.value?.checkin?.stops || []);
+const pastSessions = computed(() => (s.value?.checkin?.sessions || []).filter((row) => row.status === "confirmed"));
+const checked = computed(() => {
+  if (openSession.value) return Number(openSession.value.markedCount || 0);
+  return (s.value?.roster || []).filter((r) => r.checkinAt).length;
+});
+const checkinLine = computed(() => {
+  if (openSession.value) return `本轮已到 ${checked.value}`;
+  return `已签到 ${checked.value}`;
+});
+const stopKey = ref("depart");
+const starting = ref(false);
+const opening = ref(false);
+const confirming = ref(false);
 const seatRows = computed(() => {
   const list = seatChart.value?.seats || [];
   const groups = [];
@@ -126,6 +163,11 @@ function applyTripFields(data) {
 
 async function load() {
   s.value = (await http.get("/guide/schedules/" + route.params.id)).data;
+  if (!openSession.value) {
+    const first = (s.value?.checkin?.stops || [])[0];
+    if (first && !stops.value.some((st) => st.key === stopKey.value)) stopKey.value = first.key;
+    else if (!stopKey.value) stopKey.value = first?.key || "depart";
+  }
   if (!tripEditing.value || !tripLoaded.value) applyTripFields(s.value);
   if (!tripLoaded.value) {
     tripEditing.value = !(plateNo.value || consultGroup.value);
@@ -212,10 +254,62 @@ async function onManageSeat(seat) {
   }
 }
 
+async function startOfficial() {
+  starting.value = true;
+  msg.value = "";
+  try {
+    const data = (await http.post(`/guide/schedules/${route.params.id}/start`)).data;
+    s.value = { ...s.value, ...data };
+    msg.value = data.already ? "已经正式开团" : "已正式开团";
+  } catch (e) {
+    msg.value = e.message;
+  } finally {
+    starting.value = false;
+  }
+}
+
+async function openRound() {
+  opening.value = true;
+  msg.value = "";
+  try {
+    s.value = (await http.post(`/guide/schedules/${route.params.id}/checkins`, { stopKey: stopKey.value })).data;
+    msg.value = `已发起「${s.value.checkin?.openSession?.title || "签到"}」`;
+  } catch (e) {
+    msg.value = e.message;
+  } finally {
+    opening.value = false;
+  }
+}
+
+async function confirmRound() {
+  const session = openSession.value;
+  if (!session) return;
+  confirming.value = true;
+  msg.value = "";
+  try {
+    s.value = (await http.post(`/guide/schedules/${route.params.id}/checkins/${session.id}/confirm`)).data;
+    msg.value = `已确认「${session.title}」`;
+  } catch (e) {
+    msg.value = e.message;
+  } finally {
+    confirming.value = false;
+  }
+}
+
 async function checkin(row) {
   try {
     await http.post(`/guide/schedules/${route.params.id}/checkin`, { enrollmentId: row.id });
-    msg.value = `${row.name} 已签到`;
+    msg.value = `${row.name} 已到`;
+    await load();
+  } catch (e) {
+    msg.value = e.message;
+  }
+}
+
+async function uncheckin(row) {
+  try {
+    await http.post(`/guide/schedules/${route.params.id}/checkin`, { enrollmentId: row.id, marked: false });
+    msg.value = `${row.name} 已撤销`;
     await load();
   } catch (e) {
     msg.value = e.message;

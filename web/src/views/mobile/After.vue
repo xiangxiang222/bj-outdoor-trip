@@ -2,27 +2,15 @@
   <div v-if="s">
     <div class="card"><div class="pad">
       <strong>{{ s.title }}</strong>
-      <p class="muted">{{ s.startDate }} · 回来的大巴上可点完成，然后评价、抽奖、评选。</p>
+      <p class="muted">{{ s.startDate }} · 交过费即可在行程结束后抽奖，不必签到。回来的大巴上点完成后再评价、评选。</p>
       <p v-if="s.completed" style="color:var(--leaf)">已完成活动{{ s.completedAt ? " · " + s.completedAt : "" }}</p>
       <p v-else-if="!s.joined" class="muted">报名参加后才能完成活动。</p>
     </div></div>
     <p v-if="msg" :style="ok ? 'color:var(--leaf)' : 'color:var(--clay)'">{{ msg }}</p>
     <button v-if="s.canComplete" class="btn block" type="button" :disabled="loading" @click="complete">{{ loading ? "提交中…" : "完成活动" }}</button>
 
-    <div v-if="s.completed">
-      <div class="h2">评价领队和路线</div>
-      <div class="card"><div class="pad">
-        <p v-if="s.reviewedByMe" class="muted">你已评价。</p>
-        <template v-else>
-          <div class="star-pick">
-            <button v-for="n in 5" :key="n" type="button" :class="{ on: rating >= n }" @click="rating = n">★</button>
-          </div>
-          <textarea class="input" v-model="reviewText" rows="3" placeholder="这次出行怎么样（选填）" />
-          <button class="btn block" type="button" :disabled="saving" @click="submitReview">提交评价</button>
-        </template>
-      </div></div>
-
-      <div class="h2" v-if="s.lottery?.drawMode !== 'pre'">{{ s.lottery?.drawMode === 'enroll' ? '报名后抽奖' : '第二次抽奖' }}</div>
+    <div v-if="showLottery">
+      <div class="h2" v-if="s.lottery?.drawMode !== 'pre'">{{ s.lottery?.drawMode === 'enroll' ? '报名后抽奖' : '行程结束后抽奖' }}</div>
       <div class="card" v-if="s.lottery?.drawMode !== 'pre'"><div class="pad">
         <p class="muted" v-if="s.lottery?.pre">报名前抽到：{{ s.lottery.pre.prizeLabel }}</p>
         <LotteryWheel
@@ -49,6 +37,20 @@
       </div></div>
       <p class="muted" v-if="s.lottery?.claimHint && !s.lottery?.canClaim">{{ s.lottery.claimHint }}</p>
       <button v-if="s.lottery?.canClaim" class="btn block" type="button" :disabled="claiming" @click="claim">{{ claiming ? "领取中…" : "领取奖品" }}</button>
+    </div>
+
+    <div v-if="s.completed">
+      <div class="h2">评价领队和路线</div>
+      <div class="card"><div class="pad">
+        <p v-if="s.reviewedByMe" class="muted">你已评价。</p>
+        <template v-else>
+          <div class="star-pick">
+            <button v-for="n in 5" :key="n" type="button" :class="{ on: rating >= n }" @click="rating = n">★</button>
+          </div>
+          <textarea class="input" v-model="reviewText" rows="3" placeholder="这次出行怎么样（选填）" />
+          <button class="btn block" type="button" :disabled="saving" @click="submitReview">提交评价</button>
+        </template>
+      </div></div>
 
       <div class="h2">评选 · 分享投票</div>
       <div class="card"><div class="pad">
@@ -76,7 +78,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
@@ -100,6 +102,11 @@ const rating = ref(5);
 const reviewText = ref("");
 const shareUrl = ref("");
 const caption = ref("");
+const showLottery = computed(() => {
+  const l = s.value?.lottery;
+  if (!l) return false;
+  return !!(l.canPost || l.post || l.canClaim || l.pre);
+});
 
 onMounted(load);
 
@@ -120,7 +127,7 @@ async function complete() {
   try {
     await http.post("/schedules/" + route.params.id + "/complete");
     ok.value = true;
-    msg.value = "已完成，可以评价、抽奖和参加评选";
+    msg.value = "已完成，可以评价和参加评选";
     await load();
   } catch (e) {
     ok.value = false;

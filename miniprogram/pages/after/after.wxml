@@ -1,26 +1,14 @@
 <view class="card" wx:if="{{s}}"><view class="pad">
   <view class="title">{{s.title}}</view>
-  <view class="muted">{{s.startDate}} · 回来的大巴上可点完成，然后评价、抽奖、评选。</view>
+  <view class="muted">{{s.startDate}} · 交过费即可在行程结束后抽奖，不必签到。回来的大巴上点完成后再评价、评选。</view>
   <view wx:if="{{s.completed}}" style="color:#2d6a4f">已完成活动</view>
   <view wx:elif="{{!s.joined}}" class="muted">报名参加后才能完成活动。</view>
 </view></view>
 <view class="pad" wx:if="{{msg}}">{{msg}}</view>
 <view class="btn" wx:if="{{s.canComplete}}" bindtap="complete">完成活动</view>
 
-<block wx:if="{{s.completed}}">
-  <view class="pad title">评价领队和路线</view>
-  <view class="card"><view class="pad">
-    <view wx:if="{{s.reviewedByMe}}" class="muted">你已评价。</view>
-    <block wx:else>
-      <view class="star-pick">
-        <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="star {{rating >= n ? 'on' : ''}}" bindtap="pickStar" data-n="{{n}}">★</text>
-      </view>
-      <textarea class="input" placeholder="这次出行怎么样（选填）" value="{{reviewText}}" bindinput="setReview" />
-      <view class="btn" bindtap="submitReview">提交评价</view>
-    </block>
-  </view></view>
-
-  <view class="pad title" wx:if="{{s.lottery.drawMode !== 'pre'}}">{{s.lottery.drawMode === 'enroll' ? '报名后抽奖' : '第二次抽奖'}}</view>
+<block wx:if="{{s.lottery}}">
+  <view class="pad title" wx:if="{{s.lottery.drawMode !== 'pre'}}">{{s.lottery.drawMode === 'enroll' ? '报名后抽奖' : '行程结束后抽奖'}}</view>
   <view class="card" wx:if="{{s.lottery.drawMode !== 'pre'}}"><view class="pad">
     <view class="muted" wx:if="{{s.lottery.pre}}">报名前抽到：{{s.lottery.pre.prizeLabel}}</view>
     <block wx:if="{{s.lottery.post}}">
@@ -36,6 +24,20 @@
     <view class="muted" wx:if="{{s.lottery.pre.claimHint}}">{{s.lottery.pre.claimHint}}</view>
   </view></view>
   <view class="btn" wx:if="{{s.lottery.canClaim}}" bindtap="claim">{{claiming ? '领取中…' : '领取奖品'}}</view>
+</block>
+
+<block wx:if="{{s.completed}}">
+  <view class="pad title">评价领队和路线</view>
+  <view class="card"><view class="pad">
+    <view wx:if="{{s.reviewedByMe}}" class="muted">你已评价。</view>
+    <block wx:else>
+      <view class="star-pick">
+        <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="star {{rating >= n ? 'on' : ''}}" bindtap="pickStar" data-n="{{n}}">★</text>
+      </view>
+      <textarea class="input" placeholder="这次出行怎么样（选填）" value="{{reviewText}}" bindinput="setReview" />
+      <view class="btn" bindtap="submitReview">提交评价</view>
+    </block>
+  </view></view>
 
   <view class="pad title">评选 · 分享投票</view>
   <view class="card"><view class="pad">

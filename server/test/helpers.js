@@ -6,6 +6,8 @@ const PASSWORD = "123456";
 
 function wipe(db) {
   db.exec(`
+    DELETE FROM checkin_marks;
+    DELETE FROM checkin_sessions;
     DELETE FROM contest_votes;
     DELETE FROM contest_posts;
     DELETE FROM lottery_assigns;
