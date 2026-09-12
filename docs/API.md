@@ -40,7 +40,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/schedules/:id/reviews` | 该团评价列表。`{ list, count, avg }` |
 | GET | `/schedules/:id/poster` | 分享 URL + QR DataURL（**无需登录**） |
 | GET | `/share/:token` | 302 到 `/m/schedule/:id?token=` |
-| GET | `/coupons/:code` | 公开券详情、剩余、报价预览。登录后带 `claimedByMe`。可选用户 token |
+| GET | `/coupons/:code` | 公开券详情、剩余、报价预览。登录后带 `claimedByMe`、`myCoupon.expiresAt`。`universal` 通用券无指定团。可选用户 token |
 | POST | `/coupons/:code/claim` | 用户。领取（已领则幂等返回）。每人每活动 1 张，库存按领取扣 |
 
 ## 登录与资料
@@ -56,7 +56,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/auth/wechat` | 否 | `code` `nickname` `avatar` |
 | GET | `/me` | 用户 | 当前用户（证件掩码；含学生/团体状态、`isAlumni`/`campusKind`） |
 | GET | `/me/trips` | 用户 | 即将出行：已报名且团未解散、出发日 ≥ 昨天的 `joined`/`waitlist`/`applied` |
-| GET | `/me/coupons` | 用户 | 我领取的券（含未用/已用/候补占用） |
+| GET | `/me/coupons` | 用户 | 我领取的券（含未用/已用/候补占用）。含 `expiresAt` `claimedAt` `validHours` `universal` |
 | GET | `/me/referral` | 用户 | 推荐码、专属二维码、5% 按人结算明细。Query：`scheduleId` |
 | POST | `/me/photos` | 用户 | `{ url }` 写入个人相册 |
 | DELETE | `/me/photos/:id` | 用户 | 删除自己的相册照片 |
@@ -200,11 +200,12 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/schedules/:id/settle` | 公司团挂账结算，并模拟分账 |
 | GET | `/admin/schedules/:id/splits` | 分账明细 |
 | POST | `/admin/schedules/:id/split` | 对已支付金额发起分账（已有记录则复用） |
-| GET | `/admin/coupons` | Query：`scheduleId`。公开券列表 |
-| POST | `/admin/coupons` | 发行。`scheduleId` `kind=percent|amount` `audience=public|member|directed`；折扣填 `fold`（8=8折）且必填 `capAmount`；立减填 `value`；`total` |
-| GET | `/admin/coupons/:id` | 台账 `holders` + 短链/落地页/二维码 `share` |
-| PUT | `/admin/coupons/:id` | `status=on|paused|off`，可改名称与发行量（不得小于已领） |
-| POST | `/admin/coupons/:id/grant` | 定向发放。`phones`/`phonesText`/`userIds`/`allMembers`，可选 `sms`（默认 true）。一人一码，写入 `sms_logs` 场景 `coupon`，每手机每天最多 1 条 |
+| GET | `/admin/coupons` | Query：`scheduleId`。券列表；带 `scheduleId` 时含该团券与通用券 |
+| GET | `/admin/coupons/targets` | Query：`idleMonths` `minTrips` `campaignId`。预览符合定向条件的人数 |
+| POST | `/admin/coupons` | 发行。`scheduleId` 或 `universal=true`（全部个人拼团）；`kind=percent|amount` `audience=public|member|directed`；折扣填 `fold`（8=8折）且必填 `capAmount`；立减填 `value`；`total`；可选 `validHours`（领取后有效小时，0 不限）、`idleMonths`（近 N 个月未参加）、`minTrips`（出行至少 N 次）、`stackMember` `stackStudent`、`grantByRule`（发行后按条件发放，人多过库存则随机） |
+| GET | `/admin/coupons/:id` | 台账 `holders`（含 `expiresAt`）+ 短链/落地页/二维码 `share` |
+| PUT | `/admin/coupons/:id` | `status=on|paused|off`，可改名称、发行量（不得小于已领）、限时与定向/叠加字段 |
+| POST | `/admin/coupons/:id/grant` | 定向发放。`phones`/`phonesText`/`userIds`/`allMembers`，或 `byRule` 按发行条件发放（人多随机）。可选 `sms`（默认 true）。一人一码，写入 `sms_logs` 场景 `coupon`，每手机每天最多 1 条 |
 | GET | `/admin/enrollments` | Query：`scheduleId` `q` `payStatus` `status` |
 | POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款标记退款） |
 | GET | `/admin/notices` | 运营。后台待办消息。`{ list, unread }`。用户提交校园/团体认证时写入 |

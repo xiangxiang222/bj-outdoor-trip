@@ -3,6 +3,6 @@
   <view class="pad">
     <view class="title">{{item.label}}</view>
     <view>{{item.name}}</view>
-    <view class="muted">{{item.routeTitle}} · {{item.startDate}}</view>
+    <view class="muted">{{item.routeTitle}}<text wx:if="{{item.startDate}}"> · {{item.startDate}}</text></view>
   </view>
 </view>

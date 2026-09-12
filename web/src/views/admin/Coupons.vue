@@ -4,16 +4,25 @@
       <h2>优惠券</h2>
       <el-button type="success" @click="open">发行优惠券</el-button>
     </div>
-    <p class="muted">公开限量领取，或定向发给指定用户/会员并短信带短链。库存在领取或发放时扣减；报名成功才核销。与会员 95 折取更低，不叠加。公司团不可用。</p>
+    <p class="muted">可发指定团或通用券（全部个人拼团）。可按久未参加、出行次数定向，人多过库存时随机抽发。领取后可限时。默认与会员/学生价取低；勾选叠加则先打折再减券。公司团不可用。</p>
     <el-table :data="list" stripe>
       <el-table-column prop="code" label="口令" width="110" />
       <el-table-column prop="name" label="名称" min-width="140" />
       <el-table-column label="行程" min-width="180">
-        <template #default="{ row }">{{ row.routeTitle }} {{ row.startDate }}</template>
+        <template #default="{ row }">{{ row.universal ? "全部团" : `${row.routeTitle || ""} ${row.startDate || ""}` }}</template>
       </el-table-column>
       <el-table-column prop="label" label="优惠" width="90" />
       <el-table-column label="对象" width="90">
         <template #default="{ row }">{{ audienceText(row.audience) }}</template>
+      </el-table-column>
+      <el-table-column label="条件" min-width="140">
+        <template #default="{ row }">{{ ruleText(row) }}</template>
+      </el-table-column>
+      <el-table-column label="限时" width="90">
+        <template #default="{ row }">{{ row.validHours ? row.validHours + "小时" : "不限" }}</template>
+      </el-table-column>
+      <el-table-column label="叠加" width="90">
+        <template #default="{ row }">{{ stackText(row) }}</template>
       </el-table-column>
       <el-table-column label="库存" width="100">
         <template #default="{ row }">{{ row.remain }}/{{ row.total }}</template>
@@ -32,9 +41,15 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="showCreate" title="发行优惠券" width="520px">
-      <el-form label-width="110px">
-        <el-form-item label="行程">
+    <el-dialog v-model="showCreate" title="发行优惠券" width="580px">
+      <el-form label-width="120px">
+        <el-form-item label="适用范围">
+          <el-radio-group v-model="form.universal">
+            <el-radio :label="false">指定行程</el-radio>
+            <el-radio :label="true">全部团（通用券）</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="!form.universal" label="行程">
           <el-select v-model="form.scheduleId" filterable placeholder="选择个人拼团">
             <el-option v-for="s in trips" :key="s.id" :label="tripLabel(s)" :value="s.id" />
           </el-select>
@@ -65,6 +80,29 @@
         </el-form-item>
         <el-form-item label="发行数量"><el-input-number v-model="form.total" :min="1" /></el-form-item>
         <el-form-item label="保底价"><el-input-number v-model="form.floorPrice" :min="0" /> 元，0 为不限</el-form-item>
+        <el-form-item label="领取后有效">
+          <el-input-number v-model="form.validHours" :min="0" /> 小时
+          <span class="muted" style="margin-left:8px">0 为不限时，24 为一天</span>
+        </el-form-item>
+        <el-form-item label="叠加使用">
+          <el-checkbox v-model="form.stackMember">叠加会员价</el-checkbox>
+          <el-checkbox v-model="form.stackStudent">叠加学生价</el-checkbox>
+        </el-form-item>
+        <el-form-item label="久未参加">
+          <el-input-number v-model="form.idleMonths" :min="0" /> 个月内没出门
+          <span class="muted" style="margin-left:8px">0 为不限</span>
+        </el-form-item>
+        <el-form-item label="出行次数">
+          <el-input-number v-model="form.minTrips" :min="0" /> 次及以上
+          <span class="muted" style="margin-left:8px">0 为不限</span>
+        </el-form-item>
+        <el-form-item>
+          <el-button size="small" @click="previewTargets">预览符合人数</el-button>
+          <span class="muted" style="margin-left:8px">{{ previewHint }}</span>
+        </el-form-item>
+        <el-form-item label="发行后发放">
+          <el-checkbox v-model="form.grantByRule">按上面条件发给符合的人，人多过库存则随机抽</el-checkbox>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showCreate = false">取消</el-button>
@@ -82,8 +120,11 @@
     </el-dialog>
 
     <el-dialog v-model="showGrant" title="定向发放" width="520px">
-      <p class="muted" v-if="grantRow">{{ grantRow.name }} · 余 {{ grantRow.remain }} 张。每人一张，重复发放会跳过。</p>
+      <p class="muted" v-if="grantRow">{{ grantRow.name }} · 余 {{ grantRow.remain }} 张。每人一张，重复发放会跳过。{{ ruleText(grantRow) !== "不限" ? "发行条件：" + ruleText(grantRow) + "。" : "" }}</p>
       <el-form label-width="100px">
+        <el-form-item label="按条件">
+          <el-checkbox v-model="grantForm.byRule">按发行时的久未参加 / 出行次数发放，人多随机抽</el-checkbox>
+        </el-form-item>
         <el-form-item label="手机号">
           <el-input v-model="grantForm.phonesText" type="textarea" rows="3" placeholder="已注册手机，逗号或换行分隔" />
         </el-form-item>
@@ -109,6 +150,7 @@
         </el-table-column>
         <el-table-column prop="code" label="券码" width="120" />
         <el-table-column prop="createdAt" label="领取时间" width="170" />
+        <el-table-column prop="expiresAt" label="过期" width="170" />
       </el-table>
     </el-dialog>
   </div>
@@ -134,6 +176,8 @@ const saving = ref(false);
 const share = ref(null);
 const holders = ref([]);
 const form = ref({});
+const preview = ref(null);
+const previewHint = ref("");
 
 function audienceText(s) {
   if (s === "member") return "仅会员";
@@ -148,6 +192,18 @@ function statusText(s) {
 function holderStatus(s) {
   const map = { unused: "未用", held: "候补占用", used: "已核销", expired: "过期", void: "作废" };
   return map[s] || s;
+}
+function ruleText(row) {
+  const bits = [];
+  if (row.idleMonths) bits.push(`${row.idleMonths}个月未出门`);
+  if (row.minTrips) bits.push(`${row.minTrips}次及以上`);
+  return bits.join(" · ") || "不限";
+}
+function stackText(row) {
+  const bits = [];
+  if (row.stackMember) bits.push("会员");
+  if (row.stackStudent) bits.push("学生");
+  return bits.join("+") || "取低";
 }
 function tripLabel(s) {
   return `${s.route?.title || ""} ${s.startDate}（余${s.remain}）`;
@@ -170,18 +226,58 @@ onMounted(async () => {
 
 function open() {
   const preset = route.query.scheduleId ? Number(route.query.scheduleId) : "";
-  form.value = { scheduleId: preset, kind: "amount", value: 30, fold: 8, capAmount: 50, total: 20, floorPrice: 0, name: "", audience: "public" };
+  form.value = {
+    scheduleId: preset,
+    universal: false,
+    kind: "amount",
+    value: 30,
+    fold: 8,
+    capAmount: 50,
+    total: 20,
+    floorPrice: 0,
+    name: "",
+    audience: "public",
+    validHours: 0,
+    idleMonths: 0,
+    minTrips: 0,
+    stackMember: false,
+    stackStudent: false,
+    grantByRule: false,
+  };
+  preview.value = null;
+  previewHint.value = "";
   showCreate.value = true;
+}
+
+async function previewTargets() {
+  try {
+    const data = (await http.get("/admin/coupons/targets", {
+      params: { idleMonths: form.value.idleMonths || 0, minTrips: form.value.minTrips || 0 },
+    })).data;
+    preview.value = data;
+    if (data.needRule) {
+      previewHint.value = "先填久未参加或出行次数";
+      return;
+    }
+    const total = Number(form.value.total || 0);
+    previewHint.value =
+      data.count > total && total > 0
+        ? `${data.count} 人符合，将随机发给 ${total} 人`
+        : `${data.count} 人符合`;
+  } catch (e) {
+    previewHint.value = e.message || "预览失败";
+  }
 }
 
 async function save() {
   saving.value = true;
   try {
     const payload = { ...form.value };
+    if (payload.universal) payload.scheduleId = 0;
     if (payload.kind === "percent") delete payload.value;
     else delete payload.fold;
-    await http.post("/admin/coupons", payload);
-    ElMessage.success("已发行");
+    const res = await http.post("/admin/coupons", payload);
+    ElMessage.success(res.message || (res.data?.granted ? `已发行并发放 ${res.data.granted} 张` : "已发行"));
     showCreate.value = false;
     load();
   } catch (e) {
@@ -203,7 +299,7 @@ async function setStatus(row, status) {
 
 async function openGrant(row) {
   grantRow.value = row;
-  grantForm.value = { phonesText: "", allMembers: false, sms: true };
+  grantForm.value = { phonesText: "", allMembers: false, sms: true, byRule: !!(row.idleMonths || row.minTrips) };
   showGrant.value = true;
 }
 
@@ -211,7 +307,8 @@ async function saveGrant() {
   granting.value = true;
   try {
     const res = await http.post("/admin/coupons/" + grantRow.value.id + "/grant", grantForm.value);
-    ElMessage.success(`已发放 ${res.data.granted} 张` + (res.data.sms ? `，短信 ${res.data.sms} 条` : ""));
+    const extra = res.data?.randomized ? `（符合 ${res.data.matched} 人，已随机）` : "";
+    ElMessage.success(`已发放 ${res.data.granted} 张${extra}` + (res.data.sms ? `，短信 ${res.data.sms} 条` : ""));
     showGrant.value = false;
     load();
   } catch (e) {

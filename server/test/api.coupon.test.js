@@ -294,4 +294,157 @@ describe("coupons", () => {
     assert.equal(again.body.data.granted, 0);
     assert.equal(again.body.data.skipped, 1);
   });
+
+  it("sets claim expiry and rejects after it lapses", async () => {
+    const admin = await loginAdmin(agent);
+    const created = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      scheduleId: seed.individualScheduleId,
+      kind: "amount",
+      value: 40,
+      total: 2,
+      validHours: 24,
+    }).expect(200);
+    assert.equal(created.body.data.validHours, 24);
+    const token = await loginUser(agent);
+    const claimed = await agent.post(`/api/coupons/${created.body.data.code}/claim`).set(auth(token)).expect(200);
+    assert.ok(claimed.body.data.myCoupon.expiresAt);
+    const uc = seed.db.prepare("SELECT * FROM user_coupons WHERE user_id=?").get(seed.userId);
+    seed.db.prepare("UPDATE user_coupons SET expires_at='2020-01-01 00:00:00' WHERE id=?").run(uc.id);
+    const mine = await agent.get("/api/me/coupons").set(auth(token)).expect(200);
+    assert.equal(mine.body.data[0].status, "expired");
+    const enrolled = await agent.post("/api/enroll").set(auth(token)).send({
+      ...enrollBody({ scheduleId: seed.individualScheduleId }),
+      couponCode: uc.code,
+      insuranceCode: "none",
+    });
+    assert.equal(enrolled.status, 400);
+    assert.match(enrolled.body.message, /过期/);
+  });
+
+  it("lets a universal coupon apply on a personal trip but not a company tour", async () => {
+    const admin = await loginAdmin(agent);
+    const created = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      universal: true,
+      kind: "amount",
+      value: 50,
+      total: 3,
+      name: "通用满减",
+    }).expect(200);
+    assert.equal(created.body.data.universal, true);
+    assert.equal(created.body.data.scheduleId, 0);
+    const token = await loginUser(agent);
+    const enrolled = await agent.post("/api/enroll").set(auth(token)).send({
+      ...enrollBody({ scheduleId: seed.individualScheduleId }),
+      couponCode: created.body.data.code,
+      insuranceCode: "none",
+    }).expect(200);
+    assert.equal(enrolled.body.data.quote.couponApplied, true);
+    assert.equal(enrolled.body.data.quote.payAmount, 149);
+    const company = await loginCompany(agent);
+    const bad = await agent.post("/api/enroll").set(auth(company)).send({
+      ...enrollBody({
+        scheduleId: seed.companyScheduleId,
+        travelerName: "华创团建",
+        travelerPhone: "13900139000",
+        idCard: ID.maleHb,
+      }),
+      couponCode: created.body.data.code,
+    });
+    assert.equal(bad.status, 400);
+  });
+
+  it("stacks coupon on member price when asked", async () => {
+    const admin = await loginAdmin(agent);
+    const created = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      scheduleId: seed.individualScheduleId,
+      kind: "amount",
+      value: 10,
+      total: 2,
+      stackMember: true,
+    }).expect(200);
+    assert.equal(created.body.data.stackMember, true);
+    const token = await loginUser(agent);
+    const enrolled = await agent.post("/api/enroll").set(auth(token)).send({
+      ...enrollBody({ scheduleId: seed.individualScheduleId }),
+      couponCode: created.body.data.code,
+      insuranceCode: "none",
+    }).expect(200);
+    assert.equal(enrolled.body.data.quote.couponApplied, true);
+    assert.equal(enrolled.body.data.quote.payAmount, 179);
+  });
+
+  it("filters claim by idle months and trip count", async () => {
+    const admin = await loginAdmin(agent);
+    seed.db.prepare(
+      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,pay_status,status)
+       VALUES (?,?,?,?,?,?,?)`
+    ).run(seed.individualScheduleId, seed.userId, "林北野", "13800138000", ID.maleBj, "paid", "joined");
+    const idleCamp = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      scheduleId: seed.individualScheduleId,
+      kind: "amount",
+      value: 20,
+      total: 5,
+      idleMonths: 2,
+    }).expect(200);
+    const token = await loginUser(agent);
+    const recent = await agent.post(`/api/coupons/${idleCamp.body.data.code}/claim`).set(auth(token));
+    assert.equal(recent.status, 400);
+    assert.match(recent.body.message, /未参加/);
+
+    const cap = await issueCaptcha(agent);
+    const fresh = await agent.post("/api/auth/register").send({
+      phone: "13600136031",
+      password: "123456",
+      nickname: "久未出门",
+      captchaToken: cap.token,
+      captcha: cap.code,
+    }).expect(200);
+    await agent.post(`/api/coupons/${idleCamp.body.data.code}/claim`).set(auth(fresh.body.data.token)).expect(200);
+
+    const countCamp = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      scheduleId: seed.individualScheduleId,
+      kind: "amount",
+      value: 15,
+      total: 5,
+      minTrips: 2,
+    }).expect(200);
+    const few = await agent.post(`/api/coupons/${countCamp.body.data.code}/claim`).set(auth(fresh.body.data.token));
+    assert.equal(few.status, 400);
+    seed.db.prepare(
+      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,pay_status,status)
+       VALUES (?,?,?,?,?,?,?)`
+    ).run(seed.companyScheduleId, fresh.body.data.user.id, "久未出门", "13600136031", ID.femaleSd, "paid", "joined");
+    seed.db.prepare(
+      `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,pay_status,status)
+       VALUES (?,?,?,?,?,?,?)`
+    ).run(seed.individualScheduleId, fresh.body.data.user.id, "久未出门", "13600136031", ID.femaleSd, "paid", "joined");
+    await agent.post(`/api/coupons/${countCamp.body.data.code}/claim`).set(auth(fresh.body.data.token)).expect(200);
+  });
+
+  it("randomly grants when more people match than stock", async () => {
+    const admin = await loginAdmin(agent);
+    const cap = await issueCaptcha(agent);
+    await agent.post("/api/auth/register").send({
+      phone: "13600136041",
+      password: "123456",
+      nickname: "随机第三人",
+      captchaToken: cap.token,
+      captcha: cap.code,
+    }).expect(200);
+    const created = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      universal: true,
+      kind: "amount",
+      value: 20,
+      total: 2,
+      idleMonths: 2,
+      audience: "directed",
+      grantByRule: true,
+      sms: false,
+    }).expect(200);
+    assert.equal(created.body.data.granted, 2);
+    assert.equal(created.body.data.randomized, true);
+    assert.ok(created.body.data.matched >= 2);
+    const holders = seed.db.prepare("SELECT COUNT(*) AS c FROM user_coupons WHERE campaign_id=?").get(created.body.data.id);
+    assert.equal(holders.c, 2);
+  });
 });
