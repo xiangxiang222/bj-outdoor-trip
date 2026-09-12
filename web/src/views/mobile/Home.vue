@@ -44,16 +44,22 @@
       <router-link v-else-if="store.profile?.studentStatus === 'pending'" class="campus-cta" to="/m/student">审核中</router-link>
     </section>
 
-    <div v-if="upcoming" class="card trip-soon" @click="$router.push('/m/orders')">
-      <div class="pad">
-        <div class="muted">即将出行 · 看行程</div>
-        <strong>{{ upcoming.title }}</strong>
-        <p class="muted" style="margin:6px 0 0">{{ upcoming.startDate }} · {{ upcoming.meetupPoint }} {{ upcoming.meetupTime }}</p>
-      </div>
+    <button v-if="upcoming" class="trip-hint" type="button" @click="$router.push('/m/orders')">
+      <span>
+        <span class="muted">即将出行</span>
+        <strong>{{ upcoming.startDate }} · {{ upcoming.title }}</strong>
+      </span>
+      <span class="muted">行程 ›</span>
+    </button>
+
+    <input class="feed-search" v-model="query" type="search" :placeholder="searchHint" />
+
+    <div class="home-seg" role="tablist" aria-label="团或线路">
+      <button type="button" role="tab" :aria-selected="view === 'trips'" :class="{ on: view === 'trips' }" @click="setView('trips')">团</button>
+      <button type="button" role="tab" :aria-selected="view === 'routes'" :class="{ on: view === 'routes' }" @click="setView('routes')">线路</button>
     </div>
 
-    <input class="feed-search" v-model="query" type="search" placeholder="搜线路、城区、主理人" />
-
+    <template v-if="view === 'trips'">
     <div class="chips city-bar">
       <div class="chip" :class="{ on: !city }" @click="city = ''">热门</div>
       <div class="chip" :class="{ on: city === c.name }" v-for="c in home.cities || []" :key="c.name" @click="toggleCity(c.name)">{{ c.name }}</div>
@@ -64,16 +70,12 @@
       <div class="chip" :class="{ on: tag === t.name }" v-for="t in home.tags || []" :key="t.id" @click="toggleTag(t.name)">{{ t.name }}</div>
     </div>
 
-    <div class="catalog-row">
-      <button class="tool-btn ghost-line" type="button" @click="goRoutes">看线路</button>
-      <button class="tool-btn play" type="button" @click="goPublish()">发团</button>
-    </div>
-
     <div class="feed-toolbar">
       <div class="hint">看看最近都在忙什么</div>
       <div class="tools">
         <button class="tool-btn" type="button" @click="sort = cycleSort(sort)">{{ sortLabel(sort) }}</button>
         <button class="tool-btn" type="button" @click="fold.extra = !fold.extra">{{ fold.extra ? "收起" : "筛选" }}</button>
+        <button class="tool-btn play" type="button" @click="goPublish()">发团</button>
       </div>
     </div>
 
@@ -135,13 +137,16 @@
     <div v-if="!groups.length" class="card">
       <div class="pad">
         <strong>还没有符合条件的团</strong>
-        <p class="muted">可以先看官方线路，或自己发一个，审核通过后会出现在这里。</p>
+        <p class="muted">过审的团会出现在这里。也可以先看官方线路。</p>
         <div class="catalog-row" style="margin:10px 0 0">
-          <button class="tool-btn ghost-line" type="button" @click="goRoutes">看线路</button>
+          <button class="tool-btn ghost-line" type="button" @click="setView('routes')">先看线路</button>
           <button class="tool-btn play" type="button" @click="goPublish()">去发团</button>
         </div>
       </div>
     </div>
+    </template>
+
+    <RouteCatalog v-else :q="query" :seed-tag="tag" />
 
     <p class="home-foot muted">
       <router-link to="/m/official">客服与规则</router-link>
@@ -151,15 +156,17 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
-import { useRouter } from "vue-router";
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { OFFER_TYPES } from "@/utils/offer";
 import { mediaSrc, slideBg, slideFallback, slideRouteTarget } from "@/utils/media";
 import { boardedLine, coverMark, coverOf, feedWhen, hostName, isFreeOffer, taglineOf } from "@/utils/feedCard";
 import { cycleSort, processFeed, sortLabel } from "@/utils/feedList";
+import RouteCatalog from "@/components/RouteCatalog.vue";
 
+const pageRoute = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const schedules = ref([]);
@@ -178,6 +185,8 @@ const heroIndex = ref(0);
 const upcoming = ref(null);
 const fold = reactive({ extra: false });
 const offers = OFFER_TYPES.filter((o) => o.key !== "full");
+const view = ref(pageRoute.query.view === "routes" ? "routes" : "trips");
+const searchHint = computed(() => (view.value === "routes" ? "搜长城 / 十渡 / 坝上" : "搜线路、城区、主理人"));
 
 const brandSlides = computed(() => {
   if (home.value.brand?.slides?.length) return home.value.brand.slides;
@@ -264,6 +273,20 @@ onMounted(async () => {
 });
 onUnmounted(() => clearInterval(heroTimer));
 
+watch(
+  () => pageRoute.query.view,
+  (next) => {
+    view.value = next === "routes" ? "routes" : "trips";
+  }
+);
+
+function setView(next) {
+  view.value = next;
+  const queryMap = { ...pageRoute.query };
+  if (next === "routes") queryMap.view = "routes";
+  else delete queryMap.view;
+  router.replace({ path: "/m", query: queryMap });
+}
 function countOn(day) {
   return schedules.value.filter((s) => s.startDate === day && s.status !== "cancelled").length;
 }
@@ -286,12 +309,6 @@ function onSlideError(e, slide) {
   e.target.dataset.fallback = "1";
   e.target.src = fb;
   if (e.target.parentElement) e.target.parentElement.style.backgroundImage = `url("${fb}")`;
-}
-function goRoutes() {
-  const params = {};
-  if (tag.value) params.tag = tag.value;
-  if (query.value.trim()) params.q = query.value.trim();
-  router.push({ path: "/m/routes", query: params });
 }
 function goPublish(when) {
   const path = when ? `/m/publish?date=${when}` : "/m/publish";

@@ -1,7 +1,6 @@
 <template>
-  <div>
-    <p class="muted" style="margin:0 0 10px">官方线路。点进去看介绍，有排期就能报，没有可以自己开一团。</p>
-    <input class="input" v-model="q" placeholder="搜索长城 / 十渡 / 坝上 / 野三坡" @keyup.enter="load" />
+  <div class="route-catalog">
+    <p class="muted catalog-lead">官方线路。点进去看介绍，有排期就能报，没有可以自己开一团。</p>
     <div class="chips">
       <div class="chip" :class="{ on: days === 0 }" @click="setDays(0)">全部天数</div>
       <div class="chip" :class="{ on: days === n }" v-for="n in [1, 2, 3]" :key="n" @click="setDays(n)">{{ n }}日</div>
@@ -9,7 +8,14 @@
     </div>
     <div class="chips">
       <div class="chip" :class="{ on: tag === '' }" @click="setTag('')">全部玩法</div>
-      <div class="play-tag" :class="{ on: tag === t.name }" v-for="t in tags" :key="t.id" :style="{ background: t.color, opacity: tag === t.name || tag === '' ? 1 : 0.45 }" @click="setTag(t.name)">{{ t.name }}</div>
+      <div
+        class="play-tag"
+        :class="{ on: tag === t.name }"
+        v-for="t in tags"
+        :key="t.id"
+        :style="{ background: t.color, opacity: tag === t.name || tag === '' ? 1 : 0.45 }"
+        @click="setTag(t.name)"
+      >{{ t.name }}</div>
     </div>
     <div class="card" v-for="r in list" :key="r.id" @click="$router.push('/m/route/' + r.id)">
       <img class="cover" :src="r.cover" />
@@ -25,64 +31,51 @@
         </div>
       </div>
     </div>
-    <p class="muted" v-if="!list.length">没有匹配的线路</p>
+    <p class="muted" v-if="ready && !list.length">没有匹配的线路</p>
   </div>
 </template>
 
 <script setup>
 import { onMounted, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 
-const route = useRoute();
-const router = useRouter();
+const props = defineProps({
+  q: { type: String, default: "" },
+  seedTag: { type: String, default: "" },
+});
+
 const list = ref([]);
-const q = ref("");
 const days = ref(0);
 const tag = ref("");
 const tags = ref([]);
-
-function applyQuery() {
-  days.value = route.query.days === "multi" ? "multi" : Number(route.query.days) || 0;
-  tag.value = route.query.tag ? String(route.query.tag) : route.query.category ? String(route.query.category) : "";
-  q.value = route.query.q ? String(route.query.q) : "";
-}
+const ready = ref(false);
 
 async function load() {
   const params = {};
   if (days.value) params.days = days.value;
   if (tag.value) params.tag = tag.value;
-  if (q.value) params.q = q.value;
-  list.value = (await http.get("/routes", { params })).data;
-}
-
-function syncQuery() {
-  const query = {};
-  if (days.value) query.days = String(days.value);
-  if (tag.value) query.tag = tag.value;
-  if (q.value) query.q = q.value;
-  router.replace({ path: "/m/routes", query });
+  if (props.q) params.q = props.q;
+  try {
+    list.value = (await http.get("/routes", { params })).data || [];
+  } catch {
+    list.value = [];
+  }
+  ready.value = true;
 }
 
 function setDays(n) {
   days.value = n;
-  syncQuery();
+  load();
 }
-function setTag(c) {
-  tag.value = c;
-  syncQuery();
+function setTag(name) {
+  tag.value = name;
+  load();
 }
 
-watch(
-  () => route.query,
-  () => {
-    applyQuery();
-    load();
-  }
-);
+watch(() => props.q, () => load());
 
 onMounted(async () => {
-  applyQuery();
+  tag.value = props.seedTag || "";
   tags.value = (await http.get("/play-tags").catch(() => ({ data: [] }))).data || [];
   load();
 });

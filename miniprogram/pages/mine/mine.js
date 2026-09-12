@@ -31,7 +31,8 @@ Page({
     wx.navigateTo({ url: "/pages/official/official" });
   },
   goRoutes() {
-    wx.navigateTo({ url: "/pages/routes/routes" });
+    getApp().globalData.homeView = "routes";
+    wx.switchTab({ url: "/pages/index/index" });
   },
   login() { wx.navigateTo({ url: "/pages/login/login" }); },
   register() { wx.navigateTo({ url: "/pages/login/login?tab=register" }); },

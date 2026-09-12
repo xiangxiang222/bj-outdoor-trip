@@ -6,6 +6,7 @@ App({
     token: "",
     user: null,
     routeFilter: null,
+    homeView: "",
   },
   onLaunch() {
     this.globalData.token = wx.getStorageSync("bj_token") || "";
