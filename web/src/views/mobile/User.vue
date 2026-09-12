@@ -20,14 +20,30 @@
     </div>
 
     <div class="h2">个人相册</div>
-    <div class="album-grid" v-if="u.album?.length">
-      <img v-for="p in u.album" :key="p.id" :src="p.url" alt="" />
+    <div class="moments-grid" v-if="u.album?.length || isSelf">
+      <div v-for="(p, i) in u.album || []" :key="p.id" class="moments-cell">
+        <img :src="p.url" alt="" @click="preview(i)" />
+        <button v-if="isSelf" class="moments-del" type="button" aria-label="删除" @click.stop="removePhoto(p)">×</button>
+      </div>
+      <label v-if="isSelf && remain > 0" class="moments-add" :class="{ busy: uploading }">
+        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden :disabled="uploading" @change="onPhotos" />
+        <i />
+      </label>
     </div>
     <p class="muted" v-else>还没有相册。</p>
-    <div v-if="isSelf" class="card"><div class="pad">
-      <input type="file" accept="image/*" @change="onPhoto" />
-      <p class="muted">最多 24 张，用于个人主页展示。</p>
-    </div></div>
+    <p v-if="isSelf" class="muted moments-hint">一次最多选 9 张，相册最多 24 张。点图放大，点角标删除。</p>
+
+    <Teleport to="body">
+      <div v-if="previewIndex != null" class="lightbox" @click.self="previewIndex = null">
+        <img :src="(u.album || [])[previewIndex]?.url" @click.stop="next" />
+        <div class="lb-nav">
+          <button class="lb-btn" type="button" @click.stop="prev">上一张</button>
+          <button class="lb-btn" type="button" @click.stop="previewIndex = null">关闭</button>
+          <button class="lb-btn" type="button" @click.stop="next">下一张</button>
+        </div>
+        <div class="lb-hint">{{ previewIndex + 1 }} / {{ (u.album || []).length }} · 点图下一张</div>
+      </div>
+    </Teleport>
 
     <div class="h2">拟出行</div>
     <div class="card" v-for="t in u.trips?.upcoming || []" :key="'u'+t.id" @click="$router.push('/m/schedule/' + t.scheduleId)">
@@ -58,42 +74,99 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { genderText } from "@/utils/labels";
+
+const ALBUM_MAX = 24;
+const PICK_MAX = 9;
 
 const route = useRoute();
 const store = useUserStore();
 const u = ref(null);
 const err = ref("");
 const msg = ref("");
+const uploading = ref(false);
+const previewIndex = ref(null);
 const isSelf = computed(() => store.profile && u.value && Number(store.profile.id) === Number(u.value.id));
+const remain = computed(() => ALBUM_MAX - (u.value?.album?.length || 0));
 
 async function load() {
   try {
+    if (store.token && !store.profile?.id) {
+      try { await store.fetchMe(); } catch { /* 仍按公开主页展示 */ }
+    }
     u.value = (await http.get("/users/" + route.params.id)).data;
+    err.value = "";
   } catch (e) {
+    u.value = null;
     err.value = e.message || "用户不存在";
   }
 }
 
-onMounted(load);
+function preview(i) {
+  previewIndex.value = i;
+}
+function prev() {
+  const n = u.value?.album?.length || 0;
+  if (!n) return;
+  previewIndex.value = (previewIndex.value + n - 1) % n;
+}
+function next() {
+  const n = u.value?.album?.length || 0;
+  if (!n) return;
+  previewIndex.value = (previewIndex.value + 1) % n;
+}
+function onKey(e) {
+  if (previewIndex.value == null) return;
+  if (e.key === "Escape") previewIndex.value = null;
+  if (e.key === "ArrowLeft") prev();
+  if (e.key === "ArrowRight") next();
+}
 
-async function onPhoto(e) {
-  const file = e.target.files?.[0];
+async function onPhotos(e) {
+  const files = [...(e.target.files || [])].slice(0, Math.min(PICK_MAX, remain.value));
   e.target.value = "";
-  if (!file) return;
-  const body = new FormData();
-  body.append("file", file);
+  if (!files.length) return;
+  uploading.value = true;
+  msg.value = "";
+  let ok = 0;
   try {
-    const up = await http.post("/upload", body);
-    await http.post("/me/photos", { url: up.data.url });
-    msg.value = "已加入相册";
+    for (const file of files) {
+      const body = new FormData();
+      body.append("file", file);
+      const up = await http.post("/upload", body);
+      await http.post("/me/photos", { url: up.data.url });
+      ok += 1;
+    }
+    msg.value = ok > 1 ? `已加入 ${ok} 张` : "已加入相册";
     await load();
   } catch (ex) {
     msg.value = ex.message || "上传失败";
+    if (ok) await load();
+  } finally {
+    uploading.value = false;
   }
 }
+
+async function removePhoto(p) {
+  if (!window.confirm("删除这张照片？")) return;
+  try {
+    await http.delete("/me/photos/" + p.id);
+    if (previewIndex.value != null) previewIndex.value = null;
+    msg.value = "已删除";
+    await load();
+  } catch (ex) {
+    msg.value = ex.message || "删除失败";
+  }
+}
+
+onMounted(() => {
+  load();
+  window.addEventListener("keydown", onKey);
+});
+onUnmounted(() => window.removeEventListener("keydown", onKey));
+watch(() => route.params.id, load);
 </script>

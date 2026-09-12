@@ -10,10 +10,17 @@
     </view>
   </view>
   <view class="pad title">个人相册</view>
-  <view class="album-grid" wx:if="{{u.album.length}}">
-    <image wx:for="{{u.album}}" wx:key="id" src="{{item.url}}" mode="aspectFill" class="album-img" />
+  <view class="moments-grid" wx:if="{{u.album.length || isSelf}}">
+    <view class="moments-cell" wx:for="{{u.album}}" wx:key="id">
+      <image src="{{item.url}}" mode="aspectFill" bindtap="preview" data-index="{{index}}" />
+      <view wx:if="{{isSelf}}" class="moments-del" catchtap="removePhoto" data-id="{{item.id}}">×</view>
+    </view>
+    <view class="moments-add" wx:if="{{isSelf && remain > 0}}" bindtap="pickPhotos">
+      <view class="moments-plus">+</view>
+    </view>
   </view>
-  <view class="pad muted" wx:else>还没有相册。</view>
+  <view class="pad muted" wx:elif="{{!u.album.length}}">还没有相册。</view>
+  <view class="muted moments-hint" wx:if="{{isSelf}}">一次最多选 9 张，相册最多 24 张。点图放大，点角标删除。</view>
   <view class="pad title">拟出行</view>
   <view class="card" wx:for="{{u.trips.upcoming}}" wx:key="id" bindtap="goSch" data-id="{{item.scheduleId}}">
     <view class="pad"><view>{{item.title}}</view><view class="muted">{{item.startDate}} · {{item.region}}</view></view>

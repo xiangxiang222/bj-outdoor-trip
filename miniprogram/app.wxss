@@ -69,8 +69,60 @@ button.btn::after { border: none; }
   font-weight: 700;
   flex-shrink: 0;
 }
-.album-grid { display: flex; flex-wrap: wrap; padding: 0 16rpx; }
-.album-img { width: 31%; height: 180rpx; margin: 1%; border-radius: 12rpx; }
+.album-grid,
+.moments-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8rpx;
+  padding: 0 24rpx;
+  margin-bottom: 16rpx;
+}
+.album-img,
+.moments-cell image {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.moments-cell,
+.moments-add {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+  background: #f3f3f3;
+  overflow: hidden;
+}
+.moments-cell image {
+  position: absolute;
+  inset: 0;
+}
+.moments-del {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 40rpx;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 32rpx;
+  z-index: 1;
+}
+.moments-add {
+  background: #f4f4f4;
+}
+.moments-plus {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c8c8c8;
+  font-size: 72rpx;
+  font-weight: 200;
+  line-height: 1;
+}
+.moments-hint { padding: 0 24rpx 16rpx; }
 .kind-grid { display: flex; gap: 12rpx; padding: 0 16rpx 16rpx; }
 .act-kind {
   flex: 1;
