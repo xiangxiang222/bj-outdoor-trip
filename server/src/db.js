@@ -91,6 +91,7 @@ function createSchema(db) {
       gallery_json TEXT,
       min_group_size INTEGER,
       description TEXT,
+      story_json TEXT,
       highlights_json TEXT,
       itinerary_json TEXT,
       fee_include TEXT,
@@ -552,6 +553,7 @@ function migrateSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_user_coupons_user ON user_coupons(user_id);
     CREATE INDEX IF NOT EXISTS idx_coupon_campaigns_schedule ON coupon_campaigns(schedule_id);
   `);
+  addColumnIfMissing(db, "routes", "story_json", "TEXT");
 }
 
 let _db;
@@ -582,6 +584,7 @@ function toRoute(row, extra = {}) {
     gallery: JSON.parse(row.gallery_json || "[]"),
     minGroupSize: row.min_group_size,
     description: row.description,
+    story: JSON.parse(row.story_json || "[]"),
     highlights: JSON.parse(row.highlights_json || "[]"),
     itinerary: JSON.parse(row.itinerary_json || "[]"),
     feeInclude: row.fee_include,

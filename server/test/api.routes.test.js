@@ -47,6 +47,8 @@ describe("routes and schedules API", () => {
     assert.equal(detail.body.data.favored, true);
     assert.ok(detail.body.data.priceTiers.length >= 1);
     assert.ok(detail.body.data.schedules.length >= 1);
+    assert.ok(detail.body.data.story.some((b) => b.type === "text" && b.body === "介绍"));
+    assert.ok(detail.body.data.story.some((b) => b.type === "image"));
   });
 
   it("lists and details schedules with masked chain names", async () => {

@@ -1,6 +1,6 @@
 <template>
   <div v-if="r">
-    <img class="cover" :src="r.cover" style="width:100%;height:200px;object-fit:cover;border-radius:16px;margin-bottom:10px;cursor:zoom-in" @click="preview(0, true)" />
+    <img class="cover" :src="r.cover" style="width:100%;height:200px;object-fit:cover;border-radius:16px;margin-bottom:10px;cursor:zoom-in" @click="previewUrl(r.cover)" />
     <div class="row">
       <h2 style="margin:0;font-size:20px">{{ r.title }}</h2>
       <span class="tag">{{ r.days }}日 · {{ r.difficulty }}</span>
@@ -27,9 +27,14 @@
       <button class="btn ghost" @click="fav">{{ r.favored ? "已收藏" : "收藏" }}</button>
     </div>
 
-    <div class="h2">线路相册</div>
-    <div class="gallery">
-      <img v-for="(g, i) in r.gallery" :key="i" :src="g" @click="preview(i, false)" />
+    <div class="h2" v-if="story.length">线路介绍</div>
+    <div class="card" v-if="story.length"><div class="pad">
+      <RouteStory :blocks="story" @preview="previewUrl" />
+    </div></div>
+
+    <div class="h2" v-if="album.length">更多照片</div>
+    <div class="gallery" v-if="album.length">
+      <img v-for="g in album" :key="g" :src="g" @click="previewUrl(g)" />
     </div>
 
     <Teleport to="body">
@@ -44,9 +49,6 @@
       </div>
     </Teleport>
 
-    <div class="h2">线路介绍</div>
-    <div class="card"><div class="pad">{{ r.description }}</div></div>
-
     <div class="h2">亮点</div>
     <div class="card"><div class="pad">
       <p v-for="(h, i) in r.highlights" :key="i">{{ i + 1 }}. {{ h }}</p>
@@ -57,6 +59,7 @@
       <div class="item" v-for="(it, i) in r.itinerary" :key="i">
         <div class="time">{{ it.time }} · {{ it.title }}</div>
         <div class="muted">{{ it.detail }}</div>
+        <img v-if="it.photo" class="itin-photo" :src="it.photo" alt="" @click="previewUrl(it.photo)" />
       </div>
     </div></div>
 
@@ -142,6 +145,8 @@ import { useRoute, useRouter } from "vue-router";
 import { organizerTypeText, starText } from "@/utils/labels";
 import WeatherChart from "@/components/WeatherChart.vue";
 import TripPrices from "@/components/TripPrices.vue";
+import RouteStory from "@/components/RouteStory.vue";
+import { storyAlbum } from "@/utils/story";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 
@@ -156,9 +161,13 @@ const copied = ref(false);
 const favMsg = ref("");
 const previewIndex = ref(null);
 
+const story = computed(() => r.value?.story || []);
+const album = computed(() => storyAlbum(r.value?.gallery || [], story.value));
 const previewList = computed(() => {
   if (!r.value) return [];
-  const list = [r.value.cover, ...(r.value.gallery || [])].filter(Boolean);
+  const fromStory = story.value.filter((b) => b.type === "image" && b.url).map((b) => b.url);
+  const fromItin = (r.value.itinerary || []).map((it) => it.photo).filter(Boolean);
+  const list = [r.value.cover, ...fromStory, ...(r.value.gallery || []), ...fromItin].filter(Boolean);
   return [...new Set(list)];
 });
 
@@ -189,13 +198,9 @@ function onKey(e) {
   if (e.key === "ArrowRight") next();
 }
 
-function preview(i, fromCover) {
-  if (fromCover) previewIndex.value = 0;
-  else {
-    const url = r.value.gallery[i];
-    const idx = previewList.value.indexOf(url);
-    previewIndex.value = idx >= 0 ? idx : 0;
-  }
+function previewUrl(url) {
+  const idx = previewList.value.indexOf(url);
+  previewIndex.value = idx >= 0 ? idx : 0;
 }
 function prev() {
   const n = previewList.value.length;
