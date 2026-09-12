@@ -2,10 +2,39 @@ const fs = require("fs");
 const path = require("path");
 const { nanoid } = require("nanoid");
 const config = require("../config");
+const { PLACE_ALBUMS } = require("../seed/place-albums-config");
 
 const CATEGORIES = ["长城", "登山", "山水", "玩水", "文化", "草原", "海滨"];
 const UA = "bj-outdoor-trip/1.0 (route draft; https://github.com/xiangxiang222/bj-outdoor-trip)";
 const MIN_PHOTO_BYTES = 8000;
+const SEARCH_TIMEOUT_MS = 5000;
+const DOWNLOAD_TIMEOUT_MS = 10000;
+const GENERIC_PLACE_WORDS = new Set([
+  "北京",
+  "北京市",
+  "河北",
+  "河北省",
+  "山西",
+  "山西省",
+  "天津",
+  "天津市",
+  "内蒙古",
+  "门头沟",
+  "怀柔",
+  "平谷",
+  "密云",
+  "延庆",
+  "房山",
+  "昌平",
+  "海淀",
+  "朝阳",
+  "丰台",
+  "石景山",
+  "通州",
+  "顺义",
+  "大兴",
+  "蓟州",
+]);
 
 function inUnitTest() {
   return String(process.env.MMC_DATA_DIR || "").includes("bj-ut-");
@@ -198,6 +227,68 @@ function extOf(title) {
   return `.${m[1]}`;
 }
 
+function placeKeywords(cfg) {
+  const keys = [];
+  for (const query of cfg?.queries || []) {
+    for (const word of String(query).match(/[\u4e00-\u9fff]{2,}/g) || []) {
+      if (!GENERIC_PLACE_WORDS.has(word)) keys.push(word);
+    }
+  }
+  return [...new Set(keys)];
+}
+
+function matchPlaces(input) {
+  const title = String(input?.title || "");
+  const place = placeNameOf(title);
+  const hay = `${place} ${title}`;
+  return Object.entries(PLACE_ALBUMS)
+    .filter(([, cfg]) =>
+      placeKeywords(cfg).some((word) => {
+        if (hay.includes(word)) return true;
+        return place.length >= 3 && word.includes(place);
+      })
+    )
+    .map(([id, cfg]) => ({ id, cfg }));
+}
+
+function searchQueries(input) {
+  const place = placeNameOf(input.title);
+  const extras = [];
+  for (const { cfg } of matchPlaces(input)) {
+    for (const query of cfg.queries || []) {
+      if (/[A-Za-z]{4,}/.test(query)) extras.push(query);
+    }
+  }
+  return [...new Set([place, ...extras].filter((q) => q && String(q).length >= 2))].slice(0, 4);
+}
+
+function localLibraryPhotos(input, deps = {}) {
+  const publicDir = deps.publicDir || config.publicDir;
+  const limit = deps.limit || 4;
+  const urls = [];
+  for (const { cfg } of matchPlaces(input)) {
+    for (const key of cfg.existing || []) {
+      const rel = path.join("static", "photos", `${key}.jpg`);
+      const full = path.join(publicDir, rel);
+      try {
+        if (fs.existsSync(full) && fs.statSync(full).size > MIN_PHOTO_BYTES) {
+          urls.push(`/${rel.split(path.sep).join("/")}`);
+        }
+      } catch {
+        /* missing file */
+      }
+      if (urls.length >= limit) return urls;
+    }
+  }
+  return urls;
+}
+
+function photoSourceOf(photos) {
+  if (!photos.length) return "";
+  if (photos.some((url) => String(url).includes("/static/photos/"))) return "library";
+  return "search";
+}
+
 async function commonsSearch(query, fetchImpl) {
   const url =
     "https://commons.wikimedia.org/w/api.php?" +
@@ -209,7 +300,7 @@ async function commonsSearch(query, fetchImpl) {
       srlimit: "10",
       format: "json",
     });
-  const res = await fetchImpl(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(12000) });
+  const res = await fetchImpl(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(SEARCH_TIMEOUT_MS) });
   if (!res.ok) return [];
   const data = await res.json();
   return (data.query?.search || [])
@@ -219,6 +310,70 @@ async function commonsSearch(query, fetchImpl) {
         .trim()
     )
     .filter(isUsablePhotoTitle);
+}
+
+async function wikimediaRestSearch(query, fetchImpl) {
+  const url =
+    "https://api.wikimedia.org/core/v1/commons/search/page?" +
+    new URLSearchParams({
+      q: String(query || ""),
+      limit: "10",
+    });
+  const res = await fetchImpl(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(SEARCH_TIMEOUT_MS) });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.pages || [])
+    .map((row) =>
+      String(row.title || row.key || "")
+        .replace(/^File:/i, "")
+        .replace(/_/g, " ")
+        .trim()
+    )
+    .filter(isUsablePhotoTitle);
+}
+
+async function openverseSearch(query, fetchImpl) {
+  const url =
+    "https://api.openverse.org/v1/images/?" +
+    new URLSearchParams({
+      q: String(query || ""),
+      page_size: "8",
+      mature: "false",
+    });
+  const res = await fetchImpl(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(8000) });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.results || [])
+    .map((row) => ({
+      title: String(row.title || "photo.jpg"),
+      url: String(row.url || "").trim(),
+    }))
+    .filter((row) => row.url.startsWith("http") && !/\.svg(\?|$)/i.test(row.url));
+}
+
+async function downloadBuffer(url, destPath, fetchImpl) {
+  const imgRes = await fetchImpl(url, {
+    headers: { "User-Agent": UA },
+    redirect: "follow",
+    signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
+  });
+  if (!imgRes.ok) return null;
+  const buf = Buffer.from(await imgRes.arrayBuffer());
+  if (buf.length < MIN_PHOTO_BYTES) return null;
+  fs.writeFileSync(destPath, buf);
+  return destPath;
+}
+
+async function wikimediaFileUrl(fileTitle, fetchImpl) {
+  const key = String(fileTitle || "")
+    .replace(/^File:/i, "")
+    .trim()
+    .replace(/ /g, "_");
+  const url = `https://api.wikimedia.org/core/v1/commons/file/${encodeURIComponent(key)}`;
+  const res = await fetchImpl(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(SEARCH_TIMEOUT_MS) });
+  if (!res.ok) return "";
+  const data = await res.json();
+  return data.preferred?.url || data.original?.url || data.thumbnail?.url || "";
 }
 
 async function downloadCommonsFile(fileTitle, destPath, fetchImpl) {
@@ -232,48 +387,68 @@ async function downloadCommonsFile(fileTitle, destPath, fetchImpl) {
       iiurlwidth: "1280",
       format: "json",
     });
-  const infoRes = await fetchImpl(api, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(10000) });
-  if (!infoRes.ok) return null;
-  const data = await infoRes.json();
-  const page = Object.values(data.query?.pages || {})[0];
-  const url = page?.imageinfo?.[0]?.thumburl || page?.imageinfo?.[0]?.url;
-  if (!url) return null;
-  const imgRes = await fetchImpl(url, { headers: { "User-Agent": UA }, redirect: "follow", signal: AbortSignal.timeout(15000) });
-  if (!imgRes.ok) return null;
-  const buf = Buffer.from(await imgRes.arrayBuffer());
-  if (buf.length < MIN_PHOTO_BYTES) return null;
-  fs.writeFileSync(destPath, buf);
-  return destPath;
+  try {
+    const infoRes = await fetchImpl(api, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(SEARCH_TIMEOUT_MS) });
+    if (infoRes.ok) {
+      const data = await infoRes.json();
+      const page = Object.values(data.query?.pages || {})[0];
+      const url = page?.imageinfo?.[0]?.thumburl || page?.imageinfo?.[0]?.url;
+      if (url) {
+        const saved = await downloadBuffer(url, destPath, fetchImpl);
+        if (saved) return saved;
+      }
+    }
+  } catch {
+    /* try the REST file endpoint */
+  }
+  try {
+    const url = await wikimediaFileUrl(fileTitle, fetchImpl);
+    if (url) return downloadBuffer(url, destPath, fetchImpl);
+  } catch {
+    /* skip this file */
+  }
+  return null;
 }
 
-function searchQueries(input) {
-  const place = placeNameOf(input.title);
-  const regionTail = String(input.region || "")
-    .split(/\s*\/\s*/)
-    .filter(Boolean)
-    .at(-1);
-  return [...new Set([place, regionTail, input.category].filter((q) => q && String(q).length >= 2))].slice(0, 2);
-}
-
-async function searchAndSavePhotos(input, deps = {}) {
-  const fetchImpl = deps.fetchImpl || globalThis.fetch;
-  if (!deps.fetchImpl && inUnitTest()) return [];
-  const destDir = deps.destDir || path.join(config.publicDir, "static", "uploads");
-  const limit = deps.limit || 4;
-  fs.mkdirSync(destDir, { recursive: true });
+async function collectRemoteTitles(input, fetchImpl, limit) {
   const titles = [];
+  const add = (found) => {
+    for (const title of found) {
+      if (!titles.includes(title)) titles.push(title);
+    }
+  };
   for (const query of searchQueries(input)) {
     if (titles.length >= limit * 2) break;
     try {
-      const found = await commonsSearch(query, fetchImpl);
-      for (const title of found) {
-        if (!titles.includes(title)) titles.push(title);
-      }
+      add(await commonsSearch(query, fetchImpl));
     } catch {
       /* keep going */
     }
   }
-  const urls = [];
+  if (titles.length) return titles;
+  for (const query of searchQueries(input)) {
+    if (titles.length >= limit * 2) break;
+    try {
+      add(await wikimediaRestSearch(query, fetchImpl));
+    } catch {
+      /* keep going */
+    }
+  }
+  return titles;
+}
+
+async function searchAndSavePhotos(input, deps = {}) {
+  const fetchImpl = deps.fetchImpl || globalThis.fetch;
+  const skipNet = !deps.fetchImpl && inUnitTest();
+  const destDir = deps.destDir || path.join(config.publicDir, "static", "uploads");
+  const limit = deps.limit || 4;
+  const allowLibrary = Boolean(deps.publicDir) || !deps.fetchImpl;
+  const local = allowLibrary && !(skipNet && !deps.publicDir) ? localLibraryPhotos(input, deps) : [];
+  if (skipNet || local.length >= limit) return local.slice(0, limit);
+
+  fs.mkdirSync(destDir, { recursive: true });
+  const urls = [...local];
+  const titles = await collectRemoteTitles(input, fetchImpl, limit);
   for (const title of titles) {
     if (urls.length >= limit) break;
     const name = `ai-${nanoid(10)}${extOf(title)}`;
@@ -285,7 +460,29 @@ async function searchAndSavePhotos(input, deps = {}) {
       /* skip this file */
     }
   }
-  return urls;
+  if (urls.length >= limit) return urls.slice(0, limit);
+
+  for (const query of searchQueries(input)) {
+    if (urls.length >= limit) break;
+    let found = [];
+    try {
+      found = await openverseSearch(query, fetchImpl);
+    } catch {
+      found = [];
+    }
+    for (const row of found) {
+      if (urls.length >= limit) break;
+      const name = `ai-${nanoid(10)}${extOf(row.title || row.url)}`;
+      const dest = path.join(destDir, name);
+      try {
+        const ok = await downloadBuffer(row.url, dest, fetchImpl);
+        if (ok) urls.push(`/static/uploads/${name}`);
+      } catch {
+        /* skip this file */
+      }
+    }
+  }
+  return urls.slice(0, limit);
 }
 
 async function draftRoute(input, deps = {}) {
@@ -330,6 +527,7 @@ async function draftRoute(input, deps = {}) {
     cover: photos[0] || "",
     gallery: photos,
     source,
+    photoSource: photoSourceOf(photos),
   };
 }
 
@@ -342,6 +540,10 @@ module.exports = {
   normalizeLlmDraft,
   llmDraft,
   isUsablePhotoTitle,
+  placeKeywords,
+  matchPlaces,
+  searchQueries,
+  localLibraryPhotos,
   searchAndSavePhotos,
   draftRoute,
 };

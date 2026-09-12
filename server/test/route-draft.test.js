@@ -11,6 +11,9 @@ const {
   normalizeLlmDraft,
   llmDraft,
   isUsablePhotoTitle,
+  matchPlaces,
+  searchQueries,
+  localLibraryPhotos,
   searchAndSavePhotos,
   draftRoute,
 } = require("../src/services/route-draft");
@@ -129,6 +132,26 @@ describe("route draft model and photos", () => {
     assert.equal(isUsablePhotoTitle(""), false);
   });
 
+  it("matches known places and prefers English search terms over district names", () => {
+    const hits = matchPlaces({ title: "慕田峪长城一日游", region: "北京市 / 海淀区" });
+    assert.ok(hits.some((row) => row.id === "mutianyu"));
+    assert.equal(matchPlaces({ title: "周末山水", region: "北京市 / 海淀区" }).length, 0);
+    const queries = searchQueries({ title: "慕田峪长城一日游", region: "北京市 / 海淀区", category: "长城" });
+    assert.ok(queries.includes("慕田峪长城"));
+    assert.ok(queries.some((q) => /Mutianyu/i.test(q)));
+    assert.ok(!queries.includes("海淀区"));
+  });
+
+  it("reuses local place photos when the title hits a known album", () => {
+    const publicDir = fs.mkdtempSync(path.join(os.tmpdir(), "bj-lib-"));
+    const photoDir = path.join(publicDir, "static", "photos");
+    fs.mkdirSync(photoDir, { recursive: true });
+    fs.writeFileSync(path.join(photoDir, "mutianyuLift.jpg"), Buffer.alloc(9000, 7));
+    fs.writeFileSync(path.join(photoDir, "mutianyu.jpg"), Buffer.alloc(9000, 8));
+    const urls = localLibraryPhotos({ title: "慕田峪长城一日游" }, { publicDir, limit: 4 });
+    assert.deepEqual(urls, ["/static/photos/mutianyuLift.jpg", "/static/photos/mutianyu.jpg"]);
+  });
+
   it("downloads usable commons photos and skips junk", async () => {
     const destDir = fs.mkdtempSync(path.join(os.tmpdir(), "bj-draft-"));
     let calls = 0;
@@ -168,6 +191,46 @@ describe("route draft model and photos", () => {
       }
     );
     assert.deepEqual(urls, []);
+  });
+
+  it("falls back to the local album when remote search is blocked", async () => {
+    const destDir = fs.mkdtempSync(path.join(os.tmpdir(), "bj-draft-"));
+    const publicDir = fs.mkdtempSync(path.join(os.tmpdir(), "bj-pub-"));
+    const photoDir = path.join(publicDir, "static", "photos");
+    fs.mkdirSync(photoDir, { recursive: true });
+    fs.writeFileSync(path.join(photoDir, "mutianyuLift.jpg"), Buffer.alloc(9000, 7));
+    const urls = await searchAndSavePhotos(
+      { title: "慕田峪长城一日游" },
+      {
+        destDir,
+        publicDir,
+        limit: 2,
+        fetchImpl: async () => jsonRes({}, false),
+      }
+    );
+    assert.deepEqual(urls, ["/static/photos/mutianyuLift.jpg"]);
+  });
+
+  it("downloads Openverse photos when Commons has nothing", async () => {
+    const destDir = fs.mkdtempSync(path.join(os.tmpdir(), "bj-draft-"));
+    const urls = await searchAndSavePhotos(
+      { title: "周末山水" },
+      {
+        destDir,
+        limit: 1,
+        fetchImpl: async (url) => {
+          if (String(url).includes("openverse.org")) {
+            return jsonRes({ results: [{ title: "Lake.jpg", url: "http://x/lake.jpg" }] });
+          }
+          if (String(url).includes("lake.jpg")) {
+            return { ok: true, arrayBuffer: async () => Buffer.alloc(9000, 3) };
+          }
+          return jsonRes({ query: { search: [] }, pages: [] });
+        },
+      }
+    );
+    assert.equal(urls.length, 1);
+    assert.match(urls[0], /^\/static\/uploads\/ai-.+\.jpg$/);
   });
 
   it("skips a file when imageinfo has no url or the download throws", async () => {
@@ -226,6 +289,7 @@ describe("draftRoute", () => {
     assert.equal(draft.source, "template");
     assert.equal(draft.cover, "/static/uploads/a.jpg");
     assert.deepEqual(draft.gallery, ["/static/uploads/a.jpg", "/static/uploads/b.jpg"]);
+    assert.equal(draft.photoSource, "search");
     assert.equal(draft.category, "长城");
   });
 
@@ -242,6 +306,7 @@ describe("draftRoute", () => {
     assert.equal(draft.source, "llm");
     assert.equal(draft.subtitle, "模型");
     assert.deepEqual(draft.gallery, []);
+    assert.equal(draft.photoSource, "");
   });
 
   it("drafts from the template without live net in unit tests", async () => {

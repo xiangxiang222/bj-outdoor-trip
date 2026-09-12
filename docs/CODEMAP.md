@@ -84,7 +84,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `helpers.js` | 报价、成团匹配导游、积分入账 |
 | `fallback.js` | 候选团 / 替代团 |
 | `notices.js` | 后台待办：校园/团体认证写入 `admin_notices`，点开 `/admin/verify?kind=&userId=` |
-| `route-draft.js` | 后台发线路起草：有密钥走兼容 OpenAI 的聊天接口，否则模板；图片搜维基共享并落到 `uploads` |
+| `route-draft.js` | 后台发线路起草：有密钥走兼容 OpenAI 的聊天接口，否则模板；图片先对已有景点库，再搜维基共享 / Openverse |
 
 路由全集中在 `api.js`，不在 services 里挂 HTTP。
 
