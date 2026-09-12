@@ -73,7 +73,7 @@
           </el-form-item>
           <el-form-item label="起草">
             <el-button type="success" :loading="drafting" @click="generateDraft">生成文案和图片</el-button>
-            <span class="inline-hint">未配置 AI_API_KEY 时用模板写文案。图片先用已有景点库，再搜公开图库。</span>
+            <span class="inline-hint">未配置 AI_API_KEY 时用模板写文案。图片先用已有景点库，再搜百度 / 360。</span>
           </el-form-item>
         </template>
         <el-form-item label="难度">
@@ -410,7 +410,7 @@ async function generateDraft() {
       form.value.story = composeStory(form.value.description, gallery).map((b) => ({ ...b, _key: nextKey() }));
     }
     if (!gallery.length) {
-      ElMessage.warning("文案已出，公开图库没搜到照片，请自己上传封面");
+      ElMessage.warning("文案已出，国内图库没搜到照片，请自己上传封面");
     } else {
       ElMessage.success(d.source === "llm" ? "已用 AI 起草，请核对后再保存" : "已用模板起草，请核对后再保存");
     }
