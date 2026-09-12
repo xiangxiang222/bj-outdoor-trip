@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { harness, loginUser, loginAdmin, auth, ID, issueCaptcha } = require("./http");
+const { harness, loginUser, loginAdmin, applyAndApproveLeader, auth, ID, issueCaptcha } = require("./http");
 
 describe("student and school enroll limits", () => {
   let agent;
@@ -133,6 +133,7 @@ describe("student and school enroll limits", () => {
       .send({ studentOnly: true, schools: ["清华大学"] })
       .expect(200);
     const token = await loginUser(agent);
+    await applyAndApproveLeader(agent, token, seed.userId);
     const denied = await agent.post(`/api/schedules/${seed.individualScheduleId}/leaders/apply`).set(auth(token)).send({});
     assert.equal(denied.status, 400);
     assert.match(denied.body.message, /清华大学/);

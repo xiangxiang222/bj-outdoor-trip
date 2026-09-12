@@ -37,7 +37,9 @@ function request(path, method, data) {
           reject(new Error("请先登录"));
           return;
         }
-        reject(new Error((res.data && res.data.message) || "HTTP " + res.statusCode));
+        const err = new Error((res.data && res.data.message) || "HTTP " + res.statusCode);
+        err.code = (res.data && res.data.code) || "";
+        reject(err);
       },
       fail(err) {
         reject(new Error(failMessage(err, baseUrl)));

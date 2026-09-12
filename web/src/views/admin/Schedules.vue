@@ -62,7 +62,7 @@
           <el-button size="small" @click="demo(row)">画像</el-button>
           <el-button v-if="canOps" size="small" type="success" :disabled="row.status === 'cancelled'" @click="settle(row)">结算</el-button>
           <el-button v-if="canOps" size="small" @click="openSplit(row)">分账</el-button>
-          <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openLottery(row)">抽奖</el-button>
+          <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="$router.push('/admin/lottery?scheduleId=' + row.id)">抽奖</el-button>
           <el-button v-if="canOps" size="small" :disabled="row.organizerType === 'company' || row.status === 'cancelled'" @click="$router.push('/admin/coupons?scheduleId=' + row.id)">优惠券</el-button>
           <el-button v-if="canOps" size="small" type="danger" :disabled="row.status === 'cancelled'" @click="openDissolve(row)">解散</el-button>
         </template>
@@ -249,8 +249,6 @@
       </template>
     </el-dialog>
 
-    <LotteryEditor v-model="showLottery" :schedule="cur" @saved="load" />
-
     <el-dialog v-model="showGuide" :title="guideDetail?.name || '导游详情'" width="480px">
       <template v-if="guideDetail">
         <p>评分 {{ guideDetail.rating }} · 从业 {{ guideDetail.years }} 年 · 已带团 {{ guideDetail.tripCount }} 次</p>
@@ -271,8 +269,6 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { organizerTypeText, scheduleStatusText } from "@/utils/labels";
 import http from "@/api/http";
 import { hasCap } from "@/utils/staff";
-import LotteryEditor from "@/components/admin/LotteryEditor.vue";
-
 const $router = useRouter();
 const me = ref({ caps: [] });
 const canOps = computed(() => hasCap(me.value, "ops"));
@@ -290,7 +286,6 @@ const showSplit = ref(false);
 const showGuide = ref(false);
 const showTrip = ref(false);
 const showLimit = ref(false);
-const showLottery = ref(false);
 const savingLimit = ref(false);
 const drawingId = ref(0);
 const limitForm = ref({ studentOnly: false, alumniOk: false, oversub: false, schools: "" });
@@ -325,10 +320,6 @@ const neu = ref({
   virtualCount: 0,
   lotteryMode: "off",
 });
-function openLottery(row) {
-  cur.value = row;
-  showLottery.value = true;
-}
 function openLimit(row) {
   cur.value = row;
   limitForm.value = {

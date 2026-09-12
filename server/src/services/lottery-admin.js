@@ -105,6 +105,46 @@ function listDraws(scheduleId, campaignId) {
     }));
 }
 
+const MODE_TEXT = {
+  off: "未开",
+  pre: "报名前",
+  enroll: "报名后",
+  both: "前后都抽",
+};
+
+function listAdminLotteries() {
+  const rows = getDb()
+    .prepare(
+      `SELECT s.id AS schedule_id, s.start_date, s.status, IFNULL(s.channel,'trip') AS channel,
+              r.title AS route_title,
+              c.id AS campaign_id, c.enabled, c.title, c.draw_mode, c.updated_at
+       FROM schedules s
+       LEFT JOIN routes r ON r.id = s.route_id
+       LEFT JOIN lottery_campaigns c ON c.schedule_id = s.id
+       ORDER BY CASE WHEN s.status='cancelled' THEN 1 ELSE 0 END, s.start_date DESC, s.id DESC`
+    )
+    .all();
+  return rows.map((row) => {
+    const configured = !!row.campaign_id;
+    const enabled = configured && Number(row.enabled) === 1;
+    const drawMode = enabled ? normalizeDrawMode(row.draw_mode) || "both" : "off";
+    return {
+      scheduleId: row.schedule_id,
+      routeTitle: row.route_title || "",
+      startDate: row.start_date || "",
+      status: row.status,
+      channel: row.channel || "trip",
+      campaignId: row.campaign_id || 0,
+      enabled,
+      configured,
+      title: row.title || "",
+      drawMode,
+      drawLabel: !configured ? "未配置" : enabled ? MODE_TEXT[drawMode] || "已开" : "已关闭",
+      updatedAt: row.updated_at || "",
+    };
+  });
+}
+
 function getAdminLottery(scheduleId) {
   const sid = Number(scheduleId);
   if (!sid) fail(400, "请选择行程");
@@ -310,4 +350,12 @@ function attachLotteryOnCreate(scheduleId, body = {}) {
   });
 }
 
-module.exports = { getAdminLottery, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate, LAUNCH_PRIZES };
+module.exports = {
+  getAdminLottery,
+  listAdminLotteries,
+  saveAdminLottery,
+  addAssign,
+  removeAssign,
+  attachLotteryOnCreate,
+  LAUNCH_PRIZES,
+};

@@ -18,6 +18,11 @@ describe("coupon math", () => {
     assert.equal(campaignLabel({ kind: "amount", value: 30 }), "减¥30");
   });
 
+  it("zeros trip pay for a free coupon", () => {
+    assert.equal(couponedTripPay(199, { kind: "free", value: 0 }), 0);
+    assert.equal(campaignLabel({ kind: "free" }), "免费");
+  });
+
   it("takes the lower of coupon and member unless stacking", () => {
     const quote = { tripPrice: 199, price: 189, memberPrice: 189, isMember: true, isStudent: false };
     const noStack = decideCouponPrice({

@@ -332,6 +332,11 @@ function createSchema(db) {
       expires_at TEXT,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
+    CREATE TABLE IF NOT EXISTS coupon_allowlist (
+      campaign_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      PRIMARY KEY (campaign_id, user_id)
+    );
   `);
 }
 
@@ -389,6 +394,10 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "users", "group_status", "TEXT");
   addColumnIfMissing(db, "users", "group_name", "TEXT");
   addColumnIfMissing(db, "users", "group_kind", "TEXT");
+  addColumnIfMissing(db, "users", "leader_status", "TEXT");
+  addColumnIfMissing(db, "users", "leader_name", "TEXT");
+  addColumnIfMissing(db, "users", "leader_years", "INTEGER");
+  addColumnIfMissing(db, "users", "leader_intro", "TEXT");
   db.exec(`
     CREATE TABLE IF NOT EXISTS feedbacks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -565,6 +574,12 @@ function migrateSchema(db) {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_user_coupons_campaign_user ON user_coupons(campaign_id, user_id);
     CREATE INDEX IF NOT EXISTS idx_user_coupons_user ON user_coupons(user_id);
     CREATE INDEX IF NOT EXISTS idx_coupon_campaigns_schedule ON coupon_campaigns(schedule_id);
+    CREATE TABLE IF NOT EXISTS coupon_allowlist (
+      campaign_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      PRIMARY KEY (campaign_id, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_coupon_allowlist_user ON coupon_allowlist(user_id);
   `);
   addColumnIfMissing(db, "routes", "story_json", "TEXT");
   db.exec(`

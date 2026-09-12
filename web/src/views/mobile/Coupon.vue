@@ -79,6 +79,7 @@ const statusText = computed(() => {
 const cta = computed(() => {
   if (data.value?.myCoupon?.status === "used" || data.value?.myCoupon?.status === "held") return "已用于报名";
   if (data.value?.claimedByMe) return data.value.universal ? "已领取，去选团" : "已领取，去报名";
+  if (data.value?.guaranteedForMe && !data.value?.claimedByMe) return "领取预留券并报名";
   if (data.value?.audience === "directed") return "该券需由后台发放";
   if (data.value?.audience === "member") return "会员领取并报名";
   return "领取并报名";

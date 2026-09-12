@@ -447,4 +447,125 @@ describe("coupons", () => {
     const holders = seed.db.prepare("SELECT COUNT(*) AS c FROM user_coupons WHERE campaign_id=?").get(created.body.data.id);
     assert.equal(holders.c, 2);
   });
+
+  it("issues a free coupon that zeros trip pay", async () => {
+    const admin = await loginAdmin(agent);
+    const created = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      scheduleId: seed.individualScheduleId,
+      kind: "free",
+      total: 2,
+      name: "免团费",
+    }).expect(200);
+    assert.equal(created.body.data.kind, "free");
+    assert.equal(created.body.data.label, "免费");
+    const token = await loginUser(agent);
+    const enrolled = await agent.post("/api/enroll").set(auth(token)).send({
+      ...enrollBody({ scheduleId: seed.individualScheduleId }),
+      couponCode: created.body.data.code,
+      insuranceCode: "none",
+    }).expect(200);
+    assert.equal(enrolled.body.data.quote.couponApplied, true);
+    assert.equal(enrolled.body.data.quote.payAmount, 0);
+    assert.equal(enrolled.body.data.payStatus, "paid");
+    assert.match(enrolled.body.data.message, /团费已免/);
+  });
+
+  it("searches people and grants by user id", async () => {
+    const admin = await loginAdmin(agent);
+    const people = await agent.get("/api/admin/coupons/people?q=林北野").set(auth(admin)).expect(200);
+    assert.ok(people.body.data.some((u) => u.id === seed.userId && u.isMember));
+    const created = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      scheduleId: seed.individualScheduleId,
+      kind: "amount",
+      value: 15,
+      total: 3,
+      audience: "directed",
+      name: "选人发放",
+    }).expect(200);
+    const granted = await agent
+      .post(`/api/admin/coupons/${created.body.data.id}/grant`)
+      .set(auth(admin))
+      .send({ userIds: [seed.userId], sms: false })
+      .expect(200);
+    assert.equal(granted.body.data.granted, 1);
+    const uc = seed.db.prepare("SELECT * FROM user_coupons WHERE user_id=? AND campaign_id=?").get(
+      seed.userId,
+      created.body.data.id
+    );
+    assert.ok(uc);
+  });
+
+  it("guarantees selected users on a member-only coupon", async () => {
+    const admin = await loginAdmin(agent);
+    const cap = await issueCaptcha(agent);
+    const guest = await agent.post("/api/auth/register").send({
+      phone: "13600136051",
+      password: "123456",
+      nickname: "必领非会员",
+      captchaToken: cap.token,
+      captcha: cap.code,
+    }).expect(200);
+    const guestId = guest.body.data.user.id;
+    const created = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      scheduleId: seed.individualScheduleId,
+      kind: "amount",
+      value: 20,
+      total: 2,
+      audience: "member",
+      guaranteedUserIds: [guestId],
+      name: "会员券必领",
+    }).expect(200);
+    assert.equal(created.body.data.granted, 1);
+    assert.deepEqual(created.body.data.allowUserIds, [guestId]);
+    assert.equal(created.body.data.remain, 1);
+    const already = seed.db.prepare("SELECT * FROM user_coupons WHERE user_id=? AND campaign_id=?").get(
+      guestId,
+      created.body.data.id
+    );
+    assert.ok(already);
+
+    const cap2 = await issueCaptcha(agent);
+    const other = await agent.post("/api/auth/register").send({
+      phone: "13600136052",
+      password: "123456",
+      nickname: "普通非会员",
+      captchaToken: cap2.token,
+      captcha: cap2.code,
+    }).expect(200);
+    const denied = await agent.post(`/api/coupons/${created.body.data.code}/claim`).set(auth(other.body.data.token));
+    assert.equal(denied.status, 400);
+    assert.match(denied.body.message, /会员/);
+
+    const memberToken = await loginUser(agent);
+    await agent.post(`/api/coupons/${created.body.data.code}/claim`).set(auth(memberToken)).expect(200);
+    const sold = await agent.post(`/api/coupons/${created.body.data.code}/claim`).set(auth(other.body.data.token));
+    assert.equal(sold.status, 400);
+  });
+
+  it("reserves a claim slot for allowlisted users even before grant", async () => {
+    const admin = await loginAdmin(agent);
+    const cap = await issueCaptcha(agent);
+    const guest = await agent.post("/api/auth/register").send({
+      phone: "13600136061",
+      password: "123456",
+      nickname: "预留领取",
+      captchaToken: cap.token,
+      captcha: cap.code,
+    }).expect(200);
+    const created = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      scheduleId: seed.individualScheduleId,
+      kind: "amount",
+      value: 18,
+      total: 1,
+      audience: "member",
+    }).expect(200);
+    seed.db.prepare("INSERT INTO coupon_allowlist (campaign_id, user_id) VALUES (?,?)").run(
+      created.body.data.id,
+      guest.body.data.user.id
+    );
+    const memberToken = await loginUser(agent);
+    const blocked = await agent.post(`/api/coupons/${created.body.data.code}/claim`).set(auth(memberToken));
+    assert.equal(blocked.status, 400);
+    await agent.post(`/api/coupons/${created.body.data.code}/claim`).set(auth(guest.body.data.token)).expect(200);
+  });
 });

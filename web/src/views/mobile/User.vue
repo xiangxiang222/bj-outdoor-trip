@@ -9,6 +9,7 @@
         <div>
           <div class="row">
             <strong style="font-size:18px">{{ u.nickname }}</strong>
+            <span class="tag" v-if="u.isLeader">领队</span>
             <span class="tag" v-if="u.lifeStage">{{ u.lifeStage }}</span>
           </div>
           <p class="muted" style="margin:6px 0 0">

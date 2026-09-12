@@ -256,8 +256,10 @@ function enrollUser({
             : "已报名辅助领队，免个人团费"
           : giftApplied
             ? "已用会员赠送名额占座，本团免费"
-            : isActivity && payAmount === 0
-              ? "已报名，到场即可"
+            : payAmount === 0
+              ? isActivity
+                ? "已报名，到场即可"
+                : "已报名占座，团费已免"
               : "已报名占座，费用待出行前支付",
   };
 }

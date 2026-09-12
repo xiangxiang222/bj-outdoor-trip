@@ -1,9 +1,13 @@
 const { request, setAuth, showError } = require("../../utils/request");
 const app = getApp();
 Page({
-  data: { user: null, coupon: null },
+  data: { user: null, coupon: null, leaderLabel: "领队申请" },
   onShow() {
-    this.setData({ user: app.globalData.user });
+    const user = app.globalData.user;
+    this.setData({
+      user,
+      leaderLabel: user && user.isLeader ? "领队已认证" : user && user.leaderStatus === "pending" ? "领队申请审核中" : "领队申请",
+    });
     this.loadCoupon();
   },
   async loadCoupon() {

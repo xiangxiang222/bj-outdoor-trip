@@ -43,8 +43,11 @@ function localizeMedia(value) {
 http.interceptors.response.use(
   (r) => localizeMedia(r.data),
   (err) => {
-    const msg = err.response?.data?.message || err.message || "网络错误";
-    return Promise.reject(new Error(msg));
+    const data = err.response?.data || {};
+    const e = new Error(data.message || err.message || "网络错误");
+    e.code = data.code || "";
+    e.status = err.response?.status;
+    return Promise.reject(e);
   }
 );
 

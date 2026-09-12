@@ -64,7 +64,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `offer.js` | 特价类型；学生价 = 原价 × `config.student.discountRate`（0.9） |
 | `eligibility.js` | 仅学生 / 指定高校 |
 | `combo.js` | 组合团另一半条件 |
-| `coupons.js` | 公开/会员/定向/通用券，领取后限时，按出行记录定向与随机发放，核销与退回 |
+| `coupons.js` | 公开/会员/定向/通用/免费券，指定必领与用户搜索发放，领取后限时，按出行记录定向与随机发放，核销与退回 |
 | `seats.js` | 2+2 座位图、锁座、改座 |
 | `waitlist` 逻辑在 `enroll.js` `promoteWaitlist` | 满员候补、取消后递补 |
 | `idcard.js` | 18 位校验、性别/生日/籍贯 |
@@ -123,14 +123,14 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 **和 H5 的差：**
 
 - 没有独立「学生认证」「团体认证」页。首页学生认证按钮在已登录时跳到「我的」。自己的个人主页可按朋友圈九宫格传相册。
-- 「我的」权益组目前有优惠券、会员、抽奖；没有学生/团体/推荐报名/推荐领队入口（这些在 H5 有）。
+- 「我的」权益组有优惠券、会员、抽奖、领队申请；没有学生/团体/推荐报名入口（这些在 H5 有）。点团详情「报名领队」未认证时弹窗跳到领队申请。
 - 官方页快捷入口没有「学生认证」磁贴。
 - `miniprogram/config.js`：`USE_LOCAL_API` 默认 `false`，请求 `http://192.144.167.212`。
 - `app.js` `onShow`：已登录且有未使用券时弹窗，同一次打开只提一次；点「去看看」进券包。
 
 ## 6. 后台与导游端
 
-后台 `/admin`：看板、线路、拼团与成本、报名、优惠券、用户与会员、认证审批、玩法标签、管理员。壳子按电商商家后台：红顶栏、深色侧栏、灰底白卡片。登录页与顶栏用原来的 `logo.jpg`。有运营权限时顶栏有「消息」，点开跳到 `/admin/verify?kind=campus|group&userId=`。发线路表单在 `web/src/views/admin/Routes.vue`，地区级联数据在 `web/src/utils/chinaAreas.js`。
+后台 `/admin`：看板、线路、拼团与成本、报名、优惠券、抽奖、用户与会员、认证审批、玩法标签、管理员。壳子按电商商家后台：红顶栏、深色侧栏、灰底白卡片。登录页与顶栏用原来的 `logo.jpg`。有运营权限时顶栏有「消息」，点开跳到 `/admin/verify?kind=campus|group|leader&userId=`。发线路表单在 `web/src/views/admin/Routes.vue`，地区级联数据在 `web/src/utils/chinaAreas.js`。抽奖页 `web/src/views/admin/Lottery.vue`。
 
 导游 `/g`：图片验证码登录 → 行程列表 → 名单签到 / 游客详情 / 锁座调座 / 车牌。演示号 `13700001101`。
 

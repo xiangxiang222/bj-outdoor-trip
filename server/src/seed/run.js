@@ -49,13 +49,16 @@ async function run() {
     { phone: "13800138000", nickname: "林北野", gender: "male", birthday: "1992-05-12", id_card: fakeId("110101", "19920512", "1"), hometown: "北京市", is_member: 1, member_expire_at: dayjs().add(300, "day").format("YYYY-MM-DD"), points: 1280, company_name: null, role: "user" },
     { phone: "13800138001", nickname: "陈小川", gender: "female", birthday: "1996-08-20", id_card: fakeId("130102", "19960820", "2"), hometown: "河北省石家庄市", is_member: 0, member_expire_at: null, points: 80, company_name: null, role: "user" },
     { phone: "13900139000", nickname: "华创团建", gender: "male", birthday: "1988-01-08", id_card: fakeId("110105", "19880108", "1"), hometown: "北京市", is_member: 1, member_expire_at: dayjs().add(200, "day").format("YYYY-MM-DD"), points: 520, company_name: "北京华创科技有限公司", role: "company" },
-    { phone: "13700137000", nickname: "领队老周", gender: "male", birthday: "1985-11-03", id_card: fakeId("140107", "19851103", "1"), hometown: "山西省太原市", is_member: 1, member_expire_at: dayjs().add(100, "day").format("YYYY-MM-DD"), points: 860, company_name: null, role: "organizer" },
+    { phone: "13700137000", nickname: "领队老周", gender: "male", birthday: "1985-11-03", id_card: fakeId("140107", "19851103", "1"), hometown: "山西省太原市", is_member: 1, member_expire_at: dayjs().add(100, "day").format("YYYY-MM-DD"), points: 860, company_name: null, role: "leader" },
   ];
   const userIds = {};
   for (const u of demoUsers) {
     const info = insertUser.run({ ...u, password_hash: hash, avatar: "" });
     userIds[u.phone] = Number(info.lastInsertRowid);
   }
+  db.prepare(
+    "UPDATE users SET leader_status='approved', leader_name=?, leader_years=?, leader_intro=? WHERE phone=?"
+  ).run("周领队", 8, "常年带慕田峪、古北水镇周末团，熟悉集合与车上节奏。", "13700137000");
 
   const extraPeople = [
     ["110101", "19900101", "1", "王磊", "male"],

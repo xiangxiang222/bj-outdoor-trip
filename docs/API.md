@@ -34,7 +34,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友/高校限制）、`oversub`（报超会抽）。同城局名单不含年龄段展示字段的使用由前端控制 |
 | GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
 | POST | `/schedules/:id/seats/pick` | 已报名用户改座 |
-| POST | `/schedules/:id/leaders/apply` | 报名领队（最多两位） |
+| POST | `/schedules/:id/leaders/apply` | 报名领队（最多两位）。须已通过领队申请，否则 403 `need_leader_apply` / `leader_pending` |
 | POST | `/enrollments/:id/fallbacks` | 设置候选团与替代团 |
 | GET | `/schedules/:id/demographics` | 本团画像 |
 | GET | `/schedules/:id/reviews` | 该团评价列表。`{ list, count, avg }` |
@@ -54,7 +54,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/auth/login` | 否 | `phone` `password` `captchaToken` `captcha` |
 | POST | `/auth/login-sms` | 否 | `phone` `code`；无用户则创建。当前 UI 未使用 |
 | POST | `/auth/wechat` | 否 | `code` `nickname` `avatar` |
-| GET | `/me` | 用户 | 当前用户（证件掩码；含学生/团体状态、`isAlumni`/`campusKind`） |
+| GET | `/me` | 用户 | 当前用户（证件掩码；含学生/团体/领队状态、`isAlumni`/`campusKind`/`isLeader`） |
 | GET | `/me/trips` | 用户 | 即将出行：已报名且团未解散、出发日 ≥ 昨天的 `joined`/`waitlist`/`applied` |
 | GET | `/me/coupons` | 用户 | 我领取的券（含未用/已用/候补占用）。含 `expiresAt` `claimedAt` `validHours` `universal` |
 | GET | `/me/referral` | 用户 | 推荐码、专属二维码、5% 按人结算明细。Query：`scheduleId` |
@@ -63,6 +63,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | PUT | `/me` | 用户 | `nickname` `gender` `birthday` `idCard` `companyName` `avatar` |
 | POST | `/me/student` | 用户 | `{ school }`，可选 `campusKind=student\|alumni`。写入 pending，待后台审核 |
 | POST | `/me/group` | 用户 | `{ name, kind }` 团体认证，pending |
+| POST | `/me/leader` | 用户 | `{ name, years, intro }` 个人领队申请，pending。已通过则 400 |
 | POST | `/feedback` | 用户 | `{ kind: suggest\|bug, content }`，内容至少 4 字 |
 | GET | `/lottery` | 可选用户 | 抽奖状态与圆盘奖品（不含权重）。Query：`scheduleId`。返回 `drawMode` `canPre` `canPost` `canClaim`。有本团配置则用本团奖池。不带 `scheduleId` 时另给 `trips[]`（已抽或已报名的本团抽奖）和平台默认转盘 |
 | POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }`。服务端先出结果再让圆盘转到 `sectorIndex`，返回 `rate` `prizeInfo` `deferred` `claimHint`。指定中奖不会返回给用户。本团奖池中奖先记账，跟团结束后领取 |
@@ -188,6 +189,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/schedules/dissolve-all` | 解散全部进行中的团。body：`reason` |
 | POST | `/admin/schedules/:id/dissolve` | 解散单团。body：`reason` |
 | PUT | `/admin/schedules/:id/limit` | 报名限制。`studentOnly`、`alumniOk`、`oversub`、`schools`（数组或逗号分隔）。填高校或允许校友则自动仅师生 |
+| GET | `/admin/lotteries` | 后台抽奖列表：各团是否配置、时机、标题 |
 | GET | `/admin/schedules/:id/lottery` | 本团抽奖配置、指定名单、中奖记录 |
 | PUT | `/admin/schedules/:id/lottery` | 保存本团抽奖。`enabled` `drawMode`（`pre\|enroll\|both`）`title` `spinSeconds` `prizes[]`（2～8 个，含权重/库存/等级） |
 | POST | `/admin/schedules/:id/lottery/assigns` | 指定中奖。`userId` 或 `phone` + `prizeId` |
@@ -202,7 +204,8 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/schedules/:id/split` | 对已支付金额发起分账（已有记录则复用） |
 | GET | `/admin/coupons` | Query：`scheduleId`。券列表；带 `scheduleId` 时含该团券与通用券 |
 | GET | `/admin/coupons/targets` | Query：`idleMonths` `minTrips` `campaignId`。预览符合定向条件的人数 |
-| POST | `/admin/coupons` | 发行。`scheduleId` 或 `universal=true`（全部个人拼团）；`kind=percent|amount` `audience=public|member|directed`；折扣填 `fold`（8=8折）且必填 `capAmount`；立减填 `value`；`total`；可选 `validHours`（领取后有效小时，0 不限）、`idleMonths`（近 N 个月未参加）、`minTrips`（出行至少 N 次）、`stackMember` `stackStudent`、`grantByRule`（发行后按条件发放，人多过库存则随机） |
+| GET | `/admin/coupons/people` | Query：`q` 昵称/手机、`ids`、`limit`（默认 30）。真实用户列表，供发放选人 |
+| POST | `/admin/coupons` | 发行。`scheduleId` 或 `universal=true`（全部个人拼团）；`kind=percent|amount|free` `audience=public|member|directed`；折扣填 `fold`（8=8折）且必填 `capAmount`；立减填 `value`；免费无需金额；`total`；可选 `guaranteedUserIds`（指定必领，发行后立刻入账并预留库存）、`validHours`（领取后有效小时，0 不限）、`idleMonths`（近 N 个月未参加）、`minTrips`（出行至少 N 次）、`stackMember` `stackStudent`、`grantByRule`（发行后按条件发放，人多过库存则随机） |
 | GET | `/admin/coupons/:id` | 台账 `holders`（含 `expiresAt`）+ 短链/落地页/二维码 `share` |
 | PUT | `/admin/coupons/:id` | `status=on|paused|off`，可改名称、发行量（不得小于已领）、限时与定向/叠加字段 |
 | POST | `/admin/coupons/:id/grant` | 定向发放。`phones`/`phonesText`/`userIds`/`allMembers`，或 `byRule` 按发行条件发放（人多随机）。可选 `sms`（默认 true）。一人一码，写入 `sms_logs` 场景 `coupon`，每手机每天最多 1 条 |
@@ -214,7 +217,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | GET | `/admin/users` | Query：`q`、`pending=campus\|group\|any`。不含已注销、不含证件；带 `isMember` `isVirtual` `isStudent` `isAlumni` `campusKind` `school` `studentStatus` `groupStatus`。待审排在前面 |
 | POST | `/admin/virtual-users` | `{ scheduleId, count }` 将该团虚拟报名人数设为 `count`（可增可减） |
 | POST | `/admin/schedules/:id/virtual-users` | `{ count }` 同上，按路径指定行程 |
-| POST | `/admin/users/:id/verify` | `{ kind: student\|group, action: approve\|reject }`。校友通过后 `is_student=0` |
+| POST | `/admin/users/:id/verify` | `{ kind: student\|group\|leader, action: approve\|reject }`。校友通过后 `is_student=0`；领队通过后 `role=leader`（公司账号保持 `company`） |
 | POST | `/admin/users/:id/member` | `action=grant` 开通/续费，`revoke` 取消会员 |
 | POST | `/admin/users/:id/points` | `delta` 非零整数、`reason` |
 | POST | `/admin/users/:id/close` | 注销该用户 |

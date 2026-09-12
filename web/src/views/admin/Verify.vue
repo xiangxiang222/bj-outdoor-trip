@@ -6,12 +6,13 @@
         <el-radio-button label="all">全部待审</el-radio-button>
         <el-radio-button label="campus">校园</el-radio-button>
         <el-radio-button label="group">团体</el-radio-button>
+        <el-radio-button label="leader">领队</el-radio-button>
       </el-radio-group>
     </div>
     <p class="admin-scroll-hint">消息点进来会高亮对应申请。通过或拒绝后这条待办会消失。</p>
     <el-table :data="items" stripe row-key="key" :row-class-name="rowClass">
       <el-table-column label="类型" width="110">
-        <template #default="{ row }">{{ row.kind === "group" ? "团体" : row.user.campusKind === "alumni" ? "校友" : "师生" }}</template>
+        <template #default="{ row }">{{ row.kind === "leader" ? "领队" : row.kind === "group" ? "团体" : row.user.campusKind === "alumni" ? "校友" : "师生" }}</template>
       </el-table-column>
       <el-table-column label="申请人" min-width="120">
         <template #default="{ row }">{{ row.user.nickname }}</template>
@@ -20,7 +21,7 @@
         <template #default="{ row }">{{ row.user.phone }}</template>
       </el-table-column>
       <el-table-column label="申请内容" min-width="220">
-        <template #default="{ row }">{{ row.kind === "group" ? row.user.groupName || "团体认证" : row.user.school || "校园认证" }}</template>
+        <template #default="{ row }">{{ applyText(row) }}</template>
       </el-table-column>
       <el-table-column label="操作" width="180">
         <template #default="{ row }">
@@ -50,19 +51,30 @@ watch(() => [route.query.kind, route.query.userId], syncFromRoute);
 
 function syncFromRoute() {
   const next = String(route.query.kind || "");
-  kind.value = next === "campus" || next === "group" ? next : "";
+  kind.value = next === "campus" || next === "group" || next === "leader" ? next : "";
   focusId.value = String(route.query.userId || "");
   load();
 }
 
 function setKind(value) {
-  const next = value === "campus" || value === "group" ? value : "";
+  const next = value === "campus" || value === "group" || value === "leader" ? value : "";
   router.replace({ path: "/admin/verify", query: next ? { kind: next } : {} });
 }
 
 function rowClass({ row }) {
   if (focusId.value && String(row.user.id) === focusId.value) return "admin-row-focus";
   return "";
+}
+
+function applyText(row) {
+  if (row.kind === "leader") {
+    const bits = [row.user.leaderName || "领队申请"];
+    if (row.user.leaderYears) bits.push(`带队 ${row.user.leaderYears} 年`);
+    if (row.user.leaderIntro) bits.push(row.user.leaderIntro);
+    return bits.join(" · ");
+  }
+  if (row.kind === "group") return row.user.groupName || "团体认证";
+  return row.user.school || "校园认证";
 }
 
 function toItems(users, filter) {
@@ -73,6 +85,9 @@ function toItems(users, filter) {
     }
     if ((!filter || filter === "group") && user.groupStatus === "pending") {
       rows.push({ key: `group-${user.id}`, kind: "group", user });
+    }
+    if ((!filter || filter === "leader") && user.leaderStatus === "pending") {
+      rows.push({ key: `leader-${user.id}`, kind: "leader", user });
     }
   }
   return rows;
@@ -92,8 +107,8 @@ async function load() {
 }
 
 async function decide(row, action) {
-  const apiKind = row.kind === "group" ? "group" : "student";
-  const label = row.kind === "group" ? "团体认证" : "校园认证";
+  const apiKind = row.kind === "group" ? "group" : row.kind === "leader" ? "leader" : "student";
+  const label = row.kind === "group" ? "团体认证" : row.kind === "leader" ? "领队申请" : "校园认证";
   try {
     if (action === "reject") {
       await ElMessageBox.confirm(`拒绝「${row.user.nickname}」的${label}？`, "拒绝认证", { type: "warning" });

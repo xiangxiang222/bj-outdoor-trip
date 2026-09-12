@@ -38,6 +38,24 @@ function auth(token) {
   return { Authorization: `Bearer ${token}` };
 }
 
+async function applyAndApproveLeader(agent, token, userId, extra = {}) {
+  const admin = await loginAdmin(agent);
+  await agent
+    .post("/api/me/leader")
+    .set(auth(token))
+    .send({
+      name: extra.name || "测试领队",
+      years: extra.years ?? 2,
+      intro: extra.intro || "周末带过几次郊野团，熟悉集合。",
+    })
+    .expect(200);
+  await agent
+    .post(`/api/admin/users/${userId}/verify`)
+    .set(auth(admin))
+    .send({ kind: "leader", action: "approve" })
+    .expect(200);
+}
+
 const ID = {
   maleBj: "110101199205121219",
   femaleBj: "110101199001011229",
@@ -55,4 +73,4 @@ function enrollPayload(extra = {}) {
   };
 }
 
-module.exports = { harness, issueCaptcha, loginUser, loginCompany, loginAdmin, auth, ID, enrollPayload };
+module.exports = { harness, issueCaptcha, loginUser, loginCompany, loginAdmin, applyAndApproveLeader, auth, ID, enrollPayload };

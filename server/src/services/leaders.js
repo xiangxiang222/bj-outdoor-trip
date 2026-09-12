@@ -1,13 +1,14 @@
 const { getDb } = require("../db");
-const { attachAssetHost, addPoints } = require("./helpers");
+const { attachAssetHost, addPoints, isLeader } = require("./helpers");
 const { leaderRecruitCopy } = require("./policy");
 const config = require("../config");
 const { ensureReferralCode } = require("./profile");
 const { assertEnrollLimit } = require("./eligibility");
 
-function fail(status, message) {
+function fail(status, message, extra) {
   const err = new Error(message);
   err.status = status;
+  Object.assign(err, extra || {});
   throw err;
 }
 
@@ -38,7 +39,7 @@ function leaderView(row, req) {
       kind: "user",
       id: u.id,
       userId: u.id,
-      name: u.nickname || "领队",
+      name: u.leader_name || u.nickname || "领队",
       avatar: attachAssetHost(req, u.avatar) || "",
     };
   }
@@ -76,6 +77,12 @@ function applyLeader(scheduleId, userId, { leadRef } = {}) {
   if (sch.status === "cancelled") fail(400, "该拼团已解散");
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
   if (!user || user.deleted_at) fail(401, "请先登录");
+  if (!isLeader(user)) {
+    if (user.leader_status === "pending") {
+      fail(403, "领队申请审核中，通过后再报名领队", { code: "leader_pending" });
+    }
+    fail(403, "报名领队需先填写领队申请并通过审核", { code: "need_leader_apply" });
+  }
   assertEnrollLimit(user, sch);
   const exist = db.prepare("SELECT id FROM schedule_leaders WHERE schedule_id=? AND user_id=? AND status='assigned'").get(scheduleId, userId);
   if (exist) fail(400, "你已经是本团领队");
