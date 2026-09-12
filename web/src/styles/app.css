@@ -1071,6 +1071,26 @@ html.admin-theme .el-dialog__footer {
   --el-table-row-hover-bg-color: #fff7f7;
   font-size: 13px;
 }
+.admin-shell .el-table th.el-table-fixed-column--left {
+  background: #f5f6f8;
+}
+.admin-shell .el-table td.el-table-fixed-column--left {
+  background: #fff;
+}
+.admin-shell .el-table--striped .el-table__body tr.el-table__row--striped td.el-table-fixed-column--left {
+  background: #fafafa;
+}
+.admin-shell .el-table .el-table__body tr:hover > td.el-table-fixed-column--left {
+  background: var(--el-table-row-hover-bg-color);
+}
+.admin-row-focus > td.el-table-fixed-column--left { background: #fff7e8 !important; }
+.admin-row-pending > td.el-table-fixed-column--left { background: #fff1f0 !important; }
+.admin-schedules-table.is-scrolling-middle td.el-table-fixed-column--left.is-last-column,
+.admin-schedules-table.is-scrolling-right td.el-table-fixed-column--left.is-last-column,
+.admin-schedules-table.is-scrolling-middle th.el-table-fixed-column--left.is-last-column,
+.admin-schedules-table.is-scrolling-right th.el-table-fixed-column--left.is-last-column {
+  box-shadow: 8px 0 10px -6px rgba(20, 20, 20, 0.18);
+}
 .admin-table-ops {
   display: flex;
   flex-wrap: wrap;

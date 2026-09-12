@@ -7,10 +7,10 @@
         <el-button v-if="canOps" type="success" @click="open">发布拼团</el-button>
       </div>
     </div>
-    <p class="admin-scroll-hint">表格较宽时可左右滑动，操作在最右侧。</p>
-    <el-table :data="list" stripe>
-      <el-table-column prop="route.title" label="线路" min-width="160" />
-      <el-table-column prop="startDate" label="出发" width="120" />
+    <p class="admin-scroll-hint">表格较宽时可左右滑动。线路、出发会钉在左侧，操作在最右侧。</p>
+    <el-table :data="list" stripe :fit="false" class="admin-schedules-table">
+      <el-table-column prop="route.title" label="线路" width="168" fixed="left" />
+      <el-table-column prop="startDate" label="出发" width="112" fixed="left" />
       <el-table-column label="组织" width="90">
         <template #default="{ row }">{{ organizerTypeText(row.organizerType, true) }}</template>
       </el-table-column>
