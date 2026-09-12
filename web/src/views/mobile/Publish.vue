@@ -130,6 +130,15 @@
       <textarea class="input" v-model="form.notes" rows="2" />
     </template>
 
+    <label>抽奖</label>
+    <select class="select" v-model="form.lotteryMode">
+      <option value="off">不开抽奖</option>
+      <option value="pre">报名前抽奖</option>
+      <option value="enroll">报名后抽奖</option>
+      <option value="both">报名前和报名后都抽</option>
+    </select>
+    <p class="muted">中奖后立刻看到奖品和中奖率，跟团结束后才能领奖。奖品可在后台再改。</p>
+
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
     <button class="btn block" :disabled="loading" @click="submit">{{ loading ? "提交中…" : "提交审核" }}</button>
   </div>
@@ -196,6 +205,7 @@ const form = ref({
   description: "",
   notes: "",
   comboRule: { require: "student_or_group", school: "" },
+  lotteryMode: "off",
 });
 const isActivity = computed(() => form.value.channel === "activity");
 const kindPlaceholder = computed(() => {

@@ -142,6 +142,15 @@
           <el-input-number v-model="neu.virtualCount" :min="0" :max="80" />
           <p class="muted" style="margin:6px 0 0">发布后先占若干看起来像真人的报名，之后仍可在列表里改人数。</p>
         </el-form-item>
+        <el-form-item label="抽奖">
+          <el-select v-model="neu.lotteryMode">
+            <el-option label="不开抽奖" value="off" />
+            <el-option label="报名前抽奖" value="pre" />
+            <el-option label="报名后抽奖" value="enroll" />
+            <el-option label="报名前和报名后都抽" value="both" />
+          </el-select>
+          <p class="muted" style="margin:6px 0 0">中奖先记账并展示中奖率，跟团结束后领奖。发布后仍可在列表「抽奖」里改奖品。</p>
+        </el-form-item>
         <el-form-item label="备注"><el-input v-model="neu.notes" type="textarea" :rows="2" /></el-form-item>
       </el-form>
       <template #footer>
@@ -308,6 +317,7 @@ const neu = ref({
   oversub: false,
   schools: "",
   virtualCount: 0,
+  lotteryMode: "off",
 });
 function openLottery(row) {
   cur.value = row;

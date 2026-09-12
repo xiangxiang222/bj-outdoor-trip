@@ -1,5 +1,19 @@
 const { getDb } = require("../db");
-const { defaultPool, getCampaignBySchedule, listPrizeRows, mapPrizeRow, isThanks } = require("./lottery");
+const {
+  defaultPool,
+  getCampaignBySchedule,
+  listPrizeRows,
+  mapPrizeRow,
+  isThanks,
+  normalizeDrawMode,
+} = require("./lottery");
+
+const LAUNCH_PRIZES = [
+  { name: "一等奖", level: 1, kind: "physical", weight: 5, stock: 1, color: "#e1251b" },
+  { name: "二等奖", level: 2, kind: "points", points: 50, weight: 15, stock: -1, color: "#f5a623" },
+  { name: "三等奖", level: 3, kind: "points", points: 20, weight: 25, stock: -1, color: "#7cb342", prizeKey: "points20" },
+  { name: "谢谢参与", level: 9, kind: "thanks", weight: 55, stock: -1, color: "#c8ccc4", prizeKey: "thanks" },
+];
 
 function fail(status, message) {
   const err = new Error(message);
@@ -86,6 +100,7 @@ function listDraws(scheduleId, campaignId) {
       level: Number(row.level || 0),
       doubled: !!row.doubled,
       assigned: !!row.assigned,
+      claimed: !!row.claimed_at,
       createdAt: row.created_at,
     }));
 }
@@ -110,6 +125,7 @@ function getAdminLottery(scheduleId) {
   return {
     scheduleId: sid,
     enabled: !!(campaign && Number(campaign.enabled) === 1),
+    drawMode: campaign ? normalizeDrawMode(campaign.draw_mode) || "both" : "both",
     title: campaign?.title || "本团抽奖",
     spinSeconds: Number(campaign?.spin_seconds || 5),
     note: campaign?.note || "",
@@ -148,7 +164,10 @@ function saveAdminLottery(scheduleId, body = {}) {
   const prizes = Array.isArray(body.prizes) ? body.prizes.map((p, i) => normalizePrize(p, i)) : [];
   if (prizes.length < 2 || prizes.length > 8) fail(400, "奖品请设 2～8 个，圆盘才好看");
   if (!prizes.some((p) => p.weight > 0)) fail(400, "至少有一个奖品的中奖权重大于 0");
-  const enabled = body.enabled === false || body.enabled === 0 || body.enabled === "0" ? 0 : 1;
+  let drawMode = normalizeDrawMode(body.drawMode || body.draw_mode || body.lotteryMode) || "both";
+  let enabled = body.enabled === false || body.enabled === 0 || body.enabled === "0" ? 0 : 1;
+  if (drawMode === "off") enabled = 0;
+  if (!enabled) drawMode = normalizeDrawMode(body.drawMode || body.draw_mode) === "off" ? "off" : drawMode;
   const title = String(body.title || "本团抽奖").trim().slice(0, 40) || "本团抽奖";
   const spinSeconds = clampInt(body.spinSeconds ?? body.spin_seconds, 2, 10, 5);
   const note = String(body.note || "").trim().slice(0, 200);
@@ -159,14 +178,14 @@ function saveAdminLottery(scheduleId, body = {}) {
     if (!campaign) {
       const info = db
         .prepare(
-          "INSERT INTO lottery_campaigns (schedule_id,enabled,title,spin_seconds,note,updated_at) VALUES (?,?,?,?,?,datetime('now','localtime'))"
+          "INSERT INTO lottery_campaigns (schedule_id,enabled,title,spin_seconds,note,draw_mode,updated_at) VALUES (?,?,?,?,?,?,datetime('now','localtime'))"
         )
-        .run(sid, enabled, title, spinSeconds, note);
+        .run(sid, enabled, title, spinSeconds, note, drawMode === "off" ? "both" : drawMode);
       campaign = db.prepare("SELECT * FROM lottery_campaigns WHERE id=?").get(info.lastInsertRowid);
     } else {
       db.prepare(
-        "UPDATE lottery_campaigns SET enabled=?, title=?, spin_seconds=?, note=?, updated_at=datetime('now','localtime') WHERE id=?"
-      ).run(enabled, title, spinSeconds, note, campaign.id);
+        "UPDATE lottery_campaigns SET enabled=?, title=?, spin_seconds=?, note=?, draw_mode=?, updated_at=datetime('now','localtime') WHERE id=?"
+      ).run(enabled, title, spinSeconds, note, drawMode === "off" ? campaign.draw_mode || "both" : drawMode, campaign.id);
     }
     const keepIds = [];
     prizes.forEach((prize, i) => {
@@ -279,4 +298,16 @@ function removeAssign(scheduleId, assignId) {
   return getAdminLottery(scheduleId);
 }
 
-module.exports = { getAdminLottery, saveAdminLottery, addAssign, removeAssign };
+function attachLotteryOnCreate(scheduleId, body = {}) {
+  const mode = normalizeDrawMode(body.lotteryMode || body.lottery_mode || body.drawMode || body.draw_mode);
+  if (!mode || mode === "off") return null;
+  return saveAdminLottery(scheduleId, {
+    enabled: true,
+    drawMode: mode,
+    title: "本团抽奖",
+    spinSeconds: 5,
+    prizes: LAUNCH_PRIZES,
+  });
+}
+
+module.exports = { getAdminLottery, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate, LAUNCH_PRIZES };

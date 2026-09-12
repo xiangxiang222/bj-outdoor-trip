@@ -20,12 +20,22 @@
     </block>
   </view></view>
 
-  <view class="pad title">第二次抽奖</view>
-  <view class="card"><view class="pad">
-    <view class="muted" wx:if="{{s.lottery.pre}}">第一次抽到：{{s.lottery.pre.prizeLabel}}</view>
-    <view wx:if="{{s.lottery.post}}" class="title">{{s.lottery.post.prizeLabel}}{{s.lottery.post.doubled ? ' · 已翻倍' : ''}}</view>
-    <view class="btn" wx:else bindtap="goLottery">去转盘抽第二次</view>
+  <view class="pad title" wx:if="{{s.lottery.drawMode !== 'pre'}}">{{s.lottery.drawMode === 'enroll' ? '报名后抽奖' : '第二次抽奖'}}</view>
+  <view class="card" wx:if="{{s.lottery.drawMode !== 'pre'}}"><view class="pad">
+    <view class="muted" wx:if="{{s.lottery.pre}}">报名前抽到：{{s.lottery.pre.prizeLabel}}</view>
+    <block wx:if="{{s.lottery.post}}">
+      <view class="title">{{s.lottery.post.prizeLabel}}{{s.lottery.post.rate != null ? ' · 中奖率 ' + s.lottery.post.rate + '%' : ''}}{{s.lottery.post.doubled ? ' · 两次一致' : ''}}</view>
+      <view class="muted" wx:if="{{s.lottery.post.claimHint}}">{{s.lottery.post.claimHint}}</view>
+    </block>
+    <view class="btn" wx:if="{{!s.lottery.post && s.lottery.canPost}}" bindtap="goLottery">去转盘抽奖</view>
   </view></view>
+  <view class="card" wx:if="{{s.lottery.drawMode === 'pre' && s.lottery.pre}}"><view class="pad">
+    <view class="muted">报名前抽到</view>
+    <view class="title">{{s.lottery.pre.prizeLabel}}</view>
+    <view class="muted" wx:if="{{s.lottery.pre.prizeInfo && s.lottery.pre.level < 9}}">{{s.lottery.pre.prizeInfo}}{{s.lottery.pre.rate != null ? ' · 中奖率 ' + s.lottery.pre.rate + '%' : ''}}</view>
+    <view class="muted" wx:if="{{s.lottery.pre.claimHint}}">{{s.lottery.pre.claimHint}}</view>
+  </view></view>
+  <view class="btn" wx:if="{{s.lottery.canClaim}}" bindtap="claim">{{claiming ? '领取中…' : '领取奖品'}}</view>
 
   <view class="pad title">评选 · 分享投票</view>
   <view class="card"><view class="pad">

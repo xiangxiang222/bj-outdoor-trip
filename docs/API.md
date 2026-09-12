@@ -64,8 +64,9 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/me/student` | 用户 | `{ school }`，可选 `campusKind=student\|alumni`。写入 pending，待后台审核 |
 | POST | `/me/group` | 用户 | `{ name, kind }` 团体认证，pending |
 | POST | `/feedback` | 用户 | `{ kind: suggest\|bug, content }`，内容至少 4 字 |
-| GET | `/lottery` | 可选用户 | 抽奖状态与圆盘奖品（不含权重）。Query：`scheduleId`。有本团配置则用本团奖池 |
-| POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }`。服务端先出结果再让圆盘转到 `sectorIndex`，指定中奖不会返回给用户 |
+| GET | `/lottery` | 可选用户 | 抽奖状态与圆盘奖品（不含权重）。Query：`scheduleId`。返回 `drawMode` `canPre` `canPost` `canClaim`。有本团配置则用本团奖池 |
+| POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }`。服务端先出结果再让圆盘转到 `sectorIndex`，返回 `rate` `prizeInfo` `deferred` `claimHint`。指定中奖不会返回给用户。本团奖池中奖先记账，跟团结束后领取 |
+| POST | `/lottery/claim` | 用户 | `{ scheduleId }`。须已报名且行程结束日（或出发日）不晚于今天。文案：「跟团结束后才能领奖」 |
 | GET | `/schedules/:id/after` | 可选用户 | 完成活动页状态 |
 | POST | `/schedules/:id/complete` | 用户 | 标记完成活动 |
 | GET | `/schedules/:id/contest` | 可选用户 | 评选帖列表 |
@@ -79,8 +80,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 
 | 方法 | 路径 | 鉴权 | 说明 |
 | --- | --- | --- | --- |
-| POST | `/schedules` | 用户 | 基于已有线路开团。可带 `offerType` `playTagIds` `studentOnly` `alumniOk` `oversub` `schools` |
-| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `schools` `comboRule`。提交后 `review_status=pending`，审核通过才上首页或活动 Tab |
+| POST | `/schedules` | 用户 | 基于已有线路开团。可带 `offerType` `playTagIds` `studentOnly` `alumniOk` `oversub` `schools` `lotteryMode`（`off\|pre\|enroll\|both`） |
+| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `schools` `comboRule` `lotteryMode`。提交后 `review_status=pending`，审核通过才上首页或活动 Tab |
 | POST | `/upload` | 用户 | 发团封面。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
 | POST | `/enroll` | 用户 | 见下方报名 body。报超会抽且名单未确认时写入 `applied`（不占座）；确认后中签 `joined`、未中 `waitlist`。候补/`applied` 券为 `held` |
@@ -180,14 +181,14 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` |
 | PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换 |
 | DELETE | `/admin/routes/:id` | 下架 |
-| POST | `/admin/schedules` | 后台发布排期。可选 `virtualCount` 发布后立即设置虚拟报名 |
+| POST | `/admin/schedules` | 后台发布排期。可选 `virtualCount` 发布后立即设置虚拟报名；`lotteryMode` 非 off 时挂上默认 4 奖转盘 |
 | POST | `/admin/schedules/:id/review` | 用户发团审核。`status=approved|rejected` |
 | GET | `/admin/schedules` | 含成本、收入、利润、导游 |
 | POST | `/admin/schedules/dissolve-all` | 解散全部进行中的团。body：`reason` |
 | POST | `/admin/schedules/:id/dissolve` | 解散单团。body：`reason` |
 | PUT | `/admin/schedules/:id/limit` | 报名限制。`studentOnly`、`alumniOk`、`oversub`、`schools`（数组或逗号分隔）。填高校或允许校友则自动仅师生 |
 | GET | `/admin/schedules/:id/lottery` | 本团抽奖配置、指定名单、中奖记录 |
-| PUT | `/admin/schedules/:id/lottery` | 保存本团抽奖。`enabled` `title` `spinSeconds` `prizes[]`（2～8 个，含权重/库存/等级） |
+| PUT | `/admin/schedules/:id/lottery` | 保存本团抽奖。`enabled` `drawMode`（`pre\|enroll\|both`）`title` `spinSeconds` `prizes[]`（2～8 个，含权重/库存/等级） |
 | POST | `/admin/schedules/:id/lottery/assigns` | 指定中奖。`userId` 或 `phone` + `prizeId` |
 | DELETE | `/admin/schedules/:id/lottery/assigns/:assignId` | 取消未抽的指定 |
 | POST | `/admin/schedules/:id/draw` | 确认出行名单（运营）。报名未超座位则全部确认；超过则抽签。重复确认 400，`force=true` 可重抽 |

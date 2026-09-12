@@ -22,20 +22,33 @@
         </template>
       </div></div>
 
-      <div class="h2">第二次抽奖</div>
-      <div class="card"><div class="pad">
-        <p class="muted" v-if="s.lottery?.pre">第一次抽到：{{ s.lottery.pre.prizeLabel }}</p>
+      <div class="h2" v-if="s.lottery?.drawMode !== 'pre'">{{ s.lottery?.drawMode === 'enroll' ? '报名后抽奖' : '第二次抽奖' }}</div>
+      <div class="card" v-if="s.lottery?.drawMode !== 'pre'"><div class="pad">
+        <p class="muted" v-if="s.lottery?.pre">报名前抽到：{{ s.lottery.pre.prizeLabel }}</p>
         <LotteryWheel
           ref="wheel"
           :prizes="s.lottery?.prizes || []"
           :spin-seconds="s.lottery?.spinSeconds || 5"
-          :disabled="!!s.lottery?.post || drawing"
+          :disabled="!s.lottery?.canPost || drawing"
           :park-key="s.lottery?.post?.prizeKey || ''"
-          :go-text="s.lottery?.post ? '已抽' : '抽第二次'"
+          :go-text="s.lottery?.post ? '已抽' : '抽奖'"
           @request="drawPost"
         />
-        <p v-if="s.lottery?.post"><strong>{{ s.lottery.post.prizeLabel }}</strong>{{ s.lottery.post.doubled ? " · 两次一致，已翻倍" : "" }}</p>
+        <p v-if="s.lottery?.post">
+          <strong>{{ s.lottery.post.prizeLabel }}</strong>
+          <span v-if="s.lottery.post.rate != null"> · 中奖率 {{ s.lottery.post.rate }}%</span>
+          {{ s.lottery.post.doubled ? " · 两次一致" : "" }}
+        </p>
+        <p class="muted" v-if="s.lottery?.post?.claimHint">{{ s.lottery.post.claimHint }}</p>
       </div></div>
+      <div class="card" v-if="s.lottery?.drawMode === 'pre' && s.lottery?.pre"><div class="pad">
+        <div class="muted">报名前抽到</div>
+        <strong>{{ s.lottery.pre.prizeLabel }}</strong>
+        <p class="muted" v-if="s.lottery.pre.prizeInfo && s.lottery.pre.level < 9">{{ s.lottery.pre.prizeInfo }}{{ s.lottery.pre.rate != null ? ' · 中奖率 ' + s.lottery.pre.rate + '%' : '' }}</p>
+        <p class="muted" v-if="s.lottery.pre.claimHint">{{ s.lottery.pre.claimHint }}</p>
+      </div></div>
+      <p class="muted" v-if="s.lottery?.claimHint && !s.lottery?.canClaim">{{ s.lottery.claimHint }}</p>
+      <button v-if="s.lottery?.canClaim" class="btn block" type="button" :disabled="claiming" @click="claim">{{ claiming ? "领取中…" : "领取奖品" }}</button>
 
       <div class="h2">评选 · 分享投票</div>
       <div class="card"><div class="pad">
@@ -80,6 +93,7 @@ const ok = ref(false);
 const loading = ref(false);
 const saving = ref(false);
 const drawing = ref(false);
+const claiming = ref(false);
 const wheel = ref(null);
 const posting = ref(false);
 const rating = ref(5);
@@ -139,13 +153,29 @@ async function drawPost() {
     const res = await http.post("/lottery/draw", { phase: "post", scheduleId: Number(route.params.id) });
     ok.value = true;
     if (wheel.value) await wheel.value.play(res.data);
-    msg.value = res.data.matched ? `两次都是「${res.data.prizeLabel}」，已翻倍` : "";
+    msg.value = res.data.matched ? `两次都是「${res.data.prizeLabel}」，领取时翻倍` : "";
     await load();
   } catch (e) {
     ok.value = false;
     msg.value = e.message;
   } finally {
     drawing.value = false;
+  }
+}
+
+async function claim() {
+  if (!requireLogin(store, router, route)) return;
+  claiming.value = true;
+  try {
+    const res = await http.post("/lottery/claim", { scheduleId: Number(route.params.id) });
+    ok.value = true;
+    msg.value = res.message || "奖品已领取";
+    await load();
+  } catch (e) {
+    ok.value = false;
+    msg.value = e.message;
+  } finally {
+    claiming.value = false;
   }
 }
 

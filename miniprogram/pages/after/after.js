@@ -11,6 +11,7 @@ Page({
     reviewText: "",
     shareUrl: "",
     caption: "",
+    claiming: false,
   },
   onLoad(q) {
     this.setData({ id: q.id || "" });
@@ -70,6 +71,18 @@ Page({
   goLottery() {
     if (!this.needLogin()) return;
     wx.navigateTo({ url: "/pages/lottery/lottery?scheduleId=" + this.data.id + "&phase=post" });
+  },
+  async claim() {
+    if (!this.needLogin()) return;
+    if (this.data.claiming) return;
+    this.setData({ claiming: true });
+    try {
+      const res = await request("/lottery/claim", "POST", { scheduleId: Number(this.data.id) });
+      this.setData({ claiming: false, msg: (res && res.message) || "奖品已领取" });
+      this.load();
+    } catch (e) {
+      this.setData({ claiming: false, msg: (e && e.message) || "领取失败" });
+    }
   },
   setUrl(e) {
     this.setData({ shareUrl: e.detail.value });

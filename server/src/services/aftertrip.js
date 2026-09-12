@@ -39,8 +39,7 @@ function afterTripState(userId, scheduleId) {
   if (!sch) fail(404, "行程不存在");
   const route = db.prepare("SELECT title FROM routes WHERE id=?").get(sch.route_id);
   const en = userId ? joinedEnrollment(userId, sid) : null;
-  const lottery = userId ? lotteryState(userId, sid) : { pre: null, post: null, canPre: false, canPost: false };
-  if (userId && en && en.completed_at && !lottery.post) lottery.canPost = true;
+  const lottery = userId ? lotteryState(userId, sid) : { pre: null, post: null, canPre: false, canPost: false, canClaim: false };
   const reviews = listReviews({ scheduleId: sid });
   return {
     scheduleId: sid,

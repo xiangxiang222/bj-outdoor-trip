@@ -219,8 +219,8 @@
       <div class="card" v-if="s.lotteryEnabled" @click="$router.push('/m/lottery?scheduleId=' + s.id)">
         <div class="pad row">
           <div>
-            <strong>转盘抽奖</strong>
-            <p class="muted" style="margin:4px 0 0">本团专属奖品，点进去转圆盘</p>
+            <strong>{{ s.lotteryLabel || "转盘抽奖" }}</strong>
+            <p class="muted" style="margin:4px 0 0">中奖先记账，跟团结束后领奖</p>
           </div>
           <span class="nav-link">去抽 ›</span>
         </div>

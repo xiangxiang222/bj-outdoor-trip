@@ -11,6 +11,13 @@ const PRIZES = [
   { key: "coupon", label: "下团减 20 元券", weight: 4, points: 0, level: 1, kind: "coupon", color: "#e1251b" },
 ];
 
+const MODE_LABELS = {
+  off: "",
+  pre: "报名前抽奖",
+  enroll: "报名后抽奖",
+  both: "报名前和报名后都可抽",
+};
+
 function fail(status, message) {
   const err = new Error(message);
   err.status = status;
@@ -19,6 +26,30 @@ function fail(status, message) {
 
 function nowText() {
   return dayjs().format("YYYY-MM-DD HH:mm:ss");
+}
+
+function normalizeDrawMode(raw) {
+  const v = String(raw || "")
+    .trim()
+    .toLowerCase();
+  if (["off", "none", "0", "false", "no"].includes(v)) return "off";
+  if (["pre", "before"].includes(v)) return "pre";
+  if (["enroll", "after", "post"].includes(v)) return "enroll";
+  if (["both", "all"].includes(v)) return "both";
+  return "";
+}
+
+function drawModeOf(campaign) {
+  if (!campaign || Number(campaign.enabled) !== 1) return "off";
+  return normalizeDrawMode(campaign.draw_mode) || "both";
+}
+
+function allowsPre(mode) {
+  return mode === "pre" || mode === "both";
+}
+
+function allowsEnroll(mode) {
+  return mode === "enroll" || mode === "both";
 }
 
 function defaultPool() {
@@ -76,6 +107,17 @@ function isLotteryEnabled(scheduleId) {
   return !!(row && Number(row.enabled) === 1 && listPrizeRows(row.id).length);
 }
 
+function lotteryPublic(scheduleId) {
+  const campaign = getCampaignBySchedule(scheduleId);
+  const mode = drawModeOf(campaign);
+  const enabled = mode !== "off" && isLotteryEnabled(scheduleId);
+  return {
+    lotteryEnabled: enabled,
+    lotteryMode: enabled ? mode : "off",
+    lotteryLabel: enabled ? MODE_LABELS[mode] || "" : "",
+  };
+}
+
 function resolvePool(scheduleId) {
   const campaign = getCampaignBySchedule(scheduleId);
   if (!campaign || Number(campaign.enabled) !== 1) {
@@ -84,6 +126,19 @@ function resolvePool(scheduleId) {
   const prizes = listPrizeRows(campaign.id).map(mapPrizeRow);
   if (!prizes.length) return { campaign, prizes: defaultPool() };
   return { campaign, prizes };
+}
+
+function rateOf(prize, prizes) {
+  const total = (prizes || []).reduce((sum, p) => sum + Number(p.weight || 0), 0);
+  if (!total) return 0;
+  return Math.round((Number(prize.weight || 0) / total) * 1000) / 10;
+}
+
+function prizeInfoOf(prize) {
+  if (!prize || isThanks(prize)) return "谢谢参与，没有奖品";
+  if (prize.kind === "points") return `${prize.points} 积分`;
+  if (prize.kind === "coupon") return "优惠券一张";
+  return prize.label || prize.name || "实物奖品";
 }
 
 function publicPrizes(prizes) {
@@ -134,6 +189,7 @@ function prizeOf(key, prizes) {
 
 function mapDraw(row, extra = {}) {
   if (!row) return null;
+  const prize = extra.prize || null;
   return {
     id: row.id,
     phase: row.phase,
@@ -142,9 +198,17 @@ function mapDraw(row, extra = {}) {
     level: Number(row.level || 0),
     doubled: !!row.doubled,
     createdAt: row.created_at,
+    claimed: extra.deferred ? !!row.claimed_at : extra.claimed !== false,
+    claimedAt: row.claimed_at || "",
     sectorIndex: extra.sectorIndex,
     spinSeconds: extra.spinSeconds,
+    rate: extra.rate,
+    prizeKind: prize ? prize.kind : extra.prizeKind,
+    prizePoints: prize ? prize.points : extra.prizePoints,
+    prizeInfo: extra.prizeInfo,
+    deferred: !!extra.deferred,
     ...extra,
+    prize: undefined,
   };
 }
 
@@ -186,10 +250,27 @@ function requireJoined(userId, scheduleId) {
   return en;
 }
 
+function requireEnrolled(userId, scheduleId) {
+  const en = getDb()
+    .prepare(
+      "SELECT * FROM enrollments WHERE user_id=? AND schedule_id=? AND status IN ('joined','applied','waitlist')"
+    )
+    .get(userId, scheduleId);
+  if (!en) fail(400, "请先报名本团再抽");
+  return en;
+}
+
 function requireCompleted(userId, scheduleId) {
   const en = requireJoined(userId, scheduleId);
   if (!en.completed_at) fail(400, "请先在回来的大巴上点「完成活动」");
   return en;
+}
+
+function tripHasEnded(scheduleId) {
+  const sch = getDb().prepare("SELECT start_date, end_date FROM schedules WHERE id=?").get(scheduleId);
+  if (!sch) fail(404, "行程不存在");
+  const end = sch.end_date || sch.start_date;
+  return !dayjs(end).isAfter(dayjs(), "day");
 }
 
 function consumeStock(prize) {
@@ -227,6 +308,8 @@ function insertDraw({ userId, scheduleId, phase, prize, doubled, campaignId, ass
     prize_label: prize.label,
     doubled: doubled ? 1 : 0,
     level: prize.level || 0,
+    campaign_id: campaignId || 0,
+    claimed_at: null,
     created_at: nowText(),
   };
 }
@@ -240,17 +323,31 @@ function choosePrize(userId, prizes, campaign) {
   return { prize: pickPrize(prizes), assigned: false, assignId: 0 };
 }
 
-function fulfillDraw(userId, prize, times, assignedMeta) {
-  applyPrize(userId, prize, times);
+function fulfillDraw(userId, prize, times, assignedMeta, deferred) {
   consumeStock(prize);
   if (assignedMeta.assignId) markAssignUsed(assignedMeta.assignId);
+  if (!deferred) applyPrize(userId, prize, times);
 }
 
 function drawPayload(row, prizes, campaign, extra = {}) {
+  const prize = prizes.find((p) => p.key === row.prize_key) || prizeOf(row.prize_key, prizes);
   const spinSeconds = Number(campaign?.spin_seconds || 5);
+  const deferred = !!(campaign && Number(campaign.enabled) === 1 && !isThanks(prize));
   return mapDraw(row, {
+    prize,
     sectorIndex: sectorIndexOf(prizes, row.prize_key),
     spinSeconds: spinSeconds >= 2 && spinSeconds <= 10 ? spinSeconds : 5,
+    rate: rateOf(prize, prizes),
+    prizeKind: prize.kind,
+    prizePoints: prize.points,
+    prizeInfo: prizeInfoOf(prize),
+    deferred,
+    claimed: deferred ? !!row.claimed_at : true,
+    claimHint: deferred
+      ? row.claimed_at
+        ? "已领取"
+        : "跟团结束后才能领奖，先记在本团抽奖里"
+      : "",
     ...extra,
   });
 }
@@ -258,6 +355,8 @@ function drawPayload(row, prizes, campaign, extra = {}) {
 function drawPre(userId, scheduleId) {
   const sid = Number(scheduleId || 0);
   const { campaign, prizes } = resolvePool(sid);
+  const mode = drawModeOf(campaign);
+  if (campaign && !allowsPre(mode)) fail(400, "本团是报名后抽奖，请报名后再抽");
   const useCampaign = !!(campaign && Number(campaign.enabled) === 1);
   const storeSid = useCampaign ? sid : 0;
   const exist = useCampaign
@@ -267,7 +366,7 @@ function drawPre(userId, scheduleId) {
 
   const picked = choosePrize(userId, prizes, campaign);
   const run = getDb().transaction(() => {
-    fulfillDraw(userId, picked.prize, 1, picked);
+    fulfillDraw(userId, picked.prize, 1, picked, useCampaign && !isThanks(picked.prize));
     return insertDraw({
       userId,
       scheduleId: storeSid,
@@ -284,16 +383,23 @@ function drawPre(userId, scheduleId) {
 function drawPost(userId, scheduleId) {
   const sid = Number(scheduleId);
   if (!sid) fail(400, "请选择行程");
-  requireCompleted(userId, sid);
   const { campaign, prizes } = resolvePool(sid);
+  const mode = drawModeOf(campaign);
+  if (campaign && Number(campaign.enabled) === 1) {
+    if (!allowsEnroll(mode)) fail(400, "本团只开放报名前抽奖");
+    requireEnrolled(userId, sid);
+  } else {
+    requireCompleted(userId, sid);
+  }
   const exist = getDraw(userId, sid, "post");
   if (exist) return drawPayload(exist, prizes, campaign, { already: true });
 
   const picked = choosePrize(userId, prizes, campaign);
   const pre = getDraw(userId, sid, "pre") || getDraw(userId, 0, "pre");
   const doubled = !!(pre && pre.prize_key === picked.prize.key && !isThanks(picked.prize));
+  const useCampaign = !!(campaign && Number(campaign.enabled) === 1);
   const run = getDb().transaction(() => {
-    fulfillDraw(userId, picked.prize, doubled ? 2 : 1, picked);
+    fulfillDraw(userId, picked.prize, doubled ? 2 : 1, picked, useCampaign && !isThanks(picked.prize));
     return insertDraw({
       userId,
       scheduleId: sid,
@@ -307,29 +413,95 @@ function drawPost(userId, scheduleId) {
   return drawPayload(run(), prizes, campaign, { matched: doubled, preLabel: pre ? pre.prize_label : "" });
 }
 
+function claimPrizes(userId, scheduleId) {
+  const sid = Number(scheduleId);
+  if (!sid) fail(400, "请选择行程");
+  requireJoined(userId, sid);
+  if (!tripHasEnded(sid)) fail(400, "跟团结束后才能领奖");
+  const { campaign, prizes } = resolvePool(sid);
+  if (!campaign || Number(campaign.enabled) !== 1) fail(400, "本团没有待领奖品");
+  const rows = getDb()
+    .prepare(
+      "SELECT * FROM lottery_draws WHERE user_id=? AND schedule_id=? AND IFNULL(campaign_id,0)=? AND claimed_at IS NULL"
+    )
+    .all(userId, sid, campaign.id);
+  const pending = rows.filter((row) => {
+    const prize = prizes.find((p) => p.key === row.prize_key) || prizeOf(row.prize_key, prizes);
+    return !isThanks(prize);
+  });
+  if (!pending.length) fail(400, "没有待领的奖品");
+  const run = getDb().transaction(() => {
+    const claimed = [];
+    pending.forEach((row) => {
+      const prize = prizes.find((p) => p.key === row.prize_key) || prizeOf(row.prize_key, prizes);
+      const times = row.doubled ? 2 : 1;
+      applyPrize(userId, prize, times);
+      getDb().prepare("UPDATE lottery_draws SET claimed_at=? WHERE id=?").run(nowText(), row.id);
+      claimed.push({
+        prizeLabel: prize.label,
+        prizeInfo: prizeInfoOf(prize),
+        doubled: !!row.doubled,
+      });
+    });
+    return claimed;
+  });
+  return { claimed: run(), message: "奖品已领取" };
+}
+
 function campaignPublic(campaign) {
   const seconds = Number(campaign?.spin_seconds || 5);
+  const mode = drawModeOf(campaign);
   return {
     title: (campaign && campaign.title) || "活动抽奖",
     spinSeconds: seconds >= 2 && seconds <= 10 ? seconds : 5,
-    enabled: !!(campaign && Number(campaign.enabled) === 1),
+    enabled: mode !== "off",
+    drawMode: mode,
+    drawLabel: MODE_LABELS[mode] || "",
     note: (campaign && campaign.note) || "",
   };
 }
 
-function canPostDraw(userId, sid) {
+function canPostDraw(userId, sid, campaign) {
   if (!userId || !sid) return false;
   if (getDraw(userId, sid, "post")) return false;
+  const mode = drawModeOf(campaign);
+  if (campaign && Number(campaign.enabled) === 1) {
+    if (!allowsEnroll(mode)) return false;
+    return !!getDb()
+      .prepare(
+        "SELECT id FROM enrollments WHERE user_id=? AND schedule_id=? AND status IN ('joined','applied','waitlist')"
+      )
+      .get(userId, sid);
+  }
   const en = getDb()
     .prepare("SELECT completed_at FROM enrollments WHERE user_id=? AND schedule_id=? AND status='joined'")
     .get(userId, sid);
   return !!(en && en.completed_at);
 }
 
+function canClaimDraws(userId, sid, campaign, prizes) {
+  if (!userId || !sid || !campaign || Number(campaign.enabled) !== 1) return false;
+  if (!tripHasEnded(sid)) return false;
+  const joined = getDb()
+    .prepare("SELECT id FROM enrollments WHERE user_id=? AND schedule_id=? AND status='joined'")
+    .get(userId, sid);
+  if (!joined) return false;
+  const pending = getDb()
+    .prepare(
+      "SELECT prize_key FROM lottery_draws WHERE user_id=? AND schedule_id=? AND IFNULL(campaign_id,0)=? AND claimed_at IS NULL"
+    )
+    .all(userId, sid, campaign.id);
+  return pending.some((row) => {
+    const prize = (prizes || []).find((p) => p.key === row.prize_key) || prizeOf(row.prize_key, prizes);
+    return !isThanks(prize);
+  });
+}
+
 function lotteryState(userId, scheduleId) {
   const sid = Number(scheduleId || 0);
   const { campaign, prizes } = resolvePool(sid);
   const useCampaign = !!(campaign && Number(campaign.enabled) === 1);
+  const mode = drawModeOf(campaign);
   const pre = userId
     ? useCampaign
       ? getDraw(userId, sid, "pre")
@@ -338,26 +510,36 @@ function lotteryState(userId, scheduleId) {
   const post = userId && sid ? getDraw(userId, sid, "post") : null;
   const canPre = userId
     ? useCampaign
-      ? !getDraw(userId, sid, "pre")
+      ? allowsPre(mode) && !getDraw(userId, sid, "pre")
       : !getDraw(userId, 0, "pre") && !getDraw(userId, sid, "pre")
     : false;
+  const canClaim = canClaimDraws(userId, sid, campaign, prizes);
   return {
     ...campaignPublic(campaign),
     prizes: publicPrizes(prizes),
-    pre: mapDraw(pre, { sectorIndex: pre ? sectorIndexOf(prizes, pre.prize_key) : 0 }),
-    post: mapDraw(post, { sectorIndex: post ? sectorIndexOf(prizes, post.prize_key) : 0 }),
+    pre: pre ? drawPayload(pre, prizes, campaign) : null,
+    post: post ? drawPayload(post, prizes, campaign) : null,
     canPre,
-    canPost: canPostDraw(userId, sid),
+    canPost: canPostDraw(userId, sid, campaign),
+    canClaim,
+    claimHint: useCampaign
+      ? canClaim
+        ? "跟团已结束，可以领奖"
+        : "中奖后先记账，跟团结束后再领奖"
+      : "",
   };
 }
 
 module.exports = {
   PRIZES,
+  MODE_LABELS,
   pickPrize,
   prizeOf,
   drawPre,
   drawPost,
+  claimPrizes,
   lotteryState,
+  lotteryPublic,
   getDraw,
   requireJoined,
   requireCompleted,
@@ -370,4 +552,6 @@ module.exports = {
   getCampaignBySchedule,
   sectorIndexOf,
   isThanks,
+  normalizeDrawMode,
+  drawModeOf,
 };
