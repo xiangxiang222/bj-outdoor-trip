@@ -1,4 +1,5 @@
 const { getDb } = require("../db");
+const { isMember } = require("./helpers");
 const {
   defaultPool,
   getCampaignBySchedule,
@@ -94,7 +95,8 @@ function enrollLabel(status, payStatus) {
 function listDraws(scheduleId, campaignId) {
   return getDb()
     .prepare(
-      `SELECT d.*, u.nickname, u.phone, e.status AS enroll_status, e.pay_status
+      `SELECT d.*, u.nickname, u.phone, u.is_member, u.member_expire_at,
+              e.status AS enroll_status, e.pay_status
        FROM lottery_draws d
        JOIN users u ON u.id = d.user_id
        LEFT JOIN enrollments e ON e.id = (
@@ -117,6 +119,7 @@ function listDraws(scheduleId, campaignId) {
         userId: row.user_id,
         nickname: row.nickname,
         phone: row.phone,
+        isMember: isMember(row),
         phase: row.phase,
         prizeKey: row.prize_key,
         prizeLabel: row.prize_label,
@@ -198,8 +201,19 @@ function getAdminLottery(scheduleId) {
         remain: -1,
         rate: totalWeight > 0 ? Math.round((Number(p.weight || 0) / totalWeight) * 1000) / 10 : 0,
       }));
+  const draws = listDraws(sid, campaign?.id);
+  const byKey = new Map(prizes.map((p) => [String(p.key || ""), p]));
+  draws.forEach((d) => {
+    const prize = byKey.get(String(d.prizeKey || ""));
+    d.prizeKind = prize?.kind || "";
+    d.prizePoints = Number(prize?.points || 0);
+  });
+  prizes.forEach((p) => {
+    p.winCount = draws.filter((d) => String(d.prizeKey || "") === String(p.key || "")).length;
+  });
   return {
     scheduleId: sid,
+    configured: !!campaign,
     enabled: !!(campaign && Number(campaign.enabled) === 1),
     drawMode: campaign ? normalizeDrawMode(campaign.draw_mode) || "both" : "both",
     title: campaign?.title || "本团抽奖",
@@ -207,7 +221,7 @@ function getAdminLottery(scheduleId) {
     note: campaign?.note || "",
     prizes,
     assigns: campaign ? listAssigns(campaign.id) : [],
-    draws: listDraws(sid, campaign?.id),
+    draws,
     enrolled: enrolledUsers(sid),
   };
 }

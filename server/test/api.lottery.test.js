@@ -213,6 +213,11 @@ describe("lottery after-trip contest", () => {
     assert.equal(adminView.body.data.draws[0].assigned, true);
     assert.equal(adminView.body.data.draws[0].enrolled, false);
     assert.equal(adminView.body.data.draws[0].enrollLabel, "未报名");
+    assert.equal(adminView.body.data.draws[0].isMember, true);
+    assert.equal(adminView.body.data.draws[0].prizeKind, "physical");
+    assert.equal(adminView.body.data.configured, true);
+    assert.ok(adminView.body.data.prizes.length >= 3);
+    assert.equal(adminView.body.data.prizes.find((p) => p.name === "一等奖").winCount, 1);
     assert.equal(adminView.body.data.assigns[0].usedAt.length > 0, true);
 
     await enroll(token).expect(200);
