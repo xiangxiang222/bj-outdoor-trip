@@ -12,12 +12,6 @@
       <span class="tag" v-if="route.days || route.difficulty">{{ [route.days ? route.days + "日" : "", route.difficulty].filter(Boolean).join(" · ") }}</span>
     </div>
     <p class="muted">{{ route.subtitle }}</p>
-    <div v-if="!embedded && weather" class="weather" :class="weather.alerts?.[0]?.level">
-      <strong>{{ weather.place }} {{ weather.summary }}</strong>
-      <span>{{ weather.tmin }}~{{ weather.tmax }}℃ · 风 {{ weather.wind }}km/h</span>
-      <WeatherChart :hourly="weather.hourly" :label="weather.place + '分时气温'" />
-      <p>{{ weather.alerts?.[0]?.text }}</p>
-    </div>
     <div>
       <span
         class="play-tag sm"
@@ -161,13 +155,11 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { organizerTypeText, starText } from "@/utils/labels";
 import { storyAlbum } from "@/utils/story";
-import WeatherChart from "@/components/WeatherChart.vue";
 import TripPrices from "@/components/TripPrices.vue";
 import RouteStory from "@/components/RouteStory.vue";
 
 const props = defineProps({
   route: { type: Object, default: null },
-  weather: { type: Object, default: null },
   reviews: { type: Object, default: () => ({ list: [], count: 0, avg: 0 }) },
   faqs: { type: Array, default: () => [] },
   embedded: { type: Boolean, default: false },

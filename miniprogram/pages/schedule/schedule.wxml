@@ -92,7 +92,12 @@
       </view>
       <view class="muted">{{s.leaderRecruitCopy}}</view>
     </block>
-    <view class="weather" wx:if="{{!isActivity && weather}}">
+  </view>
+</view>
+<view class="pad title" wx:if="{{!isActivity && weather}}">出行天气</view>
+<view class="card" wx:if="{{!isActivity && weather}}">
+  <view class="pad">
+    <view class="weather">
       <view>{{weather.place}} {{weather.summary}}</view>
       <view class="muted">{{weather.tmin}}~{{weather.tmax}}℃ · 风 {{weather.wind}}km/h</view>
       <canvas wx:if="{{weather.hourly && weather.hourly.length}}" type="2d" id="weatherChart" class="wx-chart" disable-scroll="true"></canvas>
