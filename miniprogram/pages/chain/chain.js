@@ -1,9 +1,10 @@
 const { request } = require("../../utils/request");
+const { hostName } = require("../../utils/feed-card");
 Page({
   data: { list: [] },
   onShow() {
     request("/schedules")
-      .then((r) => this.setData({ list: r.data || [] }))
+      .then((r) => this.setData({ list: (r.data || []).map((s) => Object.assign({}, s, { host: hostName(s) })) }))
       .catch(() => this.setData({ list: [] }));
   },
   go(e) { wx.navigateTo({ url: "/pages/schedule/schedule?id=" + e.currentTarget.dataset.id }); },

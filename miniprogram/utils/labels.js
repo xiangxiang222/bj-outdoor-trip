@@ -31,7 +31,9 @@ function payStatusText(status) {
 }
 
 function organizerTypeText(type) {
-  return type === "company" ? "公司团" : "个人拼团";
+  if (type === "company") return "公司团";
+  if (type === "campus") return "高校团";
+  return "个人拼团";
 }
 
 function scheduleStatusText(status) {

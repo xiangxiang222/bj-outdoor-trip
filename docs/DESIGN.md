@@ -110,7 +110,7 @@ User 1──n Favorite / PointsLedger / Review
 | 字段 | 说明 |
 | --- | --- |
 | `channel` | `trip` 山野团（默认）/ `activity` 同城局 |
-| `organizer_type` | `individual` 个人拼团 / `company` 公司团 |
+| `organizer_type` | `individual` 个人拼团 / `company` 公司团 / `campus` 高校团（付款同个人，学校名写在 `company_name`） |
 | `max_seats` | 山野团取自车型座位数；同城局为人数上限 |
 | `share_token` | 分享短链 |
 | `status` | `recruiting` 招募 / `confirmed` 已成团 / `cancelled` 已解散；满员与结束可由人数与日期推导 |
@@ -133,7 +133,7 @@ User 1──n Favorite / PointsLedger / Review
 - 必须填写出行人姓名、手机。
 - **山野团**另须 **18 位身份证**（校验出生日期与校验码；用于性别/生日/籍贯统计；禁止同团重复有效证件）、紧急联系人（11 位手机，且不能与出行人相同），并确认健康声明与户外风险告知。可选座位、保险、补给。
 - **同城局**只校验姓名与 11 位手机，按 `user_id` 去重（「你已报名本局」），不写身份证、紧急联系人与弃权时间。成功文案「已报名，到场即可」（免费时）；满员候补「本局已满」，不再说「本车」。
-- 个人拼团：`pay_status=unpaid`（应付 > 0）或 `paid`（0 元），占座，`needPay=false`，报名时不生成预支付单
+- 个人拼团 / 高校团：`pay_status=unpaid`（应付 > 0）或 `paid`（0 元），占座，`needPay=false`，报名时不生成预支付单
 - 公司团：`pay_status=company_pending`，金额暂记 0，由开团公司或后台结算
 - `status`：`joined` / `applied`（报超会抽待确认） / `waitlist` / `cancelled`。候补与 `applied` 不占座；有人取消后按报名顺序（抽签团按 `draw_rank`）递补
 - 有效报名人数（不含虚拟用户）≥ 成团人数时排期接口 `guaranteed=true`（铁定出发）

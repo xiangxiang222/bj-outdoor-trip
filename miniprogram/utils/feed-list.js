@@ -72,11 +72,18 @@ function companyNameOf(row) {
 }
 
 function schoolsOf(row) {
-  const list = row && row.eligibility && row.eligibility.schools;
-  return (Array.isArray(list) ? list : []).map((s) => String(s || "").trim()).filter(Boolean);
+  const list = (row && row.eligibility && Array.isArray(row.eligibility.schools) ? row.eligibility.schools : [])
+    .map((s) => String(s || "").trim())
+    .filter(Boolean);
+  const organizer = (row && (row.organizerType || row.organizer_type)) || "";
+  const host = companyNameOf(row);
+  if (organizer === "campus" && host && list.indexOf(host) < 0) list.unshift(host);
+  return list;
 }
 
 function isCampusTrip(row) {
+  const organizer = (row && (row.organizerType || row.organizer_type)) || "";
+  if (organizer === "campus") return true;
   const el = (row && row.eligibility) || {};
   return !!(el.studentOnly || el.alumniOk || el.enabled || schoolsOf(row).length);
 }
@@ -101,8 +108,9 @@ function hostFacets(rows) {
   const seenC = {};
   const seenS = {};
   (Array.isArray(rows) ? rows : []).filter(isListable).forEach((row) => {
+    const organizer = (row && (row.organizerType || row.organizer_type)) || "";
     const company = companyNameOf(row);
-    if (company && !seenC[company]) {
+    if (organizer === "company" && company && !seenC[company]) {
       seenC[company] = true;
       companies.push(company);
     }

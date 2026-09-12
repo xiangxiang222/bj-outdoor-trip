@@ -58,6 +58,24 @@
   <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
     <view class="input">{{dateLabels[dateIndex]}}</view>
   </picker>
+  <view class="label">组织类型</view>
+  <picker mode="selector" range="{{organizerLabels}}" value="{{organizerIndex}}" bindchange="setOrganizer">
+    <view class="input">{{organizerLabels[organizerIndex]}}</view>
+  </picker>
+  <input
+    wx:if="{{form.organizerType === 'company'}}"
+    class="input"
+    placeholder="公司名称（公司开团必填）"
+    value="{{form.companyName}}"
+    bindinput="setCompanyName"
+  />
+  <input
+    wx:if="{{form.organizerType === 'campus'}}"
+    class="input"
+    placeholder="学校名称（高校开团必填）"
+    value="{{form.companyName}}"
+    bindinput="setCompanyName"
+  />
   <view class="label">车型</view>
   <picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">
     <view class="input">{{busNames[busIndex]}}</view>

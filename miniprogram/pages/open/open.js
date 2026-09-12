@@ -52,7 +52,8 @@ Page({
   data: {
     id: "",
     title: "",
-    types: ["个人开团（先报名，出行前付款）", "公司开团（统一支付）"],
+    types: ["个人开团（先报名，出行前付款）", "公司开团（先报名，最后统一支付）", "高校开团（先报名，出行前付款）"],
+    typeKeys: ["individual", "company", "campus"],
     typeIndex: 0,
     dates: [],
     dateLabels: [],
@@ -125,7 +126,8 @@ Page({
   },
   setType(e) {
     const i = Number(e.detail.value);
-    this.setData({ typeIndex: i, "form.organizerType": i === 1 ? "company" : "individual" });
+    const type = this.data.typeKeys[i] || "individual";
+    this.setData({ typeIndex: i, "form.organizerType": type });
   },
   setCo(e) {
     this.setData({ "form.companyName": e.detail.value });
@@ -158,6 +160,10 @@ Page({
     }
     if (form.organizerType === "company" && !form.companyName) {
       wx.showToast({ title: "公司开团请填写公司名称", icon: "none" });
+      return;
+    }
+    if (form.organizerType === "campus" && !form.companyName) {
+      wx.showToast({ title: "高校开团请填写学校", icon: "none" });
       return;
     }
     const minGroupSize = parseInt(String(form.minGroupSize), 10);

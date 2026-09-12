@@ -80,7 +80,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 
 | 方法 | 路径 | 鉴权 | 说明 |
 | --- | --- | --- | --- |
-| POST | `/schedules` | 用户 | 基于已有线路开团。可带 `offerType` `playTagIds` `studentOnly` `alumniOk` `oversub` `schools` `lotteryMode`（`off\|pre\|enroll\|both`） |
+| POST | `/schedules` | 用户 | 基于已有线路开团。`organizerType` 为 `individual` / `company` / `campus`。公司须 `companyName`，高校须学校名（`companyName` 或 `campusName`）。可带 `offerType` `playTagIds` `studentOnly` `alumniOk` `oversub` `schools` `lotteryMode`（`off\|pre\|enroll\|both`） |
 | POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `schools` `comboRule` `lotteryMode`。提交后 `review_status=pending`，审核通过才上首页或活动 Tab |
 | POST | `/upload` | 用户 | 发团封面。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |

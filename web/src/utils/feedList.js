@@ -82,11 +82,18 @@ export function companyNameOf(row) {
 }
 
 export function schoolsOf(row) {
-  const list = row?.eligibility?.schools;
-  return (Array.isArray(list) ? list : []).map((s) => String(s || "").trim()).filter(Boolean);
+  const list = (Array.isArray(row?.eligibility?.schools) ? row.eligibility.schools : [])
+    .map((s) => String(s || "").trim())
+    .filter(Boolean);
+  const organizer = row?.organizerType || row?.organizer_type || "";
+  const host = companyNameOf(row);
+  if (organizer === "campus" && host && !list.includes(host)) list.unshift(host);
+  return list;
 }
 
 export function isCampusTrip(row) {
+  const organizer = row?.organizerType || row?.organizer_type || "";
+  if (organizer === "campus") return true;
   const el = row?.eligibility || {};
   return !!(el.studentOnly || el.alumniOk || el.enabled || schoolsOf(row).length);
 }
@@ -110,8 +117,9 @@ export function hostFacets(rows) {
   const seenC = new Set();
   const seenS = new Set();
   for (const row of (Array.isArray(rows) ? rows : []).filter(isListable)) {
+    const organizer = row?.organizerType || row?.organizer_type || "";
     const company = companyNameOf(row);
-    if (company && !seenC.has(company)) {
+    if (organizer === "company" && company && !seenC.has(company)) {
       seenC.add(company);
       companies.push(company);
     }

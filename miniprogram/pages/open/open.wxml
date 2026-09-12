@@ -17,6 +17,13 @@
   value="{{form.companyName}}"
   bindinput="setCo"
 />
+<input
+  wx:if="{{form.organizerType === 'campus'}}"
+  class="input"
+  placeholder="学校名称（高校开团必填）"
+  value="{{form.companyName}}"
+  bindinput="setCo"
+/>
 
 <view class="label">大巴车型</view>
 <picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">

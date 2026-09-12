@@ -38,6 +38,7 @@ export function payStatusText(status) {
 
 export function organizerTypeText(type, short = false) {
   if (type === "company") return short ? "公司" : "公司团";
+  if (type === "campus") return short ? "高校" : "高校团";
   return short ? "个人" : "个人拼团";
 }
 

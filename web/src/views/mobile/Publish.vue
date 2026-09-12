@@ -107,11 +107,18 @@
       <input class="input" type="date" v-model="form.startDate" />
       <label>组织类型</label>
       <select class="select" v-model="form.organizerType">
-        <option value="individual">个人开团</option>
-        <option value="company">公司开团</option>
+        <option value="individual">个人开团（先报名，出行前付款）</option>
+        <option value="company">公司开团（先报名，最后统一支付）</option>
+        <option value="campus">高校开团（先报名，出行前付款）</option>
       </select>
       <label v-if="form.organizerType === 'company'">公司名称</label>
-      <input v-if="form.organizerType === 'company'" class="input" v-model="form.companyName" />
+      <label v-if="form.organizerType === 'campus'">学校名称</label>
+      <input
+        v-if="form.organizerType === 'company' || form.organizerType === 'campus'"
+        class="input"
+        v-model="form.companyName"
+        :placeholder="form.organizerType === 'campus' ? '例如：北京大学' : '公司全称'"
+      />
       <label>大巴车型</label>
       <select class="select" v-model="form.busTypeId">
         <option v-for="b in buses" :key="b.id" :value="b.id">{{ b.name }}（{{ b.seats }}座）</option>
@@ -214,6 +221,18 @@ const kindPlaceholder = computed(() => {
 });
 
 watch(
+  () => form.value.organizerType,
+  (type) => {
+    if (type === "campus" && !form.value.companyName && store.profile?.school) {
+      form.value.companyName = store.profile.school;
+    }
+    if (type === "company" && !form.value.companyName && store.profile?.companyName) {
+      form.value.companyName = store.profile.companyName;
+    }
+  }
+);
+
+watch(
   () => form.value.channel,
   (channel) => {
     if (channel === "activity") {
@@ -300,6 +319,14 @@ async function submit() {
         loading.value = false;
         return;
       }
+    } else if (payload.organizerType === "company" && !String(payload.companyName || "").trim()) {
+      err.value = "公司开团请填写公司名称";
+      loading.value = false;
+      return;
+    } else if (payload.organizerType === "campus" && !String(payload.companyName || "").trim()) {
+      err.value = "高校开团请填写学校";
+      loading.value = false;
+      return;
     }
     const res = await http.post("/trips", payload);
     router.push("/m/schedule/" + res.data.id + "?posted=1");

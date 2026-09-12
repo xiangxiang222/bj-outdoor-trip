@@ -7,9 +7,16 @@
     <select class="select" v-model="form.organizerType">
       <option value="individual">个人开团（先报名，出行前付款）</option>
       <option value="company">公司开团（先报名，最后统一支付）</option>
+      <option value="campus">高校开团（先报名，出行前付款）</option>
     </select>
     <label v-if="form.organizerType === 'company'">公司名称</label>
-    <input v-if="form.organizerType === 'company'" class="input" v-model="form.companyName" />
+    <label v-if="form.organizerType === 'campus'">学校名称</label>
+    <input
+      v-if="form.organizerType === 'company' || form.organizerType === 'campus'"
+      class="input"
+      v-model="form.companyName"
+      :placeholder="form.organizerType === 'campus' ? '例如：北京大学' : '公司全称'"
+    />
     <label>大巴车型</label>
     <select class="select" v-model="form.busTypeId">
       <option v-for="b in buses" :key="b.id" :value="b.id">{{ b.name }}（{{ b.seats }}座）</option>
@@ -46,7 +53,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
@@ -76,6 +83,18 @@ const form = ref({
   schools: "",
 });
 
+watch(
+  () => form.value.organizerType,
+  (type) => {
+    if (type === "campus" && !form.value.companyName && store.profile?.school) {
+      form.value.companyName = store.profile.school;
+    }
+    if (type === "company" && !form.value.companyName && store.profile?.companyName) {
+      form.value.companyName = store.profile.companyName;
+    }
+  }
+);
+
 onMounted(async () => {
   if (!requireLogin(store, router, route)) return;
   routeInfo.value = (await http.get("/routes/" + route.params.id)).data;
@@ -92,6 +111,14 @@ function toggleTag(id) {
 }
 
 async function submit() {
+  if (form.value.organizerType === "company" && !String(form.value.companyName || "").trim()) {
+    err.value = "公司开团请填写公司名称";
+    return;
+  }
+  if (form.value.organizerType === "campus" && !String(form.value.companyName || "").trim()) {
+    err.value = "高校开团请填写学校";
+    return;
+  }
   try {
     const res = await http.post("/schedules", { routeId: Number(route.params.id), ...form.value });
     router.push("/m/schedule/" + res.data.id);
