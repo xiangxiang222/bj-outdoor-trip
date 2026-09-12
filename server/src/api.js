@@ -38,7 +38,7 @@ const { optionsForSchedule, setFallbacks, listFallbacks } = require("./services/
 const { generateVirtualUsers, setVirtualUsersForSchedule } = require("./services/virtual");
 const { deleteAccount } = require("./services/account");
 const { drawPre, drawPost, claimPrizes, lotteryState, lotteryPublic } = require("./services/lottery");
-const { getAdminLottery, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate } = require("./services/lottery-admin");
+const { getAdminLottery, listAdminLotteries, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate } = require("./services/lottery-admin");
 const { completeTrip, afterTripState } = require("./services/aftertrip");
 const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
@@ -61,6 +61,7 @@ const {
   sharePayload,
   loadCampaign,
   previewRuleTargets,
+  searchPeople,
 } = require("./services/coupons");
 const {
   publicStaff,
@@ -1959,6 +1960,10 @@ router.put("/admin/schedules/:id/limit", authAdmin, requireCap("ops"), (req, res
   res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id), req) });
 });
 
+router.get("/admin/lotteries", authAdmin, requireCap("ops"), (req, res) => {
+  res.json({ ok: true, data: listAdminLotteries() });
+});
+
 router.get("/admin/schedules/:id/lottery", authAdmin, requireCap("ops"), (req, res) => {
   try {
     res.json({ ok: true, data: getAdminLottery(req.params.id) });
@@ -2096,21 +2101,58 @@ router.get("/admin/coupons/targets", authAdmin, requireCap("ops"), (req, res) =>
   }
 });
 
+router.get("/admin/coupons/people", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    res.json({ ok: true, data: searchPeople(req.query || {}) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
 router.post("/admin/coupons", authAdmin, requireCap("ops"), (req, res) => {
   try {
     const body = req.body || {};
     const created = createCampaign(body);
+    const guaranteedIds = created.allowUserIds || [];
+    let campaign = created;
+    let guaranteedGranted = 0;
+    if (guaranteedIds.length) {
+      const granted = grantCoupons(
+        created.id,
+        {
+          userIds: guaranteedIds,
+          sms: body.sms === true || body.sms === 1 || body.sms === "1",
+        },
+        req
+      );
+      campaign = granted.campaign;
+      guaranteedGranted = granted.granted;
+    }
     if (body.grantByRule || body.grant_by_rule) {
       const grant = grantCoupons(created.id, { byRule: true, sms: body.sms }, req);
       return res.json({
         ok: true,
-        data: { ...grant.campaign, granted: grant.granted, matched: grant.matched, randomized: grant.randomized },
+        data: {
+          ...grant.campaign,
+          granted: grant.granted + guaranteedGranted,
+          matched: grant.matched,
+          randomized: grant.randomized,
+        },
         message: grant.randomized
           ? `符合 ${grant.matched} 人，已随机发放 ${grant.granted} 张`
-          : `已按条件发放 ${grant.granted} 张`,
+          : guaranteedGranted
+            ? `已发行，指定 ${guaranteedGranted} 人已入账，并按条件发放 ${grant.granted} 张`
+            : `已按条件发放 ${grant.granted} 张`,
       });
     }
-    res.json({ ok: true, data: created });
+    if (guaranteedGranted) {
+      return res.json({
+        ok: true,
+        data: { ...campaign, granted: guaranteedGranted },
+        message: `已发行，指定 ${guaranteedGranted} 人已入账`,
+      });
+    }
+    res.json({ ok: true, data: campaign });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }

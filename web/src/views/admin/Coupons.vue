@@ -4,7 +4,7 @@
       <h2>优惠券</h2>
       <el-button type="success" @click="open">发行优惠券</el-button>
     </div>
-    <p class="muted">可发指定团或通用券（全部个人拼团）。可按久未参加、出行次数定向，人多过库存时随机抽发。领取后可限时。默认与会员/学生价取低；勾选叠加则先打折再减券。公司团不可用。</p>
+    <p class="muted">可发指定团或通用券。类型含几折、直减、免费。定向可从用户列表搜索选人；仅会员券可指定必领用户，库存先留给他们。领取后可限时。默认与会员/学生价取低。公司团不可用。</p>
     <el-table :data="list" stripe>
       <el-table-column prop="code" label="口令" width="110" />
       <el-table-column prop="name" label="名称" min-width="140" />
@@ -12,8 +12,8 @@
         <template #default="{ row }">{{ row.universal ? "全部团" : `${row.routeTitle || ""} ${row.startDate || ""}` }}</template>
       </el-table-column>
       <el-table-column prop="label" label="优惠" width="90" />
-      <el-table-column label="对象" width="90">
-        <template #default="{ row }">{{ audienceText(row.audience) }}</template>
+      <el-table-column label="对象" width="120">
+        <template #default="{ row }">{{ audienceText(row.audience) }}{{ row.allowUserIds?.length ? ` · 必领${row.allowUserIds.length}` : "" }}</template>
       </el-table-column>
       <el-table-column label="条件" min-width="140">
         <template #default="{ row }">{{ ruleText(row) }}</template>
@@ -41,7 +41,7 @@
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="showCreate" title="发行优惠券" width="580px">
+    <el-dialog v-model="showCreate" class="coupon-dialog" title="发行优惠券" width="640px">
       <el-form label-width="120px">
         <el-form-item label="适用范围">
           <el-radio-group v-model="form.universal">
@@ -62,10 +62,32 @@
             <el-radio label="directed">定向发放</el-radio>
           </el-radio-group>
         </el-form-item>
+        <el-form-item v-if="form.audience === 'member' || form.audience === 'directed'" :label="form.audience === 'member' ? '指定必领' : '指定发放'">
+          <el-select
+            v-model="form.guaranteedUserIds"
+            multiple
+            filterable
+            remote
+            reserve-keyword
+            clearable
+            :remote-method="searchPeople"
+            :loading="peopleLoading"
+            placeholder="搜昵称或手机，可多选"
+            style="width:100%"
+          >
+            <el-option v-for="u in peopleOptions" :key="u.id" :label="peopleLabel(u)" :value="u.id" />
+          </el-select>
+          <p class="muted" style="margin:6px 0 0">
+            {{ form.audience === "member"
+              ? "选中的人发行后立刻入账，库存先留给他们；其余会员领剩下的。"
+              : "选中的人发行后立刻入账。也可发行后再到「发放」里补选。" }}
+          </p>
+        </el-form-item>
         <el-form-item label="类型">
           <el-radio-group v-model="form.kind">
             <el-radio label="percent">几折</el-radio>
             <el-radio label="amount">直减</el-radio>
+            <el-radio label="free">免费</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item v-if="form.kind === 'percent'" label="几折">
@@ -75,16 +97,19 @@
         <el-form-item v-if="form.kind === 'percent'" label="最高减">
           <el-input-number v-model="form.capAmount" :min="1" /> 元
         </el-form-item>
-        <el-form-item v-else label="减免">
+        <el-form-item v-else-if="form.kind === 'amount'" label="减免">
           <el-input-number v-model="form.value" :min="1" /> 元
         </el-form-item>
+        <el-form-item v-else label="说明">
+          <span class="muted">团费为 0，保险仍另计。</span>
+        </el-form-item>
         <el-form-item label="发行数量"><el-input-number v-model="form.total" :min="1" /></el-form-item>
-        <el-form-item label="保底价"><el-input-number v-model="form.floorPrice" :min="0" /> 元，0 为不限</el-form-item>
+        <el-form-item v-if="form.kind !== 'free'" label="保底价"><el-input-number v-model="form.floorPrice" :min="0" /> 元，0 为不限</el-form-item>
         <el-form-item label="领取后有效">
           <el-input-number v-model="form.validHours" :min="0" /> 小时
           <span class="muted" style="margin-left:8px">0 为不限时，24 为一天</span>
         </el-form-item>
-        <el-form-item label="叠加使用">
+        <el-form-item v-if="form.kind !== 'free'" label="叠加使用">
           <el-checkbox v-model="form.stackMember">叠加会员价</el-checkbox>
           <el-checkbox v-model="form.stackStudent">叠加学生价</el-checkbox>
         </el-form-item>
@@ -119,14 +144,30 @@
       </div>
     </el-dialog>
 
-    <el-dialog v-model="showGrant" title="定向发放" width="520px">
+    <el-dialog v-model="showGrant" class="coupon-dialog" title="定向发放" width="560px">
       <p class="muted" v-if="grantRow">{{ grantRow.name }} · 余 {{ grantRow.remain }} 张。每人一张，重复发放会跳过。{{ ruleText(grantRow) !== "不限" ? "发行条件：" + ruleText(grantRow) + "。" : "" }}</p>
       <el-form label-width="100px">
         <el-form-item label="按条件">
           <el-checkbox v-model="grantForm.byRule">按发行时的久未参加 / 出行次数发放，人多随机抽</el-checkbox>
         </el-form-item>
+        <el-form-item label="选人">
+          <el-select
+            v-model="grantForm.userIds"
+            multiple
+            filterable
+            remote
+            reserve-keyword
+            clearable
+            :remote-method="searchPeople"
+            :loading="peopleLoading"
+            placeholder="从用户列表搜昵称或手机"
+            style="width:100%"
+          >
+            <el-option v-for="u in peopleOptions" :key="u.id" :label="peopleLabel(u)" :value="u.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="手机号">
-          <el-input v-model="grantForm.phonesText" type="textarea" rows="3" placeholder="已注册手机，逗号或换行分隔" />
+          <el-input v-model="grantForm.phonesText" type="textarea" rows="2" placeholder="也可直接填已注册手机，逗号或换行分隔" />
         </el-form-item>
         <el-form-item label="全部会员">
           <el-checkbox v-model="grantForm.allMembers">发给当前全部有效会员</el-checkbox>
@@ -171,13 +212,15 @@ const showLedger = ref(false);
 const showGrant = ref(false);
 const granting = ref(false);
 const grantRow = ref(null);
-const grantForm = ref({ phonesText: "", allMembers: false, sms: true });
+const grantForm = ref({ phonesText: "", allMembers: false, sms: true, userIds: [] });
 const saving = ref(false);
 const share = ref(null);
 const holders = ref([]);
 const form = ref({});
 const preview = ref(null);
 const previewHint = ref("");
+const peopleOptions = ref([]);
+const peopleLoading = ref(false);
 
 function audienceText(s) {
   if (s === "member") return "仅会员";
@@ -207,6 +250,25 @@ function stackText(row) {
 }
 function tripLabel(s) {
   return `${s.route?.title || ""} ${s.startDate}（余${s.remain}）`;
+}
+function peopleLabel(u) {
+  return `${u.nickname || "用户"} ${u.phone || ""}${u.isMember ? " · 会员" : ""}`;
+}
+function mergePeople(rows) {
+  const map = new Map(peopleOptions.value.map((u) => [u.id, u]));
+  for (const u of rows || []) map.set(u.id, u);
+  peopleOptions.value = [...map.values()];
+}
+async function searchPeople(q) {
+  peopleLoading.value = true;
+  try {
+    const data = (await http.get("/admin/coupons/people", { params: { q: q || "", limit: 40 } })).data || [];
+    mergePeople(data);
+  } catch {
+    /* keep existing options */
+  } finally {
+    peopleLoading.value = false;
+  }
 }
 
 async function load() {
@@ -243,10 +305,13 @@ function open() {
     stackMember: false,
     stackStudent: false,
     grantByRule: false,
+    guaranteedUserIds: [],
   };
   preview.value = null;
   previewHint.value = "";
+  peopleOptions.value = [];
   showCreate.value = true;
+  searchPeople("");
 }
 
 async function previewTargets() {
@@ -275,7 +340,12 @@ async function save() {
     const payload = { ...form.value };
     if (payload.universal) payload.scheduleId = 0;
     if (payload.kind === "percent") delete payload.value;
-    else delete payload.fold;
+    else if (payload.kind === "free") {
+      delete payload.fold;
+      delete payload.value;
+      delete payload.capAmount;
+      payload.floorPrice = 0;
+    } else delete payload.fold;
     const res = await http.post("/admin/coupons", payload);
     ElMessage.success(res.message || (res.data?.granted ? `已发行并发放 ${res.data.granted} 张` : "已发行"));
     showCreate.value = false;
@@ -299,8 +369,16 @@ async function setStatus(row, status) {
 
 async function openGrant(row) {
   grantRow.value = row;
-  grantForm.value = { phonesText: "", allMembers: false, sms: true, byRule: !!(row.idleMonths || row.minTrips) };
+  grantForm.value = {
+    phonesText: "",
+    allMembers: false,
+    sms: true,
+    byRule: !!(row.idleMonths || row.minTrips),
+    userIds: [],
+  };
+  peopleOptions.value = [];
   showGrant.value = true;
+  searchPeople("");
 }
 
 async function saveGrant() {
@@ -347,3 +425,10 @@ async function copy(text) {
   }
 }
 </script>
+
+<style>
+.coupon-dialog .el-dialog__body {
+  max-height: 70vh;
+  overflow: auto;
+}
+</style>

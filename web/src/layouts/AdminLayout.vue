@@ -56,6 +56,7 @@
           <router-link v-if="can('roster')" to="/admin/schedules">拼团与成本</router-link>
           <router-link v-if="can('roster')" to="/admin/enrollments">报名与收款</router-link>
           <router-link v-if="can('ops')" to="/admin/coupons">优惠券</router-link>
+          <router-link v-if="can('ops')" to="/admin/lottery">抽奖</router-link>
         </nav>
         <nav v-if="can('ops')" class="admin-nav-group">
           <div class="admin-nav-label">用户</div>

@@ -182,6 +182,7 @@ function instanceDTO(coupon) {
 
 function campaignLabel(row) {
   if (!row) return "";
+  if (row.kind === "free") return "免费";
   if (row.kind === "percent") {
     const fold = Number(row.value) / 10;
     const text = Number.isInteger(fold) ? String(fold) : String(fold);
@@ -194,11 +195,126 @@ function remainOf(row) {
   return Math.max(0, Number(row.total || 0) - Number(row.claimed || 0));
 }
 
+function parseUserIdList(raw) {
+  const list = [];
+  if (Array.isArray(raw)) list.push(...raw);
+  else if (raw != null && raw !== "") String(raw).split(/[\s,，;；]+/).forEach((x) => list.push(x));
+  const ids = [];
+  const seen = new Set();
+  for (const item of list) {
+    const n = Number(item);
+    if (!Number.isInteger(n) || n <= 0 || seen.has(n)) continue;
+    seen.add(n);
+    ids.push(n);
+  }
+  return ids;
+}
+
+function loadRealUsersByIds(ids) {
+  const db = getDb();
+  const users = [];
+  for (const id of ids) {
+    const user = db.prepare("SELECT * FROM users WHERE id=?").get(id);
+    if (!user || user.deleted_at) fail(400, `用户 ${id} 不存在`);
+    if (Number(user.is_virtual || 0) === 1) fail(400, `${user.nickname || id} 是虚拟用户，不能发券`);
+    users.push(user);
+  }
+  return users;
+}
+
+function saveAllowlist(campaignId, userIds) {
+  const db = getDb();
+  db.prepare("DELETE FROM coupon_allowlist WHERE campaign_id=?").run(campaignId);
+  const ins = db.prepare("INSERT INTO coupon_allowlist (campaign_id, user_id) VALUES (?,?)");
+  for (const id of userIds) ins.run(campaignId, id);
+}
+
+function isAllowlisted(campaignId, userId) {
+  if (!campaignId || !userId) return false;
+  return !!getDb()
+    .prepare("SELECT user_id FROM coupon_allowlist WHERE campaign_id=? AND user_id=?")
+    .get(campaignId, userId);
+}
+
+function reservedUnclaimed(campaignId) {
+  return getDb()
+    .prepare(
+      `SELECT COUNT(*) AS c FROM coupon_allowlist a
+       WHERE a.campaign_id=?
+         AND NOT EXISTS (
+           SELECT 1 FROM user_coupons uc WHERE uc.campaign_id=a.campaign_id AND uc.user_id=a.user_id
+         )`
+    )
+    .get(campaignId).c;
+}
+
+function publicRemainOf(row) {
+  return Math.max(0, remainOf(row) - reservedUnclaimed(row.id));
+}
+
+function visibleRemain(row, user) {
+  const raw = remainOf(row);
+  if (user && isAllowlisted(row.id, user.id)) return raw;
+  return publicRemainOf(row);
+}
+
+function allowUsersOf(campaignId) {
+  return getDb()
+    .prepare(
+      `SELECT u.id, u.nickname, u.phone, u.is_member, u.member_expire_at
+       FROM coupon_allowlist a
+       JOIN users u ON u.id=a.user_id
+       WHERE a.campaign_id=?
+       ORDER BY a.user_id`
+    )
+    .all(campaignId)
+    .map((u) => ({
+      id: u.id,
+      nickname: u.nickname,
+      phone: u.phone,
+      isMember: isMember(u),
+    }));
+}
+
+function searchPeople(query = {}) {
+  const db = getDb();
+  const q = String(query.q || "").trim();
+  const ids = parseUserIdList(query.ids || query.userIds || query.user_ids);
+  const limit = parseNonNegInt(query.limit, 30, 80, "人数上限不正确") || 30;
+  let sql = "SELECT * FROM users WHERE deleted_at IS NULL AND IFNULL(is_virtual,0)=0";
+  const args = [];
+  if (ids.length) {
+    sql += ` AND id IN (${ids.map(() => "?").join(",")})`;
+    args.push(...ids);
+  } else if (q) {
+    sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ?)";
+    args.push(`%${q}%`, `%${q}%`);
+  }
+  sql += " ORDER BY is_member DESC, id DESC LIMIT ?";
+  args.push(limit);
+  return db
+    .prepare(sql)
+    .all(...args)
+    .map((u) => ({
+      id: u.id,
+      nickname: u.nickname || "",
+      phone: u.phone || "",
+      isMember: isMember(u),
+    }));
+}
+
+function assertClaimStock(campaign, userId) {
+  if (remainOf(campaign) <= 0) fail(400, "该券已领完");
+  if (!isAllowlisted(campaign.id, userId) && publicRemainOf(campaign) <= 0) fail(400, "该券已领完");
+}
+
 function couponedTripPay(tripPrice, campaign) {
   const trip = Math.max(0, Math.round(Number(tripPrice || 0)));
   if (!campaign || trip <= 0) return trip;
   let next = trip;
-  if (campaign.kind === "percent") {
+  if (campaign.kind === "free") {
+    next = 0;
+  } else if (campaign.kind === "percent") {
     const rate = Number(campaign.value || 0) / 100;
     next = Math.round(trip * rate);
     const cap = Number(campaign.cap_amount || 0);
@@ -264,21 +380,29 @@ function createCampaign(body = {}) {
     if (sch.organizer_type === "company") fail(400, "公司团不可发行优惠券");
     scheduleId = sch.id;
   }
-  const kind = body.kind === "percent" ? "percent" : body.kind === "amount" ? "amount" : "";
-  if (!kind) fail(400, "请选择折扣或满减");
-  let value;
+  const kind =
+    body.kind === "percent" ? "percent" : body.kind === "amount" ? "amount" : body.kind === "free" ? "free" : "";
+  if (!kind) fail(400, "请选择折扣、满减或免费");
+  let value = 0;
   let capAmount = Number(body.capAmount || body.cap_amount || 0);
+  let floorPrice = Math.max(0, Number(body.floorPrice || body.floor_price || 0) || 0);
   if (kind === "percent") {
     value = parsePercentValue(body);
     if (!Number.isFinite(capAmount) || capAmount < 1) fail(400, "折扣券请填写最高减免金额");
-  } else {
+  } else if (kind === "amount") {
     value = Number(body.value);
     if (!Number.isFinite(value) || value < 1) fail(400, "请填写减免金额");
     capAmount = capAmount > 0 ? capAmount : 0;
+  } else {
+    value = 0;
+    capAmount = 0;
+    floorPrice = 0;
   }
   const total = Number(body.total);
   if (!Number.isFinite(total) || total < 1) fail(400, "请填写发行数量");
-  const floorPrice = Math.max(0, Number(body.floorPrice || body.floor_price || 0) || 0);
+  const guaranteedIds = parseUserIdList(body.guaranteedUserIds ?? body.guaranteed_user_ids);
+  if (guaranteedIds.length) loadRealUsersByIds(guaranteedIds);
+  if (guaranteedIds.length > Math.round(total)) fail(400, "发行数量不能少于指定必领人数");
   const name = String(body.name || "").trim() || `${campaignLabel({ kind, value })}券`;
   const audience =
     body.audience === "member" || body.audience === "directed" ? body.audience : "public";
@@ -286,36 +410,43 @@ function createCampaign(body = {}) {
   const validHours = parseValidHours(body, 0);
   const idleMonths = parseIdleMonths(body, 0);
   const minTrips = parseMinTrips(body, 0);
-  const stackMember = parseFlag(body.stackMember != null ? body.stackMember : body.stack_member, 0);
-  const stackStudent = parseFlag(body.stackStudent != null ? body.stackStudent : body.stack_student, 0);
-  const info = db
-    .prepare(
-      `INSERT INTO coupon_campaigns
-        (code,schedule_id,name,kind,value,cap_amount,floor_price,total,claimed,per_user_limit,claim_start,claim_end,use_start,use_end,valid_hours,idle_months,min_trips,stack_member,stack_student,audience,status)
-       VALUES (?,?,?,?,?,?,?,?,0,1,?,?,?,?,?,?,?,?,?,?,?)`
-    )
-    .run(
-      code,
-      scheduleId,
-      name,
-      kind,
-      value,
-      capAmount,
-      floorPrice,
-      Math.round(total),
-      body.claimStart || body.claim_start || null,
-      body.claimEnd || body.claim_end || null,
-      body.useStart || body.use_start || null,
-      body.useEnd || body.use_end || null,
-      validHours,
-      idleMonths,
-      minTrips,
-      stackMember,
-      stackStudent,
-      audience,
-      "on"
-    );
-  return publicAdminCampaign(loadCampaign(Number(info.lastInsertRowid)));
+  const stackMember =
+    kind === "free" ? 0 : parseFlag(body.stackMember != null ? body.stackMember : body.stack_member, 0);
+  const stackStudent =
+    kind === "free" ? 0 : parseFlag(body.stackStudent != null ? body.stackStudent : body.stack_student, 0);
+  const run = db.transaction(() => {
+    const info = db
+      .prepare(
+        `INSERT INTO coupon_campaigns
+          (code,schedule_id,name,kind,value,cap_amount,floor_price,total,claimed,per_user_limit,claim_start,claim_end,use_start,use_end,valid_hours,idle_months,min_trips,stack_member,stack_student,audience,status)
+         VALUES (?,?,?,?,?,?,?,?,0,1,?,?,?,?,?,?,?,?,?,?,?)`
+      )
+      .run(
+        code,
+        scheduleId,
+        name,
+        kind,
+        value,
+        capAmount,
+        floorPrice,
+        Math.round(total),
+        body.claimStart || body.claim_start || null,
+        body.claimEnd || body.claim_end || null,
+        body.useStart || body.use_start || null,
+        body.useEnd || body.use_end || null,
+        validHours,
+        idleMonths,
+        minTrips,
+        stackMember,
+        stackStudent,
+        audience,
+        "on"
+      );
+    const id = Number(info.lastInsertRowid);
+    if (guaranteedIds.length) saveAllowlist(id, guaranteedIds);
+    return id;
+  });
+  return publicAdminCampaign(loadCampaign(run()));
 }
 
 function updateCampaign(id, body = {}) {
@@ -481,15 +612,16 @@ function claimCampaign(userId, code) {
       return { campaign, coupon: expireIfNeeded(exist, campaign), already: true };
     }
     const audience = campaign.audience || "public";
-    if (audience === "directed") fail(400, "该券需由后台发放");
-    if (audience === "member") {
+    const reserved = isAllowlisted(campaign.id, userId);
+    if (audience === "directed" && !reserved) fail(400, "该券需由后台发放");
+    if (audience === "member" && !reserved) {
       const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
       if (!isMember(user)) fail(400, "仅会员可领取");
     }
     if (campaign.status !== "on") fail(400, campaign.status === "paused" ? "该券已暂停领取" : "该券已停用");
     if (!inWindow(campaign.claim_start, campaign.claim_end)) fail(400, "不在领取时间内");
-    if (Number(campaign.claimed) >= Number(campaign.total)) fail(400, "该券已领完");
-    assertClaimRules(userId, campaign);
+    assertClaimStock(campaign, userId);
+    if (!reserved) assertClaimRules(userId, campaign);
     const coupon = insertUserCoupon(campaign.id, userId);
     return { campaign: loadCampaign(campaign.id), coupon, already: false };
   });
@@ -719,7 +851,7 @@ function publicCampaignDTO(row, req, extras = {}) {
     floorPrice: Number(row.floor_price || 0),
     total: Number(row.total || 0),
     claimed: Number(row.claimed || 0),
-    remain: remainOf(row),
+    remain: extras.remain != null ? extras.remain : remainOf(row),
     status: row.status,
     claimStart: row.claim_start || "",
     claimEnd: row.claim_end || "",
@@ -740,10 +872,14 @@ function publicCampaignDTO(row, req, extras = {}) {
 
 function publicAdminCampaign(row) {
   if (!row) return null;
+  const allowUsers = allowUsersOf(row.id);
   return {
     ...publicCampaignDTO(row, null),
     value: Number(row.value),
     fold: row.kind === "percent" ? Number(row.value) / 10 : null,
+    allowUserIds: allowUsers.map((u) => u.id),
+    allowUsers,
+    reserved: reservedUnclaimed(row.id),
   };
 }
 
@@ -801,18 +937,22 @@ function publicGet(code, user, req) {
   const quote = user ? quotePreview(campaign, user) : quotePreview(campaign, null);
   const audience = campaign.audience || "public";
   const already = !!(myCoupon && myCoupon.status !== "expired" && myCoupon.status !== "void");
-  const memberOk = audience !== "member" || isMember(user);
-  const ruleOk = !user || userMatchesRule(user.id, campaign);
+  const reserved = !!(user && isAllowlisted(campaign.id, user.id));
+  const memberOk = audience !== "member" || isMember(user) || reserved;
+  const ruleOk = !user || userMatchesRule(user.id, campaign) || reserved;
+  const stockOk = reserved ? remainOf(campaign) > 0 : publicRemainOf(campaign) > 0;
   return publicCampaignDTO(campaign, req, {
+    remain: visibleRemain(campaign, user),
     claimedByMe: already,
     myCoupon: instanceDTO(myCoupon),
     quote,
+    guaranteedForMe: reserved,
     claimable:
-      audience !== "directed" &&
+      (audience !== "directed" || reserved) &&
       memberOk &&
       ruleOk &&
       campaign.status === "on" &&
-      remainOf(campaign) > 0 &&
+      stockOk &&
       inWindow(campaign.claim_start, campaign.claim_end) &&
       !already,
   });
@@ -826,7 +966,7 @@ function publicSummaryForSchedule(scheduleId, req) {
       code: row.code,
       name: row.name,
       label: campaignLabel(row),
-      remain: remainOf(row),
+      remain: publicRemainOf(row),
       total: Number(row.total || 0),
       universal: isUniversalCampaign(row),
       url: req ? `${req.protocol}://${req.get("host")}/m/coupon/${row.code}` : `/m/coupon/${row.code}`,
@@ -977,4 +1117,6 @@ module.exports = {
   previewRuleTargets,
   userMatchesRule,
   couponBasePrice,
+  searchPeople,
+  parseUserIdList,
 };

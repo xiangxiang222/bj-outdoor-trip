@@ -188,6 +188,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/schedules/dissolve-all` | 解散全部进行中的团。body：`reason` |
 | POST | `/admin/schedules/:id/dissolve` | 解散单团。body：`reason` |
 | PUT | `/admin/schedules/:id/limit` | 报名限制。`studentOnly`、`alumniOk`、`oversub`、`schools`（数组或逗号分隔）。填高校或允许校友则自动仅师生 |
+| GET | `/admin/lotteries` | 后台抽奖列表：各团是否配置、时机、标题 |
 | GET | `/admin/schedules/:id/lottery` | 本团抽奖配置、指定名单、中奖记录 |
 | PUT | `/admin/schedules/:id/lottery` | 保存本团抽奖。`enabled` `drawMode`（`pre\|enroll\|both`）`title` `spinSeconds` `prizes[]`（2～8 个，含权重/库存/等级） |
 | POST | `/admin/schedules/:id/lottery/assigns` | 指定中奖。`userId` 或 `phone` + `prizeId` |
@@ -202,7 +203,8 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/schedules/:id/split` | 对已支付金额发起分账（已有记录则复用） |
 | GET | `/admin/coupons` | Query：`scheduleId`。券列表；带 `scheduleId` 时含该团券与通用券 |
 | GET | `/admin/coupons/targets` | Query：`idleMonths` `minTrips` `campaignId`。预览符合定向条件的人数 |
-| POST | `/admin/coupons` | 发行。`scheduleId` 或 `universal=true`（全部个人拼团）；`kind=percent|amount` `audience=public|member|directed`；折扣填 `fold`（8=8折）且必填 `capAmount`；立减填 `value`；`total`；可选 `validHours`（领取后有效小时，0 不限）、`idleMonths`（近 N 个月未参加）、`minTrips`（出行至少 N 次）、`stackMember` `stackStudent`、`grantByRule`（发行后按条件发放，人多过库存则随机） |
+| GET | `/admin/coupons/people` | Query：`q` 昵称/手机、`ids`、`limit`（默认 30）。真实用户列表，供发放选人 |
+| POST | `/admin/coupons` | 发行。`scheduleId` 或 `universal=true`（全部个人拼团）；`kind=percent|amount|free` `audience=public|member|directed`；折扣填 `fold`（8=8折）且必填 `capAmount`；立减填 `value`；免费无需金额；`total`；可选 `guaranteedUserIds`（指定必领，发行后立刻入账并预留库存）、`validHours`（领取后有效小时，0 不限）、`idleMonths`（近 N 个月未参加）、`minTrips`（出行至少 N 次）、`stackMember` `stackStudent`、`grantByRule`（发行后按条件发放，人多过库存则随机） |
 | GET | `/admin/coupons/:id` | 台账 `holders`（含 `expiresAt`）+ 短链/落地页/二维码 `share` |
 | PUT | `/admin/coupons/:id` | `status=on|paused|off`，可改名称、发行量（不得小于已领）、限时与定向/叠加字段 |
 | POST | `/admin/coupons/:id/grant` | 定向发放。`phones`/`phonesText`/`userIds`/`allMembers`，或 `byRule` 按发行条件发放（人多随机）。可选 `sms`（默认 true）。一人一码，写入 `sms_logs` 场景 `coupon`，每手机每天最多 1 条 |

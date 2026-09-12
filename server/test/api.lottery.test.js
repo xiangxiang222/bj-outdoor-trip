@@ -138,6 +138,32 @@ describe("lottery after-trip contest", () => {
     assert.equal(voted.body.data[0].voted, true);
   });
 
+  it("lists lottery rows for the admin hub", async () => {
+    const admin = await loginAdmin(agent);
+    const listed = await agent.get("/api/admin/lotteries").set(auth(admin)).expect(200);
+    const row = listed.body.data.find((r) => r.scheduleId === seed.individualScheduleId);
+    assert.ok(row);
+    assert.equal(row.drawLabel, "未配置");
+    await agent
+      .put(`/api/admin/schedules/${seed.individualScheduleId}/lottery`)
+      .set(auth(admin))
+      .send({
+        enabled: true,
+        drawMode: "pre",
+        title: "列表验证券",
+        prizes: [
+          { name: "一等奖", level: 1, kind: "physical", weight: 1, stock: 1 },
+          { name: "谢谢参与", level: 9, kind: "thanks", weight: 9, stock: -1 },
+        ],
+      })
+      .expect(200);
+    const again = await agent.get("/api/admin/lotteries").set(auth(admin)).expect(200);
+    const live = again.body.data.find((r) => r.scheduleId === seed.individualScheduleId);
+    assert.equal(live.enabled, true);
+    assert.equal(live.drawLabel, "报名前");
+    assert.equal(live.title, "列表验证券");
+  });
+
   it("lets admin configure per-trip prizes, rates and a designated winner", async () => {
     const admin = await loginAdmin(agent);
     const token = await loginUser(agent);
