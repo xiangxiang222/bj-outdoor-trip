@@ -108,7 +108,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `/m/login` | Login | 图片验证码 + 密码；微信演示授权 |
 | `/m/member` `/m/coupons` `/m/coupon/:code` | 会员与券 | |
 | `/m/lottery` `/m/after/:id` `/m/feedback` | 抽奖、完成活动、建议 | |
-| `/m/guides` `/m/guide/:id` `/m/user/:id` | 领队、导游详情、个人主页 | |
+| `/m/guides` `/m/guide/:id` `/m/user/:id` | 领队、导游详情、个人主页（相册按朋友圈九宫格上传） | |
 | `/m/favorites` `/m/stats/:id` `/m/chain` `/m/open/:id` | 收藏、画像、进行中的团、开团 | |
 
 顶栏文案由 `web/src/utils/pageChrome.js` 覆盖；首页隐藏第二行 `.mp-nav`，只留 lockup。
@@ -121,7 +121,7 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 
 **和 H5 的差：**
 
-- 没有独立「学生认证」「团体认证」页。首页学生认证按钮在已登录时跳到「我的」。
+- 没有独立「学生认证」「团体认证」页。首页学生认证按钮在已登录时跳到「我的」。自己的个人主页可按朋友圈九宫格传相册。
 - 「我的」权益组目前有优惠券、会员、抽奖；没有学生/团体/推荐报名/推荐领队入口（这些在 H5 有）。
 - 官方页快捷入口没有「学生认证」磁贴。
 - `miniprogram/config.js`：`USE_LOCAL_API` 默认 `false`，请求 `http://192.144.167.212`。
