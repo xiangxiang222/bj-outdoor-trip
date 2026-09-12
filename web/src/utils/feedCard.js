@@ -23,7 +23,9 @@ export function boardedLine(row, channel) {
 
 export function hostName(row) {
   if (!row) return "";
-  if (row.organizerType === "company") return row.companyName || row.organizerName || "";
+  if (row.organizerType === "company" || row.organizerType === "campus") {
+    return row.companyName || (row.eligibility?.schools || [])[0] || row.organizerName || "";
+  }
   return row.organizerName || row.companyName || "";
 }
 

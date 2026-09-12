@@ -76,6 +76,8 @@ const {
   isMember,
   isStudent,
   isAlumni,
+  normalizeOrganizerType,
+  hostOrgName,
   enrolledCount,
   realEnrolledCount,
   virtualEnrolledCount,
@@ -90,6 +92,22 @@ const {
 
 const router = express.Router();
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
+
+function resolveOrganizer(body, user, forceIndividual) {
+  const type = forceIndividual ? "individual" : normalizeOrganizerType(body && body.organizerType);
+  const name = forceIndividual ? "" : hostOrgName(type, body, user);
+  if (type === "company" && !name) {
+    const err = new Error("公司开团请填写公司名称");
+    err.status = 400;
+    throw err;
+  }
+  if (type === "campus" && !name) {
+    const err = new Error("高校开团请填写学校");
+    err.status = 400;
+    throw err;
+  }
+  return { type, name };
+}
 
 function uploadsDir() {
   const dir = path.join(config.publicDir, "static", "uploads");
@@ -1040,15 +1058,17 @@ router.post("/schedules", authUser, (req, res) => {
       return res.status(e.status || 400).json({ ok: false, message: e.message });
     }
   }
-  const { routeId, startDate, organizerType, busTypeId, minGroupSize, meetupPoint, meetupTime, notes, companyName } = req.body || {};
+  const { routeId, startDate, busTypeId, minGroupSize, meetupPoint, meetupTime, notes } = req.body || {};
   const route = db().prepare("SELECT * FROM routes WHERE id=?").get(routeId);
   if (!route) return res.status(400).json({ ok: false, message: "线路不存在" });
   const bus = db().prepare("SELECT * FROM bus_types WHERE id=?").get(busTypeId);
   if (!bus) return res.status(400).json({ ok: false, message: "请选择车型" });
   if (!startDate) return res.status(400).json({ ok: false, message: "请选择出发日期" });
-  const type = organizerType === "company" ? "company" : "individual";
-  if (type === "company" && !(companyName || user.company_name)) {
-    return res.status(400).json({ ok: false, message: "公司开团请填写公司名称" });
+  let organizer;
+  try {
+    organizer = resolveOrganizer(req.body, user, false);
+  } catch (e) {
+    return res.status(e.status || 400).json({ ok: false, message: e.message });
   }
   const end = dayjs(startDate).add(route.days - 1, "day").format("YYYY-MM-DD");
   const info = db()
@@ -1060,10 +1080,10 @@ router.post("/schedules", authUser, (req, res) => {
       route.id,
       startDate,
       end,
-      type,
+      organizer.type,
       user.id,
       user.nickname,
-      companyName || user.company_name,
+      organizer.name,
       bus.id,
       minGroupSize || route.min_group_size,
       bus.seats,
@@ -1130,9 +1150,11 @@ router.post("/trips", authUser, (req, res) => {
   const originPrice = Number(b.originPrice || b.price || 0);
   if (originPrice < 0) return res.status(400).json({ ok: false, message: "价格不正确" });
   const memberPrice = liveMemberPrice(originPrice);
-  const type = isActivity ? "individual" : b.organizerType === "company" ? "company" : "individual";
-  if (type === "company" && !(b.companyName || user.company_name)) {
-    return res.status(400).json({ ok: false, message: "公司开团请填写公司名称" });
+  let organizer;
+  try {
+    organizer = resolveOrganizer(b, user, isActivity);
+  } catch (e) {
+    return res.status(e.status || 400).json({ ok: false, message: e.message });
   }
   const kinds = ["掼蛋", "跑步", "电影", "招募"];
   const activityKind = kinds.includes(String(b.activityKind || "").trim())
@@ -1189,10 +1211,10 @@ router.post("/trips", authUser, (req, res) => {
       routeId,
       b.startDate,
       end,
-      type,
+      organizer.type,
       user.id,
       user.nickname,
-      b.companyName || user.company_name,
+      organizer.name,
       bus.id,
       minGroup,
       maxSeats,
@@ -1840,13 +1862,18 @@ router.delete("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
 
 router.post("/admin/schedules", authAdmin, requireCap("ops"), (req, res) => {
   const admin = db().prepare("SELECT * FROM admin_users WHERE id=?").get(req.adminId);
-  const { routeId, startDate, organizerType, busTypeId, minGroupSize, meetupPoint, meetupTime, notes, companyName } = req.body || {};
+  const { routeId, startDate, busTypeId, minGroupSize, meetupPoint, meetupTime, notes } = req.body || {};
   const route = db().prepare("SELECT * FROM routes WHERE id=?").get(routeId);
   if (!route) return res.status(400).json({ ok: false, message: "线路不存在" });
   if (!startDate) return res.status(400).json({ ok: false, message: "请选择出发日期" });
   const bus = db().prepare("SELECT * FROM bus_types WHERE id=?").get(busTypeId);
   if (!bus) return res.status(400).json({ ok: false, message: "请选择车型" });
-  const type = organizerType === "company" ? "company" : "individual";
+  let organizer;
+  try {
+    organizer = resolveOrganizer(req.body, {}, false);
+  } catch (e) {
+    return res.status(e.status || 400).json({ ok: false, message: e.message });
+  }
   const end = dayjs(startDate).add(route.days - 1, "day").format("YYYY-MM-DD");
   const info = db()
     .prepare(
@@ -1857,10 +1884,10 @@ router.post("/admin/schedules", authAdmin, requireCap("ops"), (req, res) => {
       route.id,
       startDate,
       end,
-      type,
+      organizer.type,
       0,
       admin.name,
-      companyName || "",
+      organizer.name,
       bus.id,
       minGroupSize || route.min_group_size,
       bus.seats,

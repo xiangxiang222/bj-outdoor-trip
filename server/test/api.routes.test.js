@@ -121,6 +121,31 @@ describe("routes and schedules API", () => {
         organizerType: "company",
       });
     assert.equal(noCompany.status, 400);
+
+    const noSchool = await agent
+      .post("/api/schedules")
+      .set(auth(token))
+      .send({
+        routeId: seed.routeId,
+        startDate: "2099-11-01",
+        busTypeId: "bus30",
+        organizerType: "campus",
+      });
+    assert.equal(noSchool.status, 400);
+
+    const campus = await agent
+      .post("/api/schedules")
+      .set(auth(token))
+      .send({
+        routeId: seed.routeId,
+        startDate: "2099-12-01",
+        busTypeId: "bus30",
+        organizerType: "campus",
+        companyName: "北京大学",
+      })
+      .expect(200);
+    assert.equal(campus.body.data.organizerType, "campus");
+    assert.equal(campus.body.data.companyName, "北京大学");
   });
 
   it("returns poster qr", async () => {

@@ -52,6 +52,9 @@ Page({
     lotteryIndex: 0,
     meetupNames: MEETUPS,
     meetupIndex: 0,
+    organizerLabels: ["个人开团（先报名，出行前付款）", "公司开团（先报名，最后统一支付）", "高校开团（先报名，出行前付款）"],
+    organizerKeys: ["individual", "company", "campus"],
+    organizerIndex: 0,
     form: {
       title: "",
       city: "",
@@ -63,6 +66,7 @@ Page({
       originPrice: 199,
       startDate: "",
       organizerType: "individual",
+      companyName: "",
       busTypeId: "",
       minGroupSize: 10,
       maxSeats: 12,
@@ -182,6 +186,13 @@ Page({
     const i = Number(e.detail.value);
     this.setData({ dateIndex: i, "form.startDate": this.data.dates[i].value });
   },
+  setOrganizer(e) {
+    const i = Number(e.detail.value);
+    this.setData({ organizerIndex: i, "form.organizerType": this.data.organizerKeys[i] || "individual" });
+  },
+  setCompanyName(e) {
+    this.setData({ "form.companyName": e.detail.value });
+  },
   setBus(e) {
     const i = Number(e.detail.value);
     this.setData({ busIndex: i, "form.busTypeId": this.data.buses[i].id });
@@ -213,6 +224,12 @@ Page({
         wx.showToast({ title: "请填写地点", icon: "none" });
         return;
       }
+    } else if (form.organizerType === "company" && !String(form.companyName || "").trim()) {
+      wx.showToast({ title: "公司开团请填写公司名称", icon: "none" });
+      return;
+    } else if (form.organizerType === "campus" && !String(form.companyName || "").trim()) {
+      wx.showToast({ title: "高校开团请填写学校", icon: "none" });
+      return;
     }
     try {
       wx.showLoading({ title: "提交中", mask: true });

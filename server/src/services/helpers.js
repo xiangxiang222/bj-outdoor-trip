@@ -202,10 +202,40 @@ function publicMediaUrl(url) {
   return resolveStoredMedia(url);
 }
 
+function normalizeOrganizerType(raw) {
+  const t = String(raw || "").trim().toLowerCase();
+  if (t === "company") return "company";
+  if (t === "campus" || t === "school" || t === "university" || t === "高校") return "campus";
+  return "individual";
+}
+
+function firstSchoolName(body) {
+  const raw = (body && (body.schools ?? body.schools_json ?? body.allowedSchools)) || "";
+  if (Array.isArray(raw)) return String(raw[0] || "").trim();
+  return (
+    String(raw || "")
+      .split(/[,，]/)
+      .map((s) => s.trim())
+      .find(Boolean) || ""
+  );
+}
+
+function hostOrgName(type, body, user) {
+  const b = body || {};
+  const u = user || {};
+  if (type === "company") return String(b.companyName || b.company_name || u.company_name || "").trim();
+  if (type === "campus") {
+    return String(b.campusName || b.campus_name || b.companyName || b.company_name || u.school || firstSchoolName(b) || "").trim();
+  }
+  return String(b.companyName || b.company_name || "").trim();
+}
+
 module.exports = {
   isMember,
   isStudent,
   isAlumni,
+  normalizeOrganizerType,
+  hostOrgName,
   enrolledCount,
   realEnrolledCount,
   virtualEnrolledCount,

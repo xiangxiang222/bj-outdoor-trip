@@ -101,9 +101,15 @@
           <el-select v-model="neu.organizerType">
             <el-option label="个人开团" value="individual" />
             <el-option label="公司开团" value="company" />
+            <el-option label="高校开团" value="campus" />
           </el-select>
         </el-form-item>
-        <el-form-item label="公司名"><el-input v-model="neu.companyName" /></el-form-item>
+        <el-form-item v-if="neu.organizerType === 'company'" label="公司名">
+          <el-input v-model="neu.companyName" placeholder="公司全称" />
+        </el-form-item>
+        <el-form-item v-if="neu.organizerType === 'campus'" label="学校名">
+          <el-input v-model="neu.companyName" placeholder="例如：北京大学" />
+        </el-form-item>
         <el-form-item label="车型">
           <el-select v-model="neu.busTypeId">
             <el-option v-for="b in buses" :key="b.id" :label="b.name" :value="b.id" />

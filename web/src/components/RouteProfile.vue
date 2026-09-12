@@ -67,7 +67,7 @@
         <span>{{ t.minPeople }} 人起</span>
         <span>¥{{ t.price }} / 会员 ¥{{ t.memberPrice }} / 学生 ¥{{ t.studentPrice }}</span>
       </div>
-      <p class="muted">个人拼团先报名占座，按当前人数档位计价，出行前付款；公司开团可先上车，结束后按最终人数统一支付。</p>
+      <p class="muted">个人或高校开团先报名占座，按当前人数档位计价，出行前付款；公司开团可先上车，结束后按最终人数统一支付。</p>
     </div></div>
 
     <div class="h2" v-if="route.buses?.length">可选车型</div>
