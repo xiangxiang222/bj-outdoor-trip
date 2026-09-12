@@ -56,7 +56,7 @@
         <span>推荐领队</span><i>首次带队奖 200 ›</i>
       </button>
       <button class="cell" type="button" @click="goAuth('/m/lottery')">
-        <span>抽奖</span><i>›</i>
+        <span>抽奖</span><i>本团中奖看这里 ›</i>
       </button>
     </div>
     <p class="cell-label">服务</p>

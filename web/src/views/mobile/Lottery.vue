@@ -1,7 +1,21 @@
 <template>
   <div class="lottery-page">
+    <template v-if="!scheduleId && trips.length">
+      <div class="h2">本团抽奖</div>
+      <div class="card" v-for="t in trips" :key="t.scheduleId" @click="$router.push('/m/lottery?scheduleId=' + t.scheduleId)">
+        <div class="pad row">
+          <div>
+            <strong>{{ t.routeTitle || t.title }}</strong>
+            <p class="muted" style="margin:4px 0 0">{{ t.startDate }}{{ t.drawLabel ? " · " + t.drawLabel : "" }}</p>
+            <p style="margin:6px 0 0">{{ t.resultLabel || (t.canPre || t.canPost ? "还没抽" : "已抽完") }}</p>
+          </div>
+          <span class="nav-link">去转盘 ›</span>
+        </div>
+      </div>
+      <div class="h2">平台抽奖</div>
+    </template>
     <div class="card"><div class="pad">
-      <strong>{{ state.title || "活动抽奖" }}</strong>
+      <strong>{{ scheduleId ? (state.title || "本团抽奖") : "平台抽奖" }}</strong>
       <p class="muted">{{ blurb }}</p>
     </div></div>
     <div class="card"><div class="pad">
@@ -31,12 +45,13 @@
     <p v-if="msg" :style="ok ? 'color:var(--leaf)' : 'color:var(--clay)'">{{ msg }}</p>
     <p v-if="!store.token" class="muted">登录后才能转动圆盘。</p>
     <p v-else-if="hint" class="muted">{{ hint }}</p>
+    <button v-if="scheduleId" class="btn ghost block" type="button" style="margin-top:8px" @click="$router.push('/m/lottery')">我的抽奖</button>
     <button class="btn ghost block" type="button" style="margin-top:8px" @click="$router.push(scheduleId ? '/m/schedule/' + scheduleId : '/m')">{{ scheduleId ? "回本团" : "去看团" }}</button>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
@@ -63,6 +78,7 @@ const ok = ref(false);
 const spinning = ref(false);
 const claiming = ref(false);
 const scheduleId = computed(() => Number(route.query.scheduleId || 0));
+const trips = computed(() => state.value.trips || []);
 const canDraw = computed(() => !!(state.value.canPre || state.value.canPost));
 const hasResult = computed(() => !!(state.value.pre || state.value.post));
 const parkKey = computed(() => state.value.post?.prizeKey || state.value.pre?.prizeKey || "");
@@ -90,6 +106,7 @@ const hint = computed(() => {
 });
 
 onMounted(load);
+watch(scheduleId, load);
 
 async function load() {
   try {
