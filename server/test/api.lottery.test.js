@@ -261,6 +261,12 @@ describe("lottery after-trip contest", () => {
     assert.equal(claimed.body.data.claimed[0].prizeLabel, "50 积分");
     const pointsAfterClaim = seed.db.prepare("SELECT points FROM users WHERE id=?").get(seed.userId).points;
     assert.equal(pointsAfterClaim, 550);
+
+    const home = await agent.get("/api/lottery").set(auth(token)).expect(200);
+    assert.equal(home.body.data.title, "平台抽奖");
+    assert.equal(home.body.data.trips.length, 1);
+    assert.equal(home.body.data.trips[0].scheduleId, sid);
+    assert.match(home.body.data.trips[0].resultLabel, /50 积分/);
   });
 
   it("attaches a campaign when publishing with lotteryMode", async () => {

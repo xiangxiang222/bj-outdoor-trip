@@ -64,7 +64,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/me/student` | 用户 | `{ school }`，可选 `campusKind=student\|alumni`。写入 pending，待后台审核 |
 | POST | `/me/group` | 用户 | `{ name, kind }` 团体认证，pending |
 | POST | `/feedback` | 用户 | `{ kind: suggest\|bug, content }`，内容至少 4 字 |
-| GET | `/lottery` | 可选用户 | 抽奖状态与圆盘奖品（不含权重）。Query：`scheduleId`。返回 `drawMode` `canPre` `canPost` `canClaim`。有本团配置则用本团奖池 |
+| GET | `/lottery` | 可选用户 | 抽奖状态与圆盘奖品（不含权重）。Query：`scheduleId`。返回 `drawMode` `canPre` `canPost` `canClaim`。有本团配置则用本团奖池。不带 `scheduleId` 时另给 `trips[]`（已抽或已报名的本团抽奖）和平台默认转盘 |
 | POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }`。服务端先出结果再让圆盘转到 `sectorIndex`，返回 `rate` `prizeInfo` `deferred` `claimHint`。指定中奖不会返回给用户。本团奖池中奖先记账，跟团结束后领取 |
 | POST | `/lottery/claim` | 用户 | `{ scheduleId }`。须已报名且行程结束日（或出发日）不晚于今天。文案：「跟团结束后才能领奖」 |
 | GET | `/schedules/:id/after` | 可选用户 | 完成活动页状态 |

@@ -76,6 +76,7 @@ Page({
     hasResult: false,
     blurb: "",
     hint: "",
+    trips: [],
   },
   onLoad(q) {
     this.setData({
@@ -94,6 +95,7 @@ Page({
     const deg = park ? sectorDeg(park.sectorIndex, prizes.length) : this.data.deg;
     this.setData({
       state,
+      trips: (state && state.trips) || [],
       conic: conicOf(prizes),
       labels: labelsOf(prizes),
       spinSec: Number((state && state.spinSeconds) || 5),
@@ -163,6 +165,11 @@ Page({
     } catch (e) {
       this.setData({ claiming: false, msg: (e && e.message) || "领取失败" });
     }
+  },
+  goTrip(e) {
+    const id = Number(e.currentTarget.dataset.id || 0);
+    if (!id) return;
+    wx.navigateTo({ url: "/pages/lottery/lottery?scheduleId=" + id });
   },
   closeFx() {
     this.setData({ fx: null });

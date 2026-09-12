@@ -497,6 +497,53 @@ function canClaimDraws(userId, sid, campaign, prizes) {
   });
 }
 
+function tripResultLine(pre, post) {
+  const parts = [pre && pre.prizeLabel, post && post.prizeLabel].filter(Boolean);
+  return parts.join(" · ");
+}
+
+function listUserLotteryTrips(userId) {
+  if (!userId) return [];
+  const db = getDb();
+  const rows = db
+    .prepare(
+      `SELECT s.id, s.start_date, r.title AS route_title, c.title AS campaign_title,
+              (SELECT MAX(d.id) FROM lottery_draws d WHERE d.user_id=? AND d.schedule_id=s.id) AS last_draw
+       FROM schedules s
+       JOIN lottery_campaigns c ON c.schedule_id=s.id
+       LEFT JOIN routes r ON r.id=s.route_id
+       WHERE s.id IN (
+         SELECT schedule_id FROM lottery_draws WHERE user_id=? AND IFNULL(schedule_id,0)>0
+         UNION
+         SELECT c2.schedule_id
+         FROM lottery_campaigns c2
+         JOIN enrollments e ON e.schedule_id=c2.schedule_id
+         WHERE e.user_id=? AND c2.enabled=1 AND e.status IN ('joined','applied','waitlist')
+       )
+       ORDER BY last_draw IS NULL, last_draw DESC, s.start_date DESC, s.id DESC
+       LIMIT 20`
+    )
+    .all(userId, userId, userId);
+  return rows.map((row) => {
+    const state = lotteryState(userId, row.id);
+    return {
+      scheduleId: row.id,
+      title: state.title || row.campaign_title || row.route_title || "本团抽奖",
+      routeTitle: row.route_title || state.title || "本团",
+      startDate: row.start_date || "",
+      drawMode: state.drawMode,
+      drawLabel: state.drawLabel,
+      pre: state.pre,
+      post: state.post,
+      canPre: state.canPre,
+      canPost: state.canPost,
+      canClaim: state.canClaim,
+      claimHint: state.claimHint,
+      resultLabel: tripResultLine(state.pre, state.post),
+    };
+  });
+}
+
 function lotteryState(userId, scheduleId) {
   const sid = Number(scheduleId || 0);
   const { campaign, prizes } = resolvePool(sid);
@@ -514,7 +561,7 @@ function lotteryState(userId, scheduleId) {
       : !getDraw(userId, 0, "pre") && !getDraw(userId, sid, "pre")
     : false;
   const canClaim = canClaimDraws(userId, sid, campaign, prizes);
-  return {
+  const data = {
     ...campaignPublic(campaign),
     prizes: publicPrizes(prizes),
     pre: pre ? drawPayload(pre, prizes, campaign) : null,
@@ -528,6 +575,11 @@ function lotteryState(userId, scheduleId) {
         : "中奖后先记账，跟团结束后再领奖"
       : "",
   };
+  if (!sid) {
+    data.title = "平台抽奖";
+    data.trips = listUserLotteryTrips(userId);
+  }
+  return data;
 }
 
 module.exports = {

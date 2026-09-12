@@ -1,5 +1,19 @@
+<block wx:if="{{!scheduleId && trips.length}}">
+  <view class="pad title">本团抽奖</view>
+  <view class="card" wx:for="{{trips}}" wx:key="scheduleId" bindtap="goTrip" data-id="{{item.scheduleId}}">
+    <view class="pad row">
+      <view>
+        <view class="title">{{item.routeTitle || item.title}}</view>
+        <view class="muted">{{item.startDate}}{{item.drawLabel ? ' · ' + item.drawLabel : ''}}</view>
+        <view>{{item.resultLabel || ((item.canPre || item.canPost) ? '还没抽' : '已抽完')}}</view>
+      </view>
+      <view class="nav-link">去转盘 ›</view>
+    </view>
+  </view>
+  <view class="pad title">平台抽奖</view>
+</block>
 <view class="card"><view class="pad">
-  <view class="title">{{state.title || '活动抽奖'}}</view>
+  <view class="title">{{scheduleId ? (state.title || '本团抽奖') : '平台抽奖'}}</view>
   <view class="muted">{{blurb}}</view>
 </view></view>
 
