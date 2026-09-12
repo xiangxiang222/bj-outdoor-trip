@@ -117,11 +117,18 @@
     </el-table>
 
     <div class="row" style="margin:20px 0 12px"><strong>中奖记录</strong></div>
+    <p class="muted">报名前抽的人这里能看出后来有没有报名。保存奖品不会关掉本页，看完整名单也可关了后在列表点「查看」。</p>
     <el-table :data="form.draws" size="small" stripe max-height="240">
       <el-table-column prop="createdAt" label="时间" width="160" />
       <el-table-column prop="nickname" label="用户" width="110" />
       <el-table-column prop="phone" label="手机" width="130" />
       <el-table-column prop="prizeLabel" label="奖品" />
+      <el-table-column label="报名" width="130">
+        <template #default="{ row }">{{ row.enrollLabel || (row.enrolled ? "已报名" : "未报名") }}</template>
+      </el-table-column>
+      <el-table-column label="领取" width="80">
+        <template #default="{ row }">{{ row.level === 9 ? "—" : row.claimed ? "已领" : "待领" }}</template>
+      </el-table-column>
       <el-table-column label="阶段" width="80">
         <template #default="{ row }">{{ row.phase === "post" ? "行后" : "行前" }}</template>
       </el-table-column>

@@ -162,6 +162,7 @@ describe("lottery after-trip contest", () => {
     assert.equal(live.enabled, true);
     assert.equal(live.drawLabel, "报名前");
     assert.equal(live.title, "列表验证券");
+    assert.equal(live.drawCount, 0);
   });
 
   it("lets admin configure per-trip prizes, rates and a designated winner", async () => {
@@ -210,7 +211,16 @@ describe("lottery after-trip contest", () => {
 
     const adminView = await agent.get(`/api/admin/schedules/${sid}/lottery`).set(auth(admin)).expect(200);
     assert.equal(adminView.body.data.draws[0].assigned, true);
+    assert.equal(adminView.body.data.draws[0].enrolled, false);
+    assert.equal(adminView.body.data.draws[0].enrollLabel, "未报名");
     assert.equal(adminView.body.data.assigns[0].usedAt.length > 0, true);
+
+    await enroll(token).expect(200);
+    const afterJoin = await agent.get(`/api/admin/schedules/${sid}/lottery`).set(auth(admin)).expect(200);
+    assert.equal(afterJoin.body.data.draws[0].enrolled, true);
+    assert.match(afterJoin.body.data.draws[0].enrollLabel, /已参团/);
+    const listed = await agent.get("/api/admin/lotteries").set(auth(admin)).expect(200);
+    assert.equal(listed.body.data.find((r) => r.scheduleId === sid).drawCount, 1);
   });
 
   it("falls back when a limited prize is gone", async () => {

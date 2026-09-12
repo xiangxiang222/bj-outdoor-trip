@@ -78,31 +78,60 @@ function listAssigns(campaignId) {
     }));
 }
 
+function enrollLabel(status, payStatus) {
+  if (!status) return "未报名";
+  if (status === "cancelled") return "已取消";
+  if (status === "waitlist") return "候补";
+  if (status === "applied") return "已报名待确认";
+  if (status === "joined") {
+    if (payStatus === "paid") return "已参团 · 已付";
+    if (payStatus === "pending" || payStatus === "unpaid") return "已参团 · 待付";
+    return "已参团";
+  }
+  return status;
+}
+
 function listDraws(scheduleId, campaignId) {
   return getDb()
     .prepare(
-      `SELECT d.*, u.nickname, u.phone
+      `SELECT d.*, u.nickname, u.phone, e.status AS enroll_status, e.pay_status
        FROM lottery_draws d
        JOIN users u ON u.id = d.user_id
+       LEFT JOIN enrollments e ON e.id = (
+         SELECT e2.id FROM enrollments e2
+         WHERE e2.user_id = d.user_id AND e2.schedule_id = ?
+         ORDER BY CASE e2.status
+           WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3
+         END, e2.id DESC
+         LIMIT 1
+       )
        WHERE d.schedule_id=? OR (d.campaign_id!=0 AND d.campaign_id=?)
        ORDER BY d.id DESC
        LIMIT 200`
     )
-    .all(scheduleId, campaignId || 0)
-    .map((row) => ({
-      id: row.id,
-      userId: row.user_id,
-      nickname: row.nickname,
-      phone: row.phone,
-      phase: row.phase,
-      prizeKey: row.prize_key,
-      prizeLabel: row.prize_label,
-      level: Number(row.level || 0),
-      doubled: !!row.doubled,
-      assigned: !!row.assigned,
-      claimed: !!row.claimed_at,
-      createdAt: row.created_at,
-    }));
+    .all(scheduleId, scheduleId, campaignId || 0)
+    .map((row) => {
+      const enrollStatus = row.enroll_status || "";
+      return {
+        id: row.id,
+        userId: row.user_id,
+        nickname: row.nickname,
+        phone: row.phone,
+        phase: row.phase,
+        prizeKey: row.prize_key,
+        prizeLabel: row.prize_label,
+        level: Number(row.level || 0),
+        doubled: !!row.doubled,
+        assigned: !!row.assigned,
+        claimed: !!row.claimed_at,
+        claimedAt: row.claimed_at || "",
+        createdAt: row.created_at,
+        enrollStatus,
+        payStatus: row.pay_status || "",
+        enrolled: !!(enrollStatus && enrollStatus !== "cancelled"),
+        enrollLabel: enrollLabel(enrollStatus, row.pay_status),
+      };
+    });
 }
 
 const MODE_TEXT = {
@@ -113,6 +142,12 @@ const MODE_TEXT = {
 };
 
 function listAdminLotteries() {
+  const drawCounts = new Map(
+    getDb()
+      .prepare("SELECT schedule_id AS sid, COUNT(*) AS c FROM lottery_draws WHERE IFNULL(schedule_id,0)>0 GROUP BY schedule_id")
+      .all()
+      .map((row) => [Number(row.sid), Number(row.c)])
+  );
   const rows = getDb()
     .prepare(
       `SELECT s.id AS schedule_id, s.start_date, s.status, IFNULL(s.channel,'trip') AS channel,
@@ -140,6 +175,7 @@ function listAdminLotteries() {
       title: row.title || "",
       drawMode,
       drawLabel: !configured ? "未配置" : enabled ? MODE_TEXT[drawMode] || "已开" : "已关闭",
+      drawCount: drawCounts.get(Number(row.schedule_id)) || 0,
       updatedAt: row.updated_at || "",
     };
   });
