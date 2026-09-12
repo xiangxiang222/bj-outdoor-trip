@@ -554,6 +554,49 @@ function migrateSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_coupon_campaigns_schedule ON coupon_campaigns(schedule_id);
   `);
   addColumnIfMissing(db, "routes", "story_json", "TEXT");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS lottery_campaigns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      schedule_id INTEGER NOT NULL UNIQUE,
+      enabled INTEGER DEFAULT 0,
+      title TEXT DEFAULT '本团抽奖',
+      spin_seconds INTEGER DEFAULT 5,
+      note TEXT DEFAULT '',
+      updated_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE TABLE IF NOT EXISTS lottery_prizes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL,
+      sort_order INTEGER DEFAULT 0,
+      name TEXT NOT NULL,
+      prize_key TEXT,
+      level INTEGER DEFAULT 4,
+      kind TEXT DEFAULT 'thanks',
+      points INTEGER DEFAULT 0,
+      weight INTEGER DEFAULT 0,
+      stock INTEGER DEFAULT -1,
+      stock_used INTEGER DEFAULT 0,
+      color TEXT DEFAULT '#c8ccc4',
+      coupon_campaign_id INTEGER DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS lottery_assigns (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      campaign_id INTEGER NOT NULL,
+      prize_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      note TEXT DEFAULT '',
+      used_at TEXT,
+      created_by INTEGER,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      UNIQUE(campaign_id, user_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_lottery_prizes_campaign ON lottery_prizes(campaign_id);
+    CREATE INDEX IF NOT EXISTS idx_lottery_assigns_campaign ON lottery_assigns(campaign_id);
+  `);
+  addColumnIfMissing(db, "lottery_draws", "prize_id", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "lottery_draws", "campaign_id", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "lottery_draws", "assigned", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "lottery_draws", "level", "INTEGER DEFAULT 0");
 }
 
 let _db;

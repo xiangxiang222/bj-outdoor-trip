@@ -25,8 +25,16 @@
       <div class="h2">第二次抽奖</div>
       <div class="card"><div class="pad">
         <p class="muted" v-if="s.lottery?.pre">第一次抽到：{{ s.lottery.pre.prizeLabel }}</p>
+        <LotteryWheel
+          ref="wheel"
+          :prizes="s.lottery?.prizes || []"
+          :spin-seconds="s.lottery?.spinSeconds || 5"
+          :disabled="!!s.lottery?.post || drawing"
+          :park-key="s.lottery?.post?.prizeKey || ''"
+          :go-text="s.lottery?.post ? '已抽' : '抽第二次'"
+          @request="drawPost"
+        />
         <p v-if="s.lottery?.post"><strong>{{ s.lottery.post.prizeLabel }}</strong>{{ s.lottery.post.doubled ? " · 两次一致，已翻倍" : "" }}</p>
-        <button v-else class="btn block" type="button" :disabled="drawing" @click="drawPost">抽第二次</button>
       </div></div>
 
       <div class="h2">评选 · 分享投票</div>
@@ -60,6 +68,7 @@ import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
+import LotteryWheel from "@/components/LotteryWheel.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -71,6 +80,7 @@ const ok = ref(false);
 const loading = ref(false);
 const saving = ref(false);
 const drawing = ref(false);
+const wheel = ref(null);
 const posting = ref(false);
 const rating = ref(5);
 const reviewText = ref("");
@@ -128,7 +138,8 @@ async function drawPost() {
   try {
     const res = await http.post("/lottery/draw", { phase: "post", scheduleId: Number(route.params.id) });
     ok.value = true;
-    msg.value = res.data.matched ? `两次都是「${res.data.prizeLabel}」，已翻倍` : `抽到：${res.data.prizeLabel}`;
+    if (wheel.value) await wheel.value.play(res.data);
+    msg.value = res.data.matched ? `两次都是「${res.data.prizeLabel}」，已翻倍` : "";
     await load();
   } catch (e) {
     ok.value = false;

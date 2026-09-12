@@ -64,8 +64,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/me/student` | 用户 | `{ school }`，可选 `campusKind=student\|alumni`。写入 pending，待后台审核 |
 | POST | `/me/group` | 用户 | `{ name, kind }` 团体认证，pending |
 | POST | `/feedback` | 用户 | `{ kind: suggest\|bug, content }`，内容至少 4 字 |
-| GET | `/lottery` | 用户 | 抽奖状态。Query：`scheduleId` |
-| POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }` |
+| GET | `/lottery` | 可选用户 | 抽奖状态与圆盘奖品（不含权重）。Query：`scheduleId`。有本团配置则用本团奖池 |
+| POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }`。服务端先出结果再让圆盘转到 `sectorIndex`，指定中奖不会返回给用户 |
 | GET | `/schedules/:id/after` | 可选用户 | 完成活动页状态 |
 | POST | `/schedules/:id/complete` | 用户 | 标记完成活动 |
 | GET | `/schedules/:id/contest` | 可选用户 | 评选帖列表 |
@@ -186,6 +186,10 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/schedules/dissolve-all` | 解散全部进行中的团。body：`reason` |
 | POST | `/admin/schedules/:id/dissolve` | 解散单团。body：`reason` |
 | PUT | `/admin/schedules/:id/limit` | 报名限制。`studentOnly`、`alumniOk`、`oversub`、`schools`（数组或逗号分隔）。填高校或允许校友则自动仅师生 |
+| GET | `/admin/schedules/:id/lottery` | 本团抽奖配置、指定名单、中奖记录 |
+| PUT | `/admin/schedules/:id/lottery` | 保存本团抽奖。`enabled` `title` `spinSeconds` `prizes[]`（2～8 个，含权重/库存/等级） |
+| POST | `/admin/schedules/:id/lottery/assigns` | 指定中奖。`userId` 或 `phone` + `prizeId` |
+| DELETE | `/admin/schedules/:id/lottery/assigns/:assignId` | 取消未抽的指定 |
 | POST | `/admin/schedules/:id/draw` | 确认出行名单（运营）。报名未超座位则全部确认；超过则抽签。重复确认 400，`force=true` 可重抽 |
 | PUT | `/admin/schedules/:id/cost` | `transport` `ticket` `hotel` `meal` `guide` `other` |
 | PUT | `/admin/schedules/:id/trip` | `plateNo` `busPhoto` `consultGroup` |
