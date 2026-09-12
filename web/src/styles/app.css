@@ -1582,13 +1582,58 @@ html.admin-theme .el-dialog__footer {
 }
 .cell:last-child { border-bottom: 0; }
 .cell i { font-style: normal; color: var(--muted); font-size: 13px; flex: none; }
+.trip-detail {
+  margin: -12px -14px 0;
+}
+.trip-detail .hero-swipe { border-radius: 0; }
+.trip-detail .hero-swipe img { height: 210px; }
+.trip-head { padding-bottom: 8px; }
+.goods-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  height: 44px;
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+.goods-tabs button {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 15px;
+  color: #8c8c8c;
+  position: relative;
+  cursor: pointer;
+}
+.goods-tabs button.on {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+.goods-tabs button.on::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 20px;
+  height: 3px;
+  margin-left: -10px;
+  border-radius: 3px;
+  background: #e1251b;
+}
+.trip-pane { padding: 12px 14px 88px; }
+.rules-block + .rules-block { margin-top: 8px; }
+.waiver-text { white-space: pre-wrap; line-height: 1.65; }
 .enroll-dock {
   position: sticky;
   bottom: 0;
   z-index: 5;
   background: #fff;
   box-shadow: 0 -8px 20px rgba(20, 20, 20, 0.06);
-  padding: 10px 0 calc(8px + env(safe-area-inset-bottom));
+  padding: 10px 14px calc(8px + env(safe-area-inset-bottom));
   margin-top: 16px;
 }
 .enroll-bar {
