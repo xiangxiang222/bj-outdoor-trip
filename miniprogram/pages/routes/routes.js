@@ -21,6 +21,7 @@ Page({
       this.setData({
         days: filter.days || 0,
         tag: filter.tag || filter.category || "",
+        q: filter.q || "",
       });
       getApp().globalData.routeFilter = null;
     }

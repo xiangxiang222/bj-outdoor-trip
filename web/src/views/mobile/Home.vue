@@ -64,12 +64,16 @@
       <div class="chip" :class="{ on: tag === t.name }" v-for="t in home.tags || []" :key="t.id" @click="toggleTag(t.name)">{{ t.name }}</div>
     </div>
 
+    <div class="catalog-row">
+      <button class="tool-btn ghost-line" type="button" @click="goRoutes">看线路</button>
+      <button class="tool-btn play" type="button" @click="goPublish()">发团</button>
+    </div>
+
     <div class="feed-toolbar">
       <div class="hint">看看最近都在忙什么</div>
       <div class="tools">
         <button class="tool-btn" type="button" @click="sort = cycleSort(sort)">{{ sortLabel(sort) }}</button>
         <button class="tool-btn" type="button" @click="fold.extra = !fold.extra">{{ fold.extra ? "收起" : "筛选" }}</button>
-        <button class="tool-btn play" type="button" @click="goPublish()">发团</button>
       </div>
     </div>
 
@@ -128,11 +132,14 @@
         </p>
       </div>
     </article>
-    <div v-if="!groups.length" class="card publish-guide" @click="goPublish()">
+    <div v-if="!groups.length" class="card">
       <div class="pad">
         <strong>还没有符合条件的团</strong>
-        <p class="muted">发一个新团，审核通过后会出现在这里。</p>
-        <button class="btn ghost block" type="button">去发团</button>
+        <p class="muted">可以先看官方线路，或自己发一个，审核通过后会出现在这里。</p>
+        <div class="catalog-row" style="margin:10px 0 0">
+          <button class="tool-btn ghost-line" type="button" @click="goRoutes">看线路</button>
+          <button class="tool-btn play" type="button" @click="goPublish()">去发团</button>
+        </div>
       </div>
     </div>
 
@@ -279,6 +286,12 @@ function onSlideError(e, slide) {
   e.target.dataset.fallback = "1";
   e.target.src = fb;
   if (e.target.parentElement) e.target.parentElement.style.backgroundImage = `url("${fb}")`;
+}
+function goRoutes() {
+  const params = {};
+  if (tag.value) params.tag = tag.value;
+  if (query.value.trim()) params.q = query.value.trim();
+  router.push({ path: "/m/routes", query: params });
 }
 function goPublish(when) {
   const path = when ? `/m/publish?date=${when}` : "/m/publish";

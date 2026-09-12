@@ -26,6 +26,9 @@
       <button v-if="store.token && store.profile" class="cell" type="button" @click="$router.push('/m/user/' + store.profile.id)">
         <span>个人主页</span><i>相册与过往 ›</i>
       </button>
+      <button class="cell" type="button" @click="$router.push('/m/routes')">
+        <span>看线路</span><i>官方目的地 ›</i>
+      </button>
       <button class="cell" type="button" @click="goAuth('/m/favorites')">
         <span>我的收藏</span><i>›</i>
       </button>

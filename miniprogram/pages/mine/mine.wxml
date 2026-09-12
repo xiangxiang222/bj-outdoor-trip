@@ -11,6 +11,7 @@
 <view class="cell-label">出行</view>
 <view class="cell-group">
   <view class="cell" wx:if="{{user}}" bindtap="goHome"><text>个人主页</text><text class="muted">相册与过往 ›</text></view>
+  <view class="cell" bindtap="goRoutes"><text>看线路</text><text class="muted">官方目的地 ›</text></view>
   <view class="cell" bindtap="go" data-url="/pages/favorites/favorites"><text>我的收藏</text><text class="muted">›</text></view>
 </view>
 
