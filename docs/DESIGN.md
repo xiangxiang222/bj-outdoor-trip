@@ -137,7 +137,7 @@ User 1──n Favorite / PointsLedger / Review
 - 公司团：`pay_status=company_pending`，金额暂记 0，由开团公司或后台结算
 - `status`：`joined` / `applied`（报超会抽待确认） / `waitlist` / `cancelled`。候补与 `applied` 不占座；有人取消后按报名顺序（抽签团按 `draw_rank`）递补
 - 有效报名人数（不含虚拟用户）≥ 成团人数时排期接口 `guaranteed=true`（铁定出发）
-- 一个团最多两位领队；空位可报名领队。推荐领队首次带队完成后奖励 200 元；推荐报名按人数结报名费 5%
+- 一个团最多两位领队；空位可报名领队，须已通过个人领队申请。推荐领队首次带队完成后奖励 200 元；推荐报名按人数结报名费 5%
 - 虚拟用户由运营在指定行程上设置人数并占座，资料按真人报名生成；之后可改人数。真人占座时虚拟用户腾座。前台不暴露虚拟标记。
 
 详情页若已有 `myEnrollment`，H5 / 小程序不再露出报名按钮。
@@ -161,10 +161,11 @@ User 1──n Favorite / PointsLedger / Review
 
 ### 3.4 用户与会员
 
-- 角色：`user` / `company`（公司账号带 `company_name`）
+- 角色：`user` / `company`（公司账号带 `company_name`） / `leader`（个人领队申请通过后写入；公司账号通过后仍为 `company`，靠 `leader_status=approved`）
 - 会员：年费 99 元，有效期 365 天，会员价 95 折，开通赠一次 100 元以内团。`POST /member/buy` 立即记成功支付并开通
 - 学生：`POST /me/student` 填学校全称 → `student_status=pending` → 后台 `POST /admin/users/:id/verify` `kind=student` 通过后 `is_student=1`。部分团 `studentOnly` 或 `schools` 名单（学校名包含匹配，含简称）。提交时写入 `admin_notices`，后台消息点开 `/admin/verify?kind=campus&userId=`
 - 团体：`POST /me/group` → 待审 → 后台审核，同样写入待办消息
+- 领队：`POST /me/leader` 填姓名、带队年限、经历 → `leader_status=pending` → 后台 `kind=leader` 通过后 `isLeader`。未通过时团详情「报名领队」提示去填写申请。消息点开 `/admin/verify?kind=leader&userId=`
 - 积分：消费 1 元积 1 分；会员入账 ×1.2；抵现规则仍为 **100 分 = 1 元**，最多抵应付的 **20%**，且实付至少 **1 元**。当前报名接口不扣积分
 - 注销：`users.deleted_at` 软删除，清空手机/密码/openid/证件，昵称改为「已注销用户」
 
@@ -238,7 +239,7 @@ User 1──n Favorite / PointsLedger / Review
 
 建表语句见 `server/src/db.js` 的 `createSchema`；旧库通过 `migrateSchema` 补列。种子脚本 `server/src/seed/run.js` **会清空并重建演示数据**，不要在生产库上误跑。仅更新封面可用 `server/src/seed/refresh-images.js`。部署脚本仅在目标机尚无 `app.sqlite` 时 seed。
 
-核心表：`users`（含 `deleted_at`、学生/团体字段）、`admin_users`（含 `status`）、`sms_codes`、`captchas`、`bus_types`、`routes`、`route_price_tiers`、`route_buses`、`guides`、`schedules`（含 `channel`、解散字段、审核、成本）、`enrollments`、`payments`、`payment_splits`、`points_ledger`、`favorites`、`reviews`、`settings`、`sms_logs`、`play_tags`、`coupon_campaigns`、`coupon_allowlist`、`user_coupons`、`feedbacks`、`lottery_draws`、`lottery_campaigns`、`lottery_prizes`、`lottery_assigns`、`contest_posts`、`contest_votes`、`user_photos`、`schedule_leaders`、`enrollment_fallbacks`、`referrals`、`leader_referrals`。
+核心表：`users`（含 `deleted_at`、学生/团体/领队字段）、`admin_users`（含 `status`）、`sms_codes`、`captchas`、`bus_types`、`routes`、`route_price_tiers`、`route_buses`、`guides`、`schedules`（含 `channel`、解散字段、审核、成本）、`enrollments`、`payments`、`payment_splits`、`points_ledger`、`favorites`、`reviews`、`settings`、`sms_logs`、`play_tags`、`coupon_campaigns`、`coupon_allowlist`、`user_coupons`、`feedbacks`、`lottery_draws`、`lottery_campaigns`、`lottery_prizes`、`lottery_assigns`、`contest_posts`、`contest_votes`、`user_photos`、`schedule_leaders`、`enrollment_fallbacks`、`referrals`、`leader_referrals`。
 
 ## 6. 前端信息架构与视觉
 

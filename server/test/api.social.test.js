@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { harness, loginUser, loginAdmin, loginCompany, issueCaptcha, auth, ID, enrollPayload } = require("./http");
+const { harness, loginUser, loginAdmin, loginCompany, applyAndApproveLeader, issueCaptcha, auth, ID, enrollPayload } = require("./http");
 const { getDb } = require("../src/db");
 
 describe("social homepage leaders referral virtual fallback", () => {
@@ -80,12 +80,14 @@ describe("social homepage leaders referral virtual fallback", () => {
 
   it("accepts two volunteer leaders and shows empty slot as apply-able", async () => {
     const token = await loginUser(agent);
+    const company = await loginCompany(agent);
+    await applyAndApproveLeader(agent, token, seed.userId);
+    await applyAndApproveLeader(agent, company, seed.companyUserId, { name: "华创领队" });
     const first = await agent
       .post(`/api/schedules/${seed.individualScheduleId}/leaders/apply`)
       .set(auth(token))
       .expect(200);
     assert.equal(first.body.data.slot, 1);
-    const company = await loginCompany(agent);
     await agent
       .post(`/api/schedules/${seed.individualScheduleId}/leaders/apply`)
       .set(auth(company))

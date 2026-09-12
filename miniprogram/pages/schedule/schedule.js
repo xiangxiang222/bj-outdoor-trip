@@ -247,14 +247,43 @@ Page({
     wx.showToast({ title: "早报名早选座", icon: "none" });
   },
   applyLeader() {
+    const back = "/pages/schedule/schedule?id=" + this.data.id;
     if (!app.globalData.token) {
-      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/schedule/schedule?id=" + this.data.id) });
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(back) });
+      return;
+    }
+    const me = app.globalData.user || {};
+    if (!me.isLeader) {
+      const pending = me.leaderStatus === "pending";
+      wx.showModal({
+        title: pending ? "申请审核中" : "需要先申请领队",
+        content: pending ? "领队申请审核中，通过后再报名领队" : "报名领队需先填写领队申请并通过审核",
+        confirmText: pending ? "查看申请" : "去申请",
+        success: (r) => {
+          if (!r.confirm) return;
+          wx.navigateTo({ url: "/pages/leader/leader?redirect=" + encodeURIComponent(back) });
+        },
+      });
       return;
     }
     request("/schedules/" + this.data.id + "/leaders/apply", "POST", {}).then(() => {
       wx.showToast({ title: "已报名领队", icon: "none" });
       this.load();
-    }).catch((e) => wx.showModal({ title: "报名领队失败", content: e.message, showCancel: false }));
+    }).catch((e) => {
+      if (e.code === "need_leader_apply" || e.code === "leader_pending") {
+        wx.showModal({
+          title: "需要先申请领队",
+          content: e.message,
+          confirmText: "去申请",
+          success: (r) => {
+            if (!r.confirm) return;
+            wx.navigateTo({ url: "/pages/leader/leader?redirect=" + encodeURIComponent(back) });
+          },
+        });
+        return;
+      }
+      wx.showModal({ title: "报名领队失败", content: e.message, showCancel: false });
+    });
   },
   openLeader(e) {
     const kind = e.currentTarget.dataset.kind;

@@ -1,6 +1,6 @@
 const { getDb } = require("../db");
 const { parseIdCard, lifeStageFromPerson } = require("./idcard");
-const { attachAssetHost } = require("./helpers");
+const { attachAssetHost, isLeader } = require("./helpers");
 
 function fail(status, message) {
   const err = new Error(message);
@@ -142,6 +142,7 @@ function publicUserProfile(user, req) {
     gender: user.gender || parsed.gender || "",
     lifeStage: stage.label || "",
     hometown: user.hometown || "",
+    isLeader: isLeader(user),
     tripCount,
     album: albumOf(user.id, req),
     trips,

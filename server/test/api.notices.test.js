@@ -67,4 +67,19 @@ describe("admin review notices", () => {
     assert.ok(any.body.data.some((u) => Number(u.id) === Number(seed.userId)));
     await agent.get("/api/admin/notices").set(auth(token)).expect(401);
   });
+
+  it("notifies leader applications and opens the verify page", async () => {
+    const token = await loginUser(agent);
+    const admin = await loginAdmin(agent);
+    await agent
+      .post("/api/me/leader")
+      .set(auth(token))
+      .send({ name: "林领队", years: 2, intro: "周末带过几次郊野团，熟悉集合。" })
+      .expect(200);
+    const box = await agent.get("/api/admin/notices").set(auth(admin)).expect(200);
+    assert.equal(box.body.data.list[0].kind, "leader");
+    assert.equal(box.body.data.list[0].href, `/admin/verify?kind=leader&userId=${seed.userId}`);
+    const pending = await agent.get("/api/admin/users?pending=leader").set(auth(admin)).expect(200);
+    assert.equal(pending.body.data[0].id, seed.userId);
+  });
 });

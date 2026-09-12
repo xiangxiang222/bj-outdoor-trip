@@ -23,7 +23,8 @@
     "pages/guides/guides",
     "pages/guide/guide",
     "pages/user/user",
-    "pages/publish/publish"
+    "pages/publish/publish",
+    "pages/leader/leader"
   ],
   "subPackages": [
     { "root": "pkg-detail", "name": "detail", "pages": ["detail/detail"] }

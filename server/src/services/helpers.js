@@ -22,6 +22,10 @@ function isAlumni(user) {
   return !!(user && user.campus_kind === "alumni" && user.student_status === "approved");
 }
 
+function isLeader(user) {
+  return !!(user && (user.leader_status === "approved" || user.role === "leader"));
+}
+
 function enrolledCount(scheduleId, includeCancelled = false) {
   const db = getDb();
   const sql = includeCancelled
@@ -234,6 +238,7 @@ module.exports = {
   isMember,
   isStudent,
   isAlumni,
+  isLeader,
   normalizeOrganizerType,
   hostOrgName,
   enrolledCount,

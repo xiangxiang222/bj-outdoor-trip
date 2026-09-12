@@ -59,7 +59,7 @@ const tabNames = new Set(["home", "activities", "orders", "mine"]);
 const isHome = computed(() => route.name === "home");
 const showBack = computed(() => !tabNames.has(route.name));
 const mineActive = computed(() =>
-  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/student", "/m/group", "/m/official", "/m/feedback"].some(
+  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/student", "/m/group", "/m/leader", "/m/official", "/m/feedback"].some(
     (p) => route.path === p || route.path.startsWith(p + "/")
   )
 );
@@ -81,6 +81,7 @@ const title = computed(() => {
     rules: "客服与规则",
     student: "校园认证",
     group: "团体认证",
+    leader: "领队申请",
     feedback: "建议与 BUG",
     lottery: "抽奖",
     after: "完成活动",
@@ -112,6 +113,7 @@ const subtitle = computed(() => {
     official: "加微信、看规则、找客服",
     rules: "加微信、看规则、找客服",
     student: "认证后可走学生价",
+    leader: "通过后可在团里报名领队",
     mine: "账号、权益与客服",
     orders: "下一趟，以及走过的局",
     publish: "提交后需管理员审核",

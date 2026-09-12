@@ -7,7 +7,7 @@
         <el-button type="success" @click="load">查询</el-button>
       </div>
     </div>
-    <p class="admin-scroll-hint">校园和团体认证请到「认证审批」。这里只管会员、积分和账号。</p>
+    <p class="admin-scroll-hint">校园、团体和领队认证请到「认证审批」。这里只管会员、积分和账号。</p>
     <el-table :data="list" stripe row-key="id" :row-class-name="rowClass">
       <el-table-column prop="nickname" label="昵称" min-width="120" />
       <el-table-column prop="phone" label="手机" width="130" />
@@ -29,10 +29,14 @@
       <el-table-column label="团体" min-width="120">
         <template #default="{ row }">{{ row.groupStatus === "approved" ? row.groupName || "已认证" : row.groupStatus === "pending" ? "待审" : "—" }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="360">
+      <el-table-column label="领队" width="110">
+        <template #default="{ row }">{{ row.isLeader ? "已认证" : row.leaderStatus === "pending" ? "待审" : "—" }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="420">
         <template #default="{ row }">
           <el-button v-if="row.studentStatus === 'pending'" size="small" @click="verify(row, 'student')">过校园</el-button>
           <el-button v-if="row.groupStatus === 'pending'" size="small" @click="verify(row, 'group')">过团体</el-button>
+          <el-button v-if="row.leaderStatus === 'pending'" size="small" @click="verify(row, 'leader')">过领队</el-button>
           <el-button size="small" type="success" @click="grant(row)">{{ row.isMember ? "续费" : "开通" }}</el-button>
           <el-button v-if="row.isMember" size="small" @click="revoke(row)">取消会员</el-button>
           <el-button size="small" @click="openPoints(row)">积分</el-button>
@@ -82,7 +86,7 @@ watch(() => [route.query.pending, route.query.userId], syncFromRoute);
 function syncFromRoute() {
   const pending = String(route.query.pending || "");
   const userId = String(route.query.userId || "");
-  if (pending === "campus" || pending === "group") {
+  if (pending === "campus" || pending === "group" || pending === "leader") {
     router.replace({ path: "/admin/verify", query: { kind: pending, ...(userId ? { userId } : {}) } });
     return;
   }
@@ -92,7 +96,7 @@ function syncFromRoute() {
 
 function rowClass({ row }) {
   if (focusId.value && String(row.id) === focusId.value) return "admin-row-focus";
-  if (row.studentStatus === "pending" || row.groupStatus === "pending") return "admin-row-pending";
+  if (row.studentStatus === "pending" || row.groupStatus === "pending" || row.leaderStatus === "pending") return "admin-row-pending";
   return "";
 }
 
@@ -110,7 +114,7 @@ async function load() {
 async function verify(row, kind) {
   try {
     await http.post(`/admin/users/${row.id}/verify`, { kind, action: "approve" });
-    ElMessage.success(kind === "student" ? "校园认证已通过" : "团体已通过");
+    ElMessage.success(kind === "student" ? "校园认证已通过" : kind === "leader" ? "领队已通过" : "团体已通过");
     window.dispatchEvent(new Event("admin-notices-refresh"));
     await load();
   } catch (e) {

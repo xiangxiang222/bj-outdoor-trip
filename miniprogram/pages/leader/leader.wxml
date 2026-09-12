@@ -1,0 +1,12 @@
+<view class="pad muted">个人通过领队申请后，才能在团详情页报名领队。</view>
+<view class="pad" wx:if="{{certified}}" style="color:#2d6a4f">已是领队{{name ? ' · ' + name : ''}}</view>
+<view class="pad muted" wx:elif="{{pending}}">审核中{{name ? ' · ' + name : ''}}</view>
+<view class="pad muted" wx:elif="{{rejected}}">上次未通过，可修改后再次提交。</view>
+<view class="pad">真实姓名</view>
+<input class="input" value="{{name}}" placeholder="带队时展示给团友" disabled="{{certified}}" bindinput="onName" />
+<view class="pad">带队年限</view>
+<input class="input" type="number" value="{{years}}" placeholder="没有带过可填 0" disabled="{{certified}}" bindinput="onYears" />
+<view class="pad">带队经历</view>
+<textarea class="input" value="{{intro}}" placeholder="走过哪些线、怎么带队、能照顾到什么" disabled="{{certified}}" bindinput="onIntro" />
+<button bindtap="submit" disabled="{{loading || certified}}">{{loading ? '提交中…' : '提交申请'}}</button>
+<button class="ghost" wx:if="{{redirect}}" bindtap="goBack">返回团详情</button>

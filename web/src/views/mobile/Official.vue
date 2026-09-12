@@ -20,6 +20,7 @@
       <router-link class="svc-tile" to="/m/feedback">意见反馈</router-link>
       <router-link class="svc-tile" to="/m/lottery">报名前抽奖</router-link>
       <router-link class="svc-tile" to="/m/student">学生认证</router-link>
+      <router-link class="svc-tile" to="/m/leader">领队申请</router-link>
       <a class="svc-tile" href="#rules" @click.prevent="jumpRules">平台规则</a>
     </div>
 

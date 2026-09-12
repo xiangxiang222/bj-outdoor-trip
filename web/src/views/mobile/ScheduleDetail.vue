@@ -106,6 +106,12 @@
               <a v-else class="nav-link" href="#" @click.prevent="applyLeader(slot.slot)">{{ slot.label }} · 报名领队</a>
             </div>
             <p class="muted">{{ s.leaderRecruitCopy }}</p>
+            <div v-if="leaderNeedApply" class="card" style="margin-top:8px">
+              <div class="pad">
+                <p style="margin:0 0 10px">{{ leaderNeedApplyText }}</p>
+                <button class="btn block" type="button" @click="goLeaderApply">{{ leaderNeedApplyCta }}</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -415,6 +421,9 @@ const tabItems = computed(() => [
   { id: "rules", label: "须知" },
 ]);
 const msg = ref("");
+const leaderNeedApply = ref(false);
+const leaderNeedApplyText = ref("报名领队需先填写领队申请并通过审核");
+const leaderNeedApplyCta = computed(() => (store.profile?.leaderStatus === "pending" ? "查看领队申请" : "去填写领队申请"));
 const showDissolve = ref(false);
 const showShare = ref(false);
 const showBus = ref(false);
@@ -626,16 +635,45 @@ function openLeader(leader) {
   else if (leader.userId || leader.id) router.push("/m/user/" + (leader.userId || leader.id));
 }
 
+function goLeaderApply() {
+  const redirect = encodeURIComponent(route.fullPath);
+  router.push("/m/leader?redirect=" + redirect);
+}
+
+function showLeaderApplyHint(text) {
+  leaderNeedApply.value = true;
+  leaderNeedApplyText.value = text || "报名领队需先填写领队申请并通过审核";
+  msg.value = leaderNeedApplyText.value;
+}
+
 async function applyLeader() {
   if (!store.token) {
     router.push("/m/login?redirect=" + encodeURIComponent(route.fullPath));
     return;
   }
   try {
+    await store.fetchMe();
+  } catch {
+    /* 继续用本地资料判断 */
+  }
+  if (!store.profile?.isLeader) {
+    showLeaderApplyHint(
+      store.profile?.leaderStatus === "pending"
+        ? "领队申请审核中，通过后再报名领队"
+        : "报名领队需先填写领队申请并通过审核"
+    );
+    return;
+  }
+  try {
     const res = await http.post("/schedules/" + s.value.id + "/leaders/apply", { leadRef: route.query.leadRef });
+    leaderNeedApply.value = false;
     msg.value = res.message || "已报名领队";
     await load();
   } catch (e) {
+    if (e.code === "need_leader_apply" || e.code === "leader_pending") {
+      showLeaderApplyHint(e.message);
+      return;
+    }
     msg.value = e.message;
   }
 }

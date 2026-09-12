@@ -13,7 +13,7 @@ function now() {
 
 function rewriteHref(href) {
   const value = String(href || "").trim();
-  const old = value.match(/^\/admin\/users\?pending=(campus|group)&userId=(\d+)/);
+  const old = value.match(/^\/admin\/users\?pending=(campus|group|leader)&userId=(\d+)/);
   if (old) return `/admin/verify?kind=${old[1]}&userId=${old[2]}`;
   return value;
 }
@@ -84,6 +84,22 @@ function noticeGroup(user) {
   });
 }
 
+function noticeLeader(user) {
+  if (!user) return null;
+  const who = user.nickname || user.phone || "用户";
+  const name = String(user.leader_name || "").trim();
+  const years = Number(user.leader_years || 0);
+  const bits = [name || who, years ? `带队 ${years} 年` : ""].filter(Boolean);
+  return pushNotice({
+    kind: "leader",
+    title: "领队申请待审",
+    body: bits.length ? `${who} 申请领队（${bits.join(" · ")}）` : `${who} 申请领队`,
+    href: `/admin/verify?kind=leader&userId=${user.id}`,
+    refType: "user",
+    refId: user.id,
+  });
+}
+
 function listNotices(limit = 30) {
   const rows = getDb()
     .prepare("SELECT * FROM admin_notices ORDER BY id DESC LIMIT ?")
@@ -121,6 +137,7 @@ module.exports = {
   pushNotice,
   noticeCampus,
   noticeGroup,
+  noticeLeader,
   listNotices,
   markRead,
   markAllRead,

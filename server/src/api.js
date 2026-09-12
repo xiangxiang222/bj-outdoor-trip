@@ -46,7 +46,7 @@ const { parseEnrollLimit, eligibilityView, applyEnrollLimit } = require("./servi
 const { oversubView, isOversubPending, drawOversub } = require("./services/oversub");
 const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
 const { draftRoute } = require("./services/route-draft");
-const { noticeCampus, noticeGroup, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
+const { noticeCampus, noticeGroup, noticeLeader, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
   createCampaign,
@@ -77,6 +77,7 @@ const {
   isMember,
   isStudent,
   isAlumni,
+  isLeader,
   normalizeOrganizerType,
   hostOrgName,
   enrolledCount,
@@ -160,6 +161,11 @@ function userPublic(u, req) {
     groupStatus: u.group_status || "",
     groupName: u.group_name || "",
     groupKind: u.group_kind || "",
+    isLeader: isLeader(u),
+    leaderStatus: u.leader_status || "",
+    leaderName: u.leader_name || "",
+    leaderYears: Number(u.leader_years || 0),
+    leaderIntro: u.leader_intro || "",
     referralCode: ensureReferralCode(u.id),
     idCardMasked: maskIdCard(u.id_card),
   };
@@ -679,6 +685,25 @@ router.post("/me/group", authUser, (req, res) => {
   res.json({ ok: true, data: userPublic(next, req), message: "已提交团体认证，待后台审核" });
 });
 
+router.post("/me/leader", authUser, (req, res) => {
+  const body = req.body || {};
+  const name = String(body.name || body.leaderName || "").trim();
+  const intro = String(body.intro || body.leaderIntro || "").trim();
+  const years = Number(body.years ?? body.leaderYears);
+  if (name.length < 2 || name.length > 20) return res.status(400).json({ ok: false, message: "请填写 2～20 字真实姓名" });
+  if (!Number.isFinite(years) || years < 0 || years > 40) return res.status(400).json({ ok: false, message: "请填写 0～40 的带队年限" });
+  if (intro.length < 8 || intro.length > 300) return res.status(400).json({ ok: false, message: "请用 8～300 字介绍带队经历" });
+  const current = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+  if (!current || current.deleted_at) return res.status(401).json({ ok: false, message: "请先登录" });
+  if (isLeader(current)) return res.status(400).json({ ok: false, message: "你已是领队，无需重复申请" });
+  db()
+    .prepare("UPDATE users SET leader_name=?, leader_years=?, leader_intro=?, leader_status='pending' WHERE id=?")
+    .run(name, Math.round(years), intro, req.userId);
+  const next = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+  noticeLeader(next);
+  res.json({ ok: true, data: userPublic(next, req), message: "已提交领队申请，待后台审核" });
+});
+
 router.post("/feedback", authUser, (req, res) => {
   const kind = (req.body || {}).kind === "bug" ? "bug" : "suggest";
   const content = String((req.body || {}).content || "").trim();
@@ -1020,7 +1045,7 @@ router.post("/schedules/:id/leaders/apply", authUser, (req, res) => {
     const data = applyLeader(req.params.id, req.userId, { leadRef: (req.body || {}).leadRef || req.query.leadRef });
     res.json({ ok: true, data, message: `已报名领队${data.slot}` });
   } catch (e) {
-    res.status(e.status || 500).json({ ok: false, message: e.message });
+    res.status(e.status || 500).json({ ok: false, message: e.message, code: e.code || undefined });
   }
 });
 
@@ -1619,6 +1644,12 @@ function adminUserView(user) {
     school: user.school || "",
     groupStatus: user.group_status || "",
     groupName: user.group_name || "",
+    isLeader: isLeader(user),
+    leaderStatus: user.leader_status || "",
+    leaderName: user.leader_name || "",
+    leaderYears: Number(user.leader_years || 0),
+    leaderIntro: user.leader_intro || "",
+    role: user.role || "user",
     member_expire_at: user.member_expire_at,
     points: user.points,
     company_name: user.company_name,
@@ -2242,18 +2273,19 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
   const q = String(req.query.q || "").trim();
   const pending = String(req.query.pending || "").trim();
   let sql =
-    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,campus_kind,group_status,group_name FROM users WHERE deleted_at IS NULL";
+    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,campus_kind,group_status,group_name,role,leader_status,leader_name,leader_years,leader_intro FROM users WHERE deleted_at IS NULL";
   const args = [];
   if (q) {
-    sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ? OR IFNULL(school,'') LIKE ? OR IFNULL(group_name,'') LIKE ?)";
+    sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ? OR IFNULL(school,'') LIKE ? OR IFNULL(group_name,'') LIKE ? OR IFNULL(leader_name,'') LIKE ?)";
     const like = `%${q}%`;
-    args.push(like, like, like, like, like);
+    args.push(like, like, like, like, like, like);
   }
   if (pending === "campus") sql += " AND student_status='pending'";
   else if (pending === "group") sql += " AND group_status='pending'";
-  else if (pending === "any") sql += " AND (student_status='pending' OR group_status='pending')";
+  else if (pending === "leader") sql += " AND leader_status='pending'";
+  else if (pending === "any") sql += " AND (student_status='pending' OR group_status='pending' OR leader_status='pending')";
   sql +=
-    " ORDER BY CASE WHEN student_status='pending' THEN 0 WHEN group_status='pending' THEN 1 ELSE 2 END, id DESC";
+    " ORDER BY CASE WHEN student_status='pending' THEN 0 WHEN group_status='pending' THEN 1 WHEN leader_status='pending' THEN 2 ELSE 3 END, id DESC";
   const rows = db()
     .prepare(sql)
     .all(...args)
@@ -2262,11 +2294,16 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
       isMember: isMember(u),
       isStudent: isStudent(u),
       isAlumni: isAlumni(u),
+      isLeader: isLeader(u),
       studentStatus: u.student_status || "",
       campusKind: u.campus_kind === "alumni" ? "alumni" : u.student_status || u.is_student ? "student" : "",
       school: u.school || "",
       groupStatus: u.group_status || "",
       groupName: u.group_name || "",
+      leaderStatus: u.leader_status || "",
+      leaderName: u.leader_name || "",
+      leaderYears: Number(u.leader_years || 0),
+      leaderIntro: u.leader_intro || "",
       isVirtual: !!u.is_virtual,
     }));
   res.json({ ok: true, data: rows });
@@ -2303,10 +2340,18 @@ router.post("/admin/users/:id/verify", authAdmin, requireCap("ops"), (req, res) 
   } else if (kind === "group") {
     if (action === "approve") db().prepare("UPDATE users SET group_status='approved' WHERE id=?").run(user.id);
     else db().prepare("UPDATE users SET group_status='rejected' WHERE id=?").run(user.id);
+  } else if (kind === "leader") {
+    if (action === "approve") {
+      const role = user.role === "company" ? "company" : "leader";
+      db().prepare("UPDATE users SET leader_status='approved', role=? WHERE id=?").run(role, user.id);
+    } else {
+      const role = user.role === "leader" ? "user" : user.role;
+      db().prepare("UPDATE users SET leader_status='rejected', role=? WHERE id=?").run(role, user.id);
+    }
   } else {
-    return res.status(400).json({ ok: false, message: "请选择学生或团体认证" });
+    return res.status(400).json({ ok: false, message: "请选择学生、团体或领队认证" });
   }
-  resolveNotices(kind === "student" ? "campus" : "group", "user", user.id, req.adminId);
+  resolveNotices(kind === "student" ? "campus" : kind === "group" ? "group" : "leader", "user", user.id, req.adminId);
   const next = db().prepare("SELECT * FROM users WHERE id=?").get(user.id);
   res.json({ ok: true, data: adminUserView(next) });
 });

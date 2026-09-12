@@ -12,6 +12,7 @@ const routes = [
       { path: "rules", redirect: "/m/official#rules" },
       { path: "student", name: "student", component: () => import("@/views/mobile/Student.vue") },
       { path: "group", name: "group", component: () => import("@/views/mobile/Group.vue") },
+      { path: "leader", name: "leader", component: () => import("@/views/mobile/Leader.vue") },
       { path: "feedback", name: "feedback", component: () => import("@/views/mobile/Feedback.vue") },
       { path: "lottery", name: "lottery", component: () => import("@/views/mobile/Lottery.vue") },
       { path: "after/:id", name: "after", component: () => import("@/views/mobile/After.vue") },

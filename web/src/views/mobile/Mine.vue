@@ -49,6 +49,9 @@
       <button class="cell" type="button" @click="goAuth('/m/group')">
         <span>{{ store.profile?.groupStatus === "approved" ? "团体已认证" : store.profile?.groupStatus === "pending" ? "团体认证审核中" : "团体认证" }}</span><i>›</i>
       </button>
+      <button class="cell" type="button" @click="goAuth('/m/leader')">
+        <span>{{ store.profile?.isLeader ? "领队已认证" : store.profile?.leaderStatus === "pending" ? "领队申请审核中" : "领队申请" }}</span><i>›</i>
+      </button>
       <button class="cell" type="button" @click="goReferral">
         <span>推荐报名</span><i>按人数结 5% ›</i>
       </button>
