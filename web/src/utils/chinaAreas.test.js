@@ -51,8 +51,9 @@ describe("chinaAreas", () => {
     expect(findRegionPath("河南济源")).toEqual(["河南省", "济源市"]);
   });
 
-  it("keeps custom or cross-province labels unmapped", () => {
-    expect(findRegionPath("北京周边")).toEqual([]);
+  it("maps extra labels and leaves mixed custom text unmapped", () => {
+    expect(findRegionPath("北京周边")).toEqual(["北京周边"]);
+    expect(findRegionPath("跨省")).toEqual(["跨省"]);
     expect(findRegionPath("北京房山 / 河北涞水")).toEqual([]);
     expect(findRegionPath("")).toEqual([]);
   });

@@ -63,10 +63,9 @@
             :props="regionProps"
             filterable
             clearable
-            placeholder="选省、市或县，可只选到省"
+            placeholder="选省、市或县，也可选北京周边 / 跨省"
             @change="onRegionPick"
           />
-          <el-input v-model="form.region" class="region-hand" placeholder="也可手填，如北京周边、跨省" @change="onRegionTyped" />
         </el-form-item>
         <template v-if="composeMode === 'ai'">
           <el-form-item label="补充">
@@ -296,10 +295,6 @@ function applyRegion(text) {
 
 function onRegionPick(path) {
   form.value.region = formatRegion(path);
-}
-
-function onRegionTyped() {
-  applyRegion(form.value.region);
 }
 
 async function load() {
@@ -600,9 +595,6 @@ async function off(row) {
 }
 .field-select {
   width: 100%;
-}
-.region-hand {
-  margin-top: 8px;
 }
 .sec {
   margin: 8px 0 14px;
