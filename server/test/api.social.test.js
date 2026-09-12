@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { harness, loginUser, loginAdmin, loginCompany, auth, ID, enrollPayload } = require("./http");
+const { harness, loginUser, loginAdmin, loginCompany, issueCaptcha, auth, ID, enrollPayload } = require("./http");
 const { getDb } = require("../src/db");
 
 describe("social homepage leaders referral virtual fallback", () => {
@@ -17,6 +17,30 @@ describe("social homepage leaders referral virtual fallback", () => {
     assert.ok(res.body.data.commonRules.sections.length >= 4);
     assert.match(res.body.data.leaderRecruitCopy, /200/);
     assert.equal(res.body.data.referralRate, 0.05);
+  });
+
+  it("opens the new organizer homepage after the old account was closed", async () => {
+    const admin = await loginAdmin(agent);
+    await agent.post(`/api/admin/users/${seed.userId}/close`).set(auth(admin)).expect(200);
+    const cap = await issueCaptcha(agent);
+    const created = await agent
+      .post("/api/auth/register")
+      .send({
+        phone: "13800138000",
+        password: "123456",
+        nickname: "林北野",
+        captchaToken: cap.token,
+        captcha: cap.code,
+      })
+      .expect(200);
+    const newId = created.body.data.user.id;
+    const page = await agent.get("/api/users/" + seed.userId).expect(200);
+    assert.equal(page.body.data.id, newId);
+    assert.equal(page.body.data.nickname, "林北野");
+    const sch = await agent.get("/api/schedules/" + seed.individualScheduleId).expect(200);
+    assert.equal(sch.body.data.organizerId, newId);
+    const missing = await agent.get("/api/users/999999");
+    assert.equal(missing.status, 404);
   });
 
   it("returns album and trip buckets on public user homepage", async () => {

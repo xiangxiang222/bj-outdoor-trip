@@ -31,7 +31,7 @@ const {
 } = require("./services/home");
 const { offerMeta, liveMemberPrice, liveStudentPrice, flagOn } = require("./services/offer");
 const { publicUserProfile, payEnrollment, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
-const { addPhoto, removePhoto, ensureReferralCode } = require("./services/profile");
+const { addPhoto, removePhoto, ensureReferralCode, resolveLiveUser, adoptOrganizer } = require("./services/profile");
 const { leadersOf, applyLeader, settleLeaderRewards, recruitPayload } = require("./services/leaders");
 const { referralCard, groupQrPayload, settleEnrollReferrals } = require("./services/referral");
 const { optionsForSchedule, setFallbacks, listFallbacks } = require("./services/fallback");
@@ -241,6 +241,7 @@ function scheduleView(sch, req) {
   const virtualLive = virtualEnrolledCount(sch.id);
   const leaders = leadersOf(sch.id, req);
   const viewer = req.userId ? db().prepare("SELECT * FROM users WHERE id=?").get(req.userId) : null;
+  const organizer = adoptOrganizer(sch);
   return {
     id: sch.id,
     routeId: sch.route_id,
@@ -249,8 +250,8 @@ function scheduleView(sch, req) {
     startDate: sch.start_date,
     endDate: sch.end_date,
     organizerType: sch.organizer_type,
-    organizerId: sch.organizer_id,
-    organizerName: sch.organizer_name,
+    organizerId: organizer ? organizer.id : sch.organizer_id,
+    organizerName: organizer?.nickname || sch.organizer_name,
     companyName: sch.company_name,
     bus: mapBus(bus, sch, req),
     minGroupSize: sch.min_group_size,
@@ -715,7 +716,7 @@ router.get("/weather", async (req, res) => {
 });
 
 router.get("/users/:id", (req, res) => {
-  const user = db().prepare("SELECT * FROM users WHERE id=? AND deleted_at IS NULL").get(req.params.id);
+  const user = resolveLiveUser(req.params.id);
   const data = publicUserProfile(user, req);
   if (!data) return res.status(404).json({ ok: false, message: "用户不存在" });
   res.json({ ok: true, data });
