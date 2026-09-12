@@ -12,7 +12,11 @@
     <view class="muted">{{data.universal ? '公司团除外，报名任一团可用' : data.schedule.startDate + ' 出发'}}</view>
     <view class="price" wx:if="{{data.quote}}">团价 ¥{{data.quote.tripPrice}}<text wx:if="{{data.quote.applyCoupon}}"> → 券后 ¥{{data.quote.couponPay}}</text></view>
     <view class="muted" wx:if="{{data.quote && data.quote.reason}}">{{data.quote.reason}}</view>
-    <view class="muted" wx:if="{{data.validHours}}">领取后 {{data.validHours}} 小时内可用</view>
+    <view class="muted" wx:if="{{data.validHours && !ttl}}">领取后 {{data.validHours}} 小时内可用</view>
+    <view wx:if="{{ttl}}">
+      <view class="progress {{ttl.percent < 20 ? 'low' : ''}}"><view class="bar" style="width: {{ttl.percent}}%;"></view></view>
+      <view class="muted">{{ttl.expired ? '这张券已过期' : ttl.label + '内可用'}}</view>
+    </view>
     <view class="muted">保险另计。{{data.stackMember || data.stackStudent ? '可与会员/学生价叠加。' : '与会员/学生价取更低，不叠加。'}}</view>
   </view>
 </view>

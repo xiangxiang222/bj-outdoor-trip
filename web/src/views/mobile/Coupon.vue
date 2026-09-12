@@ -17,7 +17,13 @@
         <template v-else-if="quote.isMember"> · 会员价 ¥{{ quote.memberPay }}</template>
       </p>
       <p class="muted" v-if="quote && quote.reason">{{ quote.reason }}</p>
-      <p class="muted" v-if="data.validHours">领取后 {{ data.validHours }} 小时内可用。</p>
+      <p class="muted" v-if="data.validHours && !ttl">领取后 {{ data.validHours }} 小时内可用。</p>
+      <div v-if="ttl" class="coupon-ttl">
+        <div class="progress" :class="{ low: ttl.percent < 20 }">
+          <i :style="{ width: ttl.percent + '%' }"></i>
+        </div>
+        <p class="muted">{{ ttl.expired ? "这张券已过期" : ttl.label + "内可用" }}</p>
+      </div>
       <p class="muted">保险另计，不参与优惠。{{ stackHint }}</p>
     </div></div>
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
@@ -28,11 +34,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
+import { couponCountdown } from "@/utils/couponTime";
 
 const route = useRoute();
 const router = useRouter();
@@ -40,8 +47,22 @@ const store = useUserStore();
 const data = ref(null);
 const err = ref("");
 const loading = ref(false);
+const now = ref(Date.now());
+let timer;
 
 const quote = computed(() => data.value?.quote || null);
+const ttl = computed(() => {
+  const mine = data.value?.myCoupon;
+  if (!mine || mine.status === "used" || mine.status === "held") return null;
+  return couponCountdown(
+    {
+      ...mine,
+      validHours: data.value?.validHours,
+      useEnd: data.value?.useEnd,
+    },
+    now.value
+  );
+});
 const stackHint = computed(() => {
   const d = data.value || {};
   const bits = [];
@@ -63,7 +84,13 @@ const cta = computed(() => {
   return "领取并报名";
 });
 
-onMounted(load);
+onMounted(() => {
+  timer = setInterval(() => {
+    now.value = Date.now();
+  }, 1000);
+  load();
+});
+onUnmounted(() => clearInterval(timer));
 
 async function load() {
   err.value = "";

@@ -107,7 +107,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `/m/route/:id` | RouteDetail | 30 条线路图文 |
 | `/m/routes` | RouteList | 线路目录（底栏不再放入口，可直接打开） |
 | `/m/login` | Login | 图片验证码 + 密码；微信演示授权 |
-| `/m/member` `/m/coupons` `/m/coupon/:code` | 会员与券 | |
+| `/m/member` `/m/coupons` `/m/coupon/:code` | 会员与券；券页展示领取后剩余时间进度条 | |
 | `/m/lottery` `/m/after/:id` `/m/feedback` | 抽奖、完成活动、建议 | |
 | `/m/guides` `/m/guide/:id` `/m/user/:id` | 领队、导游详情、个人主页（相册按朋友圈九宫格上传） | |
 | `/m/favorites` `/m/stats/:id` `/m/chain` `/m/open/:id` | 收藏、画像、进行中的团、开团 | |

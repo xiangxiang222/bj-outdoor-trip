@@ -4,5 +4,9 @@
     <view class="title">{{item.label}}</view>
     <view>{{item.name}}</view>
     <view class="muted">{{item.routeTitle}}<text wx:if="{{item.startDate}}"> · {{item.startDate}}</text></view>
+    <view wx:if="{{item.status=='unused' && item.ttl}}">
+      <view class="progress {{item.ttl.percent < 20 ? 'low' : ''}}"><view class="bar" style="width: {{item.ttl.percent}}%;"></view></view>
+      <view class="muted">{{item.ttl.label}}</view>
+    </view>
   </view>
 </view>
