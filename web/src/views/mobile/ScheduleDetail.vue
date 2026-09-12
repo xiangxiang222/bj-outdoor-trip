@@ -1,13 +1,13 @@
 <template>
-  <div v-if="s">
-    <div class="card">
+  <div v-if="s" class="trip-detail">
+    <div class="card" style="border-radius:0;margin:0">
       <div class="hero-swipe" v-if="gallery.length" @click="previewHero">
         <img :src="gallery[heroIndex]" :alt="s.route.title" />
         <div class="hero-dots" v-if="gallery.length > 1">
           <i v-for="(g, i) in gallery" :key="g" :class="{ on: i === heroIndex }" />
         </div>
       </div>
-      <div class="pad">
+      <div class="pad trip-head">
         <div class="row">
           <strong>
             <span v-if="s.offerLabel" class="offer-chip inline" :style="{ background: s.offerColor }">{{ s.offerLabel }}</span>
@@ -18,270 +18,299 @@
         <div class="tag-row">
           <span class="play-tag sm" v-for="t in s.playTags || s.route.tags || []" :key="t.id || t" :style="{ background: t.color || '#2d6a4f' }">{{ t.name || t }}</span>
         </div>
-        <div class="fact-list">
-          <div class="fact-row">
-            <span class="fact-k">时间</span>
-            <span class="fact-v">{{ whenText }}</span>
-          </div>
-          <div class="fact-row">
-            <span class="fact-k">{{ isActivity ? "地点" : "集合" }}</span>
-            <span class="fact-v">{{ placeText }}</span>
-            <a v-if="s.meetupMapUrl" class="nav-link" :href="s.meetupMapUrl" target="_blank" rel="noreferrer">地图</a>
-          </div>
-          <div class="fact-row">
-            <span class="fact-k">人数</span>
-            <span class="fact-v">{{ peopleText }}</span>
-          </div>
-          <div class="fact-row">
-            <span class="fact-k">发起</span>
-            <span class="fact-v">
-              <a v-if="s.organizerId" class="nav-link" href="#" @click.prevent="goUser(s.organizerId)">{{ s.organizerName }}</a>
-              <span v-else>{{ s.organizerName }}</span>
-              <span v-if="s.companyName">（{{ s.companyName }}）</span>
-            </span>
-          </div>
-        </div>
-        <p v-if="s.guaranteed && !isActivity" class="muted" style="color:var(--leaf)">已成团 · 铁定出发（人数已达最低成团线）</p>
-        <div class="trust-row">
-          <span class="trust-chip" v-for="c in trusts" :key="c">{{ c }}</span>
-        </div>
-        <div v-if="ticket" class="ticket-card" :class="{ wait: ticket.kind === 'waitlist', posted: ticket.kind === 'posted' }">
-          <strong>{{ ticket.title }}</strong>
-          <p class="muted" style="margin:6px 0 0">{{ ticket.sub }}</p>
-          <div class="ticket-actions">
-            <button v-if="ticket.trips" class="btn ghost" type="button" @click="$router.push('/m/orders')">看行程</button>
-            <button v-if="ticket.share" class="btn" type="button" @click="share">去分享</button>
-          </div>
-        </div>
-        <p v-if="!isActivity">
-          <a v-if="busPhotos.length" class="nav-link" href="#" @click.prevent="showBus = true">{{ busText }}</a>
-          <span v-else>{{ busText }}</span>
-        </p>
-        <div class="progress"><i :style="{ width: Math.min(100, (shownEnrolled / s.maxSeats) * 100) + '%' }"></i></div>
-        <div class="row">
-          <span v-if="s.minGroupSize || s.oversub?.label" class="muted">{{ isActivity ? "满 " + s.minGroupSize + " 人成局" : "最低成团 " + s.minGroupSize }}<template v-if="s.oversub?.label"> · {{ s.oversub.label }}</template></span>
-          <span v-else></span>
+        <div class="row" style="margin-top:10px">
           <span v-if="isActivity && isFree" class="tag">免费</span>
           <span v-else-if="isActivity" class="price">¥{{ s.quote?.price }}</span>
           <TripPrices v-else :quote="s.quote" compact />
+          <span class="muted">{{ whenText }}</span>
         </div>
-        <p class="muted" v-if="s.oversub?.enabled">{{ s.oversub.copy }}</p>
-        <p class="muted" v-if="s.eligibility?.enabled">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? (s.eligibility.alumniOk ? " 已认证师生或校友可报" : " 已认证学生可报") : "" }}</p>
-        <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" class="muted" style="color:var(--clay)">
-          {{ s.eligibility.reason }}
-          <router-link to="/m/student">去校园认证</router-link>
-        </p>
-        <p class="muted" v-if="s.reviewStatus === 'pending'" style="color:#c77d3a">本团正在审核，通过后才会出现在{{ isActivity ? "活动页" : "首页" }}，暂不能报名。</p>
-        <p class="muted" v-else-if="s.reviewStatus === 'rejected'" style="color:var(--clay)">本团未通过审核。</p>
-        <p class="muted" v-if="s.status === 'cancelled'" style="color:var(--clay)">
-          本团已解散。理由：{{ s.cancelReason }}
-        </p>
-        <div v-if="s.coupon" class="card" style="margin:12px 0 0;background:#fff7e6" @click="$router.push('/m/coupon/' + s.coupon.code)">
-          <div class="pad">
-            <strong>{{ s.coupon.label }}</strong>
-            <span class="muted"> 余 {{ s.coupon.remain }}/{{ s.coupon.total }} · 点此领取</span>
+      </div>
+    </div>
+
+    <GoodsTabs v-model="tab" :tabs="tabItems" :label="isActivity ? '局详情分段' : '团详情分段'" />
+
+    <div v-show="tab === 'trip'" class="trip-pane">
+      <div class="card">
+        <div class="pad">
+          <div class="fact-list">
+            <div class="fact-row">
+              <span class="fact-k">时间</span>
+              <span class="fact-v">{{ whenText }}</span>
+            </div>
+            <div class="fact-row">
+              <span class="fact-k">{{ isActivity ? "地点" : "集合" }}</span>
+              <span class="fact-v">{{ placeText }}</span>
+              <a v-if="s.meetupMapUrl" class="nav-link" :href="s.meetupMapUrl" target="_blank" rel="noreferrer">地图</a>
+            </div>
+            <div class="fact-row">
+              <span class="fact-k">人数</span>
+              <span class="fact-v">{{ peopleText }}</span>
+            </div>
+            <div class="fact-row">
+              <span class="fact-k">发起</span>
+              <span class="fact-v">
+                <a v-if="s.organizerId" class="nav-link" href="#" @click.prevent="goUser(s.organizerId)">{{ s.organizerName }}</a>
+                <span v-else>{{ s.organizerName }}</span>
+                <span v-if="s.companyName">（{{ s.companyName }}）</span>
+              </span>
+            </div>
+          </div>
+          <p v-if="s.guaranteed && !isActivity" class="muted" style="color:var(--leaf)">已成团 · 铁定出发（人数已达最低成团线）</p>
+          <div class="trust-row">
+            <span class="trust-chip" v-for="c in trusts" :key="c">{{ c }}</span>
+          </div>
+          <div v-if="ticket" class="ticket-card" :class="{ wait: ticket.kind === 'waitlist', posted: ticket.kind === 'posted' }">
+            <strong>{{ ticket.title }}</strong>
+            <p class="muted" style="margin:6px 0 0">{{ ticket.sub }}</p>
+            <div class="ticket-actions">
+              <button v-if="ticket.trips" class="btn ghost" type="button" @click="$router.push('/m/orders')">看行程</button>
+              <button v-if="ticket.share" class="btn" type="button" @click="share">去分享</button>
+            </div>
+          </div>
+          <p v-if="!isActivity">
+            <a v-if="busPhotos.length" class="nav-link" href="#" @click.prevent="showBus = true">{{ busText }}</a>
+            <span v-else>{{ busText }}</span>
+          </p>
+          <div class="progress"><i :style="{ width: Math.min(100, (shownEnrolled / s.maxSeats) * 100) + '%' }"></i></div>
+          <div class="row">
+            <span v-if="s.minGroupSize || s.oversub?.label" class="muted">{{ isActivity ? "满 " + s.minGroupSize + " 人成局" : "最低成团 " + s.minGroupSize }}<template v-if="s.oversub?.label"> · {{ s.oversub.label }}</template></span>
+            <span v-else></span>
+          </div>
+          <p class="muted" v-if="s.oversub?.enabled">{{ s.oversub.copy }}</p>
+          <p class="muted" v-if="s.eligibility?.enabled">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? (s.eligibility.alumniOk ? " 已认证师生或校友可报" : " 已认证学生可报") : "" }}</p>
+          <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" class="muted" style="color:var(--clay)">
+            {{ s.eligibility.reason }}
+            <router-link to="/m/student">去校园认证</router-link>
+          </p>
+          <p class="muted" v-if="s.reviewStatus === 'pending'" style="color:#c77d3a">本团正在审核，通过后才会出现在{{ isActivity ? "活动页" : "首页" }}，暂不能报名。</p>
+          <p class="muted" v-else-if="s.reviewStatus === 'rejected'" style="color:var(--clay)">本团未通过审核。</p>
+          <p class="muted" v-if="s.status === 'cancelled'" style="color:var(--clay)">
+            本团已解散。理由：{{ s.cancelReason }}
+          </p>
+          <p v-if="s.notes" class="muted">{{ s.notes }}</p>
+          <div v-if="s.coupon" class="card" style="margin:12px 0 0;background:#fff7e6" @click="$router.push('/m/coupon/' + s.coupon.code)">
+            <div class="pad">
+              <strong>{{ s.coupon.label }}</strong>
+              <span class="muted"> 余 {{ s.coupon.remain }}/{{ s.coupon.total }} · 点此领取</span>
+            </div>
+          </div>
+          <div class="leader-board" v-if="!isActivity">
+            <div class="leader-slot" v-for="slot in leaderSlots" :key="slot.slot">
+              <template v-if="slot.leader">
+                <a class="nav-link" href="#" @click.prevent="openLeader(slot.leader)">
+                  <img v-if="slot.leader.avatar" class="leader-face" :src="slot.leader.avatar" alt="" />
+                  <span v-else class="leader-face">{{ (slot.leader.name || "领").slice(0, 1) }}</span>
+                  {{ slot.label }} {{ slot.leader.name }}
+                </a>
+              </template>
+              <a v-else class="nav-link" href="#" @click.prevent="applyLeader(slot.slot)">{{ slot.label }} · 报名领队</a>
+            </div>
+            <p class="muted">{{ s.leaderRecruitCopy }}</p>
+          </div>
+          <div v-if="!isActivity && weather" class="weather" :class="weather.alerts?.[0]?.level">
+            <strong>{{ weather.place }} {{ weather.summary }}</strong>
+            <span>{{ weather.tmin }}~{{ weather.tmax }}℃ · 风 {{ weather.wind }}km/h</span>
+            <WeatherChart :hourly="weather.hourly" :label="weather.place + '分时气温'" />
+            <p v-for="(a, i) in weather.alerts" :key="i">{{ a.text }}</p>
           </div>
         </div>
-        <div class="leader-board" v-if="!isActivity">
-          <div class="leader-slot" v-for="slot in leaderSlots" :key="slot.slot">
-            <template v-if="slot.leader">
-              <a class="nav-link" href="#" @click.prevent="openLeader(slot.leader)">
-                <img v-if="slot.leader.avatar" class="leader-face" :src="slot.leader.avatar" alt="" />
-                <span v-else class="leader-face">{{ (slot.leader.name || "领").slice(0, 1) }}</span>
-                {{ slot.label }} {{ slot.leader.name }}
-              </a>
-            </template>
-            <a v-else class="nav-link" href="#" @click.prevent="applyLeader(slot.slot)">{{ slot.label }} · 报名领队</a>
+      </div>
+
+      <template v-if="!isActivity">
+        <div class="h2">座位图</div>
+        <div class="card"><div class="pad">
+          <div class="seat-map">
+            <div class="seat-front">车头</div>
+            <div class="seat-row" v-for="row in seatRows" :key="row[0].row">
+              <template v-for="seat in row" :key="seat.no">
+                <span
+                  class="seat"
+                  :class="{ taken: seat.taken && !seat.locked, locked: seat.locked, mine: seat.mine, face: !!seat.occupant }"
+                  @click="onSeat(seat)"
+                >
+                  <img v-if="seat.occupant?.avatar" :src="seat.occupant.avatar" alt="" />
+                  <template v-else-if="seat.occupant">{{ seat.occupant.initial }}<span class="seat-age">{{ genderMark(seat.occupant.gender) }}{{ seat.occupant.lifeStage }}</span></template>
+                  <template v-else-if="seat.locked">锁</template>
+                  <template v-else>{{ seat.col }}</template>
+                </span>
+                <i v-if="seat.aisleAfter" class="seat-aisle" />
+              </template>
+            </div>
           </div>
-          <p class="muted">{{ s.leaderRecruitCopy }}</p>
-        </div>
-        <div v-if="!isActivity && weather" class="weather" :class="weather.alerts?.[0]?.level">
-          <strong>{{ weather.place }} {{ weather.summary }}</strong>
-          <span>{{ weather.tmin }}~{{ weather.tmax }}℃ · 风 {{ weather.wind }}km/h</span>
-          <WeatherChart :hourly="weather.hourly" :label="weather.place + '分时气温'" />
-          <p v-for="(a, i) in weather.alerts" :key="i">{{ a.text }}</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" v-if="isActivity && (s.route?.description || s.notes)">
-      <div class="pad">
-        <p v-if="s.route?.description" style="margin-top:0;white-space:pre-wrap">{{ s.route.description }}</p>
-        <p v-if="s.notes" class="muted">{{ s.notes }}</p>
-      </div>
-    </div>
-
-    <template v-if="!isActivity">
-    <div class="h2">座位图</div>
-    <div class="card"><div class="pad">
-      <div class="seat-map">
-        <div class="seat-front" v-if="!isActivity">车头</div>
-        <div class="seat-row" v-for="row in seatRows" :key="row[0].row">
-          <template v-for="seat in row" :key="seat.no">
-            <span
-              class="seat"
-              :class="{ taken: seat.taken && !seat.locked, locked: seat.locked, mine: seat.mine, face: !!seat.occupant }"
-              @click="onSeat(seat)"
-            >
-              <img v-if="seat.occupant?.avatar" :src="seat.occupant.avatar" alt="" />
-              <template v-else-if="seat.occupant">{{ seat.occupant.initial }}<span class="seat-age">{{ genderMark(seat.occupant.gender) }}{{ seat.occupant.lifeStage }}</span></template>
-              <template v-else-if="seat.locked">锁</template>
-              <template v-else>{{ seat.col }}</template>
-            </span>
-            <i v-if="seat.aisleAfter" class="seat-aisle" />
-          </template>
-        </div>
-      </div>
-      <p class="muted">{{ seatHint }}</p>
-    </div></div>
-    </template>
-
-    <div class="h2" v-if="s.myEnrollment">报名后</div>
-    <div class="card" v-if="s.myEnrollment"><div class="pad">
-      <template v-if="isActivity">
-        <p style="margin-top:0">已报名。到场时找发起人即可。</p>
-        <p>本局微信群</p>
-        <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本局群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
-        <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
-        <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
+          <p class="muted">{{ seatHint }}</p>
+        </div></div>
       </template>
-      <template v-else>
-      <p v-if="s.myEnrollment.status === 'applied'">已报名，待确认出行名单。{{ s.oversub?.copy }}</p>
-      <p v-else>1. 座位图可改座，早报名早选座。</p>
-      <p>2. 本团微信群</p>
-      <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本团群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
-      <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
-      <p>3. 候选团（本团未成团则按顺序转团，价格多退少补）</p>
-      <label class="check-row" v-for="opt in candidateOptions" :key="opt.id">
-        <input type="checkbox" :value="opt.id" v-model="fallbackIds" />
-        <span>{{ opt.title }} {{ opt.startDate }} · 余 {{ opt.remain }}</span>
-      </label>
-      <p>4. 替代团</p>
-      <label class="check-row">
-        <input type="checkbox" v-model="autoAlt" />
-        <span>如本团未成团，自动加入相同行程的其他日期</span>
-      </label>
-      <button class="btn ghost block" style="margin-top:8px" :disabled="savingFallbacks" @click="saveFallbacks">保存备选</button>
-      <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
+
+      <div class="h2" v-if="s.myEnrollment">报名后</div>
+      <div class="card" v-if="s.myEnrollment"><div class="pad">
+        <template v-if="isActivity">
+          <p style="margin-top:0">已报名。到场时找发起人即可。</p>
+          <p>本局微信群</p>
+          <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本局群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
+          <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
+          <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
+        </template>
+        <template v-else>
+          <p v-if="s.myEnrollment.status === 'applied'">已报名，待确认出行名单。{{ s.oversub?.copy }}</p>
+          <p v-else>1. 座位图可改座，早报名早选座。</p>
+          <p>2. 本团微信群</p>
+          <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本团群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
+          <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
+          <p>3. 候选团（本团未成团则按顺序转团，价格多退少补）</p>
+          <label class="check-row" v-for="opt in candidateOptions" :key="opt.id">
+            <input type="checkbox" :value="opt.id" v-model="fallbackIds" />
+            <span>{{ opt.title }} {{ opt.startDate }} · 余 {{ opt.remain }}</span>
+          </label>
+          <p>4. 替代团</p>
+          <label class="check-row">
+            <input type="checkbox" v-model="autoAlt" />
+            <span>如本团未成团，自动加入相同行程的其他日期</span>
+          </label>
+          <button class="btn ghost block" style="margin-top:8px" :disabled="savingFallbacks" @click="saveFallbacks">保存备选</button>
+          <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
+        </template>
+      </div></div>
+
+      <template v-if="!isActivity">
+        <div class="h2">推荐报名</div>
+        <div class="card"><div class="pad" style="text-align:center">
+          <p class="muted">推荐成功后按人数结算报名费的 5%</p>
+          <img v-if="referral.qr" :src="referral.qr" alt="推荐二维码" style="width:160px;height:160px;background:#fff;border-radius:12px" />
+          <p class="muted" style="word-break:break-all">{{ referral.url }}</p>
+          <p v-if="referral.code">我的推荐码 {{ referral.code }} · 待结 ¥{{ referral.pending || 0 }} / 已结 ¥{{ referral.earned || 0 }}</p>
+          <button class="btn ghost" @click="loadReferral">生成我的推荐码</button>
+        </div></div>
       </template>
-    </div></div>
 
-    <template v-if="!isActivity">
-    <div class="h2">推荐报名</div>
-    <div class="card"><div class="pad" style="text-align:center">
-      <p class="muted">推荐成功后按人数结算报名费的 5%</p>
-      <img v-if="referral.qr" :src="referral.qr" alt="推荐二维码" style="width:160px;height:160px;background:#fff;border-radius:12px" />
-      <p class="muted" style="word-break:break-all">{{ referral.url }}</p>
-      <p v-if="referral.code">我的推荐码 {{ referral.code }} · 待结 ¥{{ referral.pending || 0 }} / 已结 ¥{{ referral.earned || 0 }}</p>
-      <button class="btn ghost" @click="loadReferral">生成我的推荐码</button>
-    </div></div>
-    </template>
-
-    <div class="h2" v-if="s.combo?.enabled">组合团 · 另一半条件</div>
-    <div class="card" v-if="s.combo?.enabled"><div class="pad">
-      <p class="muted">只对学生或已认证学生组织开放。每人写下希望另一半满足的条件。</p>
-      <p v-if="s.combo.rule?.school" class="muted">开团要求：{{ s.combo.rule.school }}</p>
-      <div v-for="(m, i) in s.combo.mates" :key="i" class="chain-item">
-        <span>{{ m.name }}</span>
-        <span class="muted">{{ m.school }} · 希望{{ m.wantGender === "female" ? "女生" : m.wantGender === "male" ? "男生" : "不限" }}<template v-if="m.wantSchool"> · {{ m.wantSchool }}</template></span>
-        <span v-if="m.note">{{ m.note }}</span>
-      </div>
-      <p v-if="!s.combo.mates?.length" class="muted">还没有人写下条件。</p>
-    </div></div>
-
-    <div class="h2">报名名单</div>
-    <div class="card"><div class="pad">
-      <div class="chain-item" v-for="c in s.chain" :key="c.index">
-        <span>{{ c.index }}</span>
-        <span>
-          <a v-if="c.userId" class="nav-link" href="#" @click.prevent="goUser(c.userId)">{{ c.name }}</a>
-          <span v-else>{{ c.name }}</span>
-          {{ c.gender === "female" ? "女" : c.gender === "male" ? "男" : "" }}
-          <span v-if="!isActivity && c.lifeStage" class="muted"> · {{ c.lifeStage }}</span>
-        </span>
-        <span v-if="c.waitlisted" class="muted">候补</span>
-        <span v-else-if="c.applied || c.status === 'applied'" class="muted">待确认</span>
-        <span
-          v-else-if="!isActivity || !isFree"
-          :class="{ 'pay-paid': c.payStatus === 'paid', 'pay-unpaid': c.canPay }"
-          @click="c.canPay && payFor(c)"
-        >{{ (c.seatNo ? c.seatNo + " · " : "") + payText(c.payStatus) }}{{ c.canPay ? " · 去支付" : "" }}</span>
-      </div>
-      <p class="muted" v-if="!s.chain?.length">还没有人报名，快来占第一名。</p>
-    </div></div>
-
-    <div class="h2">本团评价 <span v-if="reviews.count" class="muted">{{ reviews.avg }} 分 · {{ reviews.count }} 条</span></div>
-    <div class="card" v-if="reviews.list?.length">
-      <div class="pad review-item" v-for="rv in reviews.list" :key="rv.id">
-        <div class="row">
-          <strong>{{ rv.name }}</strong>
-          <span class="stars">{{ starText(rv.rating) }}</span>
+      <div class="h2" v-if="s.combo?.enabled">组合团 · 另一半条件</div>
+      <div class="card" v-if="s.combo?.enabled"><div class="pad">
+        <p class="muted">只对学生或已认证学生组织开放。每人写下希望另一半满足的条件。</p>
+        <p v-if="s.combo.rule?.school" class="muted">开团要求：{{ s.combo.rule.school }}</p>
+        <div v-for="(m, i) in s.combo.mates" :key="i" class="chain-item">
+          <span>{{ m.name }}</span>
+          <span class="muted">{{ m.school }} · 希望{{ m.wantGender === "female" ? "女生" : m.wantGender === "male" ? "男生" : "不限" }}<template v-if="m.wantSchool"> · {{ m.wantSchool }}</template></span>
+          <span v-if="m.note">{{ m.note }}</span>
         </div>
-        <p v-if="rv.content">{{ rv.content }}</p>
-        <p class="muted">{{ rv.createdAt }}</p>
+        <p v-if="!s.combo.mates?.length" class="muted">还没有人写下条件。</p>
+      </div></div>
+
+      <div class="h2">报名名单</div>
+      <div class="card"><div class="pad">
+        <div class="chain-item" v-for="c in s.chain" :key="c.index">
+          <span>{{ c.index }}</span>
+          <span>
+            <a v-if="c.userId" class="nav-link" href="#" @click.prevent="goUser(c.userId)">{{ c.name }}</a>
+            <span v-else>{{ c.name }}</span>
+            {{ c.gender === "female" ? "女" : c.gender === "male" ? "男" : "" }}
+            <span v-if="!isActivity && c.lifeStage" class="muted"> · {{ c.lifeStage }}</span>
+          </span>
+          <span v-if="c.waitlisted" class="muted">候补</span>
+          <span v-else-if="c.applied || c.status === 'applied'" class="muted">待确认</span>
+          <span
+            v-else-if="!isActivity || !isFree"
+            :class="{ 'pay-paid': c.payStatus === 'paid', 'pay-unpaid': c.canPay }"
+            @click="c.canPay && payFor(c)"
+          >{{ (c.seatNo ? c.seatNo + " · " : "") + payText(c.payStatus) }}{{ c.canPay ? " · 去支付" : "" }}</span>
+        </div>
+        <p class="muted" v-if="!s.chain?.length">还没有人报名，快来占第一名。</p>
+      </div></div>
+
+      <div class="h2">本团评价 <span v-if="reviews.count" class="muted">{{ reviews.avg }} 分 · {{ reviews.count }} 条</span></div>
+      <div class="card" v-if="reviews.list?.length">
+        <div class="pad review-item" v-for="rv in reviews.list" :key="rv.id">
+          <div class="row">
+            <strong>{{ rv.name }}</strong>
+            <span class="stars">{{ starText(rv.rating) }}</span>
+          </div>
+          <p v-if="rv.content">{{ rv.content }}</p>
+          <p class="muted">{{ rv.createdAt }}</p>
+        </div>
+      </div>
+      <p class="muted" v-else>还没有评价。</p>
+
+      <div v-if="!isActivity" style="display:flex;gap:8px;margin:12px 0">
+        <button class="btn ghost" style="flex:1" @click="$router.push('/m/stats/' + s.id)">本团画像</button>
+        <button class="btn ghost" style="flex:1" @click="share">分享到微信</button>
+      </div>
+      <div v-else style="margin:12px 0">
+        <button class="btn ghost block" @click="share">分享到微信</button>
       </div>
     </div>
-    <p class="muted" v-else>还没有评价。</p>
 
-    <template v-if="!isActivity">
-    <div class="h2">装备清单</div>
-    <div class="card"><div class="pad">
-      <label class="pack-item" v-for="item in packing" :key="item">
-        <input type="checkbox" />
-        <span>{{ item }}</span>
-      </label>
-      <p class="muted" v-if="!packing.length">详见线路介绍中的装备说明。</p>
-    </div></div>
-
-    <div class="h2">退改说明</div>
-    <div class="card"><div class="pad">
-      <p class="muted" style="margin-top:0">{{ cancelPolicy.summary }}</p>
-      <p v-for="(it, i) in cancelPolicy.items" :key="i" class="muted">{{ i + 1 }}. {{ it }}</p>
-    </div></div>
-    </template>
-    <p v-else class="muted">出发日前可取消；当天不可取消。</p>
-
-    <div class="h2">联系官方与本团</div>
-    <div class="card"><div class="pad">
-      <div class="contact-row">
-        <span>官方微信 {{ contacts.officialWechatName }} <em class="muted">{{ contacts.officialWechat }}</em></span>
-        <a class="nav-link" href="#" @click.prevent="copyText(contacts.officialWechat)">复制</a>
-      </div>
-      <div class="contact-row">
-        <span>官方用户群 {{ contacts.officialGroup }}</span>
-        <a class="nav-link" href="#" @click.prevent="copyText(contacts.officialWechat)">复制微信号</a>
-      </div>
-      <div class="contact-row" v-if="s.consultGroup">
-        <span>本团咨询群 {{ s.consultGroup }}</span>
-        <a class="nav-link" href="#" @click.prevent="copyText(s.consultGroup)">复制</a>
-      </div>
-      <p class="muted" v-else>本团咨询群确认后会显示在这里。</p>
-      <p class="muted">{{ contacts.hint }}</p>
-    </div></div>
-
-    <div v-if="!isActivity" style="display:flex;gap:8px;margin:12px 0">
-      <button class="btn ghost" style="flex:1" @click="$router.push('/m/stats/' + s.id)">本团画像</button>
-      <button class="btn ghost" style="flex:1" @click="share">分享到微信</button>
+    <div v-show="tab === 'route'" class="trip-pane">
+      <RouteProfile
+        embedded
+        :route="routeDetail || s.route"
+        :reviews="routeReviews"
+        @fav="favRoute"
+      />
     </div>
-    <div v-else style="margin:12px 0">
-      <button class="btn ghost block" @click="share">分享到微信</button>
+
+    <div v-show="tab === 'rules'" class="trip-pane">
+      <div class="h2">退改说明</div>
+      <div class="card rules-block"><div class="pad">
+        <p class="muted" style="margin-top:0">{{ isActivity ? "出发日前可取消；当天不可取消。" : cancelPolicy.summary }}</p>
+        <p v-if="!isActivity" v-for="(it, i) in cancelPolicy.items" :key="i" class="muted">{{ i + 1 }}. {{ it }}</p>
+      </div></div>
+
+      <template v-if="commonRules.sections?.length">
+        <div class="h2">{{ commonRules.title || "公共规则" }}</div>
+        <div class="card rules-block"><div class="pad">
+          <p class="muted" style="margin-top:0">{{ commonRules.summary }}</p>
+          <div v-for="sec in commonRules.sections" :key="sec.title" class="faq-item">
+            <strong>{{ sec.title }}</strong>
+            <p v-for="(info, i) in sec.items" :key="i" class="muted">{{ info }}</p>
+          </div>
+        </div></div>
+      </template>
+
+      <div class="h2" v-if="waiverText">风险告知</div>
+      <div class="card rules-block" v-if="waiverText"><div class="pad">
+        <p class="muted waiver-text" style="margin-top:0">{{ waiverText }}</p>
+      </div></div>
+
+      <div class="h2" v-if="faqs.length">常见问题</div>
+      <div class="card rules-block" v-if="faqs.length"><div class="pad">
+        <div class="faq-item" v-for="f in faqs" :key="f.q">
+          <strong>{{ f.q }}</strong>
+          <p class="muted">{{ f.a }}</p>
+        </div>
+      </div></div>
+
+      <div class="h2">联系官方与本团</div>
+      <div class="card"><div class="pad">
+        <div class="contact-row">
+          <span>官方微信 {{ contacts.officialWechatName }} <em class="muted">{{ contacts.officialWechat }}</em></span>
+          <a class="nav-link" href="#" @click.prevent="copyText(contacts.officialWechat)">复制</a>
+        </div>
+        <div class="contact-row">
+          <span>官方用户群 {{ contacts.officialGroup }}</span>
+          <a class="nav-link" href="#" @click.prevent="copyText(contacts.officialWechat)">复制微信号</a>
+        </div>
+        <div class="contact-row" v-if="s.consultGroup">
+          <span>本团咨询群 {{ s.consultGroup }}</span>
+          <a class="nav-link" href="#" @click.prevent="copyText(s.consultGroup)">复制</a>
+        </div>
+        <p class="muted" v-else>本团咨询群确认后会显示在这里。</p>
+        <p class="muted">{{ contacts.hint }}</p>
+      </div></div>
     </div>
+
     <div class="enroll-dock">
-    <div v-if="showEnroll" class="enroll-bar">
-      <div class="enroll-price">
-        <b>{{ priceDock.main }}</b>
-        <small v-if="priceDock.sub">{{ priceDock.sub }}</small>
+      <div v-if="showEnroll" class="enroll-bar">
+        <div class="enroll-price">
+          <b>{{ priceDock.main }}</b>
+          <small v-if="priceDock.sub">{{ priceDock.sub }}</small>
+        </div>
+        <button class="btn" type="button" @click="$router.push(enrollHref)">{{ ctaText }}</button>
       </div>
-      <button class="btn" type="button" @click="$router.push(enrollHref)">{{ ctaText }}</button>
-    </div>
-    <p v-else-if="s.myEnrollment" class="muted" style="text-align:center;margin:0 0 8px">{{ ticket?.title || "已报名" }}<template v-if="isActivity && s.myEnrollment.status !== 'waitlist'">，到场找发起人即可</template></p>
-    <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>
-    <button v-if="s.isOrganizer && s.status !== 'cancelled'" class="btn ghost block" style="margin-top:8px;color:var(--clay)" @click="showDissolve = true">解散拼团</button>
-    <p v-if="!isActivity && s.notes" class="muted" style="margin-top:8px">{{ s.notes }}</p>
-    <p v-if="msg" class="muted">{{ msg }}</p>
+      <p v-else-if="s.myEnrollment" class="muted" style="text-align:center;margin:0 0 8px">{{ ticket?.title || "已报名" }}<template v-if="isActivity && s.myEnrollment.status !== 'waitlist'">，到场找发起人即可</template></p>
+      <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>
+      <button v-if="s.isOrganizer && s.status !== 'cancelled'" class="btn ghost block" style="margin-top:8px;color:var(--clay)" @click="showDissolve = true">解散拼团</button>
+      <p v-if="msg" class="muted">{{ msg }}</p>
     </div>
 
-    <div v-if="showShare" class="card" style="margin-top:12px">
+    <div v-if="showShare" class="card" style="margin:12px 14px 0">
       <div class="pad" style="text-align:center">
         <p style="margin-top:0">发给微信好友或群，扫码即可打开本团报名页</p>
         <img v-if="shareQr" :src="shareQr" alt="报名二维码" style="width:180px;height:180px;background:#fff;border-radius:12px" />
@@ -293,7 +322,7 @@
       </div>
     </div>
 
-    <div v-if="showDissolve" class="card" style="margin-top:12px">
+    <div v-if="showDissolve" class="card" style="margin:12px 14px 0">
       <div class="pad">
         <p>解散后将取消全部报名，已付款的标记退款，并向出行人发送取消短信。</p>
         <label>解散理由</label>
@@ -317,7 +346,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
@@ -327,11 +356,15 @@ import { canShowEnroll, dockPrice, enrollCta, peopleLine, ticketState, trustChip
 import { setChrome } from "@/utils/pageChrome";
 import WeatherChart from "@/components/WeatherChart.vue";
 import TripPrices from "@/components/TripPrices.vue";
+import GoodsTabs from "@/components/GoodsTabs.vue";
+import RouteProfile from "@/components/RouteProfile.vue";
 
+const TAB_IDS = ["trip", "route", "rules"];
 const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const s = ref(null);
+const tab = ref(normalizeTab(route.query.tab));
 const isActivity = computed(() => s.value?.channel === "activity");
 const isFree = computed(() => {
   const q = s.value?.quote || {};
@@ -359,6 +392,11 @@ const priceDock = computed(() => dockPrice(s.value));
 const showEnroll = computed(() => canShowEnroll(s.value));
 const ctaText = computed(() => enrollCta(s.value));
 const kindTag = computed(() => activityKindOf(s.value)?.label || "");
+const tabItems = computed(() => [
+  { id: "trip", label: isActivity.value ? "本局" : "本团" },
+  { id: "route", label: "线路" },
+  { id: "rules", label: "须知" },
+]);
 const msg = ref("");
 const showDissolve = ref(false);
 const showShare = ref(false);
@@ -371,9 +409,13 @@ const dissolveErr = ref("");
 const dissolving = ref(false);
 const weather = ref(null);
 const reviews = ref({ list: [], count: 0, avg: 0 });
+const routeDetail = ref(null);
+const routeReviews = ref({ list: [], count: 0, avg: 0 });
 const cancelPolicy = ref({ summary: "", items: [] });
+const commonRules = ref({ title: "", summary: "", sections: [] });
+const waiverText = ref("");
+const faqs = ref([]);
 const contacts = ref({ officialWechat: "同行者众", officialWechatName: "同行者众官方", officialGroup: "同行者众户外交流群", hint: "" });
-const packing = computed(() => s.value?.route?.packingList || []);
 const referral = ref({});
 const fallbackIds = ref([]);
 const autoAlt = ref(false);
@@ -440,6 +482,19 @@ const statusTag = computed(() => {
   return s.value.organizerType === "company" ? "公司统一支付" : "先报名后付款";
 });
 
+watch(tab, (id) => {
+  const next = { ...route.query };
+  if (id === "trip") delete next.tab;
+  else next.tab = id;
+  const same = String(route.query.tab || "") === String(next.tab || "");
+  if (!same) router.replace({ query: next });
+  nextTick(scrollTabsToTop);
+});
+watch(() => route.query.tab, (value) => {
+  const next = normalizeTab(value);
+  if (next !== tab.value) tab.value = next;
+});
+
 onMounted(() => {
   load();
   heroTimer = window.setInterval(() => {
@@ -449,6 +504,19 @@ onMounted(() => {
 onUnmounted(() => {
   if (heroTimer) window.clearInterval(heroTimer);
 });
+
+function normalizeTab(value) {
+  const id = String(value || "");
+  return TAB_IDS.includes(id) ? id : "trip";
+}
+
+function scrollTabsToTop() {
+  const scroller = document.querySelector(".mp-body");
+  const bar = document.querySelector(".goods-tabs");
+  if (!scroller || !bar) return;
+  const top = bar.offsetTop - scroller.offsetTop;
+  scroller.scrollTo({ top: Math.max(0, top), behavior: "instant" });
+}
 
 async function load() {
   s.value = (await http.get("/schedules/" + route.params.id)).data;
@@ -480,9 +548,24 @@ async function load() {
   try {
     const meta = (await http.get("/meta")).data;
     cancelPolicy.value = meta.cancelPolicy || cancelPolicy.value;
+    commonRules.value = meta.commonRules || commonRules.value;
+    waiverText.value = meta.waiverText || "";
+    faqs.value = meta.faqs || [];
     if (meta.contacts) contacts.value = meta.contacts;
   } catch {
     /* ignore */
+  }
+  if (s.value.routeId) {
+    try {
+      routeDetail.value = (await http.get("/routes/" + s.value.routeId)).data;
+    } catch {
+      routeDetail.value = s.value.route;
+    }
+    try {
+      routeReviews.value = (await http.get("/routes/" + s.value.routeId + "/reviews")).data;
+    } catch {
+      routeReviews.value = { list: [], count: 0, avg: 0 };
+    }
   }
 }
 
@@ -571,6 +654,22 @@ async function loadReferral() {
 
 function previewHero() {
   if (gallery.value.length > 1) heroIndex.value = (heroIndex.value + 1) % gallery.value.length;
+}
+
+async function favRoute() {
+  if (!store.token) {
+    router.push("/m/login?redirect=" + encodeURIComponent(route.fullPath));
+    return;
+  }
+  const r = routeDetail.value || s.value?.route;
+  if (!r?.id) return;
+  try {
+    if (r.favored) await http.delete("/favorites/" + r.id);
+    else await http.post("/favorites/" + r.id);
+    if (routeDetail.value) routeDetail.value = { ...routeDetail.value, favored: !r.favored };
+  } catch (e) {
+    msg.value = e.message;
+  }
 }
 
 async function payFor(c) {

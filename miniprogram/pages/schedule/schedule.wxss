@@ -1,1 +1,36 @@
-/* inherit */
+.trip-head { margin-top: 0; border-radius: 0; }
+.hero-swipe { margin: 0; }
+.goods-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  background: #fff;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.goods-tab {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  font-size: 30rpx;
+  color: #8c8c8c;
+  position: relative;
+}
+.goods-tab.on {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+.goods-tab.on::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 12rpx;
+  width: 40rpx;
+  height: 6rpx;
+  margin-left: -20rpx;
+  border-radius: 6rpx;
+  background: #e1251b;
+}
+.story-text { white-space: pre-wrap; line-height: 1.7; margin: 12rpx 0 20rpx; }
+.story-img { width: 100%; border-radius: 12rpx; margin: 8rpx 0 16rpx; display: block; }

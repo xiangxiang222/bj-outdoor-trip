@@ -20,6 +20,14 @@ Page({
     s: null,
     id: "",
     coupon: "",
+    tab: "trip",
+    routeDetail: {},
+    routeAlbum: [],
+    routeReviews: { list: [], count: 0, avg: 0 },
+    faqs: [],
+    cancelItems: [],
+    commonRules: { title: "", summary: "", sections: [] },
+    waiverText: "",
     showDissolve: false,
     reason: "",
     seatRows: [],
@@ -48,7 +56,8 @@ Page({
     leaderSlots: [{ slot: 1, label: "领队1", leader: null }, { slot: 2, label: "领队2", leader: null }],
   },
   onLoad(q) {
-    this.setData({ id: q.id, coupon: q.coupon || "", posted: q.posted || "", joinedHint: q.joined || "" });
+    const tab = ["trip", "route", "rules"].includes(q.tab) ? q.tab : "trip";
+    this.setData({ id: q.id, coupon: q.coupon || "", posted: q.posted || "", joinedHint: q.joined || "", tab });
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
   },
   onShow() { this.load(); },
@@ -97,6 +106,7 @@ Page({
         })),
       });
       wx.setNavigationBarTitle({ title: isActivity ? "局详情" : "行程详情" });
+      this.loadRoute(s.routeId || (s.route && s.route.id));
       const region = s && s.route && [s.route.region, s.route.title].filter(Boolean).join(" ");
       const date = s && s.startDate;
       if (region && !isActivity) {
@@ -130,9 +140,45 @@ Page({
       const data = (r && r.data) || {};
       this.setData({
         cancelSummary: (data.cancelPolicy && data.cancelPolicy.summary) || "",
+        cancelItems: (data.cancelPolicy && data.cancelPolicy.items) || [],
+        commonRules: data.commonRules || { title: "", summary: "", sections: [] },
+        waiverText: data.waiverText || "",
+        faqs: data.faqs || [],
         contacts: data.contacts || this.data.contacts,
       });
     }).catch(() => {});
+  },
+  loadRoute(routeId) {
+    routeId = routeId || (this.data.s && (this.data.s.routeId || (this.data.s.route && this.data.s.route.id)));
+    if (!routeId) return;
+    request("/routes/" + routeId).then((r) => {
+      const route = r.data || {};
+      const used = {};
+      (route.story || []).forEach((b) => {
+        if (b && b.type === "image" && b.url) used[b.url] = true;
+      });
+      const album = (route.gallery || []).filter((url) => url && !used[url]);
+      this.setData({ routeDetail: route, routeAlbum: album });
+    }).catch(() => {
+      this.setData({ routeDetail: (this.data.s && this.data.s.route) || {}, routeAlbum: [] });
+    });
+    request("/routes/" + routeId + "/reviews").then((r) => {
+      const data = (r && r.data) || {};
+      const list = (data.list || []).map((row) => Object.assign({}, row, { stars: starText(row.rating) }));
+      this.setData({ routeReviews: { list, count: data.count || 0, avg: data.avg || 0 } });
+    }).catch(() => {});
+  },
+  setTab(e) {
+    const tab = e.currentTarget.dataset.tab;
+    if (!tab || tab === this.data.tab) return;
+    this.setData({ tab }, () => {
+      if (tab === "trip") wx.nextTick(() => this.drawWeather());
+      wx.pageScrollTo({ selector: ".goods-tabs", duration: 0 });
+    });
+  },
+  previewStory(e) {
+    const url = e.currentTarget.dataset.url;
+    if (url) wx.previewImage({ urls: [url], current: url });
   },
   openMap() {
     const s = this.data.s;
