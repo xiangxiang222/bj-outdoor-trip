@@ -45,30 +45,33 @@
           <span v-else>未匹配</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="820">
+      <el-table-column label="操作" min-width="760">
         <template #default="{ row }">
-          <el-button v-if="canOps && row.reviewStatus === 'pending'" size="small" type="success" @click="review(row, 'approved')">通过</el-button>
-          <el-button v-if="canOps && row.reviewStatus === 'pending'" size="small" type="warning" @click="review(row, 'rejected')">驳回</el-button>
-          <el-button v-if="canOps" size="small" @click="cost(row)">成本</el-button>
-          <el-button v-if="canField" size="small" @click="openTrip(row)">车辆座位</el-button>
-          <el-button v-if="canField" size="small" :disabled="row.status === 'cancelled'" @click="openCheckinDlg(row)">开团签到</el-button>
-          <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openVirtual(row)">虚拟</el-button>
-          <el-button v-if="canOps" size="small" @click="openLimit(row)">限制</el-button>
-          <el-button
-            v-if="canOps && row.oversub?.enabled && !row.oversub?.drawn"
-            size="small"
-            type="warning"
-            :disabled="row.status === 'cancelled' || drawingId === row.id"
-            @click="confirmDraw(row)"
-          >确认出行名单</el-button>
-          <el-button size="small" @click="demo(row)">画像</el-button>
-          <el-button v-if="canOps" size="small" type="success" :disabled="row.status === 'cancelled'" @click="settle(row)">结算</el-button>
-          <el-button v-if="canOps" size="small" @click="openSplit(row)">分账</el-button>
-          <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="$router.push('/admin/lottery?scheduleId=' + row.id)">抽奖</el-button>
-          <el-button v-if="canOps" size="small" :disabled="row.organizerType === 'company' || row.status === 'cancelled'" @click="$router.push('/admin/coupons?scheduleId=' + row.id)">优惠券</el-button>
-          <el-button v-if="canOps" size="small" type="danger" :disabled="row.status === 'cancelled'" @click="openDissolve(row)">解散</el-button>
+          <div class="admin-table-ops">
+            <el-button v-if="canOps && row.reviewStatus === 'pending'" size="small" type="success" @click="review(row, 'approved')">通过</el-button>
+            <el-button v-if="canOps && row.reviewStatus === 'pending'" size="small" type="warning" @click="review(row, 'rejected')">驳回</el-button>
+            <el-button v-if="canOps" size="small" @click="cost(row)">成本</el-button>
+            <el-button v-if="canField" size="small" @click="openTrip(row)">车辆座位</el-button>
+            <el-button v-if="canField" size="small" :disabled="row.status === 'cancelled'" @click="openCheckinDlg(row)">开团签到</el-button>
+            <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openVirtual(row)">虚拟</el-button>
+            <el-button v-if="canOps" size="small" @click="openLimit(row)">限制</el-button>
+            <el-button
+              v-if="canOps && row.oversub?.enabled && !row.oversub?.drawn"
+              size="small"
+              type="warning"
+              :disabled="row.status === 'cancelled' || drawingId === row.id"
+              @click="confirmDraw(row)"
+            >确认出行名单</el-button>
+            <el-button size="small" @click="demo(row)">画像</el-button>
+            <el-button v-if="canOps" size="small" type="success" :disabled="row.status === 'cancelled'" @click="settle(row)">结算</el-button>
+            <el-button v-if="canOps" size="small" @click="openSplit(row)">分账</el-button>
+            <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="$router.push('/admin/lottery?scheduleId=' + row.id)">抽奖</el-button>
+            <el-button v-if="canOps" size="small" :disabled="row.organizerType === 'company' || row.status === 'cancelled'" @click="$router.push('/admin/coupons?scheduleId=' + row.id)">优惠券</el-button>
+            <el-button v-if="canOps" size="small" type="danger" :disabled="row.status === 'cancelled'" @click="openDissolve(row)">解散</el-button>
+          </div>
         </template>
       </el-table-column>
+      <el-table-column width="48" class-name="admin-table-gutter" />
     </el-table>
 
     <el-dialog v-model="showCost" title="活动成本" width="480px">

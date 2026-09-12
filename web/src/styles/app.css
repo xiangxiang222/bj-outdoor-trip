@@ -1071,6 +1071,24 @@ html.admin-theme .el-dialog__footer {
   --el-table-row-hover-bg-color: #fff7f7;
   font-size: 13px;
 }
+.admin-table-ops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: center;
+  padding-right: 8px;
+}
+.admin-table-ops .el-button + .el-button {
+  margin-left: 0;
+}
+.admin-shell .el-table td.el-table__cell:has(.admin-table-ops) .cell {
+  overflow: visible;
+}
+.admin-table-gutter,
+.admin-table-gutter .cell {
+  padding: 0 !important;
+  border-left-color: transparent;
+}
 .admin-verify-filter .el-radio-button__inner {
   padding: 5px 14px;
 }
@@ -1078,18 +1096,6 @@ html.admin-theme .el-dialog__footer {
   background: #14281d;
   border-color: #14281d;
   box-shadow: -1px 0 0 0 #14281d;
-}
-.admin-main .el-table.is-scrolling-left::after,
-.admin-main .el-table.is-scrolling-middle::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 4;
-  width: 36px;
-  height: 100%;
-  pointer-events: none;
-  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.95));
 }
 .admin-login {
   position: relative;
