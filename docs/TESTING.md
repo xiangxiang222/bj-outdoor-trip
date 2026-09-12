@@ -148,7 +148,7 @@ npx vitest run src/utils/activityKind.test.js
 | `web/src/utils/chinaAreas.test.js` | 全国省市县树、旧地区回填、北京周边/跨省选项 |
 | `web/src/utils/couponTime.test.js` | 优惠券倒计时剩余比例与未使用过滤 |
 
-Vue 页面与小程序以手动/演示验收为主（依赖浏览器与微信开发者工具）；完整接口顺序见第 8 节走查。走查脚本目前按户外团路径打公开接口、报名、取消、解散、会员、注销，同城局轻报名以 `api.enroll.test.js` / `api.home.test.js` 为准。
+Vue 页面与小程序以手动/演示验收为主（依赖浏览器与微信开发者工具）；完整接口顺序见第 8 节走查。走查脚本目前按户外团路径打公开接口、报名、取消、解散、会员、注销；后台发券挂在个人团上（公司团发券会 400）。同城局轻报名以 `api.enroll.test.js` / `api.home.test.js` 为准。
 
 ## 5. 编写新测试
 

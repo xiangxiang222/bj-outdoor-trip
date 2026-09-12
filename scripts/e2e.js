@@ -767,10 +767,30 @@ async function run(opts) {
     apiOk(await request("GET", "/api/admin/enrollments", { token: ctx.adminToken }), "admin enrollments");
     apiOk(await request("GET", "/api/admin/users", { token: ctx.adminToken }), "admin users");
     apiOk(await request("GET", "/api/admin/me", { token: ctx.adminToken }), "admin me");
+    const companyCoupon = await request("POST", "/api/admin/coupons", {
+      token: ctx.adminToken,
+      body: { scheduleId: published.id, kind: "amount", value: 20, total: 5, name: "走查券" },
+    });
+    assert(companyCoupon.status === 400, "公司团发券应失败");
+    const personal = apiOk(
+      await request("POST", "/api/admin/schedules", {
+        token: ctx.adminToken,
+        body: {
+          routeId: ctx.routeId,
+          startDate: plusDays(41),
+          busTypeId: ctx.busId,
+          organizerType: "individual",
+          minGroupSize: 2,
+          meetupPoint: "东直门东方银座C口",
+          notes: "e2e走查个人团发券",
+        },
+      }),
+      "admin publish personal for coupon"
+    );
     const coupon = apiOk(
       await request("POST", "/api/admin/coupons", {
         token: ctx.adminToken,
-        body: { scheduleId: published.id, kind: "amount", value: 20, total: 5, name: "走查券" },
+        body: { scheduleId: personal.id, kind: "amount", value: 20, total: 5, name: "走查券" },
       }),
       "admin create coupon"
     );
@@ -870,7 +890,25 @@ async function run(opts) {
   }, { skip: live && !opts.unsafe, reason: live ? "线上默认跳过，加 --unsafe 才执行" : "" });
 
   await step("H5 页面可打开", async () => {
-    const pages = ["/m", "/m/login", "/m/activities", "/m/orders", "/m/official", "/m/rules", "/m/routes", "/m/guides", "/m/mine", "/m/coupon/x", "/admin/login", "/g/login"];
+    const pages = [
+      "/m",
+      "/m/login",
+      "/m/activities",
+      "/m/orders",
+      "/m/official",
+      "/m/rules",
+      "/m/routes",
+      "/m/guides",
+      "/m/mine",
+      "/m/coupons",
+      "/m/lottery",
+      "/m/student",
+      "/m/leader",
+      "/m/publish",
+      "/m/coupon/x",
+      "/admin/login",
+      "/g/login",
+    ];
     for (const p of pages) {
       const res = await request("GET", p, { follow: true });
       assert(res.status === 200, p + " 返回 " + res.status);
