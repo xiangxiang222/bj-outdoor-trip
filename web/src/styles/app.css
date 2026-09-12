@@ -1062,6 +1062,19 @@ html.admin-theme .el-dialog__footer {
   font-size: 12px;
   color: #999;
 }
+.admin-schedules-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.admin-schedules-actions .el-checkbox {
+  height: auto;
+  color: #666;
+  font-weight: 400;
+  margin-right: 4px;
+}
 .admin-verify-filter .el-radio-button__inner { padding: 5px 14px; }
 .admin-page.dash h2 { margin-bottom: 12px; }
 .admin-shell .el-table {
