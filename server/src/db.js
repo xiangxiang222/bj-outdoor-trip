@@ -311,6 +311,11 @@ function createSchema(db) {
       claim_end TEXT,
       use_start TEXT,
       use_end TEXT,
+      valid_hours INTEGER DEFAULT 0,
+      idle_months INTEGER DEFAULT 0,
+      min_trips INTEGER DEFAULT 0,
+      stack_member INTEGER DEFAULT 0,
+      stack_student INTEGER DEFAULT 0,
       audience TEXT DEFAULT 'public',
       status TEXT DEFAULT 'on',
       created_at TEXT DEFAULT (datetime('now','localtime'))
@@ -324,6 +329,7 @@ function createSchema(db) {
       status TEXT DEFAULT 'unused',
       used_enrollment_id INTEGER,
       used_at TEXT,
+      expires_at TEXT,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
   `);
@@ -534,6 +540,11 @@ function migrateSchema(db) {
       claim_end TEXT,
       use_start TEXT,
       use_end TEXT,
+      valid_hours INTEGER DEFAULT 0,
+      idle_months INTEGER DEFAULT 0,
+      min_trips INTEGER DEFAULT 0,
+      stack_member INTEGER DEFAULT 0,
+      stack_student INTEGER DEFAULT 0,
       audience TEXT DEFAULT 'public',
       status TEXT DEFAULT 'on',
       created_at TEXT DEFAULT (datetime('now','localtime'))
@@ -546,6 +557,7 @@ function migrateSchema(db) {
       status TEXT DEFAULT 'unused',
       used_enrollment_id INTEGER,
       used_at TEXT,
+      expires_at TEXT,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
     CREATE UNIQUE INDEX IF NOT EXISTS idx_coupon_campaigns_code ON coupon_campaigns(code);
@@ -601,6 +613,12 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "lottery_draws", "level", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "lottery_draws", "claimed_at", "TEXT");
   addColumnIfMissing(db, "lottery_campaigns", "draw_mode", "TEXT DEFAULT 'both'");
+  addColumnIfMissing(db, "coupon_campaigns", "valid_hours", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "coupon_campaigns", "idle_months", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "coupon_campaigns", "min_trips", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "coupon_campaigns", "stack_member", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "coupon_campaigns", "stack_student", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "user_coupons", "expires_at", "TEXT");
 }
 
 let _db;

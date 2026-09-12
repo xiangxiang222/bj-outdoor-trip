@@ -45,8 +45,11 @@ Page({
   },
   goEnroll() {
     const id = this.data.data && this.data.data.scheduleId;
-    if (!id) return;
     const code = (this.data.data.myCoupon && this.data.data.myCoupon.code) || this.data.code;
+    if (!id) {
+      wx.switchTab({ url: "/pages/index/index" });
+      return;
+    }
     wx.navigateTo({ url: "/pages/enroll/enroll?id=" + id + "&coupon=" + code });
   },
   goTrip() {

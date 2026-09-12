@@ -60,6 +60,7 @@ const {
   adminDetail,
   sharePayload,
   loadCampaign,
+  previewRuleTargets,
 } = require("./services/coupons");
 const {
   publicStaff,
@@ -2060,10 +2061,29 @@ router.get("/admin/coupons", authAdmin, requireCap("ops"), (req, res) => {
   res.json({ ok: true, data: listAdmin(req.query.scheduleId || req.query.schedule_id) });
 });
 
+router.get("/admin/coupons/targets", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    res.json({ ok: true, data: previewRuleTargets(req.query || {}) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
 router.post("/admin/coupons", authAdmin, requireCap("ops"), (req, res) => {
   try {
-    const data = createCampaign(req.body || {});
-    res.json({ ok: true, data });
+    const body = req.body || {};
+    const created = createCampaign(body);
+    if (body.grantByRule || body.grant_by_rule) {
+      const grant = grantCoupons(created.id, { byRule: true, sms: body.sms }, req);
+      return res.json({
+        ok: true,
+        data: { ...grant.campaign, granted: grant.granted, matched: grant.matched, randomized: grant.randomized },
+        message: grant.randomized
+          ? `符合 ${grant.matched} 人，已随机发放 ${grant.granted} 张`
+          : `已按条件发放 ${grant.granted} 张`,
+      });
+    }
+    res.json({ ok: true, data: created });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }

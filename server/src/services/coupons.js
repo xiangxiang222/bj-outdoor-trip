@@ -35,6 +35,151 @@ function inWindow(start, end) {
   return true;
 }
 
+function parseValidHours(body, fallback = 0) {
+  const raw = body.validHours != null ? body.validHours : body.valid_hours;
+  if (raw == null || raw === "") return fallback;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0 || n > 24 * 365) fail(400, "领取后有效时长不正确");
+  return Math.round(n);
+}
+
+function parseNonNegInt(raw, fallback, max, message) {
+  if (raw == null || raw === "") return fallback;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 0 || n > max) fail(400, message);
+  return Math.round(n);
+}
+
+function parseFlag(raw, fallback = 0) {
+  if (raw === true || raw === 1 || raw === "1" || raw === "on") return 1;
+  if (raw === false || raw === 0 || raw === "0" || raw === "off" || raw === "") return 0;
+  if (raw == null) return fallback;
+  return fallback;
+}
+
+function isUniversalCampaign(row) {
+  return Number(row?.schedule_id || 0) === 0;
+}
+
+function parseIdleMonths(body, fallback = 0) {
+  return parseNonNegInt(body.idleMonths != null ? body.idleMonths : body.idle_months, fallback, 120, "未参加月数不正确");
+}
+
+function parseMinTrips(body, fallback = 0) {
+  return parseNonNegInt(body.minTrips != null ? body.minTrips : body.min_trips, fallback, 999, "出行次数不正确");
+}
+
+function ruleCutoff(idleMonths) {
+  const n = Number(idleMonths || 0);
+  if (!n) return "";
+  return dayjs().subtract(n, "month").format("YYYY-MM-DD");
+}
+
+function tripStats(userId) {
+  const rows = getDb()
+    .prepare(
+      `SELECT s.start_date, e.created_at
+       FROM enrollments e
+       LEFT JOIN schedules s ON s.id=e.schedule_id
+       WHERE e.user_id=? AND e.status='joined'`
+    )
+    .all(userId);
+  let lastDate = "";
+  for (const row of rows) {
+    const day = String(row.start_date || "").trim() || String(row.created_at || "").slice(0, 10);
+    if (day && day > lastDate) lastDate = day;
+  }
+  return { trips: rows.length, lastDate };
+}
+
+function userMatchesRule(userId, campaign = {}) {
+  const idle = Number(campaign.idle_months || campaign.idleMonths || 0);
+  const min = Number(campaign.min_trips || campaign.minTrips || 0);
+  if (!idle && !min) return true;
+  const stats = tripStats(userId);
+  if (min && stats.trips < min) return false;
+  if (idle) {
+    const cutoff = ruleCutoff(idle);
+    if (stats.lastDate && stats.lastDate >= cutoff) return false;
+  }
+  return true;
+}
+
+function ruleHint(campaign) {
+  const bits = [];
+  const idle = Number(campaign?.idle_months || campaign?.idleMonths || 0);
+  const min = Number(campaign?.min_trips || campaign?.minTrips || 0);
+  if (idle) bits.push(`${idle}个月内未参加过活动`);
+  if (min) bits.push(`至少参加过${min}次`);
+  return bits.join("且");
+}
+
+function assertClaimRules(userId, campaign) {
+  if (!userMatchesRule(userId, campaign)) {
+    const hint = ruleHint(campaign);
+    fail(400, hint ? `仅限${hint}的用户` : "不符合领取条件");
+  }
+}
+
+function findRuleUsers({ idleMonths = 0, minTrips = 0, campaignId = 0 } = {}) {
+  const db = getDb();
+  const users = db.prepare("SELECT * FROM users WHERE deleted_at IS NULL AND IFNULL(is_virtual,0)=0").all();
+  return users.filter((u) => {
+    if (campaignId) {
+      const hold = db.prepare("SELECT id FROM user_coupons WHERE campaign_id=? AND user_id=?").get(campaignId, u.id);
+      if (hold) return false;
+    }
+    return userMatchesRule(u.id, { idle_months: idleMonths, min_trips: minTrips });
+  });
+}
+
+function shufflePick(list, n) {
+  const copy = [...(Array.isArray(list) ? list : [])];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, Math.max(0, n));
+}
+
+function previewRuleTargets(query = {}) {
+  const idleMonths = parseIdleMonths(query, 0);
+  const minTrips = parseMinTrips(query, 0);
+  const campaignId = Number(query.campaignId || query.campaign_id || 0);
+  if (!idleMonths && !minTrips) {
+    return { count: 0, idleMonths, minTrips, needRule: true };
+  }
+  const users = findRuleUsers({ idleMonths, minTrips, campaignId });
+  return { count: users.length, idleMonths, minTrips, needRule: false };
+}
+
+function couponExpiresAt(campaign, from = dayjs()) {
+  const hours = Number(campaign?.valid_hours || 0);
+  if (!hours) return null;
+  return from.add(hours, "hour").format("YYYY-MM-DD HH:mm:ss");
+}
+
+function effectiveUseEnd(coupon, campaign) {
+  const ends = [];
+  const inst = parseBound(coupon?.expires_at, false);
+  if (inst) ends.push(inst);
+  const camp = parseBound(campaign?.use_end, true);
+  if (camp) ends.push(camp);
+  if (!ends.length) return null;
+  return ends.reduce((a, b) => (a.isBefore(b) ? a : b));
+}
+
+function instanceDTO(coupon) {
+  if (!coupon) return null;
+  return {
+    code: coupon.code,
+    status: coupon.status,
+    usedEnrollmentId: coupon.used_enrollment_id || null,
+    claimedAt: coupon.created_at || "",
+    expiresAt: coupon.expires_at || "",
+  };
+}
+
 function campaignLabel(row) {
   if (!row) return "";
   if (row.kind === "percent") {
@@ -103,11 +248,22 @@ function parsePercentValue(body) {
 
 function createCampaign(body = {}) {
   const db = getDb();
-  const scheduleId = Number(body.scheduleId || body.schedule_id);
-  const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
-  if (!sch) fail(400, "排期不存在");
-  if (sch.status === "cancelled") fail(400, "已解散的团不能发行优惠券");
-  if (sch.organizer_type === "company") fail(400, "公司团不可发行优惠券");
+  const rawSid = body.scheduleId != null ? body.scheduleId : body.schedule_id;
+  const universal =
+    body.universal === true ||
+    body.universal === 1 ||
+    body.universal === "1" ||
+    rawSid === 0 ||
+    rawSid === "0";
+  let scheduleId = 0;
+  if (!universal) {
+    scheduleId = Number(rawSid);
+    const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
+    if (!sch) fail(400, "排期不存在");
+    if (sch.status === "cancelled") fail(400, "已解散的团不能发行优惠券");
+    if (sch.organizer_type === "company") fail(400, "公司团不可发行优惠券");
+    scheduleId = sch.id;
+  }
   const kind = body.kind === "percent" ? "percent" : body.kind === "amount" ? "amount" : "";
   if (!kind) fail(400, "请选择折扣或满减");
   let value;
@@ -127,15 +283,20 @@ function createCampaign(body = {}) {
   const audience =
     body.audience === "member" || body.audience === "directed" ? body.audience : "public";
   const code = newCampaignCode();
+  const validHours = parseValidHours(body, 0);
+  const idleMonths = parseIdleMonths(body, 0);
+  const minTrips = parseMinTrips(body, 0);
+  const stackMember = parseFlag(body.stackMember != null ? body.stackMember : body.stack_member, 0);
+  const stackStudent = parseFlag(body.stackStudent != null ? body.stackStudent : body.stack_student, 0);
   const info = db
     .prepare(
       `INSERT INTO coupon_campaigns
-        (code,schedule_id,name,kind,value,cap_amount,floor_price,total,claimed,per_user_limit,claim_start,claim_end,use_start,use_end,audience,status)
-       VALUES (?,?,?,?,?,?,?,?,0,1,?,?,?,?,?,?)`
+        (code,schedule_id,name,kind,value,cap_amount,floor_price,total,claimed,per_user_limit,claim_start,claim_end,use_start,use_end,valid_hours,idle_months,min_trips,stack_member,stack_student,audience,status)
+       VALUES (?,?,?,?,?,?,?,?,0,1,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       code,
-      sch.id,
+      scheduleId,
       name,
       kind,
       value,
@@ -146,6 +307,11 @@ function createCampaign(body = {}) {
       body.claimEnd || body.claim_end || null,
       body.useStart || body.use_start || null,
       body.useEnd || body.use_end || null,
+      validHours,
+      idleMonths,
+      minTrips,
+      stackMember,
+      stackStudent,
       audience,
       "on"
     );
@@ -166,8 +332,28 @@ function updateCampaign(id, body = {}) {
     }
   }
   const name = body.name != null ? String(body.name).trim() || row.name : row.name;
+  const validHours =
+    body.validHours !== undefined || body.valid_hours !== undefined
+      ? parseValidHours(body, Number(row.valid_hours || 0))
+      : Number(row.valid_hours || 0);
+  const idleMonths =
+    body.idleMonths !== undefined || body.idle_months !== undefined
+      ? parseIdleMonths(body, Number(row.idle_months || 0))
+      : Number(row.idle_months || 0);
+  const minTrips =
+    body.minTrips !== undefined || body.min_trips !== undefined
+      ? parseMinTrips(body, Number(row.min_trips || 0))
+      : Number(row.min_trips || 0);
+  const stackMember =
+    body.stackMember !== undefined || body.stack_member !== undefined
+      ? parseFlag(body.stackMember != null ? body.stackMember : body.stack_member, Number(row.stack_member || 0))
+      : Number(row.stack_member || 0);
+  const stackStudent =
+    body.stackStudent !== undefined || body.stack_student !== undefined
+      ? parseFlag(body.stackStudent != null ? body.stackStudent : body.stack_student, Number(row.stack_student || 0))
+      : Number(row.stack_student || 0);
   db.prepare(
-    `UPDATE coupon_campaigns SET name=?, total=?, status=?, claim_start=?, claim_end=?, use_start=?, use_end=? WHERE id=?`
+    `UPDATE coupon_campaigns SET name=?, total=?, status=?, claim_start=?, claim_end=?, use_start=?, use_end=?, valid_hours=?, idle_months=?, min_trips=?, stack_member=?, stack_student=? WHERE id=?`
   ).run(
     name,
     Math.round(total),
@@ -176,6 +362,11 @@ function updateCampaign(id, body = {}) {
     body.claimEnd !== undefined ? body.claimEnd || null : row.claim_end,
     body.useStart !== undefined ? body.useStart || null : row.use_start,
     body.useEnd !== undefined ? body.useEnd || null : row.use_end,
+    validHours,
+    idleMonths,
+    minTrips,
+    stackMember,
+    stackStudent,
     row.id
   );
   return publicAdminCampaign(loadCampaign(row.id));
@@ -183,12 +374,10 @@ function updateCampaign(id, body = {}) {
 
 function expireIfNeeded(coupon, campaign) {
   if (!coupon || coupon.status !== "unused") return coupon;
-  if (campaign && !inWindow(campaign.use_start, campaign.use_end) && parseBound(campaign.use_end, true)) {
-    const to = parseBound(campaign.use_end, true);
-    if (to && dayjs().isAfter(to)) {
-      getDb().prepare("UPDATE user_coupons SET status='expired' WHERE id=?").run(coupon.id);
-      return { ...coupon, status: "expired" };
-    }
+  const to = effectiveUseEnd(coupon, campaign);
+  if (to && dayjs().isAfter(to)) {
+    getDb().prepare("UPDATE user_coupons SET status='expired' WHERE id=?").run(coupon.id);
+    return { ...coupon, status: "expired" };
   }
   return coupon;
 }
@@ -213,7 +402,19 @@ function couponSmsCountToday(phone) {
     .get(phone, `${day}%`).c;
 }
 
-function resolveGrantTargets(body = {}) {
+function resolveGrantTargets(body = {}, campaign = null) {
+  if (body.byRule || body.by_rule) {
+    if (!campaign) fail(400, "优惠券不存在");
+    const idleMonths = Number(campaign.idle_months || 0);
+    const minTrips = Number(campaign.min_trips || 0);
+    if (!idleMonths && !minTrips) fail(400, "请先设置参与时间或出行次数条件");
+    const matched = findRuleUsers({ idleMonths, minTrips, campaignId: campaign.id });
+    if (!matched.length) fail(400, "没有符合条件的用户");
+    const remain = remainOf(campaign);
+    const randomized = matched.length > remain;
+    const picked = randomized ? shufflePick(matched, remain) : matched;
+    return { targets: picked, matched: matched.length, randomized };
+  }
   const db = getDb();
   const map = new Map();
   function add(user) {
@@ -247,15 +448,16 @@ function resolveGrantTargets(body = {}) {
       .all();
     rows.filter((u) => isMember(u)).forEach(add);
   }
-  return [...map.values()];
+  return { targets: [...map.values()], matched: map.size, randomized: false };
 }
 
 function insertUserCoupon(campaignId, userId) {
   const db = getDb();
+  const campaign = loadCampaign(campaignId);
   const instance = "U" + instanceNano();
   const info = db
-    .prepare("INSERT INTO user_coupons (campaign_id,user_id,code,status) VALUES (?,?,?,?)")
-    .run(campaignId, userId, instance, "unused");
+    .prepare("INSERT INTO user_coupons (campaign_id,user_id,code,status,expires_at) VALUES (?,?,?,?,?)")
+    .run(campaignId, userId, instance, "unused", couponExpiresAt(campaign));
   db.prepare("UPDATE coupon_campaigns SET claimed=claimed+1 WHERE id=?").run(campaignId);
   return db.prepare("SELECT * FROM user_coupons WHERE id=?").get(Number(info.lastInsertRowid));
 }
@@ -287,6 +489,7 @@ function claimCampaign(userId, code) {
     if (campaign.status !== "on") fail(400, campaign.status === "paused" ? "该券已暂停领取" : "该券已停用");
     if (!inWindow(campaign.claim_start, campaign.claim_end)) fail(400, "不在领取时间内");
     if (Number(campaign.claimed) >= Number(campaign.total)) fail(400, "该券已领完");
+    assertClaimRules(userId, campaign);
     const coupon = insertUserCoupon(campaign.id, userId);
     return { campaign: loadCampaign(campaign.id), coupon, already: false };
   });
@@ -309,8 +512,9 @@ function grantCoupons(campaignId, body = {}, req) {
   const campaign = loadCampaign(campaignId);
   if (!campaign) fail(404, "优惠券不存在");
   if (campaign.status === "off") fail(400, "该券已停用");
-  const targets = resolveGrantTargets(body);
-  if (!targets.length) fail(400, "请选择用户、填写已注册手机号，或发给全部会员");
+  const picked = resolveGrantTargets(body, campaign);
+  const targets = picked.targets || [];
+  if (!targets.length) fail(400, "请选择用户、填写已注册手机号，按条件发放，或发给全部会员");
   const granted = [];
   let skipped = 0;
   const run = db.transaction(() => {
@@ -340,6 +544,8 @@ function grantCoupons(campaignId, body = {}, req) {
     const route = sch ? db.prepare("SELECT title FROM routes WHERE id=?").get(sch.route_id) : null;
     const origin = couponOrigin(req);
     const label = campaignLabel(campaign);
+    const title = isUniversalCampaign(campaign) ? "全部个人拼团" : route?.title || "活动";
+    const when = sch?.start_date ? `${sch.start_date}出发` : "";
     for (const row of granted) {
       if (!/^1\d{10}$/.test(row.phone || "")) {
         skippedSms += 1;
@@ -353,7 +559,7 @@ function grantCoupons(campaignId, body = {}, req) {
       sendSms({
         phone: row.phone,
         scene: "coupon",
-        content: `【同行者众】您的${label}已到账，用于「${route?.title || "活动"}」${sch?.start_date || ""}出发：${shortUrl}`,
+        content: `【同行者众】您的${label}已到账，用于「${title}」${when}：${shortUrl}`,
         refType: "coupon",
         refId: campaign.id,
       });
@@ -366,6 +572,8 @@ function grantCoupons(campaignId, body = {}, req) {
     skipped,
     sms,
     skippedSms,
+    matched: picked.matched || targets.length,
+    randomized: !!picked.randomized,
   };
 }
 
@@ -384,7 +592,9 @@ function resolveCouponForEnroll({ userId, couponCode, scheduleId, company }) {
     campaign = loadCampaign(coupon.campaign_id);
   }
   if (!campaign) fail(400, "优惠券不存在");
-  if (Number(campaign.schedule_id) !== Number(scheduleId)) fail(400, "该券不适用于本团");
+  if (!isUniversalCampaign(campaign) && Number(campaign.schedule_id) !== Number(scheduleId)) {
+    fail(400, "该券不适用于本团");
+  }
   if (campaign.status === "off") fail(400, "该券已停用");
   if (!coupon) {
     const claimed = claimCampaign(userId, campaign.code);
@@ -400,10 +610,24 @@ function resolveCouponForEnroll({ userId, couponCode, scheduleId, company }) {
   return { campaign, coupon };
 }
 
+function couponBasePrice(quote, campaign) {
+  const trip = Number(quote.tripPrice != null ? quote.tripPrice : quote.price || 0);
+  const stackMember = Number(campaign?.stack_member || campaign?.stackMember || 0) === 1;
+  const stackStudent = Number(campaign?.stack_student || campaign?.stackStudent || 0) === 1;
+  let base = trip;
+  if (quote.isMember && stackMember) {
+    base = Math.min(base, Number(quote.memberPrice != null ? quote.memberPrice : quote.price || trip));
+  }
+  if (quote.isStudent && stackStudent) {
+    base = Math.min(base, Number(quote.studentPrice != null ? quote.studentPrice : quote.price || trip));
+  }
+  return base;
+}
+
 function decideCouponPrice({ quote, user, campaign, waitlisted }) {
   const tripPrice = Number(quote.tripPrice != null ? quote.tripPrice : quote.price || 0);
   const memberPay = Number(quote.price || 0);
-  const couponPay = campaign ? couponedTripPay(tripPrice, campaign) : memberPay;
+  const couponPay = campaign ? couponedTripPay(couponBasePrice(quote, campaign), campaign) : memberPay;
   const giftMax = Number(config.member.giftMaxPrice || 100);
   const giftWouldApply =
     !waitlisted &&
@@ -423,13 +647,19 @@ function decideCouponPrice({ quote, user, campaign, waitlisted }) {
     };
   }
   const applyCoupon = !!(campaign && couponPay < memberPay);
+  let reason = "";
+  if (!applyCoupon) {
+    if (quote.isMember) reason = "会员价更优惠或相同，将不核销此券";
+    else if (quote.isStudent) reason = "学生价更优惠或相同，将不核销此券";
+    else reason = "券后价未低于团价";
+  }
   return {
     tripPrice,
     memberPay,
     couponPay,
     applyCoupon,
     giftWouldApply: false,
-    reason: applyCoupon ? "" : quote.isMember ? "会员价更优惠或相同，将不核销此券" : "券后价未低于团价",
+    reason,
   };
 }
 
@@ -495,7 +725,13 @@ function publicCampaignDTO(row, req, extras = {}) {
     claimEnd: row.claim_end || "",
     useStart: row.use_start || "",
     useEnd: row.use_end || "",
-    scheduleId: row.schedule_id,
+    validHours: Number(row.valid_hours || 0),
+    idleMonths: Number(row.idle_months || 0),
+    minTrips: Number(row.min_trips || 0),
+    stackMember: Number(row.stack_member || 0) === 1,
+    stackStudent: Number(row.stack_student || 0) === 1,
+    universal: isUniversalCampaign(row),
+    scheduleId: Number(row.schedule_id || 0),
     audience: row.audience || "public",
     schedule: sch ? scheduleCover(sch, req) : null,
     ...extras,
@@ -512,6 +748,7 @@ function publicAdminCampaign(row) {
 }
 
 function quotePreview(campaign, user) {
+  if (isUniversalCampaign(campaign)) return null;
   const sch = getDb().prepare("SELECT * FROM schedules WHERE id=?").get(campaign.schedule_id);
   if (!sch) return null;
   const occupied = enrolledCount(sch.id);
@@ -565,15 +802,15 @@ function publicGet(code, user, req) {
   const audience = campaign.audience || "public";
   const already = !!(myCoupon && myCoupon.status !== "expired" && myCoupon.status !== "void");
   const memberOk = audience !== "member" || isMember(user);
+  const ruleOk = !user || userMatchesRule(user.id, campaign);
   return publicCampaignDTO(campaign, req, {
     claimedByMe: already,
-    myCoupon: myCoupon
-      ? { code: myCoupon.code, status: myCoupon.status, usedEnrollmentId: myCoupon.used_enrollment_id || null }
-      : null,
+    myCoupon: instanceDTO(myCoupon),
     quote,
     claimable:
       audience !== "directed" &&
       memberOk &&
+      ruleOk &&
       campaign.status === "on" &&
       remainOf(campaign) > 0 &&
       inWindow(campaign.claim_start, campaign.claim_end) &&
@@ -582,65 +819,90 @@ function publicGet(code, user, req) {
 }
 
 function publicSummaryForSchedule(scheduleId, req) {
-  const row = getDb()
+  const pick = (row) => {
+    if (!row || remainOf(row) <= 0) return null;
+    if (!inWindow(row.claim_start, row.claim_end)) return null;
+    return {
+      code: row.code,
+      name: row.name,
+      label: campaignLabel(row),
+      remain: remainOf(row),
+      total: Number(row.total || 0),
+      universal: isUniversalCampaign(row),
+      url: req ? `${req.protocol}://${req.get("host")}/m/coupon/${row.code}` : `/m/coupon/${row.code}`,
+    };
+  };
+  const trip = getDb()
     .prepare(
       `SELECT * FROM coupon_campaigns
        WHERE schedule_id=? AND status='on' AND audience='public'
        ORDER BY id DESC LIMIT 1`
     )
     .get(scheduleId);
-  if (!row || remainOf(row) <= 0) return null;
-  if (!inWindow(row.claim_start, row.claim_end)) return null;
-  return {
-    code: row.code,
-    name: row.name,
-    label: campaignLabel(row),
-    remain: remainOf(row),
-    total: Number(row.total || 0),
-    url: req ? `${req.protocol}://${req.get("host")}/m/coupon/${row.code}` : `/m/coupon/${row.code}`,
-  };
+  const hit = pick(trip);
+  if (hit) return hit;
+  const uni = getDb()
+    .prepare(
+      `SELECT * FROM coupon_campaigns
+       WHERE IFNULL(schedule_id,0)=0 AND status='on' AND audience='public'
+       ORDER BY id DESC LIMIT 1`
+    )
+    .get();
+  return pick(uni);
 }
 
 function listMine(userId) {
   const rows = getDb()
     .prepare(
       `SELECT uc.*, c.name AS campaign_name, c.kind, c.value, c.schedule_id, c.status AS campaign_status,
-              c.use_start, c.use_end, c.code AS campaign_code, r.title AS route_title, s.start_date
+              c.use_start, c.use_end, c.valid_hours, c.code AS campaign_code, r.title AS route_title, s.start_date
        FROM user_coupons uc
        JOIN coupon_campaigns c ON c.id=uc.campaign_id
-       JOIN schedules s ON s.id=c.schedule_id
-       JOIN routes r ON r.id=s.route_id
+       LEFT JOIN schedules s ON s.id=c.schedule_id
+       LEFT JOIN routes r ON r.id=s.route_id
        WHERE uc.user_id=?
        ORDER BY uc.id DESC`
     )
     .all(userId);
-  return rows.map((row) => ({
-    id: row.id,
-    code: row.code,
-    status: expireIfNeeded(row, { use_end: row.use_end, use_start: row.use_start }).status,
-    label: campaignLabel(row),
-    name: row.campaign_name,
-    scheduleId: row.schedule_id,
-    routeTitle: row.route_title,
-    startDate: row.start_date,
-    campaignCode: row.campaign_code || "",
-  }));
+  return rows.map((row) => {
+    const live = expireIfNeeded(row, {
+      use_end: row.use_end,
+      use_start: row.use_start,
+      valid_hours: row.valid_hours,
+    });
+    return {
+      id: row.id,
+      code: row.code,
+      status: live.status,
+      label: campaignLabel(row),
+      name: row.campaign_name,
+      scheduleId: Number(row.schedule_id || 0),
+      routeTitle: Number(row.schedule_id || 0) === 0 ? "全部团" : row.route_title,
+      startDate: row.start_date || "",
+      campaignCode: row.campaign_code || "",
+      claimedAt: row.created_at || "",
+      expiresAt: row.expires_at || "",
+      validHours: Number(row.valid_hours || 0),
+      useEnd: row.use_end || "",
+      universal: Number(row.schedule_id || 0) === 0,
+    };
+  });
 }
 
 function listAdmin(scheduleId) {
   const db = getDb();
   const sql = scheduleId
     ? `SELECT c.*, r.title AS route_title, s.start_date FROM coupon_campaigns c
-       JOIN schedules s ON s.id=c.schedule_id JOIN routes r ON r.id=s.route_id
-       WHERE c.schedule_id=? ORDER BY c.id DESC`
+       LEFT JOIN schedules s ON s.id=c.schedule_id LEFT JOIN routes r ON r.id=s.route_id
+       WHERE c.schedule_id=? OR IFNULL(c.schedule_id,0)=0 ORDER BY c.id DESC`
     : `SELECT c.*, r.title AS route_title, s.start_date FROM coupon_campaigns c
-       JOIN schedules s ON s.id=c.schedule_id JOIN routes r ON r.id=s.route_id
+       LEFT JOIN schedules s ON s.id=c.schedule_id LEFT JOIN routes r ON r.id=s.route_id
        ORDER BY c.id DESC`;
   const rows = scheduleId ? db.prepare(sql).all(scheduleId) : db.prepare(sql).all();
   return rows.map((row) => ({
     ...publicAdminCampaign(row),
-    routeTitle: row.route_title,
-    startDate: row.start_date,
+    routeTitle: isUniversalCampaign(row) ? "全部团" : row.route_title,
+    startDate: row.start_date || "",
   }));
 }
 
@@ -667,6 +929,7 @@ function adminDetail(id, req) {
       usedEnrollmentId: h.used_enrollment_id || null,
       usedAt: h.used_at || "",
       createdAt: h.created_at,
+      expiresAt: h.expires_at || "",
     }));
   return {
     campaign: publicAdminCampaign(row),
@@ -707,4 +970,11 @@ module.exports = {
   sharePayload,
   loadCampaign,
   loadCampaignByCode,
+  parseValidHours,
+  couponExpiresAt,
+  expireIfNeeded,
+  effectiveUseEnd,
+  previewRuleTargets,
+  userMatchesRule,
+  couponBasePrice,
 };

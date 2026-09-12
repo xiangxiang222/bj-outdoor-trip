@@ -8,7 +8,7 @@
           <span class="tag">{{ statusText(c.status) }}</span>
         </div>
         <p style="margin:8px 0 0">{{ c.name }}</p>
-        <p class="muted">{{ c.routeTitle }} · {{ c.startDate }}</p>
+        <p class="muted">{{ c.routeTitle }}<template v-if="c.startDate"> · {{ c.startDate }}</template></p>
       </div>
     </div>
   </div>
