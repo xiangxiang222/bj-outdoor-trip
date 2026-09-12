@@ -6,6 +6,8 @@ const { PLACE_ALBUMS } = require("../seed/place-albums-config");
 
 const CATEGORIES = ["长城", "登山", "山水", "玩水", "文化", "草原", "海滨"];
 const UA = "bj-outdoor-trip/1.0 (route draft; https://github.com/xiangxiang222/bj-outdoor-trip)";
+const BROWSER_UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
 const MIN_PHOTO_BYTES = 8000;
 const SEARCH_TIMEOUT_MS = 5000;
 const DOWNLOAD_TIMEOUT_MS = 10000;
@@ -205,26 +207,57 @@ async function llmDraft(input, deps = {}) {
   }
 }
 
-function isUsablePhotoTitle(title) {
-  const t = String(title || "")
-    .replace(/^File:/i, "")
+function stripTags(text) {
+  return String(text || "")
+    .replace(/<[^>]+>/g, "")
     .trim();
-  if (!t) return false;
-  if (/\.(svg|pdf|djvu|webm|ogv|stl|wav|ogg|mid|opus)$/i.test(t)) return false;
-  if (!/\.(jpe?g|tiff?|gif|webp|png)$/i.test(t)) return false;
-  if (/location map|coat of arms|logo|icon|flag of|banner|qr code|diagram|wikidata|svg map|route map/i.test(t)) {
+}
+
+function isUsableSearchPhoto(title, url) {
+  const u = String(url || "").trim();
+  if (!/^https?:\/\//i.test(u)) return false;
+  if (/\.svg(\?|$)/i.test(u)) return false;
+  const t = stripTags(title);
+  if (/location map|coat of arms|logo|icon|flag of|banner|qr code|diagram|wikidata|svg map|route map|地图|示意图|图标|二维码|路线图/i.test(t)) {
     return false;
   }
   return true;
 }
 
-function extOf(title) {
-  const m = String(title || "")
-    .toLowerCase()
-    .match(/\.(jpe?g|png|gif|webp|tiff?)$/);
-  if (!m) return ".jpg";
-  if (m[1] === "jpeg" || m[1] === "jpg" || m[1] === "tif" || m[1] === "tiff") return ".jpg";
-  return `.${m[1]}`;
+function extOf(titleOrUrl) {
+  const s = String(titleOrUrl || "").toLowerCase();
+  if (/f=png|\.png(\?|$)/.test(s)) return ".png";
+  if (/f=webp|\.webp(\?|$)/.test(s)) return ".webp";
+  if (/f=gif|\.gif(\?|$)/.test(s)) return ".gif";
+  return ".jpg";
+}
+
+function searchHeaders(referer) {
+  return {
+    "User-Agent": BROWSER_UA,
+    Accept: "application/json,text/javascript,*/*;q=0.8",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    Referer: referer,
+  };
+}
+
+function downloadHeaders(url) {
+  const headers = {
+    "User-Agent": BROWSER_UA,
+    Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+  };
+  if (/baidu\.com|bdimg\.com/.test(url)) headers.Referer = "https://image.baidu.com/";
+  else if (/so\.com|qhimgs/.test(url)) headers.Referer = "https://image.so.com/";
+  return headers;
+}
+
+async function readJson(res) {
+  if (!res || typeof res.json !== "function") return null;
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
 
 function placeKeywords(cfg) {
@@ -255,11 +288,9 @@ function searchQueries(input) {
   const place = placeNameOf(input.title);
   const extras = [];
   for (const { cfg } of matchPlaces(input)) {
-    for (const query of cfg.queries || []) {
-      if (/[A-Za-z]{4,}/.test(query)) extras.push(query);
-    }
+    extras.push(...placeKeywords(cfg));
   }
-  return [...new Set([place, ...extras].filter((q) => q && String(q).length >= 2))].slice(0, 4);
+  return [...new Set([place, ...extras].filter((q) => q && String(q).length >= 2))].slice(0, 3);
 }
 
 function localLibraryPhotos(input, deps = {}) {
@@ -289,71 +320,57 @@ function photoSourceOf(photos) {
   return "search";
 }
 
-async function commonsSearch(query, fetchImpl) {
+async function baiduImageSearch(query, fetchImpl) {
   const url =
-    "https://commons.wikimedia.org/w/api.php?" +
+    "https://image.baidu.com/search/wisejsonala?" +
     new URLSearchParams({
-      action: "query",
-      list: "search",
-      srsearch: `${query} filetype:bitmap`,
-      srnamespace: "6",
-      srlimit: "10",
-      format: "json",
+      tn: "wisejsonala",
+      ie: "utf-8",
+      word: String(query || ""),
+      pn: "0",
+      rn: "10",
     });
-  const res = await fetchImpl(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(SEARCH_TIMEOUT_MS) });
+  const res = await fetchImpl(url, {
+    headers: searchHeaders("https://image.baidu.com/"),
+    signal: AbortSignal.timeout(SEARCH_TIMEOUT_MS),
+  });
   if (!res.ok) return [];
-  const data = await res.json();
-  return (data.query?.search || [])
-    .map((row) =>
-      String(row.title || "")
-        .replace(/^File:/i, "")
-        .trim()
-    )
-    .filter(isUsablePhotoTitle);
-}
-
-async function wikimediaRestSearch(query, fetchImpl) {
-  const url =
-    "https://api.wikimedia.org/core/v1/commons/search/page?" +
-    new URLSearchParams({
-      q: String(query || ""),
-      limit: "10",
-    });
-  const res = await fetchImpl(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(SEARCH_TIMEOUT_MS) });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return (data.pages || [])
-    .map((row) =>
-      String(row.title || row.key || "")
-        .replace(/^File:/i, "")
-        .replace(/_/g, " ")
-        .trim()
-    )
-    .filter(isUsablePhotoTitle);
-}
-
-async function openverseSearch(query, fetchImpl) {
-  const url =
-    "https://api.openverse.org/v1/images/?" +
-    new URLSearchParams({
-      q: String(query || ""),
-      page_size: "8",
-      mature: "false",
-    });
-  const res = await fetchImpl(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(8000) });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return (data.results || [])
+  const data = await readJson(res);
+  if (!data || data.antiFlag || data.message === "Forbid spider access") return [];
+  return (data.data || [])
     .map((row) => ({
-      title: String(row.title || "photo.jpg"),
-      url: String(row.url || "").trim(),
+      title: stripTags(row?.title || row?.ori_title || "photo.jpg"),
+      url: String(row?.thumburl || row?.hoverurl || row?.thumbnail_url || "").trim(),
     }))
-    .filter((row) => row.url.startsWith("http") && !/\.svg(\?|$)/i.test(row.url));
+    .filter((row) => isUsableSearchPhoto(row.title, row.url));
+}
+
+async function soImageSearch(query, fetchImpl) {
+  const url =
+    "https://image.so.com/j?" +
+    new URLSearchParams({
+      q: String(query || ""),
+      src: "srp",
+      sn: "0",
+      pn: "10",
+    });
+  const res = await fetchImpl(url, {
+    headers: searchHeaders("https://image.so.com/"),
+    signal: AbortSignal.timeout(SEARCH_TIMEOUT_MS),
+  });
+  if (!res.ok) return [];
+  const data = await readJson(res);
+  return (data?.list || [])
+    .map((row) => ({
+      title: stripTags(row?.title || "photo.jpg"),
+      url: String(row?.img || row?.thumb || "").trim(),
+    }))
+    .filter((row) => isUsableSearchPhoto(row.title, row.url));
 }
 
 async function downloadBuffer(url, destPath, fetchImpl) {
   const imgRes = await fetchImpl(url, {
-    headers: { "User-Agent": UA },
+    headers: downloadHeaders(url),
     redirect: "follow",
     signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS),
   });
@@ -364,77 +381,32 @@ async function downloadBuffer(url, destPath, fetchImpl) {
   return destPath;
 }
 
-async function wikimediaFileUrl(fileTitle, fetchImpl) {
-  const key = String(fileTitle || "")
-    .replace(/^File:/i, "")
-    .trim()
-    .replace(/ /g, "_");
-  const url = `https://api.wikimedia.org/core/v1/commons/file/${encodeURIComponent(key)}`;
-  const res = await fetchImpl(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(SEARCH_TIMEOUT_MS) });
-  if (!res.ok) return "";
-  const data = await res.json();
-  return data.preferred?.url || data.original?.url || data.thumbnail?.url || "";
-}
-
-async function downloadCommonsFile(fileTitle, destPath, fetchImpl) {
-  const api =
-    "https://commons.wikimedia.org/w/api.php?" +
-    new URLSearchParams({
-      action: "query",
-      titles: `File:${fileTitle}`,
-      prop: "imageinfo",
-      iiprop: "url",
-      iiurlwidth: "1280",
-      format: "json",
-    });
-  try {
-    const infoRes = await fetchImpl(api, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(SEARCH_TIMEOUT_MS) });
-    if (infoRes.ok) {
-      const data = await infoRes.json();
-      const page = Object.values(data.query?.pages || {})[0];
-      const url = page?.imageinfo?.[0]?.thumburl || page?.imageinfo?.[0]?.url;
-      if (url) {
-        const saved = await downloadBuffer(url, destPath, fetchImpl);
-        if (saved) return saved;
-      }
-    }
-  } catch {
-    /* try the REST file endpoint */
-  }
-  try {
-    const url = await wikimediaFileUrl(fileTitle, fetchImpl);
-    if (url) return downloadBuffer(url, destPath, fetchImpl);
-  } catch {
-    /* skip this file */
-  }
-  return null;
-}
-
-async function collectRemoteTitles(input, fetchImpl, limit) {
-  const titles = [];
+async function collectRemotePhotos(input, fetchImpl) {
+  const seen = new Set();
+  const rows = [];
   const add = (found) => {
-    for (const title of found) {
-      if (!titles.includes(title)) titles.push(title);
+    for (const row of found) {
+      if (!row?.url || seen.has(row.url)) continue;
+      seen.add(row.url);
+      rows.push(row);
     }
   };
   for (const query of searchQueries(input)) {
-    if (titles.length >= limit * 2) break;
     try {
-      add(await commonsSearch(query, fetchImpl));
+      add(await baiduImageSearch(query, fetchImpl));
     } catch {
       /* keep going */
     }
   }
-  if (titles.length) return titles;
+  if (rows.length) return rows;
   for (const query of searchQueries(input)) {
-    if (titles.length >= limit * 2) break;
     try {
-      add(await wikimediaRestSearch(query, fetchImpl));
+      add(await soImageSearch(query, fetchImpl));
     } catch {
       /* keep going */
     }
   }
-  return titles;
+  return rows;
 }
 
 async function searchAndSavePhotos(input, deps = {}) {
@@ -448,38 +420,16 @@ async function searchAndSavePhotos(input, deps = {}) {
 
   fs.mkdirSync(destDir, { recursive: true });
   const urls = [...local];
-  const titles = await collectRemoteTitles(input, fetchImpl, limit);
-  for (const title of titles) {
+  const found = await collectRemotePhotos(input, fetchImpl);
+  for (const row of found) {
     if (urls.length >= limit) break;
-    const name = `ai-${nanoid(10)}${extOf(title)}`;
+    const name = `ai-${nanoid(10)}${extOf(row.title || row.url)}`;
     const dest = path.join(destDir, name);
     try {
-      const ok = await downloadCommonsFile(title, dest, fetchImpl);
+      const ok = await downloadBuffer(row.url, dest, fetchImpl);
       if (ok) urls.push(`/static/uploads/${name}`);
     } catch {
       /* skip this file */
-    }
-  }
-  if (urls.length >= limit) return urls.slice(0, limit);
-
-  for (const query of searchQueries(input)) {
-    if (urls.length >= limit) break;
-    let found = [];
-    try {
-      found = await openverseSearch(query, fetchImpl);
-    } catch {
-      found = [];
-    }
-    for (const row of found) {
-      if (urls.length >= limit) break;
-      const name = `ai-${nanoid(10)}${extOf(row.title || row.url)}`;
-      const dest = path.join(destDir, name);
-      try {
-        const ok = await downloadBuffer(row.url, dest, fetchImpl);
-        if (ok) urls.push(`/static/uploads/${name}`);
-      } catch {
-        /* skip this file */
-      }
     }
   }
   return urls.slice(0, limit);
@@ -539,7 +489,7 @@ module.exports = {
   parseJsonObject,
   normalizeLlmDraft,
   llmDraft,
-  isUsablePhotoTitle,
+  isUsableSearchPhoto,
   placeKeywords,
   matchPlaces,
   searchQueries,

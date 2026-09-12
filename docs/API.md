@@ -178,7 +178,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | PUT | `/admin/play-tags/:id` | 更新 |
 | DELETE | `/admin/play-tags/:id` | 下架 |
 | GET | `/admin/routes` | 含下架；`priceTiers` 为 camelCase，`buses` 为车型 id 数组 |
-| POST | `/admin/routes/draft` | 起草。body：`title`（必填）`region` `days` `category` `notes`。返回文案字段 + `cover` `gallery` + `source`=`llm`/`template` + `photoSource`=`library`/`search`/空。无密钥用模板；图片先用已有景点库，再搜维基共享 / Openverse |
+| POST | `/admin/routes/draft` | 起草。body：`title`（必填）`region` `days` `category` `notes`。返回文案字段 + `cover` `gallery` + `source`=`llm`/`template` + `photoSource`=`library`/`search`/空。无密钥用模板；图片先用已有景点库，再搜百度 / 360 |
 | POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` |
 | PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换 |
 | DELETE | `/admin/routes/:id` | 下架 |

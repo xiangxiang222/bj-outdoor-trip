@@ -91,7 +91,7 @@ npx vitest run src/utils/activityKind.test.js
 | `config.test.js` | 测试环境目录覆盖是否生效 |
 | `weather.test.js` | mock / 实时开关 |
 | `coupons.service.test.js` | 折扣封顶、立减与保底价、会员叠加、领取后有效小时 |
-| `route-draft.test.js` | 线路模板/模型文案、Commons 搜图过滤与下载、本地景点库回退、Openverse 回退、无标题拒绝 |
+| `route-draft.test.js` | 线路模板/模型文案、百度 / 360 搜图过滤与下载、本地景点库回退、无标题拒绝 |
 
 ### 4.2 带数据库的服务
 

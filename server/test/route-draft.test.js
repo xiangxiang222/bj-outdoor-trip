@@ -10,7 +10,7 @@ const {
   parseJsonObject,
   normalizeLlmDraft,
   llmDraft,
-  isUsablePhotoTitle,
+  isUsableSearchPhoto,
   matchPlaces,
   searchQueries,
   localLibraryPhotos,
@@ -125,21 +125,21 @@ describe("route draft model and photos", () => {
     assert.equal(draft.category, "长城");
   });
 
-  it("filters unusable commons titles", () => {
-    assert.equal(isUsablePhotoTitle("File:Great Wall.jpg"), true);
-    assert.equal(isUsablePhotoTitle("File:logo.svg"), false);
-    assert.equal(isUsablePhotoTitle("File:location map.png"), false);
-    assert.equal(isUsablePhotoTitle(""), false);
+  it("filters unusable search photos", () => {
+    assert.equal(isUsableSearchPhoto("慕田峪长城", "https://img.baidu.com/it/u=1"), true);
+    assert.equal(isUsableSearchPhoto("景区logo", "https://img.baidu.com/it/u=1"), false);
+    assert.equal(isUsableSearchPhoto("风景", "https://x.com/a.svg"), false);
+    assert.equal(isUsableSearchPhoto("风景", ""), false);
   });
 
-  it("matches known places and prefers English search terms over district names", () => {
+  it("matches known places and searches Chinese names, not district names", () => {
     const hits = matchPlaces({ title: "慕田峪长城一日游", region: "北京市 / 海淀区" });
     assert.ok(hits.some((row) => row.id === "mutianyu"));
     assert.equal(matchPlaces({ title: "周末山水", region: "北京市 / 海淀区" }).length, 0);
     const queries = searchQueries({ title: "慕田峪长城一日游", region: "北京市 / 海淀区", category: "长城" });
     assert.ok(queries.includes("慕田峪长城"));
-    assert.ok(queries.some((q) => /Mutianyu/i.test(q)));
     assert.ok(!queries.includes("海淀区"));
+    assert.ok(!queries.some((q) => /Mutianyu/i.test(q)));
   });
 
   it("reuses local place photos when the title hits a known album", () => {
@@ -152,36 +152,33 @@ describe("route draft model and photos", () => {
     assert.deepEqual(urls, ["/static/photos/mutianyuLift.jpg", "/static/photos/mutianyu.jpg"]);
   });
 
-  it("downloads usable commons photos and skips junk", async () => {
+  it("downloads usable Baidu photos and skips junk", async () => {
     const destDir = fs.mkdtempSync(path.join(os.tmpdir(), "bj-draft-"));
     let calls = 0;
     const fetchImpl = async (url) => {
       calls += 1;
-      if (String(url).includes("list=search")) {
+      if (String(url).includes("wisejsonala")) {
         return jsonRes({
-          query: {
-            search: [{ title: "File:Great Wall.jpg" }, { title: "File:logo.svg" }, { title: "File:tiny.jpg" }],
-          },
+          data: [
+            { title: "慕田峪", thumburl: "http://x/wall.jpg" },
+            { title: "景区logo", thumburl: "http://x/logo.png" },
+            { title: "远景", thumburl: "http://x/tiny.jpg" },
+          ],
         });
-      }
-      if (String(url).includes("imageinfo")) {
-        const titles = String(url);
-        if (titles.includes("tiny")) return jsonRes({ query: { pages: { 1: { imageinfo: [{ url: "http://x/tiny.jpg" }] } } } });
-        return jsonRes({ query: { pages: { 1: { imageinfo: [{ thumburl: "http://x/wall.jpg" }] } } } });
       }
       if (String(url).includes("tiny.jpg")) {
         return { ok: true, arrayBuffer: async () => Buffer.from("tiny") };
       }
       return { ok: true, arrayBuffer: async () => Buffer.alloc(9000, 7) };
     };
-    const urls = await searchAndSavePhotos({ title: "慕田峪长城", region: "北京市 / 怀柔区", category: "长城" }, { fetchImpl, destDir, limit: 2 });
+    const urls = await searchAndSavePhotos({ title: "周末山水" }, { fetchImpl, destDir, limit: 2 });
     assert.equal(urls.length, 1);
     assert.match(urls[0], /^\/static\/uploads\/ai-.+\.jpg$/);
     assert.equal(fs.existsSync(path.join(destDir, path.basename(urls[0]))), true);
-    assert.ok(calls >= 3);
+    assert.ok(calls >= 2);
   });
 
-  it("returns no photos when commons search fails", async () => {
+  it("returns no photos when remote search fails", async () => {
     const destDir = fs.mkdtempSync(path.join(os.tmpdir(), "bj-draft-"));
     const urls = await searchAndSavePhotos(
       { title: "慕田峪" },
@@ -211,7 +208,7 @@ describe("route draft model and photos", () => {
     assert.deepEqual(urls, ["/static/photos/mutianyuLift.jpg"]);
   });
 
-  it("downloads Openverse photos when Commons has nothing", async () => {
+  it("downloads 360 photos when Baidu has nothing", async () => {
     const destDir = fs.mkdtempSync(path.join(os.tmpdir(), "bj-draft-"));
     const urls = await searchAndSavePhotos(
       { title: "周末山水" },
@@ -219,13 +216,13 @@ describe("route draft model and photos", () => {
         destDir,
         limit: 1,
         fetchImpl: async (url) => {
-          if (String(url).includes("openverse.org")) {
-            return jsonRes({ results: [{ title: "Lake.jpg", url: "http://x/lake.jpg" }] });
+          if (String(url).includes("image.so.com")) {
+            return jsonRes({ list: [{ title: "湖", img: "http://x/lake.jpg" }] });
           }
           if (String(url).includes("lake.jpg")) {
             return { ok: true, arrayBuffer: async () => Buffer.alloc(9000, 3) };
           }
-          return jsonRes({ query: { search: [] }, pages: [] });
+          return jsonRes({ data: [] });
         },
       }
     );
@@ -233,28 +230,28 @@ describe("route draft model and photos", () => {
     assert.match(urls[0], /^\/static\/uploads\/ai-.+\.jpg$/);
   });
 
-  it("skips a file when imageinfo has no url or the download throws", async () => {
+  it("skips a file when the image url is missing or the download throws", async () => {
     const destDir = fs.mkdtempSync(path.join(os.tmpdir(), "bj-draft-"));
     const empty = await searchAndSavePhotos(
-      { title: "慕田峪" },
+      { title: "周末山水" },
       {
         destDir,
         fetchImpl: async (url) => {
-          if (String(url).includes("list=search")) {
-            return jsonRes({ query: { search: [{ title: "File:Wall.png" }] } });
+          if (String(url).includes("wisejsonala")) {
+            return jsonRes({ data: [{ title: "空", thumburl: "" }] });
           }
-          return jsonRes({ query: { pages: { 1: {} } } });
+          return jsonRes({ data: [], list: [] });
         },
       }
     );
     assert.deepEqual(empty, []);
     const thrown = await searchAndSavePhotos(
-      { title: "慕田峪" },
+      { title: "周末山水" },
       {
         destDir,
         fetchImpl: async (url) => {
-          if (String(url).includes("list=search")) {
-            return jsonRes({ query: { search: [{ title: "File:Wall.jpg" }] } });
+          if (String(url).includes("wisejsonala")) {
+            return jsonRes({ data: [{ title: "湖", thumburl: "http://x/wall.jpg" }] });
           }
           throw new Error("net");
         },
