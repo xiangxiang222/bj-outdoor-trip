@@ -190,7 +190,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/schedules/:id/dissolve` | 解散单团。body：`reason` |
 | PUT | `/admin/schedules/:id/limit` | 报名限制。`studentOnly`、`alumniOk`、`oversub`、`schools`（数组或逗号分隔）。填高校或允许校友则自动仅师生 |
 | GET | `/admin/lotteries` | 后台抽奖列表：各团是否配置、时机、标题、`drawCount` |
-| GET | `/admin/schedules/:id/lottery` | 本团抽奖配置、指定名单、中奖记录。`draws[]` 含 `enrolled` `enrollLabel` `claimed` |
+| GET | `/admin/schedules/:id/lottery` | 本团抽奖配置、奖品（含 `rate` `remain` `winCount`）、指定名单、中奖记录。`draws[]` 含 `enrolled` `enrollLabel` `claimed` `isMember` `prizeKind` |
 | PUT | `/admin/schedules/:id/lottery` | 保存本团抽奖。`enabled` `drawMode`（`pre\|enroll\|both`）`title` `spinSeconds` `prizes[]`（2～8 个，含权重/库存/等级） |
 | POST | `/admin/schedules/:id/lottery/assigns` | 指定中奖。`userId` 或 `phone` + `prizeId` |
 | DELETE | `/admin/schedules/:id/lottery/assigns/:assignId` | 取消未抽的指定 |
