@@ -2,7 +2,7 @@
 
 本文说明测试分层、环境隔离、命令、覆盖率门槛，以及如何为新接口补用例。单元测试**不会**写入开发用的 `server/data/app.sqlite`，也**不会**下载 30 条线路的实景照片。
 
-当前用例数（`it(` 计数，对照 2026-09-05 代码）：**172** 条服务端 + **14** 条 H5。
+当前用例数（`it(` 计数，对照 2026-09-12 代码）：**209** 条服务端 + **43** 条 H5。
 
 ## 1. 依赖
 
@@ -91,6 +91,7 @@ npx vitest run src/utils/activityKind.test.js
 | `config.test.js` | 测试环境目录覆盖是否生效 |
 | `weather.test.js` | mock / 实时开关 |
 | `coupons.service.test.js` | 折扣封顶、立减与保底价 |
+| `route-draft.test.js` | 线路模板/模型文案、Commons 搜图过滤与下载、无标题拒绝 |
 
 ### 4.2 带数据库的服务
 
@@ -127,7 +128,7 @@ npx vitest run src/utils/activityKind.test.js
 | `api.social.test.js` | 相册、主页等 |
 | `api.split.test.js` | 演示分账 |
 | `api.dissolve.test.js` | 发起人解散、非发起人 403、后台解散单团与全部、重复解散 |
-| `api.admin.test.js` | 看板、线路增改下架、封面上传、排期成本利润、后台结算、报名脱敏、用户列表 |
+| `api.admin.test.js` | 看板、线路起草/增改下架、封面上传、排期成本利润、后台结算、报名脱敏、用户列表 |
 | `api.notices.test.js` | 校园/团体认证写入后台待办，点开带 `/admin/verify` 与 `kind`/`userId`，通过后未读清零 |
 | `api.guide.test.js` | 导游登录、行程名单含紧急联系人、游客详情、签到 |
 | `api.staff.test.js` | 后台账号增删改/停用、改密、运营权限、用户会员积分注销、后台代取消报名 |
@@ -141,6 +142,8 @@ npx vitest run src/utils/activityKind.test.js
 | `web/src/utils/activityKind.test.js` | 掼蛋/跑步/电影/招募分类与本周判断 |
 | `web/src/utils/media.test.js` | 首页轮播把绝对地址收成 `/static/...`，缺图回退 SVG |
 | `web/src/utils/weatherChart.test.js` | 气温曲线数据整理 |
+| `web/src/utils/routeMeta.test.js` | 线路类型/地区预设、阶梯价 95 折、集合点序列化 |
+| `web/src/utils/chinaAreas.test.js` | 全国省市县树、旧地区回填、跨省手填不映射 |
 
 Vue 页面与小程序以手动/演示验收为主（依赖浏览器与微信开发者工具）；完整接口顺序见第 8 节走查。走查脚本目前按户外团路径打公开接口、报名、取消、解散、会员、注销，同城局轻报名以 `api.enroll.test.js` / `api.home.test.js` 为准。
 

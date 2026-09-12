@@ -45,6 +45,7 @@ const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/co
 const { parseEnrollLimit, eligibilityView, applyEnrollLimit } = require("./services/eligibility");
 const { oversubView, isOversubPending, drawOversub } = require("./services/oversub");
 const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
+const { draftRoute } = require("./services/route-draft");
 const { noticeCampus, noticeGroup, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -1720,13 +1721,30 @@ router.delete("/admin/play-tags/:id", authAdmin, requireCap("ops"), (req, res) =
   res.json({ ok: true });
 });
 
+router.post("/admin/routes/draft", authAdmin, requireCap("ops"), async (req, res) => {
+  try {
+    const data = await draftRoute(req.body || {});
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 400).json({ ok: false, message: e.message || "起草失败" });
+  }
+});
+
 router.get("/admin/routes", authAdmin, requireCap("roster"), (req, res) => {
   const rows = db()
     .prepare("SELECT * FROM routes ORDER BY id")
     .all()
     .map((r) => {
-      const tiers = db().prepare("SELECT * FROM route_price_tiers WHERE route_id=? ORDER BY min_people").all(r.id);
-      return mapRoute(r, req, { priceTiers: tiers });
+      const bundle = loadRouteBundle(r.id) || { tiers: [], buses: [] };
+      return mapRoute(r, req, {
+        priceTiers: (bundle.tiers || []).map((t) => ({
+          minPeople: t.min_people,
+          maxPeople: t.max_people,
+          price: t.price,
+          memberPrice: t.member_price,
+        })),
+        buses: (bundle.buses || []).map((b) => b.id),
+      });
     });
   res.json({ ok: true, data: rows });
 });

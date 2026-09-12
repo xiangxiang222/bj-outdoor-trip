@@ -36,6 +36,11 @@ module.exports = {
   student: {
     discountRate: 0.9,
   },
+  ai: {
+    apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "",
+    baseUrl: process.env.AI_BASE_URL || "https://api.openai.com/v1",
+    model: process.env.AI_MODEL || "gpt-4o-mini",
+  },
   insurance: {
     plans: [
       { code: "none", name: "暂不购买", fee: 0, cover: "出行风险自担" },
