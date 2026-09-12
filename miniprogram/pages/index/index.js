@@ -169,6 +169,13 @@ Page({
     if (!Number.isInteger(id) || id <= 0) return;
     wx.navigateTo({ url: detailUrl(id) });
   },
+  goRoutes() {
+    getApp().globalData.routeFilter = {
+      tag: this.data.tag || "",
+      q: String(this.data.query || "").trim(),
+    };
+    wx.navigateTo({ url: "/pages/routes/routes" });
+  },
   goPublish() {
     const app = getApp();
     if (!app.globalData.token) {

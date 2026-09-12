@@ -1,5 +1,6 @@
 <template>
   <div>
+    <p class="muted" style="margin:0 0 10px">官方线路。点进去看介绍，有排期就能报，没有可以自己开一团。</p>
     <input class="input" v-model="q" placeholder="搜索长城 / 十渡 / 坝上 / 野三坡" @keyup.enter="load" />
     <div class="chips">
       <div class="chip" :class="{ on: days === 0 }" @click="setDays(0)">全部天数</div>
@@ -44,6 +45,7 @@ const tags = ref([]);
 function applyQuery() {
   days.value = route.query.days === "multi" ? "multi" : Number(route.query.days) || 0;
   tag.value = route.query.tag ? String(route.query.tag) : route.query.category ? String(route.query.category) : "";
+  q.value = route.query.q ? String(route.query.q) : "";
 }
 
 async function load() {
@@ -81,7 +83,6 @@ watch(
 
 onMounted(async () => {
   applyQuery();
-  if (route.query.q) q.value = String(route.query.q);
   tags.value = (await http.get("/play-tags").catch(() => ({ data: [] }))).data || [];
   load();
 });

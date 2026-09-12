@@ -1236,6 +1236,23 @@ html.admin-theme .el-dialog__footer {
 .ticket-card .muted { color: rgba(255, 255, 255, 0.72); }
 .ticket-actions { display: flex; gap: 8px; margin-top: 10px; }
 .ticket-actions .btn { flex: 1; }
+.catalog-row {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+.catalog-row .tool-btn {
+  flex: 1;
+  text-align: center;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 700;
+}
+.tool-btn.ghost-line {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
 .feed-toolbar {
   display: flex;
   align-items: center;

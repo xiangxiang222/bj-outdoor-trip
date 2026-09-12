@@ -30,6 +30,9 @@ Page({
   goOfficial() {
     wx.navigateTo({ url: "/pages/official/official" });
   },
+  goRoutes() {
+    wx.navigateTo({ url: "/pages/routes/routes" });
+  },
   login() { wx.navigateTo({ url: "/pages/login/login" }); },
   register() { wx.navigateTo({ url: "/pages/login/login?tab=register" }); },
   go(e) {

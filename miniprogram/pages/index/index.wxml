@@ -32,12 +32,15 @@
   <view class="chip {{tag==item.name?'on':''}}" wx:for="{{home.tags}}" wx:key="id" bindtap="setTag" data-name="{{item.name}}">{{item.name}}</view>
 </scroll-view>
 
+<view class="catalog-row">
+  <view class="tool-btn ghost-line" bindtap="goRoutes">看线路</view>
+  <view class="tool-btn play" bindtap="goPublish">发团</view>
+</view>
 <view class="feed-toolbar">
   <view class="hint">看看最近都在忙什么</view>
   <view class="tools">
     <view class="tool-btn" bindtap="cycleSort">{{sortText}}</view>
     <view class="tool-btn" bindtap="toggleFold" data-key="extra">{{fold.extra ? '收起' : '筛选'}}</view>
-    <view class="tool-btn play" bindtap="goPublish">发团</view>
   </view>
 </view>
 
@@ -85,10 +88,14 @@
     </view>
   </view>
 </view>
-<view wx:if="{{!groups.length}}" class="card" bindtap="goPublish">
+<view wx:if="{{!groups.length}}" class="card">
   <view class="pad">
     <view class="title">还没有符合条件的团</view>
-    <view class="muted">发一个新团，审核通过后会出现在这里。</view>
+    <view class="muted">可以先看官方线路，或自己发一个，审核通过后会出现在这里。</view>
+    <view class="catalog-row" style="margin-top:16rpx">
+      <view class="tool-btn ghost-line" catchtap="goRoutes">看线路</view>
+      <view class="tool-btn play" catchtap="goPublish">去发团</view>
+    </view>
   </view>
 </view>
 <view class="home-foot muted" bindtap="goOfficial">客服与规则</view>
