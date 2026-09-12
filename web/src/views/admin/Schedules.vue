@@ -2,13 +2,16 @@
   <div>
     <div class="row">
       <h2>拼团排期、成本与解散</h2>
-      <div>
+      <div class="admin-schedules-actions">
+        <el-checkbox v-model="showCancelled" :disabled="!cancelledCount && !showCancelled">
+          显示已解散<span v-if="cancelledCount">（{{ cancelledCount }}）</span>
+        </el-checkbox>
         <el-button v-if="canOps" type="danger" plain :disabled="!activeCount" @click="openDissolveAll">解散全部拼团（{{ activeCount }}）</el-button>
         <el-button v-if="canOps" type="success" @click="open">发布拼团</el-button>
       </div>
     </div>
     <p class="admin-scroll-hint">表格较宽时可左右滑动。线路、出发会钉在左侧，操作在最右侧。</p>
-    <el-table :data="list" stripe :fit="false" class="admin-schedules-table">
+    <el-table :data="visibleList" stripe :fit="false" class="admin-schedules-table" :empty-text="emptyText">
       <el-table-column prop="route.title" label="线路" width="168" fixed="left" />
       <el-table-column prop="startDate" label="出发" width="112" fixed="left" />
       <el-table-column label="组织" width="90">
@@ -321,6 +324,7 @@ const canField = computed(() => hasCap(me.value, "field"));
 
 const meetupPoints = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
 const list = ref([]);
+const showCancelled = ref(false);
 const routes = ref([]);
 const buses = ref([]);
 const showCost = ref(false);
@@ -444,6 +448,13 @@ async function load() {
 }
 onMounted(load);
 const activeCount = computed(() => list.value.filter((s) => s.status !== "cancelled").length);
+const cancelledCount = computed(() => list.value.filter((s) => s.status === "cancelled").length);
+const visibleList = computed(() => (showCancelled.value ? list.value : list.value.filter((s) => s.status !== "cancelled")));
+const emptyText = computed(() => (
+  !showCancelled.value && cancelledCount.value
+    ? "已解散的团已隐藏，打开「显示已解散」可查看"
+    : "暂无数据"
+));
 function open() { showNew.value = true; }
 function openVirtual(row) {
   cur.value = row;
