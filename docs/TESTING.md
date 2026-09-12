@@ -144,7 +144,7 @@ npx vitest run src/utils/activityKind.test.js
 | `web/src/utils/media.test.js` | 首页轮播把绝对地址收成 `/static/...`，缺图回退 SVG |
 | `web/src/utils/weatherChart.test.js` | 气温曲线数据整理 |
 | `web/src/utils/routeMeta.test.js` | 线路类型/地区预设、阶梯价 95 折、集合点序列化 |
-| `web/src/utils/chinaAreas.test.js` | 全国省市县树、旧地区回填、跨省手填不映射 |
+| `web/src/utils/chinaAreas.test.js` | 全国省市县树、旧地区回填、北京周边/跨省选项 |
 | `web/src/utils/couponTime.test.js` | 优惠券倒计时剩余比例与未使用过滤 |
 
 Vue 页面与小程序以手动/演示验收为主（依赖浏览器与微信开发者工具）；完整接口顺序见第 8 节走查。走查脚本目前按户外团路径打公开接口、报名、取消、解散、会员、注销，同城局轻报名以 `api.enroll.test.js` / `api.home.test.js` 为准。

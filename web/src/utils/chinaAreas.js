@@ -66,7 +66,12 @@ export function buildChinaAreaTree(raw) {
   });
 }
 
-export const chinaAreaOptions = buildChinaAreaTree(rawAreas);
+export const EXTRA_REGIONS = [
+  { value: "北京周边", label: "北京周边" },
+  { value: "跨省", label: "跨省" },
+];
+
+export const chinaAreaOptions = [...EXTRA_REGIONS, ...buildChinaAreaTree(rawAreas)];
 
 export function formatRegion(path) {
   return (Array.isArray(path) ? path : []).map((p) => String(p || "").trim()).filter(Boolean).join(" / ");
