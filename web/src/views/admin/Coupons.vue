@@ -4,7 +4,7 @@
       <h2>优惠券</h2>
       <el-button type="success" @click="open">发行优惠券</el-button>
     </div>
-    <p class="muted">可发指定团或通用券。类型含几折、直减、免费。定向可从用户列表搜索选人；仅会员券可指定必领用户，库存先留给他们。领取后可限时。默认与会员/学生价取低。公司团不可用。</p>
+    <p class="muted">可发指定团或通用券。类型含几折、直减、免费。公开、会员、定向都可以指定人；人多时从名单搜索、翻页勾选。指定的人发行后立刻入账，库存先留给他们。领取后可限时。默认与会员/学生价取低。公司团不可用。</p>
     <el-table :data="list" stripe>
       <el-table-column prop="code" label="口令" width="110" />
       <el-table-column prop="name" label="名称" min-width="140" />
@@ -62,26 +62,8 @@
             <el-radio label="directed">定向发放</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="form.audience === 'member' || form.audience === 'directed'" :label="form.audience === 'member' ? '指定必领' : '指定发放'">
-          <el-select
-            v-model="form.guaranteedUserIds"
-            multiple
-            filterable
-            remote
-            reserve-keyword
-            clearable
-            :remote-method="searchPeople"
-            :loading="peopleLoading"
-            placeholder="搜昵称或手机，可多选"
-            style="width:100%"
-          >
-            <el-option v-for="u in peopleOptions" :key="u.id" :label="peopleLabel(u)" :value="u.id" />
-          </el-select>
-          <p class="muted" style="margin:6px 0 0">
-            {{ form.audience === "member"
-              ? "选中的人发行后立刻入账，库存先留给他们；其余会员领剩下的。"
-              : "选中的人发行后立刻入账。也可发行后再到「发放」里补选。" }}
-          </p>
+        <el-form-item :label="form.audience === 'directed' ? '指定发放' : '指定必领'">
+          <PeoplePicker v-model="form.guaranteedUserIds" :hint="assignHint" />
         </el-form-item>
         <el-form-item label="类型">
           <el-radio-group v-model="form.kind">
@@ -151,20 +133,7 @@
           <el-checkbox v-model="grantForm.byRule">按发行时的久未参加 / 出行次数发放，人多随机抽</el-checkbox>
         </el-form-item>
         <el-form-item label="选人">
-          <el-select
-            v-model="grantForm.userIds"
-            multiple
-            filterable
-            remote
-            reserve-keyword
-            clearable
-            :remote-method="searchPeople"
-            :loading="peopleLoading"
-            placeholder="从用户列表搜昵称或手机"
-            style="width:100%"
-          >
-            <el-option v-for="u in peopleOptions" :key="u.id" :label="peopleLabel(u)" :value="u.id" />
-          </el-select>
+          <PeoplePicker v-model="grantForm.userIds" hint="搜昵称或手机，也可翻页勾选。已选的人翻页不会丢。" />
         </el-form-item>
         <el-form-item label="手机号">
           <el-input v-model="grantForm.phonesText" type="textarea" rows="2" placeholder="也可直接填已注册手机，逗号或换行分隔" />
@@ -198,10 +167,11 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import http from "@/api/http";
+import PeoplePicker from "@/components/admin/PeoplePicker.vue";
 
 const route = useRoute();
 const list = ref([]);
@@ -216,11 +186,14 @@ const grantForm = ref({ phonesText: "", allMembers: false, sms: true, userIds: [
 const saving = ref(false);
 const share = ref(null);
 const holders = ref([]);
-const form = ref({});
+const form = ref({ audience: "public", guaranteedUserIds: [] });
 const preview = ref(null);
 const previewHint = ref("");
-const peopleOptions = ref([]);
-const peopleLoading = ref(false);
+const assignHint = computed(() => {
+  if (form.value.audience === "directed") return "选中的人发行后立刻入账。也可发行后再到「发放」里补选。人多时搜索或翻页勾选。";
+  if (form.value.audience === "member") return "选中的人发行后立刻入账，库存先留给他们；其余会员领剩下的。人多时搜索或翻页勾选。";
+  return "选中的人发行后立刻入账，库存先留给他们；其他人仍可公开领剩下的。人多时搜索或翻页勾选。";
+});
 
 function audienceText(s) {
   if (s === "member") return "仅会员";
@@ -250,25 +223,6 @@ function stackText(row) {
 }
 function tripLabel(s) {
   return `${s.route?.title || ""} ${s.startDate}（余${s.remain}）`;
-}
-function peopleLabel(u) {
-  return `${u.nickname || "用户"} ${u.phone || ""}${u.isMember ? " · 会员" : ""}`;
-}
-function mergePeople(rows) {
-  const map = new Map(peopleOptions.value.map((u) => [u.id, u]));
-  for (const u of rows || []) map.set(u.id, u);
-  peopleOptions.value = [...map.values()];
-}
-async function searchPeople(q) {
-  peopleLoading.value = true;
-  try {
-    const data = (await http.get("/admin/coupons/people", { params: { q: q || "", limit: 40 } })).data || [];
-    mergePeople(data);
-  } catch {
-    /* keep existing options */
-  } finally {
-    peopleLoading.value = false;
-  }
 }
 
 async function load() {
@@ -309,9 +263,7 @@ function open() {
   };
   preview.value = null;
   previewHint.value = "";
-  peopleOptions.value = [];
   showCreate.value = true;
-  searchPeople("");
 }
 
 async function previewTargets() {
@@ -376,9 +328,7 @@ async function openGrant(row) {
     byRule: !!(row.idleMonths || row.minTrips),
     userIds: [],
   };
-  peopleOptions.value = [];
   showGrant.value = true;
-  searchPeople("");
 }
 
 async function saveGrant() {
