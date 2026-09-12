@@ -7,6 +7,8 @@
         <em>管理后台</em>
       </div>
       <div class="admin-top-tools">
+        <a class="admin-jump" href="/m" target="_blank" rel="noopener">用户端</a>
+        <a class="admin-jump" href="/g" target="_blank" rel="noopener">导游端</a>
         <div v-if="can('ops')" class="admin-bell-wrap">
           <button class="admin-bell" type="button" @click="toggleNotices">
             消息
@@ -39,8 +41,12 @@
           </span>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="m">打开用户端</el-dropdown-item>
-              <el-dropdown-item command="g">打开导游端</el-dropdown-item>
+              <el-dropdown-item>
+                <a class="admin-drop-link" href="/m" target="_blank" rel="noopener">打开用户端</a>
+              </el-dropdown-item>
+              <el-dropdown-item>
+                <a class="admin-drop-link" href="/g" target="_blank" rel="noopener">打开导游端</a>
+              </el-dropdown-item>
               <el-dropdown-item divided command="out">退出登录</el-dropdown-item>
             </el-dropdown-menu>
           </template>
@@ -151,9 +157,7 @@ function onDocClick(e) {
 }
 
 function onUserCommand(cmd) {
-  if (cmd === "m") window.open("/m", "_blank");
-  else if (cmd === "g") window.open("/g", "_blank");
-  else if (cmd === "out") out();
+  if (cmd === "out") out();
 }
 
 onMounted(async () => {
