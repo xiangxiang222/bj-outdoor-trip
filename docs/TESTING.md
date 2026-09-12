@@ -140,6 +140,7 @@ npx vitest run src/utils/activityKind.test.js
 | `web/src/utils/auth.test.js` | 已登录放行；未登录 `replace` 到 `/m/login` 并带 `redirect` |
 | `web/src/utils/trips.test.js` | 行程列表拆成待出行 / 历史，同城局与山野团标签 |
 | `web/src/utils/activityKind.test.js` | 掼蛋/跑步/电影/招募分类与本周判断 |
+| `web/src/utils/feedList.test.js` | 团列表排序、满员保留、公司/高校/个人筛选 |
 | `web/src/utils/media.test.js` | 首页轮播把绝对地址收成 `/static/...`，缺图回退 SVG |
 | `web/src/utils/weatherChart.test.js` | 气温曲线数据整理 |
 | `web/src/utils/routeMeta.test.js` | 线路类型/地区预设、阶梯价 95 折、集合点序列化 |
