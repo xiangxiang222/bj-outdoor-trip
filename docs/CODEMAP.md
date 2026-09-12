@@ -84,6 +84,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `helpers.js` | 报价、成团匹配导游、积分入账 |
 | `fallback.js` | 候选团 / 替代团 |
 | `notices.js` | 后台待办：校园/团体认证写入 `admin_notices`，点开 `/admin/verify?kind=&userId=` |
+| `route-draft.js` | 后台发线路起草：有密钥走兼容 OpenAI 的聊天接口，否则模板；图片搜维基共享并落到 `uploads` |
 
 路由全集中在 `api.js`，不在 services 里挂 HTTP。
 
@@ -128,7 +129,7 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 
 ## 6. 后台与导游端
 
-后台 `/admin`：看板、线路、拼团与成本、报名、优惠券、用户与会员、认证审批、玩法标签、管理员。壳子按电商商家后台：红顶栏、深色侧栏、灰底白卡片。登录页与顶栏用原来的 `logo.jpg`。有运营权限时顶栏有「消息」，点开跳到 `/admin/verify?kind=campus|group&userId=`。
+后台 `/admin`：看板、线路、拼团与成本、报名、优惠券、用户与会员、认证审批、玩法标签、管理员。壳子按电商商家后台：红顶栏、深色侧栏、灰底白卡片。登录页与顶栏用原来的 `logo.jpg`。有运营权限时顶栏有「消息」，点开跳到 `/admin/verify?kind=campus|group&userId=`。发线路表单在 `web/src/views/admin/Routes.vue`，地区级联数据在 `web/src/utils/chinaAreas.js`。
 
 导游 `/g`：图片验证码登录 → 行程列表 → 名单签到 / 游客详情 / 锁座调座 / 车牌。演示号 `13700001101`。
 

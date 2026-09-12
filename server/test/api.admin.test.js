@@ -28,6 +28,23 @@ describe("admin API", () => {
     assert.ok(Array.isArray(res.body.data.byDay));
   });
 
+  it("drafts route copy without a model key", async () => {
+    await agent.post("/api/admin/routes/draft").send({ title: "慕田峪长城一日游" }).expect(401);
+    const blank = await agent.post("/api/admin/routes/draft").set(auth(adminToken)).send({ title: "" }).expect(400);
+    assert.match(blank.body.message, /标题/);
+    const res = await agent
+      .post("/api/admin/routes/draft")
+      .set(auth(adminToken))
+      .send({ title: "慕田峪长城一日游", region: "北京市 / 怀柔区", days: 1, notes: "亲子" })
+      .expect(200);
+    assert.equal(res.body.data.source, "template");
+    assert.equal(res.body.data.category, "长城");
+    assert.match(res.body.data.description, /慕田峪/);
+    assert.ok(Array.isArray(res.body.data.highlights));
+    assert.ok(Array.isArray(res.body.data.itinerary));
+    assert.deepEqual(res.body.data.gallery, []);
+  });
+
   it("creates updates and off-shelves a route", async () => {
     const created = await agent
       .post("/api/admin/routes")
@@ -47,7 +64,11 @@ describe("admin API", () => {
       .expect(200);
     const id = created.body.data.id;
     const list = await agent.get("/api/admin/routes").set(auth(adminToken)).expect(200);
-    assert.ok(list.body.data.some((r) => r.code === "R99"));
+    const createdRow = list.body.data.find((r) => r.code === "R99");
+    assert.ok(createdRow);
+    assert.deepEqual(createdRow.priceTiers, [{ minPeople: 10, maxPeople: null, price: 299, memberPrice: 275 }]);
+    assert.deepEqual(createdRow.buses, ["bus30"]);
+    assert.deepEqual(createdRow.highlights, ["亮点"]);
 
     await agent
       .put(`/api/admin/routes/${id}`)
