@@ -64,7 +64,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `offer.js` | 特价类型；学生价 = 原价 × `config.student.discountRate`（0.9） |
 | `eligibility.js` | 仅学生 / 指定高校 |
 | `combo.js` | 组合团另一半条件 |
-| `coupons.js` | 公开/会员/定向/通用/免费券，指定必领与用户搜索发放，领取后限时，按出行记录定向与随机发放，核销与退回 |
+| `coupons.js` | 公开/会员/定向/通用/免费券，指定必领与用户搜索分页发放，领取后限时，按出行记录定向与随机发放，核销与退回 |
 | `seats.js` | 2+2 座位图、锁座、改座 |
 | `waitlist` 逻辑在 `enroll.js` `promoteWaitlist` | 满员候补、取消后递补 |
 | `idcard.js` | 18 位校验、性别/生日/籍贯 |

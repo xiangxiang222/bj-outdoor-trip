@@ -155,7 +155,7 @@ User 1──n Favorite / PointsLedger / Review
 ### 3.3.1 优惠券
 
 - `coupon_campaigns`：按团发行，或 `schedule_id=0` 通用券（全部个人拼团）。`audience=public` 公开限量领取；`member` 仅会员自领；`directed` 后台定向发放。`kind=percent` 时 `value=80` 表示 8 折（付 80%），须填 `cap_amount` 封顶减免；`kind=amount` 为立减元；`kind=free` 团费为 0（保险另计）。`valid_hours` 领取/抽中后有效小时，0 不限（仍受 `use_end`）。`idle_months` / `min_trips` 定向：近 N 个月无 `joined` 报名、累计至少 N 次。`stack_member` / `stack_student` 为 1 时在会员/学生价上再减券，否则与折扣取低。公司团、已解散团不可发行指定券；通用券也不能用于公司团。
-- `coupon_allowlist`：指定必领用户。仅会员券上这些人发行后立刻入账，未入账时也预留库存，领取时不校验会员/出行门槛。定向发放可按用户列表搜索选人。
+- `coupon_allowlist`：指定必领用户。公开/会员/定向都可以指定；发行后立刻入账，未入账时也预留库存。领取时不校验会员/出行门槛。后台选人按昵称/手机搜索并分页。
 - `user_coupons`：领取后每人每活动 1 张。`unused` 已领未用；候补 `held`；占座成功 `used`；取消/解散退回 `unused`。`expires_at` 按活动 `valid_hours` 写入。库存按领取扣减，不因退券回补。按条件发放时若符合人数大于剩余张数，随机抽取。
 - 报价：先算团价（阶梯 + `offerType`）。默认在「会员/学生价」与「券后价」取更低，不连乘；勾选叠加则券作用在已打折价格上。保险不加折。会员赠团免单时不核销。链接只带活动码，不含折扣数字。短链 `/c/:code` 302 到 `/m/coupon/:code`。
 

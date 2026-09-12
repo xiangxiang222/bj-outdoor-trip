@@ -280,27 +280,33 @@ function searchPeople(query = {}) {
   const db = getDb();
   const q = String(query.q || "").trim();
   const ids = parseUserIdList(query.ids || query.userIds || query.user_ids);
-  const limit = parseNonNegInt(query.limit, 30, 80, "人数上限不正确") || 30;
-  let sql = "SELECT * FROM users WHERE deleted_at IS NULL AND IFNULL(is_virtual,0)=0";
+  const membersOnly = parseFlag(query.members ?? query.membersOnly, 0) === 1;
+  const pageSize = parseNonNegInt(query.pageSize ?? query.limit, 20, 50, "每页人数不正确") || 20;
+  const page = parseNonNegInt(query.page, 1, 100000, "页码不正确") || 1;
+  let where = "deleted_at IS NULL AND IFNULL(is_virtual,0)=0";
   const args = [];
   if (ids.length) {
-    sql += ` AND id IN (${ids.map(() => "?").join(",")})`;
+    where += ` AND id IN (${ids.map(() => "?").join(",")})`;
     args.push(...ids);
   } else if (q) {
-    sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ?)";
+    where += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ?)";
     args.push(`%${q}%`, `%${q}%`);
   }
-  sql += " ORDER BY is_member DESC, id DESC LIMIT ?";
-  args.push(limit);
-  return db
-    .prepare(sql)
-    .all(...args)
+  if (membersOnly && !ids.length) {
+    where += " AND IFNULL(is_member,0)=1 AND (member_expire_at IS NULL OR member_expire_at='' OR date(member_expire_at) >= date('now','localtime'))";
+  }
+  const total = Number(db.prepare(`SELECT COUNT(*) AS c FROM users WHERE ${where}`).get(...args).c || 0);
+  const offset = (page - 1) * pageSize;
+  const list = db
+    .prepare(`SELECT * FROM users WHERE ${where} ORDER BY is_member DESC, id DESC LIMIT ? OFFSET ?`)
+    .all(...args, pageSize, offset)
     .map((u) => ({
       id: u.id,
       nickname: u.nickname || "",
       phone: u.phone || "",
       isMember: isMember(u),
     }));
+  return { list, total, page, pageSize };
 }
 
 function assertClaimStock(campaign, userId) {
