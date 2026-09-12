@@ -226,6 +226,9 @@ Page({
     const id = e.currentTarget.dataset.id;
     if (id) wx.navigateTo({ url: "/pages/user/user?id=" + id });
   },
+  goLottery() {
+    wx.navigateTo({ url: "/pages/lottery/lottery?scheduleId=" + this.data.id });
+  },
   onSeat(e) {
     const id = e.currentTarget.dataset.userid;
     if (id) {

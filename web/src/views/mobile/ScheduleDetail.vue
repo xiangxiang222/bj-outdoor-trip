@@ -215,6 +215,17 @@
         <p class="muted" v-if="!s.chain?.length">还没有人报名，快来占第一名。</p>
       </div></div>
 
+      <div class="h2" v-if="s.lotteryEnabled">本团抽奖</div>
+      <div class="card" v-if="s.lotteryEnabled" @click="$router.push('/m/lottery?scheduleId=' + s.id)">
+        <div class="pad row">
+          <div>
+            <strong>转盘抽奖</strong>
+            <p class="muted" style="margin:4px 0 0">本团专属奖品，点进去转圆盘</p>
+          </div>
+          <span class="nav-link">去抽 ›</span>
+        </div>
+      </div>
+
       <div class="h2">本团评价 <span v-if="reviews.count" class="muted">{{ reviews.avg }} 分 · {{ reviews.count }} 条</span></div>
       <div class="card" v-if="reviews.list?.length">
         <div class="pad review-item" v-for="rv in reviews.list" :key="rv.id">

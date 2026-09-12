@@ -37,7 +37,8 @@ const { referralCard, groupQrPayload, settleEnrollReferrals } = require("./servi
 const { optionsForSchedule, setFallbacks, listFallbacks } = require("./services/fallback");
 const { generateVirtualUsers, setVirtualUsersForSchedule } = require("./services/virtual");
 const { deleteAccount } = require("./services/account");
-const { drawPre, drawPost, lotteryState } = require("./services/lottery");
+const { drawPre, drawPost, lotteryState, isLotteryEnabled } = require("./services/lottery");
+const { getAdminLottery, saveAdminLottery, addAssign, removeAssign } = require("./services/lottery-admin");
 const { completeTrip, afterTripState } = require("./services/aftertrip");
 const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
@@ -316,6 +317,7 @@ function scheduleView(sch, req) {
     combo: comboView(sch, viewer),
     eligibility: eligibilityView(sch, viewer),
     oversub: oversubView(sch),
+    lotteryEnabled: isLotteryEnabled(sch.id),
   };
 }
 
@@ -664,7 +666,7 @@ router.post("/feedback", authUser, (req, res) => {
   res.json({ ok: true, message: "已收到，谢谢反馈" });
 });
 
-router.get("/lottery", authUser, (req, res) => {
+router.get("/lottery", optionalUser, (req, res) => {
   res.json({ ok: true, data: lotteryState(req.userId, Number(req.query.scheduleId || 0)) });
 });
 
@@ -1896,6 +1898,38 @@ router.put("/admin/schedules/:id/limit", authAdmin, requireCap("ops"), (req, res
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
   applyEnrollLimit(sch.id, req.body || {});
   res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id), req) });
+});
+
+router.get("/admin/schedules/:id/lottery", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    res.json({ ok: true, data: getAdminLottery(req.params.id) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.put("/admin/schedules/:id/lottery", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    res.json({ ok: true, data: saveAdminLottery(req.params.id, req.body || {}), message: "本团抽奖已保存" });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/admin/schedules/:id/lottery/assigns", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    res.json({ ok: true, data: addAssign(req.params.id, req.body || {}, req.adminId), message: "已指定中奖人" });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.delete("/admin/schedules/:id/lottery/assigns/:assignId", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    res.json({ ok: true, data: removeAssign(req.params.id, req.params.assignId), message: "已取消指定" });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 router.post("/admin/schedules/:id/draw", authAdmin, requireCap("ops"), (req, res) => {

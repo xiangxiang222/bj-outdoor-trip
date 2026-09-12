@@ -153,6 +153,16 @@
   <text wx:elif="{{!isActivity || !isFree && item.canPay}}" class="pay-unpaid" catchtap="payFor" data-id="{{item.enrollmentId}}" data-name="{{item.name}}"> {{item.payText}} · 去支付</text>
   <text wx:elif="{{!isActivity || !isFree}}" class="{{item.payStatus=='paid' ? 'pay-paid' : 'muted'}}"> {{item.payText}}</text>
 </view>
+<view class="card" wx:if="{{s.lotteryEnabled}}" bindtap="goLottery">
+  <view class="pad row">
+    <view>
+      <view class="title">本团抽奖</view>
+      <view class="muted">本团专属转盘，点进去抽</view>
+    </view>
+    <view class="nav-link">去抽 ›</view>
+  </view>
+</view>
+
 <view class="pad title">本团评价 <text class="muted" wx:if="{{reviews.count}}">{{reviews.avg}}分 · {{reviews.count}}条</text></view>
 <view class="pad muted" wx:if="{{!reviews.list.length}}">还没有评价。</view>
 <view class="card" wx:for="{{reviews.list}}" wx:key="id">

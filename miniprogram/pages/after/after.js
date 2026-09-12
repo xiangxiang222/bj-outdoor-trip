@@ -67,17 +67,9 @@ Page({
       this.setData({ msg: (e && e.message) || "评价失败" });
     }
   },
-  async drawPost() {
+  goLottery() {
     if (!this.needLogin()) return;
-    try {
-      const res = await request("/lottery/draw", "POST", { phase: "post", scheduleId: Number(this.data.id) });
-      this.setData({
-        msg: res.data.matched ? "两次一致，已翻倍" : "抽到：" + res.data.prizeLabel,
-      });
-      this.load();
-    } catch (e) {
-      this.setData({ msg: (e && e.message) || "抽奖失败" });
-    }
+    wx.navigateTo({ url: "/pages/lottery/lottery?scheduleId=" + this.data.id + "&phase=post" });
   },
   setUrl(e) {
     this.setData({ shareUrl: e.detail.value });

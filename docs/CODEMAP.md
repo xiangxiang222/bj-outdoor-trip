@@ -71,7 +71,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `policy.js` | 退改文案、风险告知、FAQ、官方账号 |
 | `weather.js` | Open-Meteo 或 mock |
 | `leaders.js` / `referral.js` | 双领队、推荐码 5%、领队奖 200 |
-| `lottery.js` / `aftertrip.js` / `contest.js` | 抽奖、完成活动、评选 |
+| `lottery.js` / `lottery-admin.js` / `aftertrip.js` / `contest.js` | 抽奖圆盘、本团奖池与指定中奖、完成活动、评选 |
 | `virtual.js` | 后台虚拟占座，真人报名腾座 |
 | `dissolve.js` | 解散拼团 |
 | `account.js` | 注销 |

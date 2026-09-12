@@ -1,7 +1,7 @@
 const { describe, it, beforeEach, afterEach } = require("node:test");
 const assert = require("node:assert/strict");
 const dayjs = require("dayjs");
-const { harness, loginUser, auth, ID, issueCaptcha } = require("./http");
+const { harness, loginUser, loginAdmin, auth, ID, issueCaptcha } = require("./http");
 
 describe("lottery after-trip contest", () => {
   let agent;
@@ -136,5 +136,78 @@ describe("lottery after-trip contest", () => {
     const voted = await agent.post(`/api/contest/${mine.body.data.id}/vote`).set(auth(other)).expect(200);
     assert.equal(voted.body.data[0].votes, 1);
     assert.equal(voted.body.data[0].voted, true);
+  });
+
+  it("lets admin configure per-trip prizes, rates and a designated winner", async () => {
+    const admin = await loginAdmin(agent);
+    const token = await loginUser(agent);
+    const sid = seed.individualScheduleId;
+    const saved = await agent
+      .put(`/api/admin/schedules/${sid}/lottery`)
+      .set(auth(admin))
+      .send({
+        enabled: true,
+        title: "坝上抽奖",
+        spinSeconds: 5,
+        prizes: [
+          { name: "一等奖", level: 1, kind: "physical", weight: 1, stock: 1, color: "#e1251b", prizeKey: "first" },
+          { name: "二等奖", level: 2, kind: "points", points: 50, weight: 9, stock: -1, color: "#f5a623", prizeKey: "second" },
+          { name: "谢谢参与", level: 9, kind: "thanks", weight: 90, stock: -1, color: "#c8ccc4", prizeKey: "thanks" },
+        ],
+      })
+      .expect(200);
+    assert.equal(saved.body.data.enabled, true);
+    assert.equal(saved.body.data.prizes.length, 3);
+    assert.equal(saved.body.data.prizes[0].rate, 1);
+    const firstId = saved.body.data.prizes[0].id;
+
+    await agent
+      .post(`/api/admin/schedules/${sid}/lottery/assigns`)
+      .set(auth(admin))
+      .send({ phone: "13800138000", prizeId: firstId, note: "指定一等奖" })
+      .expect(200);
+
+    Math.random = () => 0.99;
+    const drawn = await agent.post("/api/lottery/draw").set(auth(token)).send({ phase: "pre", scheduleId: sid }).expect(200);
+    assert.equal(drawn.body.data.prizeKey, "first");
+    assert.equal(drawn.body.data.prizeLabel, "一等奖");
+    assert.equal(drawn.body.data.level, 1);
+    assert.equal(drawn.body.data.sectorIndex, 0);
+    assert.equal(drawn.body.data.spinSeconds, 5);
+    assert.equal(drawn.body.data.assigned, undefined);
+
+    const state = await agent.get("/api/lottery").set(auth(token)).query({ scheduleId: sid }).expect(200);
+    assert.equal(state.body.data.title, "坝上抽奖");
+    assert.equal(state.body.data.canPre, false);
+    assert.equal(state.body.data.prizes[0].label, "一等奖");
+    assert.equal(state.body.data.prizes[0].weight, undefined);
+
+    const adminView = await agent.get(`/api/admin/schedules/${sid}/lottery`).set(auth(admin)).expect(200);
+    assert.equal(adminView.body.data.draws[0].assigned, true);
+    assert.equal(adminView.body.data.assigns[0].usedAt.length > 0, true);
+  });
+
+  it("falls back when a limited prize is gone", async () => {
+    const admin = await loginAdmin(agent);
+    const token = await loginUser(agent);
+    const other = await register("13600136009", "第二人", ID.femaleSd);
+    const sid = seed.individualScheduleId;
+    await agent
+      .put(`/api/admin/schedules/${sid}/lottery`)
+      .set(auth(admin))
+      .send({
+        enabled: true,
+        spinSeconds: 4,
+        prizes: [
+          { name: "仅一份", level: 1, kind: "physical", weight: 100, stock: 1, prizeKey: "only" },
+          { name: "谢谢参与", level: 9, kind: "thanks", weight: 0, stock: -1, prizeKey: "thanks" },
+        ],
+      })
+      .expect(200);
+    Math.random = () => 0.1;
+    const first = await agent.post("/api/lottery/draw").set(auth(token)).send({ phase: "pre", scheduleId: sid }).expect(200);
+    assert.equal(first.body.data.prizeKey, "only");
+    const second = await agent.post("/api/lottery/draw").set(auth(other)).send({ phase: "pre", scheduleId: sid }).expect(200);
+    assert.equal(second.body.data.prizeKey, "thanks");
   });
 });

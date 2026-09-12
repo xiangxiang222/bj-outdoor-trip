@@ -24,7 +24,7 @@
   <view class="card"><view class="pad">
     <view class="muted" wx:if="{{s.lottery.pre}}">第一次抽到：{{s.lottery.pre.prizeLabel}}</view>
     <view wx:if="{{s.lottery.post}}" class="title">{{s.lottery.post.prizeLabel}}{{s.lottery.post.doubled ? ' · 已翻倍' : ''}}</view>
-    <view class="btn" wx:else bindtap="drawPost">抽第二次</view>
+    <view class="btn" wx:else bindtap="goLottery">去转盘抽第二次</view>
   </view></view>
 
   <view class="pad title">评选 · 分享投票</view>

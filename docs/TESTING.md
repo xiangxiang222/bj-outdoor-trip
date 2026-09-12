@@ -123,7 +123,7 @@ npx vitest run src/utils/activityKind.test.js
 | `oversub.service.test.js` | 抽签乱序可注入 rng，不改原数组 |
 | `api.coupon.test.js` | 公开限量领取、每人一张、会员与券取低不叠、赠团不核销、候补占用/递补核销/取消退券、公司团与暂停领取、仅会员领取、定向发放与演示短信 |
 | `api.reviews.test.js` | 仅报名成功可评、每团一条、线路/排期列表、候补与取消不可评 |
-| `api.lottery.test.js` | 报名前/后抽奖 |
+| `api.lottery.test.js` | 报名前/后抽奖、本团奖池与指定中奖、库存用尽回落 |
 | `api.social.test.js` | 相册、主页等 |
 | `api.split.test.js` | 演示分账 |
 | `api.dissolve.test.js` | 发起人解散、非发起人 403、后台解散单团与全部、重复解散 |
