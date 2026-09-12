@@ -1,12 +1,19 @@
 <template>
   <el-dialog v-model="open" :title="title" width="920px" top="6vh" destroy-on-close @closed="emit('closed')">
     <p class="muted" style="margin-top:0">
-      圆盘上的结果由服务器先算出来，再转到对应扇区。用户看不到中奖率和指定名单。权重大小即相对中奖率，库存用尽后该奖不再随机抽中；指定中奖仍会给。
+      圆盘上的结果由服务器先算出来，再转到对应扇区。指定名单用户看不到。中奖后用户能看到奖品和这档中奖率；积分/实物等跟团结束后才能领。权重大小即相对中奖率，库存用尽后该奖不再随机抽中。
     </p>
     <el-form label-width="96px" v-if="form">
       <el-form-item label="启用">
         <el-switch v-model="form.enabled" />
         <span class="muted" style="margin-left:8px">关闭时前台仍用平台默认奖池</span>
+      </el-form-item>
+      <el-form-item label="抽奖时机">
+        <el-radio-group v-model="form.drawMode">
+          <el-radio label="pre">报名前</el-radio>
+          <el-radio label="enroll">报名后</el-radio>
+          <el-radio label="both">前后都抽</el-radio>
+        </el-radio-group>
       </el-form-item>
       <el-form-item label="标题">
         <el-input v-model="form.title" maxlength="40" style="width:240px" />
@@ -151,6 +158,7 @@ const title = computed(() => {
 });
 const form = ref({
   enabled: false,
+  drawMode: "both",
   title: "本团抽奖",
   spinSeconds: 5,
   note: "",
@@ -220,6 +228,7 @@ async function load() {
   const data = (await http.get(`/admin/schedules/${props.schedule.id}/lottery`)).data;
   form.value = {
     enabled: !!data.enabled,
+    drawMode: data.drawMode || "both",
     title: data.title || "本团抽奖",
     spinSeconds: data.spinSeconds || 5,
     note: data.note || "",
@@ -236,6 +245,7 @@ async function save() {
     const data = (
       await http.put(`/admin/schedules/${props.schedule.id}/lottery`, {
         enabled: form.value.enabled,
+        drawMode: form.value.drawMode,
         title: form.value.title,
         spinSeconds: form.value.spinSeconds,
         note: form.value.note,

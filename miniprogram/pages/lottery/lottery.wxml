@@ -1,6 +1,6 @@
 <view class="card"><view class="pad">
   <view class="title">{{state.title || '活动抽奖'}}</view>
-  <view class="muted">转盘大约转 {{state.spinSeconds || 5}} 秒后停稳。报名前抽一次，完成活动后再抽一次。两次不是谢谢参与且奖品相同，积分翻倍。</view>
+  <view class="muted">{{blurb}}</view>
 </view></view>
 
 <view class="card"><view class="pad">
@@ -10,7 +10,7 @@
       <view class="lw-label" wx:for="{{labels}}" wx:key="key" style="transform:rotate({{item.angle}}deg) translateY(-200rpx) rotate({{item.back}}deg)">{{item.text}}</view>
       <view class="lw-hub"></view>
     </view>
-    <view class="lw-go {{(spinning || (phase=='pre' && !state.canPre) || (phase=='post' && !state.canPost)) ? 'off' : ''}}" bindtap="draw">{{spinning ? '…' : ((phase=='post' ? state.canPost : state.canPre) ? '抽奖' : '已抽')}}</view>
+    <view class="lw-go {{(spinning || !canDraw) ? 'off' : ''}}" bindtap="draw">{{spinning ? '…' : (canDraw ? '抽奖' : (hasResult ? '已抽' : '抽奖'))}}</view>
   </view>
   <view class="lw-legend">
     <view class="lw-chip" wx:for="{{state.prizes}}" wx:key="key">
@@ -20,23 +20,32 @@
 </view></view>
 
 <view class="card" wx:if="{{state.pre}}"><view class="pad">
-  <view class="muted">第一次（报名前）</view>
+  <view class="muted">报名前</view>
   <view class="title">{{state.pre.prizeLabel}}</view>
+  <view class="muted" wx:if="{{state.pre.prizeInfo && state.pre.level < 9}}">{{state.pre.prizeInfo}}{{state.pre.rate != null ? ' · 中奖率 ' + state.pre.rate + '%' : ''}}</view>
+  <view class="muted" wx:if="{{state.pre.claimHint}}">{{state.pre.claimHint}}</view>
 </view></view>
 <view class="card" wx:if="{{state.post}}"><view class="pad">
-  <view class="muted">第二次（参团后）</view>
-  <view class="title">{{state.post.prizeLabel}}{{state.post.doubled ? ' · 已翻倍' : ''}}</view>
+  <view class="muted">报名后{{state.post.doubled ? ' · 两次一致' : ''}}</view>
+  <view class="title">{{state.post.prizeLabel}}</view>
+  <view class="muted" wx:if="{{state.post.prizeInfo && state.post.level < 9}}">{{state.post.prizeInfo}}{{state.post.rate != null ? ' · 中奖率 ' + state.post.rate + '%' : ''}}</view>
+  <view class="muted" wx:if="{{state.post.claimHint}}">{{state.post.claimHint}}</view>
 </view></view>
+<view class="btn" wx:if="{{state.canClaim}}" bindtap="claim">{{claiming ? '领取中…' : '跟团结束，领取奖品'}}</view>
 <view class="pad" wx:if="{{msg}}">{{msg}}</view>
-<view class="pad muted" wx:if="{{!state.pre && !canLogin}}">请先登录后再抽。</view>
-<view class="pad muted" wx:elif="{{state.pre && !state.post}}">第一次已抽过。出行回来后到「我的报名」点完成活动。</view>
+<view class="pad muted" wx:if="{{!canLogin}}">登录后才能转动圆盘。</view>
+<view class="pad muted" wx:elif="{{hint}}">{{hint}}</view>
 
 <view class="lw-mask" wx:if="{{fx}}" bindtap="closeFx">
   <view class="lw-burst lv{{fx.level || 9}}"></view>
   <view class="lw-card lv{{fx.level || 9}}" catchtap="noop">
     <view class="lw-em">{{fxTitle}}</view>
     <view class="title">{{fx.prizeLabel}}</view>
-    <view class="muted" wx:if="{{fx.doubled}}">两次奖品一致，积分已翻倍</view>
+    <view class="muted" wx:if="{{fx.prizeInfo && fx.level < 9}}">奖品：{{fx.prizeInfo}}</view>
+    <view class="muted" wx:if="{{fx.rate != null && fx.level < 9}}">这档中奖率 {{fx.rate}}%</view>
+    <view class="muted" wx:if="{{fx.doubled}}">两次奖品一致，领取时翻倍</view>
+    <view class="muted" wx:elif="{{fx.level >= 9}}">下次再来</view>
+    <view class="muted" wx:elif="{{fx.claimHint}}">{{fx.claimHint}}</view>
     <view class="btn" bindtap="closeFx">好的</view>
   </view>
 </view>

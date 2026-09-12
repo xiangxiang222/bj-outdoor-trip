@@ -210,4 +210,78 @@ describe("lottery after-trip contest", () => {
     const second = await agent.post("/api/lottery/draw").set(auth(other)).send({ phase: "pre", scheduleId: sid }).expect(200);
     assert.equal(second.body.data.prizeKey, "thanks");
   });
+
+  it("lets a trip choose enroll-only draw and defers prizes until the trip ends", async () => {
+    const admin = await loginAdmin(agent);
+    const token = await loginUser(agent);
+    const sid = seed.individualScheduleId;
+    await agent
+      .put(`/api/admin/schedules/${sid}/lottery`)
+      .set(auth(admin))
+      .send({
+        enabled: true,
+        drawMode: "enroll",
+        spinSeconds: 3,
+        prizes: [
+          { name: "50 积分", level: 2, kind: "points", points: 50, weight: 100, stock: -1, prizeKey: "points50" },
+          { name: "谢谢参与", level: 9, kind: "thanks", weight: 0, stock: -1, prizeKey: "thanks" },
+        ],
+      })
+      .expect(200);
+
+    const beforeEnroll = await agent.post("/api/lottery/draw").set(auth(token)).send({ phase: "pre", scheduleId: sid });
+    assert.equal(beforeEnroll.status, 400);
+    assert.match(beforeEnroll.body.message, /报名后/);
+
+    const beforeJoin = await agent.post("/api/lottery/draw").set(auth(token)).send({ phase: "post", scheduleId: sid });
+    assert.equal(beforeJoin.status, 400);
+
+    await enroll(token).expect(200);
+    Math.random = () => 0.1;
+    const drawn = await agent.post("/api/lottery/draw").set(auth(token)).send({ phase: "post", scheduleId: sid }).expect(200);
+    assert.equal(drawn.body.data.prizeKey, "points50");
+    assert.equal(drawn.body.data.rate, 100);
+    assert.equal(drawn.body.data.prizeInfo, "50 积分");
+    assert.equal(drawn.body.data.deferred, true);
+    assert.equal(drawn.body.data.claimed, false);
+
+    const pointsAfterDraw = seed.db.prepare("SELECT points FROM users WHERE id=?").get(seed.userId).points;
+    assert.equal(pointsAfterDraw, 500);
+
+    const earlyClaim = await agent.post("/api/lottery/claim").set(auth(token)).send({ scheduleId: sid });
+    assert.equal(earlyClaim.status, 400);
+    assert.match(earlyClaim.body.message, /结束后/);
+
+    seed.db.prepare("UPDATE schedules SET start_date=?, end_date=? WHERE id=?").run(
+      dayjs().format("YYYY-MM-DD"),
+      dayjs().format("YYYY-MM-DD"),
+      sid
+    );
+    const claimed = await agent.post("/api/lottery/claim").set(auth(token)).send({ scheduleId: sid }).expect(200);
+    assert.equal(claimed.body.data.claimed[0].prizeLabel, "50 积分");
+    const pointsAfterClaim = seed.db.prepare("SELECT points FROM users WHERE id=?").get(seed.userId).points;
+    assert.equal(pointsAfterClaim, 550);
+  });
+
+  it("attaches a campaign when publishing with lotteryMode", async () => {
+    const admin = await loginAdmin(agent);
+    const published = await agent
+      .post("/api/admin/schedules")
+      .set(auth(admin))
+      .send({
+        routeId: seed.routeId,
+        startDate: dayjs().add(30, "day").format("YYYY-MM-DD"),
+        busTypeId: "bus30",
+        organizerType: "individual",
+        minGroupSize: 2,
+        meetupPoint: "东直门东方银座C口",
+        lotteryMode: "pre",
+      })
+      .expect(200);
+    const sid = published.body.data.id;
+    const view = await agent.get("/api/schedules/" + sid).expect(200);
+    assert.equal(view.body.data.lotteryEnabled, true);
+    assert.equal(view.body.data.lotteryMode, "pre");
+    assert.match(view.body.data.lotteryLabel, /报名前/);
+  });
 });

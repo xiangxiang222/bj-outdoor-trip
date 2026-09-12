@@ -33,9 +33,12 @@
       <div class="lw-card" :class="'lv' + fxLevel" @click.stop>
         <em>{{ fxTitle }}</em>
         <strong>{{ fx.prizeLabel }}</strong>
-        <p v-if="fx.doubled">两次奖品一致，积分已翻倍</p>
+        <p v-if="fx.prizeInfo && fxLevel < 9">奖品：{{ fx.prizeInfo }}</p>
+        <p v-if="fx.rate != null && fxLevel < 9">这档中奖率 {{ fx.rate }}%</p>
+        <p v-if="fx.doubled">两次奖品一致，领取时翻倍</p>
         <p v-else-if="fxLevel >= 9" class="muted">下次再来</p>
-        <p v-else class="muted">已记入你的账户，出行时可核对</p>
+        <p v-else-if="fx.claimHint" class="muted">{{ fx.claimHint }}</p>
+        <p v-else class="muted">已记入你的账户</p>
         <button class="btn block" type="button" @click="fx = null">好的</button>
       </div>
     </div>

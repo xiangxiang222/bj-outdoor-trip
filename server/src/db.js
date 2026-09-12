@@ -408,6 +408,7 @@ function migrateSchema(db) {
       prize_key TEXT,
       prize_label TEXT,
       doubled INTEGER DEFAULT 0,
+      claimed_at TEXT,
       created_at TEXT DEFAULT (datetime('now','localtime')),
       UNIQUE(user_id, schedule_id, phase)
     );
@@ -562,6 +563,7 @@ function migrateSchema(db) {
       title TEXT DEFAULT '本团抽奖',
       spin_seconds INTEGER DEFAULT 5,
       note TEXT DEFAULT '',
+      draw_mode TEXT DEFAULT 'both',
       updated_at TEXT DEFAULT (datetime('now','localtime'))
     );
     CREATE TABLE IF NOT EXISTS lottery_prizes (
@@ -597,6 +599,8 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "lottery_draws", "campaign_id", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "lottery_draws", "assigned", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "lottery_draws", "level", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "lottery_draws", "claimed_at", "TEXT");
+  addColumnIfMissing(db, "lottery_campaigns", "draw_mode", "TEXT DEFAULT 'both'");
 }
 
 let _db;

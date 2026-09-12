@@ -37,8 +37,8 @@ const { referralCard, groupQrPayload, settleEnrollReferrals } = require("./servi
 const { optionsForSchedule, setFallbacks, listFallbacks } = require("./services/fallback");
 const { generateVirtualUsers, setVirtualUsersForSchedule } = require("./services/virtual");
 const { deleteAccount } = require("./services/account");
-const { drawPre, drawPost, lotteryState, isLotteryEnabled } = require("./services/lottery");
-const { getAdminLottery, saveAdminLottery, addAssign, removeAssign } = require("./services/lottery-admin");
+const { drawPre, drawPost, claimPrizes, lotteryState, lotteryPublic } = require("./services/lottery");
+const { getAdminLottery, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate } = require("./services/lottery-admin");
 const { completeTrip, afterTripState } = require("./services/aftertrip");
 const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
@@ -317,7 +317,7 @@ function scheduleView(sch, req) {
     combo: comboView(sch, viewer),
     eligibility: eligibilityView(sch, viewer),
     oversub: oversubView(sch),
-    lotteryEnabled: isLotteryEnabled(sch.id),
+    ...lotteryPublic(sch.id),
   };
 }
 
@@ -676,6 +676,16 @@ router.post("/lottery/draw", authUser, (req, res) => {
     const scheduleId = Number((req.body || {}).scheduleId || req.query.scheduleId || 0);
     const data = phase === "post" ? drawPost(req.userId, scheduleId) : drawPre(req.userId, scheduleId);
     res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/lottery/claim", authUser, (req, res) => {
+  try {
+    const scheduleId = Number((req.body || {}).scheduleId || req.query.scheduleId || 0);
+    const data = claimPrizes(req.userId, scheduleId);
+    res.json({ ok: true, data, message: data.message });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }
@@ -1062,6 +1072,7 @@ router.post("/schedules", authUser, (req, res) => {
       notes || ""
     );
   applyScheduleExtras(info.lastInsertRowid, { ...(req.body || {}), reviewStatus: "approved" }, route);
+  attachLotteryOnCreate(info.lastInsertRowid, req.body || {});
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(info.lastInsertRowid);
   res.json({ ok: true, data: scheduleView(sch, req) });
 });
@@ -1204,6 +1215,7 @@ router.post("/trips", authUser, (req, res) => {
     },
     route
   );
+  attachLotteryOnCreate(schInfo.lastInsertRowid, b);
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(schInfo.lastInsertRowid);
   res.json({
     ok: true,
@@ -1840,6 +1852,7 @@ router.post("/admin/schedules", authAdmin, requireCap("ops"), (req, res) => {
       notes || ""
     );
   applyScheduleExtras(info.lastInsertRowid, { ...(req.body || {}), reviewStatus: "approved" }, route);
+  attachLotteryOnCreate(info.lastInsertRowid, req.body || {});
   const createdId = info.lastInsertRowid;
   const virtualRaw = (req.body || {}).virtualCount;
   let virtual = null;

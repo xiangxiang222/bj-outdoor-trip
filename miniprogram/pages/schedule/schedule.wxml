@@ -156,8 +156,8 @@
 <view class="card" wx:if="{{s.lotteryEnabled}}" bindtap="goLottery">
   <view class="pad row">
     <view>
-      <view class="title">本团抽奖</view>
-      <view class="muted">本团专属转盘，点进去抽</view>
+      <view class="title">{{s.lotteryLabel || '本团抽奖'}}</view>
+      <view class="muted">中奖先记账，跟团结束后领奖</view>
     </view>
     <view class="nav-link">去抽 ›</view>
   </view>

@@ -69,4 +69,9 @@
   </picker>
   <textarea class="input" placeholder="介绍" value="{{form.description}}" bindinput="setField" data-k="description" />
 </block>
+<view class="label">抽奖</view>
+<picker mode="selector" range="{{lotteryLabels}}" value="{{lotteryIndex}}" bindchange="setLottery">
+  <view class="input">{{lotteryLabels[lotteryIndex]}}</view>
+</picker>
+<view class="pad muted">中奖后立刻看到奖品和中奖率，跟团结束后才能领奖。</view>
 <view class="btn" bindtap="submit">提交审核</view>

@@ -47,6 +47,9 @@ Page({
     buses: [],
     busNames: [],
     busIndex: 0,
+    lotteryLabels: ["不开抽奖", "报名前抽奖", "报名后抽奖", "报名前和报名后都抽"],
+    lotteryKeys: ["off", "pre", "enroll", "both"],
+    lotteryIndex: 0,
     meetupNames: MEETUPS,
     meetupIndex: 0,
     form: {
@@ -71,6 +74,7 @@ Page({
       alumniOk: false,
       oversub: false,
       schools: "",
+      lotteryMode: "off",
     },
   },
   onLoad(q) {
@@ -181,6 +185,10 @@ Page({
   setBus(e) {
     const i = Number(e.detail.value);
     this.setData({ busIndex: i, "form.busTypeId": this.data.buses[i].id });
+  },
+  setLottery(e) {
+    const i = Number(e.detail.value);
+    this.setData({ lotteryIndex: i, "form.lotteryMode": this.data.lotteryKeys[i] });
   },
   setMeetup(e) {
     const i = Number(e.detail.value);
