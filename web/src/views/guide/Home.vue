@@ -15,7 +15,7 @@
           <strong>{{ s.route.title }}</strong>
           <span class="tag">{{ s.startDate }}</span>
         </div>
-        <div class="muted">{{ s.enrolled }}/{{ s.maxSeats }} · {{ s.meetupPoint }} {{ s.meetupTime }}</div>
+        <div class="muted">{{ s.enrolled }}/{{ s.maxSeats }} · {{ s.meetupPoint }} {{ s.meetupTime }}<template v-if="s.startedAt"> · 已开团</template></div>
       </div>
     </div>
     <p v-if="!list.length" class="muted">暂无已分配行程。人数成团后会自动匹配。</p>

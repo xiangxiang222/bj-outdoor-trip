@@ -39,6 +39,7 @@
     <label class="check-row"><input type="checkbox" v-model="form.studentOnly" /> 仅已认证师生可报名</label>
     <label class="check-row"><input type="checkbox" v-model="form.alumniOk" /> 允许已认证校友</label>
     <label class="check-row"><input type="checkbox" v-model="form.oversub" /> 报超会抽（车位不够才抽）</label>
+    <p v-if="form.organizerType === 'campus' && form.offerType === 'free'" class="muted">高校免费团会默认打开抽签：先报名待确认，人数超过座位才抽签。</p>
     <label>限定高校（可空，逗号分隔）</label>
     <input class="input" v-model="form.schools" placeholder="例如：北京大学,清华大学" />
     <label>想怎么玩</label>
@@ -84,13 +85,21 @@ const form = ref({
 });
 
 watch(
-  () => form.value.organizerType,
-  (type) => {
+  () => [form.value.organizerType, form.value.offerType, form.value.companyName],
+  ([type, offer, name], prev = []) => {
     if (type === "campus" && !form.value.companyName && store.profile?.school) {
       form.value.companyName = store.profile.school;
     }
     if (type === "company" && !form.value.companyName && store.profile?.companyName) {
       form.value.companyName = store.profile.companyName;
+    }
+    const wasCampusFree = prev[0] === "campus" && prev[1] === "free";
+    const isCampusFree = type === "campus" && offer === "free";
+    if (isCampusFree && !wasCampusFree) {
+      form.value.oversub = true;
+      form.value.studentOnly = true;
+      const school = name || form.value.companyName || store.profile?.school || "";
+      if (school && !String(form.value.schools || "").trim()) form.value.schools = school;
     }
   }
 );
@@ -120,7 +129,13 @@ async function submit() {
     return;
   }
   try {
-    const res = await http.post("/schedules", { routeId: Number(route.params.id), ...form.value });
+    const payload = { ...form.value };
+    if (payload.organizerType === "campus" && payload.offerType === "free") {
+      payload.oversub = true;
+      payload.studentOnly = true;
+      if (!String(payload.schools || "").trim()) payload.schools = payload.companyName || "";
+    }
+    const res = await http.post("/schedules", { routeId: Number(route.params.id), ...payload });
     router.push("/m/schedule/" + res.data.id);
   } catch (e) {
     err.value = e.message;

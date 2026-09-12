@@ -4,7 +4,7 @@
       <h2>优惠券</h2>
       <el-button type="success" @click="open">发行优惠券</el-button>
     </div>
-    <p class="muted">可发指定团或通用券。类型含几折、直减、免费。公开、会员、定向都可以指定人；人多时从名单搜索、翻页勾选。指定的人发行后立刻入账，库存先留给他们。领取后可限时。默认与会员/学生价取低。公司团不可用。</p>
+    <p class="muted">可发指定团或通用券。类型含几折、直减、免费。公开、会员、定向都可以指定人；人多时从名单搜索、按高校筛选或全选该校已认证师生。指定的人发行后立刻入账，库存先留给他们。领取后可限时。默认与会员/学生价取低。公司团不可用。</p>
     <el-table :data="list" stripe>
       <el-table-column prop="code" label="口令" width="110" />
       <el-table-column prop="name" label="名称" min-width="140" />
@@ -64,6 +64,12 @@
         </el-form-item>
         <el-form-item :label="form.audience === 'directed' ? '指定发放' : '指定必领'">
           <PeoplePicker v-model="form.guaranteedUserIds" :hint="assignHint" />
+        </el-form-item>
+        <el-form-item label="高校名单">
+          <el-select v-model="form.school" clearable filterable placeholder="选学校，发行后发给该校已认证师生" style="width:280px">
+            <el-option v-for="s in campusSchools" :key="s.name" :label="`${s.name}（${s.count}人）`" :value="s.name" />
+          </el-select>
+          <el-checkbox v-model="form.allCampus" style="margin-left:12px" :disabled="!form.school">发给该校全部已认证师生</el-checkbox>
         </el-form-item>
         <el-form-item label="类型">
           <el-radio-group v-model="form.kind">
@@ -133,7 +139,15 @@
           <el-checkbox v-model="grantForm.byRule">按发行时的久未参加 / 出行次数发放，人多随机抽</el-checkbox>
         </el-form-item>
         <el-form-item label="选人">
-          <PeoplePicker v-model="grantForm.userIds" hint="搜昵称或手机，也可翻页勾选。已选的人翻页不会丢。" />
+          <PeoplePicker v-model="grantForm.userIds" hint="可搜昵称、手机，或按高校名单筛选、全选该校。已选的人翻页不会丢。" />
+        </el-form-item>
+        <el-form-item label="高校名单">
+          <el-select v-model="grantForm.school" clearable filterable placeholder="选择学校" style="width:240px">
+            <el-option v-for="s in campusSchools" :key="s.name" :label="`${s.name}（${s.count}人）`" :value="s.name" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="该校全部">
+          <el-checkbox v-model="grantForm.allCampus" :disabled="!grantForm.school">发给该校全部已认证师生/校友</el-checkbox>
         </el-form-item>
         <el-form-item label="手机号">
           <el-input v-model="grantForm.phonesText" type="textarea" rows="2" placeholder="也可直接填已注册手机，逗号或换行分隔" />
@@ -182,17 +196,18 @@ const showLedger = ref(false);
 const showGrant = ref(false);
 const granting = ref(false);
 const grantRow = ref(null);
-const grantForm = ref({ phonesText: "", allMembers: false, sms: true, userIds: [] });
+const grantForm = ref({ phonesText: "", allMembers: false, sms: true, userIds: [], school: "", allCampus: false });
 const saving = ref(false);
 const share = ref(null);
 const holders = ref([]);
 const form = ref({ audience: "public", guaranteedUserIds: [] });
 const preview = ref(null);
 const previewHint = ref("");
+const campusSchools = ref([]);
 const assignHint = computed(() => {
-  if (form.value.audience === "directed") return "选中的人发行后立刻入账。也可发行后再到「发放」里补选。人多时搜索或翻页勾选。";
-  if (form.value.audience === "member") return "选中的人发行后立刻入账，库存先留给他们；其余会员领剩下的。人多时搜索或翻页勾选。";
-  return "选中的人发行后立刻入账，库存先留给他们；其他人仍可公开领剩下的。人多时搜索或翻页勾选。";
+  if (form.value.audience === "directed") return "选中的人发行后立刻入账。也可按高校名单全选该校已认证师生，或发行后再到「发放」里补选。";
+  if (form.value.audience === "member") return "选中的人发行后立刻入账，库存先留给他们；其余会员领剩下的。也可按高校名单勾选。";
+  return "选中的人发行后立刻入账，库存先留给他们；其他人仍可公开领剩下的。也可从高校名单勾选。";
 });
 
 function audienceText(s) {
@@ -225,6 +240,15 @@ function tripLabel(s) {
   return `${s.route?.title || ""} ${s.startDate}（余${s.remain}）`;
 }
 
+async function loadCampusSchools() {
+  try {
+    const data = (await http.get("/admin/coupons/people", { params: { page: 1, pageSize: 1 } })).data || {};
+    campusSchools.value = data.schools || [];
+  } catch {
+    campusSchools.value = [];
+  }
+}
+
 async function load() {
   const q = route.query.scheduleId ? { scheduleId: route.query.scheduleId } : {};
   list.value = (await http.get("/admin/coupons", { params: q })).data;
@@ -232,6 +256,7 @@ async function load() {
 
 onMounted(async () => {
   await load();
+  await loadCampusSchools();
   try {
     const rows = (await http.get("/admin/schedules")).data || [];
     trips.value = rows.filter((s) => s.organizerType !== "company" && s.status !== "cancelled");
@@ -260,6 +285,8 @@ function open() {
     stackStudent: false,
     grantByRule: false,
     guaranteedUserIds: [],
+    school: "",
+    allCampus: false,
   };
   preview.value = null;
   previewHint.value = "";
@@ -327,6 +354,8 @@ async function openGrant(row) {
     sms: true,
     byRule: !!(row.idleMonths || row.minTrips),
     userIds: [],
+    school: "",
+    allCampus: false,
   };
   showGrant.value = true;
 }

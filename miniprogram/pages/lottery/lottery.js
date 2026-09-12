@@ -45,7 +45,7 @@ function blurbOf(state) {
   if (mode === "pre") return "本团只在报名前抽一次，转盘约 " + sec + " 秒。中奖先记账，跟团结束后领奖。";
   if (mode === "enroll") return "本团报名后才能抽，转盘约 " + sec + " 秒。中奖先记账，跟团结束后领奖。";
   if (mode === "both") return "报名前、报名后各抽一次，转盘约 " + sec + " 秒。中奖先记账，跟团结束后领奖。两次不是谢谢参与且奖品相同，领取时翻倍。";
-  return "转盘约 " + sec + " 秒。报名前可抽一次，完成活动后再抽第二次。";
+  return "转盘约 " + sec + " 秒。报名前可抽一次，交过费且行程结束后再抽第二次，不必签到。";
 }
 
 function hintOf(state, canDraw, hasResult) {

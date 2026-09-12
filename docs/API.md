@@ -66,8 +66,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/me/leader` | 用户 | `{ name, years, intro }` 个人领队申请，pending。已通过则 400 |
 | POST | `/feedback` | 用户 | `{ kind: suggest\|bug, content }`，内容至少 4 字 |
 | GET | `/lottery` | 可选用户 | 抽奖状态与圆盘奖品（不含权重）。Query：`scheduleId`。返回 `drawMode` `canPre` `canPost` `canClaim`。有本团配置则用本团奖池。不带 `scheduleId` 时另给 `trips[]`（已抽或已报名的本团抽奖）和平台默认转盘 |
-| POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }`。服务端先出结果再让圆盘转到 `sectorIndex`，返回 `rate` `prizeInfo` `deferred` `claimHint`。指定中奖不会返回给用户。本团奖池中奖先记账，跟团结束后领取 |
-| POST | `/lottery/claim` | 用户 | `{ scheduleId }`。须已报名且行程结束日（或出发日）不晚于今天。文案：「跟团结束后才能领奖」 |
+| POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }`。服务端先出结果再让圆盘转到 `sectorIndex`，返回 `rate` `prizeInfo` `deferred` `claimHint`。指定中奖不会返回给用户。本团奖池中奖先记账，跟团结束后领取。平台默认行后抽：交费（或已占座）且行程结束即可，不必签到或点完成活动 |
+| POST | `/lottery/claim` | 用户 | `{ scheduleId }`。须已交费或已占座，且行程结束日（或出发日）不晚于今天。文案：「跟团结束后才能领奖」 |
 | GET | `/schedules/:id/after` | 可选用户 | 完成活动页状态 |
 | POST | `/schedules/:id/complete` | 用户 | 标记完成活动 |
 | GET | `/schedules/:id/contest` | 可选用户 | 评选帖列表 |
@@ -105,14 +105,17 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/guide/login` | `phone` `captchaToken` `captcha`。演示：`13700001101` |
 | GET | `/guide/me` | 当前导游 |
 | GET | `/guide/schedules` | 已分配行程 |
-| GET | `/guide/schedules/:id` | 名单含手机、座位、紧急联系人、籍贯、年龄段、关联用户 |
+| GET | `/guide/schedules/:id` | 名单含手机、座位、紧急联系人、籍贯、年龄段、关联用户、本轮 `sessionChecked`；另含 `startedAt`、`checkin`（签到点、进行中的轮次、历史） |
 | GET | `/guide/schedules/:id/travelers/:enrollmentId` | 本团游客详情：报名资料 + 公开主页（相册/行程）。身份证掩码。仅已分配导游 |
-| POST | `/guide/schedules/:id/checkin` | body：`enrollmentId` |
+| POST | `/guide/schedules/:id/start` | 正式开团。已开过则 `already: true` |
+| POST | `/guide/schedules/:id/checkins` | 发起一轮签到。body：`stopKey`（`depart` 或 `stop-0`…）或自定义 `title`。同一时间只能有一轮未确认 |
+| POST | `/guide/schedules/:id/checkins/:sessionId/confirm` | 确认本轮签到，之后才能再发起 |
+| POST | `/guide/schedules/:id/checkin` | body：`enrollmentId`；可选 `marked: false` 撤销本轮；有进行中的轮次则记入该轮，否则只写 `checkin_at` |
 | PUT | `/guide/schedules/:id/trip` | 车牌、本团咨询群 |
 | POST | `/guide/schedules/:id/seats/lock` | `seatNo`+`locked` 或 `lockedSeats` 数组 |
 | POST | `/guide/schedules/:id/seats/assign` | `enrollmentId` `seatNo`，空位调座或两人互换 |
 
-H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急联系人号码为 `tel:` 链接，手机可直接拨打。车辆与咨询群保存后只读，点「修改」再改。
+H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急联系人号码为 `tel:` 链接，手机可直接拨打。车辆与咨询群保存后只读，点「修改」再改。可点「正式开团」；出发前上车和每个行程休息点可发起签到，核对后点「确认本轮签到」。
 
 ### 报名 body
 
@@ -183,9 +186,14 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` |
 | PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换 |
 | DELETE | `/admin/routes/:id` | 下架 |
-| POST | `/admin/schedules` | 后台发布排期。可选 `virtualCount` 发布后立即设置虚拟报名；`lotteryMode` 非 off 时挂上默认 4 奖转盘 |
+| POST | `/admin/schedules` | 后台发布排期。可选 `virtualCount` 发布后立即设置虚拟报名；`lotteryMode` 非 off 时挂上默认 4 奖转盘。`organizerType=campus` 且 `offerType=free` 时默认打开报超会抽、仅师生，并用学校名作为限定高校 |
 | POST | `/admin/schedules/:id/review` | 用户发团审核。`status=approved|rejected` |
-| GET | `/admin/schedules` | 含成本、收入、利润、导游 |
+| GET | `/admin/schedules` | 含成本、收入、利润、导游、`startedAt` |
+| POST | `/admin/schedules/:id/start` | 现场权限。正式开团 |
+| GET | `/admin/schedules/:id/checkin` | 现场权限。开团状态、签到点、本轮名单 |
+| POST | `/admin/schedules/:id/checkins` | 现场权限。发起一轮签到，body 同导游端 |
+| POST | `/admin/schedules/:id/checkins/:sessionId/confirm` | 现场权限。确认本轮 |
+| POST | `/admin/schedules/:id/checkin` | 现场权限。勾人/撤销，body 同导游端 |
 | POST | `/admin/schedules/dissolve-all` | 解散全部进行中的团。body：`reason` |
 | POST | `/admin/schedules/:id/dissolve` | 解散单团。body：`reason` |
 | PUT | `/admin/schedules/:id/limit` | 报名限制。`studentOnly`、`alumniOk`、`oversub`、`schools`（数组或逗号分隔）。填高校或允许校友则自动仅师生 |
@@ -204,11 +212,11 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/schedules/:id/split` | 对已支付金额发起分账（已有记录则复用） |
 | GET | `/admin/coupons` | Query：`scheduleId`。券列表；带 `scheduleId` 时含该团券与通用券 |
 | GET | `/admin/coupons/targets` | Query：`idleMonths` `minTrips` `campaignId`。预览符合定向条件的人数 |
-| GET | `/admin/coupons/people` | Query：`q` 昵称/手机、`ids`、`page`（默认 1）、`pageSize`/`limit`（默认 20，最大 50）、`members=1` 只看有效会员。返回 `{ list, total, page, pageSize }`，供指定/发放选人 |
-| POST | `/admin/coupons` | 发行。`scheduleId` 或 `universal=true`（全部个人拼团）；`kind=percent|amount|free` `audience=public|member|directed`；折扣填 `fold`（8=8折）且必填 `capAmount`；立减填 `value`；免费无需金额；`total`；可选 `guaranteedUserIds`（公开/会员/定向均可指定，发行后立刻入账并预留库存）、`validHours`（领取后有效小时，0 不限）、`idleMonths`（近 N 个月未参加）、`minTrips`（出行至少 N 次）、`stackMember` `stackStudent`、`grantByRule`（发行后按条件发放，人多过库存则随机） |
+| GET | `/admin/coupons/people` | Query：`q` 昵称/手机/学校、`ids`、`page`（默认 1）、`pageSize`/`limit`（默认 20，最大 50）、`members=1` 只看有效会员、`campus=1` 只看已认证师生/校友、`school` 高校名单（学校名包含匹配）、`all=1` 一次返回该校最多 500 人。返回 `{ list, total, page, pageSize, schools }`，`schools` 为已认证人数按校汇总，供指定/发放选人 |
+| POST | `/admin/coupons` | 发行。`scheduleId` 或 `universal=true`（全部个人拼团）；`kind=percent|amount|free` `audience=public|member|directed`；折扣填 `fold`（8=8折）且必填 `capAmount`；立减填 `value`；免费无需金额；`total`；可选 `guaranteedUserIds`（公开/会员/定向均可指定，发行后立刻入账并预留库存）、`school`+`allCampus=true`（发给该校全部已认证师生/校友）、`validHours`（领取后有效小时，0 不限）、`idleMonths`（近 N 个月未参加）、`minTrips`（出行至少 N 次）、`stackMember` `stackStudent`、`grantByRule`（发行后按条件发放，人多过库存则随机） |
 | GET | `/admin/coupons/:id` | 台账 `holders`（含 `expiresAt`）+ 短链/落地页/二维码 `share` |
 | PUT | `/admin/coupons/:id` | `status=on|paused|off`，可改名称、发行量（不得小于已领）、限时与定向/叠加字段 |
-| POST | `/admin/coupons/:id/grant` | 定向发放。`phones`/`phonesText`/`userIds`/`allMembers`，或 `byRule` 按发行条件发放（人多随机）。可选 `sms`（默认 true）。一人一码，写入 `sms_logs` 场景 `coupon`，每手机每天最多 1 条 |
+| POST | `/admin/coupons/:id/grant` | 定向发放。`phones`/`phonesText`/`userIds`/`allMembers`，或 `school`+`allCampus` 发给该校已认证师生/校友，或 `byRule` 按发行条件发放（人多随机）。可选 `sms`（默认 true）。一人一码，写入 `sms_logs` 场景 `coupon`，每手机每天最多 1 条 |
 | GET | `/admin/enrollments` | Query：`scheduleId` `q` `payStatus` `status` |
 | POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款标记退款） |
 | GET | `/admin/notices` | 运营。后台待办消息。`{ list, unread }`。用户提交校园/团体认证时写入 |

@@ -236,4 +236,33 @@ describe("oversub draw and campus alumni", () => {
     assert.equal(created.body.data.eligibility.alumniOk, true);
     assert.deepEqual(created.body.data.eligibility.schools, ["北京林业大学"]);
   });
+
+  it("turns on draw for a free campus trip and uses the school name", async () => {
+    const admin = await loginAdmin(agent);
+    const routes = await agent.get("/api/admin/routes").set(auth(admin)).expect(200);
+    const buses = await agent.get("/api/buses").expect(200);
+    const created = await agent
+      .post("/api/admin/schedules")
+      .set(auth(admin))
+      .send({
+        routeId: routes.body.data[0].id,
+        startDate: seed.db.prepare("SELECT date('now','+11 day') AS d").get().d,
+        busTypeId: buses.body.data[0].id,
+        organizerType: "campus",
+        companyName: "北京大学",
+        offerType: "free",
+        meetupPoint: "东直门东方银座C口",
+      })
+      .expect(200);
+    assert.equal(created.body.data.organizerType, "campus");
+    assert.equal(created.body.data.offerType, "free");
+    assert.equal(created.body.data.oversub.enabled, true);
+    assert.equal(created.body.data.eligibility.studentOnly, true);
+    assert.deepEqual(created.body.data.eligibility.schools, ["北京大学"]);
+
+    const token = await loginUser(agent);
+    await certify(token, seed.userId, "北京大学");
+    const applied = await enroll(token, { scheduleId: created.body.data.id }).expect(200);
+    assert.equal(applied.body.data.status, "applied");
+  });
 });

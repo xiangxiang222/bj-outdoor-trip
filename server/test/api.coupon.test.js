@@ -638,4 +638,69 @@ describe("coupons", () => {
     assert.equal(sold.status, 400);
     assert.match(sold.body.message, /领完/);
   });
+
+  it("lists campus people by school and grants coupons to that roster", async () => {
+    const admin = await loginAdmin(agent);
+    const cap = await issueCaptcha(agent);
+    const guest = await agent.post("/api/auth/register").send({
+      phone: "13600136091",
+      password: "123456",
+      nickname: "北大甲",
+      captchaToken: cap.token,
+      captcha: cap.code,
+    }).expect(200);
+    const guestId = guest.body.data.user.id;
+    await agent.post("/api/me/student").set(auth(guest.body.data.token)).send({ school: "北京大学" }).expect(200);
+    await agent.post(`/api/admin/users/${guestId}/verify`).set(auth(admin)).send({ kind: "student", action: "approve" }).expect(200);
+
+    const cap2 = await issueCaptcha(agent);
+    const other = await agent.post("/api/auth/register").send({
+      phone: "13600136092",
+      password: "123456",
+      nickname: "清华乙",
+      captchaToken: cap2.token,
+      captcha: cap2.code,
+    }).expect(200);
+    const otherId = other.body.data.user.id;
+    await agent.post("/api/me/student").set(auth(other.body.data.token)).send({ school: "清华大学" }).expect(200);
+    await agent.post(`/api/admin/users/${otherId}/verify`).set(auth(admin)).send({ kind: "student", action: "approve" }).expect(200);
+
+    const people = await agent
+      .get("/api/admin/coupons/people?campus=1&school=北京大学")
+      .set(auth(admin))
+      .expect(200);
+    assert.ok(people.body.data.schools.some((s) => s.name === "北京大学"));
+    assert.equal(people.body.data.list.length, 1);
+    assert.equal(people.body.data.list[0].id, guestId);
+    assert.equal(people.body.data.list[0].school, "北京大学");
+    assert.equal(people.body.data.list[0].isStudent, true);
+
+    const all = await agent
+      .get("/api/admin/coupons/people?school=北京大学&campus=1&all=1")
+      .set(auth(admin))
+      .expect(200);
+    assert.equal(all.body.data.total, 1);
+
+    const created = await agent.post("/api/admin/coupons").set(auth(admin)).send({
+      scheduleId: seed.individualScheduleId,
+      kind: "amount",
+      value: 12,
+      total: 3,
+      audience: "directed",
+      school: "北京大学",
+      allCampus: true,
+      name: "北大定向",
+    }).expect(200);
+    assert.equal(created.body.data.granted, 1);
+    const held = seed.db.prepare("SELECT * FROM user_coupons WHERE user_id=? AND campaign_id=?").get(
+      guestId,
+      created.body.data.id
+    );
+    assert.ok(held);
+    const tsinghua = seed.db.prepare("SELECT * FROM user_coupons WHERE user_id=? AND campaign_id=?").get(
+      otherId,
+      created.body.data.id
+    );
+    assert.equal(tsinghua, undefined);
+  });
 });

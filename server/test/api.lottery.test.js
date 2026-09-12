@@ -84,7 +84,11 @@ describe("lottery after-trip contest", () => {
   it("completes the trip then allows review, second draw and contest vote", async () => {
     const token = await loginUser(agent);
     await enroll(token).expect(200);
-    seed.db.prepare("UPDATE schedules SET start_date=? WHERE id=?").run(dayjs().format("YYYY-MM-DD"), seed.individualScheduleId);
+    seed.db.prepare("UPDATE schedules SET start_date=?, end_date=? WHERE id=?").run(
+      dayjs().format("YYYY-MM-DD"),
+      dayjs().format("YYYY-MM-DD"),
+      seed.individualScheduleId
+    );
 
     const ready = await agent.get("/api/orders").set(auth(token)).expect(200);
     assert.equal(ready.body.data[0].canComplete, true);
@@ -136,6 +140,36 @@ describe("lottery after-trip contest", () => {
     const voted = await agent.post(`/api/contest/${mine.body.data.id}/vote`).set(auth(other)).expect(200);
     assert.equal(voted.body.data[0].votes, 1);
     assert.equal(voted.body.data[0].voted, true);
+  });
+
+  it("lets a paid no-show draw after the trip without check-in or complete", async () => {
+    const token = await loginUser(agent);
+    await enroll(token).expect(200);
+    seed.db.prepare("UPDATE enrollments SET pay_status='paid' WHERE user_id=? AND schedule_id=?").run(
+      seed.userId,
+      seed.individualScheduleId
+    );
+    seed.db.prepare("UPDATE schedules SET start_date=?, end_date=? WHERE id=?").run(
+      dayjs().format("YYYY-MM-DD"),
+      dayjs().format("YYYY-MM-DD"),
+      seed.individualScheduleId
+    );
+    const en = seed.db
+      .prepare("SELECT checkin_at, completed_at FROM enrollments WHERE user_id=? AND schedule_id=?")
+      .get(seed.userId, seed.individualScheduleId);
+    assert.equal(en.checkin_at, null);
+    assert.equal(en.completed_at, null);
+
+    const state = await agent.get("/api/lottery").set(auth(token)).query({ scheduleId: seed.individualScheduleId }).expect(200);
+    assert.equal(state.body.data.canPost, true);
+
+    Math.random = () => 0.37;
+    const post = await agent
+      .post("/api/lottery/draw")
+      .set(auth(token))
+      .send({ phase: "post", scheduleId: seed.individualScheduleId })
+      .expect(200);
+    assert.equal(post.body.data.prizeKey, "points20");
   });
 
   it("lists lottery rows for the admin hub", async () => {

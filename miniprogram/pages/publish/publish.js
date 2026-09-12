@@ -165,6 +165,7 @@ Page({
   setOffer(e) {
     const i = Number(e.detail.value);
     this.setData({ offerIndex: i, "form.offerType": OFFER_TYPES[i].key });
+    this.applyCampusFree();
   },
   setComboRequire(e) {
     const i = Number(e.detail.value);
@@ -189,6 +190,16 @@ Page({
   setOrganizer(e) {
     const i = Number(e.detail.value);
     this.setData({ organizerIndex: i, "form.organizerType": this.data.organizerKeys[i] || "individual" });
+    this.applyCampusFree();
+  },
+  applyCampusFree() {
+    const form = this.data.form || {};
+    if (form.organizerType !== "campus" || form.offerType !== "free") return;
+    this.setData({
+      "form.oversub": true,
+      "form.studentOnly": true,
+      "form.schools": form.schools || form.companyName || "",
+    });
   },
   setCompanyName(e) {
     this.setData({ "form.companyName": e.detail.value });
@@ -230,6 +241,11 @@ Page({
     } else if (form.organizerType === "campus" && !String(form.companyName || "").trim()) {
       wx.showToast({ title: "高校开团请填写学校", icon: "none" });
       return;
+    }
+    if (form.organizerType === "campus" && form.offerType === "free") {
+      form.oversub = true;
+      form.studentOnly = true;
+      if (!String(form.schools || "").trim()) form.schools = form.companyName || "";
     }
     try {
       wx.showLoading({ title: "提交中", mask: true });

@@ -168,6 +168,9 @@ function createSchema(db) {
       review_status TEXT DEFAULT 'approved',
       play_tags_json TEXT DEFAULT '[]',
       city TEXT,
+      started_at TEXT,
+      started_by TEXT,
+      started_by_id INTEGER,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
@@ -223,6 +226,29 @@ function createSchema(db) {
       health_declared_at TEXT,
       coupon_id INTEGER,
       created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+
+    CREATE TABLE IF NOT EXISTS checkin_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      schedule_id INTEGER,
+      kind TEXT,
+      stop_index INTEGER DEFAULT -1,
+      title TEXT,
+      status TEXT DEFAULT 'open',
+      opened_at TEXT,
+      opened_by TEXT,
+      opened_by_id INTEGER,
+      confirmed_at TEXT,
+      confirmed_by TEXT,
+      confirmed_by_id INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS checkin_marks (
+      session_id INTEGER,
+      enrollment_id INTEGER,
+      marked_at TEXT,
+      marked_by TEXT,
+      marked_by_id INTEGER,
+      PRIMARY KEY (session_id, enrollment_id)
     );
 
     CREATE TABLE IF NOT EXISTS payments (
@@ -634,6 +660,33 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "coupon_campaigns", "stack_member", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "coupon_campaigns", "stack_student", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "user_coupons", "expires_at", "TEXT");
+  addColumnIfMissing(db, "schedules", "started_at", "TEXT");
+  addColumnIfMissing(db, "schedules", "started_by", "TEXT");
+  addColumnIfMissing(db, "schedules", "started_by_id", "INTEGER");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS checkin_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      schedule_id INTEGER,
+      kind TEXT,
+      stop_index INTEGER DEFAULT -1,
+      title TEXT,
+      status TEXT DEFAULT 'open',
+      opened_at TEXT,
+      opened_by TEXT,
+      opened_by_id INTEGER,
+      confirmed_at TEXT,
+      confirmed_by TEXT,
+      confirmed_by_id INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS checkin_marks (
+      session_id INTEGER,
+      enrollment_id INTEGER,
+      marked_at TEXT,
+      marked_by TEXT,
+      marked_by_id INTEGER,
+      PRIMARY KEY (session_id, enrollment_id)
+    );
+  `);
 }
 
 let _db;

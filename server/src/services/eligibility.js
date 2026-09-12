@@ -1,6 +1,6 @@
 const { getDb } = require("../db");
 const { isStudent, isAlumni } = require("./helpers");
-const { flagOn } = require("./offer");
+const { flagOn, offerMeta } = require("./offer");
 
 function fail(status, message) {
   const err = new Error(message);
@@ -38,6 +38,23 @@ function parseSchools(input) {
     if (out.length >= 20) break;
   }
   return out;
+}
+
+function isCampusFreeTrip(body = {}) {
+  const organizerType = String(body.organizerType || body.organizer_type || "").toLowerCase();
+  const offerType = offerMeta(body.offerType || body.offer_type).key;
+  return organizerType === "campus" && offerType === "free";
+}
+
+function withCampusFreeDefaults(body = {}) {
+  if (!isCampusFreeTrip(body)) return body;
+  const next = { ...body, oversub: true, studentOnly: true };
+  const schools = parseSchools(next.schools ?? next.schools_json ?? next.allowedSchools);
+  if (!schools.length) {
+    const name = String(next.companyName || next.company_name || next.campusName || next.campus_name || "").trim();
+    if (name) next.schools = name;
+  }
+  return next;
 }
 
 function parseEnrollLimit(body) {
@@ -146,4 +163,6 @@ module.exports = {
   assertEnrollLimit,
   eligibilityView,
   applyEnrollLimit,
+  isCampusFreeTrip,
+  withCampusFreeDefaults,
 };

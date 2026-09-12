@@ -14,9 +14,10 @@
       <el-table-column label="组织" width="90">
         <template #default="{ row }">{{ organizerTypeText(row.organizerType, true) }}</template>
       </el-table-column>
-      <el-table-column label="状态" width="110">
+      <el-table-column label="状态" width="130">
         <template #default="{ row }">
           {{ scheduleStatusText(row.status) }}
+          <span v-if="row.startedAt && row.status !== 'cancelled'"> · 已开团</span>
           <span v-if="row.reviewStatus === 'pending'" style="color:#c77d3a"> · 待审</span>
           <span v-else-if="row.reviewStatus === 'rejected'" style="color:#bc4749"> · 驳回</span>
         </template>
@@ -44,12 +45,13 @@
           <span v-else>未匹配</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="740">
+      <el-table-column label="操作" width="820">
         <template #default="{ row }">
           <el-button v-if="canOps && row.reviewStatus === 'pending'" size="small" type="success" @click="review(row, 'approved')">通过</el-button>
           <el-button v-if="canOps && row.reviewStatus === 'pending'" size="small" type="warning" @click="review(row, 'rejected')">驳回</el-button>
           <el-button v-if="canOps" size="small" @click="cost(row)">成本</el-button>
           <el-button v-if="canField" size="small" @click="openTrip(row)">车辆座位</el-button>
+          <el-button v-if="canField" size="small" :disabled="row.status === 'cancelled'" @click="openCheckinDlg(row)">开团签到</el-button>
           <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openVirtual(row)">虚拟</el-button>
           <el-button v-if="canOps" size="small" @click="openLimit(row)">限制</el-button>
           <el-button
@@ -140,6 +142,7 @@
         </el-form-item>
         <el-form-item label="报超会抽">
           <el-switch v-model="neu.oversub" />
+          <span v-if="neu.organizerType === 'campus' && neu.offerType === 'free'" class="muted" style="margin-left:8px">高校免费团默认开启：先报名待确认，超过座位才抽签</span>
         </el-form-item>
         <el-form-item label="限定高校">
           <el-input v-model="neu.schools" placeholder="逗号分隔，如 北京大学,清华大学" />
@@ -211,6 +214,45 @@
       </template>
     </el-dialog>
 
+    <el-dialog v-model="showCheckin" :title="checkinTitle" width="640px">
+      <p class="muted">出发前上车和每个休息点都可以再开一轮。核对后点确认，下一轮才能发起。没上车、没有签到的交费客行程结束后仍可抽奖。</p>
+      <div v-if="checkinData" class="checkin-toolbar">
+        <el-button v-if="!checkinData.startedAt" type="success" :loading="startingTrip" @click="startOfficialAdmin">正式开团</el-button>
+        <span v-else>已正式开团 {{ checkinData.startedAt }}</span>
+        <template v-if="checkinOpen">
+          <strong>本轮 {{ checkinOpen.title }} · {{ checkinOpen.markedCount }}/{{ checkinOpen.total }}</strong>
+          <el-button type="primary" :loading="confirmingCheckin" @click="confirmCheckinRound">确认本轮签到</el-button>
+        </template>
+        <template v-else>
+          <el-select v-model="checkinStopKey" style="width:220px">
+            <el-option v-for="st in checkinStops" :key="st.key" :label="(st.time ? st.time + ' ' : '') + st.title" :value="st.key" />
+          </el-select>
+          <el-button :loading="openingCheckin" @click="openCheckinRound">发起签到</el-button>
+        </template>
+      </div>
+      <el-table :data="checkinData?.roster || []" stripe size="small" max-height="360">
+        <el-table-column prop="seatNo" label="座" width="60" />
+        <el-table-column prop="name" label="姓名" width="100" />
+        <el-table-column prop="phone" label="手机" width="130" />
+        <el-table-column label="本轮" width="90">
+          <template #default="{ row }">{{ checkinOpen ? (row.sessionChecked ? "已到" : "未到") : (row.checkinAt ? "曾签到" : "未签") }}</template>
+        </el-table-column>
+        <el-table-column label="" width="90">
+          <template #default="{ row }">
+            <el-button v-if="checkinOpen && !row.sessionChecked" link type="primary" :disabled="markingId === row.id" @click="markCheckinRow(row, true)">签到</el-button>
+            <el-button v-else-if="checkinOpen && row.sessionChecked" link :disabled="markingId === row.id" @click="markCheckinRow(row, false)">撤销</el-button>
+            <el-button v-else-if="!row.checkinAt" link type="primary" :disabled="markingId === row.id" @click="markCheckinRow(row, true)">签到</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <p v-if="checkinPast.length" class="muted" style="margin-top:10px">
+        <span v-for="sess in checkinPast" :key="sess.id" style="margin-right:12px">{{ sess.title }} 已确认 {{ sess.markedCount }}/{{ sess.total }}</span>
+      </p>
+      <template #footer>
+        <el-button @click="showCheckin = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
     <el-dialog v-model="showLimit" title="报名限制" width="480px">
       <p v-if="cur">「{{ cur.route?.title }} {{ cur.startDate }}」可限制师生/校友，或在报名超过座位时抽签确认出行人。</p>
       <el-form label-width="100px">
@@ -262,7 +304,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import * as echarts from "echarts";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -285,6 +327,21 @@ const showDissolve = ref(false);
 const showSplit = ref(false);
 const showGuide = ref(false);
 const showTrip = ref(false);
+const showCheckin = ref(false);
+const checkinData = ref(null);
+const checkinStopKey = ref("depart");
+const startingTrip = ref(false);
+const openingCheckin = ref(false);
+const confirmingCheckin = ref(false);
+const markingId = ref(0);
+const checkinOpen = computed(() => checkinData.value?.checkin?.openSession || null);
+const checkinStops = computed(() => checkinData.value?.checkin?.stops || []);
+const checkinPast = computed(() => (checkinData.value?.checkin?.sessions || []).filter((row) => row.status === "confirmed"));
+const checkinTitle = computed(() => {
+  const title = checkinData.value?.route?.title || cur.value?.route?.title || "";
+  const date = checkinData.value?.startDate || cur.value?.startDate || "";
+  return title ? `开团签到 · ${title} ${date}` : "开团签到";
+});
 const showLimit = ref(false);
 const savingLimit = ref(false);
 const drawingId = ref(0);
@@ -320,6 +377,20 @@ const neu = ref({
   virtualCount: 0,
   lotteryMode: "off",
 });
+watch(
+  () => [neu.value.organizerType, neu.value.offerType, neu.value.companyName],
+  ([type, offer, name], prev = []) => {
+    const wasCampusFree = prev[0] === "campus" && prev[1] === "free";
+    const isCampusFree = type === "campus" && offer === "free";
+    if (isCampusFree && !wasCampusFree) {
+      neu.value.oversub = true;
+      neu.value.studentOnly = true;
+      if (name && !String(neu.value.schools || "").trim()) neu.value.schools = name;
+    } else if (isCampusFree && name && !String(neu.value.schools || "").trim()) {
+      neu.value.schools = name;
+    }
+  }
+);
 function openLimit(row) {
   cur.value = row;
   limitForm.value = {
@@ -411,6 +482,76 @@ async function openTrip(row) {
     chain.value = [];
   }
   showTrip.value = true;
+}
+
+async function openCheckinDlg(row) {
+  cur.value = row;
+  showCheckin.value = true;
+  try {
+    await loadCheckin(row.id);
+  } catch (e) {
+    ElMessage.error(e.message || "签到名单加载失败");
+  }
+}
+
+async function loadCheckin(id) {
+  checkinData.value = (await http.get(`/admin/schedules/${id}/checkin`)).data;
+  if (!checkinOpen.value) {
+    const first = (checkinData.value?.checkin?.stops || [])[0];
+    if (first) checkinStopKey.value = first.key;
+  }
+}
+
+async function startOfficialAdmin() {
+  startingTrip.value = true;
+  try {
+    const data = (await http.post(`/admin/schedules/${cur.value.id}/start`)).data;
+    checkinData.value = data;
+    ElMessage.success(data.already ? "已经正式开团" : "已正式开团");
+    await load();
+  } catch (e) {
+    ElMessage.error(e.message || "开团失败");
+  } finally {
+    startingTrip.value = false;
+  }
+}
+
+async function openCheckinRound() {
+  openingCheckin.value = true;
+  try {
+    checkinData.value = (await http.post(`/admin/schedules/${cur.value.id}/checkins`, { stopKey: checkinStopKey.value })).data;
+    ElMessage.success(`已发起「${checkinData.value.checkin?.openSession?.title || "签到"}」`);
+  } catch (e) {
+    ElMessage.error(e.message || "发起失败");
+  } finally {
+    openingCheckin.value = false;
+  }
+}
+
+async function confirmCheckinRound() {
+  if (!checkinOpen.value) return;
+  confirmingCheckin.value = true;
+  try {
+    const title = checkinOpen.value.title;
+    checkinData.value = (await http.post(`/admin/schedules/${cur.value.id}/checkins/${checkinOpen.value.id}/confirm`)).data;
+    ElMessage.success(`已确认「${title}」`);
+  } catch (e) {
+    ElMessage.error(e.message || "确认失败");
+  } finally {
+    confirmingCheckin.value = false;
+  }
+}
+
+async function markCheckinRow(row, marked) {
+  markingId.value = row.id;
+  try {
+    await http.post(`/admin/schedules/${cur.value.id}/checkin`, { enrollmentId: row.id, marked });
+    await loadCheckin(cur.value.id);
+  } catch (e) {
+    ElMessage.error(e.message || "签到失败");
+  } finally {
+    markingId.value = 0;
+  }
 }
 async function saveTrip() {
   try {
@@ -549,3 +690,14 @@ async function create() {
   load();
 }
 </script>
+
+<style scoped>
+.checkin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 12px;
+}
+</style>
+

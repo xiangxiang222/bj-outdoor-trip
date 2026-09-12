@@ -40,9 +40,10 @@ const { deleteAccount } = require("./services/account");
 const { drawPre, drawPost, claimPrizes, lotteryState, lotteryPublic } = require("./services/lottery");
 const { getAdminLottery, listAdminLotteries, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate } = require("./services/lottery-admin");
 const { completeTrip, afterTripState } = require("./services/aftertrip");
+const { startTrip, openCheckin, markCheckin, unmarkCheckin, confirmCheckin, tripRunOf } = require("./services/trip-run");
 const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
-const { parseEnrollLimit, eligibilityView, applyEnrollLimit } = require("./services/eligibility");
+const { parseEnrollLimit, eligibilityView, applyEnrollLimit, withCampusFreeDefaults } = require("./services/eligibility");
 const { oversubView, isOversubPending, drawOversub } = require("./services/oversub");
 const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
 const { draftRoute } = require("./services/route-draft");
@@ -301,6 +302,8 @@ function scheduleView(sch, req) {
     meetupLng: meetup.lng,
     meetupPrecise: meetup.precise,
     status: sch.status,
+    startedAt: sch.started_at || "",
+    startedBy: sch.started_by || "",
     cancelReason: sch.cancel_reason || "",
     cancelledAt: sch.cancelled_at || "",
     cancelledBy: sch.cancelled_by || "",
@@ -367,7 +370,7 @@ function applyScheduleExtras(id, body, route) {
   const memberOn = flagOn(body.memberPriceOn ?? body.member_price_on) ? 1 : 0;
   const studentOn = flagOn(body.studentPriceOn ?? body.student_price_on) ? 1 : 0;
   const comboRule = JSON.stringify(parseComboRule(body.comboRule || body.combo_rule || {}));
-  const limit = parseEnrollLimit(body);
+  const limit = parseEnrollLimit(withCampusFreeDefaults(body));
   db()
     .prepare(
       "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=?, student_only=?, schools_json=?, alumni_ok=?, oversub=? WHERE id=?"
@@ -1517,13 +1520,9 @@ router.get("/guide/schedules", authGuide, (req, res) => {
 });
 
 router.get("/guide/schedules/:id", authGuide, (req, res) => {
-  const sch = db().prepare("SELECT * FROM schedules WHERE id=? AND guide_id=?").get(req.params.id, req.guideId);
-  if (!sch) return res.status(404).json({ ok: false, message: "未分配该团" });
-  const roster = db()
-    .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status='joined' ORDER BY id")
-    .all(sch.id)
-    .map((e) => guideRosterItem(e, req));
-  res.json({ ok: true, data: { ...scheduleView(sch, req), roster } });
+  const sch = ensureGuideSchedule(req, res);
+  if (!sch) return;
+  res.json({ ok: true, data: checkinPayload(sch, req) });
 });
 
 router.get("/guide/schedules/:id/travelers/:enrollmentId", authGuide, (req, res) => {
@@ -1535,25 +1534,66 @@ router.get("/guide/schedules/:id/travelers/:enrollmentId", authGuide, (req, res)
   if (!en) return res.status(404).json({ ok: false, message: "名单中没有该游客" });
   const user = en.user_id ? db().prepare("SELECT * FROM users WHERE id=? AND deleted_at IS NULL").get(en.user_id) : null;
   const routeRow = db().prepare("SELECT title FROM routes WHERE id=?").get(sch.route_id);
+  const run = tripRunOf(sch.id);
   res.json({
     ok: true,
     data: {
-      ...guideRosterItem(en, req),
+      ...guideRosterItem(en, req, run),
       profile: publicUserProfile(user, req),
       schedule: { id: sch.id, title: routeRow?.title || "", startDate: sch.start_date },
+      openSession: run.openSession ? { id: run.openSession.id, title: run.openSession.title } : null,
     },
   });
 });
 
+router.post("/guide/schedules/:id/start", authGuide, (req, res) => {
+  const sch = ensureGuideSchedule(req, res);
+  if (!sch) return;
+  try {
+    const data = startTrip(sch.id, { role: "guide", id: req.guideId });
+    res.json({ ok: true, data: { ...checkinPayload(db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id), req), ...data } });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/guide/schedules/:id/checkins", authGuide, (req, res) => {
+  const sch = ensureGuideSchedule(req, res);
+  if (!sch) return;
+  try {
+    const session = openCheckin(sch.id, req.body || {}, { role: "guide", id: req.guideId });
+    res.json({ ok: true, data: { ...checkinPayload(sch, req), session } });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/guide/schedules/:id/checkins/:sessionId/confirm", authGuide, (req, res) => {
+  const sch = ensureGuideSchedule(req, res);
+  if (!sch) return;
+  try {
+    const session = confirmCheckin(sch.id, req.params.sessionId, { role: "guide", id: req.guideId });
+    res.json({ ok: true, data: { ...checkinPayload(sch, req), session } });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
 router.post("/guide/schedules/:id/checkin", authGuide, (req, res) => {
-  const sch = db().prepare("SELECT * FROM schedules WHERE id=? AND guide_id=?").get(req.params.id, req.guideId);
-  if (!sch) return res.status(404).json({ ok: false, message: "未分配该团" });
-  const enrollmentId = Number((req.body || {}).enrollmentId);
-  const en = db().prepare("SELECT * FROM enrollments WHERE id=? AND schedule_id=? AND status='joined'").get(enrollmentId, sch.id);
-  if (!en) return res.status(400).json({ ok: false, message: "报名不存在或已取消" });
-  db().prepare("UPDATE enrollments SET checkin_at=datetime('now','localtime'), checkin_by=? WHERE id=?").run(req.guideId, en.id);
-  const updated = db().prepare("SELECT checkin_at FROM enrollments WHERE id=?").get(en.id);
-  res.json({ ok: true, data: { enrollmentId: en.id, checkinAt: updated.checkin_at } });
+  const sch = ensureGuideSchedule(req, res);
+  if (!sch) return;
+  try {
+    const b = req.body || {};
+    const actor = { role: "guide", id: req.guideId };
+    if (b.marked === false) {
+      unmarkCheckin(sch.id, b.enrollmentId, actor, b.sessionId);
+      return res.json({ ok: true, data: checkinPayload(sch, req) });
+    }
+    const data = markCheckin(sch.id, b.enrollmentId, actor, b.sessionId);
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 function ensureGuideSchedule(req, res) {
@@ -1565,10 +1605,21 @@ function ensureGuideSchedule(req, res) {
   return sch;
 }
 
-function guideRosterItem(e, req) {
+function checkinPayload(sch, req) {
+  const run = tripRunOf(sch.id);
+  const roster = db()
+    .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status='joined' ORDER BY id")
+    .all(sch.id)
+    .map((e) => guideRosterItem(e, req, run));
+  return { ...scheduleView(sch, req), roster, checkin: run };
+}
+
+function guideRosterItem(e, req, run) {
   const user = e.user_id ? db().prepare("SELECT * FROM users WHERE id=?").get(e.user_id) : null;
   const alive = user && !user.deleted_at;
   const stage = lifeStageFromPerson({ idCard: e.id_card, birthday: e.birthday || user?.birthday });
+  const open = run && run.openSession;
+  const sessionChecked = !!(open && Array.isArray(open.markedIds) && open.markedIds.includes(Number(e.id)));
   return {
     id: e.id,
     userId: e.user_id || null,
@@ -1585,6 +1636,7 @@ function guideRosterItem(e, req) {
     emergencyName: e.emergency_name,
     emergencyPhone: e.emergency_phone,
     checkinAt: e.checkin_at,
+    sessionChecked,
     idCard: maskIdCard(e.id_card),
   };
 }
@@ -2087,6 +2139,76 @@ router.post("/admin/schedules/:id/seats/assign", authAdmin, requireCap("field"),
   }
 });
 
+function loadAdminSchedule(req, res) {
+  const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
+  if (!sch) {
+    res.status(404).json({ ok: false, message: "排期不存在" });
+    return null;
+  }
+  return sch;
+}
+
+router.get("/admin/schedules/:id/checkin", authAdmin, requireCap("field"), (req, res) => {
+  const sch = loadAdminSchedule(req, res);
+  if (!sch) return;
+  try {
+    res.json({ ok: true, data: checkinPayload(sch, req) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/admin/schedules/:id/start", authAdmin, requireCap("field"), (req, res) => {
+  const sch = loadAdminSchedule(req, res);
+  if (!sch) return;
+  try {
+    const data = startTrip(sch.id, { role: "admin", id: req.adminId });
+    const next = db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id);
+    res.json({ ok: true, data: { ...checkinPayload(next, req), ...data } });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/admin/schedules/:id/checkins", authAdmin, requireCap("field"), (req, res) => {
+  const sch = loadAdminSchedule(req, res);
+  if (!sch) return;
+  try {
+    const session = openCheckin(sch.id, req.body || {}, { role: "admin", id: req.adminId });
+    res.json({ ok: true, data: { ...checkinPayload(sch, req), session } });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/admin/schedules/:id/checkins/:sessionId/confirm", authAdmin, requireCap("field"), (req, res) => {
+  const sch = loadAdminSchedule(req, res);
+  if (!sch) return;
+  try {
+    const session = confirmCheckin(sch.id, req.params.sessionId, { role: "admin", id: req.adminId });
+    res.json({ ok: true, data: { ...checkinPayload(sch, req), session } });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/admin/schedules/:id/checkin", authAdmin, requireCap("field"), (req, res) => {
+  const sch = loadAdminSchedule(req, res);
+  if (!sch) return;
+  try {
+    const b = req.body || {};
+    const actor = { role: "admin", id: req.adminId };
+    if (b.marked === false) {
+      unmarkCheckin(sch.id, b.enrollmentId, actor, b.sessionId);
+      return res.json({ ok: true, data: checkinPayload(sch, req) });
+    }
+    const data = markCheckin(sch.id, b.enrollmentId, actor, b.sessionId);
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
 router.post("/admin/schedules/:id/settle", authAdmin, requireCap("ops"), (req, res) => {
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
   if (!sch) return res.status(400).json({ ok: false, message: "排期不存在" });
@@ -2158,6 +2280,19 @@ router.post("/admin/coupons", authAdmin, requireCap("ops"), (req, res) => {
       );
       campaign = granted.campaign;
       guaranteedGranted = granted.granted;
+    }
+    if (body.allCampus || body.all_campus) {
+      const grant = grantCoupons(
+        created.id,
+        {
+          school: body.school,
+          allCampus: true,
+          sms: body.sms === true || body.sms === 1 || body.sms === "1",
+        },
+        req
+      );
+      campaign = grant.campaign;
+      guaranteedGranted += grant.granted;
     }
     if (body.grantByRule || body.grant_by_rule) {
       const grant = grantCoupons(created.id, { byRule: true, sms: body.sms }, req);

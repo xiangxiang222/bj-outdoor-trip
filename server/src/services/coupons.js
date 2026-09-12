@@ -2,7 +2,8 @@ const dayjs = require("dayjs");
 const { customAlphabet } = require("nanoid");
 const QRCode = require("qrcode");
 const { getDb } = require("../db");
-const { quoteForSchedule, enrolledCount, attachAssetHost, isMember } = require("./helpers");
+const { quoteForSchedule, enrolledCount, attachAssetHost, isMember, isStudent, isAlumni } = require("./helpers");
+const { schoolMatches } = require("./eligibility");
 const { sendSms } = require("./sms");
 const config = require("../config");
 
@@ -276,23 +277,100 @@ function allowUsersOf(campaignId) {
     }));
 }
 
+function isCampusCertified(user) {
+  return !!(user && (isStudent(user) || isAlumni(user)));
+}
+
+function listCampusSchools() {
+  const counts = new Map();
+  getDb()
+    .prepare(
+      `SELECT school, is_student, student_status, campus_kind FROM users
+       WHERE deleted_at IS NULL AND IFNULL(is_virtual,0)=0 AND IFNULL(school,'') != ''`
+    )
+    .all()
+    .filter(isCampusCertified)
+    .forEach((u) => {
+      const name = String(u.school || "").trim();
+      if (!name) return;
+      counts.set(name, (counts.get(name) || 0) + 1);
+    });
+  return [...counts.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "zh"))
+    .slice(0, 80);
+}
+
+function mapPeopleRow(u) {
+  return {
+    id: u.id,
+    nickname: u.nickname || "",
+    phone: u.phone || "",
+    school: u.school || "",
+    isMember: isMember(u),
+    isStudent: isStudent(u),
+    isAlumni: isAlumni(u),
+  };
+}
+
 function searchPeople(query = {}) {
   const db = getDb();
   const q = String(query.q || "").trim();
   const ids = parseUserIdList(query.ids || query.userIds || query.user_ids);
   const membersOnly = parseFlag(query.members ?? query.membersOnly, 0) === 1;
+  const campusOnly = parseFlag(query.campus ?? query.campusOnly, 0) === 1;
+  const school = String(query.school || "").trim();
+  const wantAll = parseFlag(query.all, 0) === 1;
   const pageSize = parseNonNegInt(query.pageSize ?? query.limit, 20, 50, "每页人数不正确") || 20;
   const page = parseNonNegInt(query.page, 1, 100000, "页码不正确") || 1;
+  const schools = listCampusSchools();
+
+  if (ids.length) {
+    const list = db
+      .prepare(`SELECT * FROM users WHERE id IN (${ids.map(() => "?").join(",")}) AND deleted_at IS NULL`)
+      .all(...ids)
+      .map(mapPeopleRow);
+    return { list, total: list.length, page: 1, pageSize: list.length || 1, schools };
+  }
+
+  if (campusOnly || school || wantAll) {
+    if (wantAll && !school) fail(400, "请选择高校");
+    let rows = db
+      .prepare(
+        `SELECT * FROM users WHERE deleted_at IS NULL AND IFNULL(is_virtual,0)=0
+         ORDER BY is_member DESC, id DESC`
+      )
+      .all()
+      .filter((u) => isCampusCertified(u));
+    if (school) rows = rows.filter((u) => schoolMatches(u.school, [school]));
+    if (q) {
+      const needle = q.toLowerCase();
+      rows = rows.filter(
+        (u) =>
+          String(u.phone || "").includes(q) ||
+          String(u.nickname || "").toLowerCase().includes(needle) ||
+          String(u.school || "").toLowerCase().includes(needle)
+      );
+    }
+    if (membersOnly) rows = rows.filter((u) => isMember(u));
+    const total = rows.length;
+    const sliced = wantAll ? rows.slice(0, 500) : rows.slice((page - 1) * pageSize, page * pageSize);
+    return {
+      list: sliced.map(mapPeopleRow),
+      total,
+      page: wantAll ? 1 : page,
+      pageSize: wantAll ? sliced.length || total : pageSize,
+      schools,
+    };
+  }
+
   let where = "deleted_at IS NULL AND IFNULL(is_virtual,0)=0";
   const args = [];
-  if (ids.length) {
-    where += ` AND id IN (${ids.map(() => "?").join(",")})`;
-    args.push(...ids);
-  } else if (q) {
-    where += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ?)";
-    args.push(`%${q}%`, `%${q}%`);
+  if (q) {
+    where += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(school,'') LIKE ?)";
+    args.push(`%${q}%`, `%${q}%`, `%${q}%`);
   }
-  if (membersOnly && !ids.length) {
+  if (membersOnly) {
     where += " AND IFNULL(is_member,0)=1 AND (member_expire_at IS NULL OR member_expire_at='' OR date(member_expire_at) >= date('now','localtime'))";
   }
   const total = Number(db.prepare(`SELECT COUNT(*) AS c FROM users WHERE ${where}`).get(...args).c || 0);
@@ -300,13 +378,8 @@ function searchPeople(query = {}) {
   const list = db
     .prepare(`SELECT * FROM users WHERE ${where} ORDER BY is_member DESC, id DESC LIMIT ? OFFSET ?`)
     .all(...args, pageSize, offset)
-    .map((u) => ({
-      id: u.id,
-      nickname: u.nickname || "",
-      phone: u.phone || "",
-      isMember: isMember(u),
-    }));
-  return { list, total, page, pageSize };
+    .map(mapPeopleRow);
+  return { list, total, page, pageSize, schools };
 }
 
 function assertClaimStock(campaign, userId) {
@@ -585,6 +658,16 @@ function resolveGrantTargets(body = {}, campaign = null) {
       .all();
     rows.filter((u) => isMember(u)).forEach(add);
   }
+  const school = String(body.school || "").trim();
+  if (body.allCampus || body.all_campus) {
+    if (!school) fail(400, "请选择高校");
+    db.prepare(
+      `SELECT * FROM users WHERE deleted_at IS NULL AND IFNULL(is_virtual,0)=0 AND IFNULL(school,'') != ''`
+    )
+      .all()
+      .filter((u) => isCampusCertified(u) && schoolMatches(u.school, [school]))
+      .forEach(add);
+  }
   return { targets: [...map.values()], matched: map.size, randomized: false };
 }
 
@@ -652,7 +735,7 @@ function grantCoupons(campaignId, body = {}, req) {
   if (campaign.status === "off") fail(400, "该券已停用");
   const picked = resolveGrantTargets(body, campaign);
   const targets = picked.targets || [];
-  if (!targets.length) fail(400, "请选择用户、填写已注册手机号，按条件发放，或发给全部会员");
+  if (!targets.length) fail(400, "请选择用户、填写已注册手机号，按高校名单发放，按条件发放，或发给全部会员");
   const granted = [];
   let skipped = 0;
   const run = db.transaction(() => {
