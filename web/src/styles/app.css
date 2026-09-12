@@ -779,6 +779,26 @@ html.admin-theme .el-button--success,
   --el-button-active-bg-color: #be1118;
   --el-button-active-border-color: #be1118;
 }
+html.admin-theme .el-overlay-dialog {
+  overflow: auto;
+}
+html.admin-theme .el-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 32px);
+  margin: 16px auto !important;
+}
+html.admin-theme .el-dialog__body {
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
+}
+html.admin-theme .el-dialog__footer {
+  flex: none;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  background: #fff;
+}
 .admin-shell {
   display: flex;
   flex-direction: column;
