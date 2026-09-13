@@ -384,6 +384,50 @@ function addColumnIfMissing(db, table, name, def) {
   if (!cols.includes(name)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${name} ${def}`);
 }
 
+function uniquifyPaymentTradeNos(db) {
+  const dups = db
+    .prepare(
+      `SELECT trade_no FROM payments
+       WHERE trade_no IS NOT NULL AND trade_no != ''
+       GROUP BY trade_no
+       HAVING COUNT(*) > 1`
+    )
+    .all();
+  if (!dups.length) return 0;
+  const taken = new Set(
+    db
+      .prepare(`SELECT trade_no FROM payments WHERE trade_no IS NOT NULL AND trade_no != ''`)
+      .all()
+      .map((row) => String(row.trade_no))
+  );
+  const update = db.prepare("UPDATE payments SET trade_no=? WHERE id=?");
+  let changed = 0;
+  for (const { trade_no } of dups) {
+    const rows = db.prepare("SELECT id FROM payments WHERE trade_no=? ORDER BY id ASC").all(trade_no);
+    rows.forEach((row, idx) => {
+      if (idx === 0) return;
+      let next = `D${row.id}`;
+      let n = 0;
+      while (taken.has(next)) {
+        n += 1;
+        next = `D${row.id}x${n}`;
+      }
+      update.run(next, row.id);
+      taken.add(next);
+      changed += 1;
+    });
+  }
+  if (changed) console.warn(`payments.trade_no 有 ${changed} 条重复，已改成唯一值后再建索引`);
+  return changed;
+}
+
+function ensurePaymentTradeNoIndex(db) {
+  uniquifyPaymentTradeNos(db);
+  db.exec(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_trade_no ON payments(trade_no) WHERE trade_no IS NOT NULL AND trade_no != ''"
+  );
+}
+
 function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "cancel_reason", "TEXT");
   addColumnIfMissing(db, "schedules", "cancelled_at", "TEXT");
@@ -669,7 +713,7 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "lottery_draws", "level", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "lottery_draws", "claimed_at", "TEXT");
   addColumnIfMissing(db, "payments", "scene", "TEXT");
-  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_trade_no ON payments(trade_no) WHERE trade_no IS NOT NULL AND trade_no != ''");
+  ensurePaymentTradeNoIndex(db);
   addColumnIfMissing(db, "lottery_campaigns", "draw_mode", "TEXT DEFAULT 'both'");
   addColumnIfMissing(db, "coupon_campaigns", "valid_hours", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "coupon_campaigns", "idle_months", "INTEGER DEFAULT 0");

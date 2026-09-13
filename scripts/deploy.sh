@@ -93,7 +93,19 @@ pm2 delete beiyexing >/dev/null 2>&1 || true
 pm2 start scripts/prod-start.sh --name beiyexing --interpreter bash --cwd "$DIR"
 pm2 save
 sudo env PATH="$PATH" pm2 startup systemd -u "$USER" --hp "$HOME" >/dev/null || true
-sleep 2
-curl -fsS -o /dev/null -w "local_api:%{http_code}\n" http://127.0.0.1:3780/api/routes
+ok=0
+for _ in $(seq 1 20); do
+  if curl -fsS -o /dev/null -w "local_api:%{http_code}\n" http://127.0.0.1:3780/api/routes; then
+    ok=1
+    break
+  fi
+  sleep 1
+done
+if [ "$ok" -ne 1 ]; then
+  echo "==> API 未响应，PM2 状态与最近日志"
+  pm2 describe beiyexing || true
+  pm2 logs beiyexing --err --lines 120 --nostream || true
+  exit 1
+fi
 echo "deploy ok: http://$HOST/m  http://$HOST/admin"
 REMOTE
