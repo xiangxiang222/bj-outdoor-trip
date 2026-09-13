@@ -15,7 +15,7 @@
       <p v-if="isActivity && isFree" class="price">免费</p>
       <p v-else class="price">你应付 ¥{{ displayQuote }} / 人</p>
       <p v-if="couponHint" class="muted" style="color:var(--leaf)">{{ couponHint }}</p>
-      <p v-if="s.eligibility?.enabled" class="muted">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? (s.eligibility.alumniOk ? " 已认证师生或校友" : " 已认证学生") : "" }}</p>
+      <p v-if="s.eligibility?.enabled" class="muted">{{ s.eligibility.label }}{{ s.eligibility.alumniOk ? " 已认证师生或校友" : " 已认证学生" }}</p>
       <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" style="color:var(--clay)">
         {{ s.eligibility.reason }}
         <router-link to="/m/student">去校园认证</router-link>

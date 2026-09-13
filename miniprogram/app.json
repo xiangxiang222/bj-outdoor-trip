@@ -24,7 +24,8 @@
     "pages/guide/guide",
     "pages/user/user",
     "pages/publish/publish",
-    "pages/leader/leader"
+    "pages/leader/leader",
+    "pages/student/student"
   ],
   "subPackages": [
     { "root": "pkg-detail", "name": "detail", "pages": ["detail/detail"] }

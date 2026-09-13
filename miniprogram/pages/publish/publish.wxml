@@ -50,10 +50,17 @@
     <input class="input" placeholder="另一半学校（可空）" value="{{form.comboRule.school}}" bindinput="setComboSchool" />
   </view>
   <input class="input" type="number" placeholder="原价（元）" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
-  <view class="pad" bindtap="toggleStudentOnly">{{form.studentOnly ? '☑' : '☐'}} 仅已认证师生可报名</view>
   <view class="pad" bindtap="toggleAlumniOk">{{form.alumniOk ? '☑' : '☐'}} 允许已认证校友</view>
   <view class="pad" bindtap="toggleOversub">{{form.oversub ? '☑' : '☐'}} 报超会抽（车位不够才抽）</view>
-  <input class="input" placeholder="限定高校，逗号分隔，可空" value="{{form.schools}}" bindinput="setField" data-k="schools" />
+  <view class="label">校园范围</view>
+  <picker mode="selector" range="{{scopeLabels}}" value="{{scopeIndex}}" bindchange="setScope">
+    <view class="input">{{scopeLabels[scopeIndex]}}</view>
+  </picker>
+  <input wx:if="{{form.campusScope=='college' || form.campusScope=='school' || form.campusScope=='colleges'}}" class="input" placeholder="学校全称" value="{{form.campusSchool}}" bindinput="setField" data-k="campusSchool" />
+  <input wx:if="{{form.campusScope=='college'}}" class="input" placeholder="学院，例如信息科学技术学院" value="{{form.campusCollege}}" bindinput="setField" data-k="campusCollege" />
+  <input wx:if="{{form.campusScope=='colleges'}}" class="input" placeholder="开放学院，逗号分隔" value="{{form.colleges}}" bindinput="setField" data-k="colleges" />
+  <input wx:if="{{form.campusScope=='schools'}}" class="input" placeholder="开放学校，逗号分隔" value="{{form.schools}}" bindinput="setField" data-k="schools" />
+  <input wx:if="{{form.campusScope=='schools'}}" class="input" placeholder="限定学院可空" value="{{form.colleges}}" bindinput="setField" data-k="colleges" />
   <view class="label">出发日期</view>
   <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
     <view class="input">{{dateLabels[dateIndex]}}</view>

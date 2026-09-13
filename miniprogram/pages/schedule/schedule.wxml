@@ -75,8 +75,9 @@
       <text wx:if="{{s.minGroupSize}}" class="muted">{{isActivity ? '满 ' + s.minGroupSize + ' 人成局' : '最低成团 ' + s.minGroupSize}}</text>
     </view>
     <view class="muted" wx:if="{{s.oversub.enabled}}">{{s.oversub.copy}}</view>
-    <view class="muted" wx:if="{{s.eligibility.enabled}}">{{s.eligibility.label}}{{s.eligibility.schools.length ? (s.eligibility.alumniOk ? ' 已认证师生或校友可报' : ' 已认证学生可报') : ''}}</view>
+    <view class="muted" wx:if="{{s.eligibility.enabled}}">{{s.eligibility.label}}{{s.eligibility.alumniOk ? ' 已认证师生或校友可报' : ' 已认证学生可报'}}</view>
     <view class="muted" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" style="color:#bc4749">{{s.eligibility.reason}}</view>
+    <view class="btn ghost" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" bindtap="goStudent">去校园认证</view>
     <view class="muted" wx:if="{{s.reviewStatus=='pending'}}" style="color:#c77d3a">本团正在审核，通过后才会出现在{{isActivity ? '活动页' : '首页'}}。</view>
     <view class="muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">本团已解散。理由：{{s.cancelReason}}</view>
     <view class="muted" wx:if="{{s.notes}}">{{s.notes}}</view>
@@ -186,6 +187,16 @@
 </view>
 <view class="btn ghost" wx:if="{{!isActivity}}" bindtap="stats">本团画像</view>
 <button class="btn ghost" open-type="share">分享到微信</button>
+<view class="card" wx:if="{{s.isOrganizer && s.status!='cancelled' && s.eligibility.schools.length}}">
+  <view class="pad muted">当前范围：{{s.eligibility.label}}。可以再开放其他学院或学校，不能收窄。</view>
+  <block wx:if="{{s.eligibility.colleges.length}}">
+    <input class="input" placeholder="开放学院，例如计算机学院" value="{{addCollege}}" bindinput="setAddCollege" />
+    <view class="btn ghost" bindtap="expandColleges">开放学院</view>
+    <view class="btn ghost" bindtap="expandAllColleges">本校全部学院可报</view>
+  </block>
+  <input class="input" placeholder="开放学校，例如清华大学" value="{{addSchool}}" bindinput="setAddSchool" />
+  <view class="btn ghost" bindtap="expandSchools">开放学校</view>
+</view>
 <view class="btn clay" wx:if="{{s.isOrganizer && s.status!='cancelled'}}" bindtap="toggleDissolve">解散拼团</view>
 <view class="card" wx:if="{{showDissolve}}">
   <view class="pad">

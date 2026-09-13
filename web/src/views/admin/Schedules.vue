@@ -154,6 +154,9 @@
         <el-form-item label="限定高校">
           <el-input v-model="neu.schools" placeholder="逗号分隔，如 北京大学,清华大学" />
         </el-form-item>
+        <el-form-item label="限定学院">
+          <el-input v-model="neu.colleges" placeholder="逗号分隔，如 信息科学技术学院。留空则名单内学校各学院可报" />
+        </el-form-item>
         <el-form-item label="虚拟报名">
           <el-input-number v-model="neu.virtualCount" :min="0" :max="80" />
           <p class="muted" style="margin:6px 0 0">从虚拟用户池抽人占座，之后仍可在列表里改人数。</p>
@@ -275,6 +278,9 @@
         <el-form-item label="限定高校">
           <el-input v-model="limitForm.schools" type="textarea" :rows="2" placeholder="逗号分隔，如 北京大学,清华大学。留空则不限学校。" />
         </el-form-item>
+        <el-form-item label="限定学院">
+          <el-input v-model="limitForm.colleges" type="textarea" :rows="2" placeholder="逗号分隔。留空则名单内学校各学院可报。" />
+        </el-form-item>
         <p class="muted">报超会抽：先报名待确认。人数超过座位才抽签，未超过则全部确认。不要对外说「抽名额」。</p>
       </el-form>
       <template #footer>
@@ -371,7 +377,7 @@ const checkinTitle = computed(() => {
 const showLimit = ref(false);
 const savingLimit = ref(false);
 const drawingId = ref(0);
-const limitForm = ref({ studentOnly: false, alumniOk: false, oversub: false, schools: "" });
+const limitForm = ref({ studentOnly: false, alumniOk: false, oversub: false, schools: "", colleges: "" });
 const showVirtual = ref(false);
 const virtualCount = ref(0);
 const savingVirtual = ref(false);
@@ -404,6 +410,7 @@ const neu = ref({
   alumniOk: false,
   oversub: false,
   schools: "",
+  colleges: "",
   virtualCount: 0,
   lotteryMode: "off",
 });
@@ -428,6 +435,7 @@ function openLimit(row) {
     alumniOk: !!row.eligibility?.alumniOk,
     oversub: !!row.oversub?.enabled,
     schools: (row.eligibility?.schools || []).join("，"),
+    colleges: (row.eligibility?.colleges || []).join("，"),
   };
   showLimit.value = true;
 }
@@ -439,6 +447,7 @@ async function saveLimit() {
       alumniOk: limitForm.value.alumniOk,
       oversub: limitForm.value.oversub,
       schools: limitForm.value.schools,
+      colleges: limitForm.value.colleges,
     });
     showLimit.value = false;
     ElMessage.success("报名限制已更新");

@@ -31,6 +31,8 @@ Page({
     waiverText: "",
     showDissolve: false,
     reason: "",
+    addCollege: "",
+    addSchool: "",
     seatRows: [],
     weather: null,
     reviews: { list: [], count: 0, avg: 0 },
@@ -363,6 +365,24 @@ Page({
   stats() { wx.navigateTo({ url: "/pages/stats/stats?id=" + this.data.id }); },
   toggleDissolve() { this.setData({ showDissolve: !this.data.showDissolve }); },
   setReason(e) { this.setData({ reason: e.detail.value }); },
+  goStudent() {
+    wx.navigateTo({ url: "/pages/student/student?redirect=" + encodeURIComponent("/pages/schedule/schedule?id=" + this.data.id) });
+  },
+  setAddCollege(e) { this.setData({ addCollege: e.detail.value }); },
+  setAddSchool(e) { this.setData({ addSchool: e.detail.value }); },
+  expandColleges() { this.expandLimit({ addColleges: this.data.addCollege }); },
+  expandSchools() { this.expandLimit({ addSchools: this.data.addSchool }); },
+  expandAllColleges() { this.expandLimit({ openAllColleges: true }); },
+  async expandLimit(body) {
+    try {
+      const res = await request("/schedules/" + this.data.id + "/limit", "PUT", body);
+      this.setData({ addCollege: "", addSchool: "" });
+      wx.showToast({ title: "已开放：" + ((res.data.eligibility && res.data.eligibility.label) || "报名范围"), icon: "none" });
+      this.load();
+    } catch (e) {
+      wx.showModal({ title: "无法开放", content: e.message || "请稍后重试", showCancel: false });
+    }
+  },
   async confirmDissolve() {
     const reason = (this.data.reason || "").trim();
     if (!reason) {

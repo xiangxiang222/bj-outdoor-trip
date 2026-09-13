@@ -21,6 +21,7 @@
   <view class="cell" bindtap="openMember"><text>{{user.isMember ? '会员中心' : '开通会员'}}</text><text class="muted">年费 99 ›</text></view>
   <view class="cell" bindtap="go" data-url="/pages/lottery/lottery"><text>抽奖</text><text class="muted">本团中奖看这里 ›</text></view>
   <view class="cell" bindtap="go" data-url="/pages/leader/leader"><text>{{leaderLabel}}</text><text class="muted">›</text></view>
+  <view class="cell" bindtap="go" data-url="/pages/student/student"><text>{{campusLabel}}</text><text class="muted">›</text></view>
 </view>
 
 <view class="cell-label">服务</view>

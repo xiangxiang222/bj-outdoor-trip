@@ -127,6 +127,9 @@ Page({
     });
     return parsed;
   },
+  goStudent() {
+    wx.navigateTo({ url: "/pages/student/student?redirect=" + encodeURIComponent("/pages/enroll/enroll?id=" + this.data.id) });
+  },
   async submit() {
     if (this.data.s && this.data.s.status === "cancelled") {
       wx.showToast({ title: "该拼团已解散", icon: "none" });

@@ -73,4 +73,14 @@ function enrollPayload(extra = {}) {
   };
 }
 
-module.exports = { harness, issueCaptcha, loginUser, loginCompany, loginAdmin, applyAndApproveLeader, auth, ID, enrollPayload };
+function campusPayload(extra = {}) {
+  return {
+    school: "北京大学",
+    college: "信息科学技术学院",
+    studentNo: "1700012345",
+    studentCardUrl: "/static/uploads/student-card.jpg",
+    ...extra,
+  };
+}
+
+module.exports = { harness, issueCaptcha, loginUser, loginCompany, loginAdmin, applyAndApproveLeader, auth, ID, enrollPayload, campusPayload };

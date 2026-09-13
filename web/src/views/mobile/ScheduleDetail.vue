@@ -83,11 +83,21 @@
             <span v-else></span>
           </div>
           <p class="muted" v-if="s.oversub?.enabled">{{ s.oversub.copy }}</p>
-          <p class="muted" v-if="s.eligibility?.enabled">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? (s.eligibility.alumniOk ? " 已认证师生或校友可报" : " 已认证学生可报") : "" }}</p>
+          <p class="muted" v-if="s.eligibility?.enabled">{{ s.eligibility.label }}{{ s.eligibility.alumniOk ? " 已认证师生或校友可报" : " 已认证学生可报" }}</p>
           <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" class="muted" style="color:var(--clay)">
             {{ s.eligibility.reason }}
             <router-link to="/m/student">去校园认证</router-link>
           </p>
+          <div v-if="s.isOrganizer && s.status !== 'cancelled' && s.eligibility?.schools?.length" class="expand-campus">
+            <p class="muted">当前范围：{{ s.eligibility.label }}。可以再开放其他学院或学校，不能收窄。</p>
+            <template v-if="s.eligibility.colleges?.length">
+              <input class="input" v-model="addCollege" placeholder="开放学院，例如计算机学院" />
+              <button class="btn ghost block" type="button" :disabled="expanding" @click="expandLimit({ addColleges: addCollege })">开放学院</button>
+              <button class="btn ghost block" type="button" :disabled="expanding" @click="expandLimit({ openAllColleges: true })">本校全部学院可报</button>
+            </template>
+            <input class="input" v-model="addSchool" placeholder="开放学校，例如清华大学" />
+            <button class="btn ghost block" type="button" :disabled="expanding" @click="expandLimit({ addSchools: addSchool })">开放学校</button>
+          </div>
           <p class="muted" v-if="s.reviewStatus === 'pending'" style="color:#c77d3a">本团正在审核，通过后才会出现在{{ isActivity ? "活动页" : "首页" }}，暂不能报名。</p>
           <p class="muted" v-else-if="s.reviewStatus === 'rejected'" style="color:var(--clay)">本团未通过审核。</p>
           <p class="muted" v-if="s.status === 'cancelled'" style="color:var(--clay)">
@@ -460,6 +470,9 @@ const nativeShareOk = computed(() => nativeShareSupported(typeof navigator === "
 const reason = ref("");
 const dissolveErr = ref("");
 const dissolving = ref(false);
+const addCollege = ref("");
+const addSchool = ref("");
+const expanding = ref(false);
 const weather = ref(null);
 const reviews = ref({ list: [], count: 0, avg: 0 });
 const routeDetail = ref(null);
@@ -861,6 +874,21 @@ async function settle() {
   const res = await http.post("/pay/company-settle", { scheduleId: s.value.id });
   msg.value = `已为 ${res.data.count} 人统一支付，合计 ¥${res.data.total}`;
   await load();
+}
+
+async function expandLimit(body) {
+  expanding.value = true;
+  try {
+    const res = await http.put("/schedules/" + s.value.id + "/limit", body);
+    s.value = res.data;
+    addCollege.value = "";
+    addSchool.value = "";
+    msg.value = "已开放报名范围：" + (res.data.eligibility?.label || "");
+  } catch (e) {
+    msg.value = e.message;
+  } finally {
+    expanding.value = false;
+  }
 }
 
 async function dissolve() {

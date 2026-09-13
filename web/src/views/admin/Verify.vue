@@ -23,6 +23,17 @@
       <el-table-column label="申请内容" min-width="220">
         <template #default="{ row }">{{ applyText(row) }}</template>
       </el-table-column>
+      <el-table-column label="证件" width="90">
+        <template #default="{ row }">
+          <el-image
+            v-if="row.kind === 'campus' && row.user.studentCardUrl"
+            :src="row.user.studentCardUrl"
+            :preview-src-list="[row.user.studentCardUrl]"
+            fit="cover"
+            style="width:48px;height:48px;border-radius:6px"
+          />
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="180">
         <template #default="{ row }">
           <el-button size="small" type="success" @click="decide(row, 'approve')">通过</el-button>
@@ -74,7 +85,8 @@ function applyText(row) {
     return bits.join(" · ");
   }
   if (row.kind === "group") return row.user.groupName || "团体认证";
-  return row.user.school || "校园认证";
+  const bits = [row.user.school, row.user.college, row.user.studentNo].filter(Boolean);
+  return bits.join(" · ") || "校园认证";
 }
 
 function toItems(users, filter) {

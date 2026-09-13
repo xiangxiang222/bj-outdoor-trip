@@ -2,12 +2,13 @@ const { request, setAuth, showError } = require("../../utils/request");
 const { buyMembership } = require("../../utils/pay");
 const app = getApp();
 Page({
-  data: { user: null, coupon: null, leaderLabel: "领队申请" },
+  data: { user: null, coupon: null, leaderLabel: "领队申请", campusLabel: "校园认证" },
   onShow() {
     const user = app.globalData.user;
     this.setData({
       user,
       leaderLabel: user && user.isLeader ? "领队已认证" : user && user.leaderStatus === "pending" ? "领队申请审核中" : "领队申请",
+      campusLabel: user && user.isAlumni ? "校友已认证" : user && user.isStudent ? "学生已认证" : user && user.studentStatus === "pending" ? "校园认证审核中" : "校园认证",
     });
     this.loadCoupon();
   },

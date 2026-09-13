@@ -25,6 +25,17 @@
   bindinput="setCo"
 />
 
+<view class="label">校园范围</view>
+<picker mode="selector" range="{{scopeLabels}}" value="{{scopeIndex}}" bindchange="setScope">
+  <view class="input">{{scopeLabels[scopeIndex]}}</view>
+</picker>
+<input wx:if="{{form.campusScope=='college' || form.campusScope=='school' || form.campusScope=='colleges'}}" class="input" placeholder="学校全称" value="{{form.campusSchool}}" bindinput="setCampusSchool" />
+<input wx:if="{{form.campusScope=='college'}}" class="input" placeholder="学院，例如信息科学技术学院" value="{{form.campusCollege}}" bindinput="setCampusCollege" />
+<input wx:if="{{form.campusScope=='colleges'}}" class="input" placeholder="开放学院，逗号分隔" value="{{form.colleges}}" bindinput="setColleges" />
+<input wx:if="{{form.campusScope=='schools'}}" class="input" placeholder="开放学校，逗号分隔" value="{{form.schools}}" bindinput="setSchools" />
+<input wx:if="{{form.campusScope=='schools'}}" class="input" placeholder="限定学院可空" value="{{form.colleges}}" bindinput="setColleges" />
+<view class="pad" bindtap="toggleAlumniOk">{{form.alumniOk ? '☑' : '☐'}} 允许已认证校友</view>
+
 <view class="label">大巴车型</view>
 <picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">
   <view class="input">{{busNames[busIndex]}}</view>

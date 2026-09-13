@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { harness, loginUser, loginAdmin, auth, issueCaptcha } = require("./http");
+const { harness, loginUser, loginAdmin, auth, issueCaptcha, campusPayload } = require("./http");
 
 describe("homepage and publish review", () => {
   let agent;
@@ -32,7 +32,7 @@ describe("homepage and publish review", () => {
 
   it("accepts student apply, feedback and photographer enroll waive", async () => {
     const token = await loginUser(agent);
-    const stu = await agent.post("/api/me/student").set(auth(token)).send({ school: "北京大学" }).expect(200);
+    const stu = await agent.post("/api/me/student").set(auth(token)).send(campusPayload({ school: "北京大学" })).expect(200);
     assert.equal(stu.body.data.studentStatus, "pending");
     await agent.post("/api/feedback").set(auth(token)).send({ kind: "suggest", content: "希望增加夜观星空" }).expect(200);
     const admin = await loginAdmin(agent);

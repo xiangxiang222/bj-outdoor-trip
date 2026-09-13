@@ -55,7 +55,7 @@ const { completeTrip, afterTripState } = require("./services/aftertrip");
 const { startTrip, openCheckin, markCheckin, unmarkCheckin, confirmCheckin, tripRunOf } = require("./services/trip-run");
 const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
-const { parseEnrollLimit, eligibilityView, applyEnrollLimit, withCampusFreeDefaults } = require("./services/eligibility");
+const { eligibilityView, applyEnrollLimit, expandEnrollLimit, resolveEnrollLimit } = require("./services/eligibility");
 const { oversubView, isOversubPending, drawOversub } = require("./services/oversub");
 const { parseVideoInput, videoViews } = require("./services/video");
 const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
@@ -172,6 +172,9 @@ function userPublic(u, req) {
     studentStatus: u.student_status || "",
     campusKind: u.campus_kind === "alumni" ? "alumni" : u.student_status || u.is_student ? "student" : "",
     school: u.school || "",
+    college: u.college || "",
+    studentNo: u.student_no || "",
+    studentCardUrl: attachAssetHost(req, u.student_card_url) || "",
     groupStatus: u.group_status || "",
     groupName: u.group_name || "",
     groupKind: u.group_kind || "",
@@ -377,7 +380,7 @@ function resolvePlayTags(sch, route, req) {
   return tagsForIds(ids, req);
 }
 
-function applyScheduleExtras(id, body, route) {
+function applyScheduleExtras(id, body, route, user) {
   const offerType = offerMeta(body.offerType || body.offer_type).key;
   const offerPrice = body.offerPrice == null || body.offerPrice === "" ? null : Number(body.offerPrice);
   const reviewStatus = body.reviewStatus || body.review_status || "approved";
@@ -387,10 +390,10 @@ function applyScheduleExtras(id, body, route) {
   const memberOn = flagOn(body.memberPriceOn ?? body.member_price_on) ? 1 : 0;
   const studentOn = flagOn(body.studentPriceOn ?? body.student_price_on) ? 1 : 0;
   const comboRule = JSON.stringify(parseComboRule(body.comboRule || body.combo_rule || {}));
-  const limit = parseEnrollLimit(withCampusFreeDefaults(body));
+  const limit = resolveEnrollLimit(body, user);
   db()
     .prepare(
-      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=?, student_only=?, schools_json=?, alumni_ok=?, oversub=? WHERE id=?"
+      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=?, student_only=?, schools_json=?, colleges_json=?, alumni_ok=?, oversub=? WHERE id=?"
     )
     .run(
       offerType,
@@ -404,6 +407,7 @@ function applyScheduleExtras(id, body, route) {
       comboRule,
       limit.studentOnly ? 1 : 0,
       JSON.stringify(limit.schools),
+      JSON.stringify(limit.colleges),
       limit.alumniOk ? 1 : 0,
       limit.oversub ? 1 : 0,
       id
@@ -736,14 +740,32 @@ router.put("/me", authUser, (req, res) => {
   res.json({ ok: true, data: userPublic(user, req) });
 });
 
+function parseStudentCardUrl(raw) {
+  const url = String(raw || "").trim();
+  if (!url) return "";
+  if (url.includes("..") || url.includes("\\")) return "";
+  if (url.startsWith("/static/uploads/")) return url.slice(0, 300);
+  if (/^https?:\/\//i.test(url)) return url.slice(0, 300);
+  return "";
+}
+
 router.post("/me/student", authUser, (req, res) => {
-  const school = String((req.body || {}).school || "").trim();
-  if (!school) return res.status(400).json({ ok: false, message: "请填写学校" });
-  const rawKind = String((req.body || {}).campusKind || (req.body || {}).campus_kind || "student").toLowerCase();
+  const body = req.body || {};
+  const school = String(body.school || "").trim().slice(0, 40);
+  const college = String(body.college || "").trim().slice(0, 40);
+  const studentNo = String(body.studentNo || body.student_no || "").trim().slice(0, 32);
+  const studentCardUrl = parseStudentCardUrl(body.studentCardUrl || body.student_card_url);
+  if (school.length < 2) return res.status(400).json({ ok: false, message: "请填写学校全称" });
+  if (college.length < 2) return res.status(400).json({ ok: false, message: "请填写学院" });
+  const rawKind = String(body.campusKind || body.campus_kind || "student").toLowerCase();
   const campusKind = rawKind === "alumni" ? "alumni" : "student";
+  if (campusKind === "student" && studentNo.length < 4) return res.status(400).json({ ok: false, message: "请填写学号" });
+  if (!studentCardUrl) return res.status(400).json({ ok: false, message: "请上传学生证照片" });
   db()
-    .prepare("UPDATE users SET school=?, campus_kind=?, student_status='pending', is_student=0 WHERE id=?")
-    .run(school, campusKind, req.userId);
+    .prepare(
+      "UPDATE users SET school=?, college=?, student_no=?, student_card_url=?, campus_kind=?, student_status='pending', is_student=0 WHERE id=?"
+    )
+    .run(school, college, studentNo, studentCardUrl, campusKind, req.userId);
   const next = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
   noticeCampus(next);
   res.json({
@@ -1206,7 +1228,12 @@ router.post("/schedules", authUser, (req, res) => {
       nanoid(10),
       notes || ""
     );
-  applyScheduleExtras(info.lastInsertRowid, { ...(req.body || {}), reviewStatus: "approved" }, route);
+  try {
+    applyScheduleExtras(info.lastInsertRowid, { ...(req.body || {}), reviewStatus: "approved" }, route, user);
+  } catch (e) {
+    db().prepare("DELETE FROM schedules WHERE id=?").run(info.lastInsertRowid);
+    return jsonError(res, e);
+  }
   attachLotteryOnCreate(info.lastInsertRowid, req.body || {});
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(info.lastInsertRowid);
   res.json({ ok: true, data: scheduleView(sch, req) });
@@ -1228,6 +1255,21 @@ function dissolveHandler(actor) {
 }
 
 router.post("/schedules/:id/dissolve", authUser, dissolveHandler("organizer"));
+
+router.put("/schedules/:id/limit", authUser, (req, res) => {
+  const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
+  if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
+  if (!sch.organizer_id || Number(sch.organizer_id) !== Number(req.userId)) {
+    return res.status(403).json({ ok: false, message: "仅发起人可开放报名范围" });
+  }
+  if (sch.status === "cancelled") return res.status(400).json({ ok: false, message: "本团已解散" });
+  try {
+    expandEnrollLimit(sch, req.body || {});
+    res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id), req) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
 
 router.post("/upload", authUser, (req, res) => {
   uploadImage.single("file")(req, res, (err) => {
@@ -1338,21 +1380,27 @@ router.post("/trips", authUser, (req, res) => {
       nanoid(10),
       b.notes || ""
     );
-  applyScheduleExtras(
-    schInfo.lastInsertRowid,
-    {
-      ...b,
-      offerType: b.offerType || (isActivity && originPrice === 0 ? "free" : b.offerType),
-      offerPrice: (b.offerType || (isActivity && originPrice === 0 ? "free" : "")) === "free" ? 0 : b.offerPrice,
-      playTagIds,
-      city,
-      channel: b.channel,
-      memberPriceOn: b.memberPriceOn,
-      studentPriceOn: b.studentPriceOn,
-      reviewStatus: "pending",
-    },
-    route
-  );
+  try {
+    applyScheduleExtras(
+      schInfo.lastInsertRowid,
+      {
+        ...b,
+        offerType: b.offerType || (isActivity && originPrice === 0 ? "free" : b.offerType),
+        offerPrice: (b.offerType || (isActivity && originPrice === 0 ? "free" : "")) === "free" ? 0 : b.offerPrice,
+        playTagIds,
+        city,
+        channel: b.channel,
+        memberPriceOn: b.memberPriceOn,
+        studentPriceOn: b.studentPriceOn,
+        reviewStatus: "pending",
+      },
+      route,
+      user
+    );
+  } catch (e) {
+    db().prepare("DELETE FROM schedules WHERE id=?").run(schInfo.lastInsertRowid);
+    return jsonError(res, e);
+  }
   attachLotteryOnCreate(schInfo.lastInsertRowid, b);
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(schInfo.lastInsertRowid);
   res.json({
@@ -1808,6 +1856,9 @@ function adminUserView(user) {
     studentStatus: user.student_status || "",
     campusKind: user.campus_kind === "alumni" ? "alumni" : user.student_status || user.is_student ? "student" : "",
     school: user.school || "",
+    college: user.college || "",
+    studentNo: user.student_no || "",
+    studentCardUrl: user.student_card_url || "",
     groupStatus: user.group_status || "",
     groupName: user.group_name || "",
     isLeader: isLeader(user),
@@ -2135,7 +2186,12 @@ router.post("/admin/schedules", authAdmin, requireCap("ops"), (req, res) => {
       nanoid(10),
       notes || ""
     );
-  applyScheduleExtras(info.lastInsertRowid, { ...(req.body || {}), reviewStatus: "approved" }, route);
+  try {
+    applyScheduleExtras(info.lastInsertRowid, { ...(req.body || {}), reviewStatus: "approved" }, route);
+  } catch (e) {
+    db().prepare("DELETE FROM schedules WHERE id=?").run(info.lastInsertRowid);
+    return jsonError(res, e);
+  }
   attachLotteryOnCreate(info.lastInsertRowid, req.body || {});
   const createdId = info.lastInsertRowid;
   const virtualRaw = (req.body || {}).virtualCount;
@@ -2193,8 +2249,12 @@ router.post("/admin/schedules/:id/dissolve", authAdmin, requireCap("ops"), disso
 router.put("/admin/schedules/:id/limit", authAdmin, requireCap("ops"), (req, res) => {
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
-  applyEnrollLimit(sch.id, req.body || {});
-  res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id), req) });
+  try {
+    applyEnrollLimit(sch.id, req.body || {});
+    res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id), req) });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 router.get("/admin/lotteries", authAdmin, requireCap("ops"), (req, res) => {
@@ -2562,12 +2622,12 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
   const q = String(req.query.q || "").trim();
   const pending = String(req.query.pending || "").trim();
   let sql =
-    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,campus_kind,group_status,group_name,role,leader_status,leader_name,leader_years,leader_intro FROM users WHERE deleted_at IS NULL";
+    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,college,student_no,student_card_url,campus_kind,group_status,group_name,role,leader_status,leader_name,leader_years,leader_intro FROM users WHERE deleted_at IS NULL";
   const args = [];
   if (q) {
-    sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ? OR IFNULL(school,'') LIKE ? OR IFNULL(group_name,'') LIKE ? OR IFNULL(leader_name,'') LIKE ?)";
+    sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ? OR IFNULL(school,'') LIKE ? OR IFNULL(college,'') LIKE ? OR IFNULL(group_name,'') LIKE ? OR IFNULL(leader_name,'') LIKE ?)";
     const like = `%${q}%`;
-    args.push(like, like, like, like, like, like);
+    args.push(like, like, like, like, like, like, like);
   }
   if (pending === "campus") sql += " AND student_status='pending'";
   else if (pending === "group") sql += " AND group_status='pending'";
@@ -2587,6 +2647,9 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
       studentStatus: u.student_status || "",
       campusKind: u.campus_kind === "alumni" ? "alumni" : u.student_status || u.is_student ? "student" : "",
       school: u.school || "",
+      college: u.college || "",
+      studentNo: u.student_no || "",
+      studentCardUrl: attachAssetHost(req, u.student_card_url) || "",
       groupStatus: u.group_status || "",
       groupName: u.group_name || "",
       leaderStatus: u.leader_status || "",

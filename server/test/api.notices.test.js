@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { harness, loginUser, loginAdmin, auth } = require("./http");
+const { harness, loginUser, loginAdmin, auth, campusPayload } = require("./http");
 
 describe("admin review notices", () => {
   let agent;
@@ -17,13 +17,13 @@ describe("admin review notices", () => {
     const empty = await agent.get("/api/admin/notices").set(auth(admin)).expect(200);
     assert.equal(empty.body.data.unread, 0);
 
-    await agent.post("/api/me/student").set(auth(token)).send({ school: "北京大学", campusKind: "alumni" }).expect(200);
+    await agent.post("/api/me/student").set(auth(token)).send(campusPayload({ school: "北京大学", campusKind: "alumni", studentNo: "" })).expect(200);
 
     const box = await agent.get("/api/admin/notices").set(auth(admin)).expect(200);
     assert.equal(box.body.data.unread, 1);
     assert.equal(box.body.data.list[0].kind, "campus");
     assert.equal(box.body.data.list[0].title, "校园认证待审");
-    assert.match(box.body.data.list[0].body, /北京大学/);
+    assert.match(box.body.data.list[0].body, /北京大学信息科学技术学院/);
     assert.match(box.body.data.list[0].body, /校友/);
     assert.equal(box.body.data.list[0].href, `/admin/verify?kind=campus&userId=${seed.userId}`);
 
@@ -42,8 +42,8 @@ describe("admin review notices", () => {
   it("keeps one unread campus notice per user and clears it after approve", async () => {
     const token = await loginUser(agent);
     const admin = await loginAdmin(agent);
-    await agent.post("/api/me/student").set(auth(token)).send({ school: "清华大学" }).expect(200);
-    await agent.post("/api/me/student").set(auth(token)).send({ school: "清华大学" }).expect(200);
+    await agent.post("/api/me/student").set(auth(token)).send(campusPayload({ school: "清华大学" })).expect(200);
+    await agent.post("/api/me/student").set(auth(token)).send(campusPayload({ school: "清华大学" })).expect(200);
     const box = await agent.get("/api/admin/notices").set(auth(admin)).expect(200);
     assert.equal(box.body.data.unread, 1);
 

@@ -303,10 +303,11 @@ Page({
   },
   goStudent() {
     const app = getApp();
+    const url = "/pages/student/student";
     if (!app.globalData.token) {
-      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/mine/mine") });
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(url) });
       return;
     }
-    wx.switchTab({ url: "/pages/mine/mine" });
+    wx.navigateTo({ url });
   },
 });

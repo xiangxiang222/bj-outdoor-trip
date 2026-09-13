@@ -65,6 +65,9 @@ Page({
     meetupIndex: 0,
     times: ["06:30", "07:00", "07:30", "08:00", "08:30"],
     timeIndex: 2,
+    scopeLabels: ["不限制学校学院", "仅已认证师生", "仅本学院", "仅本校", "本校跨学院", "跨学校"],
+    scopeKeys: ["open", "certified", "college", "school", "colleges", "schools"],
+    scopeIndex: 0,
     form: {
       startDate: "",
       organizerType: "individual",
@@ -73,6 +76,12 @@ Page({
       minGroupSize: "10",
       meetupPoint: "",
       meetupTime: "07:30",
+      campusScope: "open",
+      campusSchool: "",
+      campusCollege: "",
+      schools: "",
+      colleges: "",
+      alumniOk: false,
     },
   },
   onLoad(q) {
@@ -84,6 +93,7 @@ Page({
       return;
     }
     const dates = buildDates(60);
+    const user = app.globalData.user || {};
     this.setData({
       id: q.id,
       dates,
@@ -94,6 +104,9 @@ Page({
       "form.busTypeId": FALLBACK_BUSES[0].id,
       meetupNames: FALLBACK_MEETUPS,
       "form.meetupPoint": FALLBACK_MEETUPS[0],
+      "form.campusSchool": user.school || "",
+      "form.campusCollege": user.college || "",
+      "form.companyName": user.companyName || user.school || "",
     });
     this.loadRoute(q.id);
   },
@@ -147,6 +160,36 @@ Page({
   setTime(e) {
     const i = Number(e.detail.value);
     this.setData({ timeIndex: i, "form.meetupTime": this.data.times[i] });
+  },
+  setScope(e) {
+    const i = Number(e.detail.value);
+    const scope = this.data.scopeKeys[i] || "open";
+    const user = getApp().globalData.user || {};
+    const patch = { scopeIndex: i, "form.campusScope": scope };
+    if (!this.data.form.campusSchool && (user.school || this.data.form.companyName)) {
+      patch["form.campusSchool"] = user.school || this.data.form.companyName;
+    }
+    if (!this.data.form.campusCollege && user.college) patch["form.campusCollege"] = user.college;
+    if (scope === "colleges" && user.college && !this.data.form.colleges) patch["form.colleges"] = user.college;
+    if (scope === "schools" && (this.data.form.campusSchool || user.school) && !this.data.form.schools) {
+      patch["form.schools"] = this.data.form.campusSchool || user.school;
+    }
+    this.setData(patch);
+  },
+  setCampusSchool(e) {
+    this.setData({ "form.campusSchool": e.detail.value });
+  },
+  setCampusCollege(e) {
+    this.setData({ "form.campusCollege": e.detail.value });
+  },
+  setSchools(e) {
+    this.setData({ "form.schools": e.detail.value });
+  },
+  setColleges(e) {
+    this.setData({ "form.colleges": e.detail.value });
+  },
+  toggleAlumniOk() {
+    this.setData({ "form.alumniOk": !this.data.form.alumniOk });
   },
   async submit() {
     const form = this.data.form;

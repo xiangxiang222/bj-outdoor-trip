@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { harness, loginUser, loginAdmin, auth, ID, issueCaptcha, enrollPayload } = require("./http");
+const { harness, loginUser, loginAdmin, auth, ID, issueCaptcha, enrollPayload, campusPayload } = require("./http");
 const { makeIdCard } = require("../src/services/idcard");
 
 const EXTRA_IDS = [
@@ -35,7 +35,7 @@ describe("oversub draw and campus alumni", () => {
   }
 
   async function certify(token, userId, school, campusKind = "student") {
-    await agent.post("/api/me/student").set(auth(token)).send({ school, campusKind }).expect(200);
+    await agent.post("/api/me/student").set(auth(token)).send(campusPayload({ school, campusKind })).expect(200);
     const admin = await loginAdmin(agent);
     await agent
       .post(`/api/admin/users/${userId}/verify`)
