@@ -60,7 +60,7 @@ npm run dev
 | 管理后台 | http://192.144.167.212/admin |
 | 导游端 | http://192.144.167.212/g |
 
-部署发生在 GitHub Actions 上，**不需要 iPhone 能 SSH**。**合并到 `main`**（或直接推 `main`）会自动上线；功能分支不会部署。也可在 Actions 里手动 Run workflow，或在能登录服务器的电脑上执行 `./scripts/deploy.sh`（同步到腾讯云、构建、PM2 进程名 `beiyexing`，目录 `/var/www/beiyexing`）。
+Pull Request 会跑 **Unit tests**（`npm run test:coverage`）。给 `main` 配上必过检查 `unit-tests` 后，没绿灯不能合入。合入 `main` 且 UT 通过后才会 **Deploy**。部署发生在 GitHub Actions 上，**不需要 iPhone 能 SSH**。功能分支不会部署。也可在 Actions 里手动 Run workflow，或在能登录服务器的电脑上执行 `./scripts/deploy.sh`（同步到腾讯云、构建、PM2 进程名 `beiyexing`，目录 `/var/www/beiyexing`）。
 
 第一次需要在仓库 **Settings → Secrets and variables → Actions** 配置 Secret `DEPLOY_SSH_KEY`（服务器 **`ubuntu`** 用户私钥全文）。不要配成 Deploy keys，也不要用 `root`。**只用手机也可以配完**，步骤见 [docs/DEPLOY.md](docs/DEPLOY.md)。**不要**在生产库执行 `npm run seed`（会清空业务数据）。部署脚本仅在目标机还没有数据库文件时才会 seed。
 

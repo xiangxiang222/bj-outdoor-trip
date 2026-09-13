@@ -71,6 +71,21 @@ describe("personal leader application", () => {
       .set(auth(token))
       .expect(200);
     assert.equal(applied.body.data.slot, 1);
+
+    const dup = await agent
+      .post(`/api/schedules/${seed.individualScheduleId}/leaders/apply`)
+      .set(auth(token));
+    assert.equal(dup.status, 400);
+    assert.match(dup.body.message, /已经是本团领队/);
+  });
+
+  it("exposes leader recruit copy and code after login", async () => {
+    const guest = await agent.get("/api/guides/recruit").expect(200);
+    assert.match(guest.body.data.copy || JSON.stringify(guest.body.data), /领队|带队|奖励/);
+    assert.equal(guest.body.data.reward > 0, true);
+    const token = await loginUser(agent);
+    const mine = await agent.get("/api/guides/recruit").set(auth(token)).expect(200);
+    assert.ok(mine.body.data.code);
   });
 
   it("keeps company role when a company account is approved as leader", async () => {

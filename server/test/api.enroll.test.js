@@ -546,4 +546,43 @@ describe("enroll pay member favorites", () => {
       .expect(400);
     assert.match(taken.body.message, /已有摄影师/);
   });
+
+  it("rejects photographer enroll on a city activity", async () => {
+    const token = await loginUser(agent);
+    const start = seed.db.prepare("SELECT date('now','+5 day') AS d").get().d;
+    const created = await agent
+      .post("/api/trips")
+      .send({
+        title: "周五夜掼蛋局",
+        city: "朝阳",
+        startDate: start,
+        meetupPoint: "三里屯",
+        meetupTime: "19:30",
+        channel: "activity",
+        minGroupSize: 4,
+        maxSeats: 10,
+      })
+      .set(auth(token))
+      .expect(200);
+    const admin = await loginAdmin(agent);
+    await agent
+      .post(`/api/admin/schedules/${created.body.data.id}/review`)
+      .set(auth(admin))
+      .send({ status: "approved" })
+      .expect(200);
+    const joined = await agent
+      .post("/api/enroll")
+      .set(auth(token))
+      .send({
+        scheduleId: created.body.data.id,
+        travelerName: "林北野",
+        travelerPhone: "13800138000",
+        joinMode: "photographer",
+      })
+      .expect(200);
+    assert.equal(joined.body.data.status, "joined");
+    const apply = await agent.post(`/api/schedules/${created.body.data.id}/photographers/apply`).set(auth(token));
+    assert.equal(apply.status, 400);
+    assert.match(apply.body.message, /同城局不设摄影师/);
+  });
 });

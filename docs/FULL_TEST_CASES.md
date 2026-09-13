@@ -6,7 +6,7 @@
 
 | 文件 | 作用 |
 | --- | --- |
-| [full-tests/AUTOMATED.md](./full-tests/AUTOMATED.md) | 仓库内全部 **325** 条 `it(` 名称（272 服务端 + 53 H5），`npm test` 一次跑完 |
+| [full-tests/AUTOMATED.md](./full-tests/AUTOMATED.md) | 仓库内全部 **345** 条 `it(` 名称（275 服务端 + 70 H5），`npm test` 一次跑完 |
 | [full-tests/screenshots/](./full-tests/screenshots/) | 本文手动走查按测试顺序截的图 |
 | [TESTING.md](./TESTING.md) | 怎么跑单测、覆盖率、e2e |
 | 发团专项（官方线路 + 用户发团） | 见 PR [#57](https://github.com/xiangxiang222/bj-outdoor-trip/pull/57) 的 `docs/PUBLISH_TEST_CASES.md`（合入 `main` 后以仓库文件为准） |
@@ -17,7 +17,7 @@
 
 本仓库的遍历方式：
 
-1. **自动化 325 条**：每条接口/领域规则各断言一次，这是全量遍历。
+1. **自动化 345 条**：每条接口/领域规则各断言一次，这是全量遍历。
 2. **交互规则表（§2）**：每一条「允许 / 禁止」的组合至少对应一条自动化用例，关键组合另有 UI 截图。
 3. **手动走查（§3）**：按真实使用顺序走三端，每一步一张图。每个模块、每种用户身份、每种团型至少出现一次。
 
@@ -506,11 +506,11 @@ npm test
 
 ---
 
-## 4. 自动化全表（325 条，一次跑完）
+## 4. 自动化全表（345 条，一次跑完）
 
 按文件的 `it(` 计数。逐条英文名称见 [full-tests/AUTOMATED.md](./full-tests/AUTOMATED.md)。
 
-### 4.1 服务端 HTTP / 领域（272）
+### 4.1 服务端 HTTP / 领域（275）
 
 | 文件 | 条数 | 模块 |
 | --- | ---: | --- |
@@ -520,11 +520,11 @@ npm test
 | `api.coupon.test.js` | 22 | 优惠券全组合 |
 | `api.dissolve.test.js` | 4 | 解散退款 |
 | `api.eligibility.test.js` | 11 | 高校 / 学院 / 校友 / 证件 |
-| `api.enroll.test.js` | 16 | 个人/公司/同城局/摄影师/满员 |
+| `api.enroll.test.js` | 17 | 个人/公司/同城局/摄影师/满员 |
 | `api.guide.test.js` | 1 | 导游登录签到 |
-| `api.home.test.js` | 6 | 首页、发团待审、同城局不进线路 |
+| `api.home.test.js` | 7 | 首页、发团待审、同城局不进线路、玩法标签改删 |
 | `api.insurance.test.js` | 1 | 保险加价 |
-| `api.leader.test.js` | 3 | 领队审批与公司角色 |
+| `api.leader.test.js` | 4 | 领队审批、招募文案、公司角色 |
 | `api.lottery.test.js` | 9 | 抽奖时机、指定中奖、库存 |
 | `api.notices.test.js` | 4 | 认证待办 |
 | `api.oversub.test.js` | 6 | 报超会抽 |
@@ -560,9 +560,9 @@ npm test
 | `weather.test.js` | 2 | 天气 |
 | `wechat.test.js` | 6 | 微信会话与支付 XML |
 
-### 4.2 H5 工具函数（53）
+### 4.2 H5 工具函数（70）
 
-`activityKind` 4、`auth` 3、`chinaAreas` 6、`couponTime` 3、`feedCard` 3、`feedList` 6、`media` 3、`pulse` 1、`routeMeta` 6、`scanFacts` 5、`share` 3、`story` 2、`trips` 4、`weatherChart` 2、`wechatPay` 2。
+`activityKind` 4、`auth` 3、`chinaAreas` 6、`couponTime` 3、`feedCard` 3、`feedList` 6、`idcard` 4、`labels` 4、`media` 3、`offer` 2、`pageChrome` 2、`phone` 2、`pulse` 1、`routeMeta` 6、`scanFacts` 5、`share` 3、`staff` 3、`story` 2、`trips` 4、`weatherChart` 2、`wechatPay` 2。
 
 `feedList` 覆盖首页公司 / 高校 / 个人筛选，与 M-34 对应。
 
@@ -603,7 +603,7 @@ npm test
 
 ## 7. 建议回归顺序（上线前）
 
-1. `npm test`（325 条，隔离临时库）。
+1. `npm test`（345 条，隔离临时库）。
 2. `npm run test:coverage`（行/语句/函数 80%，分支 65%）。
 3. 按本文 M-01 → M-71 点一遍三端（本地 `npm run dev`）。
 4. `npm run test:e2e` 或 `npm run test:e2e:live`（不要对生产 `--unsafe`）。

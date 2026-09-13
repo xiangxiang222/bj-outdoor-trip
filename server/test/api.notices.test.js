@@ -59,6 +59,8 @@ describe("admin review notices", () => {
   it("notifies group certification and rejects a user token", async () => {
     const token = await loginUser(agent);
     const admin = await loginAdmin(agent);
+    const blank = await agent.post("/api/me/group").set(auth(token)).send({ name: "" });
+    assert.equal(blank.status, 400);
     await agent.post("/api/me/group").set(auth(token)).send({ name: "北大山鹰社", kind: "社团" }).expect(200);
     const box = await agent.get("/api/admin/notices").set(auth(admin)).expect(200);
     assert.equal(box.body.data.list[0].kind, "group");
