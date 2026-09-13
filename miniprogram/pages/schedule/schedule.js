@@ -1,4 +1,5 @@
 const { request } = require("../../utils/request");
+const { invokeWechatPay, ensureWechatCode } = require("../../utils/pay");
 const { payStatusText, starText } = require("../../utils/labels");
 const { shareCover } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
@@ -316,8 +317,13 @@ Page({
       return;
     }
     try {
-      await request("/pay/for-enrollment", "POST", { enrollmentId: e.currentTarget.dataset.id });
-      wx.showToast({ title: "已支付（演示）", icon: "none" });
+      const code = await ensureWechatCode();
+      const res = await request("/pay/for-enrollment", "POST", {
+        enrollmentId: e.currentTarget.dataset.id,
+        code,
+      });
+      await invokeWechatPay(res.data);
+      wx.showToast({ title: res.data.needPay && res.data.wechatPay && !res.data.wechatPay.mock ? "支付成功" : "已支付", icon: "none" });
       this.load();
     } catch (err) {
       wx.showModal({ title: "支付失败", content: err.message, showCancel: false });

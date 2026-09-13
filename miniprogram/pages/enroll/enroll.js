@@ -1,5 +1,6 @@
 const { request } = require("../../utils/request");
 const { parseIdCard } = require("../../utils/idcard");
+const { invokeWechatPay } = require("../../utils/pay");
 const app = getApp();
 Page({
   data: {
@@ -183,11 +184,10 @@ Page({
           };
       const res = await request("/enroll", "POST", payload);
       if (res.data.needPay) {
-        const pay = res.data.wechatPay;
-        if (pay.mock) {
+        if (res.data.wechatPay && res.data.wechatPay.mock) {
           await request("/pay/mock-success", "POST", { tradeNo: res.data.tradeNo, enrollmentId: res.data.enrollmentId });
         } else {
-          await wx.requestPayment(pay);
+          await invokeWechatPay(res.data);
         }
       }
       wx.showToast({ title: res.data.waitlisted ? "已加入候补" : "报名成功" });

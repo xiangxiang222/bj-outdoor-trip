@@ -1,4 +1,5 @@
 const { request, setAuth, showError } = require("../../utils/request");
+const { buyMembership } = require("../../utils/pay");
 const app = getApp();
 Page({
   data: { user: null, coupon: null, leaderLabel: "领队申请" },
@@ -58,9 +59,9 @@ Page({
       return;
     }
     try {
-      const res = await request("/member/buy", "POST", {});
-      setAuth(app.globalData.token, res.data.user);
-      this.setData({ user: res.data.user });
+      const user = await buyMembership();
+      setAuth(app.globalData.token, user);
+      this.setData({ user });
       wx.navigateTo({ url: "/pages/member/member" });
     } catch (e) {
       showError("开通失败", e);

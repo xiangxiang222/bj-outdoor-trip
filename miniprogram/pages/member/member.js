@@ -1,4 +1,5 @@
 const { request, setAuth, showError } = require("../../utils/request");
+const { buyMembership } = require("../../utils/pay");
 Page({
   data: { user: null },
   onShow() {
@@ -19,9 +20,9 @@ Page({
   },
   async buy() {
     try {
-      const res = await request("/member/buy", "POST", {});
-      setAuth(getApp().globalData.token, res.data.user);
-      this.setData({ user: res.data.user });
+      const user = await buyMembership();
+      setAuth(getApp().globalData.token, user);
+      this.setData({ user });
       wx.showToast({ title: "开通成功", icon: "none" });
     } catch (e) {
       showError("开通失败", e);

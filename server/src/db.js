@@ -666,6 +666,8 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "lottery_draws", "assigned", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "lottery_draws", "level", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "lottery_draws", "claimed_at", "TEXT");
+  addColumnIfMissing(db, "payments", "scene", "TEXT");
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_trade_no ON payments(trade_no) WHERE trade_no IS NOT NULL AND trade_no != ''");
   addColumnIfMissing(db, "lottery_campaigns", "draw_mode", "TEXT DEFAULT 'both'");
   addColumnIfMissing(db, "coupon_campaigns", "valid_hours", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "coupon_campaigns", "idle_months", "INTEGER DEFAULT 0");

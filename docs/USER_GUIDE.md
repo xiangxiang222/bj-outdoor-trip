@@ -201,7 +201,7 @@
 
 | 能力 | H5 | 小程序 |
 | --- | --- | --- |
-| 微信登录 | 演示按钮 | `wx.login` code 换会话（演示 AppId 仍走 mock） |
+| 微信登录 | 演示按钮 | `wx.login` code 换会话；已配置 AppSecret 时走真实 jscode2session |
 | 图片验证码 | 接口返回 data URL，直接显示 | 把 base64 写到本机临时文件再 `image` 展示 |
 | 分享 | 二维码 + 复制链接 | 好友 / 群原生转发按钮 |
 | 报名支付 | 报名不付款；出行前再付（演示未接真支付） | 同上 |
@@ -212,4 +212,4 @@
 
 小程序默认请求线上 `http://192.144.167.212`。本地联调时把 `miniprogram/config.js` 里的 `USE_LOCAL_API` 改为 `true`（开发者工具走 `127.0.0.1:3780`，真机走局域网地址）。真机访问 HTTP IP 需关闭合法域名校验。
 
-正式上线：更换小程序 AppId，配置服务器域名，填写真实 `WX_APPID` / 商户号，并关闭 mock。
+正式上线：`miniprogram/project.config.json` 已是真实 AppId。服务器填写 `WX_APPSECRET` / `WX_MCH_KEY`，`WX_PAY_MOCK=0`，并配置 HTTPS 合法域名。

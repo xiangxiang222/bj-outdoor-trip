@@ -72,10 +72,10 @@
 | `JWT_SECRET` | 签发密钥 | 开发默认值，上线必须改 |
 | `MMC_DATA_DIR` / `MMC_DB_FILE` / `MMC_PUBLIC_DIR` / `MMC_WEB_DIST_DIR` | 数据、静态与前端 dist 目录（单测用临时目录） | `server/data`、`server/public`、`web/dist` |
 | `MMC_SKIP_WEB` | `1` 时不托管前端 dist | 未设置则 dist 存在即托管 |
-| `WX_APPID` / `WX_APPSECRET` / `WX_MCH_ID` / `WX_MCH_KEY` | 真实微信 | 演示 `wx_demo_appid` |
-| `WX_PAY_MOCK` | `0` 关闭 mock 支付 | 默认开启 mock |
+| `WX_APPID` / `WX_APPSECRET` / `WX_MCH_ID` / `WX_MCH_KEY` | 小程序与商户 | 默认 AppID `wx205ca387929c002a`、商户号 `17501360384`；Secret / APIv2 密钥只放服务器 `.env` |
+| `WX_PAY_MOCK` | `0` 关闭 mock，走 JSAPI | 默认开启 mock |
 | `WEATHER_LIVE` | `1` 强制 Open-Meteo；`0` 强制模拟 | 生产默认实时，本地默认 mock |
-| `WX_PAY_NOTIFY` | 支付回调 URL | `http://localhost:3780/api/pay/wechat/notify` |
+| `WX_PAY_NOTIFY` | 支付回调 URL | 默认 `http://192.144.167.212/api/pay/wechat/notify` |
 
 JWT 有效期：用户/导游 `jwtExpire=30d`，后台 `adminJwtExpire=7d`。
 
@@ -163,7 +163,7 @@ User 1──n Favorite / PointsLedger / Review
 ### 3.4 用户与会员
 
 - 角色：`user` / `company`（公司账号带 `company_name`） / `leader`（个人领队申请通过后写入；公司账号通过后仍为 `company`，靠 `leader_status=approved`）
-- 会员：年费 99 元，有效期 365 天，会员价 95 折，开通赠一次 100 元以内团。`POST /member/buy` 立即记成功支付并开通
+- 会员：年费 99 元，有效期 365 天，会员价 95 折，开通赠一次 100 元以内团。演示环境 `POST /member/buy` 立即记成功；真实支付等微信入账后再开通
 - 学生：`POST /me/student` 填学校全称 → `student_status=pending` → 后台 `POST /admin/users/:id/verify` `kind=student` 通过后 `is_student=1`。部分团 `studentOnly` 或 `schools` 名单（学校名包含匹配，含简称）。提交时写入 `admin_notices`，后台消息点开 `/admin/verify?kind=campus&userId=`
 - 团体：`POST /me/group` → 待审 → 后台审核，同样写入待办消息
 - 领队：`POST /me/leader` 填姓名、带队年限、经历 → `leader_status=pending` → 后台 `kind=leader` 通过后 `isLeader`。未通过时团详情「报名领队」提示去填写申请。消息点开 `/admin/verify?kind=leader&userId=`
@@ -178,7 +178,7 @@ User 1──n Favorite / PointsLedger / Review
 图片验证码 ──► GET /auth/captcha（token + image）
 手机号+密码+验证码 ──► /auth/login
 注册 ──► 昵称+手机+验证码+密码 ──► /auth/register
-微信 ──► wx.login code ──► /auth/wechat（演示用 mock openid）
+微信 ──► wx.login code ──► /auth/wechat（无 AppSecret 时 mock openid；已登录则绑定）
 短信登录 API 仍保留：/auth/sms ──► /auth/login-sms（UI 未接）
 注销 ──► DELETE /me ──► 旧 token 401「账号已注销」
 ```
@@ -213,12 +213,12 @@ User 1──n Favorite / PointsLedger / Review
         ──► 释放座位；paid → refunded
 
 解散拼团 ──► 全部有效报名 cancelled；paid → refunded + 退款支付单
-会员开通 ──► POST /member/buy 直接 success + grantMembership
+会员开通 ──► POST /member/buy（演示立即 success；真实支付返回 JSAPI，入账后 grantMembership）
 ```
 
-`/pay/mock-success` 仍可用于调试把报名改为已付，或 `scene=member` 开通会员；用户端开通会员不再走该步。
+`/pay/mock-success` 仍可用于调试把报名改为已付，或 `scene=member` 开通会员；真实支付开启后该接口 403。
 
-真实微信支付：配置商户号，设置 `WX_PAY_MOCK=0`，小程序改用 `wx.requestPayment` 真实签名。当前仓库未实现生产回调验签，上线需补 `/pay/wechat/notify`。
+真实微信支付：服务器 `.env` 配齐 AppSecret 与 APIv2 密钥，`WX_PAY_MOCK=0`。小程序 `wx.requestPayment` 后调 `POST /pay/confirm` 查单；微信也会 POST `/pay/wechat/notify`。H5 无法使用小程序 JSAPI，提示去小程序付款。原路退款尚未对接。
 
 ### 4.4 人口画像
 

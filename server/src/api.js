@@ -11,7 +11,7 @@ const config = require("./config");
 const { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide } = require("./middleware/auth");
 const { parseIdCard, maskIdCard, lifeStageFromPerson } = require("./services/idcard");
 const { buildDemographics, maskPhone } = require("./services/biz");
-const { code2session } = require("./services/wechat");
+const { code2session, payLive, clientIp } = require("./services/wechat");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, canCancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
 const { scheduleSeats, setLockedSeats, toggleLockedSeat, assignSeat, pickMySeat } = require("./services/seats");
@@ -30,7 +30,9 @@ const {
   randomTagColor,
 } = require("./services/home");
 const { offerMeta, liveMemberPrice, liveStudentPrice, flagOn } = require("./services/offer");
-const { publicUserProfile, payEnrollment, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
+const { publicUserProfile, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
+const { payEnrollment, buyMembership, confirmTrade, applyWechatSession } = require("./services/payment");
+const { grantMembership } = require("./services/member");
 const { addPhoto, removePhoto, ensureReferralCode, resolveLiveUser, adoptOrganizer } = require("./services/profile");
 const { leadersOf, applyLeader, settleLeaderRewards, recruitPayload } = require("./services/leaders");
 const { referralCard, groupQrPayload, settleEnrollReferrals } = require("./services/referral");
@@ -171,20 +173,12 @@ function userPublic(u, req) {
     leaderIntro: u.leader_intro || "",
     referralCode: ensureReferralCode(u.id),
     idCardMasked: maskIdCard(u.id_card),
+    wechatBound: Boolean(u.wechat_openid),
   };
 }
 
-function grantMembership(userId) {
-  const user = db().prepare("SELECT * FROM users WHERE id=?").get(userId);
-  const expire = dayjs(user.member_expire_at).isAfter(dayjs()) ? dayjs(user.member_expire_at) : dayjs();
-  const next = expire.add(config.member.durationDays, "day").format("YYYY-MM-DD");
-  db().prepare("UPDATE users SET is_member=1, member_expire_at=?, member_gift_left=COALESCE(member_gift_left,0)+? WHERE id=?").run(
-    next,
-    config.member.giftTrips || 1,
-    userId
-  );
-  addPoints(userId, config.member.annualFee, "开通会员赠送积分", "member", userId);
-  return db().prepare("SELECT * FROM users WHERE id=?").get(userId);
+function jsonError(res, e) {
+  res.status(e.status || 500).json({ ok: false, message: e.message, ...(e.extra || {}) });
 }
 
 function mapRoute(row, req, extra) {
@@ -414,6 +408,8 @@ router.get("/meta", (req, res) => {
       studentDiscountRate: config.student.discountRate,
       smsDemoCode: config.demoSmsCode,
       wechatPayMock: config.wechat.mock,
+      wechatPayLive: payLive(),
+      wechatAppId: config.wechat.appId,
       memberAnnualFee: config.member.annualFee,
       memberDiscountRate: config.member.discountRate,
       memberGiftMaxPrice: config.member.giftMaxPrice,
@@ -577,18 +573,28 @@ router.post("/auth/login-sms", (req, res) => {
   res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req) } });
 });
 
-router.post("/auth/wechat", async (req, res) => {
-  const { code, nickname, avatar } = req.body || {};
-  const sess = await code2session(code || `demo_${Date.now()}`);
-  if (sess.errcode) return res.status(400).json({ ok: false, message: sess.errmsg || "微信登录失败" });
-  let user = db().prepare("SELECT * FROM users WHERE wechat_openid=? AND deleted_at IS NULL").get(sess.openid);
-  if (!user) {
-    const info = db()
-      .prepare("INSERT INTO users (nickname,avatar,wechat_openid,wechat_unionid) VALUES (?,?,?,?)")
-      .run(nickname || "微信用户", avatar || "", sess.openid, sess.unionid || "");
-    user = db().prepare("SELECT * FROM users WHERE id=?").get(info.lastInsertRowid);
+router.post("/auth/wechat", optionalUser, async (req, res) => {
+  try {
+    const { code, nickname, avatar } = req.body || {};
+    const sess = await code2session(code || `demo_${Date.now()}`);
+    if (sess.errcode) return res.status(400).json({ ok: false, message: sess.errmsg || "微信登录失败" });
+    if (!sess.openid) return res.status(400).json({ ok: false, message: "微信登录失败" });
+    if (req.userId) {
+      applyWechatSession(req.userId, sess);
+      const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+      return res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req), bound: true } });
+    }
+    let user = db().prepare("SELECT * FROM users WHERE wechat_openid=? AND deleted_at IS NULL").get(sess.openid);
+    if (!user) {
+      const info = db()
+        .prepare("INSERT INTO users (nickname,avatar,wechat_openid,wechat_unionid) VALUES (?,?,?,?)")
+        .run(nickname || "微信用户", avatar || "", sess.openid, sess.unionid || "");
+      user = db().prepare("SELECT * FROM users WHERE id=?").get(info.lastInsertRowid);
+    }
+    res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req) } });
+  } catch (e) {
+    jsonError(res, e);
   }
-  res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req) } });
 });
 
 router.get("/me", authUser, (req, res) => {
@@ -1392,17 +1398,35 @@ router.post("/enroll", authUser, (req, res) => {
   }
 });
 
-router.post("/pay/for-enrollment", authUser, (req, res) => {
+router.post("/pay/for-enrollment", authUser, async (req, res) => {
   try {
-    const enrollmentId = Number((req.body || {}).enrollmentId);
-    const data = payEnrollment(enrollmentId, req.userId);
+    const body = req.body || {};
+    const enrollmentId = Number(body.enrollmentId);
+    const data = await payEnrollment(enrollmentId, req.userId, { code: body.code, clientIp: clientIp(req) });
     res.json({ ok: true, data });
   } catch (e) {
-    res.status(e.status || 500).json({ ok: false, message: e.message });
+    jsonError(res, e);
+  }
+});
+
+router.post("/pay/confirm", authUser, async (req, res) => {
+  try {
+    const tradeNo = String((req.body || {}).tradeNo || "");
+    const data = await confirmTrade(tradeNo);
+    res.json({
+      ok: true,
+      data: {
+        ...data,
+        user: userPublic(data.user, req),
+      },
+    });
+  } catch (e) {
+    jsonError(res, e);
   }
 });
 
 router.post("/pay/mock-success", authUser, (req, res) => {
+  if (payLive()) return res.status(403).json({ ok: false, message: "已接入真实支付，不能再模拟付款" });
   const { tradeNo, enrollmentId, scene } = req.body || {};
   if (scene === "member") {
     return res.json({ ok: true, data: userPublic(grantMembership(req.userId), req) });
@@ -1489,25 +1513,19 @@ router.get("/schedules/:id/demographics", optionalUser, (req, res) => {
   res.json({ ok: true, data: buildDemographics(list) });
 });
 
-router.post("/member/buy", authUser, (req, res) => {
-  const tradeNo = `M${dayjs().format("YYYYMMDDHHmmss")}${req.userId}`;
-  db().prepare("INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark) VALUES (0,?,0,?,?,?,?,?)").run(
-    req.userId,
-    config.member.annualFee,
-    "wechat",
-    "success",
-    tradeNo,
-    "会员年费"
-  );
-  const user = grantMembership(req.userId);
-  res.json({
-    ok: true,
-    data: {
-      tradeNo,
-      amount: config.member.annualFee,
-      user: userPublic(user, req),
-    },
-  });
+router.post("/member/buy", authUser, async (req, res) => {
+  try {
+    const data = await buyMembership(req.userId, { code: (req.body || {}).code, clientIp: clientIp(req) });
+    res.json({
+      ok: true,
+      data: {
+        ...data,
+        user: userPublic(data.user, req),
+      },
+    });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 router.get("/points", authUser, (req, res) => {

@@ -13,11 +13,11 @@ module.exports = {
   webDistDir: process.env.MMC_WEB_DIST_DIR || path.join(rootDir, "..", "web", "dist"),
   demoSmsCode: "888888",
   wechat: {
-    appId: process.env.WX_APPID || "wx_demo_appid",
+    appId: process.env.WX_APPID || "wx205ca387929c002a",
     appSecret: process.env.WX_APPSECRET || "wx_demo_secret",
-    mchId: process.env.WX_MCH_ID || "",
+    mchId: process.env.WX_MCH_ID || "17501360384",
     mchKey: process.env.WX_MCH_KEY || "",
-    notifyUrl: process.env.WX_PAY_NOTIFY || "http://localhost:3780/api/pay/wechat/notify",
+    notifyUrl: process.env.WX_PAY_NOTIFY || "http://192.144.167.212/api/pay/wechat/notify",
     mock: process.env.WX_PAY_MOCK !== "0",
   },
   points: {
