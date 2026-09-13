@@ -13,12 +13,21 @@ const { parseIdCard, maskIdCard, lifeStageFromPerson } = require("./services/idc
 const { buildDemographics, maskPhone } = require("./services/biz");
 const { code2session, payLive, clientIp } = require("./services/wechat");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
-const { enrollUser, cancelEnrollment, canCancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
+const { enrollUser, cancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
 const { scheduleSeats, setLockedSeats, toggleLockedSeat, assignSeat, pickMySeat } = require("./services/seats");
 const { forecast } = require("./services/weather");
 const { listSplits, createSplitsForSchedule } = require("./services/split");
 const { listReviews, createReview, reviewedScheduleIds, createVirtualReviews } = require("./services/reviews");
-const { cancelPolicy, waiverText, faqs, meetupMap, contacts, officialAccounts, commonRules, leaderRecruitCopy } = require("./services/policy");
+const { waiverText, faqs, meetupMap, contacts, officialAccounts, commonRules, leaderRecruitCopy } = require("./services/policy");
+const {
+  refundPolicyView,
+  withRefundCommonRules,
+  applyRouteRefundRules,
+  saveGlobalRefundRules,
+  DEFAULT_TIERS,
+  cloneTiers,
+  cancelQuote,
+} = require("./services/refund");
 const {
   buildHome,
   cityOf,
@@ -203,6 +212,7 @@ function mapRoute(row, req, extra) {
     ...it,
     photo: it.photo ? attachAssetHost(req, resolveStoredMedia(it.photo, { code: r.code })) || "" : "",
   }));
+  r.refundPolicy = refundPolicyView(row);
   return r;
 }
 
@@ -353,6 +363,7 @@ function scheduleView(sch, req) {
     combo: comboView(sch, viewer),
     eligibility: eligibilityView(sch, viewer),
     oversub: oversubView(sch),
+    refundPolicy: refundPolicyView(route, sch),
     ...lotteryPublic(sch.id),
   };
 }
@@ -400,6 +411,7 @@ function applyScheduleExtras(id, body, route) {
 }
 
 router.get("/meta", (req, res) => {
+  const refundPolicy = refundPolicyView();
   res.json({
     ok: true,
     data: {
@@ -418,12 +430,18 @@ router.get("/meta", (req, res) => {
       insurance: config.insurance.plans,
       supplies: config.supplies.items,
       days: [1, 2, 3, 5],
-      cancelPolicy,
+      cancelPolicy: {
+        title: refundPolicy.title,
+        summary: refundPolicy.summary,
+        items: refundPolicy.items,
+        lines: refundPolicy.lines,
+      },
+      refundPolicy,
       waiverText,
       faqs,
       contacts,
       officialAccounts,
-      commonRules,
+      commonRules: withRefundCommonRules(commonRules, refundPolicy),
       leaderRecruitCopy,
       referralRate: config.referral.enrollRate,
       leaderReward: config.referral.leaderReward,
@@ -1481,21 +1499,35 @@ router.get("/orders", authUser, (req, res) => {
   const rows = db()
     .prepare(
       `SELECT e.*, s.start_date, s.end_date, s.organizer_type, s.status AS schedule_status, s.route_id,
-              s.meetup_point, s.meetup_time, s.city, IFNULL(s.channel,'trip') AS channel, r.title, r.cover, r.days
+              s.meetup_point, s.meetup_time, s.city, s.started_at, IFNULL(s.channel,'trip') AS channel,
+              r.title, r.cover, r.days, r.refund_rules_json
        FROM enrollments e JOIN schedules s ON s.id=e.schedule_id JOIN routes r ON r.id=s.route_id
        WHERE e.user_id=? ORDER BY e.id DESC`
     )
     .all(req.userId)
-    .map((e) => ({
-      ...e,
-      cover: attachAssetHost(req, e.cover),
-      idCard: maskIdCard(e.id_card),
-      canCancel: canCancelEnrollment(e, e.schedule_status, e.start_date),
-      reviewed: reviewed.has(e.schedule_id),
-      canReview: e.status === "joined" && !reviewed.has(e.schedule_id),
-      completed: !!e.completed_at,
-      canComplete: e.status === "joined" && !e.completed_at && !dayjs(e.start_date).isAfter(dayjs(), "day"),
-    }));
+    .map((e) => {
+      const quote = cancelQuote(e, {
+        status: e.schedule_status,
+        startDate: e.start_date,
+        startedAt: e.started_at,
+        channel: e.channel,
+        refundRulesJson: e.refund_rules_json,
+      });
+      const { refund_rules_json, ...rest } = e;
+      return {
+        ...rest,
+        cover: attachAssetHost(req, e.cover),
+        idCard: maskIdCard(e.id_card),
+        canCancel: quote.canCancel,
+        refundPercent: quote.percent,
+        refundHint: quote.hint,
+        refundAmount: quote.amount || 0,
+        reviewed: reviewed.has(e.schedule_id),
+        canReview: e.status === "joined" && !reviewed.has(e.schedule_id),
+        completed: !!e.completed_at,
+        canComplete: e.status === "joined" && !e.completed_at && !dayjs(e.start_date).isAfter(dayjs(), "day"),
+      };
+    });
   res.json({ ok: true, data: rows });
 });
 
@@ -1905,6 +1937,34 @@ router.put("/admin/play-tags/:id", authAdmin, requireCap("ops"), (req, res) => {
   res.json({ ok: true, data: mapPlayTag(db().prepare("SELECT * FROM play_tags WHERE id=?").get(row.id), req) });
 });
 
+router.get("/admin/refund-rules", authAdmin, requireCap("ops"), (req, res) => {
+  const policy = refundPolicyView();
+  res.json({
+    ok: true,
+    data: {
+      ...policy,
+      defaults: cloneTiers(DEFAULT_TIERS),
+    },
+  });
+});
+
+router.put("/admin/refund-rules", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    const b = req.body || {};
+    saveGlobalRefundRules(b.reset ? DEFAULT_TIERS : b.tiers);
+    const policy = refundPolicyView();
+    res.json({
+      ok: true,
+      data: {
+        ...policy,
+        defaults: cloneTiers(DEFAULT_TIERS),
+      },
+    });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
 router.delete("/admin/play-tags/:id", authAdmin, requireCap("ops"), (req, res) => {
   db().prepare("UPDATE play_tags SET status='off' WHERE id=?").run(req.params.id);
   res.json({ ok: true });
@@ -1976,6 +2036,11 @@ router.post("/admin/routes", authAdmin, requireCap("ops"), (req, res) => {
     db().prepare("INSERT INTO route_price_tiers (route_id,min_people,max_people,price,member_price) VALUES (?,?,?,?,?)").run(id, t.minPeople, t.maxPeople || null, t.price, t.memberPrice || t.price);
   });
   (b.buses || []).forEach((busId) => db().prepare("INSERT INTO route_buses (route_id,bus_type_id) VALUES (?,?)").run(id, busId));
+  try {
+    applyRouteRefundRules(id, b, { updating: false });
+  } catch (e) {
+    return jsonError(res, e);
+  }
   res.json({ ok: true, data: { id } });
 });
 
@@ -2019,6 +2084,11 @@ router.put("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
   if (b.buses) {
     db().prepare("DELETE FROM route_buses WHERE route_id=?").run(id);
     b.buses.forEach((busId) => db().prepare("INSERT INTO route_buses (route_id,bus_type_id) VALUES (?,?)").run(id, busId));
+  }
+  try {
+    applyRouteRefundRules(id, b, { updating: true });
+  } catch (e) {
+    return jsonError(res, e);
   }
   res.json({ ok: true });
 });

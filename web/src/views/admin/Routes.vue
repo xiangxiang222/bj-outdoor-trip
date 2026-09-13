@@ -245,6 +245,11 @@
         <el-form-item label="费用不含"><el-input type="textarea" :rows="2" v-model="form.feeExclude" placeholder="门票、餐食等" /></el-form-item>
         <el-form-item label="装备"><el-input type="textarea" :rows="2" v-model="form.equipment" placeholder="运动鞋、防晒帽。用户端会按顿号拆成装备清单" /></el-form-item>
         <el-form-item label="注意事项"><el-input type="textarea" :rows="2" v-model="form.notices" placeholder="台阶陡、带身份证等" /></el-form-item>
+        <el-form-item label="退费规则">
+          <el-switch v-model="form.refundUseGlobal" active-text="使用全局规则" inactive-text="本线路单独设置" />
+          <p class="muted" style="margin:6px 0 8px">{{ form.refundUseGlobal ? (globalRefund.summary || "所有线路默认：10 天前 100%，3 天前 80%，不足 3 天 50%，开团后不退。") : "仅这条线路使用下面的比例。" }}</p>
+          <RefundRulesEditor v-model="form.refundTiers" :disabled="form.refundUseGlobal" />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="show=false">取消</el-button>
@@ -292,6 +297,7 @@ import {
 } from "@/utils/routeMeta";
 import { chinaAreaOptions, findRegionPath, formatRegion } from "@/utils/chinaAreas";
 import { composeStory } from "@/utils/story";
+import RefundRulesEditor from "@/components/RefundRulesEditor.vue";
 
 let blockSeed = 1;
 function nextKey() {
@@ -303,6 +309,7 @@ const list = ref([]);
 const buses = ref([]);
 const show = ref(false);
 const form = ref({});
+const globalRefund = ref({ tiers: [], summary: "" });
 const showReview = ref(false);
 const savingReview = ref(false);
 const reviewRow = ref(null);
@@ -331,8 +338,24 @@ function onRegionPick(path) {
   form.value.region = formatRegion(path);
 }
 
+const FALLBACK_TIERS = [
+  { minDays: 10, percent: 100 },
+  { minDays: 3, percent: 80 },
+  { minDays: 0, percent: 50 },
+];
+
+function cloneTiers(list) {
+  const src = list && list.length ? list : FALLBACK_TIERS;
+  return src.map((t) => ({ minDays: t.minDays, percent: t.percent }));
+}
+
 async function load() {
   list.value = (await http.get("/admin/routes")).data;
+  try {
+    globalRefund.value = (await http.get("/admin/refund-rules")).data || { tiers: [], summary: "" };
+  } catch {
+    globalRefund.value = { tiers: [], summary: "" };
+  }
 }
 async function loadBuses() {
   buses.value = (await http.get("/buses")).data || [];
@@ -369,6 +392,8 @@ function blankForm() {
     feeExclude: "",
     equipment: "",
     notices: "",
+    refundUseGlobal: true,
+    refundTiers: cloneTiers(globalRefund.value.tiers),
   };
 }
 
@@ -393,6 +418,8 @@ function edit(row) {
     buses: [...(row.buses || [])],
     priceTiers: normalizePriceTiers(row.priceTiers).length ? normalizePriceTiers(row.priceTiers) : defaultPriceTiers(),
     status: row.status || "on",
+    refundUseGlobal: row.refundPolicy ? row.refundPolicy.useGlobal !== false : true,
+    refundTiers: cloneTiers((row.refundPolicy && row.refundPolicy.tiers) || globalRefund.value.tiers),
   };
   composeMode.value = "manual";
   draftNotes.value = "";
@@ -605,6 +632,8 @@ async function save() {
       priceTiers,
       meetupPoints: serializeMeetupPoints(form.value.meetupPoints),
       buses: form.value.buses || [],
+      refundUseGlobal: !!form.value.refundUseGlobal,
+      refundTiers: form.value.refundTiers || [],
     };
     if (form.value.id) await http.put("/admin/routes/" + form.value.id, payload);
     else await http.post("/admin/routes", payload);

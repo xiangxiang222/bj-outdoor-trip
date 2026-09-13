@@ -98,9 +98,10 @@ Page({
   cancel(e) {
     const id = e.currentTarget.dataset.id;
     if (!id) return;
+    const item = [].concat(this.data.upcoming, this.data.waitlist, this.data.past).find((row) => String(row.id) === String(id));
     wx.showModal({
       title: "取消报名",
-      content: "确定取消报名？名额将释放给其他人。已付款的会标记退款。",
+      content: item && item.refundHint ? "确定取消报名？" + item.refundHint + "。名额将释放给其他人。" : "确定取消报名？名额将释放给其他人。已付款的会按退费规则标记退款。",
       confirmColor: "#bc4749",
       success: async (res) => {
         if (!res.confirm) return;

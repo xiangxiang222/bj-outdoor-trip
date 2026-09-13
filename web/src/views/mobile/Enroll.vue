@@ -262,7 +262,7 @@ onMounted(async () => {
       /* plans computed from store; keep meta texts */
     }
     waiver.value = meta.waiverText || waiver.value;
-    cancelSummary.value = meta.cancelPolicy?.summary || cancelSummary.value;
+    cancelSummary.value = s.value?.refundPolicy?.summary || meta.cancelPolicy?.summary || cancelSummary.value;
   } catch {
     /* use defaults */
   }

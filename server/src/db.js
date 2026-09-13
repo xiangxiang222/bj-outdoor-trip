@@ -100,6 +100,7 @@ function createSchema(db) {
       equipment TEXT,
       notices TEXT,
       meetup_json TEXT,
+      refund_rules_json TEXT,
       status TEXT DEFAULT 'on',
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
@@ -621,6 +622,7 @@ function migrateSchema(db) {
   `);
   addColumnIfMissing(db, "routes", "story_json", "TEXT");
   addColumnIfMissing(db, "routes", "videos_json", "TEXT");
+  addColumnIfMissing(db, "routes", "refund_rules_json", "TEXT");
   db.exec(`
     CREATE TABLE IF NOT EXISTS lottery_campaigns (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

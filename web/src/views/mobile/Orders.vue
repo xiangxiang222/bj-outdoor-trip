@@ -202,7 +202,7 @@ async function submitReview(o) {
   }
 }
 async function cancel(o) {
-  if (!window.confirm("确定取消报名？名额将释放给其他人。已付款的会标记退款。")) return;
+  if (!window.confirm(o.refundHint ? `确定取消报名？${o.refundHint}。名额将释放给其他人。` : "确定取消报名？名额将释放给其他人。已付款的会按退费规则标记退款。")) return;
   cancelling.value = o.id;
   msg.value = "";
   try {

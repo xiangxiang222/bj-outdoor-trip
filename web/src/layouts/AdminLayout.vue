@@ -72,6 +72,7 @@
         <nav v-if="can('ops') || can('staff')" class="admin-nav-group">
           <div class="admin-nav-label">设置</div>
           <router-link v-if="can('ops')" to="/admin/tags">玩法标签</router-link>
+          <router-link v-if="can('ops')" to="/admin/refund">退费规则</router-link>
           <router-link v-if="can('staff')" to="/admin/staff">管理员</router-link>
         </nav>
       </aside>

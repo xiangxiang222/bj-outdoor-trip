@@ -46,6 +46,11 @@
     <text>¥{{item.price}} / 会员¥{{item.memberPrice}}</text>
   </view>
 </view>
+<view class="pad" wx:if="{{r.refundPolicy && r.refundPolicy.lines && r.refundPolicy.lines.length}}">
+  <view class="title">退费规则</view>
+  <view class="muted">{{r.refundPolicy.summary}}</view>
+  <view class="muted" wx:for="{{r.refundPolicy.lines}}" wx:key="text">{{item.text}}</view>
+</view>
 <view class="pad"><view class="title">排期</view>
   <view wx:if="{{!r.schedules || !r.schedules.length}}" class="muted">暂无排期，发布后会显示在这里。</view>
   <view class="card" wx:for="{{r.schedules}}" wx:key="id" bindtap="goSch" data-id="{{item.id}}">

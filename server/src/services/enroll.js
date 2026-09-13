@@ -20,6 +20,7 @@ const { assertComboEnroll, parseComboWant } = require("./combo");
 const { assertEnrollLimit } = require("./eligibility");
 const { resolveSupplies } = require("./supplies");
 const { isOversubPending } = require("./oversub");
+const { cancelQuote, refundAmount } = require("./refund");
 
 function fail(status, message, extra) {
   const err = new Error(message);
@@ -375,29 +376,50 @@ function cancelEnrollment(enrollmentId, userId, options = {}) {
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(en.schedule_id);
   if (!sch) fail(400, "排期不存在");
   if (sch.status === "cancelled" && !options.force) fail(400, "拼团已解散，报名已取消");
-  if (!options.force && !options.admin && !dayjs(sch.start_date).isAfter(dayjs(), "day")) {
-    fail(400, "出发当天及之后不可取消报名");
+
+  const route = db.prepare("SELECT * FROM routes WHERE id=?").get(sch.route_id);
+  const paid = en.pay_status === "paid" && Number(en.pay_amount || 0) > 0;
+  let refundPercent = 100;
+  let refundedAmount = 0;
+  if (!options.force && !options.admin) {
+    const quote = cancelQuote(en, {
+      status: sch.status,
+      startDate: sch.start_date,
+      startedAt: sch.started_at,
+      channel: sch.channel || "trip",
+      route,
+    });
+    if (!quote.canCancel) fail(400, quote.hint || "当前不可取消报名");
+    refundPercent = quote.percent;
+    refundedAmount = paid ? refundAmount(en.pay_amount, refundPercent) : 0;
+    if (paid && refundPercent <= 0) fail(400, "当前时段不退费，无法取消报名");
+  } else if (paid) {
+    refundedAmount = Number(en.pay_amount) || 0;
   }
 
-  const paid = en.pay_status === "paid" && Number(en.pay_amount || 0) > 0;
   const nextPay = paid ? "refunded" : en.pay_status;
   const wasJoined = en.status === "joined";
+  const remark = options.admin
+    ? "后台取消报名退款"
+    : refundPercent === 100
+      ? "用户取消报名退款"
+      : `用户取消报名退款 ${refundPercent}%`;
 
   const run = db.transaction(() => {
     db.prepare("UPDATE enrollments SET status='cancelled', pay_status=? WHERE id=?").run(nextPay, en.id);
     releaseCouponByEnrollment(en.id);
-    if (paid) {
+    if (paid && refundedAmount > 0) {
       db.prepare(
         `INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark) VALUES (?,?,?,?,?,?,?,?)`
       ).run(
         en.id,
         en.user_id,
         sch.id,
-        en.pay_amount,
+        refundedAmount,
         en.pay_channel || "wechat",
         "refunded",
         `C${Date.now()}${en.id}`,
-        options.admin ? "后台取消报名退款" : "用户取消报名退款"
+        remark
       );
       if (en.points_used) addPoints(en.user_id, en.points_used, "取消报名退还积分", "enrollment", en.id);
     }
@@ -416,17 +438,18 @@ function cancelEnrollment(enrollmentId, userId, options = {}) {
     status: "cancelled",
     payStatus: nextPay,
     refunded: paid,
-    refundAmount: paid ? Number(en.pay_amount) : 0,
+    refundAmount: refundedAmount,
+    refundPercent,
     promoted: promoted ? { enrollmentId: promoted.enrollmentId } : null,
   };
 }
 
 function canCancelEnrollment(en, scheduleStatus, startDate) {
-  return (
-    en.status !== "cancelled" &&
-    scheduleStatus !== "cancelled" &&
-    dayjs(startDate).isAfter(dayjs(), "day")
-  );
+  const sch =
+    scheduleStatus && typeof scheduleStatus === "object"
+      ? scheduleStatus
+      : { status: scheduleStatus, startDate, startedAt: "", channel: "trip" };
+  return cancelQuote(en, sch).canCancel;
 }
 
 module.exports = {

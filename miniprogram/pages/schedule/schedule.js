@@ -36,6 +36,7 @@ Page({
     reviews: { list: [], count: 0, avg: 0 },
     packing: [],
     cancelSummary: "",
+    refundHint: "",
     contacts: { officialWechat: "同行者众", officialWechatName: "同行者众官方", officialGroup: "同行者众户外交流群" },
     gallery: [],
     busPhotos: [],
@@ -105,6 +106,9 @@ Page({
           label: "领队" + slot,
           leader: ((s.leaders || []).find((l) => Number(l.slot) === slot)) || null,
         })),
+        cancelSummary: (s.refundPolicy && s.refundPolicy.summary) || this.data.cancelSummary,
+        cancelItems: (s.refundPolicy && s.refundPolicy.items) || this.data.cancelItems,
+        refundHint: (s.refundPolicy && s.refundPolicy.current && s.refundPolicy.current.hint) || "",
       });
       wx.setNavigationBarTitle({ title: isActivity ? "局详情" : "行程详情" });
       this.loadRoute(s.routeId || (s.route && s.route.id));
@@ -139,14 +143,17 @@ Page({
     }).catch(() => {});
     request("/meta").then((r) => {
       const data = (r && r.data) || {};
-      this.setData({
-        cancelSummary: (data.cancelPolicy && data.cancelPolicy.summary) || "",
-        cancelItems: (data.cancelPolicy && data.cancelPolicy.items) || [],
+      const patch = {
         commonRules: data.commonRules || { title: "", summary: "", sections: [] },
         waiverText: data.waiverText || "",
         faqs: data.faqs || [],
         contacts: data.contacts || this.data.contacts,
-      });
+      };
+      if (!(this.data.s && this.data.s.refundPolicy)) {
+        patch.cancelSummary = (data.cancelPolicy && data.cancelPolicy.summary) || "";
+        patch.cancelItems = (data.cancelPolicy && data.cancelPolicy.items) || [];
+      }
+      this.setData(patch);
     }).catch(() => {});
   },
   loadRoute(routeId) {

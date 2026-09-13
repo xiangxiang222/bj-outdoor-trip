@@ -207,12 +207,12 @@ describe("enroll pay member favorites", () => {
       .run(seed.individualScheduleId);
     const res = await agent.post(`/api/orders/${enrolled.body.data.enrollmentId}/cancel`).set(auth(token));
     assert.equal(res.status, 400);
-    assert.match(res.body.message, /不可取消|已开始/);
+    assert.match(res.body.message, /不可取消|已开始|已过出发日/);
     seed.db
-      .prepare("UPDATE schedules SET start_date=date('now') WHERE id=?")
+      .prepare("UPDATE schedules SET start_date=date('now'), started_at=datetime('now','localtime') WHERE id=?")
       .run(seed.individualScheduleId);
-    const sameDay = await agent.post(`/api/orders/${enrolled.body.data.enrollmentId}/cancel`).set(auth(token));
-    assert.equal(sameDay.status, 400);
+    const sameDayStarted = await agent.post(`/api/orders/${enrolled.body.data.enrollmentId}/cancel`).set(auth(token));
+    assert.equal(sameDayStarted.status, 400);
   });
 
   it("company enroll stays pending until organizer settles", async () => {

@@ -33,7 +33,7 @@ bj-outdoor-trip/
     src/views/admin         Element Plus 后台（/admin）
     src/views/guide         导游工作台（/g）
     src/layouts             MobileLayout / AdminLayout / GuideLayout
-    src/components          TripPrices、WeatherChart、LivePulse
+    src/components          TripPrices、WeatherChart、LivePulse、RefundRulesEditor
     src/styles/app.css      色板与顶栏
     public/brand            logo.jpg（原标识）与 mark.png（顶栏裁切）
     src/utils/*.test.js     Vitest
@@ -70,6 +70,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `waitlist` 逻辑在 `enroll.js` `promoteWaitlist` | 满员候补、取消后递补 |
 | `idcard.js` | 18 位校验、性别/生日/籍贯 |
 | `policy.js` | 退改文案、风险告知、FAQ、官方账号 |
+| `refund.js` | 全局/线路退费档位、距出发日匹配比例、取消退款金额 |
 | `weather.js` | Open-Meteo 或 mock |
 | `leaders.js` / `referral.js` | 双领队、推荐码 5%、领队奖 200 |
 | `lottery.js` / `lottery-admin.js` / `aftertrip.js` / `contest.js` / `trip-run.js` | 抽奖圆盘、本团奖池与指定中奖、完成活动、评选、正式开团与多轮签到 |
@@ -132,7 +133,7 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 
 ## 6. 后台与导游端
 
-后台 `/admin`：看板、线路、拼团与成本、报名、优惠券、抽奖、用户与会员、认证审批、玩法标签、管理员。壳子按电商商家后台：红顶栏、深色侧栏、灰底白卡片。登录页与顶栏用原来的 `logo.jpg`。有运营权限时顶栏有「消息」，点开跳到 `/admin/verify?kind=campus|group|leader&userId=`。发线路表单在 `web/src/views/admin/Routes.vue`，地区级联数据在 `web/src/utils/chinaAreas.js`。抽奖页 `web/src/views/admin/Lottery.vue`。
+后台 `/admin`：看板、线路、拼团与成本、报名、优惠券、抽奖、用户与会员、认证审批、玩法标签、退费规则、管理员。壳子按电商商家后台：红顶栏、深色侧栏、灰底白卡片。登录页与顶栏用原来的 `logo.jpg`。有运营权限时顶栏有「消息」，点开跳到 `/admin/verify?kind=campus|group|leader&userId=`。发线路表单在 `web/src/views/admin/Routes.vue`，地区级联数据在 `web/src/utils/chinaAreas.js`。抽奖页 `web/src/views/admin/Lottery.vue`。退费规则页 `web/src/views/admin/Refund.vue`。
 
 导游 `/g`：图片验证码登录 → 行程列表 → 正式开团 / 多轮签到确认 / 游客详情 / 锁座调座 / 车牌。演示号 `13700001101`。
 
