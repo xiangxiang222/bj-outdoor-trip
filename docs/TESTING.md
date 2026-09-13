@@ -2,7 +2,7 @@
 
 本文说明测试分层、环境隔离、命令、覆盖率门槛，以及如何为新接口补用例。单元测试**不会**写入开发用的 `server/data/app.sqlite`，也**不会**下载 30 条线路的实景照片。
 
-当前用例数（`it(` 计数，对照 2026-09-13 代码）：**236** 条服务端 + **47** 条 H5。
+当前用例数（`it(` 计数，对照 2026-09-13 代码）：**237** 条服务端 + **50** 条 H5。
 
 ## 1. 依赖
 
@@ -15,7 +15,7 @@ npm install --prefix web
 ```
 
 服务端测试依赖：Node 内置 `node:test` / `node:assert/strict`、`supertest`、覆盖率 `c8`。  
-用户端测试依赖：`vitest`，覆盖 `web/src/utils/` 下的登录跳转、行程拆分、同城局分类、轮播地址、天气图。
+用户端测试依赖：`vitest`，覆盖 `web/src/utils/` 下的登录跳转、行程拆分、同城局分类、轮播地址、天气图、H5 分享。
 
 ## 2. 一条命令跑全部
 
@@ -72,6 +72,7 @@ cd web
 npx vitest run src/utils/auth.test.js
 npx vitest run src/utils/trips.test.js
 npx vitest run src/utils/activityKind.test.js
+npx vitest run src/utils/share.test.js
 ```
 
 ## 4. 测试在覆盖什么
@@ -117,7 +118,7 @@ npx vitest run src/utils/activityKind.test.js
 | `api.seats.test.js` | 选座、锁座 |
 | `api.insurance.test.js` | 保险加购 |
 | `api.supplies.test.js` | 补给加购 |
-| `api.eligibility.test.js` | 仅学生 / 高校名单 |
+| `api.eligibility.test.js` | 仅学生 / 高校名单 / 高校免费团仍检查学校限制 |
 | `api.combo.test.js` | 组合团 |
 | `api.trip.test.js` | 用户发团与审核 |
 | `api.oversub.test.js` | 报超会抽：未超座位全员确认、超员抽签、重复确认 400、校友资格、中签取消后按抽签顺序递补、志愿者不进抽签池、高校免费团默认抽签 |

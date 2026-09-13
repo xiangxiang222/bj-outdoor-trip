@@ -343,14 +343,18 @@
       <p v-if="msg" class="muted">{{ msg }}</p>
     </div>
 
-    <div v-if="showShare" class="card" style="margin:12px 14px 0">
-      <div class="pad" style="text-align:center">
-        <p style="margin-top:0">发给微信好友或群，扫码即可打开本团报名页</p>
-        <img v-if="shareQr" :src="shareQr" alt="报名二维码" style="width:180px;height:180px;background:#fff;border-radius:12px" />
-        <p class="muted" style="word-break:break-all">{{ shareUrl }}</p>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="btn ghost" style="flex:1" @click="showShare = false">关闭</button>
-          <button class="btn" style="flex:1" @click="copyShare">复制链接</button>
+    <div v-if="showShare" class="lightbox share-sheet" @click.self="closeShare">
+      <div class="share-card" @click.stop>
+        <p class="share-title">发给微信好友或群</p>
+        <p class="muted">扫码即可打开本团报名页</p>
+        <img v-if="shareQr" class="share-qr" :src="shareQr" alt="报名二维码" />
+        <p v-else class="muted">正在生成二维码…</p>
+        <p class="muted share-url">{{ shareUrl }}</p>
+        <p v-if="shareHint" class="share-hint">{{ shareHint }}</p>
+        <div class="share-actions">
+          <button class="btn ghost" type="button" @click="closeShare">关闭</button>
+          <button v-if="nativeShareOk" class="btn ghost" type="button" @click="nativeShare">系统分享</button>
+          <button class="btn" type="button" @click="copyShare">复制链接</button>
         </div>
       </div>
     </div>
@@ -386,6 +390,7 @@ import { useUserStore } from "@/stores/user";
 import { payStatusText, scheduleStatusText, starText } from "@/utils/labels";
 import { formatActivityDate, activityKindOf } from "@/utils/activityKind";
 import { canShowEnroll, dockPrice, enrollCta, peopleLine, ticketState, trustChips } from "@/utils/scanFacts";
+import { nativeShareSupported, scheduleShareText, scheduleShareUrl } from "@/utils/share";
 import { setChrome } from "@/utils/pageChrome";
 import WeatherChart from "@/components/WeatherChart.vue";
 import TripPrices from "@/components/TripPrices.vue";
@@ -440,6 +445,8 @@ const showBus = ref(false);
 const shareUrl = ref("");
 const shareQr = ref("");
 const shareText = ref("");
+const shareHint = ref("");
+const nativeShareOk = computed(() => nativeShareSupported(typeof navigator === "undefined" ? {} : navigator));
 const reason = ref("");
 const dissolveErr = ref("");
 const dissolving = ref(false);
@@ -785,35 +792,54 @@ async function copyText(text) {
   }
 }
 
+function closeShare() {
+  showShare.value = false;
+  shareHint.value = "";
+}
+
 async function share() {
-  const url = location.origin + "/m/schedule/" + s.value.id + "?token=" + (s.value.shareToken || "");
+  const url = scheduleShareUrl(location.origin, s.value.id, s.value.shareToken);
   shareUrl.value = url;
-  shareText.value = `${s.value.organizerName}邀请你参加「${s.value.route.title}」${s.value.startDate}出发，已有${s.value.enrolled}人报名：${url}`;
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: "同行者众 · " + s.value.route.title, text: shareText.value, url });
-      return;
-    } catch (e) {
-      if (e && e.name === "AbortError") return;
-    }
-  }
+  shareText.value = scheduleShareText({
+    organizerName: s.value.organizerName,
+    title: s.value.route.title,
+    startDate: s.value.startDate,
+    enrolled: s.value.enrolled,
+    url,
+  });
   shareQr.value = "";
+  shareHint.value = "";
   showShare.value = true;
   try {
     const res = await http.get(`/schedules/${s.value.id}/poster`);
     shareQr.value = res.data.qr;
-    if (res.data.url) shareUrl.value = res.data.url;
   } catch {
     /* 二维码失败时仍可复制链接 */
+  }
+}
+
+async function nativeShare() {
+  if (!nativeShareOk.value) return;
+  try {
+    await navigator.share({
+      title: "同行者众 · " + s.value.route.title,
+      text: shareText.value,
+      url: shareUrl.value,
+    });
+  } catch (e) {
+    if (e && e.name === "AbortError") return;
+    await copyShare();
   }
 }
 
 async function copyShare() {
   try {
     await navigator.clipboard.writeText(shareText.value || shareUrl.value);
-    msg.value = "链接已复制，打开微信发给好友或群即可";
+    shareHint.value = "链接已复制，打开微信发给好友或群即可";
+    msg.value = shareHint.value;
   } catch {
-    msg.value = "请长按链接复制";
+    shareHint.value = "请长按上方链接复制";
+    msg.value = shareHint.value;
   }
 }
 

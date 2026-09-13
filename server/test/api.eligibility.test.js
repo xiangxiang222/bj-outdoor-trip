@@ -169,4 +169,42 @@ describe("student and school enroll limits", () => {
     assert.equal(denied.status, 400);
     assert.match(denied.body.message, /北京大学/);
   });
+
+  it("still checks school limits on a free campus trip", async () => {
+    const admin = await loginAdmin(agent);
+    const routes = await agent.get("/api/admin/routes").set(auth(admin)).expect(200);
+    const buses = await agent.get("/api/buses").expect(200);
+    const created = await agent
+      .post("/api/admin/schedules")
+      .set(auth(admin))
+      .send({
+        routeId: routes.body.data[0].id,
+        startDate: seed.db.prepare("SELECT date('now','+12 day') AS d").get().d,
+        busTypeId: buses.body.data[0].id,
+        organizerType: "campus",
+        companyName: "北京大学",
+        offerType: "free",
+        meetupPoint: "东直门东方银座C口",
+        alumniOk: true,
+      })
+      .expect(200);
+    assert.equal(created.body.data.offerType, "free");
+    assert.equal(created.body.data.eligibility.studentOnly, true);
+    assert.equal(created.body.data.eligibility.alumniOk, true);
+    assert.deepEqual(created.body.data.eligibility.schools, ["北京大学"]);
+
+    const token = await loginUser(agent);
+    const uncertified = await enroll(token, { scheduleId: created.body.data.id });
+    assert.equal(uncertified.status, 400);
+    assert.match(uncertified.body.message, /北京大学/);
+
+    await approveStudent(token, seed.userId, "清华大学");
+    const wrongSchool = await enroll(token, { scheduleId: created.body.data.id });
+    assert.equal(wrongSchool.status, 400);
+    assert.match(wrongSchool.body.message, /北京大学/);
+
+    seed.db.prepare("UPDATE users SET school=? WHERE id=?").run("北京大学", seed.userId);
+    const ok = await enroll(token, { scheduleId: created.body.data.id }).expect(200);
+    assert.equal(ok.body.data.status, "applied");
+  });
 });
