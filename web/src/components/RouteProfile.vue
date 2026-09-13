@@ -88,6 +88,12 @@
       <p v-if="route.notices"><strong>注意：</strong>{{ route.notices }}</p>
     </div></div>
 
+    <div class="h2" v-if="refundPolicy">退费规则</div>
+    <div class="card" v-if="refundPolicy"><div class="pad">
+      <p class="muted" style="margin-top:0">{{ refundPolicy.summary }}</p>
+      <p v-for="line in refundPolicy.lines" :key="line.text">{{ line.text }}</p>
+    </div></div>
+
     <template v-if="!embedded">
       <div class="h2">可报名排期</div>
       <div class="card" v-for="s in route.schedules" :key="s.id" @click="$emit('open-schedule', s.id)">
@@ -174,6 +180,7 @@ defineEmits(["fav", "share", "open-schedule", "open-guide", "open-guides", "open
 const previewIndex = ref(null);
 const story = computed(() => props.route?.story || []);
 const album = computed(() => storyAlbum(props.route?.gallery || [], story.value));
+const refundPolicy = computed(() => props.route?.refundPolicy || null);
 const previewList = computed(() => {
   if (!props.route) return [];
   const fromStory = story.value.filter((b) => b.type === "image" && b.url).map((b) => b.url);

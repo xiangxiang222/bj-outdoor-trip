@@ -288,8 +288,9 @@
     <div v-show="tab === 'rules'" class="trip-pane">
       <div class="h2">退改说明</div>
       <div class="card rules-block"><div class="pad">
-        <p class="muted" style="margin-top:0">{{ isActivity ? "出发日前可取消；当天不可取消。" : cancelPolicy.summary }}</p>
-        <p v-if="!isActivity" v-for="(it, i) in cancelPolicy.items" :key="i" class="muted">{{ i + 1 }}. {{ it }}</p>
+        <p class="muted" style="margin-top:0">{{ isActivity ? "出发日前可取消；当天不可取消。" : refundCopy.summary }}</p>
+        <p v-if="!isActivity && refundCopy.current?.hint" class="muted">{{ refundCopy.current.hint }}</p>
+        <p v-if="!isActivity" v-for="(it, i) in refundCopy.items" :key="i" class="muted">{{ i + 1 }}. {{ it }}</p>
       </div></div>
 
       <template v-if="commonRules.sections?.length">
@@ -412,6 +413,7 @@ const store = useUserStore();
 const s = ref(null);
 const tab = ref(normalizeTab(route.query.tab));
 const isActivity = computed(() => s.value?.channel === "activity");
+const refundCopy = computed(() => s.value?.refundPolicy || cancelPolicy.value);
 const isFree = computed(() => {
   const q = s.value?.quote || {};
   return Number(q.price || 0) === 0 && Number(q.originPrice || 0) === 0 && Number(q.tripPrice || 0) === 0;

@@ -18,7 +18,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/meta` | 品牌名、口号 `slogan`（在山野，遇见爱）、演示短信码、会员年费/95折/赠团文案、`studentDiscountRate`（0.9）、积分规则、保险方案、补给、可选天数、退改说明、风险告知、常见问题、官方账号、公共规则、推荐领队文案、`wechatPayMock` `wechatPayLive` `wechatAppId` |
+| GET | `/meta` | 品牌名、口号 `slogan`（在山野，遇见爱）、演示短信码、会员年费/95折/赠团文案、`studentDiscountRate`（0.9）、积分规则、保险方案、补给、可选天数、退改说明（含按距出发日比例的 `refundPolicy` / `cancelPolicy`）、风险告知、常见问题、官方账号、公共规则、推荐领队文案、`wechatPayMock` `wechatPayLive` `wechatAppId` |
 | GET | `/home` | 首页：全部上架景点轮播（`brand.slides`，含 `routeId`/`title`/`url`）、按城市分组的景点轮播、玩法标签、节日、月份、天数缩略图。同城局线路不进轮播。Query：`month=YYYY-MM` 返回该月日历（不含 activity） |
 | GET | `/live/pulse` | 首页/线路/团顶部动态条。Query：`scope=home\|route\|schedule`、`routeId`、`scheduleId`。可选用户 token 与 `X-Visitor-Id`。返回 `{ items, watchingNow, watchingText }`。`items[].text` 已拼好，姓名脱敏、不含手机号。同城局报名不进首页。匿名浏览只计入 `watchingNow` |
 | POST | `/live/view` | 记录一次浏览。body：`scope` `routeId` `scheduleId`。同一访客对同一目标 10 分钟内不重复写入。可选用户 token |
@@ -31,9 +31,9 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/guides/:id` | 导游详情、带团次数、近期行程。停用或不存在返回 404 |
 | GET | `/routes` | 上架线路。排除只被同城局引用的线路。Query：`days`（`multi` 表示 4 日及以上）`category` `tag` `city` `difficulty` `q` |
 | GET | `/schedules` | Query：`routeId` `organizerType` `city` `tag` `offerType` `month` `date` `channel=activity\|trip`（不含已解散、待审核）。含满员（`remain=0`），前端列表保留供候补。不含 `virtualEnrolled`。首页传 `channel=trip`，活动 Tab 传 `channel=activity` |
-| GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条）、`videos`（B 站等可嵌播放器） |
+| GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条）、`videos`（B 站等可嵌播放器）、`refundPolicy`（`source`=`default\|global\|route`，档位、摘要、条目） |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
-| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`photographer`、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友/高校限制）、`oversub`（报超会抽）。同城局名单不含年龄段展示字段的使用由前端控制 |
+| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`photographer`、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友/高校限制）、`oversub`（报超会抽）、`refundPolicy`（含按该团出发日计算的 `current.percent` / `hint`）。同城局名单不含年龄段展示字段的使用由前端控制 |
 | GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
 | POST | `/schedules/:id/seats/pick` | 已报名用户改座 |
 | POST | `/schedules/:id/leaders/apply` | 报名领队（最多两位）。须已通过领队申请，否则 403 `need_leader_apply` / `leader_pending` |
@@ -94,8 +94,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/pay/confirm` | 用户 | `{ tradeNo }`。向微信查单，成功则入账（报名已付或开通会员） |
 | POST | `/pay/wechat/notify` | 否 | 微信支付 XML 回调，验签后入账。返回微信 XML |
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
-| GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canReview` `reviewed`、`channel` |
-| POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（出发日前、团未解散；当天不可取消） |
+| GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canReview` `reviewed`、`channel`、`refundPercent` `refundHint` `refundAmount` |
+| POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（山野团开团前按比例退；同城局出发日前；当天同城局不可取消） |
 | POST | `/member/buy` | 用户 | 演示环境立即开通/续费会员（年费 99）。真实支付返回 JSAPI 参数，开通发生在回调或 `/pay/confirm`。可带 `code` |
 | GET | `/points` | 用户 | 积分余额与流水 |
 | POST | `/favorites/:routeId` | 用户 | 收藏 |
@@ -147,7 +147,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 
 已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序（抽签团按 `draw_rank`）自动递补。报超会抽且名单未确认时 `status=applied`，不占座。当前实现报名时 `points_used=0`，不读取抵现开关。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds`。`joinMode` 可为 `assistant` / `photographer`（免个人团费，保险另计；摄影师每团一位）。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补/`applied` `held`，占座成功才 `used`。
 
-排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`、`channel`、`oversub`、`photographer`；名单项含 `waitlisted`、`applied`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位；报超待确认时不选座。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`。前端有 `myEnrollment` 时不再展示报名按钮。
+排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`、`channel`、`oversub`、`photographer`、`refundPolicy`；名单项含 `waitlisted`、`applied`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位；报超待确认时不选座。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`，已付款按档位返回 `refundPercent` `refundAmount`。前端有 `myEnrollment` 时不再展示报名按钮。
 
 报名成功示例：
 
@@ -168,7 +168,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 
 解散成功返回 `cancelled`（取消人数）、`refunded`（退款人数）、`smsCount`。已付款报名改为 `pay_status=refunded`。
 
-取消报名：出发日之前、团未解散时可取消；出发当天及之后返回「出发当天及之后不可取消报名」。已付款则退款标记。同一证件取消后可再报。
+取消报名：山野团在正式开团前、出发日当天及之前可取消，已付款按线路退费档位（默认 10 天前 100%、3 天前 80%、不足 3 天 50%）标记退款；正式开团后或已过出发日返回「正式开团后不可取消」或「已过出发日，不可取消」。同城局仍为出发日前可取消、当天不可取消。解散或后台代取消仍按全额标记退款。同一证件取消后可再报。
 
 ## 管理端（均需管理员 token，登录除外）
 
@@ -187,10 +187,12 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 | POST | `/admin/play-tags` | 新增。`name` `color` `cover` |
 | PUT | `/admin/play-tags/:id` | 更新 |
 | DELETE | `/admin/play-tags/:id` | 下架 |
-| GET | `/admin/routes` | 含下架；`priceTiers` 为 camelCase，`buses` 为车型 id 数组 |
+| GET | `/admin/refund-rules` | 全局退费档位。返回 `tiers` `summary` `lines` `items` `defaults` |
+| PUT | `/admin/refund-rules` | 保存全局档位。`tiers:[{minDays,percent}]`，须含 `minDays=0` 一档；`reset:true` 恢复默认 10/3/0 天 |
+| GET | `/admin/routes` | 含下架；`priceTiers` 为 camelCase，`buses` 为车型 id 数组，`refundPolicy` 为生效中的退费规则 |
 | POST | `/admin/routes/draft` | 起草。body：`title`（必填）`region` `days` `category` `notes`。返回文案字段 + `cover` `gallery` + `source`=`llm`/`template` + `photoSource`=`library`/`search`/空。无密钥用模板；图片先用已有景点库，再搜百度 / 360 |
-| POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` `videos`（视频链接数组） |
-| PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换；`videos` 为视频链接数组（省略则保留原值） |
+| POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` `videos`（视频链接数组）、`refundUseGlobal`（默认 true）、`refundTiers` |
+| PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换；`videos` 为视频链接数组（省略则保留原值）；`refundUseGlobal`/`refundTiers` 省略则保留原退费设置 |
 | DELETE | `/admin/routes/:id` | 下架 |
 | POST | `/admin/schedules` | 后台发布排期。可选 `virtualCount` 发布后从虚拟用户池抽人占座；`lotteryMode` 非 off 时挂上默认 4 奖转盘。`organizerType=campus` 且 `offerType=free` 时默认打开报超会抽、仅师生，并用学校名作为限定高校 |
 | POST | `/admin/schedules/:id/review` | 用户发团审核。`status=approved|rejected` |

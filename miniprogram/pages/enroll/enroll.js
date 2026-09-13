@@ -45,6 +45,7 @@ Page({
         isActivity,
         isFree,
         "form.insuranceCode": isActivity ? "none" : this.data.form.insuranceCode,
+        cancelSummary: (s.refundPolicy && s.refundPolicy.summary) || this.data.cancelSummary,
       });
       wx.setNavigationBarTitle({ title: isActivity ? "报名本局" : "报名" });
       if (!isActivity) {
@@ -66,7 +67,7 @@ Page({
         plans: data.insurance || [],
         supplies: (data.supplies || []).map((p) => Object.assign({}, p, { qty: 0 })),
         waiver: data.waiverText || "",
-        cancelSummary: (data.cancelPolicy && data.cancelPolicy.summary) || this.data.cancelSummary,
+        cancelSummary: (this.data.s && this.data.s.refundPolicy && this.data.s.refundPolicy.summary) || (data.cancelPolicy && data.cancelPolicy.summary) || this.data.cancelSummary,
       });
     }).catch(() => {});
   },

@@ -254,6 +254,11 @@
     <view wx:if="{{routeDetail.equipment}}"><text class="muted">装备：</text>{{routeDetail.equipment}}</view>
     <view wx:if="{{routeDetail.notices}}"><text class="muted">注意：</text>{{routeDetail.notices}}</view>
   </view>
+  <view class="pad" wx:if="{{routeDetail.refundPolicy && routeDetail.refundPolicy.lines && routeDetail.refundPolicy.lines.length}}">
+    <view class="title">退费规则</view>
+    <view class="muted">{{routeDetail.refundPolicy.summary}}</view>
+    <view class="muted" wx:for="{{routeDetail.refundPolicy.lines}}" wx:key="text">{{item.text}}</view>
+  </view>
   <view class="pad">
     <view class="title">装备清单</view>
     <view wx:for="{{routeDetail.packingList}}" wx:key="*this" class="muted">· {{item}}</view>
@@ -274,6 +279,7 @@
   <view class="pad title">退改说明</view>
   <view class="card">
     <view class="pad muted">{{isActivity ? '出发日前可取消；当天不可取消。' : cancelSummary}}</view>
+    <view class="pad muted" wx:if="{{!isActivity && refundHint}}">{{refundHint}}</view>
     <view class="pad muted" wx:if="{{!isActivity}}" wx:for="{{cancelItems}}" wx:key="*this">{{index + 1}}. {{item}}</view>
   </view>
   <view class="pad title" wx:if="{{commonRules.sections.length}}">{{commonRules.title || '公共规则'}}</view>
