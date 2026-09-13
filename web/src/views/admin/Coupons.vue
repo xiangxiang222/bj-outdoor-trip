@@ -4,7 +4,7 @@
       <h2>优惠券</h2>
       <el-button type="success" @click="open">发行优惠券</el-button>
     </div>
-    <p class="muted">可发指定团或通用券。类型含几折、直减、免费。公开、会员、定向都可以指定人；人多时从名单搜索、按高校筛选或全选该校已认证师生。指定的人发行后立刻入账，库存先留给他们。领取后可限时。默认与会员/学生价取低。公司团不可用。</p>
+    <p class="muted">可发指定团或通用券。类型含几折、直减、免费。公开、会员可指定必领；定向发放只选人，张数按已选人数，高校名单和按条件发放放在「发放」里。指定的人发行后立刻入账。领取后可限时。默认与会员/学生价取低。公司团不可用。</p>
     <el-table :data="list" stripe>
       <el-table-column prop="code" label="口令" width="110" />
       <el-table-column prop="name" label="名称" min-width="140" />
@@ -65,7 +65,7 @@
         <el-form-item :label="form.audience === 'directed' ? '指定发放' : '指定必领'">
           <PeoplePicker v-model="form.guaranteedUserIds" :hint="assignHint" />
         </el-form-item>
-        <el-form-item label="高校名单">
+        <el-form-item v-if="!isDirected" label="高校名单">
           <el-select v-model="form.school" clearable filterable placeholder="选学校，发行后发给该校已认证师生" style="width:280px">
             <el-option v-for="s in campusSchools" :key="s.name" :label="`${s.name}（${s.count}人）`" :value="s.name" />
           </el-select>
@@ -91,7 +91,14 @@
         <el-form-item v-else label="说明">
           <span class="muted">团费为 0，保险仍另计。</span>
         </el-form-item>
-        <el-form-item label="发行数量"><el-input-number v-model="form.total" :min="1" /></el-form-item>
+        <el-form-item v-if="!isDirected || !directedPicked" label="发行数量">
+          <el-input-number v-model="form.total" :min="1" />
+          <span v-if="isDirected" class="muted" style="margin-left:8px">人选好后按人数发行；也可先定量，之后到「发放」里补选</span>
+        </el-form-item>
+        <el-form-item v-else label="发行数量">
+          <span>发给已选 {{ form.guaranteedUserIds.length }} 人</span>
+          <span class="muted" style="margin-left:8px">要补发再到「发放」</span>
+        </el-form-item>
         <el-form-item v-if="form.kind !== 'free'" label="保底价"><el-input-number v-model="form.floorPrice" :min="0" /> 元，0 为不限</el-form-item>
         <el-form-item label="领取后有效">
           <el-input-number v-model="form.validHours" :min="0" /> 小时
@@ -101,21 +108,23 @@
           <el-checkbox v-model="form.stackMember">叠加会员价</el-checkbox>
           <el-checkbox v-model="form.stackStudent">叠加学生价</el-checkbox>
         </el-form-item>
-        <el-form-item label="久未参加">
-          <el-input-number v-model="form.idleMonths" :min="0" /> 个月内没出门
-          <span class="muted" style="margin-left:8px">0 为不限</span>
-        </el-form-item>
-        <el-form-item label="出行次数">
-          <el-input-number v-model="form.minTrips" :min="0" /> 次及以上
-          <span class="muted" style="margin-left:8px">0 为不限</span>
-        </el-form-item>
-        <el-form-item>
-          <el-button size="small" @click="previewTargets">预览符合人数</el-button>
-          <span class="muted" style="margin-left:8px">{{ previewHint }}</span>
-        </el-form-item>
-        <el-form-item label="发行后发放">
-          <el-checkbox v-model="form.grantByRule">按上面条件发给符合的人，人多过库存则随机抽</el-checkbox>
-        </el-form-item>
+        <template v-if="!isDirected">
+          <el-form-item label="久未参加">
+            <el-input-number v-model="form.idleMonths" :min="0" /> 个月内没出门
+            <span class="muted" style="margin-left:8px">0 为不限</span>
+          </el-form-item>
+          <el-form-item label="出行次数">
+            <el-input-number v-model="form.minTrips" :min="0" /> 次及以上
+            <span class="muted" style="margin-left:8px">0 为不限</span>
+          </el-form-item>
+          <el-form-item>
+            <el-button size="small" @click="previewTargets">预览符合人数</el-button>
+            <span class="muted" style="margin-left:8px">{{ previewHint }}</span>
+          </el-form-item>
+          <el-form-item label="发行后发放">
+            <el-checkbox v-model="form.grantByRule">按上面条件发给符合的人，人多过库存则随机抽</el-checkbox>
+          </el-form-item>
+        </template>
       </el-form>
       <template #footer>
         <el-button @click="showCreate = false">取消</el-button>
@@ -181,7 +190,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import http from "@/api/http";
@@ -204,10 +213,22 @@ const form = ref({ audience: "public", guaranteedUserIds: [] });
 const preview = ref(null);
 const previewHint = ref("");
 const campusSchools = ref([]);
+const isDirected = computed(() => form.value.audience === "directed");
+const directedPicked = computed(() => isDirected.value && (form.value.guaranteedUserIds || []).length > 0);
 const assignHint = computed(() => {
-  if (form.value.audience === "directed") return "选中的人发行后立刻入账。也可按高校名单全选该校已认证师生，或发行后再到「发放」里补选。";
+  if (isDirected.value) return "选中的人发行后立刻入账。人多可在名单里按学校筛选或全选该校。也可先发行、再到「发放」里补选。";
   if (form.value.audience === "member") return "选中的人发行后立刻入账，库存先留给他们；其余会员领剩下的。也可按高校名单勾选。";
   return "选中的人发行后立刻入账，库存先留给他们；其他人仍可公开领剩下的。也可从高校名单勾选。";
+});
+
+watch(isDirected, (directed) => {
+  if (!directed) return;
+  form.value.school = "";
+  form.value.allCampus = false;
+  form.value.grantByRule = false;
+  form.value.idleMonths = 0;
+  form.value.minTrips = 0;
+  previewHint.value = "";
 });
 
 function audienceText(s) {
@@ -325,6 +346,15 @@ async function save() {
       delete payload.capAmount;
       payload.floorPrice = 0;
     } else delete payload.fold;
+    if (payload.audience === "directed") {
+      const n = (payload.guaranteedUserIds || []).length;
+      if (n > 0) payload.total = n;
+      payload.school = "";
+      payload.allCampus = false;
+      payload.grantByRule = false;
+      payload.idleMonths = 0;
+      payload.minTrips = 0;
+    }
     const res = await http.post("/admin/coupons", payload);
     ElMessage.success(res.message || (res.data?.granted ? `已发行并发放 ${res.data.granted} 张` : "已发行"));
     showCreate.value = false;
