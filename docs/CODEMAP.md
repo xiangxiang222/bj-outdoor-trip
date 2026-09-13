@@ -63,6 +63,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `biz.js` | 阶梯价、会员价、积分抵现、排期状态、姓名脱敏 |
 | `offer.js` | 特价类型；学生价 = 原价 × `config.student.discountRate`（0.9） |
 | `eligibility.js` | 仅学生 / 指定高校 |
+| `video.js` | 线路视频链接：B 站 BV/av 转播放器、YouTube、mp4、其它外链 |
 | `combo.js` | 组合团另一半条件 |
 | `coupons.js` | 公开/会员/定向/通用/免费券，指定必领与用户搜索分页发放，高校名单筛选与按校发放，领取后限时，按出行记录定向与随机发放，核销与退回 |
 | `seats.js` | 2+2 座位图、锁座、改座 |

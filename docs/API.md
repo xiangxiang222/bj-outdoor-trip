@@ -29,7 +29,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/guides/:id` | 导游详情、带团次数、近期行程。停用或不存在返回 404 |
 | GET | `/routes` | 上架线路。排除只被同城局引用的线路。Query：`days`（`multi` 表示 4 日及以上）`category` `tag` `city` `difficulty` `q` |
 | GET | `/schedules` | Query：`routeId` `organizerType` `city` `tag` `offerType` `month` `date` `channel=activity\|trip`（不含已解散、待审核）。含满员（`remain=0`），前端列表保留供候补。不含 `virtualEnrolled`。首页传 `channel=trip`，活动 Tab 传 `channel=activity` |
-| GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条） |
+| GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条）、`videos`（B 站等可嵌播放器） |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
 | GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`photographer`、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友/高校限制）、`oversub`（报超会抽）。同城局名单不含年龄段展示字段的使用由前端控制 |
 | GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
@@ -83,7 +83,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | 方法 | 路径 | 鉴权 | 说明 |
 | --- | --- | --- | --- |
 | POST | `/schedules` | 用户 | 基于已有线路开团。`organizerType` 为 `individual` / `company` / `campus`。公司须 `companyName`，高校须学校名（`companyName` 或 `campusName`）。可带 `offerType` `playTagIds` `studentOnly` `alumniOk` `oversub` `schools` `lotteryMode`（`off\|pre\|enroll\|both`） |
-| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `schools` `comboRule` `lotteryMode`。提交后 `review_status=pending`，审核通过才上首页或活动 Tab |
+| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `schools` `comboRule` `lotteryMode`、`videos`/`videoUrls`（B 站等视频链接）。提交后 `review_status=pending`，审核通过才上首页或活动 Tab |
 | POST | `/upload` | 用户 | 发团封面。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
 | POST | `/enroll` | 用户 | 见下方报名 body。报超会抽且名单未确认时写入 `applied`（不占座）；确认后中签 `joined`、未中 `waitlist`。候补/`applied` 券为 `held` |
@@ -185,8 +185,8 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | DELETE | `/admin/play-tags/:id` | 下架 |
 | GET | `/admin/routes` | 含下架；`priceTiers` 为 camelCase，`buses` 为车型 id 数组 |
 | POST | `/admin/routes/draft` | 起草。body：`title`（必填）`region` `days` `category` `notes`。返回文案字段 + `cover` `gallery` + `source`=`llm`/`template` + `photoSource`=`library`/`search`/空。无密钥用模板；图片先用已有景点库，再搜百度 / 360 |
-| POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` |
-| PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换 |
+| POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` `videos`（视频链接数组） |
+| PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换；`videos` 为视频链接数组（省略则保留原值） |
 | DELETE | `/admin/routes/:id` | 下架 |
 | POST | `/admin/schedules` | 后台发布排期。可选 `virtualCount` 发布后立即设置虚拟报名；`lotteryMode` 非 off 时挂上默认 4 奖转盘。`organizerType=campus` 且 `offerType=free` 时默认打开报超会抽、仅师生，并用学校名作为限定高校 |
 | POST | `/admin/schedules/:id/review` | 用户发团审核。`status=approved|rejected` |

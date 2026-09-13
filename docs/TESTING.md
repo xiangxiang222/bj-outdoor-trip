@@ -2,7 +2,7 @@
 
 本文说明测试分层、环境隔离、命令、覆盖率门槛，以及如何为新接口补用例。单元测试**不会**写入开发用的 `server/data/app.sqlite`，也**不会**下载 30 条线路的实景照片。
 
-当前用例数（`it(` 计数，对照 2026-09-13 代码）：**237** 条服务端 + **50** 条 H5。
+当前用例数（`it(` 计数，对照 2026-09-13 代码）：**243** 条服务端 + **50** 条 H5。
 
 ## 1. 依赖
 
@@ -93,6 +93,7 @@ npx vitest run src/utils/share.test.js
 | `weather.test.js` | mock / 实时开关 |
 | `coupons.service.test.js` | 折扣封顶、立减与保底价、免费券、会员叠加、领取后有效小时 |
 | `route-draft.test.js` | 线路模板/模型文案、百度 / 360 搜图过滤与下载、本地景点库回退、无标题拒绝 |
+| `video.test.js` | B 站 BV/av 转播放器、b23 短链、YouTube、mp4、非法地址 |
 
 ### 4.2 带数据库的服务
 
@@ -111,7 +112,7 @@ npx vitest run src/utils/share.test.js
 | 文件 | 覆盖点 |
 | --- | --- |
 | `api.auth.test.js` | meta、短信、图片验证码注册/登录、微信演示登录、改资料、注销 |
-| `api.home.test.js` | 首页轮播不含同城局线路；`GET /schedules?channel=activity` |
+| `api.home.test.js` | 首页轮播不含同城局线路；`GET /schedules?channel=activity`；发线路带 B 站视频 |
 | `api.routes.test.js` | 筛选、收藏标记、名单脱敏、分享 302、开团校验、海报 QR、导游列表与详情（无需登录） |
 | `api.enroll.test.js` | 个人占座（`needPay: false`）、紧急联系人/健康/免责、`/me/trips`、公司挂账与结算权限、满员、成团导游、取消报名（出发当天不可取消）、会员购买、收藏、**同城局姓名+手机即可报名**、行程页报名摄影师 |
 | `api.waitlist.test.js` | 候补与递补 |
@@ -130,7 +131,7 @@ npx vitest run src/utils/share.test.js
 | `api.social.test.js` | 相册、主页等 |
 | `api.split.test.js` | 演示分账 |
 | `api.dissolve.test.js` | 发起人解散、非发起人 403、后台解散单团与全部、重复解散 |
-| `api.admin.test.js` | 看板、线路起草/增改下架、封面上传、排期成本利润、后台结算、报名脱敏、用户列表 |
+| `api.admin.test.js` | 看板、线路起草/增改下架、B 站视频链接、封面上传、排期成本利润、后台结算、报名脱敏、用户列表 |
 | `api.notices.test.js` | 校园/团体/领队认证写入后台待办，点开带 `/admin/verify` 与 `kind`/`userId`，通过后未读清零 |
 | `api.guide.test.js` | 导游登录、行程名单含紧急联系人、游客详情、正式开团、多轮签到确认、后台现场签到 |
 | `api.staff.test.js` | 后台账号增删改/停用、改密、运营权限、用户会员积分注销、后台代取消报名 |

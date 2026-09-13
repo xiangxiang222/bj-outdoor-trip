@@ -45,6 +45,7 @@ const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
 const { parseEnrollLimit, eligibilityView, applyEnrollLimit, withCampusFreeDefaults } = require("./services/eligibility");
 const { oversubView, isOversubPending, drawOversub } = require("./services/oversub");
+const { parseVideoInput, videoViews } = require("./services/video");
 const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
 const { draftRoute } = require("./services/route-draft");
 const { noticeCampus, noticeGroup, noticeLeader, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
@@ -202,11 +203,20 @@ function mapRoute(row, req, extra) {
       : block
   );
   r.gallery = gallery.map((g) => attachAssetHost(req, g));
+  r.videos = videoViews(r.videos);
   r.itinerary = (r.itinerary || []).map((it) => ({
     ...it,
     photo: it.photo ? attachAssetHost(req, resolveStoredMedia(it.photo, { code: r.code })) || "" : "",
   }));
   return r;
+}
+
+function saveRouteVideos(id, body) {
+  if (!body || (body.videos == null && body.videoUrls == null && body.videoUrl == null && body.videoLinks == null)) {
+    return;
+  }
+  const videos = parseVideoInput(body.videos ?? body.videoUrls ?? body.videoUrl ?? body.videoLinks);
+  db().prepare("UPDATE routes SET videos_json=? WHERE id=?").run(JSON.stringify(videos), id);
 }
 
 function mapRouteSummary(row, req, extra) {
@@ -1231,6 +1241,7 @@ router.post("/trips", authUser, (req, res) => {
       "pending"
     );
   const routeId = Number(routeInfo.lastInsertRowid);
+  saveRouteVideos(routeId, { videos: b.videos ?? b.videoUrls ?? b.videoUrl ?? b.videoLinks ?? [] });
   db()
     .prepare("INSERT INTO route_price_tiers (route_id,min_people,max_people,price,member_price) VALUES (?,?,?,?,?)")
     .run(routeId, 10, null, originPrice || 0, memberPrice || 0);
@@ -1899,6 +1910,7 @@ router.post("/admin/routes", authAdmin, requireCap("ops"), (req, res) => {
       b.status || "on"
     );
   const id = Number(info.lastInsertRowid);
+  saveRouteVideos(id, b);
   (b.priceTiers || []).forEach((t) => {
     db().prepare("INSERT INTO route_price_tiers (route_id,min_people,max_people,price,member_price) VALUES (?,?,?,?,?)").run(id, t.minPeople, t.maxPeople || null, t.price, t.memberPrice || t.price);
   });
@@ -1936,6 +1948,7 @@ router.put("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
     b.status || "on",
     id
   );
+  saveRouteVideos(id, b);
   if (b.priceTiers) {
     db().prepare("DELETE FROM route_price_tiers WHERE route_id=?").run(id);
     b.priceTiers.forEach((t) => {

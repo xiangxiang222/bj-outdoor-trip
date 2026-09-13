@@ -86,6 +86,9 @@
     <view class="input">{{meetupNames[meetupIndex]}}</view>
   </picker>
   <textarea class="input" placeholder="介绍" value="{{form.description}}" bindinput="setField" data-k="description" />
+  <view class="label">视频链接</view>
+  <textarea class="input" placeholder="一行一条 B 站链接，如 https://www.bilibili.com/video/BVxxxx" value="{{form.videoUrls}}" bindinput="setField" data-k="videoUrls" />
+  <view class="muted pad" style="padding-top:0">线路页会嵌播放器。请粘贴含 BV 号的完整链接。</view>
 </block>
 <view class="label">抽奖</view>
 <picker mode="selector" range="{{lotteryLabels}}" value="{{lotteryIndex}}" bindchange="setLottery">

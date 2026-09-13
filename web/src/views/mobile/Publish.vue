@@ -134,6 +134,9 @@
       <input class="input" v-model="form.meetupTime" />
       <label>介绍</label>
       <textarea class="input" v-model="form.description" rows="4" />
+      <label>视频链接</label>
+      <textarea class="input" v-model="form.videoUrls" rows="3" placeholder="一行一条。支持 B 站分享链接，如 https://www.bilibili.com/video/BVxxxx" />
+      <p class="muted">线路页会直接嵌播放器。请粘贴含 BV 号的完整链接。</p>
       <label>备注</label>
       <textarea class="input" v-model="form.notes" rows="2" />
     </template>
@@ -211,6 +214,7 @@ const form = ref({
   meetupPoint: startAsActivity ? "" : meetups[0],
   meetupTime: startAsActivity ? "19:30" : "07:30",
   description: "",
+  videoUrls: "",
   notes: "",
   comboRule: { require: "student_or_group", school: "" },
   lotteryMode: "off",
@@ -319,6 +323,8 @@ async function submit() {
   loading.value = true;
   try {
     const payload = { ...form.value };
+    payload.videos = payload.videoUrls;
+    delete payload.videoUrls;
     if (payload.channel === "activity") {
       payload.days = 1;
       payload.offerType = Number(payload.originPrice) > 0 ? payload.offerType || "full" : "free";
