@@ -2,7 +2,7 @@
 
 本文说明测试分层、环境隔离、命令、覆盖率门槛，以及如何为新接口补用例。单元测试**不会**写入开发用的 `server/data/app.sqlite`，也**不会**下载 30 条线路的实景照片。
 
-当前用例数（`it(` 计数，对照 2026-09-13 代码）：**252** 条服务端 + **51** 条 H5。
+当前用例数（`it(` 计数，对照 2026-09-13 代码）：**261** 条服务端 + **53** 条 H5。
 
 ## 1. 依赖
 
@@ -83,7 +83,7 @@ npx vitest run src/utils/share.test.js
 | --- | --- |
 | `idcard.test.js` | 身份证校验（含校验码）、男女、籍贯、掩码、年龄段 |
 | `biz.test.js` | 阶梯价、会员价、积分抵现 20% 与至少 1 元、画像聚合、排期状态、姓名脱敏、手机打码 |
-| `wechat.test.js` | mock openid、code2session、预支付参数 |
+| `wechat.test.js` | mock openid、无密钥时不打微信、有 AppSecret 时 jscode2session、预支付、XML 签名 |
 | `auth.middleware.test.js` | 用户/管理员 JWT、过期、错误 typ、query token、已注销账号、停用管理员 |
 | `captcha.test.js` | 图片验证码生成与比对 |
 | `routes-data.test.js` | 30 条线唯一编号、天数 ∈ {1,2,3,5}、R29 `coverKey=wutai` |
@@ -115,6 +115,7 @@ npx vitest run src/utils/share.test.js
 | `api.home.test.js` | 首页轮播不含同城局线路；`GET /schedules?channel=activity`；发线路带 B 站视频 |
 | `api.routes.test.js` | 筛选、收藏标记、名单脱敏、分享 302、开团校验、海报 QR、导游列表与详情（无需登录） |
 | `api.enroll.test.js` | 个人占座（`needPay: false`）、紧急联系人/健康/免责、`/me/trips`、公司挂账与结算权限、满员、成团导游、取消报名（出发当天不可取消）、会员购买、收藏、**同城局姓名+手机即可报名**、行程页报名摄影师 |
+| `api.pay.test.js` | 绑定 openid、JSAPI 下单、支付回调入账、查单开通会员、真实支付时禁止 mock-success |
 | `api.waitlist.test.js` | 候补与递补 |
 | `api.seats.test.js` | 选座、锁座 |
 | `api.insurance.test.js` | 保险加购 |
@@ -151,6 +152,7 @@ npx vitest run src/utils/share.test.js
 | `web/src/utils/routeMeta.test.js` | 线路类型/地区预设、阶梯价 95 折、集合点序列化 |
 | `web/src/utils/chinaAreas.test.js` | 全国省市县树、旧地区回填、北京周边/跨省选项 |
 | `web/src/utils/pulse.test.js` | 访客 id 复用、动态条跳转线路/团、头像字 |
+| `web/src/utils/wechatPay.test.js` | H5 识别真实 JSAPI 并提示去小程序 |
 
 Vue 页面与小程序以手动/演示验收为主（依赖浏览器与微信开发者工具）；完整接口顺序见第 8 节走查。走查脚本目前按户外团路径打公开接口、报名、取消、解散、会员、注销；后台发券挂在个人团上（公司团发券会 400）。同城局轻报名以 `api.enroll.test.js` / `api.home.test.js` 为准。
 

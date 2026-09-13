@@ -39,6 +39,7 @@ import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
+import { liveWechatPay, MINIPROGRAM_PAY_HINT } from "@/utils/wechatPay";
 
 const store = useUserStore();
 const route = useRoute();
@@ -57,6 +58,10 @@ async function buy() {
   try {
     const wasMember = !!store.profile?.isMember;
     const res = await http.post("/member/buy");
+    if (liveWechatPay(res.data)) {
+      msg.value = MINIPROGRAM_PAY_HINT;
+      return;
+    }
     store.setAuth(store.token, res.data.user);
     msg.value = wasMember ? "续费成功" : "开通成功";
   } catch (e) {

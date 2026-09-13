@@ -9,6 +9,8 @@ describe("config env overrides", () => {
     assert.ok(config.publicDir.includes("bj-ut-"));
     assert.equal(config.demoSmsCode, "888888");
     assert.equal(config.wechat.mock, true);
+    assert.equal(config.wechat.appId, "wx205ca387929c002a");
+    assert.equal(config.wechat.mchId, "17501360384");
     assert.equal(config.points.redeemRate, 100);
     assert.equal(config.points.maxOffsetRatio, 0.2);
     assert.equal(config.member.annualFee, 99);

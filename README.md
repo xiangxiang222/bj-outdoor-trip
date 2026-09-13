@@ -123,7 +123,7 @@ npm run dev
 
 1. 默认请求线上 `http://192.144.167.212`。本地联调把 `miniprogram/config.js` 的 `USE_LOCAL_API` 改为 `true`
 2. 详情里关闭「校验合法域名、web-view、TLS」，以便真机请求 HTTP IP
-3. 正式上线需换成真实 AppId，并在 `server/src/config.js` 填写 `WX_APPID` / `WX_APPSECRET` / 商户号
+3. 正式上线：开发者工具填真实 AppId `wx205ca387929c002a`（已写在 `miniprogram/project.config.json`）。服务器 `.env` 填 `WX_APPSECRET` 与商户 `WX_MCH_KEY`，并把 `WX_PAY_MOCK=0`。密钥不要提交进仓库。
 
 H5 用户端与小程序打同一套 API。H5 有独立学生/团体认证页；小程序首页「学生认证」在已登录时跳到「我的」，独立页尚未做。
 
@@ -137,15 +137,13 @@ npm run test:coverage
 npm run test:e2e
 ```
 
-服务端使用临时 SQLite，不会覆盖 `server/data/app.sqlite`。当前 **172** 条服务端用例 + **14** 条 H5 用例。打已启动服务（本机或线上）用 `npm run test:e2e:live`。说明见 [docs/TESTING.md](docs/TESTING.md)。
+服务端使用临时 SQLite，不会覆盖 `server/data/app.sqlite`。当前 **261** 条服务端用例 + **53** 条 H5 用例。打已启动服务（本机或线上）用 `npm run test:e2e:live`。说明见 [docs/TESTING.md](docs/TESTING.md)。
 
 ## 支付说明
 
-默认 `wechat.mock = true`。个人拼团报名**不调起支付**（`needPay: false`）。开通会员在演示环境直接记成功。公司团由开团人或后台结算。接入真微信支付时：
+默认 `WX_PAY_MOCK=1`，个人拼团报名**不调起支付**（`needPay: false`），出行前在团页「去支付」。开通会员、团页代付在演示环境立即记成功。公司团由开团人或后台结算。
 
-- 配置商户号与回调 `WX_PAY_NOTIFY`
-- 小程序里把 `wx.requestPayment` 换成真实 `timeStamp/nonceStr/package/paySign`
-- 设置 `WX_PAY_MOCK=0`
+已写入小程序 AppID `wx205ca387929c002a`、商户号 `17501360384`。服务器配齐 `WX_APPSECRET`、商户平台 APIv2 密钥 `WX_MCH_KEY` 后设 `WX_PAY_MOCK=0`：小程序走微信 JSAPI（`wx.requestPayment`），支付结果以回调 `/api/pay/wechat/notify` 或小程序内 `POST /pay/confirm` 查单为准。H5 不能调起 JSAPI，会提示去小程序付款。
 
 取消报名、解散拼团会对已付款座位做退款标记，尚未对接微信原路退款。
 

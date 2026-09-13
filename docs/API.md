@@ -18,7 +18,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/meta` | 品牌名、口号 `slogan`（在山野，遇见爱）、演示短信码、会员年费/95折/赠团文案、`studentDiscountRate`（0.9）、积分规则、保险方案、补给、可选天数、退改说明、风险告知、常见问题、官方账号、公共规则、推荐领队文案 |
+| GET | `/meta` | 品牌名、口号 `slogan`（在山野，遇见爱）、演示短信码、会员年费/95折/赠团文案、`studentDiscountRate`（0.9）、积分规则、保险方案、补给、可选天数、退改说明、风险告知、常见问题、官方账号、公共规则、推荐领队文案、`wechatPayMock` `wechatPayLive` `wechatAppId` |
 | GET | `/home` | 首页：全部上架景点轮播（`brand.slides`，含 `routeId`/`title`/`url`）、按城市分组的景点轮播、玩法标签、节日、月份、天数缩略图。同城局线路不进轮播。Query：`month=YYYY-MM` 返回该月日历（不含 activity） |
 | GET | `/live/pulse` | 首页/线路/团顶部动态条。Query：`scope=home\|route\|schedule`、`routeId`、`scheduleId`。可选用户 token 与 `X-Visitor-Id`。返回 `{ items, watchingNow, watchingText }`。`items[].text` 已拼好，姓名脱敏、不含手机号。同城局报名不进首页。匿名浏览只计入 `watchingNow` |
 | POST | `/live/view` | 记录一次浏览。body：`scope` `routeId` `scheduleId`。同一访客对同一目标 10 分钟内不重复写入。可选用户 token |
@@ -56,7 +56,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/auth/register` | 否 | `phone` `password`(≥6) `nickname` `captchaToken` `captcha` |
 | POST | `/auth/login` | 否 | `phone` `password` `captchaToken` `captcha` |
 | POST | `/auth/login-sms` | 否 | `phone` `code`；无用户则创建。当前 UI 未使用 |
-| POST | `/auth/wechat` | 否 | `code` `nickname` `avatar` |
+| POST | `/auth/wechat` | 否（登录后可选） | `code` `nickname` `avatar`。未登录则按 openid 登录或建号；已登录则绑定当前账号的 openid，返回 `bound: true`。`user.wechatBound` 表示是否已绑微信 |
 | GET | `/me` | 用户 | 当前用户（证件掩码；含学生/团体/领队状态、`isAlumni`/`campusKind`/`isLeader`） |
 | GET | `/me/trips` | 用户 | 即将出行：已报名且团未解散、出发日 ≥ 昨天的 `joined`/`waitlist`/`applied` |
 | GET | `/me/coupons` | 用户 | 我领取的券（含未用/已用/候补占用）。含 `expiresAt` `claimedAt` `validHours` `universal` |
@@ -89,12 +89,14 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/upload` | 用户 | 发团封面。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
 | POST | `/enroll` | 用户 | 见下方报名 body。报超会抽且名单未确认时写入 `applied`（不占座）；确认后中签 `joined`、未中 `waitlist`。候补/`applied` 券为 `held` |
-| POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。报名流程默认不调用 |
-| POST | `/pay/for-enrollment` | 用户 | 行程页待支付代付。任何人可替 `unpaid` 且已占座的报名支付（演示立即成功）。公司挂账不可用 |
+| POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。`WX_PAY_MOCK=0` 时返回 403 |
+| POST | `/pay/for-enrollment` | 用户 | 行程页待支付代付。演示立即成功。真实支付返回 `{ needPay, wechatPay, tradeNo }`，需小程序 `wx.requestPayment`；可带 `code` 绑定 openid。公司挂账不可用 |
+| POST | `/pay/confirm` | 用户 | `{ tradeNo }`。向微信查单，成功则入账（报名已付或开通会员） |
+| POST | `/pay/wechat/notify` | 否 | 微信支付 XML 回调，验签后入账。返回微信 XML |
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
 | GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canReview` `reviewed`、`channel` |
 | POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（出发日前、团未解散；当天不可取消） |
-| POST | `/member/buy` | 用户 | **立即开通/续费会员**（年费 99），赠一次 100 元以内团，记成功支付并返回 `user` |
+| POST | `/member/buy` | 用户 | 演示环境立即开通/续费会员（年费 99）。真实支付返回 JSAPI 参数，开通发生在回调或 `/pay/confirm`。可带 `code` |
 | GET | `/points` | 用户 | 积分余额与流水 |
 | POST | `/favorites/:routeId` | 用户 | 收藏 |
 | DELETE | `/favorites/:routeId` | 用户 | 取消收藏 |

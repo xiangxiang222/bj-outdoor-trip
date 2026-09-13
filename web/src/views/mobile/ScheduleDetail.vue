@@ -403,6 +403,7 @@ import TripPrices from "@/components/TripPrices.vue";
 import GoodsTabs from "@/components/GoodsTabs.vue";
 import RouteProfile from "@/components/RouteProfile.vue";
 import LivePulse from "@/components/LivePulse.vue";
+import { liveWechatPay, MINIPROGRAM_PAY_HINT } from "@/utils/wechatPay";
 
 const TAB_IDS = ["trip", "route", "rules"];
 const route = useRoute();
@@ -782,8 +783,12 @@ async function payFor(c) {
     return;
   }
   try {
-    await http.post("/pay/for-enrollment", { enrollmentId: c.enrollmentId });
-    msg.value = "已为 " + c.name + " 完成支付（演示）";
+    const res = await http.post("/pay/for-enrollment", { enrollmentId: c.enrollmentId });
+    if (liveWechatPay(res.data)) {
+      msg.value = MINIPROGRAM_PAY_HINT;
+      return;
+    }
+    msg.value = "已为 " + c.name + " 完成支付";
     await load();
   } catch (e) {
     msg.value = e.message;

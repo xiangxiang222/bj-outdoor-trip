@@ -85,6 +85,7 @@ import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
+import { liveWechatPay, MINIPROGRAM_PAY_HINT } from "@/utils/wechatPay";
 
 const store = useUserStore();
 const router = useRouter();
@@ -128,6 +129,10 @@ async function openMember() {
   opening.value = true;
   try {
     const res = await http.post("/member/buy");
+    if (liveWechatPay(res.data)) {
+      window.alert(MINIPROGRAM_PAY_HINT);
+      return;
+    }
     store.setAuth(store.token, res.data.user);
     router.push("/m/member");
   } catch (e) {

@@ -77,7 +77,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `pulse.js` | 首页/线路/团实时动态：汇报名、浏览、收藏、评价、开团；浏览写入 `page_views` |
 | `dissolve.js` | 解散拼团 |
 | `account.js` | 注销 |
-| `wechat.js` / `sms.js` / `captcha.js` | 演示支付、短信 888888、图片验证码 |
+| `wechat.js` / `payment.js` / `member.js` / `sms.js` / `captcha.js` | 微信登录与 JSAPI 支付、会员开通、短信 888888、图片验证码 |
 | `staff.js` | 后台角色与权限 |
 | `profile.js` | 公开主页 |
 | `supplies.js` | 随车补给加购 |
