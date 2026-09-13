@@ -1,4 +1,5 @@
 import axios from "axios";
+import { visitorId } from "@/utils/pulse";
 
 const http = axios.create({ baseURL: "/api", timeout: 20000 });
 
@@ -6,6 +7,7 @@ http.interceptors.request.use((config) => {
   const admin = localStorage.getItem("bj_admin_token");
   const guide = localStorage.getItem("bj_guide_token");
   const user = localStorage.getItem("bj_token");
+  config.headers["X-Visitor-Id"] = visitorId();
   if (config.url.startsWith("/admin") && !config.url.includes("/admin/login")) {
     if (admin) config.headers.Authorization = `Bearer ${admin}`;
   } else if (config.url.startsWith("/guide") && !config.url.includes("/guide/login")) {

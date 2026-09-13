@@ -337,6 +337,89 @@ button, input, textarea, select { font-family: inherit; }
 .home-page .brand-hero .swipe img {
   height: 168px;
 }
+.live-pulse {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 10px 6px 8px;
+  background: var(--paper);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.live-pulse.is-flush {
+  border-radius: 0;
+  box-shadow: none;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.home-page .live-pulse {
+  margin: 0 12px 8px;
+}
+.route-profile .live-pulse {
+  margin: 0 0 10px;
+}
+.live-pulse-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+.live-pulse-main:disabled {
+  cursor: default;
+}
+.live-pulse-face {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--mint);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+.live-pulse-track {
+  flex: 1;
+  min-width: 0;
+  height: 20px;
+  overflow: hidden;
+}
+.live-pulse-text {
+  display: block;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.live-pulse-text.in {
+  animation: live-pulse-in 0.4s ease;
+}
+@keyframes live-pulse-in {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-pulse-text { animation: none; }
+}
+.live-pulse-now {
+  flex: none;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
 .home-page .brand-cap {
   padding: 28px 16px 18px;
   background: linear-gradient(180deg, transparent 10%, rgba(18, 10, 16, .55) 55%, rgba(18, 10, 16, .88));

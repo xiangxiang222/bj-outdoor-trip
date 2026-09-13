@@ -1,3 +1,5 @@
+const { visitorId } = require("./pulse");
+
 function failMessage(err, baseUrl) {
   const raw = String((err && (err.errMsg || err.message)) || "");
   if (/url not in domain list/i.test(raw)) {
@@ -27,6 +29,7 @@ function request(path, method, data) {
       header: {
         "content-type": "application/json",
         Authorization: app.globalData.token ? "Bearer " + app.globalData.token : "",
+        "X-Visitor-Id": visitorId(),
       },
       success(res) {
         if (res.statusCode >= 200 && res.statusCode < 300 && res.data && res.data.ok) {

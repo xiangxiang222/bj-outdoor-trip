@@ -2,7 +2,7 @@
 
 本文说明测试分层、环境隔离、命令、覆盖率门槛，以及如何为新接口补用例。单元测试**不会**写入开发用的 `server/data/app.sqlite`，也**不会**下载 30 条线路的实景照片。
 
-当前用例数（`it(` 计数，对照 2026-09-13 代码）：**246** 条服务端 + **50** 条 H5。
+当前用例数（`it(` 计数，对照 2026-09-13 代码）：**252** 条服务端 + **51** 条 H5。
 
 ## 1. 依赖
 
@@ -135,6 +135,7 @@ npx vitest run src/utils/share.test.js
 | `api.admin.test.js` | 看板、线路起草/增改下架、B 站视频链接、封面上传、排期成本利润、后台结算、报名脱敏、用户列表 |
 | `api.notices.test.js` | 校园/团体/领队认证写入后台待办，点开带 `/admin/verify` 与 `kind`/`userId`，通过后未读清零 |
 | `api.guide.test.js` | 导游登录、行程名单开团前手机打码、游客详情、正式开团后可见完整号码、多轮签到确认、后台现场签到 |
+| `api.pulse.test.js` | 首页/线路实时动态：报名脱敏、浏览节流、匿名浏览只计入在看人数、同城局不进首页、评价与开团 |
 | `api.staff.test.js` | 后台账号增删改/停用、改密、运营权限、用户会员积分注销、后台代取消报名 |
 
 ### 4.4 前端（Vitest）
@@ -149,7 +150,7 @@ npx vitest run src/utils/share.test.js
 | `web/src/utils/weatherChart.test.js` | 气温曲线数据整理 |
 | `web/src/utils/routeMeta.test.js` | 线路类型/地区预设、阶梯价 95 折、集合点序列化 |
 | `web/src/utils/chinaAreas.test.js` | 全国省市县树、旧地区回填、北京周边/跨省选项 |
-| `web/src/utils/couponTime.test.js` | 优惠券倒计时剩余比例与未使用过滤 |
+| `web/src/utils/pulse.test.js` | 访客 id 复用、动态条跳转线路/团、头像字 |
 
 Vue 页面与小程序以手动/演示验收为主（依赖浏览器与微信开发者工具）；完整接口顺序见第 8 节走查。走查脚本目前按户外团路径打公开接口、报名、取消、解散、会员、注销；后台发券挂在个人团上（公司团发券会 400）。同城局轻报名以 `api.enroll.test.js` / `api.home.test.js` 为准。
 

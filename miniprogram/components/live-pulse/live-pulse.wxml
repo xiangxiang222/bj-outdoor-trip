@@ -1,0 +1,7 @@
+<view class="live-pulse {{flush ? 'is-flush' : ''}}" wx:if="{{visible}}">
+  <view class="live-pulse-main" bindtap="go">
+    <view class="live-pulse-face">{{face}}</view>
+    <view class="live-pulse-text">{{line}}</view>
+  </view>
+  <view class="live-pulse-now" wx:if="{{watchingText && items.length}}">{{watchingText}}</view>
+</view>

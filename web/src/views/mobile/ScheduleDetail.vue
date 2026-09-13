@@ -7,6 +7,12 @@
           <i v-for="(g, i) in gallery" :key="g" :class="{ on: i === heroIndex }" />
         </div>
       </div>
+      <LivePulse
+        flush
+        scope="schedule"
+        :schedule-id="s.id"
+        :route-id="s.routeId || s.route?.id"
+      />
       <div class="pad trip-head">
         <div class="row">
           <strong>
@@ -396,6 +402,7 @@ import WeatherChart from "@/components/WeatherChart.vue";
 import TripPrices from "@/components/TripPrices.vue";
 import GoodsTabs from "@/components/GoodsTabs.vue";
 import RouteProfile from "@/components/RouteProfile.vue";
+import LivePulse from "@/components/LivePulse.vue";
 
 const TAB_IDS = ["trip", "route", "rules"];
 const route = useRoute();

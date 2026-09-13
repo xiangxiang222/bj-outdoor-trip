@@ -34,7 +34,7 @@ async function run() {
   writeCovers();
   await downloadPhotos();
   const db = getDb();
-  db.exec("DELETE FROM reviews; DELETE FROM payment_splits; DELETE FROM favorites; DELETE FROM points_ledger; DELETE FROM payments; DELETE FROM enrollments; DELETE FROM schedules; DELETE FROM route_buses; DELETE FROM route_price_tiers; DELETE FROM routes; DELETE FROM guides; DELETE FROM bus_types; DELETE FROM sms_codes; DELETE FROM captchas; DELETE FROM users; DELETE FROM admin_users; DELETE FROM settings; DELETE FROM play_tags;");
+  db.exec("DELETE FROM page_views; DELETE FROM reviews; DELETE FROM payment_splits; DELETE FROM favorites; DELETE FROM points_ledger; DELETE FROM payments; DELETE FROM enrollments; DELETE FROM schedules; DELETE FROM route_buses; DELETE FROM route_price_tiers; DELETE FROM routes; DELETE FROM guides; DELETE FROM bus_types; DELETE FROM sms_codes; DELETE FROM captchas; DELETE FROM users; DELETE FROM admin_users; DELETE FROM settings; DELETE FROM play_tags;");
   const { ensureDefaultPlayTags, cityOf } = require("../services/home");
   ensureDefaultPlayTags(db);
 

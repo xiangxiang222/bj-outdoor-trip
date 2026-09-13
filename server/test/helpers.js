@@ -22,6 +22,7 @@ function wipe(db) {
     DELETE FROM schedule_leaders;
     DELETE FROM user_photos;
     DELETE FROM play_tags;
+    DELETE FROM page_views;
     DELETE FROM reviews;
     DELETE FROM payment_splits;
     DELETE FROM favorites;

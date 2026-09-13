@@ -36,6 +36,7 @@ const { leadersOf, applyLeader, settleLeaderRewards, recruitPayload } = require(
 const { referralCard, groupQrPayload, settleEnrollReferrals } = require("./services/referral");
 const { optionsForSchedule, setFallbacks, listFallbacks } = require("./services/fallback");
 const { generateVirtualUsers, setVirtualUsersForSchedule, growVirtualPool, virtualPoolStats } = require("./services/virtual");
+const { listPulse, recordView, parseVisitorId } = require("./services/pulse");
 const { deleteAccount } = require("./services/account");
 const { drawPre, drawPost, claimPrizes, lotteryState, lotteryPublic } = require("./services/lottery");
 const { getAdminLottery, listAdminLotteries, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate } = require("./services/lottery-admin");
@@ -433,6 +434,45 @@ router.get("/meta", (req, res) => {
       offers: Object.values(require("./services/offer").OFFER_TYPES),
     },
   });
+});
+
+function visitorOf(req) {
+  return parseVisitorId(
+    req.get("x-visitor-id") || req.query.visitorId || (req.body && req.body.visitorId),
+    `${req.ip || ""}|${req.get("user-agent") || ""}`
+  );
+}
+
+router.get("/live/pulse", optionalUser, (req, res) => {
+  const scope = String(req.query.scope || "home");
+  const routeId = Number(req.query.routeId) || 0;
+  const scheduleId = Number(req.query.scheduleId) || 0;
+  res.json({
+    ok: true,
+    data: listPulse({
+      scope: scope === "route" || scope === "schedule" ? scope : "home",
+      routeId: routeId || undefined,
+      scheduleId: scheduleId || undefined,
+      excludeUserId: req.userId || undefined,
+      excludeVisitorId: visitorOf(req),
+    }),
+  });
+});
+
+router.post("/live/view", optionalUser, (req, res) => {
+  try {
+    const b = req.body || {};
+    const data = recordView({
+      visitorId: visitorOf(req),
+      userId: req.userId || undefined,
+      routeId: b.routeId || req.query.routeId,
+      scheduleId: b.scheduleId || req.query.scheduleId,
+      scope: b.scope || req.query.scope,
+    });
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 router.get("/home", (req, res) => {

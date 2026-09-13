@@ -33,7 +33,7 @@ bj-outdoor-trip/
     src/views/admin         Element Plus 后台（/admin）
     src/views/guide         导游工作台（/g）
     src/layouts             MobileLayout / AdminLayout / GuideLayout
-    src/components          TripPrices、WeatherChart
+    src/components          TripPrices、WeatherChart、LivePulse
     src/styles/app.css      色板与顶栏
     public/brand            logo.jpg（原标识）与 mark.png（顶栏裁切）
     src/utils/*.test.js     Vitest
@@ -74,6 +74,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `leaders.js` / `referral.js` | 双领队、推荐码 5%、领队奖 200 |
 | `lottery.js` / `lottery-admin.js` / `aftertrip.js` / `contest.js` / `trip-run.js` | 抽奖圆盘、本团奖池与指定中奖、完成活动、评选、正式开团与多轮签到 |
 | `virtual.js` | 虚拟用户池、按团抽人占座，真人报名腾座 |
+| `pulse.js` | 首页/线路/团实时动态：汇报名、浏览、收藏、评价、开团；浏览写入 `page_views` |
 | `dissolve.js` | 解散拼团 |
 | `account.js` | 注销 |
 | `wechat.js` / `sms.js` / `captcha.js` | 演示支付、短信 888888、图片验证码 |
@@ -95,7 +96,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 
 | 路径 | 页面 | 说明 |
 | --- | --- | --- |
-| `/m` | Home | 山野发现：搜索、城市/玩法、公司/高校/个人、排序（即将出发/快满员/最新）、满员可候补仍出现在列表，日历进筛选 |
+| `/m` | Home | 山野发现：轮播下实时动态条；搜索、城市/玩法、公司/高校/个人、排序（即将出发/快满员/最新）、满员可候补仍出现在列表，日历进筛选 |
 | `/m/activities` | Activities | 同城局：搜索、分类、同一套 feed 排序；含候补 |
 | `/m/orders` | Orders | 下一趟 + 待出行/候补/历史 |
 | `/m/mine` | Mine | WeUI 分组：出行 / 权益 / 服务 |
@@ -119,7 +120,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 
 Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中色 `#6b2178`。
 
-主包页面与 H5 基本一一对应。线路详情在分包 `pkg-detail/detail`。
+主包页面与 H5 基本一一对应。线路详情在分包 `pkg-detail/detail`。首页 / 团 / 线路顶图下用 `components/live-pulse` 滚动态。
 
 **和 H5 的差：**
 
@@ -151,9 +152,9 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 ## 8. 数据怎么流
 
 ```
-首页 GET /home + GET /schedules?channel=trip
+首页 GET /home + GET /schedules?channel=trip + GET /live/pulse
 活动 GET /schedules?channel=activity
-详情 GET /schedules/:id（optionalUser → myEnrollment）
+详情 GET /schedules/:id（optionalUser → myEnrollment）；线路/团顶栏 GET /live/pulse，POST /live/view
 报名 POST /enroll → services/enroll.js
 行程 GET /orders  （H5 Orders.vue 拆待出行/历史）
 我的 GET /me + GET /me/coupons

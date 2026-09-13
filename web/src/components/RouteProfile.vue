@@ -4,9 +4,10 @@
       v-if="!embedded && route.cover"
       class="cover"
       :src="route.cover"
-      style="width:100%;height:200px;object-fit:cover;border-radius:16px;margin-bottom:10px;cursor:zoom-in"
+      style="width:100%;height:200px;object-fit:cover;border-radius:16px;margin-bottom:8px;cursor:zoom-in"
       @click="previewUrl(route.cover)"
     />
+    <LivePulse v-if="!embedded && route.id" scope="route" :route-id="route.id" />
     <div class="row">
       <h2 style="margin:0;font-size:20px">{{ route.title }}</h2>
       <span class="tag" v-if="route.days || route.difficulty">{{ [route.days ? route.days + "日" : "", route.difficulty].filter(Boolean).join(" · ") }}</span>
@@ -160,6 +161,7 @@ import { storyAlbum } from "@/utils/story";
 import TripPrices from "@/components/TripPrices.vue";
 import RouteStory from "@/components/RouteStory.vue";
 import RouteVideos from "@/components/RouteVideos.vue";
+import LivePulse from "@/components/LivePulse.vue";
 
 const props = defineProps({
   route: { type: Object, default: null },
