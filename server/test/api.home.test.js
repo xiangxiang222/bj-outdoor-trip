@@ -70,6 +70,26 @@ describe("homepage and publish review", () => {
     assert.ok(created.body.data.color);
   });
 
+  it("admin can update and retire a play tag", async () => {
+    const token = await loginAdmin(agent);
+    const blank = await agent.post("/api/admin/play-tags").set(auth(token)).send({ name: "  " });
+    assert.equal(blank.status, 400);
+    const created = await agent.post("/api/admin/play-tags").set(auth(token)).send({ name: "夜观" }).expect(200);
+    const listed = await agent.get("/api/admin/play-tags").set(auth(token)).expect(200);
+    assert.ok(listed.body.data.some((t) => t.id === created.body.data.id));
+    const updated = await agent
+      .put(`/api/admin/play-tags/${created.body.data.id}`)
+      .set(auth(token))
+      .send({ name: "夜观星空", color: "#123456", sortOrder: 3 })
+      .expect(200);
+    assert.equal(updated.body.data.name, "夜观星空");
+    assert.equal(updated.body.data.color, "#123456");
+    await agent.put("/api/admin/play-tags/99999").set(auth(token)).send({ name: "无" }).expect(404);
+    await agent.delete(`/api/admin/play-tags/${created.body.data.id}`).set(auth(token)).expect(200);
+    const pub = await agent.get("/api/play-tags").expect(200);
+    assert.equal(pub.body.data.some((t) => t.id === created.body.data.id), false);
+  });
+
   it("user publish waits for review and then appears", async () => {
     const token = await loginUser(agent);
     const buses = await agent.get("/api/buses").expect(200);

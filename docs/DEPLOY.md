@@ -1,13 +1,15 @@
 # 部署（含只用 iPhone）
 
-改代码、**合并（或直接推）到 GitHub 的 `main`** 之后，**部署发生在 GitHub Actions 的云主机上**，不发生在你的 iPhone 或 Cursor 云环境里。功能分支和 Pull Request 不会自动上线。手机没有系统 SSH 不影响自动上线。
+改代码、**合并到 GitHub 的 `main`** 之后：先跑 **Unit tests**，通过了才 **Deploy** 到腾讯云。部署发生在 GitHub Actions 的云主机上，不发生在你的 iPhone 或 Cursor 云环境里。功能分支和 Pull Request 不会自动上线。手机没有系统 SSH 不影响自动上线。
 
 线上地址：<http://192.144.167.212/m>
 
+合入前必须 UT 绿灯：在 [Rulesets](https://github.com/xiangxiang222/bj-outdoor-trip/settings/rules) 给 `main` 勾选 Require status checks → `unit-tests`。说明见 [TESTING.md](./TESTING.md) 第 7 节。
+
 ## 日常（配好密钥之后）
 
-1. 在 Cursor（电脑或手机）把改动推到 `main`
-2. 打开仓库 [Actions](https://github.com/xiangxiang222/bj-outdoor-trip/actions) 看 **Deploy** 是否绿灯
+1. 开 Pull Request，等 Actions 里 **Unit tests / unit-tests** 绿灯后再合并
+2. 合并后看 **Unit tests** 再看 **Deploy** 是否先后绿灯
 3. 手机 Safari 打开上面的线上地址，强刷缓存
 
 也可以在 Actions 里打开 Deploy → **Run workflow** 手动再跑一次，不必再推代码。

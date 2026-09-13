@@ -2,7 +2,7 @@
 
 本文说明测试分层、环境隔离、命令、覆盖率门槛，以及如何为新接口补用例。单元测试**不会**写入开发用的 `server/data/app.sqlite`，也**不会**下载 30 条线路的实景照片。
 
-当前用例数（`it(` 计数，对照 2026-09-13 代码）：**272** 条服务端 + **53** 条 H5，合计 **325**。
+当前用例数（`it(` 计数，对照 2026-09-13 代码）：**275** 条服务端 + **70** 条 H5，合计 **345**。
 
 角色注册、高校/公司/个人、领队/摄影师、发团、抽签、优惠券、抽奖、三端组合与按序截图，见 [FULL_TEST_CASES.md](./FULL_TEST_CASES.md)；自动化逐条名称见 [full-tests/AUTOMATED.md](./full-tests/AUTOMATED.md)。
 
@@ -115,9 +115,9 @@ npx vitest run src/utils/share.test.js
 | 文件 | 覆盖点 |
 | --- | --- |
 | `api.auth.test.js` | meta、短信、图片验证码注册/登录、微信演示登录、改资料、注销 |
-| `api.home.test.js` | 首页轮播不含同城局线路；`GET /schedules?channel=activity`；发线路带 B 站视频 |
+| `api.home.test.js` | 首页轮播不含同城局线路；`GET /schedules?channel=activity`；发线路带 B 站视频；玩法标签增改下架 |
 | `api.routes.test.js` | 筛选、收藏标记、名单脱敏、分享 302、开团校验、海报 QR、导游列表与详情（无需登录） |
-| `api.enroll.test.js` | 个人占座（`needPay: false`）、紧急联系人/健康/免责、`/me/trips`、公司挂账与结算权限、满员、成团导游、取消报名（已过出发日 / 正式开团后不可取消）、会员购买、收藏、**同城局姓名+手机即可报名**、行程页报名摄影师 |
+| `api.enroll.test.js` | 个人占座（`needPay: false`）、紧急联系人/健康/免责、`/me/trips`、公司挂账与结算权限、满员、成团导游、取消报名（已过出发日 / 正式开团后不可取消）、会员购买、收藏、**同城局姓名+手机即可报名**、行程页报名摄影师、**同城局拒绝摄影师** |
 | `api.refund.test.js` | 默认/全局/线路退费档、已付按比例退、出发当天未开团可退 50%、开团后不可取消 |
 | `api.pay.test.js` | 绑定 openid、JSAPI 下单、支付回调入账、查单开通会员、真实支付时禁止 mock-success |
 | `api.waitlist.test.js` | 候补与递补 |
@@ -133,7 +133,7 @@ npx vitest run src/utils/share.test.js
 | `api.reviews.test.js` | 仅报名成功可评、每团一条、线路/排期列表、候补与取消不可评、后台虚拟用户评价 |
 | `api.lottery.test.js` | 报名前/后抽奖、本团奖池与指定中奖、库存用尽回落、报名后抽且跟团结束后领奖、交费未签到也可行后抽、后台抽奖列表、中奖人报名/奖品详情 |
 | `api.lottery.test.js` | 报名前/后抽奖、本团奖池与指定中奖、库存用尽回落、报名后抽且跟团结束后领奖、交费未签到也可行后抽、后台抽奖列表、中奖人报名/奖品详情 |
-| `api.leader.test.js` | 个人领队申请、待审不能报名、通过后占位、公司账号保持 company、拒绝后可再申请 |
+| `api.leader.test.js` | 个人领队申请、待审不能报名、通过后占位、重复报名 400、招募文案与推荐码、公司账号保持 company、拒绝后可再申请 |
 | `api.social.test.js` | 相册、主页、虚拟用户池与按团抽人、真人占座腾座 |
 | `api.split.test.js` | 演示分账 |
 | `api.dissolve.test.js` | 发起人解散、非发起人 403、后台解散单团与全部、重复解散 |
@@ -157,6 +157,12 @@ npx vitest run src/utils/share.test.js
 | `web/src/utils/chinaAreas.test.js` | 全国省市县树、旧地区回填、北京周边/跨省选项 |
 | `web/src/utils/pulse.test.js` | 访客 id 复用、动态条跳转线路/团、头像字 |
 | `web/src/utils/wechatPay.test.js` | H5 识别真实 JSAPI 并提示去小程序 |
+| `web/src/utils/labels.test.js` | 报名/支付/团型/星级文案，含报超会抽「待确认」 |
+| `web/src/utils/phone.test.js` | `tel:` 链接 |
+| `web/src/utils/offer.test.js` | 早鸟/免费/组合团标签 |
+| `web/src/utils/staff.test.js` | 后台角色与权限 |
+| `web/src/utils/pageChrome.test.js` | 移动端顶栏标题 |
+| `web/src/utils/idcard.test.js` | 报名页身份证校验 |
 
 Vue 页面与小程序以手动/演示验收为主（依赖浏览器与微信开发者工具）；完整接口顺序见第 8 节走查。走查脚本目前按户外团路径打公开接口、报名、取消、解散、会员、注销；后台发券挂在个人团上（公司团发券会 400）。同城局轻报名以 `api.enroll.test.js` / `api.home.test.js` 为准。
 
@@ -194,9 +200,22 @@ beforeEach(() => {
 
 单测失败时先看断言消息；若提示表不存在，确认是否漏了 `--require ./test/setup-env.js`。
 
-## 7. CI 建议
+## 7. GitHub CI（合入前必须绿灯）
 
-仓库目前 GitHub Actions 只有 **Deploy**（推 `main` 上线），没有自动跑测试的 workflow。上线前建议本机：
+Pull Request 和推到 `main` 都会跑 [`.github/workflows/test.yml`](../.github/workflows/test.yml)：Node 20、`npm ci`、再执行 `npm run test:coverage`（服务端覆盖率门槛 + H5 Vitest）。检查项名字是 **`unit-tests`**。
+
+合入前拦住未通过的 PR（仓库管理员做一次）：
+
+1. 打开 [Branch rulesets](https://github.com/xiangxiang222/bj-outdoor-trip/settings/rules)
+2. New ruleset → 目标分支 `main`
+3. 勾选 **Require status checks to pass**，加上 `unit-tests`
+4. 建议同时勾选 **Require a pull request before merging**，这样不能把没跑过 UT 的提交直接推进 `main`
+
+没有这条 ruleset 时，CI 仍会跑，但 GitHub 不会阻止合并。检查项要等本 workflow 在仓库里成功跑过一次之后才会出现在下拉框里。
+
+`main` 上 UT 通过后，[Deploy](../.github/workflows/deploy.yml) 才会同步到腾讯云（`workflow_run`，且只认 `push` 到 `main` 的那次 UT）。Actions 里仍可手动 **Run workflow** 部署。
+
+本机：
 
 ```bash
 npm install --prefix server && npm install --prefix web
@@ -227,4 +246,4 @@ node scripts/e2e.js --live --base http://192.144.167.212
 
 ## 9. 全模块手动走查与组合矩阵
 
-`npm test` 遍历全部 325 条自动化用例。手动按真实使用顺序点用户端 / 后台 / 导游，以及「高校免费团 × 报超会抽 × 已认证师生」等交互规则，见 [FULL_TEST_CASES.md](./FULL_TEST_CASES.md)（截图在 `docs/full-tests/screenshots/`）。
+`npm test` 遍历全部 345 条自动化用例。手动按真实使用顺序点用户端 / 后台 / 导游，以及「高校免费团 × 报超会抽 × 已认证师生」等交互规则，见 [FULL_TEST_CASES.md](./FULL_TEST_CASES.md)（截图在 `docs/full-tests/screenshots/`）。

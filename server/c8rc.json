@@ -1,7 +1,7 @@
 {
   "all": true,
   "include": ["src/**/*.js"],
-  "exclude": ["src/index.js", "src/seed/run.js", "src/seed/refresh-images.js", "src/seed/fetch-place-photos.js", "src/seed/fetch-place-albums.js"],
+  "exclude": ["src/index.js", "src/seed/run.js", "src/seed/refresh-images.js", "src/seed/fetch-place-photos.js", "src/seed/fetch-place-albums.js", "src/seed/pack-miniprogram-media.js"],
   "reporter": ["text", "html", "lcov"],
   "reports-dir": "coverage",
   "check-coverage": true,

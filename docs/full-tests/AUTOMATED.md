@@ -1,6 +1,6 @@
 # 自动化用例全表
 
-对照日期 2026-09-13，仓库内 `it(` 共 **325** 条。组合规则、手动走查顺序和截图见 [../FULL_TEST_CASES.md](../FULL_TEST_CASES.md)。
+对照日期 2026-09-13，仓库内 `it(` 共 **345** 条（275 服务端 + 70 H5）。组合规则、手动走查顺序和截图见 [../FULL_TEST_CASES.md](../FULL_TEST_CASES.md)。
 
 ## `server/test/api.admin.test.js`
 
@@ -93,6 +93,7 @@
 14. requires emergency contact, health and waiver
 15. city activity enrolls with name and phone only
 16. lets a traveler apply as the trip photographer from the schedule page
+17. rejects photographer enroll on a city activity
 
 ## `server/test/api.guide.test.js`
 
@@ -104,8 +105,9 @@
 2. accepts student apply, feedback and photographer enroll waive
 3. lists play tags publicly
 4. admin can add a play tag
-5. user publish waits for review and then appears
-6. city activities stay off the trip list and route catalog
+5. admin can update and retire a play tag
+6. user publish waits for review and then appears
+7. city activities stay off the trip list and route catalog
 
 ## `server/test/api.insurance.test.js`
 
@@ -114,8 +116,9 @@
 ## `server/test/api.leader.test.js`
 
 1. blocks volunteer apply until admin approves the leader role
-2. keeps company role when a company account is approved as leader
-3. lets a rejected applicant submit again
+2. exposes leader recruit copy and code after login
+3. keeps company role when a company account is approved as leader
+4. lets a rejected applicant submit again
 
 ## `server/test/api.lottery.test.js`
 
@@ -506,3 +509,38 @@
 
 1. is false for mock or completed pay
 2. is true when the server returns a real JSAPI package
+
+## `web/src/utils/idcard.test.js`
+
+1. normalizes spaces and lowercase x
+2. accepts a Beijing male card used by enroll
+3. rejects empty, 15-digit and bad checksum
+4. rejects impossible birthdays
+
+## `web/src/utils/labels.test.js`
+
+1. clamps star ratings to five glyphs
+2. maps gender and insurance codes
+3. labels enroll and pay states including oversub pending
+4. shortens organizer type and schedule status
+
+## `web/src/utils/offer.test.js`
+
+1. returns the matching offer including campus-style free
+2. falls back when the key is missing
+
+## `web/src/utils/pageChrome.test.js`
+
+1. sets and clears the mobile title bar
+2. defaults both fields to empty
+
+## `web/src/utils/phone.test.js`
+
+1. builds a tel link for mainland mobiles
+2. allows international numbers and rejects junk
+
+## `web/src/utils/staff.test.js`
+
+1. labels known roles and defaults unknown to super admin copy
+2. gives admin every cap and photographer only roster and photo
+3. prefers explicit caps on the session over the role map

@@ -13,6 +13,6 @@
 | [单元测试文档](./TESTING.md) | 单元测试、覆盖率、全功能走查（e2e） |
 | [全模块测试用例](./FULL_TEST_CASES.md) | 注册/高校/公司/个人/领队/摄影师/发团/抽签/优惠券/抽奖/三端组合矩阵与按序截图 |
 | [上线注册清单](./REGISTER.md) | 域名、ICP、小程序 AppId、微信支付、短信签名/运营商报备 |
-| [部署](./DEPLOY.md) | 合并到 `main` 后 GitHub Actions 自动部署；Secret 配置注意点 |
+| [部署](./DEPLOY.md) | 合入 `main` 且 UT 通过后 GitHub Actions 自动部署；Secret 配置注意点 |
 
 日常启动与部署仍以仓库根目录 [README.md](../README.md) 为准。
