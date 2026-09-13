@@ -6,6 +6,7 @@
 <view class="brand-cap" bindtap="goCurrentSlide">
   <view class="home-kicker">{{home.brand.lead || '在山野，遇见爱'}}</view>
 </view>
+<live-pulse scope="home"></live-pulse>
 <view class="campus-card">
   <view>
     <view class="campus-title">学生认证后走学生价</view>

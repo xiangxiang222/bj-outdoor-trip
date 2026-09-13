@@ -29,6 +29,8 @@
       </div>
     </div>
 
+    <LivePulse scope="home" />
+
     <div class="home-pad">
     <section class="campus-card">
       <div>
@@ -180,6 +182,7 @@ import { mediaSrc, slideBg, slideFallback, slideRouteTarget } from "@/utils/medi
 import { boardedLine, coverMark, coverOf, feedWhen, hostName, isFreeOffer, taglineOf } from "@/utils/feedCard";
 import { cycleSort, hostFacets as collectHostFacets, processFeed, sortLabel } from "@/utils/feedList";
 import RouteCatalog from "@/components/RouteCatalog.vue";
+import LivePulse from "@/components/LivePulse.vue";
 
 const pageRoute = useRoute();
 const router = useRouter();

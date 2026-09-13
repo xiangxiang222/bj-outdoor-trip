@@ -240,7 +240,7 @@ User 1──n Favorite / PointsLedger / Review
 
 建表语句见 `server/src/db.js` 的 `createSchema`；旧库通过 `migrateSchema` 补列。种子脚本 `server/src/seed/run.js` **会清空并重建演示数据**，不要在生产库上误跑。仅更新封面可用 `server/src/seed/refresh-images.js`。部署脚本仅在目标机尚无 `app.sqlite` 时 seed。
 
-核心表：`users`（含 `deleted_at`、学生/团体/领队字段）、`admin_users`（含 `status`）、`sms_codes`、`captchas`、`bus_types`、`routes`、`route_price_tiers`、`route_buses`、`guides`、`schedules`（含 `channel`、解散字段、审核、成本、`started_at` 正式开团）、`enrollments`、`checkin_sessions`、`checkin_marks`、`payments`、`payment_splits`、`points_ledger`、`favorites`、`reviews`、`settings`、`sms_logs`、`play_tags`、`coupon_campaigns`、`coupon_allowlist`、`user_coupons`、`feedbacks`、`lottery_draws`、`lottery_campaigns`、`lottery_prizes`、`lottery_assigns`、`contest_posts`、`contest_votes`、`user_photos`、`schedule_leaders`、`enrollment_fallbacks`、`referrals`、`leader_referrals`。
+核心表：`users`（含 `deleted_at`、学生/团体/领队字段）、`admin_users`（含 `status`）、`sms_codes`、`captchas`、`bus_types`、`routes`、`route_price_tiers`、`route_buses`、`guides`、`schedules`（含 `channel`、解散字段、审核、成本、`started_at` 正式开团）、`enrollments`、`checkin_sessions`、`checkin_marks`、`payments`、`payment_splits`、`points_ledger`、`favorites`、`reviews`、`page_views`、`settings`、`sms_logs`、`play_tags`、`coupon_campaigns`、`coupon_allowlist`、`user_coupons`、`feedbacks`、`lottery_draws`、`lottery_campaigns`、`lottery_prizes`、`lottery_assigns`、`contest_posts`、`contest_votes`、`user_photos`、`schedule_leaders`、`enrollment_fallbacks`、`referrals`、`leader_referrals`。
 
 ## 6. 前端信息架构与视觉
 
@@ -248,7 +248,7 @@ User 1──n Favorite / PointsLedger / Review
 
 | Tab | 内容 |
 | --- | --- |
-| 首页 | 山野发现。状态栏图形标 + 活字「同行者众」+ 口号；圆角景点轮播（可点进线路）；薄学生认证条；搜索；城市/玩法/公司高校胶囊；feed 活动卡（含满员可候补）；排序/筛选/发团 |
+| 首页 | 山野发现。状态栏图形标 + 活字「同行者众」+ 口号；圆角景点轮播（可点进线路）；轮播下实时动态条（报名/浏览/收藏/评价/开团，姓名脱敏）；薄学生认证条；搜索；城市/玩法/公司高校胶囊；feed 活动卡（含满员可候补）；排序/筛选/发团 |
 | 活动 | 同城局：搜索、四宫格分类、即将出发/快满员/最新、feed 卡（含候补）。「发起一局」 |
 | 行程 | 待出行 / 候补 / 历史；第一张待出行做成「下一趟」；候补不混进待出行；取消为文字链；免费局不显示 ¥0 |
 | 我的 | 夜色资料卡 + 出行 / 权益 / 服务三组 cell。会员、学生、团体、抽奖、客服都在这里，不回首页堆增长入口 |
@@ -269,7 +269,8 @@ User 1──n Favorite / PointsLedger / Review
 - **标识**：沿用原来的 `web/public/brand/logo.jpg`（绿丘、紫红徒步人、线描山峰）。顶栏小标是该图左侧图形的裁切 `mark.png`，旁边用活字写「同行者众」，避免 logo 里的字和标题叠两遍。
 - **顶栏配色**：夜色底，紫 `#6B2178` → 红 `#821A2A` 水平渐变；上沿 3px 双色细线。首页不重复第二行标题。不改 logo 图形本身。
 - **CSS 变量**（`web/src/styles/app.css`）：`--thu`、`--pku`、`--night` 仍用于夜色顶栏；页面底改为浅灰白 `--cream` `#f5f6f3`，卡片纯白。行动色 `--play` 荧光绿 `#c6f24a`（选中胶囊、发团、报名），参考粗门「出门玩」的信息结构，不换 logo、不改品牌名。
-- **首页结构**：圆角可点轮播 → 薄学生认证条 → 搜索 → 热门/城市胶囊 → 玩法胶囊 → 公司/高校/个人胶囊 → 「看看最近都在忙什么」+ 即将出发/筛选/发团 → 左图右文 feed 卡（时间、标题、主理人、玩法条、已上车人数；满员显示「已满·可候补」）。十五天日历、月/节日/特价收到「筛选」里，不挡发现。
+- **首页结构**：圆角可点轮播 → 实时动态条（「林** 3 分钟前报名了…」，点进对应团或线路；右侧可显示此刻在逛人数）→ 薄学生认证条 → 搜索 → 热门/城市胶囊 → 玩法胶囊 → 公司/高校/个人胶囊 → 「看看最近都在忙什么」+ 即将出发/筛选/发团 → 左图右文 feed 卡（时间、标题、主理人、玩法条、已上车人数；满员显示「已满·可候补」）。十五天日历、月/节日/特价收到「筛选」里，不挡发现。
+- **线路/团详情**：顶图下方同样一条动态。团页看本团+本线路；线路页看本线路。数据来自真实报名、收藏、评价、开团和登录后的浏览，不编造；匿名浏览只计入「此刻 n 人在看」。
 - **活动 Tab**：同城局同样用搜索 + 排序 + feed 卡；分类宫格选中为荧光绿。满员局留在列表里可进候补。
 - **详情扫读**：时间 / 地点+地图 / 人数（含候补）/ 发起人 → 信任条（先报名后付款、出发日前可取消、山野可加购意外险）→ 底栏价格+立即报名。已报名或发团成功出票卡（出行票 / 候补票 / 已提交审核）+ 看行程 / 去分享。山野集合点报名前就展示，不藏地点。
 - **行程票夹**：待出行只含已占座；候补单独一栏。

@@ -1,4 +1,7 @@
 {
     "navigationBarTitleText": "同行者众",
-  "enablePullDownRefresh": true
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "live-pulse": "/components/live-pulse/live-pulse"
+  }
 }

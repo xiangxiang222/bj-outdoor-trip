@@ -364,6 +364,17 @@ function createSchema(db) {
       user_id INTEGER NOT NULL,
       PRIMARY KEY (campaign_id, user_id)
     );
+    CREATE TABLE IF NOT EXISTS page_views (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      visitor_id TEXT NOT NULL,
+      user_id INTEGER,
+      route_id INTEGER,
+      schedule_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at);
+    CREATE INDEX IF NOT EXISTS idx_page_views_route ON page_views(route_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_page_views_visitor ON page_views(visitor_id, created_at);
   `);
 }
 
@@ -688,6 +699,19 @@ function migrateSchema(db) {
       marked_by_id INTEGER,
       PRIMARY KEY (session_id, enrollment_id)
     );
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS page_views (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      visitor_id TEXT NOT NULL,
+      user_id INTEGER,
+      route_id INTEGER,
+      schedule_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at);
+    CREATE INDEX IF NOT EXISTS idx_page_views_route ON page_views(route_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_page_views_visitor ON page_views(visitor_id, created_at);
   `);
 }
 

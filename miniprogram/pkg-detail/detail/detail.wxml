@@ -1,5 +1,6 @@
 <view wx:if="{{err}}" class="muted pad">{{err}}</view>
 <image class="cover" src="{{r.cover}}" mode="aspectFill" style="height:400rpx;margin:0" bindtap="preview" data-index="0" />
+<live-pulse wx:if="{{id}}" flush scope="route" routeId="{{id}}"></live-pulse>
 <view class="pad">
   <view class="title">{{r.title}}</view>
   <view class="muted">{{r.subtitle}}</view>

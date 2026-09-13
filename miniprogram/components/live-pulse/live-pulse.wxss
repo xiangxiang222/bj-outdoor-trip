@@ -1,0 +1,50 @@
+.live-pulse {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  min-height: 72rpx;
+  padding: 12rpx 20rpx 12rpx 16rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  margin: 12rpx 32rpx 8rpx;
+  box-sizing: border-box;
+}
+.live-pulse.is-flush {
+  margin: 0;
+  border-radius: 0;
+  border-top: 1rpx solid #eceee8;
+  border-bottom: 1rpx solid #eceee8;
+}
+.live-pulse-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+.live-pulse-face {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 50%;
+  background: #d8f3dc;
+  color: #141414;
+  text-align: center;
+  line-height: 48rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.live-pulse-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 24rpx;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.live-pulse-now {
+  flex-shrink: 0;
+  font-size: 22rpx;
+  color: #7a7d74;
+}

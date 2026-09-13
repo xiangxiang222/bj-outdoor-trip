@@ -3,6 +3,7 @@
     <image class="cover" src="{{item}}" mode="aspectFill" bindtap="previewHero" data-src="{{item}}" />
   </swiper-item>
 </swiper>
+<live-pulse wx:if="{{s}}" flush scope="schedule" routeId="{{s.routeId || (s.route && s.route.id) || 0}}" scheduleId="{{s.id}}"></live-pulse>
 <view class="card trip-head" wx:if="{{s}}">
   <view class="pad">
     <view class="title">
