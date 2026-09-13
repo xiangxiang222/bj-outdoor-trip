@@ -48,8 +48,11 @@ describe("guide portal", () => {
     const detail = await agent.get(`/api/guide/schedules/${seed.individualScheduleId}`).set(gauth).expect(200);
     const first = detail.body.data.roster[0];
     assert.ok(first.phone);
+    assert.match(first.phone, /\*\*\*\*/);
+    assert.equal(first.phonesVisible, false);
     assert.equal(first.emergencyName, "紧急联系人");
     assert.ok(first.emergencyPhone);
+    assert.match(first.emergencyPhone, /\*\*\*\*/);
     assert.ok(first.userId);
     assert.ok(first.hometown);
     const traveler = await agent
@@ -57,6 +60,7 @@ describe("guide portal", () => {
       .set(gauth)
       .expect(200);
     assert.equal(traveler.body.data.phone, first.phone);
+    assert.equal(traveler.body.data.phonesVisible, false);
     assert.equal(traveler.body.data.emergencyName, "紧急联系人");
     assert.match(traveler.body.data.idCard, /\*/);
     assert.ok(traveler.body.data.profile);
@@ -77,6 +81,10 @@ describe("guide portal", () => {
 
     const started = await agent.post(`/api/guide/schedules/${seed.individualScheduleId}/start`).set(gauth).expect(200);
     assert.ok(started.body.data.startedAt);
+    const openedPhone = (started.body.data.roster || []).find((r) => r.id === first.id);
+    assert.ok(openedPhone);
+    assert.match(openedPhone.phone, /^1\d{10}$/);
+    assert.equal(openedPhone.phonesVisible, true);
     const startedAgain = await agent.post(`/api/guide/schedules/${seed.individualScheduleId}/start`).set(gauth).expect(200);
     assert.equal(startedAgain.body.data.already, true);
 

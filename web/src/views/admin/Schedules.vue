@@ -57,6 +57,7 @@
             <el-button v-if="canField" size="small" @click="openTrip(row)">车辆座位</el-button>
             <el-button v-if="canField" size="small" :disabled="row.status === 'cancelled'" @click="openCheckinDlg(row)">开团签到</el-button>
             <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openVirtual(row)">虚拟</el-button>
+            <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openReview(row)">评价</el-button>
             <el-button v-if="canOps" size="small" @click="openLimit(row)">限制</el-button>
             <el-button
               v-if="canOps && row.oversub?.enabled && !row.oversub?.drawn"
@@ -155,7 +156,7 @@
         </el-form-item>
         <el-form-item label="虚拟报名">
           <el-input-number v-model="neu.virtualCount" :min="0" :max="80" />
-          <p class="muted" style="margin:6px 0 0">发布后先占若干看起来像真人的报名，之后仍可在列表里改人数。</p>
+          <p class="muted" style="margin:6px 0 0">从虚拟用户池抽人占座，之后仍可在列表里改人数。</p>
         </el-form-item>
         <el-form-item label="抽奖">
           <el-select v-model="neu.lotteryMode">
@@ -285,7 +286,7 @@
       <p v-if="cur">
         「{{ cur.route?.title }} {{ cur.startDate }}」当前真实 {{ cur.realEnrolled || 0 }} 人、虚拟 {{ cur.virtualEnrolled || 0 }} 人、座位 {{ cur.maxSeats }}。
       </p>
-      <p class="muted">用常见姓名、籍贯、手机和紧急联系人占座，前台名单看起来像真人报名。人数可随时改；真人占座时会自动腾出虚拟座位。</p>
+      <p class="muted">从虚拟用户池抽人占座。池中空闲 {{ virtualPool.idle }} / 共 {{ virtualPool.total }} 人，不够会自动补进池。人数可随时改；真人占座时会腾出虚拟座位。</p>
       <el-form label-width="120px">
         <el-form-item label="虚拟报名人数">
           <el-input-number v-model="virtualCount" :min="0" :max="80" />
@@ -294,6 +295,24 @@
       <template #footer>
         <el-button @click="showVirtual = false">取消</el-button>
         <el-button type="success" :loading="savingVirtual" @click="saveVirtual">确定</el-button>
+      </template>
+    </el-dialog>
+    <el-dialog v-model="showReview" :title="cur ? `虚拟评价 · ${cur.route?.title || ''} ${cur.startDate || ''}` : '虚拟评价'" width="480px">
+      <p class="muted">用虚拟用户给本团所属线路写评价。优先用本团已占座的虚拟报名。</p>
+      <el-form label-width="90px">
+        <el-form-item label="条数">
+          <el-input-number v-model="reviewForm.count" :min="1" :max="30" />
+        </el-form-item>
+        <el-form-item label="分数">
+          <el-input-number v-model="reviewForm.rating" :min="1" :max="5" />
+        </el-form-item>
+        <el-form-item label="评语">
+          <el-input v-model="reviewForm.content" type="textarea" :rows="3" placeholder="可空，空则用常用评语" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showReview = false">取消</el-button>
+        <el-button type="success" :loading="savingReview" @click="saveReview">发布评价</el-button>
       </template>
     </el-dialog>
 
@@ -356,6 +375,10 @@ const limitForm = ref({ studentOnly: false, alumniOk: false, oversub: false, sch
 const showVirtual = ref(false);
 const virtualCount = ref(0);
 const savingVirtual = ref(false);
+const virtualPool = ref({ total: 0, idle: 0, busy: 0 });
+const showReview = ref(false);
+const savingReview = ref(false);
+const reviewForm = ref({ count: 3, rating: 5, content: "" });
 const tripForm = ref({ plateNo: "", consultGroup: "", lockedText: "", enrollmentId: null, toSeat: "" });
 const chain = ref([]);
 const guideDetail = ref(null);
@@ -460,6 +483,26 @@ function openVirtual(row) {
   cur.value = row;
   virtualCount.value = Number(row.virtualEnrolled || 0);
   showVirtual.value = true;
+  http.get("/admin/virtual-users/pool").then((res) => {
+    virtualPool.value = res.data || virtualPool.value;
+  }).catch(() => {});
+}
+function openReview(row) {
+  cur.value = row;
+  reviewForm.value = { count: 3, rating: 5, content: "" };
+  showReview.value = true;
+}
+async function saveReview() {
+  savingReview.value = true;
+  try {
+    const res = await http.post(`/admin/schedules/${cur.value.id}/reviews`, reviewForm.value);
+    showReview.value = false;
+    ElMessage.success(res.message || "已发布评价");
+  } catch (e) {
+    ElMessage.error(e.message || "评价失败");
+  } finally {
+    savingReview.value = false;
+  }
 }
 async function saveVirtual() {
   savingVirtual.value = true;

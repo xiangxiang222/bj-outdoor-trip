@@ -222,4 +222,46 @@ describe("social homepage leaders referral virtual fallback", () => {
       .get(hit.id).c;
     assert.equal(stillVirtual, 4);
   });
+
+  it("lets ops grow a shared virtual pool and assign the same people across trips", async () => {
+    const admin = await loginAdmin(agent);
+    const grown = await agent.post("/api/admin/virtual-users/pool").set(auth(admin)).send({ count: 8 }).expect(200);
+    assert.equal(grown.body.data.created, 8);
+    assert.equal(grown.body.data.total, 8);
+    assert.equal(grown.body.data.idle, 8);
+    const pool = await agent.get("/api/admin/virtual-users/pool").set(auth(admin)).expect(200);
+    assert.equal(pool.body.data.idle, 8);
+    const first = await agent
+      .post(`/api/admin/schedules/${seed.individualScheduleId}/virtual-users`)
+      .set(auth(admin))
+      .send({ count: 3 })
+      .expect(200);
+    assert.equal(first.body.data.count, 3);
+    assert.equal(first.body.data.created, 0);
+    assert.equal(first.body.data.pool.idle, 5);
+    const second = await agent
+      .post(`/api/admin/schedules/${seed.companyScheduleId}/virtual-users`)
+      .set(auth(admin))
+      .send({ count: 3 })
+      .expect(200);
+    assert.equal(second.body.data.count, 3);
+    assert.equal(second.body.data.created, 0);
+    const afterTwo = await agent.get("/api/admin/virtual-users/pool").set(auth(admin)).expect(200);
+    assert.equal(afterTwo.body.data.busy, 6);
+    assert.equal(afterTwo.body.data.idle, 2);
+    await agent
+      .post(`/api/admin/schedules/${seed.individualScheduleId}/virtual-users`)
+      .set(auth(admin))
+      .send({ count: 0 })
+      .expect(200);
+    const freed = await agent.get("/api/admin/virtual-users/pool").set(auth(admin)).expect(200);
+    assert.equal(freed.body.data.idle, 5);
+    const raised = await agent
+      .post(`/api/admin/schedules/${seed.companyScheduleId}/virtual-users`)
+      .set(auth(admin))
+      .send({ count: 5 })
+      .expect(200);
+    assert.equal(raised.body.data.count, 5);
+    assert.equal(raised.body.data.created, 0);
+  });
 });

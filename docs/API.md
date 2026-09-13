@@ -106,8 +106,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/guide/login` | `phone` `captchaToken` `captcha`。演示：`13700001101` |
 | GET | `/guide/me` | 当前导游 |
 | GET | `/guide/schedules` | 已分配行程 |
-| GET | `/guide/schedules/:id` | 名单含手机、座位、紧急联系人、籍贯、年龄段、关联用户、本轮 `sessionChecked`；另含 `startedAt`、`checkin`（签到点、进行中的轮次、历史） |
-| GET | `/guide/schedules/:id/travelers/:enrollmentId` | 本团游客详情：报名资料 + 公开主页（相册/行程）。身份证掩码。仅已分配导游 |
+| GET | `/guide/schedules/:id` | 名单含手机、座位、紧急联系人、籍贯、年龄段、关联用户、本轮 `sessionChecked`；正式开团前手机与紧急电话打码，`phonesVisible=false`；另含 `startedAt`、`checkin`（签到点、进行中的轮次、历史） |
+| GET | `/guide/schedules/:id/travelers/:enrollmentId` | 本团游客详情：报名资料 + 公开主页（相册/行程）。身份证掩码。开团前手机打码。仅已分配导游 |
 | POST | `/guide/schedules/:id/start` | 正式开团。已开过则 `already: true` |
 | POST | `/guide/schedules/:id/checkins` | 发起一轮签到。body：`stopKey`（`depart` 或 `stop-0`…）或自定义 `title`。同一时间只能有一轮未确认 |
 | POST | `/guide/schedules/:id/checkins/:sessionId/confirm` | 确认本轮签到，之后才能再发起 |
@@ -116,7 +116,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | POST | `/guide/schedules/:id/seats/lock` | `seatNo`+`locked` 或 `lockedSeats` 数组 |
 | POST | `/guide/schedules/:id/seats/assign` | `enrollmentId` `seatNo`，空位调座或两人互换 |
 
-H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急联系人号码为 `tel:` 链接，手机可直接拨打。车辆与咨询群保存后只读，点「修改」再改。可点「正式开团」；出发前上车和每个行程休息点可发起签到，核对后点「确认本轮签到」。
+H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机与紧急联系人打码，开团后为 `tel:` 链接，手机可直接拨打。车辆与咨询群保存后只读，点「修改」再改。可点「正式开团」；出发前上车和每个行程休息点可发起签到，核对后点「确认本轮签到」。
 
 ### 报名 body
 
@@ -188,7 +188,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` `videos`（视频链接数组） |
 | PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换；`videos` 为视频链接数组（省略则保留原值） |
 | DELETE | `/admin/routes/:id` | 下架 |
-| POST | `/admin/schedules` | 后台发布排期。可选 `virtualCount` 发布后立即设置虚拟报名；`lotteryMode` 非 off 时挂上默认 4 奖转盘。`organizerType=campus` 且 `offerType=free` 时默认打开报超会抽、仅师生，并用学校名作为限定高校 |
+| POST | `/admin/schedules` | 后台发布排期。可选 `virtualCount` 发布后从虚拟用户池抽人占座；`lotteryMode` 非 off 时挂上默认 4 奖转盘。`organizerType=campus` 且 `offerType=free` 时默认打开报超会抽、仅师生，并用学校名作为限定高校 |
 | POST | `/admin/schedules/:id/review` | 用户发团审核。`status=approved|rejected` |
 | GET | `/admin/schedules` | 含成本、收入、利润、导游、`startedAt` |
 | POST | `/admin/schedules/:id/start` | 现场权限。正式开团 |
@@ -225,8 +225,12 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 | POST | `/admin/notices/read-all` | 运营。全部标已读 |
 | POST | `/admin/notices/:id/read` | 运营。单条标已读 |
 | GET | `/admin/users` | Query：`q`、`pending=campus\|group\|any`。不含已注销、不含证件；带 `isMember` `isVirtual` `isStudent` `isAlumni` `campusKind` `school` `studentStatus` `groupStatus`。待审排在前面 |
-| POST | `/admin/virtual-users` | `{ scheduleId, count }` 将该团虚拟报名人数设为 `count`（可增可减） |
+| GET | `/admin/virtual-users/pool` | 虚拟用户池 `{ total, idle, busy }` |
+| POST | `/admin/virtual-users/pool` | `{ count }` 预生成虚拟用户（一次最多 200，池上限 800） |
+| POST | `/admin/virtual-users` | `{ scheduleId, count }` 将该团虚拟报名人数设为 `count`（从池里抽人，可增可减） |
 | POST | `/admin/schedules/:id/virtual-users` | `{ count }` 同上，按路径指定行程 |
+| POST | `/admin/routes/:id/reviews` | 用虚拟用户给线路写评价。`count` `rating` `content`，可选 `scheduleId` |
+| POST | `/admin/schedules/:id/reviews` | 同上，挂在指定排期 |
 | POST | `/admin/users/:id/verify` | `{ kind: student\|group\|leader, action: approve\|reject }`。校友通过后 `is_student=0`；领队通过后 `role=leader`（公司账号保持 `company`） |
 | POST | `/admin/users/:id/member` | `action=grant` 开通/续费，`revoke` 取消会员 |
 | POST | `/admin/users/:id/points` | `delta` 非零整数、`reason` |
