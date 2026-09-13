@@ -55,6 +55,9 @@ Page({
     organizerLabels: ["个人开团（先报名，出行前付款）", "公司开团（先报名，最后统一支付）", "高校开团（先报名，出行前付款）"],
     organizerKeys: ["individual", "company", "campus"],
     organizerIndex: 0,
+    scopeLabels: ["不限制学校学院", "仅已认证师生", "仅本学院", "仅本校", "本校跨学院", "跨学校"],
+    scopeKeys: ["open", "certified", "college", "school", "colleges", "schools"],
+    scopeIndex: 0,
     form: {
       title: "",
       city: "",
@@ -75,10 +78,13 @@ Page({
       description: "",
       videoUrls: "",
       comboRule: { require: "student_or_group", school: "" },
-      studentOnly: false,
       alumniOk: false,
       oversub: false,
+      campusScope: "open",
+      campusSchool: "",
+      campusCollege: "",
       schools: "",
+      colleges: "",
       lotteryMode: "off",
     },
   },
@@ -98,6 +104,7 @@ Page({
     const title = q.title ? decodeURIComponent(q.title) : "";
     const asActivity = q.channel === "activity" || KINDS.some((k) => k.key === kind || k.key === title);
     const activityKind = KINDS.some((k) => k.key === kind) ? kind : KINDS.some((k) => k.key === title) ? title : "掼蛋";
+    const user = app.globalData.user || {};
     this.setData({
       dates,
       dateLabels: dates.map((d) => d.label),
@@ -114,6 +121,9 @@ Page({
       "form.meetupTime": asActivity ? "19:30" : this.data.form.meetupTime,
       "form.meetupPoint": asActivity ? "" : MEETUPS[0],
       "form.city": asActivity ? "朝阳" : "",
+      "form.campusSchool": user.school || "",
+      "form.campusCollege": user.college || "",
+      "form.companyName": this.data.form.companyName || user.companyName || user.school || "",
     });
     this.boot();
   },
@@ -175,9 +185,6 @@ Page({
   setComboSchool(e) {
     this.setData({ "form.comboRule.school": e.detail.value });
   },
-  toggleStudentOnly() {
-    this.setData({ "form.studentOnly": !this.data.form.studentOnly });
-  },
   toggleAlumniOk() {
     this.setData({ "form.alumniOk": !this.data.form.alumniOk });
   },
@@ -196,11 +203,28 @@ Page({
   applyCampusFree() {
     const form = this.data.form || {};
     if (form.organizerType !== "campus" || form.offerType !== "free") return;
+    const school = form.campusSchool || form.companyName || "";
     this.setData({
       "form.oversub": true,
-      "form.studentOnly": true,
-      "form.schools": form.schools || form.companyName || "",
+      "form.campusScope": form.campusScope === "open" ? "school" : form.campusScope,
+      "form.campusSchool": school,
+      scopeIndex: form.campusScope === "open" ? 3 : this.data.scopeIndex,
     });
+  },
+  setScope(e) {
+    const i = Number(e.detail.value);
+    const scope = this.data.scopeKeys[i] || "open";
+    const user = getApp().globalData.user || {};
+    const patch = { scopeIndex: i, "form.campusScope": scope };
+    if (!this.data.form.campusSchool && (user.school || this.data.form.companyName)) {
+      patch["form.campusSchool"] = user.school || this.data.form.companyName;
+    }
+    if (!this.data.form.campusCollege && user.college) patch["form.campusCollege"] = user.college;
+    if (scope === "colleges" && user.college && !this.data.form.colleges) patch["form.colleges"] = user.college;
+    if (scope === "schools" && (user.school || this.data.form.campusSchool) && !this.data.form.schools) {
+      patch["form.schools"] = this.data.form.campusSchool || user.school;
+    }
+    this.setData(patch);
   },
   setCompanyName(e) {
     this.setData({ "form.companyName": e.detail.value });
@@ -245,8 +269,8 @@ Page({
     }
     if (form.organizerType === "campus" && form.offerType === "free") {
       form.oversub = true;
-      form.studentOnly = true;
-      if (!String(form.schools || "").trim()) form.schools = form.companyName || "";
+      if (form.campusScope === "open") form.campusScope = "school";
+      if (!String(form.campusSchool || "").trim()) form.campusSchool = form.companyName || "";
     }
     try {
       wx.showLoading({ title: "提交中", mask: true });

@@ -36,12 +36,9 @@
       <option value="free">免费团</option>
       <option value="full">全价团</option>
     </select>
-    <label class="check-row"><input type="checkbox" v-model="form.studentOnly" /> 仅已认证师生可报名</label>
-    <label class="check-row"><input type="checkbox" v-model="form.alumniOk" /> 允许已认证校友</label>
     <label class="check-row"><input type="checkbox" v-model="form.oversub" /> 报超会抽（车位不够才抽）</label>
     <p v-if="form.organizerType === 'campus' && form.offerType === 'free'" class="muted">高校免费团会默认打开抽签：先报名待确认，人数超过座位才抽签。</p>
-    <label>限定高校（可空，逗号分隔）</label>
-    <input class="input" v-model="form.schools" placeholder="例如：北京大学,清华大学" />
+    <CampusAudienceFields v-model="form" :profile="store.profile" />
     <label>想怎么玩</label>
     <div class="chips">
       <div class="play-tag" v-for="t in tags" :key="t.id" :style="{ background: t.color, opacity: form.playTagIds.includes(t.id) ? 1 : 0.4 }" @click="toggleTag(t.id)">{{ t.name }}</div>
@@ -59,6 +56,7 @@ import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
+import CampusAudienceFields from "@/components/CampusAudienceFields.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -81,7 +79,11 @@ const form = ref({
   studentOnly: false,
   alumniOk: false,
   oversub: false,
+  campusScope: "open",
+  campusSchool: store.profile?.school || "",
+  campusCollege: store.profile?.college || "",
   schools: "",
+  colleges: "",
 });
 
 watch(
@@ -97,9 +99,9 @@ watch(
     const isCampusFree = type === "campus" && offer === "free";
     if (isCampusFree && !wasCampusFree) {
       form.value.oversub = true;
-      form.value.studentOnly = true;
+      if (form.value.campusScope === "open") form.value.campusScope = "school";
       const school = name || form.value.companyName || store.profile?.school || "";
-      if (school && !String(form.value.schools || "").trim()) form.value.schools = school;
+      if (school && !String(form.value.campusSchool || "").trim()) form.value.campusSchool = school;
     }
   }
 );
@@ -132,8 +134,8 @@ async function submit() {
     const payload = { ...form.value };
     if (payload.organizerType === "campus" && payload.offerType === "free") {
       payload.oversub = true;
-      payload.studentOnly = true;
-      if (!String(payload.schools || "").trim()) payload.schools = payload.companyName || "";
+      if (payload.campusScope === "open") payload.campusScope = "school";
+      if (!String(payload.campusSchool || "").trim()) payload.campusSchool = payload.companyName || "";
     }
     const res = await http.post("/schedules", { routeId: Number(route.params.id), ...payload });
     router.push("/m/schedule/" + res.data.id);

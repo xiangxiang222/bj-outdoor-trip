@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { harness, loginUser, loginAdmin, auth, ID, issueCaptcha } = require("./http");
+const { harness, loginUser, loginAdmin, auth, ID, issueCaptcha, campusPayload } = require("./http");
 
 describe("combo groups", () => {
   let agent;
@@ -11,7 +11,7 @@ describe("combo groups", () => {
   });
 
   async function approveStudent(token, userId, school) {
-    await agent.post("/api/me/student").set(auth(token)).send({ school }).expect(200);
+    await agent.post("/api/me/student").set(auth(token)).send(campusPayload({ school })).expect(200);
     const admin = await loginAdmin(agent);
     await agent.post(`/api/admin/users/${userId}/verify`).set(auth(admin)).send({ kind: "student", action: "approve" }).expect(200);
   }

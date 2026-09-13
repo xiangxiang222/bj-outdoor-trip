@@ -8,6 +8,7 @@
 <view class="pad muted" wx:else>{{isActivity ? '报名后按报价，出行前付款' : '个人拼团：先报名占座，出行前付款'}}</view>
 <view class="pad muted" wx:if="{{s.eligibility.enabled}}">{{s.eligibility.label}}</view>
 <view class="pad" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" style="color:#bc4749">{{s.eligibility.reason}}</view>
+<view class="btn ghost" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" bindtap="goStudent">去校园认证</view>
 <input class="input" placeholder="{{isActivity ? '怎么称呼' : '姓名（与身份证一致）'}}" value="{{form.travelerName}}" bindinput="setName" />
 <input class="input" placeholder="手机号" type="number" maxlength="11" value="{{form.travelerPhone}}" bindinput="setPhone" />
 <block wx:if="{{!isActivity}}">

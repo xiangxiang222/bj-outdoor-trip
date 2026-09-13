@@ -1,0 +1,22 @@
+<view class="pad muted">认证时请上传学生证或校友证，并填写学校、学院。通过后可走学生价；部分团只对本院、本校或指定学校学院开放。校友不享受学生价。</view>
+<view class="pad" wx:if="{{certified}}" style="color:#2d6a4f">已认证{{kindLabel}}{{placeText}}</view>
+<view class="pad muted" wx:elif="{{pending}}">审核中{{placeText}}</view>
+<view class="pad muted" wx:elif="{{rejected}}">上次未通过，可修改后再次提交。</view>
+
+<view class="pad">身份</view>
+<picker mode="selector" range="{{kindLabels}}" value="{{kindIndex}}" disabled="{{certified}}" bindchange="setKind">
+  <view class="input">{{kindLabels[kindIndex]}}</view>
+</picker>
+<view class="pad">学校</view>
+<input class="input" value="{{school}}" placeholder="填写学校全称" disabled="{{certified}}" bindinput="onSchool" />
+<view class="pad">学院</view>
+<input class="input" value="{{college}}" placeholder="例如：信息科学技术学院" disabled="{{certified}}" bindinput="onCollege" />
+<block wx:if="{{campusKind=='student'}}">
+  <view class="pad">学号</view>
+  <input class="input" value="{{studentNo}}" placeholder="学生证上的学号" disabled="{{certified}}" bindinput="onNo" />
+</block>
+<view class="pad">学生证 / 校友证</view>
+<image wx:if="{{studentCardUrl}}" src="{{studentCardUrl}}" mode="aspectFit" style="width:100%;height:280rpx;background:#eee" bindtap="pickCard" />
+<button wx:else class="ghost" disabled="{{certified}}" bindtap="pickCard">上传照片</button>
+<button bindtap="submit" disabled="{{loading || certified}}">{{loading ? '提交中…' : '提交认证'}}</button>
+<button class="ghost" wx:if="{{redirect}}" bindtap="goBack">返回</button>

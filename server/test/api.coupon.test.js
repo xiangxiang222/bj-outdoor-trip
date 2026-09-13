@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { harness, loginUser, loginCompany, loginAdmin, auth, ID, enrollPayload, issueCaptcha } = require("./http");
+const { harness, loginUser, loginCompany, loginAdmin, auth, ID, enrollPayload, issueCaptcha, campusPayload } = require("./http");
 
 function enrollBody(extra = {}) {
   return enrollPayload({
@@ -650,7 +650,7 @@ describe("coupons", () => {
       captcha: cap.code,
     }).expect(200);
     const guestId = guest.body.data.user.id;
-    await agent.post("/api/me/student").set(auth(guest.body.data.token)).send({ school: "北京大学" }).expect(200);
+    await agent.post("/api/me/student").set(auth(guest.body.data.token)).send(campusPayload({ school: "北京大学" })).expect(200);
     await agent.post(`/api/admin/users/${guestId}/verify`).set(auth(admin)).send({ kind: "student", action: "approve" }).expect(200);
 
     const cap2 = await issueCaptcha(agent);
@@ -662,7 +662,7 @@ describe("coupons", () => {
       captcha: cap2.code,
     }).expect(200);
     const otherId = other.body.data.user.id;
-    await agent.post("/api/me/student").set(auth(other.body.data.token)).send({ school: "清华大学" }).expect(200);
+    await agent.post("/api/me/student").set(auth(other.body.data.token)).send(campusPayload({ school: "清华大学" })).expect(200);
     await agent.post(`/api/admin/users/${otherId}/verify`).set(auth(admin)).send({ kind: "student", action: "approve" }).expect(200);
 
     const people = await agent

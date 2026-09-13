@@ -95,13 +95,10 @@
       <input class="input" type="number" v-model.number="form.originPrice" />
       <label class="check-row"><input type="checkbox" v-model="form.memberPriceOn" /> 适用会员价</label>
       <label class="check-row"><input type="checkbox" v-model="form.studentPriceOn" /> 适用学生价</label>
-      <label class="check-row"><input type="checkbox" v-model="form.studentOnly" /> 仅已认证师生可报名</label>
-      <label class="check-row"><input type="checkbox" v-model="form.alumniOk" /> 允许已认证校友</label>
       <label class="check-row"><input type="checkbox" v-model="form.oversub" /> 报超会抽（车位不够才抽）</label>
       <p v-if="form.organizerType === 'campus' && form.offerType === 'free'" class="muted">高校免费团会默认打开抽签：先报名待确认，人数超过座位才抽签决定出行人。</p>
-      <label>限定高校（可空，逗号分隔）</label>
-      <input class="input" v-model="form.schools" placeholder="例如：北京大学,清华大学" />
-      <p class="muted">填了高校后，只有认证学校匹配的师生或校友能报。勾选报超会抽后，先报名待确认；人数超过座位才抽签，未超过则全部确认。</p>
+      <CampusAudienceFields v-model="form" :profile="store.profile" />
+      <p class="muted">勾选报超会抽后，先报名待确认；人数超过座位才抽签，未超过则全部确认。</p>
       <label v-if="form.offerType !== 'free'">现价（可空，早鸟/特惠将按折扣算）</label>
       <input v-if="form.offerType !== 'free'" class="input" type="number" v-model.number="form.offerPrice" />
       <label>出发日期</label>
@@ -164,6 +161,7 @@ import { requireLogin } from "@/utils/auth";
 import { OFFER_TYPES } from "@/utils/offer";
 import { ACTIVITY_KINDS } from "@/utils/activityKind";
 import { todayYmd } from "@/utils/trips";
+import CampusAudienceFields from "@/components/CampusAudienceFields.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -201,10 +199,13 @@ const form = ref({
   offerPrice: null,
   memberPriceOn: true,
   studentPriceOn: true,
-  studentOnly: false,
   alumniOk: false,
   oversub: false,
+  campusScope: "open",
+  campusSchool: store.profile?.school || "",
+  campusCollege: store.profile?.college || "",
   schools: "",
+  colleges: "",
   startDate: route.query.date || (startAsActivity ? tomorrow() : ""),
   organizerType: "individual",
   companyName: store.profile?.companyName || "",
@@ -238,9 +239,9 @@ watch(
     const isCampusFree = type === "campus" && offer === "free";
     if (isCampusFree && !wasCampusFree) {
       form.value.oversub = true;
-      form.value.studentOnly = true;
+      if (form.value.campusScope === "open") form.value.campusScope = "school";
       const school = name || form.value.companyName || store.profile?.school || "";
-      if (school && !String(form.value.schools || "").trim()) form.value.schools = school;
+      if (school && !String(form.value.campusSchool || "").trim()) form.value.campusSchool = school;
     }
   }
 );
@@ -345,8 +346,8 @@ async function submit() {
     }
     if (payload.organizerType === "campus" && payload.offerType === "free") {
       payload.oversub = true;
-      payload.studentOnly = true;
-      if (!String(payload.schools || "").trim()) payload.schools = payload.companyName || "";
+      if (payload.campusScope === "open") payload.campusScope = "school";
+      if (!String(payload.campusSchool || "").trim()) payload.campusSchool = payload.companyName || "";
     }
     const res = await http.post("/trips", payload);
     router.push("/m/schedule/" + res.data.id + "?posted=1");

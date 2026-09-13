@@ -59,11 +59,13 @@ function noticeCampus(user) {
   if (!user) return null;
   const who = user.nickname || user.phone || "用户";
   const school = String(user.school || "").trim();
+  const college = String(user.college || "").trim();
+  const place = [school, college].filter(Boolean).join("");
   const kindLabel = user.campus_kind === "alumni" ? "校友" : "师生";
   return pushNotice({
     kind: "campus",
     title: "校园认证待审",
-    body: school ? `${who} 申请${school}（${kindLabel}）认证` : `${who} 申请校园认证`,
+    body: place ? `${who} 申请${place}（${kindLabel}）认证` : `${who} 申请校园认证`,
     href: `/admin/verify?kind=campus&userId=${user.id}`,
     refType: "user",
     refId: user.id,

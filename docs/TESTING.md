@@ -122,7 +122,7 @@ npx vitest run src/utils/share.test.js
 | `api.seats.test.js` | 选座、锁座 |
 | `api.insurance.test.js` | 保险加购 |
 | `api.supplies.test.js` | 补给加购 |
-| `api.eligibility.test.js` | 仅学生 / 高校名单 / 高校免费团仍检查学校限制 |
+| `api.eligibility.test.js` | 仅学生 / 高校名单 / 学院名单 / 高校免费团仍检查学校限制；发起人只扩不缩 |
 | `api.combo.test.js` | 组合团 |
 | `api.trip.test.js` | 用户发团与审核 |
 | `api.oversub.test.js` | 报超会抽：未超座位全员确认、超员抽签、重复确认 400、校友资格、中签取消后按抽签顺序递补、志愿者不进抽签池、高校免费团默认抽签 |

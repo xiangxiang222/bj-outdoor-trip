@@ -28,8 +28,8 @@
       <el-table-column prop="member_expire_at" label="到期" width="120" />
       <el-table-column prop="points" label="积分" width="80" />
       <el-table-column prop="company_name" label="公司" min-width="140" />
-      <el-table-column label="校园" width="120">
-        <template #default="{ row }">{{ row.isAlumni ? "校友" : row.isStudent ? "已认证" : row.studentStatus === "pending" ? "待审" : "—" }}</template>
+      <el-table-column label="校园" min-width="160">
+        <template #default="{ row }">{{ campusText(row) }}</template>
       </el-table-column>
       <el-table-column label="团体" min-width="120">
         <template #default="{ row }">{{ row.groupStatus === "approved" ? row.groupName || "已认证" : row.groupStatus === "pending" ? "待审" : "—" }}</template>
@@ -100,6 +100,13 @@ function syncFromRoute() {
   }
   focusId.value = userId;
   load();
+}
+
+function campusText(row) {
+  const status = row.isAlumni ? "校友" : row.isStudent ? "已认证" : row.studentStatus === "pending" ? "待审" : "";
+  const place = [row.school, row.college].filter(Boolean).join(" ");
+  if (status && place) return `${status} · ${place}`;
+  return status || place || "—";
 }
 
 function rowClass({ row }) {
