@@ -122,6 +122,14 @@ Page({
     const url = e.currentTarget.dataset.url;
     if (url) wx.previewImage({ urls: [url], current: url });
   },
+  copyVideo(e) {
+    const url = e.currentTarget.dataset.url;
+    if (!url) return;
+    wx.setClipboardData({
+      data: url,
+      success: () => wx.showToast({ title: "链接已复制", icon: "none" }),
+    });
+  },
   preview(e) {
     const index = Number(e.currentTarget.dataset.index) || 0;
     const gallery = this.data.r.gallery || [];

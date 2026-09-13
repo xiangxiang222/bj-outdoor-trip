@@ -29,6 +29,7 @@ function localizeMedia(value) {
   if (out.avatar) out.avatar = toPath(out.avatar);
   if (out.photo) out.photo = toPath(out.photo);
   if (out.url && typeof out.url === "string") out.url = toPath(out.url);
+  if (out.embedUrl && typeof out.embedUrl === "string") out.embedUrl = toPath(out.embedUrl);
   if (Array.isArray(out.gallery)) {
     out.gallery = out.gallery.map((g) => (typeof g === "string" ? toPath(g) : localizeMedia(g)));
   }

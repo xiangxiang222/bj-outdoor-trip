@@ -42,6 +42,8 @@
       <p style="margin-top:0;white-space:pre-wrap">{{ route.description }}</p>
     </div></div>
 
+    <RouteVideos :videos="route.videos || []" />
+
     <div class="h2" v-if="album.length">更多照片</div>
     <div class="gallery" v-if="album.length">
       <img v-for="g in album" :key="g" :src="g" @click="previewUrl(g)" />
@@ -157,6 +159,7 @@ import { organizerTypeText, starText } from "@/utils/labels";
 import { storyAlbum } from "@/utils/story";
 import TripPrices from "@/components/TripPrices.vue";
 import RouteStory from "@/components/RouteStory.vue";
+import RouteVideos from "@/components/RouteVideos.vue";
 
 const props = defineProps({
   route: { type: Object, default: null },

@@ -121,6 +121,16 @@
           </el-upload>
           <div class="muted">可多选。未单独设封面时，会用相册第一张当封面。</div>
         </el-form-item>
+        <el-form-item label="视频">
+          <div class="list-edit">
+            <div v-for="(v, i) in form.videos" :key="'v' + i" class="line-row">
+              <el-input v-model="form.videos[i]" placeholder="https://www.bilibili.com/video/BVxxxx" />
+              <el-button link type="danger" @click="form.videos.splice(i, 1)">删除</el-button>
+            </div>
+            <el-button @click="form.videos = [...(form.videos || []), '']">加一条视频链接</el-button>
+          </div>
+          <div class="muted">一行一条。支持 B 站完整分享链接（含 BV 号）、YouTube、mp4 直链。线路页会嵌播放器。请不要只用 b23 短链。</div>
+        </el-form-item>
 
         <div class="sec">介绍</div>
         <el-form-item label="介绍"><el-input type="textarea" :rows="4" v-model="form.description" placeholder="给用户看的线路说明，可分段" /></el-form-item>
@@ -323,6 +333,7 @@ function blankForm() {
     story: [],
     cover: "",
     gallery: [],
+    videos: [],
     meetupPoints: [],
     buses: ["bus30"],
     status: "on",
@@ -349,6 +360,7 @@ function edit(row) {
     ...blankForm(),
     ...row,
     gallery: [...(row.gallery || [])],
+    videos: (row.videos || []).map((v) => (typeof v === "string" ? v : v.url || "")).filter(Boolean),
     tags: [...(row.tags || [])],
     highlights: [...(row.highlights || [])],
     story: (row.story || []).map((b) => ({ ...b, _key: nextKey() })),
@@ -565,6 +577,7 @@ async function save() {
       title: String(form.value.title).trim(),
       tags: (form.value.tags || []).map((t) => String(t).trim()).filter(Boolean),
       highlights: (form.value.highlights || []).map((h) => String(h).trim()).filter(Boolean),
+      videos: (form.value.videos || []).map((v) => String(v).trim()).filter(Boolean),
       priceTiers,
       meetupPoints: serializeMeetupPoints(form.value.meetupPoints),
       buses: form.value.buses || [],

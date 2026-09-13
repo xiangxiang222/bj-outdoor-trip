@@ -89,6 +89,7 @@ function createSchema(db) {
       tags_json TEXT,
       cover TEXT,
       gallery_json TEXT,
+      videos_json TEXT,
       min_group_size INTEGER,
       description TEXT,
       story_json TEXT,
@@ -608,6 +609,7 @@ function migrateSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_coupon_allowlist_user ON coupon_allowlist(user_id);
   `);
   addColumnIfMissing(db, "routes", "story_json", "TEXT");
+  addColumnIfMissing(db, "routes", "videos_json", "TEXT");
   db.exec(`
     CREATE TABLE IF NOT EXISTS lottery_campaigns (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -699,6 +701,15 @@ function getDb() {
   return _db;
 }
 
+function parseRouteVideos(raw) {
+  try {
+    const parsed = JSON.parse(raw || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function toRoute(row, extra = {}) {
   if (!row) return null;
   return {
@@ -715,6 +726,7 @@ function toRoute(row, extra = {}) {
     tags: JSON.parse(row.tags_json || "[]"),
     cover: row.cover,
     gallery: JSON.parse(row.gallery_json || "[]"),
+    videos: parseRouteVideos(row.videos_json),
     minGroupSize: row.min_group_size,
     description: row.description,
     story: JSON.parse(row.story_json || "[]"),

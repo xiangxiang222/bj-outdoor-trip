@@ -73,6 +73,7 @@ Page({
       meetupPoint: MEETUPS[0],
       meetupTime: "07:30",
       description: "",
+      videoUrls: "",
       comboRule: { require: "student_or_group", school: "" },
       studentOnly: false,
       alumniOk: false,
@@ -251,6 +252,7 @@ Page({
       wx.showLoading({ title: "提交中", mask: true });
       const res = await request("/trips", "POST", {
         ...form,
+        videos: form.videoUrls,
         originPrice: Number(form.originPrice),
         minGroupSize: Number(form.minGroupSize),
         maxSeats: Number(form.maxSeats) || 12,

@@ -18,6 +18,13 @@
     </block>
   </block>
 </view>
+<view class="pad" wx:if="{{r.videos && r.videos.length}}">
+  <view class="title">线路视频</view>
+  <block wx:for="{{r.videos}}" wx:key="url">
+    <video wx:if="{{item.kind==='video'}}" src="{{item.embedUrl}}" controls style="width:100%;margin:12rpx 0;border-radius:16rpx;background:#000" />
+    <view wx:else class="video-link" bindtap="copyVideo" data-url="{{item.url}}">{{item.label}} · 复制链接去浏览器播放</view>
+  </block>
+</view>
 <view class="pad" wx:if="{{r.gallery && r.gallery.length}}"><view class="title">线路相册</view></view>
 <view class="gallery" style="display:flex;flex-wrap:wrap;padding:0 16rpx" wx:if="{{r.gallery && r.gallery.length}}">
   <image wx:for="{{r.gallery}}" wx:key="thumb" src="{{item.thumb}}" mode="aspectFill" style="width:48%;height:200rpx;margin:1%;border-radius:12rpx" bindtap="preview" data-index="{{index}}" show-menu-by-longpress="{{true}}" />

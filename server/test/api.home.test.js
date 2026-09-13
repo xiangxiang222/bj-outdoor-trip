@@ -87,9 +87,12 @@ describe("homepage and publish review", () => {
         meetupPoint: "东直门东方银座C口",
         offerType: "early",
         minGroupSize: 4,
+        videos: ["https://www.bilibili.com/video/BV1GJ411x7h7"],
       })
       .expect(200);
     assert.equal(created.body.data.reviewStatus, "pending");
+    assert.equal(created.body.data.route.videos[0].kind, "iframe");
+    assert.match(created.body.data.route.videos[0].embedUrl, /bvid=BV1GJ411x7h7/);
     const list = await agent.get("/api/schedules").expect(200);
     assert.equal(list.body.data.some((s) => s.id === created.body.data.id), false);
     await agent.post(`/api/enroll`).set(auth(token)).send({
