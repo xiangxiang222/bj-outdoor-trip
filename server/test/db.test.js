@@ -25,4 +25,25 @@ describe("db helpers", () => {
     const tables = second.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='users'").get();
     assert.equal(tables.name, "users");
   });
+
+  it("dedupes payment trade_no before unique index so startup does not crash", () => {
+    const db = getDb();
+    db.exec("DROP INDEX IF EXISTS idx_payments_trade_no");
+    const ins = db.prepare(
+      "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark) VALUES (0,1,0,1,'wechat','success',?,'x')"
+    );
+    ins.run("SAME");
+    ins.run("SAME");
+    ins.run("KEEP");
+    resetDb();
+    const next = getDb();
+    const nos = next.prepare("SELECT trade_no FROM payments ORDER BY id").all().map((row) => row.trade_no);
+    assert.equal(new Set(nos).size, nos.length);
+    assert.ok(nos.includes("SAME"));
+    assert.ok(nos.includes("KEEP"));
+    const idx = next
+      .prepare("SELECT name FROM sqlite_master WHERE type='index' AND name='idx_payments_trade_no'")
+      .get();
+    assert.equal(idx.name, "idx_payments_trade_no");
+  });
 });
