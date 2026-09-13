@@ -239,7 +239,16 @@ async function run() {
         "joined"
       );
       if (!companyPending) {
-        insertPay.run(Number(info.lastInsertRowid), u.id, scheduleId, amount, "wechat", "success", `MOCK${Date.now()}${idx}`, "演示支付");
+        insertPay.run(
+          Number(info.lastInsertRowid),
+          u.id,
+          scheduleId,
+          amount,
+          "wechat",
+          "success",
+          `MOCK${scheduleId}-${info.lastInsertRowid}`,
+          "演示支付"
+        );
         insertPt.run(u.id, amount, (u.points || 0) + amount, "活动积分", "enrollment", Number(info.lastInsertRowid));
       }
     });
