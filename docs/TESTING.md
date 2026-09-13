@@ -158,6 +158,8 @@ npx vitest run src/utils/share.test.js
 
 Vue 页面与小程序以手动/演示验收为主（依赖浏览器与微信开发者工具）；完整接口顺序见第 8 节走查。走查脚本目前按户外团路径打公开接口、报名、取消、解散、会员、注销；后台发券挂在个人团上（公司团发券会 400）。同城局轻报名以 `api.enroll.test.js` / `api.home.test.js` 为准。
 
+**发布行程**（首页发团 / 活动发起一局 / 线路发布排期 / 后台审核）的全量用例、逐步操作和界面截图见 [`PUBLISH_TEST_CASES.md`](./PUBLISH_TEST_CASES.md)。
+
 ## 5. 编写新测试
 
 1. 服务端文件放在 `server/test/`，文件名 `*.test.js`（Node 默认发现规则）。
