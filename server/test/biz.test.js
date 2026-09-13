@@ -8,6 +8,7 @@ const {
   buildDemographics,
   scheduleStatus,
   maskName,
+  maskPhone,
 } = require("../src/services/biz");
 const config = require("../src/config");
 
@@ -110,6 +111,13 @@ describe("maskName", () => {
     assert.equal(maskName("林北"), "林*");
     assert.equal(maskName("林北野"), "林**");
     assert.equal(maskName("欧阳北野"), "欧**");
+  });
+});
+
+describe("maskPhone", () => {
+  it("keeps prefix and suffix of a mainland mobile", () => {
+    assert.equal(maskPhone("13800138000"), "138****8000");
+    assert.equal(maskPhone(""), "");
   });
 });
 

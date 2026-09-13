@@ -8,6 +8,11 @@
       </div>
     </div>
     <p class="admin-scroll-hint">校园、团体和领队认证请到「认证审批」。这里只管会员、积分和账号。</p>
+    <div class="virtual-pool">
+      <span>虚拟用户池 {{ pool.total }} 人，空闲 {{ pool.idle }}，正在占座 {{ pool.busy }}。各团从这里抽人，不够会自动补进池。</span>
+      <el-input-number v-model="poolCount" :min="1" :max="200" />
+      <el-button type="success" :loading="growingPool" @click="growPool">生成虚拟用户</el-button>
+    </div>
     <el-table :data="list" stripe row-key="id" :row-class-name="rowClass">
       <el-table-column prop="nickname" label="昵称" min-width="120" />
       <el-table-column prop="phone" label="手机" width="130" />
@@ -79,6 +84,9 @@ const showPoints = ref(false);
 const saving = ref(false);
 const pointsRow = ref(null);
 const pointsForm = ref({ delta: 10, reason: "" });
+const pool = ref({ total: 0, idle: 0, busy: 0 });
+const poolCount = ref(20);
+const growingPool = ref(false);
 
 onMounted(syncFromRoute);
 watch(() => [route.query.pending, route.query.userId], syncFromRoute);
@@ -102,6 +110,11 @@ function rowClass({ row }) {
 
 async function load() {
   list.value = (await http.get("/admin/users", { params: { q: q.value } })).data;
+  try {
+    pool.value = (await http.get("/admin/virtual-users/pool")).data || pool.value;
+  } catch {
+    /* ignore */
+  }
   if (focusId.value && !list.value.some((u) => String(u.id) === focusId.value)) {
     list.value = (await http.get("/admin/users", { params: { q: q.value } })).data;
   }
@@ -109,6 +122,20 @@ async function load() {
   if (!focusId.value) return;
   const el = document.querySelector(".admin-row-focus");
   if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+
+async function growPool() {
+  growingPool.value = true;
+  try {
+    const res = await http.post("/admin/virtual-users/pool", { count: poolCount.value });
+    pool.value = res.data || pool.value;
+    ElMessage.success(res.message || "已生成");
+    await load();
+  } catch (e) {
+    ElMessage.error(e.message || "生成失败");
+  } finally {
+    growingPool.value = false;
+  }
 }
 
 async function verify(row, kind) {
@@ -175,3 +202,19 @@ async function close(row) {
   }
 }
 </script>
+
+<style scoped>
+.virtual-pool {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  background: #f6f8fb;
+  border-radius: 8px;
+  color: #606266;
+  font-size: 13px;
+}
+.virtual-pool span { flex: 1; min-width: 240px; line-height: 1.5; }
+</style>

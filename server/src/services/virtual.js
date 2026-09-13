@@ -238,7 +238,7 @@ function maxVirtualFor(sch) {
 function joinedVirtuals(scheduleId) {
   return getDb()
     .prepare(
-      `SELECT e.id FROM enrollments e
+      `SELECT e.id, e.user_id FROM enrollments e
        JOIN users u ON u.id=e.user_id
        WHERE e.schedule_id=? AND e.status='joined' AND IFNULL(u.is_virtual,0)=1
        ORDER BY e.id DESC`
@@ -249,12 +249,42 @@ function joinedVirtuals(scheduleId) {
 function cancelledVirtuals(scheduleId) {
   return getDb()
     .prepare(
-      `SELECT e.id FROM enrollments e
+      `SELECT e.id, e.user_id FROM enrollments e
        JOIN users u ON u.id=e.user_id
        WHERE e.schedule_id=? AND e.status='cancelled' AND IFNULL(u.is_virtual,0)=1
        ORDER BY e.id ASC`
     )
     .all(scheduleId);
+}
+
+function busyVirtualIds() {
+  return new Set(
+    getDb()
+      .prepare(
+        `SELECT DISTINCT e.user_id AS id FROM enrollments e
+         JOIN users u ON u.id=e.user_id
+         WHERE e.status='joined' AND IFNULL(u.is_virtual,0)=1 AND e.user_id IS NOT NULL`
+      )
+      .all()
+      .map((row) => Number(row.id))
+  );
+}
+
+function virtualPoolStats() {
+  const db = getDb();
+  const total = Number(
+    db.prepare("SELECT COUNT(*) AS c FROM users WHERE IFNULL(is_virtual,0)=1 AND deleted_at IS NULL").get().c || 0
+  );
+  const busy = busyVirtualIds().size;
+  return { total, busy, idle: Math.max(0, total - busy) };
+}
+
+function idleVirtualUsers() {
+  const busy = busyVirtualIds();
+  return getDb()
+    .prepare("SELECT * FROM users WHERE IFNULL(is_virtual,0)=1 AND deleted_at IS NULL ORDER BY id")
+    .all()
+    .filter((u) => !busy.has(Number(u.id)));
 }
 
 function payFields(sch) {
@@ -296,18 +326,13 @@ function restoreVirtual(sch, enrollmentId) {
   return true;
 }
 
-function createVirtualEnrollment(sch) {
+function createVirtualUser() {
   const db = getDb();
-  const seat = firstFreeSeat(sch.id, sch.max_seats);
-  if (!seat) return false;
   const gender = randInt(1, 100) <= 58 ? "male" : "female";
   const parsed = uniquePerson(db, gender);
   const name = personName(parsed.gender);
   const nick = nicknameOf(name);
   const phone = uniquePhone(db);
-  let emergencyName = personName(randInt(1, 100) <= 50 ? "male" : "female");
-  if (emergencyName === name) emergencyName = personName(parsed.gender === "male" ? "female" : "male");
-  const emergencyPhone = uniquePhone(db);
   const createdAt = recentStamp();
   const userInfo = db
     .prepare(
@@ -317,20 +342,66 @@ function createVirtualEnrollment(sch) {
     .run(phone, SHARED_HASH, nick, parsed.gender, parsed.birthday, parsed.idCard, parsed.hometown, "user", 1, createdAt);
   const userId = Number(userInfo.lastInsertRowid);
   db.prepare("UPDATE users SET referral_code=? WHERE id=?").run(`BX${userId}`, userId);
+  return db.prepare("SELECT * FROM users WHERE id=?").get(userId);
+}
+
+function growVirtualPool(count) {
+  const n = Math.floor(Number(count));
+  if (!Number.isFinite(n) || n < 1) fail(400, "请填写要生成的人数");
+  if (n > 200) fail(400, "一次最多生成 200 人");
+  const stats = virtualPoolStats();
+  if (stats.total + n > 800) fail(400, "虚拟用户池最多 800 人");
+  let created = 0;
+  for (let i = 0; i < n; i += 1) {
+    createVirtualUser();
+    created += 1;
+  }
+  return { created, ...virtualPoolStats() };
+}
+
+function lastEnrollmentOf(userId) {
+  return getDb()
+    .prepare("SELECT * FROM enrollments WHERE user_id=? ORDER BY id DESC LIMIT 1")
+    .get(userId);
+}
+
+function travelerNameOf(user) {
+  const last = lastEnrollmentOf(user.id);
+  if (last && last.traveler_name) return last.traveler_name;
+  if (user.nickname && !NICK_POOL.includes(user.nickname)) return user.nickname;
+  return personName(user.gender === "female" ? "female" : "male");
+}
+
+function enrollVirtualUser(sch, user) {
+  const db = getDb();
+  const existing = db
+    .prepare("SELECT id, status FROM enrollments WHERE schedule_id=? AND user_id=? ORDER BY id DESC LIMIT 1")
+    .get(sch.id, user.id);
+  if (existing && existing.status === "joined") return false;
+  if (existing && existing.status === "cancelled") return restoreVirtual(sch, existing.id);
+  const seat = firstFreeSeat(sch.id, sch.max_seats);
+  if (!seat) return false;
+  const name = travelerNameOf(user);
+  const last = lastEnrollmentOf(user.id);
+  let emergencyName = last && last.emergency_name ? last.emergency_name : personName(randInt(1, 100) <= 50 ? "male" : "female");
+  if (emergencyName === name) emergencyName = personName(user.gender === "male" ? "female" : "male");
+  const emergencyPhone =
+    last && last.emergency_phone && last.emergency_phone !== user.phone ? last.emergency_phone : uniquePhone(db);
   const pay = payFields(sch);
   const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
+  const createdAt = user.created_at || recentStamp();
   db.prepare(
     `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,id_card,gender,birthday,hometown,traveler_type,pay_status,pay_amount,points_used,pay_channel,join_mode,status,seat_no,insurance_code,insurance_fee,emergency_name,emergency_phone,waiver_accepted_at,health_declared_at,created_at)
      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
   ).run(
     sch.id,
-    userId,
+    user.id,
     name,
-    phone,
-    parsed.idCard,
-    parsed.gender,
-    parsed.birthday,
-    parsed.hometown,
+    user.phone,
+    user.id_card,
+    user.gender,
+    user.birthday,
+    user.hometown,
     "adult",
     pay.payStatus,
     pay.payAmount,
@@ -348,6 +419,19 @@ function createVirtualEnrollment(sch) {
     createdAt
   );
   return true;
+}
+
+function restoreIfIdle(sch, row) {
+  if (!row || !row.user_id) return false;
+  if (busyVirtualIds().has(Number(row.user_id))) return false;
+  return restoreVirtual(sch, row.id);
+}
+
+function createVirtualEnrollment(sch) {
+  const idle = idleVirtualUsers();
+  if (idle.length) return enrollVirtualUser(sch, idle[0]);
+  const user = createVirtualUser();
+  return enrollVirtualUser(sch, user);
 }
 
 function setVirtualUsersForSchedule(scheduleId, count) {
@@ -374,11 +458,12 @@ function setVirtualUsersForSchedule(scheduleId, count) {
     const reusable = cancelledVirtuals(sch.id);
     for (const row of reusable) {
       if (virtualEnrolledCount(sch.id) >= target) break;
-      if (restoreVirtual(sch, row.id)) joined += 1;
+      if (restoreIfIdle(sch, row)) joined += 1;
     }
     while (virtualEnrolledCount(sch.id) < target) {
+      const before = virtualPoolStats().total;
       if (!createVirtualEnrollment(sch)) break;
-      created += 1;
+      if (virtualPoolStats().total > before) created += 1;
       joined += 1;
     }
   }
@@ -392,6 +477,7 @@ function setVirtualUsersForSchedule(scheduleId, count) {
     cancelled,
     capped: want > cap,
     maxVirtual: cap,
+    pool: virtualPoolStats(),
   };
 }
 
@@ -406,4 +492,8 @@ module.exports = {
   trimVirtuals,
   generateVirtualUsers,
   setVirtualUsersForSchedule,
+  growVirtualPool,
+  virtualPoolStats,
+  idleVirtualUsers,
+  createVirtualUser,
 };

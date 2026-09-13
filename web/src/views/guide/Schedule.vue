@@ -81,18 +81,18 @@
     </div></div>
 
     <div class="h2">出行名单</div>
-    <p class="muted" style="margin:0 0 8px">点姓名看详情，点号码可拨打</p>
+    <p class="muted" style="margin:0 0 8px">点姓名看详情。正式开团前手机号打码，开团后才能拨打。</p>
     <div class="card">
       <div class="pad chain-item" v-for="r in s.roster" :key="r.id">
         <span>{{ r.seatNo || "-" }}</span>
         <span>
           <button type="button" class="traveler-name" @click="openTraveler(r)">{{ r.name }}</button>
           ·
-          <a v-if="telHref(r.phone)" class="tel-link" :href="telHref(r.phone)" @click.stop>{{ r.phone }}</a>
+          <a v-if="r.phonesVisible !== false && telHref(r.phone)" class="tel-link" :href="telHref(r.phone)" @click.stop>{{ r.phone }}</a>
           <template v-else>{{ r.phone }}</template>
           <div class="muted">
             紧急 {{ r.emergencyName || "未填" }}
-            <a v-if="telHref(r.emergencyPhone)" class="tel-link" :href="telHref(r.emergencyPhone)" @click.stop>{{ r.emergencyPhone }}</a>
+            <a v-if="r.phonesVisible !== false && telHref(r.emergencyPhone)" class="tel-link" :href="telHref(r.emergencyPhone)" @click.stop>{{ r.emergencyPhone }}</a>
             <template v-else>{{ r.emergencyPhone || "" }}</template>
           </div>
         </span>

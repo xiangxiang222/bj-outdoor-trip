@@ -21,14 +21,14 @@
     <div class="card"><div class="pad">
       <div class="trip-kv">
         <span class="muted">手机</span>
-        <a v-if="telHref(t.phone)" class="tel-link" :href="telHref(t.phone)">{{ t.phone }}</a>
+        <a v-if="t.phonesVisible !== false && telHref(t.phone)" class="tel-link" :href="telHref(t.phone)">{{ t.phone }}</a>
         <strong v-else>{{ t.phone || "未填" }}</strong>
       </div>
       <div class="trip-kv">
         <span class="muted">紧急联系人</span>
         <span class="kv-right">
           {{ t.emergencyName || "未填" }}
-          <a v-if="telHref(t.emergencyPhone)" class="tel-link" :href="telHref(t.emergencyPhone)">{{ t.emergencyPhone }}</a>
+          <a v-if="t.phonesVisible !== false && telHref(t.emergencyPhone)" class="tel-link" :href="telHref(t.emergencyPhone)">{{ t.emergencyPhone }}</a>
           <template v-else>{{ t.emergencyPhone || "" }}</template>
         </span>
       </div>

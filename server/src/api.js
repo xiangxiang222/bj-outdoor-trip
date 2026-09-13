@@ -10,14 +10,14 @@ const { getDb, toRoute } = require("./db");
 const config = require("./config");
 const { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide } = require("./middleware/auth");
 const { parseIdCard, maskIdCard, lifeStageFromPerson } = require("./services/idcard");
-const { buildDemographics } = require("./services/biz");
+const { buildDemographics, maskPhone } = require("./services/biz");
 const { code2session } = require("./services/wechat");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, canCancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
 const { scheduleSeats, setLockedSeats, toggleLockedSeat, assignSeat, pickMySeat } = require("./services/seats");
 const { forecast } = require("./services/weather");
 const { listSplits, createSplitsForSchedule } = require("./services/split");
-const { listReviews, createReview, reviewedScheduleIds } = require("./services/reviews");
+const { listReviews, createReview, reviewedScheduleIds, createVirtualReviews } = require("./services/reviews");
 const { cancelPolicy, waiverText, faqs, meetupMap, contacts, officialAccounts, commonRules, leaderRecruitCopy } = require("./services/policy");
 const {
   buildHome,
@@ -35,7 +35,7 @@ const { addPhoto, removePhoto, ensureReferralCode, resolveLiveUser, adoptOrganiz
 const { leadersOf, applyLeader, settleLeaderRewards, recruitPayload } = require("./services/leaders");
 const { referralCard, groupQrPayload, settleEnrollReferrals } = require("./services/referral");
 const { optionsForSchedule, setFallbacks, listFallbacks } = require("./services/fallback");
-const { generateVirtualUsers, setVirtualUsersForSchedule } = require("./services/virtual");
+const { generateVirtualUsers, setVirtualUsersForSchedule, growVirtualPool, virtualPoolStats } = require("./services/virtual");
 const { deleteAccount } = require("./services/account");
 const { drawPre, drawPost, claimPrizes, lotteryState, lotteryPublic } = require("./services/lottery");
 const { getAdminLottery, listAdminLotteries, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate } = require("./services/lottery-admin");
@@ -1626,36 +1626,39 @@ function ensureGuideSchedule(req, res) {
   return sch;
 }
 
-function checkinPayload(sch, req) {
+function checkinPayload(sch, req, { revealPhones } = {}) {
   const run = tripRunOf(sch.id);
   const roster = db()
     .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status='joined' ORDER BY id")
     .all(sch.id)
-    .map((e) => guideRosterItem(e, req, run));
+    .map((e) => guideRosterItem(e, req, run, { revealPhones }));
   return { ...scheduleView(sch, req), roster, checkin: run };
 }
 
-function guideRosterItem(e, req, run) {
+function guideRosterItem(e, req, run, { revealPhones } = {}) {
   const user = e.user_id ? db().prepare("SELECT * FROM users WHERE id=?").get(e.user_id) : null;
   const alive = user && !user.deleted_at;
   const stage = lifeStageFromPerson({ idCard: e.id_card, birthday: e.birthday || user?.birthday });
   const open = run && run.openSession;
   const sessionChecked = !!(open && Array.isArray(open.markedIds) && open.markedIds.includes(Number(e.id)));
+  const started = !!(run && run.startedAt);
+  const showPhone = revealPhones || started;
   return {
     id: e.id,
     userId: e.user_id || null,
     name: e.traveler_name,
     nickname: alive ? user.nickname || "" : "",
     avatar: alive ? attachAssetHost(req, user.avatar) || "" : "",
-    phone: e.traveler_phone,
+    phone: showPhone ? e.traveler_phone : maskPhone(e.traveler_phone),
+    emergencyName: e.emergency_name,
+    emergencyPhone: showPhone ? e.emergency_phone : maskPhone(e.emergency_phone),
+    phonesVisible: showPhone,
     gender: e.gender || (alive ? user.gender : "") || "",
     hometown: e.hometown || (alive ? user.hometown : "") || "",
     lifeStage: stage.label || "",
     seatNo: e.seat_no,
     payStatus: e.pay_status,
     insurance: e.insurance_code,
-    emergencyName: e.emergency_name,
-    emergencyPhone: e.emergency_phone,
     checkinAt: e.checkin_at,
     sessionChecked,
     idCard: maskIdCard(e.id_card),
@@ -2175,7 +2178,7 @@ router.get("/admin/schedules/:id/checkin", authAdmin, requireCap("field"), (req,
   const sch = loadAdminSchedule(req, res);
   if (!sch) return;
   try {
-    res.json({ ok: true, data: checkinPayload(sch, req) });
+    res.json({ ok: true, data: checkinPayload(sch, req, { revealPhones: true }) });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }
@@ -2187,7 +2190,7 @@ router.post("/admin/schedules/:id/start", authAdmin, requireCap("field"), (req, 
   try {
     const data = startTrip(sch.id, { role: "admin", id: req.adminId });
     const next = db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id);
-    res.json({ ok: true, data: { ...checkinPayload(next, req), ...data } });
+    res.json({ ok: true, data: { ...checkinPayload(next, req, { revealPhones: true }), ...data } });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }
@@ -2198,7 +2201,7 @@ router.post("/admin/schedules/:id/checkins", authAdmin, requireCap("field"), (re
   if (!sch) return;
   try {
     const session = openCheckin(sch.id, req.body || {}, { role: "admin", id: req.adminId });
-    res.json({ ok: true, data: { ...checkinPayload(sch, req), session } });
+    res.json({ ok: true, data: { ...checkinPayload(sch, req, { revealPhones: true }), session } });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }
@@ -2209,7 +2212,7 @@ router.post("/admin/schedules/:id/checkins/:sessionId/confirm", authAdmin, requi
   if (!sch) return;
   try {
     const session = confirmCheckin(sch.id, req.params.sessionId, { role: "admin", id: req.adminId });
-    res.json({ ok: true, data: { ...checkinPayload(sch, req), session } });
+    res.json({ ok: true, data: { ...checkinPayload(sch, req, { revealPhones: true }), session } });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }
@@ -2223,7 +2226,7 @@ router.post("/admin/schedules/:id/checkin", authAdmin, requireCap("field"), (req
     const actor = { role: "admin", id: req.adminId };
     if (b.marked === false) {
       unmarkCheckin(sch.id, b.enrollmentId, actor, b.sessionId);
-      return res.json({ ok: true, data: checkinPayload(sch, req) });
+      return res.json({ ok: true, data: checkinPayload(sch, req, { revealPhones: true }) });
     }
     const data = markCheckin(sch.id, b.enrollmentId, actor, b.sessionId);
     res.json({ ok: true, data });
@@ -2479,8 +2482,52 @@ function virtualUsersHandler(req, res) {
   }
 }
 
+router.get("/admin/virtual-users/pool", authAdmin, requireCap("ops"), (req, res) => {
+  res.json({ ok: true, data: virtualPoolStats() });
+});
+
+router.post("/admin/virtual-users/pool", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    const data = growVirtualPool((req.body || {}).count);
+    res.json({ ok: true, data, message: `已生成 ${data.created} 名虚拟用户，池中共 ${data.total} 人、空闲 ${data.idle} 人` });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
 router.post("/admin/virtual-users", authAdmin, requireCap("ops"), virtualUsersHandler);
 router.post("/admin/schedules/:id/virtual-users", authAdmin, requireCap("ops"), virtualUsersHandler);
+
+router.post("/admin/routes/:id/reviews", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    const b = req.body || {};
+    const data = createVirtualReviews({
+      routeId: req.params.id,
+      scheduleId: b.scheduleId || b.schedule_id,
+      count: b.count,
+      rating: b.rating,
+      content: b.content,
+    });
+    res.json({ ok: true, data, message: `已用虚拟用户写下 ${data.count} 条评价` });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/admin/schedules/:id/reviews", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    const b = req.body || {};
+    const data = createVirtualReviews({
+      scheduleId: req.params.id,
+      count: b.count,
+      rating: b.rating,
+      content: b.content,
+    });
+    res.json({ ok: true, data, message: `已用虚拟用户写下 ${data.count} 条评价` });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
 
 router.post("/admin/users/:id/verify", authAdmin, requireCap("ops"), (req, res) => {
   const user = managedUser(req.params.id);

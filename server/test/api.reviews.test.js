@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { harness, loginUser, auth, ID, issueCaptcha } = require("./http");
+const { harness, loginUser, loginAdmin, auth, ID, issueCaptcha } = require("./http");
 
 describe("reviews", () => {
   let agent;
@@ -122,5 +122,25 @@ describe("reviews", () => {
       .set(auth(waitToken))
       .send({ scheduleId: seed.individualScheduleId, rating: 4 });
     assert.equal(afterCancel.status, 400);
+  });
+
+  it("lets admin post virtual-user reviews onto a route", async () => {
+    const admin = await loginAdmin(agent);
+    await agent.post("/api/admin/virtual-users/pool").set(auth(admin)).send({ count: 4 }).expect(200);
+    await agent
+      .post(`/api/admin/schedules/${seed.individualScheduleId}/virtual-users`)
+      .set(auth(admin))
+      .send({ count: 3 })
+      .expect(200);
+    const posted = await agent
+      .post(`/api/admin/routes/${seed.routeId}/reviews`)
+      .set(auth(admin))
+      .send({ count: 2, rating: 5, content: "风景很好" })
+      .expect(200);
+    assert.equal(posted.body.data.count, 2);
+    const routeList = await agent.get(`/api/routes/${seed.routeId}/reviews`).expect(200);
+    assert.equal(routeList.body.data.count, 2);
+    assert.equal(routeList.body.data.avg, 5);
+    assert.equal(routeList.body.data.list[0].content, "风景很好");
   });
 });

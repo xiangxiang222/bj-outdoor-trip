@@ -87,6 +87,13 @@ function maskName(name) {
   return name[0] + "*".repeat(Math.min(2, name.length - 1));
 }
 
+function maskPhone(phone) {
+  const s = String(phone || "").replace(/[\s-]+/g, "");
+  if (/^1\d{10}$/.test(s)) return `${s.slice(0, 3)}****${s.slice(7)}`;
+  if (s.length <= 4) return s ? "****" : "";
+  return `${s.slice(0, 2)}****${s.slice(-2)}`;
+}
+
 module.exports = {
   pickTier,
   calcPayable,
@@ -94,4 +101,5 @@ module.exports = {
   buildDemographics,
   scheduleStatus,
   maskName,
+  maskPhone,
 };

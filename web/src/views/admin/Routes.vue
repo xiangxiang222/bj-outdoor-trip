@@ -18,9 +18,10 @@
       <el-table-column prop="region" label="地区" min-width="160" />
       <el-table-column prop="minGroupSize" label="成团" width="80" />
       <el-table-column prop="status" label="状态" width="80" />
-      <el-table-column label="操作" width="180">
+      <el-table-column label="操作" width="240">
         <template #default="{ row }">
           <el-button size="small" @click="edit(row)">编辑</el-button>
+          <el-button size="small" @click="openReview(row)">评价</el-button>
           <el-button size="small" type="danger" @click="off(row)">下架</el-button>
         </template>
       </el-table-column>
@@ -250,6 +251,25 @@
         <el-button type="success" @click="save">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="showReview" :title="reviewRow ? `虚拟评价 · ${reviewRow.title}` : '虚拟评价'" width="480px">
+      <p class="muted">用虚拟用户给这条线路写评价，会出现在线路页。优先用本线路已占座的虚拟报名；不够会从用户池里取。</p>
+      <el-form label-width="90px">
+        <el-form-item label="条数">
+          <el-input-number v-model="reviewForm.count" :min="1" :max="30" />
+        </el-form-item>
+        <el-form-item label="分数">
+          <el-input-number v-model="reviewForm.rating" :min="1" :max="5" />
+        </el-form-item>
+        <el-form-item label="评语">
+          <el-input v-model="reviewForm.content" type="textarea" :rows="3" placeholder="可空，空则用几条常用评语轮换" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showReview = false">取消</el-button>
+        <el-button type="success" :loading="savingReview" @click="saveReview">发布评价</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -283,6 +303,10 @@ const list = ref([]);
 const buses = ref([]);
 const show = ref(false);
 const form = ref({});
+const showReview = ref(false);
+const savingReview = ref(false);
+const reviewRow = ref(null);
+const reviewForm = ref({ count: 3, rating: 5, content: "" });
 const meetupPreset = ref("");
 const composeMode = ref("manual");
 const draftNotes = ref("");
@@ -595,6 +619,23 @@ async function off(row) {
   await http.delete("/admin/routes/" + row.id);
   ElMessage.success("已下架");
   load();
+}
+function openReview(row) {
+  reviewRow.value = row;
+  reviewForm.value = { count: 3, rating: 5, content: "" };
+  showReview.value = true;
+}
+async function saveReview() {
+  savingReview.value = true;
+  try {
+    const res = await http.post(`/admin/routes/${reviewRow.value.id}/reviews`, reviewForm.value);
+    showReview.value = false;
+    ElMessage.success(res.message || "已发布评价");
+  } catch (e) {
+    ElMessage.error(e.message || "评价失败");
+  } finally {
+    savingReview.value = false;
+  }
 }
 </script>
 
