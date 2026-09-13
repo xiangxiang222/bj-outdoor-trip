@@ -285,6 +285,24 @@ Page({
       wx.showModal({ title: "报名领队失败", content: e.message, showCancel: false });
     });
   },
+  applyPhotographer() {
+    const back = "/pages/schedule/schedule?id=" + this.data.id;
+    const enroll = "/pages/enroll/enroll?id=" + this.data.id + "&joinMode=photographer";
+    if (!app.globalData.token) {
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(back) });
+      return;
+    }
+    request("/schedules/" + this.data.id + "/photographers/apply", "POST", {}).then(() => {
+      wx.showToast({ title: "已报名摄影师", icon: "none" });
+      this.load();
+    }).catch((e) => {
+      if (e.code === "need_photo_enroll") {
+        wx.navigateTo({ url: enroll });
+        return;
+      }
+      wx.showModal({ title: "报名摄影师失败", content: e.message, showCancel: false });
+    });
+  },
   openLeader(e) {
     const kind = e.currentTarget.dataset.kind;
     const id = e.currentTarget.dataset.id;

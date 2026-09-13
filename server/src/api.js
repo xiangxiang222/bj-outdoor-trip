@@ -13,7 +13,7 @@ const { parseIdCard, maskIdCard, lifeStageFromPerson } = require("./services/idc
 const { buildDemographics } = require("./services/biz");
 const { code2session } = require("./services/wechat");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
-const { enrollUser, cancelEnrollment, canCancelEnrollment } = require("./services/enroll");
+const { enrollUser, cancelEnrollment, canCancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
 const { scheduleSeats, setLockedSeats, toggleLockedSeat, assignSeat, pickMySeat } = require("./services/seats");
 const { forecast } = require("./services/weather");
 const { listSplits, createSplitsForSchedule } = require("./services/split");
@@ -317,6 +317,7 @@ function scheduleView(sch, req) {
     people,
     guide,
     leaders,
+    photographer: photographerOf(sch.id, req),
     leaderRecruitCopy,
     ...(req.adminId
       ? { realEnrolled: realLive, virtualEnrolled: virtualLive }
@@ -1047,6 +1048,15 @@ router.post("/schedules/:id/leaders/apply", authUser, (req, res) => {
   try {
     const data = applyLeader(req.params.id, req.userId, { leadRef: (req.body || {}).leadRef || req.query.leadRef });
     res.json({ ok: true, data, message: `已报名领队${data.slot}` });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message, code: e.code || undefined });
+  }
+});
+
+router.post("/schedules/:id/photographers/apply", authUser, (req, res) => {
+  try {
+    const data = applyPhotographer(req.params.id, req.userId);
+    res.json({ ok: true, data, message: "已报名摄影师，免个人团费" });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message, code: e.code || undefined });
   }

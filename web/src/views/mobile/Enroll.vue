@@ -13,7 +13,7 @@
       <p v-else class="muted">个人拼团先报名占座，费用待出行前支付。早报名早选座。</p>
       <TripPrices v-if="!isActivity && s.quote" :quote="s.quote" />
       <p v-if="isActivity && isFree" class="price">免费</p>
-      <p v-else class="price">你应付 ¥{{ quote }} / 人</p>
+      <p v-else class="price">你应付 ¥{{ displayQuote }} / 人</p>
       <p v-if="couponHint" class="muted" style="color:var(--leaf)">{{ couponHint }}</p>
       <p v-if="s.eligibility?.enabled" class="muted">{{ s.eligibility.label }}{{ s.eligibility.schools?.length ? (s.eligibility.alumniOk ? " 已认证师生或校友" : " 已认证学生") : "" }}</p>
       <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" style="color:var(--clay)">
@@ -42,6 +42,7 @@
       <option value="assistant">辅助领队（免个人团费）</option>
       <option value="photographer">摄影师（免个人团费）</option>
     </select>
+    <p v-if="form.joinMode === 'photographer'" class="muted" style="color:var(--leaf)">免个人团费，保险另计。本团只设一位摄影师。</p>
     <p class="muted"><router-link to="/m/official#rules">辅助领队 / 摄影师职责说明</router-link></p>
     <div v-if="s.combo?.enabled" class="card"><div class="pad">
       <div class="h2" style="margin-top:0">组合团 · 另一半条件</div>
@@ -166,6 +167,10 @@ const isFree = computed(() => {
 const quote = ref(0);
 const couponHint = ref("");
 const couponCode = ref("");
+const displayQuote = computed(() => {
+  if (form.value.joinMode === "photographer" || form.value.joinMode === "assistant") return 0;
+  return quote.value;
+});
 const err = ref("");
 const loading = ref(false);
 const idHint = ref("");
@@ -230,6 +235,9 @@ onMounted(async () => {
   quote.value = s.value.quote.price;
   setChrome(isActivity.value ? "报名本局" : "报名", isActivity.value ? "姓名和手机即可" : "实名、保险与选座");
   if (isActivity.value) form.value.insuranceCode = "none";
+  if (route.query.joinMode === "photographer" || route.query.joinMode === "assistant") {
+    form.value.joinMode = String(route.query.joinMode);
+  }
   couponCode.value = String(route.query.coupon || "");
   if (couponCode.value) {
     try {

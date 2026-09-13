@@ -90,6 +90,12 @@
         </view>
         <view wx:else bindtap="applyLeader">{{item.label}} · 报名领队</view>
       </view>
+      <view class="leader-slot">
+        <view wx:if="{{s.photographer}}" bindtap="openLeader" data-kind="user" data-id="{{s.photographer.id}}" data-userid="{{s.photographer.userId}}">
+          <text class="nav-link">摄影师 {{s.photographer.name}}</text>
+        </view>
+        <view wx:else bindtap="applyPhotographer">摄影师 · 报名摄影师</view>
+      </view>
       <view class="muted">{{s.leaderRecruitCopy}}</view>
     </block>
   </view>

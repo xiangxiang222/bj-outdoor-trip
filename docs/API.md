@@ -31,10 +31,11 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://192.144.167.2
 | GET | `/schedules` | Query：`routeId` `organizerType` `city` `tag` `offerType` `month` `date` `channel=activity\|trip`（不含已解散、待审核）。含满员（`remain=0`），前端列表保留供候补。不含 `virtualEnrolled`。首页传 `channel=trip`，活动 Tab 传 `channel=activity` |
 | GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条） |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
-| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友/高校限制）、`oversub`（报超会抽）。同城局名单不含年龄段展示字段的使用由前端控制 |
+| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`photographer`、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友/高校限制）、`oversub`（报超会抽）。同城局名单不含年龄段展示字段的使用由前端控制 |
 | GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
 | POST | `/schedules/:id/seats/pick` | 已报名用户改座 |
 | POST | `/schedules/:id/leaders/apply` | 报名领队（最多两位）。须已通过领队申请，否则 403 `need_leader_apply` / `leader_pending` |
+| POST | `/schedules/:id/photographers/apply` | 报名本团摄影师（一位）。已报名则改身份并免个人团费；未报名返回 403 `need_photo_enroll`，前端跳到报名页并带 `joinMode=photographer` |
 | POST | `/enrollments/:id/fallbacks` | 设置候选团与替代团 |
 | GET | `/schedules/:id/demographics` | 本团画像 |
 | GET | `/schedules/:id/reviews` | 该团评价列表。`{ list, count, avg }` |
@@ -131,7 +132,8 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
   "emergencyName": "紧急联系人",
   "emergencyPhone": "13700000002",
   "waiverAccepted": true,
-  "healthOk": true
+  "healthOk": true,
+  "joinMode": "chain"
 }
 ```
 
@@ -139,9 +141,9 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；游客手机与紧急
 
 **同城局**（`schedules.channel=activity`）：不校验身份证、紧急联系人与弃权书；同一用户对同一局未取消的报名不可重复（400「你已报名本局」）。候补文案为「本局已满」。免费成功文案「已报名，到场即可」。同城局不走报超会抽。
 
-已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序（抽签团按 `draw_rank`）自动递补。报超会抽且名单未确认时 `status=applied`，不占座。当前实现报名时 `points_used=0`，不读取抵现开关。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds`。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补/`applied` `held`，占座成功才 `used`。
+已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序（抽签团按 `draw_rank`）自动递补。报超会抽且名单未确认时 `status=applied`，不占座。当前实现报名时 `points_used=0`，不读取抵现开关。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds`。`joinMode` 可为 `assistant` / `photographer`（免个人团费，保险另计；摄影师每团一位）。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补/`applied` `held`，占座成功才 `used`。
 
-排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`、`channel`、`oversub`；名单项含 `waitlisted`、`applied`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位；报超待确认时不选座。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`。前端有 `myEnrollment` 时不再展示报名按钮。
+排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`、`channel`、`oversub`、`photographer`；名单项含 `waitlisted`、`applied`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位；报超待确认时不选座。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`。前端有 `myEnrollment` 时不再展示报名按钮。
 
 报名成功示例：
 

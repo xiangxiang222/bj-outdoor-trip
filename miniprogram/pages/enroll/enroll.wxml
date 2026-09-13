@@ -15,6 +15,7 @@
 <view class="pad" style="color:{{idOk ? '#6b705c' : '#bc4749'}};font-size:24rpx" wx:if="{{idHint}}">{{idHint}}</view>
 <input class="input" placeholder="紧急联系人姓名" value="{{form.emergencyName}}" bindinput="setEmergencyName" />
 <input class="input" placeholder="紧急联系人手机（不能与出行人相同）" type="number" maxlength="11" value="{{form.emergencyPhone}}" bindinput="setEmergencyPhone" />
+<view class="pad muted" wx:if="{{form.joinMode=='photographer'}}" style="color:#2d6a4f">本团摄影师，免个人团费，保险另计。本团只设一位。</view>
 <view class="card" wx:if="{{s.combo.enabled}}">
   <view class="pad title">组合团 · 另一半条件</view>
   <view class="pad muted">只对学生或已认证学生组织开放。</view>

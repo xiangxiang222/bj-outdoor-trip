@@ -105,6 +105,16 @@
               </template>
               <a v-else class="nav-link" href="#" @click.prevent="applyLeader(slot.slot)">{{ slot.label }} · 报名领队</a>
             </div>
+            <div class="leader-slot">
+              <template v-if="s.photographer">
+                <a class="nav-link" href="#" @click.prevent="openLeader(s.photographer)">
+                  <img v-if="s.photographer.avatar" class="leader-face" :src="s.photographer.avatar" alt="" />
+                  <span v-else class="leader-face">{{ (s.photographer.name || "摄").slice(0, 1) }}</span>
+                  摄影师 {{ s.photographer.name }}
+                </a>
+              </template>
+              <a v-else class="nav-link" href="#" @click.prevent="applyPhotographer">摄影师 · 报名摄影师</a>
+            </div>
             <p class="muted">{{ s.leaderRecruitCopy }}</p>
             <div v-if="leaderNeedApply" class="card" style="margin-top:8px">
               <div class="pad">
@@ -458,6 +468,13 @@ const enrollHref = computed(() => {
   const s = q.toString();
   return "/m/enroll/" + (route.params.id || "") + (s ? "?" + s : "");
 });
+const photoEnrollHref = computed(() => {
+  const q = new URLSearchParams();
+  if (route.query.ref) q.set("ref", String(route.query.ref));
+  if (route.query.coupon) q.set("coupon", String(route.query.coupon));
+  q.set("joinMode", "photographer");
+  return "/m/enroll/" + (route.params.id || "") + "?" + q.toString();
+});
 const busPhotos = computed(() => s.value?.bus?.photos || []);
 const busText = computed(() => {
   const b = s.value?.bus;
@@ -672,6 +689,24 @@ async function applyLeader() {
   } catch (e) {
     if (e.code === "need_leader_apply" || e.code === "leader_pending") {
       showLeaderApplyHint(e.message);
+      return;
+    }
+    msg.value = e.message;
+  }
+}
+
+async function applyPhotographer() {
+  if (!store.token) {
+    router.push("/m/login?redirect=" + encodeURIComponent(route.fullPath));
+    return;
+  }
+  try {
+    const res = await http.post("/schedules/" + s.value.id + "/photographers/apply");
+    msg.value = res.message || "已报名摄影师";
+    await load();
+  } catch (e) {
+    if (e.code === "need_photo_enroll") {
+      router.push(photoEnrollHref.value);
       return;
     }
     msg.value = e.message;

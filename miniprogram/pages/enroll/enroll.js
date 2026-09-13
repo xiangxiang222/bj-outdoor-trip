@@ -11,7 +11,7 @@ Page({
     idOk: false,
     isActivity: false,
     isFree: false,
-    form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", seatNo: "", insuranceCode: "outdoor", emergencyName: "", emergencyPhone: "", waiverAccepted: false, healthOk: false, wantGender: "any", wantSchool: "", comboNote: "" },
+    form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", joinMode: "chain", seatNo: "", insuranceCode: "outdoor", emergencyName: "", emergencyPhone: "", waiverAccepted: false, healthOk: false, wantGender: "any", wantSchool: "", comboNote: "" },
     genderLabels: ["不限", "女生", "男生"],
     genderKeys: ["any", "female", "male"],
     genderIndex: 0,
@@ -32,6 +32,7 @@ Page({
       coupon: q.coupon || "",
       "form.travelerName": (app.globalData.user || {}).nickname || "",
       "form.travelerPhone": (app.globalData.user || {}).phone || "",
+      "form.joinMode": q.joinMode === "photographer" || q.joinMode === "assistant" ? q.joinMode : "chain",
     });
     request("/schedules/" + q.id).then((r) => {
       const s = r.data;

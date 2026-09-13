@@ -2,7 +2,7 @@
 
 本文说明测试分层、环境隔离、命令、覆盖率门槛，以及如何为新接口补用例。单元测试**不会**写入开发用的 `server/data/app.sqlite`，也**不会**下载 30 条线路的实景照片。
 
-当前用例数（`it(` 计数，对照 2026-09-12 代码）：**235** 条服务端 + **47** 条 H5。
+当前用例数（`it(` 计数，对照 2026-09-13 代码）：**236** 条服务端 + **47** 条 H5。
 
 ## 1. 依赖
 
@@ -112,7 +112,7 @@ npx vitest run src/utils/activityKind.test.js
 | `api.auth.test.js` | meta、短信、图片验证码注册/登录、微信演示登录、改资料、注销 |
 | `api.home.test.js` | 首页轮播不含同城局线路；`GET /schedules?channel=activity` |
 | `api.routes.test.js` | 筛选、收藏标记、名单脱敏、分享 302、开团校验、海报 QR、导游列表与详情（无需登录） |
-| `api.enroll.test.js` | 个人占座（`needPay: false`）、紧急联系人/健康/免责、`/me/trips`、公司挂账与结算权限、满员、成团导游、取消报名（出发当天不可取消）、会员购买、收藏、**同城局姓名+手机即可报名** |
+| `api.enroll.test.js` | 个人占座（`needPay: false`）、紧急联系人/健康/免责、`/me/trips`、公司挂账与结算权限、满员、成团导游、取消报名（出发当天不可取消）、会员购买、收藏、**同城局姓名+手机即可报名**、行程页报名摄影师 |
 | `api.waitlist.test.js` | 候补与递补 |
 | `api.seats.test.js` | 选座、锁座 |
 | `api.insurance.test.js` | 保险加购 |
