@@ -138,6 +138,7 @@ User 1──n Favorite / PointsLedger / Review
 - `status`：`joined` / `applied`（报超会抽待确认） / `waitlist` / `cancelled`。候补与 `applied` 不占座；有人取消后按报名顺序（抽签团按 `draw_rank`）递补
 - 有效报名人数（不含虚拟用户）≥ 成团人数时排期接口 `guaranteed=true`（铁定出发）
 - 一个团最多两位领队；空位可报名领队，须已通过个人领队申请。推荐领队首次带队完成后奖励 200 元；推荐报名按人数结报名费 5%
+- 一个团一位摄影师。行程页空位可「报名摄影师」：未报名先走报名表（`joinMode=photographer`），已报名则 `POST /schedules/:id/photographers/apply` 改身份并免个人团费
 - 虚拟用户由运营在指定行程上设置人数并占座，资料按真人报名生成；之后可改人数。真人占座时虚拟用户腾座。前台不暴露虚拟标记。
 
 详情页若已有 `myEnrollment`，H5 / 小程序不再露出报名按钮。

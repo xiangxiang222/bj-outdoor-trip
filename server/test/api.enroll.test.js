@@ -479,4 +479,71 @@ describe("enroll pay member favorites", () => {
     assert.equal(dup.status, 400);
     assert.match(dup.body.message, /已报名/);
   });
+
+  it("lets a traveler apply as the trip photographer from the schedule page", async () => {
+    const token = await loginUser(agent);
+    const needForm = await agent
+      .post(`/api/schedules/${seed.individualScheduleId}/photographers/apply`)
+      .set(auth(token))
+      .expect(403);
+    assert.equal(needForm.body.code, "need_photo_enroll");
+
+    await agent
+      .post("/api/enroll")
+      .set(auth(token))
+      .send({
+        scheduleId: seed.individualScheduleId,
+        travelerName: "林北野",
+        travelerPhone: "13800138000",
+        idCard: ID.maleBj,
+        emergencyName: "紧急",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
+      })
+      .expect(200);
+
+    const converted = await agent
+      .post(`/api/schedules/${seed.individualScheduleId}/photographers/apply`)
+      .set(auth(token))
+      .expect(200);
+    assert.equal(converted.body.data.converted, true);
+    assert.equal(converted.body.data.photographer.name, "林北野");
+    const detail = await agent.get(`/api/schedules/${seed.individualScheduleId}`).expect(200);
+    assert.equal(detail.body.data.photographer.userId, seed.userId);
+
+    const again = await agent
+      .post(`/api/schedules/${seed.individualScheduleId}/photographers/apply`)
+      .set(auth(token))
+      .expect(400);
+    assert.match(again.body.message, /已经是本团摄影师/);
+
+    const cap = await issueCaptcha(agent);
+    const other = await agent
+      .post("/api/auth/register")
+      .send({
+        phone: "13600136000",
+        password: "123456",
+        nickname: "摄乙",
+        captchaToken: cap.token,
+        captcha: cap.code,
+      })
+      .expect(200);
+    const taken = await agent
+      .post("/api/enroll")
+      .set(auth(other.body.data.token))
+      .send({
+        scheduleId: seed.individualScheduleId,
+        travelerName: "摄乙",
+        travelerPhone: "13600136000",
+        idCard: ID.femaleBj,
+        emergencyName: "紧急",
+        emergencyPhone: "13700000003",
+        waiverAccepted: true,
+        healthOk: true,
+        joinMode: "photographer",
+      })
+      .expect(400);
+    assert.match(taken.body.message, /已有摄影师/);
+  });
 });

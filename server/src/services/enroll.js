@@ -2,7 +2,7 @@ const dayjs = require("dayjs");
 const { getDb } = require("../db");
 const { parseIdCard } = require("./idcard");
 const { calcPayable } = require("./biz");
-const { addPoints, enrolledCount, waitlistCount, quoteForSchedule, maybeMatchGuide } = require("./helpers");
+const { addPoints, attachAssetHost, enrolledCount, waitlistCount, quoteForSchedule, maybeMatchGuide } = require("./helpers");
 const { sendSms } = require("./sms");
 const { assertSeatAvailable, firstFreeSeat } = require("./seats");
 const { kickVirtualSeat, trimVirtuals } = require("./virtual");
@@ -21,10 +21,80 @@ const { assertEnrollLimit } = require("./eligibility");
 const { resolveSupplies } = require("./supplies");
 const { isOversubPending } = require("./oversub");
 
-function fail(status, message) {
+function fail(status, message, extra) {
   const err = new Error(message);
   err.status = status;
+  Object.assign(err, extra || {});
   throw err;
+}
+
+function photographerEnrollment(scheduleId) {
+  return getDb()
+    .prepare(
+      `SELECT e.*, u.nickname, u.avatar
+       FROM enrollments e
+       LEFT JOIN users u ON u.id=e.user_id
+       WHERE e.schedule_id=? AND e.join_mode='photographer' AND e.status!='cancelled'
+       ORDER BY e.id LIMIT 1`
+    )
+    .get(scheduleId);
+}
+
+function photographerOf(scheduleId, req) {
+  const row = photographerEnrollment(scheduleId);
+  if (!row) return null;
+  return {
+    id: row.user_id,
+    userId: row.user_id,
+    name: row.traveler_name || row.nickname || "摄影师",
+    avatar: attachAssetHost(req, row.avatar) || "",
+  };
+}
+
+function assertPhotographerSlot(scheduleId, userId) {
+  const taken = photographerEnrollment(scheduleId);
+  if (taken && Number(taken.user_id) !== Number(userId)) fail(400, "本团已有摄影师");
+}
+
+function applyPhotographer(scheduleId, userId) {
+  const db = getDb();
+  const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
+  if (!sch) fail(404, "排期不存在");
+  if (sch.channel === "activity") fail(400, "同城局不设摄影师");
+  if (sch.status === "cancelled") fail(400, "该拼团已解散");
+  if ((sch.review_status || "approved") !== "approved") fail(400, "该团正在审核或未通过，暂不能报名");
+  const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
+  if (!user || user.deleted_at) fail(401, "请先登录");
+  assertEnrollLimit(user, sch);
+  assertPhotographerSlot(sch.id, userId);
+  const mine = db
+    .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND user_id=? AND status!='cancelled'")
+    .get(sch.id, userId);
+  if (!mine) fail(403, "请先填写报名信息", { code: "need_photo_enroll" });
+  if (mine.join_mode === "photographer") fail(400, "你已经是本团摄影师");
+  const insuranceFee = Number(mine.insurance_fee || 0);
+  const suppliesFee = Number(mine.supplies_fee || 0);
+  const company = sch.organizer_type === "company";
+  const payAmount = company ? 0 : insuranceFee + suppliesFee;
+  let payStatus = mine.pay_status;
+  if (!company) payStatus = payAmount === 0 ? "paid" : mine.pay_status === "paid" ? "paid" : "unpaid";
+  let status = mine.status;
+  let seat = mine.seat_no;
+  if (status === "applied" || status === "waitlist") {
+    status = "joined";
+    if (!seat) {
+      if (kickVirtualSeat(sch.id)) {
+        /* 摄影师直接占座 */
+      }
+      seat = firstFreeSeat(sch.id, sch.max_seats);
+    }
+  }
+  db.prepare(
+    "UPDATE enrollments SET join_mode='photographer', pay_amount=?, pay_status=?, status=?, seat_no=?, waitlisted_at=NULL WHERE id=?"
+  ).run(payAmount, payStatus, status, seat, mine.id);
+  maybeMatchGuide(sch.id);
+  trimVirtuals(sch.id);
+  return { photographer: photographerOf(sch.id), converted: true };
 }
 
 function pickInsurance(code) {
@@ -97,6 +167,7 @@ function enrollUser({
     : ["assistant", "photographer"].includes(String(joinMode || ""))
       ? String(joinMode)
       : "chain";
+  if (role === "photographer") assertPhotographerSlot(sch.id, user.id);
   const appliedOnly = !isActivity && isOversubPending(sch) && role === "chain";
   const occupied = enrolledCount(sch.id);
   let waitlisted = !appliedOnly && occupied >= Number(sch.max_seats);
@@ -358,4 +429,11 @@ function canCancelEnrollment(en, scheduleStatus, startDate) {
   );
 }
 
-module.exports = { enrollUser, promoteWaitlist, cancelEnrollment, canCancelEnrollment };
+module.exports = {
+  enrollUser,
+  promoteWaitlist,
+  cancelEnrollment,
+  canCancelEnrollment,
+  photographerOf,
+  applyPhotographer,
+};
