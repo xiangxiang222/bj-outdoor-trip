@@ -7,7 +7,7 @@ function fail(status, message) {
   throw err;
 }
 
-function deleteAccount(userId) {
+async function deleteAccount(userId) {
   const db = getDb();
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
   if (!user) fail(404, "账号不存在");
@@ -18,7 +18,7 @@ function deleteAccount(userId) {
     .all(userId);
   for (const row of enrollments) {
     try {
-      cancelEnrollment(row.id, userId, { force: true });
+      await cancelEnrollment(row.id, userId, { force: true });
     } catch {
       db.prepare("UPDATE enrollments SET status='cancelled' WHERE id=?").run(row.id);
     }

@@ -88,9 +88,9 @@ https://pay.weixin.qq.com/  右上角「接入微信支付」
 2. 商户 APIv2 密钥（32 位）：微信支付商户平台 → 账户中心 → API 安全 → 设置 APIv2 密钥
 3. 支付回调目前是 `http://togetherbetter.cn/api/pay/wechat/notify`。正式环境微信要求 **HTTPS + 已备案域名**，并在小程序后台配 request / upload 合法域名。没有 HTTPS 时，小程序付款后会走服务端查单确认。
 
-配到服务器 `.env`：`WX_APPID` `WX_APPSECRET` `WX_MCH_ID` `WX_MCH_KEY`，并把 `WX_PAY_MOCK=0`。不要把密钥提交进 Git。
+配到服务器 `.env`：`WX_APPID` `WX_APPSECRET` `WX_MCH_ID` `WX_MCH_KEY`，并把 `WX_PAY_MOCK=0`。不要把密钥提交进 Git。原路退款再配 `WX_MCH_CERT_PATH`（apiclient_cert.pem）和 `WX_MCH_KEY_PATH`（apiclient_key.pem）。
 
-证书和密钥等技术开口再申请，超级管理员扫码即可。原路退款还要商户 API 证书，当前取消/解散只改订单状态。
+证书和密钥由超级管理员在商户平台扫码下载。没有退款证书时，演示环境仍按付款人记账退款；真收款后取消/解散会提示无法原路退。
 
 
 七、短信（验证码、解散通知、发券通知）

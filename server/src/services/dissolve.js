@@ -2,6 +2,8 @@ const { getDb } = require("../db");
 const { addPoints } = require("./helpers");
 const { buildCancelSms, sendSms } = require("./sms");
 const { releaseCouponByEnrollment } = require("./coupons");
+const { refundableOf } = require("./pay-ledger");
+const { refundEnrollmentToPayers } = require("./payment");
 
 function fail(status, message) {
   const err = new Error(message);
@@ -9,7 +11,7 @@ function fail(status, message) {
   throw err;
 }
 
-function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
+async function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
   const db = getDb();
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
   if (!sch) fail(400, "拼团不存在");
@@ -29,6 +31,17 @@ function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
   let refunded = 0;
   let refundAmount = 0;
   let smsCount = 0;
+  const refunds = [];
+
+  for (const en of enrollments) {
+    const money = refundableOf(en);
+    if (money > 0) {
+      const rows = await refundEnrollmentToPayers(en, { amount: money, remark: `解散退款：${trimmed}` });
+      refunds.push(...rows.map((row) => ({ ...row, enrollmentId: en.id })));
+      refunded += 1;
+      refundAmount += money;
+    }
+  }
 
   const run = db.transaction(() => {
     db.prepare(
@@ -41,31 +54,16 @@ function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
     }
 
     for (const en of enrollments) {
-      const paid = en.pay_status === "paid" && Number(en.pay_amount || 0) > 0;
-      db.prepare("UPDATE enrollments SET status='cancelled', pay_status=? WHERE id=?").run(paid ? "refunded" : en.pay_status, en.id);
+      const hasRefund = refunds.some((row) => Number(row.enrollmentId) === Number(en.id));
+      const nextPay = hasRefund || (en.pay_status === "paid" && Number(en.pay_amount || 0) > 0) ? "refunded" : en.pay_status;
+      db.prepare("UPDATE enrollments SET status='cancelled', pay_status=? WHERE id=?").run(nextPay, en.id);
       releaseCouponByEnrollment(en.id);
-      if (paid) {
-        refunded += 1;
-        refundAmount += Number(en.pay_amount);
-        db.prepare(
-          `INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark) VALUES (?,?,?,?,?,?,?,?)`
-        ).run(
-          en.id,
-          en.user_id,
-          sch.id,
-          en.pay_amount,
-          en.pay_channel || "wechat",
-          "refunded",
-          `R${Date.now()}${en.id}`,
-          `解散退款：${trimmed}`
-        );
-        if (en.points_used) addPoints(en.user_id, en.points_used, "解散退还积分", "enrollment", en.id);
-      }
+      if (en.points_used && hasRefund) addPoints(en.user_id, en.points_used, "解散退还积分", "enrollment", en.id);
       const content = buildCancelSms({
         title,
         date: sch.start_date,
         reason: trimmed,
-        refunded: paid,
+        refunded: hasRefund,
       });
       const sms = sendSms({
         phone: en.traveler_phone,
@@ -89,12 +87,13 @@ function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
     refunded,
     refundAmount,
     smsCount,
+    refunds,
     status: "cancelled",
     transferred,
   };
 }
 
-function dissolveAllSchedules({ reason, actorId } = {}) {
+async function dissolveAllSchedules({ reason, actorId } = {}) {
   const trimmed = String(reason || "").trim();
   if (!trimmed) fail(400, "请填写解散理由");
   if (trimmed.length > 200) fail(400, "解散理由请控制在 200 字以内");
@@ -103,7 +102,10 @@ function dissolveAllSchedules({ reason, actorId } = {}) {
     .all()
     .map((row) => row.id);
   if (!ids.length) fail(400, "当前没有可解散的拼团");
-  const results = ids.map((id) => dissolveSchedule(id, { reason: trimmed, actor: "admin", actorId }));
+  const results = [];
+  for (const id of ids) {
+    results.push(await dissolveSchedule(id, { reason: trimmed, actor: "admin", actorId }));
+  }
   return {
     count: results.length,
     cancelled: results.reduce((sum, row) => sum + row.cancelled, 0),

@@ -184,8 +184,8 @@
     </el-dialog>
 
     <el-dialog v-model="showDissolve" :title="dissolveAll ? '解散全部拼团' : '解散拼团'" width="480px">
-      <p v-if="dissolveAll">将解散当前全部 {{ activeCount }} 个进行中的拼团（含用户开团），取消报名、已付款标记退款，并向出行人发送取消短信。</p>
-      <p v-else-if="cur">解散「{{ cur.route?.title }} {{ cur.startDate }}」后，将取消全部报名、已付款标记退款，并向出行人发送取消短信。</p>
+      <p v-if="dissolveAll">将解散当前全部 {{ activeCount }} 个进行中的拼团（含用户开团），取消报名、已付款按付款人原路退回，并向出行人发送取消短信。</p>
+      <p v-else-if="cur">解散「{{ cur.route?.title }} {{ cur.startDate }}」后，将取消全部报名、已付款按付款人原路退回，并向出行人发送取消短信。</p>
       <el-input v-model="dissolveReason" type="textarea" :rows="3" placeholder="请填写解散理由，会写进短信发给报名用户" />
       <template #footer>
         <el-button @click="showDissolve = false">取消</el-button>

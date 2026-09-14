@@ -19,6 +19,9 @@ module.exports = {
     mchKey: process.env.WX_MCH_KEY || "",
     notifyUrl: process.env.WX_PAY_NOTIFY || "http://togetherbetter.cn/api/pay/wechat/notify",
     mock: process.env.WX_PAY_MOCK !== "0",
+    mchCertPath: process.env.WX_MCH_CERT_PATH || "",
+    mchKeyPath: process.env.WX_MCH_KEY_PATH || "",
+    mchCertPass: process.env.WX_MCH_CERT_PASS || "",
   },
   points: {
     earnRate: 1,

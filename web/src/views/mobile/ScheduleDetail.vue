@@ -205,6 +205,11 @@
           <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本局群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
           <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
           <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
+          <template v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">
+            <p>费用待付 ¥{{ s.myEnrollment.remainAmount }}。</p>
+            <button class="btn block" type="button" @click="payMine">自己支付</button>
+            <button class="btn ghost block" type="button" style="margin-top:8px" @click="invitePay">邀请代付或分摊</button>
+          </template>
         </template>
         <template v-else>
           <p v-if="s.myEnrollment.status === 'applied'">已报名，待确认出行名单。{{ s.oversub?.copy }}</p>
@@ -223,6 +228,11 @@
             <span>如本团未成团，自动加入相同行程的其他日期</span>
           </label>
           <button class="btn ghost block" style="margin-top:8px" :disabled="savingFallbacks" @click="saveFallbacks">保存备选</button>
+          <template v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">
+            <p>团费待付 ¥{{ s.myEnrollment.remainAmount }} / ¥{{ s.myEnrollment.payAmount }}。可自己付、请人代付，或转发分摊。</p>
+            <button class="btn block" type="button" @click="payMine">自己支付</button>
+            <button class="btn ghost block" type="button" style="margin-top:8px" @click="invitePay">邀请代付或分摊</button>
+          </template>
           <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
         </template>
       </div></div>
@@ -266,7 +276,7 @@
             v-else-if="!isActivity || !isFree"
             :class="{ 'pay-paid': c.payStatus === 'paid', 'pay-unpaid': c.canPay }"
             @click="c.canPay && payFor(c)"
-          >{{ (c.seatNo ? c.seatNo + " · " : "") + payText(c.payStatus) }}{{ c.canPay ? " · 去支付" : "" }}</span>
+          >{{ rosterPayText(c) }}</span>
         </div>
         <p class="muted" v-if="!s.chain?.length">还没有人报名，快来占第一名。</p>
       </div></div>
@@ -396,7 +406,7 @@
 
     <div v-if="showDissolve" class="card" style="margin:12px 14px 0">
       <div class="pad">
-        <p>解散后将取消全部报名，已付款的标记退款，并向出行人发送取消短信。</p>
+        <p>解散后将取消全部报名，已付款按各付款人原路退回，并向出行人发送取消短信。</p>
         <label>解散理由</label>
         <textarea class="input" v-model="reason" rows="3" placeholder="例如：天气预警、人数不足不成团" />
         <p v-if="dissolveErr" style="color:var(--clay)">{{ dissolveErr }}</p>
@@ -677,6 +687,27 @@ async function load() {
 
 function payText(st) {
   return payStatusText(st);
+}
+
+function rosterPayText(c) {
+  const seat = c.seatNo ? c.seatNo + " · " : "";
+  if (c.canPay && c.paidAmount > 0) return `${seat}已付 ¥${c.paidAmount} / ¥${c.payAmount} · 去支付`;
+  if (c.canPay) return `${seat}${payStatusText(c.payStatus)} · 去支付`;
+  return seat + payStatusText(c.payStatus);
+}
+
+async function payMine() {
+  if (!s.value?.myEnrollment) return;
+  await payFor({ enrollmentId: s.value.myEnrollment.id, name: "自己" });
+}
+
+function invitePay() {
+  const token = s.value?.myEnrollment?.payShareToken;
+  if (!token) {
+    msg.value = "暂时无法生成付款分享";
+    return;
+  }
+  router.push("/m/pay/" + token);
 }
 
 function genderMark(g) {

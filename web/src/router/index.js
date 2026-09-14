@@ -20,6 +20,7 @@ const routes = [
       { path: "route/:id", name: "route", component: () => import("@/views/mobile/RouteDetail.vue") },
       { path: "schedule/:id", name: "schedule", component: () => import("@/views/mobile/ScheduleDetail.vue") },
       { path: "enroll/:id", name: "enroll", component: () => import("@/views/mobile/Enroll.vue") },
+      { path: "pay/:token", name: "pay-share", component: () => import("@/views/mobile/PayShare.vue") },
       { path: "coupon/:code", name: "coupon", component: () => import("@/views/mobile/Coupon.vue") },
       { path: "coupons", name: "coupons", component: () => import("@/views/mobile/Coupons.vue") },
       { path: "open/:id", name: "open", component: () => import("@/views/mobile/OpenSchedule.vue") },

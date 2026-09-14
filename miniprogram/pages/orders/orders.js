@@ -7,7 +7,14 @@ function decorate(item) {
   return Object.assign({}, item, {
     statusText: item.channel === "activity" && item.status === "joined" ? "已报名" : enrollStatusText(item),
     kindLabel: tripKindLabel(item),
-    moneyText: item.channel === "activity" && Number(item.pay_amount || 0) === 0 ? "免费" : "¥" + item.pay_amount,
+    moneyText:
+      item.channel === "activity" && Number(item.pay_amount || 0) === 0
+        ? "免费"
+        : item.pay_status === "unpaid" && Number(item.remainAmount || 0) > 0
+          ? Number(item.paidAmount || 0) > 0
+            ? "已付 ¥" + item.paidAmount + " / ¥" + (item.payAmount || item.pay_amount)
+            : "待付 ¥" + (item.remainAmount || item.pay_amount)
+          : "¥" + (item.payAmount || item.pay_amount),
   });
 }
 
@@ -67,6 +74,15 @@ Page({
     if (!id) return;
     wx.navigateTo({ url: "/pages/schedule/schedule?id=" + id });
   },
+  goPay(e) {
+    const token = e.currentTarget.dataset.token;
+    const sid = e.currentTarget.dataset.sid;
+    if (token) {
+      wx.navigateTo({ url: "/pages/pay/pay?token=" + token });
+      return;
+    }
+    if (sid) wx.navigateTo({ url: "/pages/schedule/schedule?id=" + sid });
+  },
   openReview(e) {
     this.setData({ reviewingId: Number(e.currentTarget.dataset.id), rating: 5, content: "" });
   },
@@ -101,7 +117,7 @@ Page({
     const item = [].concat(this.data.upcoming, this.data.waitlist, this.data.past).find((row) => String(row.id) === String(id));
     wx.showModal({
       title: "取消报名",
-      content: item && item.refundHint ? "确定取消报名？" + item.refundHint + "。名额将释放给其他人。" : "确定取消报名？名额将释放给其他人。已付款的会按退费规则标记退款。",
+      content: item && item.refundHint ? "确定取消报名？" + item.refundHint + "。名额将释放给其他人。已付款按付款人原路退回。" : "确定取消报名？名额将释放给其他人。已付款按付款人原路退回。",
       confirmColor: "#bc4749",
       success: async (res) => {
         if (!res.confirm) return;

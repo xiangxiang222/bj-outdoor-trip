@@ -11,6 +11,8 @@ const {
   verifySign,
   loginLive,
   payLive,
+  refundOrder,
+  refundCertLive,
 } = require("../src/services/wechat");
 const config = require("../src/config");
 
@@ -81,5 +83,12 @@ describe("wechat mock", () => {
     assert.equal(parsed.sign, sign);
     assert.equal(verifySign(parsed, key), true);
     assert.equal(verifySign({ ...parsed, sign: "DEAD" }, key), false);
+  });
+
+  it("refunds as mock when live pay is off", async () => {
+    const row = await refundOrder({ tradeNo: "P1", refundNo: "RF1", totalFen: 19900, refundFen: 15900 });
+    assert.equal(row.mock, true);
+    assert.equal(row.out_refund_no, "RF1");
+    assert.equal(refundCertLive(), false);
   });
 });

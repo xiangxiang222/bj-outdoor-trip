@@ -27,8 +27,11 @@ function updateScheduleTrip(scheduleId, body = {}) {
   return db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
 }
 
-function chainItem(e, i, req) {
+function chainItem(e, i, req, extras = {}) {
   const stage = lifeStageFromPerson({ idCard: e.id_card, birthday: e.birthday });
+  const payAmount = Number(e.pay_amount != null ? e.pay_amount : extras.payAmount || 0);
+  const paidAmount = Number(extras.paidAmount || 0);
+  const remainAmount = e.pay_status === "paid" ? 0 : Math.max(0, payAmount - paidAmount);
   return {
     index: i + 1,
     id: e.id,
@@ -39,13 +42,16 @@ function chainItem(e, i, req) {
     lifeStage: stage.label || "",
     avatar: attachAssetHost(req, e.avatar) || "",
     payStatus: e.pay_status,
+    payAmount,
+    paidAmount,
+    remainAmount,
     travelerType: e.traveler_type,
     status: e.status,
     waitlisted: e.status === "waitlist",
     applied: e.status === "applied",
     seatNo: e.seat_no || "",
     createdAt: e.created_at,
-    canPay: e.status === "joined" && e.pay_status === "unpaid",
+    canPay: e.status === "joined" && e.pay_status === "unpaid" && remainAmount > 0,
   };
 }
 

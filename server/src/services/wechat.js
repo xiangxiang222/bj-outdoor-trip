@@ -1,8 +1,11 @@
 const crypto = require("crypto");
+const fs = require("fs");
+const https = require("https");
 const config = require("../config");
 
 const UNIFIED_ORDER_URL = "https://api.mch.weixin.qq.com/pay/unifiedorder";
 const ORDER_QUERY_URL = "https://api.mch.weixin.qq.com/pay/orderquery";
+const REFUND_URL = "https://api.mch.weixin.qq.com/secapi/pay/refund";
 
 function demoSecret(value) {
   const s = String(value || "");
@@ -160,6 +163,86 @@ async function queryOrder(tradeNo) {
   return data;
 }
 
+function loadMchCert() {
+  const certPath = config.wechat.mchCertPath;
+  const keyPath = config.wechat.mchKeyPath;
+  if (!certPath || !keyPath) return null;
+  try {
+    return {
+      cert: fs.readFileSync(certPath),
+      key: fs.readFileSync(keyPath),
+      passphrase: config.wechat.mchCertPass || String(config.wechat.mchId || ""),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function refundCertLive() {
+  return Boolean(loadMchCert());
+}
+
+function postXmlCert(url, params, cert) {
+  const signed = { ...params, sign: signMd5(params, config.wechat.mchKey) };
+  const xml = objToXml(signed);
+  const u = new URL(url);
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: u.hostname,
+        port: u.port || 443,
+        path: u.pathname,
+        method: "POST",
+        headers: { "Content-Type": "text/xml; charset=utf-8", "Content-Length": Buffer.byteLength(xml) },
+        cert: cert.cert,
+        key: cert.key,
+        passphrase: cert.passphrase || undefined,
+      },
+      (res) => {
+        const chunks = [];
+        res.on("data", (c) => chunks.push(c));
+        res.on("end", () => resolve(xmlToObj(Buffer.concat(chunks).toString("utf8"))));
+      }
+    );
+    req.on("error", reject);
+    req.write(xml);
+    req.end();
+  });
+}
+
+async function refundOrder({ tradeNo, transactionId, refundNo, totalFen, refundFen }) {
+  if (!payLive()) {
+    return { mock: true, refund_id: `mock_${refundNo}`, out_refund_no: refundNo };
+  }
+  const cert = loadMchCert();
+  if (!cert) {
+    const err = new Error("未配置商户API证书，无法原路退款");
+    err.status = 400;
+    throw err;
+  }
+  const params = {
+    appid: config.wechat.appId,
+    mch_id: config.wechat.mchId,
+    nonce_str: crypto.randomBytes(16).toString("hex"),
+    out_refund_no: String(refundNo),
+    total_fee: String(totalFen),
+    refund_fee: String(refundFen),
+    op_user_id: String(config.wechat.mchId),
+  };
+  if (transactionId) params.transaction_id = String(transactionId);
+  else if (tradeNo) params.out_trade_no = String(tradeNo);
+  else {
+    const err = new Error("缺少原支付单号，无法退款");
+    err.status = 400;
+    throw err;
+  }
+  const data = await postXmlCert(REFUND_URL, params, cert);
+  if (data.return_code !== "SUCCESS" || data.result_code !== "SUCCESS") {
+    wechatFail(data, "微信退款失败");
+  }
+  return data;
+}
+
 function clientIp(req) {
   const xf = req && req.headers && req.headers["x-forwarded-for"];
   if (xf) return String(xf).split(",")[0].trim();
@@ -182,7 +265,11 @@ module.exports = {
   jsapiPayParams,
   unifiedOrder,
   queryOrder,
+  refundOrder,
+  refundCertLive,
+  loadMchCert,
   clientIp,
   UNIFIED_ORDER_URL,
   ORDER_QUERY_URL,
+  REFUND_URL,
 };

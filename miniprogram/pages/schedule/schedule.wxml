@@ -142,6 +142,11 @@
     <image wx:if="{{s.consultGroupQr}}" src="{{s.consultGroupQr}}" style="width:280rpx;height:280rpx;margin:16rpx" />
     <view class="pad muted">{{s.consultGroup || contacts.officialWechat}}</view>
     <view wx:if="{{s.myEnrollment.status=='joined'}}" class="btn" bindtap="goAfter">完成活动 / 评选</view>
+  <block wx:if="{{s.myEnrollment.status=='joined' && s.myEnrollment.payStatus=='unpaid' && s.myEnrollment.remainAmount>0}}">
+    <view class="pad">费用待付 ¥{{s.myEnrollment.remainAmount}}</view>
+    <view class="btn" bindtap="payMine">自己支付</view>
+    <view class="btn ghost" bindtap="invitePay">邀请代付或分摊</view>
+  </block>
   </block>
   <block wx:else>
   <view class="pad">1. 点空位可选座 · 早报名早选座</view>
@@ -150,6 +155,11 @@
   <view class="pad muted">{{s.consultGroup || contacts.officialWechat}}</view>
   <view class="pad">3. 候选团 / 4. 替代团请在报名页勾选，不成团自动转团多退少补</view>
   <view wx:if="{{s.myEnrollment.status=='joined'}}" class="btn" bindtap="goAfter">完成活动 / 评选</view>
+  <block wx:if="{{s.myEnrollment.status=='joined' && s.myEnrollment.payStatus=='unpaid' && s.myEnrollment.remainAmount>0}}">
+    <view class="pad">团费待付 ¥{{s.myEnrollment.remainAmount}} / ¥{{s.myEnrollment.payAmount}}</view>
+    <view class="btn" bindtap="payMine">自己支付</view>
+    <view class="btn ghost" bindtap="invitePay">邀请代付或分摊</view>
+  </block>
   </block>
 </view>
 <view class="pad title" wx:if="{{s.combo.enabled}}">组合团 · 另一半条件</view>
@@ -168,7 +178,7 @@
   <text wx:if="{{!isActivity && item.lifeStage}}"> {{item.lifeStage}}</text>
   <text wx:if="{{item.waitlisted}}" class="muted"> 候补</text>
   <text wx:elif="{{item.applied}}" class="muted"> 待确认</text>
-  <text wx:elif="{{!isActivity || !isFree && item.canPay}}" class="pay-unpaid" catchtap="payFor" data-id="{{item.enrollmentId}}" data-name="{{item.name}}"> {{item.payText}} · 去支付</text>
+  <text wx:elif="{{!isActivity || !isFree && item.canPay}}" class="pay-unpaid" catchtap="payFor" data-id="{{item.enrollmentId}}" data-name="{{item.name}}"> {{item.payText}}{{item.canPay ? ' · 去支付' : ''}}</text>
   <text wx:elif="{{!isActivity || !isFree}}" class="{{item.payStatus=='paid' ? 'pay-paid' : 'muted'}}"> {{item.payText}}</text>
 </view>
 <view class="card" wx:if="{{s.lotteryEnabled}}" bindtap="goLottery">
@@ -203,7 +213,7 @@
 <view class="btn clay" wx:if="{{s.isOrganizer && s.status!='cancelled'}}" bindtap="toggleDissolve">解散拼团</view>
 <view class="card" wx:if="{{showDissolve}}">
   <view class="pad">
-    <view>解散后将取消全部报名，已付款的标记退款，并发送取消短信。</view>
+    <view>解散后将取消全部报名，已付款按各付款人原路退回，并发送取消短信。</view>
     <textarea class="input" style="width:auto;min-height:140rpx" placeholder="请填写解散理由" value="{{reason}}" bindinput="setReason" />
     <view class="btn clay" bindtap="confirmDissolve">确认解散并通知</view>
     <view class="btn ghost" bindtap="toggleDissolve">取消</view>

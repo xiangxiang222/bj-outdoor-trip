@@ -79,7 +79,11 @@ Page({
     request("/schedules/" + this.data.id).then((r) => {
       const s = r.data;
       if (s && s.chain) {
-        s.chain = s.chain.map((c) => Object.assign({}, c, { payText: payStatusText(c.payStatus) }));
+        s.chain = s.chain.map((c) => Object.assign({}, c, {
+          payText: c.canPay && c.paidAmount > 0
+            ? "已付 ¥" + c.paidAmount + " / ¥" + c.payAmount
+            : payStatusText(c.payStatus),
+        }));
       }
       const isActivity = s.channel === "activity";
       const q = s.quote || {};
@@ -344,11 +348,24 @@ Page({
         code,
       });
       await invokeWechatPay(res.data);
-      wx.showToast({ title: res.data.needPay && res.data.wechatPay && !res.data.wechatPay.mock ? "支付成功" : "已支付", icon: "none" });
+      wx.showToast({ title: res.data.payStatus === "paid" ? "已付清" : "已支付", icon: "none" });
       this.load();
     } catch (err) {
       wx.showModal({ title: "支付失败", content: err.message, showCancel: false });
     }
+  },
+  payMine() {
+    const mine = this.data.s && this.data.s.myEnrollment;
+    if (!mine) return;
+    this.payFor({ currentTarget: { dataset: { id: mine.id, name: "自己" } } });
+  },
+  invitePay() {
+    const mine = this.data.s && this.data.s.myEnrollment;
+    if (!mine || !mine.payShareToken) {
+      wx.showToast({ title: "暂时无法分享付款", icon: "none" });
+      return;
+    }
+    wx.navigateTo({ url: "/pages/pay/pay?token=" + mine.payShareToken });
   },
   copyText(e) {
     const text = e.currentTarget.dataset.text;

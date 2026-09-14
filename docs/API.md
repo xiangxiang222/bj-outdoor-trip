@@ -92,11 +92,12 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | PUT | `/schedules/:id/limit` | 用户 | 仅发起人，只扩不缩。`addTargets`（`[{school,college,major}]`）`addSchools` `addColleges` `openAllColleges`。多校时 `addColleges` 必须带 `school`，两校同名学院不能混。不能把「不限学校」收成指定高校，也不能把「本校各学院」收成指定学院 |
 | POST | `/enroll` | 用户 | 见下方报名 body。报超会抽且名单未确认时写入 `applied`（不占座）；确认后中签 `joined`、未中 `waitlist`。候补/`applied` 券为 `held` |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。`WX_PAY_MOCK=0` 时返回 403 |
-| POST | `/pay/for-enrollment` | 用户 | 行程页待支付代付。演示立即成功。真实支付返回 `{ needPay, wechatPay, tradeNo }`，需小程序 `wx.requestPayment`；可带 `code` 绑定 openid。公司挂账不可用 |
+| POST | `/pay/for-enrollment` | 用户 | 自己付、他人代付或众筹分摊。`enrollmentId` 或付款分享 `token`；可选 `amount`（整数元，默认付清余额）。演示立即成功。真实支付返回 `{ needPay, wechatPay, tradeNo }`，需小程序 `wx.requestPayment`。公司挂账不可用 |
+| GET | `/pay/share/:token` | 可选 | 付款分享：待付余额、已付款名单。登录后 `isOwner`/`self` 更准 |
 | POST | `/pay/confirm` | 用户 | `{ tradeNo }`。向微信查单，成功则入账（报名已付或开通会员） |
 | POST | `/pay/wechat/notify` | 否 | 微信支付 XML 回调，验签后入账。返回微信 XML |
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
-| GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canReview` `reviewed`、`channel`、`refundPercent` `refundHint` `refundAmount` |
+| GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canPay` `payShareToken` `paidAmount` `remainAmount` `canReview` `reviewed`、`channel`、`refundPercent` `refundHint` `refundAmount` |
 | POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（山野团开团前按比例退；同城局出发日前；当天同城局不可取消） |
 | POST | `/member/buy` | 用户 | 演示环境立即开通/续费会员（年费 99）。真实支付返回 JSAPI 参数，开通发生在回调或 `/pay/confirm`。可带 `code` |
 | GET | `/points` | 用户 | 积分余额与流水 |
@@ -150,7 +151,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 
 已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序（抽签团按 `draw_rank`）自动递补。报超会抽且名单未确认时 `status=applied`，不占座。当前实现报名时 `points_used=0`，不读取抵现开关。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds` `joinCode`（加密团必填，忽略大小写；也可走 query `code`/`joinCode`）。发起人报名可免填。`joinMode` 可为 `assistant` / `photographer`（免个人团费，保险另计；摄影师每团一位）。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补/`applied` `held`，占座成功才 `used`。
 
-排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`、`channel`、`oversub`、`photographer`、`refundPolicy`、加密团 `private` / `joinCodeRequired`；名单项含 `waitlisted`、`applied`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位；报超待确认时不选座。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`，已付款按档位返回 `refundPercent` `refundAmount`。前端有 `myEnrollment` 时不再展示报名按钮。
+排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`、`channel`、`oversub`、`photographer`、`refundPolicy`、加密团 `private` / `joinCodeRequired`；名单项含 `waitlisted`、`applied`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位；报超待确认时不选座。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`，已付款（含众筹分摊）按档位返回 `refundPercent` `refundAmount`，`refunds` 为各付款人原路退回金额。前端有 `myEnrollment` 时不再展示报名按钮。
 
 报名成功示例：
 
@@ -169,9 +170,9 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 
 ### 解散 / 取消
 
-解散成功返回 `cancelled`（取消人数）、`refunded`（退款人数）、`smsCount`。已付款报名改为 `pay_status=refunded`。
+解散成功返回 `cancelled`（取消人数）、`refunded`（退款人数）、`smsCount`、`refunds`（各付款人原路退回）。已付款或已有分摊的报名改为 `pay_status=refunded`。
 
-取消报名：山野团在正式开团前、出发日当天及之前可取消，已付款按线路退费档位（默认 10 天前 100%、3 天前 80%、不足 3 天 50%）标记退款；正式开团后或已过出发日返回「正式开团后不可取消」或「已过出发日，不可取消」。同城局仍为出发日前可取消、当天不可取消。解散或后台代取消仍按全额标记退款。同一证件取消后可再报。
+取消报名：山野团在正式开团前、出发日当天及之前可取消，已付款按线路退费档位（默认 10 天前 100%、3 天前 80%、不足 3 天 50%）按各付款人原路退回；正式开团后或已过出发日返回「正式开团后不可取消」或「已过出发日，不可取消」。同城局仍为出发日前可取消、当天不可取消。解散或后台代取消仍按全额、按付款人原路退回。同一证件取消后可再报。
 
 ## 管理端（均需管理员 token，登录除外）
 
@@ -229,7 +230,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 | PUT | `/admin/coupons/:id` | `status=on|paused|off`，可改名称、发行量（不得小于已领）、限时与定向/叠加字段 |
 | POST | `/admin/coupons/:id/grant` | 定向发放。`phones`/`phonesText`/`userIds`/`allMembers`，或 `school`+`allCampus` 发给该校已认证师生/校友，或 `byRule` 按发行条件发放（人多随机）。可选 `sms`（默认 true）。一人一码，写入 `sms_logs` 场景 `coupon`，每手机每天最多 1 条 |
 | GET | `/admin/enrollments` | Query：`scheduleId` `q` `payStatus` `status` |
-| POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款标记退款） |
+| POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款按付款人原路退回） |
 | GET | `/admin/notices` | 运营。后台待办消息。`{ list, unread }`。用户提交校园/团体认证时写入 |
 | POST | `/admin/notices/read-all` | 运营。全部标已读 |
 | POST | `/admin/notices/:id/read` | 运营。单条标已读 |

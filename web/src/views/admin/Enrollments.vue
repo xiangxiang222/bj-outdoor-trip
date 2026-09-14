@@ -82,7 +82,7 @@ async function load() {
 
 async function cancel(row) {
   try {
-    await ElMessageBox.confirm(`取消「${row.traveler_name}」在「${row.title}」的报名？名额将释放，已付款会标记退款。`, "取消报名", {
+    await ElMessageBox.confirm(`取消「${row.traveler_name}」在「${row.title}」的报名？名额将释放，已付款按付款人原路退回。`, "取消报名", {
       type: "warning",
     });
     await http.post(`/admin/enrollments/${row.id}/cancel`);

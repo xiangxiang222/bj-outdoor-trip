@@ -12,10 +12,10 @@ function createApp() {
   const app = express();
   app.set("trust proxy", true);
   app.use(cors());
-  app.post("/api/pay/wechat/notify", express.raw({ type: "*/*", limit: "1mb" }), (req, res) => {
+  app.post("/api/pay/wechat/notify", express.raw({ type: "*/*", limit: "1mb" }), async (req, res) => {
     const xml = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : String(req.body || "");
     const { handleWechatNotify } = require("./services/payment");
-    res.type("text/xml").send(handleWechatNotify(xml));
+    res.type("text/xml").send(await handleWechatNotify(xml));
   });
   app.use(express.json({ limit: "4mb" }));
   app.use("/static", express.static(path.join(config.publicDir, "static")));

@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const { harness, loginUser, auth, ID } = require("./http");
+const { harness, loginUser, auth, ID, issueCaptcha } = require("./http");
 const config = require("../src/config");
 const { signMd5, objToXml, UNIFIED_ORDER_URL, ORDER_QUERY_URL } = require("../src/services/wechat");
 
@@ -192,5 +192,120 @@ describe("wechat live pay", () => {
     } finally {
       restorePay();
     }
+  });
+});
+
+describe("enrollment pay share and crowdfund", () => {
+  let agent;
+  let seed;
+
+  beforeEach(() => {
+    ({ agent, seed } = harness());
+  });
+
+  async function enrollSelf() {
+    const token = await loginUser(agent);
+    const enrolled = await agent
+      .post("/api/enroll")
+      .set(auth(token))
+      .send({
+        scheduleId: seed.individualScheduleId,
+        travelerName: "林北野",
+        travelerPhone: "13800138000",
+        idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
+      })
+      .expect(200);
+    return { token, enrollmentId: enrolled.body.data.enrollmentId, payShareToken: enrolled.body.data.payShareToken };
+  }
+
+  async function registerFriend() {
+    const cap = await issueCaptcha(agent);
+    const res = await agent
+      .post("/api/auth/register")
+      .send({ phone: "13600136008", password: "123456", nickname: "代付好友", captchaToken: cap.token, captcha: cap.code })
+      .expect(200);
+    return res.body.data.token;
+  }
+
+  it("lets the traveler pay remaining and exposes a share token", async () => {
+    const { token, enrollmentId, payShareToken } = await enrollSelf();
+    assert.ok(payShareToken);
+    const share = await agent.get("/api/pay/share/" + payShareToken).expect(200);
+    assert.equal(share.body.data.canPay, true);
+    assert.ok(share.body.data.remainAmount > 0);
+    const paid = await agent
+      .post("/api/pay/for-enrollment")
+      .set(auth(token))
+      .send({ enrollmentId })
+      .expect(200);
+    assert.equal(paid.body.data.payStatus, "paid");
+    assert.equal(paid.body.data.proxy, false);
+    assert.equal(paid.body.data.remainAmount, 0);
+    const row = seed.db.prepare("SELECT remark FROM payments WHERE enrollment_id=? AND status='success'").get(enrollmentId);
+    assert.equal(row.remark, "自己支付");
+  });
+
+  it("lets a friend pay the remaining amount as 代付", async () => {
+    const { enrollmentId, payShareToken } = await enrollSelf();
+    const friend = await registerFriend();
+    const paid = await agent
+      .post("/api/pay/for-enrollment")
+      .set(auth(friend))
+      .send({ token: payShareToken })
+      .expect(200);
+    assert.equal(paid.body.data.payStatus, "paid");
+    assert.equal(paid.body.data.proxy, true);
+    const row = seed.db.prepare("SELECT user_id, remark FROM payments WHERE enrollment_id=? AND status='success'").get(enrollmentId);
+    assert.notEqual(Number(row.user_id), Number(seed.userId));
+    assert.equal(row.remark, "他人代付");
+  });
+
+  it("accepts partial crowdfund payments until the fee is covered", async () => {
+    const { token, enrollmentId, payShareToken } = await enrollSelf();
+    const first = await agent
+      .post("/api/pay/for-enrollment")
+      .set(auth(token))
+      .send({ enrollmentId, amount: 80 })
+      .expect(200);
+    assert.equal(first.body.data.payStatus, "unpaid");
+    assert.equal(first.body.data.amount, 80);
+    const friend = await registerFriend();
+    const over = await agent.post("/api/pay/for-enrollment").set(auth(friend)).send({ token: payShareToken, amount: 999 });
+    assert.equal(over.status, 400);
+    const second = await agent
+      .post("/api/pay/for-enrollment")
+      .set(auth(friend))
+      .send({ token: payShareToken, amount: first.body.data.remainAmount })
+      .expect(200);
+    assert.equal(second.body.data.payStatus, "paid");
+    const detail = await agent.get("/api/schedules/" + seed.individualScheduleId).set(auth(token)).expect(200);
+    assert.equal(detail.body.data.myEnrollment.remainAmount, 0);
+    assert.equal(detail.body.data.chain[0].canPay, false);
+    assert.equal(detail.body.data.myEnrollment.contributors.length, 2);
+  });
+
+  it("refunds each crowdfund payer on cancel", async () => {
+    const { token, enrollmentId } = await enrollSelf();
+    await agent.post("/api/pay/for-enrollment").set(auth(token)).send({ enrollmentId, amount: 80 }).expect(200);
+    const friend = await registerFriend();
+    const rest = seed.db.prepare("SELECT pay_amount FROM enrollments WHERE id=?").get(enrollmentId).pay_amount - 80;
+    await agent.post("/api/pay/for-enrollment").set(auth(friend)).send({ enrollmentId, amount: rest }).expect(200);
+    const cancelled = await agent.post("/api/orders/" + enrollmentId + "/cancel").set(auth(token)).expect(200);
+    assert.equal(cancelled.body.data.payStatus, "refunded");
+    assert.equal(cancelled.body.data.refunded, true);
+    assert.equal(cancelled.body.data.refunds.length, 2);
+    const userIds = cancelled.body.data.refunds.map((row) => Number(row.userId)).sort();
+    const friendId = seed.db.prepare("SELECT id FROM users WHERE phone='13600136008'").get().id;
+    assert.deepEqual(userIds, [seed.userId, friendId].sort());
+    const sum = cancelled.body.data.refunds.reduce((s, row) => s + row.amount, 0);
+    assert.equal(sum, cancelled.body.data.refundAmount);
+  });
+
+  it("rejects an unknown pay share token", async () => {
+    await agent.get("/api/pay/share/no-such-token").expect(404);
   });
 });
