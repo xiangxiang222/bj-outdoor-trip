@@ -59,8 +59,15 @@
   <view wx:if="{{form.campusScope=='college' || form.campusScope=='school' || form.campusScope=='colleges'}}" class="input" bindtap="pickCampusSchool">{{form.campusSchool || '学校全称'}}</view>
   <view wx:if="{{form.campusScope=='college'}}" class="input" bindtap="pickCampusCollege">{{form.campusCollege || (form.campusSchool ? '可选，搜索该校学院' : '请先选择学校')}}</view>
   <view wx:if="{{form.campusScope=='colleges'}}" class="input" bindtap="pickColleges">{{form.colleges || (form.campusSchool ? '开放学院，可多选该校学院' : '请先选择学校')}}</view>
-  <view wx:if="{{form.campusScope=='schools'}}" class="input" bindtap="pickSchools">{{form.schools || '开放学校，可多选'}}</view>
-  <view wx:if="{{form.campusScope=='schools'}}" class="input" bindtap="pickColleges">{{form.colleges || (form.schools ? '限定学院可空，按已选学校列出' : '请先选择开放学校')}}</view>
+  <block wx:if="{{form.campusScope=='schools'}}">
+    <view class="card" wx:for="{{form.campusTargets}}" wx:key="index">
+      <view class="input" bindtap="pickTargetSchool" data-i="{{index}}">{{item.school || '选学校'}}</view>
+      <view class="input" bindtap="pickTargetCollege" data-i="{{index}}">{{item.college || (item.school ? '学院可空' : '请先选学校')}}</view>
+      <view class="input" bindtap="pickTargetMajor" data-i="{{index}}">{{item.major || (item.college ? '专业可空' : '请先选学院')}}</view>
+      <view class="btn ghost" bindtap="removeCampusTarget" data-i="{{index}}">删除这组</view>
+    </view>
+    <view class="btn ghost" bindtap="addCampusTarget">添加学校-学院-专业</view>
+  </block>
   <view class="label">出发日期</view>
   <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
     <view class="input">{{dateLabels[dateIndex]}}</view>

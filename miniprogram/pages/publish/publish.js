@@ -1,7 +1,7 @@
 const { request, showError } = require("../../utils/request");
 const { OFFER_TYPES } = require("../../utils/offer");
 const { KINDS } = require("../../utils/activity-kind");
-const { openCampusPick, joinNames } = require("../../utils/campus");
+const { openCampusPick, joinNames, emptyTarget, patchTarget } = require("../../utils/campus");
 
 const MEETUPS = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
 const DAYS = [1, 2, 3, "multi"];
@@ -86,6 +86,7 @@ Page({
       campusCollege: "",
       schools: "",
       colleges: "",
+      campusTargets: [],
       lotteryMode: "off",
       privateJoin: false,
       joinCode: "",
@@ -221,28 +222,68 @@ Page({
       onPick: (names) => this.setData({ "form.campusCollege": names[0] || "" }),
     });
   },
-  pickSchools() {
-    openCampusPick({
-      kind: "school",
-      multiple: true,
-      title: "开放学校",
-      selected: this.data.form.schools,
-      onPick: (names) => this.setData({ "form.schools": joinNames(names), "form.colleges": "" }),
-    });
-  },
   pickColleges() {
-    const school = this.data.form.campusScope === "schools" ? this.data.form.schools : this.data.form.campusSchool;
-    if (!String(school || "").trim()) {
+    if (!this.data.form.campusSchool) {
       wx.showToast({ title: "请先选择学校", icon: "none" });
       return;
     }
     openCampusPick({
       kind: "college",
-      school,
+      school: this.data.form.campusSchool,
       multiple: true,
       title: "选择学院",
       selected: this.data.form.colleges,
       onPick: (names) => this.setData({ "form.colleges": joinNames(names) }),
+    });
+  },
+  addCampusTarget() {
+    const campusTargets = (this.data.form.campusTargets || []).concat([emptyTarget()]);
+    this.setData({ "form.campusTargets": campusTargets });
+  },
+  removeCampusTarget(e) {
+    const i = Number(e.currentTarget.dataset.i);
+    const campusTargets = (this.data.form.campusTargets || []).filter((_, idx) => idx !== i);
+    this.setData({ "form.campusTargets": campusTargets });
+  },
+  pickTargetSchool(e) {
+    const i = Number(e.currentTarget.dataset.i);
+    const row = (this.data.form.campusTargets || [])[i] || {};
+    openCampusPick({
+      kind: "school",
+      title: "选择学校",
+      selected: row.school,
+      onPick: (names) => this.setData({ "form.campusTargets": patchTarget(this.data.form.campusTargets, i, "school", names[0] || "") }),
+    });
+  },
+  pickTargetCollege(e) {
+    const i = Number(e.currentTarget.dataset.i);
+    const row = (this.data.form.campusTargets || [])[i] || {};
+    if (!row.school) {
+      wx.showToast({ title: "请先选择学校", icon: "none" });
+      return;
+    }
+    openCampusPick({
+      kind: "college",
+      school: row.school,
+      title: "选择学院",
+      selected: row.college,
+      onPick: (names) => this.setData({ "form.campusTargets": patchTarget(this.data.form.campusTargets, i, "college", names[0] || "") }),
+    });
+  },
+  pickTargetMajor(e) {
+    const i = Number(e.currentTarget.dataset.i);
+    const row = (this.data.form.campusTargets || [])[i] || {};
+    if (!row.college) {
+      wx.showToast({ title: "请先选择学院", icon: "none" });
+      return;
+    }
+    openCampusPick({
+      kind: "major",
+      school: row.school,
+      college: row.college,
+      title: "选择专业",
+      selected: row.major,
+      onPick: (names) => this.setData({ "form.campusTargets": patchTarget(this.data.form.campusTargets, i, "major", names[0] || "") }),
     });
   },
   pickCompanySchool() {
@@ -292,8 +333,11 @@ Page({
     }
     if (!this.data.form.campusCollege && user.college) patch["form.campusCollege"] = user.college;
     if (scope === "colleges" && user.college && !this.data.form.colleges) patch["form.colleges"] = user.college;
-    if (scope === "schools" && (user.school || this.data.form.campusSchool) && !this.data.form.schools) {
-      patch["form.schools"] = this.data.form.campusSchool || user.school;
+    if (scope === "schools") {
+      const targets = this.data.form.campusTargets || [];
+      if (!targets.length) {
+        patch["form.campusTargets"] = [emptyTarget(this.data.form.campusSchool || user.school, "", "")];
+      }
     }
     this.setData(patch);
   },

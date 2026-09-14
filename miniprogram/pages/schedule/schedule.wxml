@@ -193,14 +193,12 @@
 <view class="btn ghost" wx:if="{{!isActivity}}" bindtap="stats">本团画像</view>
 <button class="btn ghost" open-type="share">分享到微信</button>
 <view class="card" wx:if="{{s.isOrganizer && s.status!='cancelled' && s.eligibility.schools.length}}">
-  <view class="pad muted">当前范围：{{s.eligibility.label}}。可以再开放其他学院或学校，不能收窄。</view>
-  <block wx:if="{{s.eligibility.colleges.length}}">
-    <view class="input" bindtap="pickAddCollege">{{addCollege || '开放学院，例如计算机学院'}}</view>
-    <view class="btn ghost" bindtap="expandColleges">开放学院</view>
-    <view class="btn ghost" bindtap="expandAllColleges">本校全部学院可报</view>
-  </block>
-  <view class="input" bindtap="pickAddSchool">{{addSchool || '开放学校，例如清华大学'}}</view>
-  <view class="btn ghost" bindtap="expandSchools">开放学校</view>
+  <view class="pad muted">当前范围：{{s.eligibility.label}}。可以再开放学校-学院-专业组合，不能收窄。</view>
+  <view class="input" bindtap="pickAddSchool">{{addSchool || '学校'}}</view>
+  <view class="input" bindtap="pickAddCollege">{{addCollege || (addSchool ? '学院可空，留空则该校各学院可报' : '请先选学校')}}</view>
+  <view class="input" bindtap="pickAddMajor">{{addMajor || (addCollege ? '专业可空' : '请先选学院')}}</view>
+  <view class="btn ghost" bindtap="expandTarget">开放该组合</view>
+  <view class="btn ghost" wx:if="{{s.eligibility.colleges.length}}" bindtap="expandAllColleges">已开放学校全部学院可报</view>
 </view>
 <view class="btn clay" wx:if="{{s.isOrganizer && s.status!='cancelled'}}" bindtap="toggleDissolve">解散拼团</view>
 <view class="card" wx:if="{{showDissolve}}">

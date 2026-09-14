@@ -5,7 +5,7 @@ const { shareCover } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
 const { dateOf } = require("../../utils/activity-kind");
 const { peopleLine, trustChips, dockPrice, enrollCta, canShowEnroll, ticketState } = require("../../utils/scan-facts");
-const { openCampusPick, joinNames } = require("../../utils/campus");
+const { openCampusPick } = require("../../utils/campus");
 const app = getApp();
 
 function busLine(s) {
@@ -34,6 +34,7 @@ Page({
     reason: "",
     addCollege: "",
     addSchool: "",
+    addMajor: "",
     seatRows: [],
     weather: null,
     reviews: { list: [], count: 0, avg: 0 },
@@ -383,31 +384,54 @@ Page({
   },
   setAddCollege(e) { this.setData({ addCollege: e.detail.value }); },
   setAddSchool(e) { this.setData({ addSchool: e.detail.value }); },
-  pickAddCollege() {
-    const schools = (this.data.s && this.data.s.eligibility && this.data.s.eligibility.schools) || [];
-    openCampusPick({
-      kind: "college",
-      school: joinNames(schools),
-      title: "开放学院",
-      selected: this.data.addCollege,
-      onPick: (names) => this.setData({ addCollege: names[0] || "" }),
-    });
-  },
+  setAddMajor(e) { this.setData({ addMajor: e.detail.value }); },
   pickAddSchool() {
     openCampusPick({
       kind: "school",
       title: "开放学校",
       selected: this.data.addSchool,
-      onPick: (names) => this.setData({ addSchool: names[0] || "" }),
+      onPick: (names) => this.setData({ addSchool: names[0] || "", addCollege: "", addMajor: "" }),
     });
   },
-  expandColleges() { this.expandLimit({ addColleges: this.data.addCollege }); },
-  expandSchools() { this.expandLimit({ addSchools: this.data.addSchool }); },
+  pickAddCollege() {
+    if (!this.data.addSchool) {
+      wx.showToast({ title: "请先选择学校", icon: "none" });
+      return;
+    }
+    openCampusPick({
+      kind: "college",
+      school: this.data.addSchool,
+      title: "开放学院",
+      selected: this.data.addCollege,
+      onPick: (names) => this.setData({ addCollege: names[0] || "", addMajor: "" }),
+    });
+  },
+  pickAddMajor() {
+    if (!this.data.addCollege) {
+      wx.showToast({ title: "请先选择学院", icon: "none" });
+      return;
+    }
+    openCampusPick({
+      kind: "major",
+      school: this.data.addSchool,
+      college: this.data.addCollege,
+      title: "开放专业",
+      selected: this.data.addMajor,
+      onPick: (names) => this.setData({ addMajor: names[0] || "" }),
+    });
+  },
+  expandTarget() {
+    if (!this.data.addSchool) {
+      wx.showToast({ title: "请先选择学校", icon: "none" });
+      return;
+    }
+    this.expandLimit({ addTargets: [{ school: this.data.addSchool, college: this.data.addCollege, major: this.data.addMajor }] });
+  },
   expandAllColleges() { this.expandLimit({ openAllColleges: true }); },
   async expandLimit(body) {
     try {
       const res = await request("/schedules/" + this.data.id + "/limit", "PUT", body);
-      this.setData({ addCollege: "", addSchool: "" });
+      this.setData({ addCollege: "", addSchool: "", addMajor: "" });
       wx.showToast({ title: "已开放：" + ((res.data.eligibility && res.data.eligibility.label) || "报名范围"), icon: "none" });
       this.load();
     } catch (e) {

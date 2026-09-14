@@ -218,6 +218,7 @@ const form = ref({
   campusCollege: store.profile?.college || "",
   schools: "",
   colleges: "",
+  campusTargets: [],
   startDate: route.query.date || (startAsActivity ? tomorrow() : ""),
   organizerType: "individual",
   companyName: store.profile?.companyName || "",

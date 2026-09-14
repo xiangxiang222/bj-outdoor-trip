@@ -96,6 +96,7 @@ npm test
 | C13 | 非认证用户 × 高校仅北大 | 拦截「去校园认证」 | 035 | `api.eligibility` blocks non-students |
 | C14 | 已认证北大师生 × 高校免费报超会抽 | ¥0，可报；状态「已报名待确认」 | 036 / 048 | `api.oversub` campus draw |
 | C15 | 外校学生 × 学校名单 | 400 独立拒绝 | — | `api.eligibility` second campus rejected |
+| C15b | 两校同名学院 | 只开北大计算机时，首师大计算机不能报 | — | `api.eligibility` same-named colleges |
 | C16 | 高校免费团发布 | 自动 `studentOnly` + `oversub` + 校名 | 047 / 047b / 049 | `api.oversub` turns on draw for free campus |
 | C17 | 报超未超座位 | 文案「未超过则全部确认」；未抽签前待确认 | 048 / 049 | `api.oversub` confirms when not over |
 | C18 | 报超超过座位 | 抽签；取消后按抽签顺序候补递补 | — | `api.oversub` draws when over |
@@ -369,7 +370,7 @@ npm test
 ![M-46](full-tests/screenshots/036_campus_enroll_ok.png)
 
 **M-47 后台发布拼团对话框**  
-类型可改高校；开关：仅师生、允许校友、报超会抽；限定高校 / 学院。学院名单按已选高校级联，多校为这些学校学院的并集。
+类型可改高校；开关：仅师生、允许校友、报超会抽；报名范围按条添加学校-学院-专业组合，两校同名学院分开选。
 
 ![M-47](full-tests/screenshots/047_oversub_admin_publish.png)
 
@@ -519,7 +520,7 @@ npm test
 | `api.combo.test.js` | 2 | 组合团资格 |
 | `api.coupon.test.js` | 22 | 优惠券全组合 |
 | `api.dissolve.test.js` | 4 | 解散退款 |
-| `api.eligibility.test.js` | 11 | 高校 / 学院 / 校友 / 证件 |
+| `api.eligibility.test.js` | 15 | 高校 / 绑定组合 / 校友 / 证件 |
 | `api.enroll.test.js` | 17 | 个人/公司/同城局/摄影师/满员 |
 | `api.guide.test.js` | 1 | 导游登录签到 |
 | `api.home.test.js` | 7 | 首页、发团待审、同城局不进线路、玩法标签改删 |

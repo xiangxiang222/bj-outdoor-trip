@@ -463,6 +463,7 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "student_only", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "schedules", "schools_json", "TEXT DEFAULT '[]'");
   addColumnIfMissing(db, "schedules", "colleges_json", "TEXT DEFAULT '[]'");
+  addColumnIfMissing(db, "schedules", "campus_targets_json", "TEXT DEFAULT '[]'");
   addColumnIfMissing(db, "schedules", "alumni_ok", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "schedules", "oversub", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "schedules", "drawn_at", "TEXT");

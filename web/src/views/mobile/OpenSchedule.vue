@@ -95,6 +95,7 @@ const form = ref({
   campusCollege: store.profile?.college || "",
   schools: "",
   colleges: "",
+  campusTargets: [],
   privateJoin: false,
   joinCode: "",
 });

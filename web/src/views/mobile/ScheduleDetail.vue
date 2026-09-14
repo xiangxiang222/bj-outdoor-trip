@@ -94,14 +94,27 @@
             <router-link to="/m/student">去校园认证</router-link>
           </p>
           <div v-if="s.isOrganizer && s.status !== 'cancelled' && s.eligibility?.schools?.length" class="expand-campus">
-            <p class="muted">当前范围：{{ s.eligibility.label }}。可以再开放其他学院或学校，不能收窄。</p>
-            <template v-if="s.eligibility.colleges?.length">
-              <CampusNamePicker v-model="addCollege" kind="college" :school="expandSchool" title="开放学院" placeholder="开放学院，从已开放学校里选" />
-              <button class="btn ghost block" type="button" :disabled="expanding" @click="expandLimit({ addColleges: addCollege })">开放学院</button>
-              <button class="btn ghost block" type="button" :disabled="expanding" @click="expandLimit({ openAllColleges: true })">本校全部学院可报</button>
-            </template>
-            <CampusNamePicker v-model="addSchool" kind="school" title="开放学校" placeholder="开放学校，例如清华大学" />
-            <button class="btn ghost block" type="button" :disabled="expanding" @click="expandLimit({ addSchools: addSchool })">开放学校</button>
+            <p class="muted">当前范围：{{ s.eligibility.label }}。可以再开放学校-学院-专业组合，不能收窄。</p>
+            <CampusNamePicker v-model="addSchool" kind="school" title="开放学校" placeholder="学校" />
+            <CampusNamePicker
+              v-model="addCollege"
+              kind="college"
+              :school="addSchool"
+              :disabled="!addSchool"
+              title="开放学院"
+              :placeholder="addSchool ? '学院可空，留空则该校各学院可报' : '请先选学校'"
+            />
+            <CampusNamePicker
+              v-model="addMajor"
+              kind="major"
+              :school="addSchool"
+              :college="addCollege"
+              :disabled="!addCollege"
+              title="开放专业"
+              :placeholder="addCollege ? '专业可空' : '请先选学院'"
+            />
+            <button class="btn ghost block" type="button" :disabled="expanding || !addSchool" @click="expandLimit({ addTargets: [{ school: addSchool, college: addCollege, major: addMajor }] })">开放该组合</button>
+            <button v-if="s.eligibility.colleges?.length" class="btn ghost block" type="button" :disabled="expanding" @click="expandLimit({ openAllColleges: true })">已开放学校全部学院可报</button>
           </div>
           <p class="muted" v-if="s.reviewStatus === 'pending'" style="color:#c77d3a">本团正在审核，通过后才会出现在{{ isActivity ? "活动页" : "首页" }}，暂不能报名。</p>
           <p class="muted" v-else-if="s.reviewStatus === 'rejected'" style="color:var(--clay)">本团未通过审核。</p>
@@ -420,7 +433,6 @@ import GoodsTabs from "@/components/GoodsTabs.vue";
 import RouteProfile from "@/components/RouteProfile.vue";
 import LivePulse from "@/components/LivePulse.vue";
 import CampusNamePicker from "@/components/CampusNamePicker.vue";
-import { joinCampusNames } from "@/utils/campusNames";
 import { liveWechatPay, MINIPROGRAM_PAY_HINT } from "@/utils/wechatPay";
 
 const TAB_IDS = ["trip", "route", "rules"];
@@ -479,8 +491,17 @@ const dissolveErr = ref("");
 const dissolving = ref(false);
 const addCollege = ref("");
 const addSchool = ref("");
+const addMajor = ref("");
+watch(addSchool, (next, prev) => {
+  if (prev && next !== prev) {
+    addCollege.value = "";
+    addMajor.value = "";
+  }
+});
+watch(addCollege, (next, prev) => {
+  if (prev && next !== prev) addMajor.value = "";
+});
 const expanding = ref(false);
-const expandSchool = computed(() => joinCampusNames(s.value?.eligibility?.schools || []));
 const weather = ref(null);
 const reviews = ref({ list: [], count: 0, avg: 0 });
 const routeDetail = ref(null);
@@ -896,6 +917,7 @@ async function expandLimit(body) {
     s.value = res.data;
     addCollege.value = "";
     addSchool.value = "";
+    addMajor.value = "";
     msg.value = "已开放报名范围：" + (res.data.eligibility?.label || "");
   } catch (e) {
     msg.value = e.message;
