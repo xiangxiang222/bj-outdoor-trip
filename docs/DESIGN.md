@@ -147,13 +147,13 @@ User 1──n Favorite / PointsLedger / Review
 
 ### 3.3.2 报超会抽与校园认证
 
-高校赞助等车位有限的团可开 `oversub`。对外文案是「报超会抽」：报名人数超过座位才抽签，未超过则全部确认，不说「抽名额」。**高校免费团**（`organizer_type=campus` 且 `offer_type=free`）发布时默认打开抽签，并用学校名写入限定高校。这与行前/行后积分抽奖（`lottery_draws`）分开。发团可选 `campusScope`：仅本学院、仅本校、本校跨学院、跨学校；发起人之后只能 `PUT /schedules/:id/limit` 再开放学院或学校，不能收窄。
+高校赞助等车位有限的团可开 `oversub`。对外文案是「报超会抽」：报名人数超过座位才抽签，未超过则全部确认，不说「抽名额」。**高校免费团**（`organizer_type=campus` 且 `offer_type=free`）发布时默认打开抽签，并用学校名写入限定高校。这与行前/行后积分抽奖（`lottery_draws`）分开。发团可选 `campusScope`：仅本学院、仅本校、本校跨学院、跨学校。跨学校写入 `campus_targets_json`（多条学校-学院-专业组合，三项绑定，学院/专业可空）；两校同名学院要分成两组，不能把学院名并成一份名单。发起人之后只能 `PUT /schedules/:id/limit` 再开放组合，不能收窄。
 
 - 确认名单前，普通报名写入 `enrollments.status=applied`，不占座、不选座；`remain` 仍按已占座计算
 - 运营 `POST /admin/schedules/:id/draw` 后：申请人 ≤ 可抽座位数则全部 `joined` 且 `draw_over=0`；超过则乱序取前 N 人占座，其余 `waitlist` 并记 `draw_rank`。重复确认返回 400，除非 `force`
 - 虚拟用户与辅助领队/摄影师不进抽签池；领队/摄影师仍可直接占座
 - 中签人取消后，候补按 `draw_rank` 再按 id 递补
-- `users.campus_kind`：`student` 在读师生 / `alumni` 校友。另有 `college` `major` `student_no` `student_card_url`。校友通过认证后 `is_student=0`，不享受学生价。排期 `alumni_ok` 打开后，指定高校的已认证校友可报。排期 `colleges_json` 限定学院，须同时有 `schools_json`
+- `users.campus_kind`：`student` 在读师生 / `alumni` 校友。另有 `college` `major` `student_no` `student_card_url`。校友通过认证后 `is_student=0`，不享受学生价。排期 `alumni_ok` 打开后，指定高校的已认证校友可报。排期 `campus_targets_json` 为 `[{school,college,major}]`；`schools_json`/`colleges_json` 是派生快照。报名命中任一条组合即可（有学院则学院也要对上，有专业则专业也要对上）。无 `campus_targets_json` 的旧数据按 `schools`×`colleges` 笛卡尔积兼容
 
 ### 3.3.1 优惠券
 
@@ -166,7 +166,7 @@ User 1──n Favorite / PointsLedger / Review
 
 - 角色：`user` / `company`（公司账号带 `company_name`） / `leader`（个人领队申请通过后写入；公司账号通过后仍为 `company`，靠 `leader_status=approved`）
 - 会员：年费 99 元，有效期 365 天，会员价 95 折，开通赠一次 100 元以内团。演示环境 `POST /member/buy` 立即记成功；真实支付等微信入账后再开通
-- 学生：`POST /me/student` 可选学校、学院、专业（北京名录 `GET /campuses` 搜索分页，学校→学院→专业一对多级联），在读须学号并上传学生证 → `student_status=pending` → 后台 `POST /admin/users/:id/verify` `kind=student` 通过后 `is_student=1`。部分团 `studentOnly`、`schools` 或 `colleges` 名单（名称包含匹配）。有学院名单时必须同时匹配学校。提交时写入 `admin_notices`，后台消息点开 `/admin/verify?kind=campus&userId=`。学号和证件只给本人与后台。
+- 学生：`POST /me/student` 可选学校、学院、专业（北京名录 `GET /campuses` 搜索分页，学校→学院→专业一对多级联），在读须学号并上传学生证 → `student_status=pending` → 后台 `POST /admin/users/:id/verify` `kind=student` 通过后 `is_student=1`。部分团 `studentOnly` 或 `campusTargets` 组合（名称包含匹配）。用户认证仍是一组学校-学院-专业；发团可配多组，按整组匹配，不把多校学院名混在一起。提交时写入 `admin_notices`，后台消息点开 `/admin/verify?kind=campus&userId=`。学号和证件只给本人与后台。
 - 团体：`POST /me/group` → 待审 → 后台审核，同样写入待办消息
 - 领队：`POST /me/leader` 填姓名、带队年限、经历 → `leader_status=pending` → 后台 `kind=leader` 通过后 `isLeader`。未通过时团详情「报名领队」提示去填写申请。消息点开 `/admin/verify?kind=leader&userId=`
 - 积分：消费 1 元积 1 分；会员入账 ×1.2；抵现规则仍为 **100 分 = 1 元**，最多抵应付的 **20%**，且实付至少 **1 元**。当前报名接口不扣积分

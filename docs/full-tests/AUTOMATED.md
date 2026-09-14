@@ -74,6 +74,10 @@
 9. lets alumni skip student number but still requires a card
 10. restricts enrollment to a college and lets the organizer open more later
 11. rejects narrowing a school-wide trip down to one college
+12. does not treat same-named colleges at two schools as one college
+13. matches mixed school-college pairs independently
+14. checks major only when a campus target includes one
+15. requires a school when opening a named college on a multi-school trip
 
 ## `server/test/api.enroll.test.js`
 

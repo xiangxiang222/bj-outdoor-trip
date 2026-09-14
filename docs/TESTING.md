@@ -2,7 +2,7 @@
 
 本文说明测试分层、环境隔离、命令、覆盖率门槛，以及如何为新接口补用例。单元测试**不会**写入开发用的 `server/data/app.sqlite`，也**不会**下载 30 条线路的实景照片。
 
-当前用例数（`it(` 计数，对照 2026-09-14 代码）：**284** 条服务端 + **73** 条 H5。
+当前用例数（`it(` 计数，对照 2026-09-14 代码）：**288** 条服务端 + **74** 条 H5。
 
 ## 1. 依赖
 
@@ -122,7 +122,7 @@ npx vitest run src/utils/share.test.js
 | `api.seats.test.js` | 选座、锁座 |
 | `api.insurance.test.js` | 保险加购 |
 | `api.supplies.test.js` | 补给加购 |
-| `api.eligibility.test.js` | 仅学生 / 高校名单 / 学院名单 / 高校免费团仍检查学校限制；发起人只扩不缩 |
+| `api.eligibility.test.js` | 仅学生 / 高校名单 / 绑定的学校-学院-专业组合（两校同名学院不混） / 高校免费团仍检查学校限制；发起人只扩不缩 |
 | `api.campuses.test.js` | 北京高校名录搜索分页；学院按学校、专业按学院级联；认证学校/学院/专业可空，证件仍必填 |
 | `api.combo.test.js` | 组合团 |
 | `api.trip.test.js` | 用户发团与审核 |
@@ -161,6 +161,7 @@ npx vitest run src/utils/share.test.js
 | `web/src/utils/scanFacts.test.js` | 人数文案、信任条（含加密团）、底栏价格与报名 CTA |
 | `web/src/utils/share.test.js` | 微信内不走系统分享；分享链接可带入团口令 |
 | `web/src/utils/campusNames.test.js` | 高校名单逗号拆分与选择器文案 |
+| `web/src/utils/campusTargets.test.js` | 学校-学院-专业组合绑定，无学院则丢掉专业 |
 
 Vue 页面与小程序以手动/演示验收为主（依赖浏览器与微信开发者工具）；完整接口顺序见第 8 节走查。走查脚本目前按户外团路径打公开接口、报名、取消、解散、会员、注销；后台发券挂在个人团上（公司团发券会 400）。同城局轻报名以 `api.enroll.test.js` / `api.home.test.js` 为准。
 

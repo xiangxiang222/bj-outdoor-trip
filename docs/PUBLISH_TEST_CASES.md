@@ -65,7 +65,7 @@
 | A-04 | keeps activity enrollments off the home ticker | `server/test/api.pulse.test.js` | 同城局报名不上首页动态条 |
 | A-05 | blocks opening a combo trip unless student/org | `server/test/api.combo.test.js` | 未认证学生 `offerType=combo` 返回 400 |
 | A-06 | keeps combo rule when a user publishes a limited trip | `server/test/api.eligibility.test.js` | 认证学生发组合团，规则与高校名单写进排期 |
-| A-07 | restricts enrollment to a college… | 同上 | `POST /schedules` + `campusScope=college`，外院 400，组织者可加学院 |
+| A-07 | restricts enrollment to a college… | 同上 | `POST /schedules` + `campusScope=college`，外院 400，组织者可加学院；另有绑定组合与同名学院用例 |
 | A-08 | creates individual and company schedules | `server/test/api.routes.test.js` | 空 body 400；个人开团成功；公司无名称 400；高校无校名 400；有校名成功 |
 | A-09 | persists limits when admin publishes a trip | `server/test/api.eligibility.test.js` | 后台发团写入仅学生 / 高校名单 |
 | A-10 | persists oversub and alumni flags when admin publishes | `server/test/api.oversub.test.js` | 后台发团写入报超会抽、校友 |
@@ -354,7 +354,7 @@
 ### TC-09 校园范围
 
 **步骤**：看「校园范围」；改为「仅本校」。  
-**期望**：出现学校输入；提示「本校各学院可报」。选项还有：不限制 / 仅已认证师生 / 仅本学院 / 本校跨学院 / 跨学校。
+**期望**：出现学校输入；提示「本校各学院可报」。选项还有：不限制 / 仅已认证师生 / 仅本学院 / 本校跨学院 / 跨学校。跨学校时每条是一组学校-学院-专业，不是学校名单再并一套学院名。
 
 ![校园范围与高校开团](publish-tests/screenshots/17_publish_campus_org_school_field.png)
 

@@ -34,7 +34,7 @@ bj-outdoor-trip/
     src/views/admin         Element Plus 后台（/admin）
     src/views/guide         导游工作台（/g）
     src/layouts             MobileLayout / AdminLayout / GuideLayout
-    src/components          TripPrices、WeatherChart、LivePulse、RefundRulesEditor、CampusNamePicker
+    src/components          TripPrices、WeatherChart、LivePulse、RefundRulesEditor、CampusNamePicker、CampusTargetList
     src/styles/app.css      色板与顶栏
     public/brand            logo.jpg（原标识）与 mark.png（顶栏裁切）
     src/utils/*.test.js     Vitest
@@ -64,7 +64,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `home.js` | 首页轮播、城市、节日、玩法标签；同城局线路不进景点轮播 |
 | `biz.js` | 阶梯价、会员价、积分抵现、排期状态、姓名脱敏 |
 | `offer.js` | 特价类型；学生价 = 原价 × `config.student.discountRate`（0.9） |
-| `eligibility.js` | 仅学生 / 指定高校 |
+| `eligibility.js` | 仅学生 / 学校-学院-专业组合 |
 | `campuses.js` | 北京高校名录：学校→学院→专业一对多检索与分页 |
 | `video.js` | 线路视频链接：B 站 BV/av 转播放器、YouTube、mp4、其它外链 |
 | `combo.js` | 组合团另一半条件 |

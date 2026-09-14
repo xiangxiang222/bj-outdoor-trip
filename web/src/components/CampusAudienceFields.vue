@@ -38,18 +38,8 @@
       />
     </template>
     <template v-if="form.campusScope === 'schools'">
-      <label>开放学校</label>
-      <CampusNamePicker v-model="form.schools" kind="school" multiple title="选择学校" placeholder="可选，搜索后多选" />
-      <label>限定学院（可空）</label>
-      <CampusNamePicker
-        v-model="form.colleges"
-        kind="college"
-        :school="form.schools"
-        multiple
-        :disabled="!form.schools"
-        title="选择学院"
-        :placeholder="form.schools ? '可空，只列出已选学校的学院' : '请先选择开放学校'"
-      />
+      <label>开放组合</label>
+      <CampusTargetList v-model="form.campusTargets" />
     </template>
     <p class="muted">{{ hint }}</p>
   </div>
@@ -58,6 +48,8 @@
 <script setup>
 import { computed, watch } from "vue";
 import CampusNamePicker from "@/components/CampusNamePicker.vue";
+import CampusTargetList from "@/components/CampusTargetList.vue";
+import { emptyCampusTarget } from "@/utils/campusTargets";
 
 const form = defineModel({ type: Object, required: true });
 const props = defineProps({
@@ -72,7 +64,12 @@ watch(
     if (!form.value.campusSchool && school) form.value.campusSchool = school;
     if (!form.value.campusCollege && college) form.value.campusCollege = college;
     if (scope === "colleges" && college && !String(form.value.colleges || "").trim()) form.value.colleges = college;
-    if (scope === "schools" && school && !String(form.value.schools || "").trim()) form.value.schools = school;
+    if (scope === "schools") {
+      if (!Array.isArray(form.value.campusTargets)) form.value.campusTargets = [];
+      if (!form.value.campusTargets.length && school) {
+        form.value.campusTargets = [emptyCampusTarget(school, "", "")];
+      }
+    }
   }
 );
 watch(
@@ -83,20 +80,13 @@ watch(
     if (form.value.campusScope === "colleges") form.value.colleges = "";
   }
 );
-watch(
-  () => form.value.schools,
-  (next, prev) => {
-    if (!prev || next === prev) return;
-    if (form.value.campusScope === "schools") form.value.colleges = "";
-  }
-);
 
 const hint = computed(() => {
   const scope = form.value.campusScope;
   if (scope === "college") return "先对本学院开放，开团后仍可再开放其他学院或学校。";
   if (scope === "school") return "本校各学院可报。开团后仍可再开放其他学校。";
   if (scope === "colleges") return "本校指定学院可报，开团后可继续加学院或学校。";
-  if (scope === "schools") return "名单内学校可报。学院按这些学校列出，留空表示各学院都能加入。";
+  if (scope === "schools") return "每条是一所学校下的学院和专业。两校同名学院要分开添加，不能拆开混选。";
   if (scope === "certified") return "已认证师生均可报名，不限学校学院。";
   return "不限制校园范围。高校免费团仍会默认仅本校。";
 });

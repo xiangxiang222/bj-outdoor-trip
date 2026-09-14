@@ -214,6 +214,8 @@ function normalizeOrganizerType(raw) {
 }
 
 function firstSchoolName(body) {
+  const targets = body && (body.campusTargets || body.targets || body.campus_targets);
+  if (Array.isArray(targets) && targets[0] && targets[0].school) return String(targets[0].school || "").trim();
   const raw = (body && (body.schools ?? body.schools_json ?? body.allowedSchools)) || "";
   if (Array.isArray(raw)) return String(raw[0] || "").trim();
   return (

@@ -101,7 +101,7 @@
       <div ref="g3" style="height:260px"></div>
     </el-dialog>
 
-    <el-dialog v-model="showNew" title="发布拼团" width="520px">
+    <el-dialog v-model="showNew" title="发布拼团" width="720px">
       <el-form label-width="100px">
         <el-form-item label="线路">
           <el-select v-model="neu.routeId" filterable>
@@ -160,18 +160,8 @@
         <el-form-item v-if="neu.privateJoin" label="入团口令">
           <el-input v-model="neu.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" />
         </el-form-item>
-        <el-form-item label="限定高校">
-          <CampusCatalogSelect v-model="neu.schools" kind="school" multiple placeholder="可选，搜索后多选。留空则不限学校" />
-        </el-form-item>
-        <el-form-item label="限定学院">
-          <CampusCatalogSelect
-            v-model="neu.colleges"
-            kind="college"
-            multiple
-            :school="neu.schools"
-            :disabled="!hasNeuSchools"
-            :placeholder="hasNeuSchools ? '可选。留空则名单内学校各学院可报' : '请先选择限定高校'"
-          />
+        <el-form-item label="报名范围">
+          <AdminCampusTargetList v-model="neu.campusTargets" />
         </el-form-item>
         <el-form-item label="虚拟报名">
           <el-input-number v-model="neu.virtualCount" :min="0" :max="80" />
@@ -279,7 +269,7 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="showLimit" title="报名限制" width="480px">
+    <el-dialog v-model="showLimit" title="报名限制" width="720px">
       <p v-if="cur">「{{ cur.route?.title }} {{ cur.startDate }}」可限制师生/校友，或在报名超过座位时抽签确认出行人。</p>
       <el-form label-width="100px">
         <el-form-item label="仅师生">
@@ -291,18 +281,8 @@
         <el-form-item label="报超会抽">
           <el-switch v-model="limitForm.oversub" />
         </el-form-item>
-        <el-form-item label="限定高校">
-          <CampusCatalogSelect v-model="limitForm.schools" kind="school" multiple placeholder="可选，搜索后多选。留空则不限学校" />
-        </el-form-item>
-        <el-form-item label="限定学院">
-          <CampusCatalogSelect
-            v-model="limitForm.colleges"
-            kind="college"
-            multiple
-            :school="limitForm.schools"
-            :disabled="!hasLimitSchools"
-            :placeholder="hasLimitSchools ? '可选。留空则名单内学校各学院可报' : '请先选择限定高校'"
-          />
+        <el-form-item label="报名范围">
+          <AdminCampusTargetList v-model="limitForm.campusTargets" />
         </el-form-item>
         <p class="muted">报超会抽：先报名待确认。人数超过座位才抽签，未超过则全部确认。不要对外说「抽名额」。</p>
       </el-form>
@@ -366,7 +346,8 @@ import { organizerTypeText, scheduleStatusText } from "@/utils/labels";
 import http from "@/api/http";
 import { hasCap } from "@/utils/staff";
 import CampusCatalogSelect from "@/components/admin/CampusCatalogSelect.vue";
-import { splitCampusNames } from "@/utils/campusNames";
+import AdminCampusTargetList from "@/components/admin/CampusTargetList.vue";
+import { emptyCampusTarget, normalizeCampusTargets } from "@/utils/campusTargets";
 const $router = useRouter();
 const me = ref({ caps: [] });
 const canOps = computed(() => hasCap(me.value, "ops"));
@@ -402,7 +383,7 @@ const checkinTitle = computed(() => {
 const showLimit = ref(false);
 const savingLimit = ref(false);
 const drawingId = ref(0);
-const limitForm = ref({ studentOnly: false, alumniOk: false, oversub: false, schools: "", colleges: "" });
+const limitForm = ref({ studentOnly: false, alumniOk: false, oversub: false, campusTargets: [] });
 const showVirtual = ref(false);
 const virtualCount = ref(0);
 const savingVirtual = ref(false);
@@ -436,8 +417,7 @@ const neu = ref({
   oversub: false,
   privateJoin: false,
   joinCode: "",
-  schools: "",
-  colleges: "",
+  campusTargets: [],
   virtualCount: 0,
   lotteryMode: "off",
 });
@@ -449,24 +429,10 @@ watch(
     if (isCampusFree && !wasCampusFree) {
       neu.value.oversub = true;
       neu.value.studentOnly = true;
-      if (name && !String(neu.value.schools || "").trim()) neu.value.schools = name;
-    } else if (isCampusFree && name && !String(neu.value.schools || "").trim()) {
-      neu.value.schools = name;
+      if (name && !neu.value.campusTargets.length) neu.value.campusTargets = [emptyCampusTarget(name)];
+    } else if (isCampusFree && name && !neu.value.campusTargets.length) {
+      neu.value.campusTargets = [emptyCampusTarget(name)];
     }
-  }
-);
-const hasNeuSchools = computed(() => splitCampusNames(neu.value.schools).length > 0);
-const hasLimitSchools = computed(() => splitCampusNames(limitForm.value.schools).length > 0);
-watch(
-  () => neu.value.schools,
-  (next) => {
-    if (!splitCampusNames(next).length) neu.value.colleges = "";
-  }
-);
-watch(
-  () => limitForm.value.schools,
-  (next) => {
-    if (!splitCampusNames(next).length) limitForm.value.colleges = "";
   }
 );
 function openLimit(row) {
@@ -475,8 +441,7 @@ function openLimit(row) {
     studentOnly: !!row.eligibility?.studentOnly,
     alumniOk: !!row.eligibility?.alumniOk,
     oversub: !!row.oversub?.enabled,
-    schools: (row.eligibility?.schools || []).join("，"),
-    colleges: (row.eligibility?.colleges || []).join("，"),
+    campusTargets: normalizeCampusTargets(row.eligibility?.targets || []),
   };
   showLimit.value = true;
 }
@@ -487,8 +452,7 @@ async function saveLimit() {
       studentOnly: limitForm.value.studentOnly,
       alumniOk: limitForm.value.alumniOk,
       oversub: limitForm.value.oversub,
-      schools: limitForm.value.schools,
-      colleges: limitForm.value.colleges,
+      campusTargets: normalizeCampusTargets(limitForm.value.campusTargets),
     });
     showLimit.value = false;
     ElMessage.success("报名限制已更新");
@@ -790,7 +754,10 @@ async function review(row, status) {
   load();
 }
 async function create() {
-  const res = await http.post("/admin/schedules", neu.value);
+  const payload = { ...neu.value, campusTargets: normalizeCampusTargets(neu.value.campusTargets) };
+  delete payload.schools;
+  delete payload.colleges;
+  const res = await http.post("/admin/schedules", payload);
   showNew.value = false;
   neu.value.virtualCount = 0;
   ElMessage.success(res.message || "已发布拼团");

@@ -344,4 +344,140 @@ describe("student and school enroll limits", () => {
     assert.equal(denied.status, 400);
     assert.match(denied.body.message, /不能再收窄/);
   });
+
+  async function registerUser(phone, nickname) {
+    const cap = await issueCaptcha(agent);
+    const created = await agent
+      .post("/api/auth/register")
+      .send({
+        phone,
+        password: "123456",
+        nickname,
+        captchaToken: cap.token,
+        captcha: cap.code,
+      })
+      .expect(200);
+    const userId = seed.db.prepare("SELECT id FROM users WHERE phone=?").get(phone).id;
+    return { token: created.body.data.token, userId };
+  }
+
+  it("does not treat same-named colleges at two schools as one college", async () => {
+    const admin = await loginAdmin(agent);
+    const saved = await agent
+      .put(`/api/admin/schedules/${seed.individualScheduleId}/limit`)
+      .set(auth(admin))
+      .send({ campusTargets: [{ school: "北京大学", college: "计算机学院" }] })
+      .expect(200);
+    assert.deepEqual(saved.body.data.eligibility.targets, [{ school: "北京大学", college: "计算机学院", major: "" }]);
+    assert.match(saved.body.data.eligibility.label, /北京大学计算机学院/);
+
+    const cnu = await registerUser("13600136101", "首师大计算机");
+    await approveStudent(cnu.token, cnu.userId, "首都师范大学");
+    seed.db.prepare("UPDATE users SET college=? WHERE id=?").run("计算机学院", cnu.userId);
+    const denied = await enroll(cnu.token, {
+      travelerName: "首师大计算机",
+      travelerPhone: "13600136101",
+      idCard: ID.femaleBj,
+    });
+    assert.equal(denied.status, 400);
+    assert.match(denied.body.message, /北京大学计算机学院/);
+
+    const pku = await registerUser("13600136102", "北大计算机");
+    await approveStudent(pku.token, pku.userId, "北京大学");
+    seed.db.prepare("UPDATE users SET college=? WHERE id=?").run("计算机学院", pku.userId);
+    const ok = await enroll(pku.token, {
+      travelerName: "北大计算机",
+      travelerPhone: "13600136102",
+      idCard: ID.maleHb,
+    }).expect(200);
+    assert.ok(ok.body.data.enrollmentId);
+  });
+
+  it("matches mixed school-college pairs independently", async () => {
+    const admin = await loginAdmin(agent);
+    const saved = await agent
+      .put(`/api/admin/schedules/${seed.individualScheduleId}/limit`)
+      .set(auth(admin))
+      .send({
+        campusTargets: [
+          { school: "北京大学", college: "计算机学院" },
+          { school: "首都师范大学", college: "文学院" },
+        ],
+      })
+      .expect(200);
+    assert.equal(saved.body.data.eligibility.targets.length, 2);
+    assert.match(saved.body.data.eligibility.label, /北京大学计算机学院/);
+    assert.match(saved.body.data.eligibility.label, /首都师范大学文学院/);
+
+    const cnuCs = await registerUser("13600136103", "首师大计算机");
+    await approveStudent(cnuCs.token, cnuCs.userId, "首都师范大学");
+    seed.db.prepare("UPDATE users SET college=? WHERE id=?").run("计算机学院", cnuCs.userId);
+    const wrongCollege = await enroll(cnuCs.token, {
+      travelerName: "首师大计算机",
+      travelerPhone: "13600136103",
+      idCard: ID.femaleBj,
+    });
+    assert.equal(wrongCollege.status, 400);
+
+    const pkuLit = await registerUser("13600136104", "北大文学");
+    await approveStudent(pkuLit.token, pkuLit.userId, "北京大学");
+    seed.db.prepare("UPDATE users SET college=? WHERE id=?").run("文学院", pkuLit.userId);
+    const wrongSchool = await enroll(pkuLit.token, {
+      travelerName: "北大文学",
+      travelerPhone: "13600136104",
+      idCard: ID.femaleSd,
+    });
+    assert.equal(wrongSchool.status, 400);
+
+    const pkuCs = await registerUser("13600136105", "北大计算机");
+    await approveStudent(pkuCs.token, pkuCs.userId, "北京大学");
+    seed.db.prepare("UPDATE users SET college=? WHERE id=?").run("计算机学院", pkuCs.userId);
+    const ok = await enroll(pkuCs.token, {
+      travelerName: "北大计算机",
+      travelerPhone: "13600136105",
+      idCard: ID.maleHb,
+    }).expect(200);
+    assert.ok(ok.body.data.enrollmentId);
+  });
+
+  it("checks major only when a campus target includes one", async () => {
+    const admin = await loginAdmin(agent);
+    await agent
+      .put(`/api/admin/schedules/${seed.individualScheduleId}/limit`)
+      .set(auth(admin))
+      .send({ campusTargets: [{ school: "北京大学", college: "计算机学院", major: "软件工程" }] })
+      .expect(200);
+
+    const token = await loginUser(agent);
+    await agent.post("/api/me/student").set(auth(token)).send(campusPayload({ school: "北京大学", college: "计算机学院", major: "计算机科学与技术" })).expect(200);
+    await agent
+      .post(`/api/admin/users/${seed.userId}/verify`)
+      .set(auth(admin))
+      .send({ kind: "student", action: "approve" })
+      .expect(200);
+    const denied = await enroll(token);
+    assert.equal(denied.status, 400);
+    assert.match(denied.body.message, /软件工程/);
+
+    seed.db.prepare("UPDATE users SET major=? WHERE id=?").run("软件工程", seed.userId);
+    const ok = await enroll(token).expect(200);
+    assert.ok(ok.body.data.enrollmentId);
+  });
+
+  it("requires a school when opening a named college on a multi-school trip", async () => {
+    const admin = await loginAdmin(agent);
+    await agent
+      .put(`/api/admin/schedules/${seed.individualScheduleId}/limit`)
+      .set(auth(admin))
+      .send({ campusTargets: [{ school: "北京大学" }, { school: "首都师范大学" }] })
+      .expect(200);
+    const token = await loginUser(agent);
+    seed.db.prepare("UPDATE schedules SET organizer_id=? WHERE id=?").run(seed.userId, seed.individualScheduleId);
+    const denied = await agent
+      .put(`/api/schedules/${seed.individualScheduleId}/limit`)
+      .set(auth(token))
+      .send({ addColleges: "计算机学院" });
+    assert.equal(denied.status, 400);
+    assert.match(denied.body.message, /写明学校/);
+  });
 });

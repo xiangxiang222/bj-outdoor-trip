@@ -48,4 +48,17 @@ function openCampusPick(opts) {
   wx.navigateTo({ url: "/pages/campus-pick/campus-pick" });
 }
 
-module.exports = { splitNames, joinNames, pickLabel, fetchCampuses, openCampusPick };
+function emptyTarget(school, college, major) {
+  return { school: school || "", college: college || "", major: major || "" };
+}
+
+function patchTarget(list, index, field, value) {
+  const next = (Array.isArray(list) ? list : []).map((row) => emptyTarget(row.school, row.college, row.major));
+  const cur = next[index] || emptyTarget();
+  if (field === "school") next[index] = emptyTarget(value, "", "");
+  else if (field === "college") next[index] = emptyTarget(cur.school, value, "");
+  else next[index] = emptyTarget(cur.school, cur.college, value);
+  return next;
+}
+
+module.exports = { splitNames, joinNames, pickLabel, fetchCampuses, openCampusPick, emptyTarget, patchTarget };

@@ -398,7 +398,7 @@ function applyScheduleExtras(id, body, route, user) {
   const joinCode = resolveJoinCode(body);
   db()
     .prepare(
-      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=?, student_only=?, schools_json=?, colleges_json=?, alumni_ok=?, oversub=?, join_code=? WHERE id=?"
+      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=?, student_only=?, schools_json=?, colleges_json=?, campus_targets_json=?, alumni_ok=?, oversub=?, join_code=? WHERE id=?"
     )
     .run(
       offerType,
@@ -411,8 +411,9 @@ function applyScheduleExtras(id, body, route, user) {
       studentOn,
       comboRule,
       limit.studentOnly ? 1 : 0,
-      JSON.stringify(limit.schools),
-      JSON.stringify(limit.colleges),
+      JSON.stringify(limit.schools || []),
+      JSON.stringify(limit.colleges || []),
+      JSON.stringify(limit.targets || []),
       limit.alumniOk ? 1 : 0,
       limit.oversub ? 1 : 0,
       joinCode,
