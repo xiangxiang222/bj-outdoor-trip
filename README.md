@@ -56,11 +56,11 @@ npm run dev
 
 | 入口 | 地址 |
 | --- | --- |
-| 用户端 | http://140.143.171.77/m |
-| 管理后台 | http://140.143.171.77/admin |
-| 导游端 | http://140.143.171.77/g |
+| 用户端 | http://togetherbetter.cn/m |
+| 管理后台 | http://togetherbetter.cn/admin |
+| 导游端 | http://togetherbetter.cn/g |
 
-Pull Request 会跑 **Unit tests**（`npm run test:coverage`）。给 `main` 配上必过检查 `unit-tests` 后，没绿灯不能合入。合入 `main` 且 UT 通过后才会 **Deploy**。部署发生在 GitHub Actions 上，**不需要 iPhone 能 SSH**。功能分支不会部署。也可在 Actions 里手动 Run workflow，或在能登录服务器的电脑上执行 `./scripts/deploy.sh`（同步到腾讯云、构建、PM2 进程名 `beiyexing`，目录 `/var/www/beiyexing`）。
+部署发生在 GitHub Actions 上，**不需要 iPhone 能 SSH**。**合并到 `main`**（或直接推 `main`）会自动上线；功能分支不会部署。也可在 Actions 里手动 Run workflow，或在能登录服务器的电脑上执行 `./scripts/deploy.sh`（同步到腾讯云、构建、PM2 进程名 `beiyexing`，目录 `/var/www/beiyexing`）。
 
 第一次需要在仓库 **Settings → Secrets and variables → Actions** 配置 Secret `DEPLOY_SSH_KEY`（服务器 **`ubuntu`** 用户私钥全文）。不要配成 Deploy keys，也不要用 `root`。**只用手机也可以配完**，步骤见 [docs/DEPLOY.md](docs/DEPLOY.md)。**不要**在生产库执行 `npm run seed`（会清空业务数据）。部署脚本仅在目标机还没有数据库文件时才会 seed。
 
@@ -121,8 +121,8 @@ Pull Request 会跑 **Unit tests**（`npm run test:coverage`）。给 `main` 配
 
 原生小程序在 `miniprogram/`。用微信开发者工具打开该目录：
 
-1. 默认请求线上 `http://140.143.171.77`。本地联调把 `miniprogram/config.js` 的 `USE_LOCAL_API` 改为 `true`
-2. 详情里关闭「校验合法域名、web-view、TLS」，以便真机请求 HTTP IP
+1. 默认请求线上 `http://togetherbetter.cn`。本地联调把 `miniprogram/config.js` 的 `USE_LOCAL_API` 改为 `true`
+2. 详情里关闭「校验合法域名、web-view、TLS」，以便真机请求 HTTP 域名
 3. 正式上线：开发者工具填真实 AppId `wx205ca387929c002a`（已写在 `miniprogram/project.config.json`）。服务器 `.env` 填 `WX_APPSECRET` 与商户 `WX_MCH_KEY`，并把 `WX_PAY_MOCK=0`。密钥不要提交进仓库。
 
 H5 用户端与小程序打同一套 API。H5 有独立学生/团体认证页；小程序首页「学生认证」在已登录时跳到「我的」，独立页尚未做。

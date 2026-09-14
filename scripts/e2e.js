@@ -5,7 +5,7 @@
  * 用法（仓库根目录）：
  *   npm run test:e2e                 隔离临时库，不碰开发/线上数据
  *   npm run test:e2e:live            打本机或线上已启动的服务
- *   node scripts/e2e.js --live --base http://140.143.171.77
+ *   node scripts/e2e.js --live --base http://togetherbetter.cn
  *
  * 线上模式只用临时手机号，结束时注销测试账号；不会执行「解散全部拼团」。
  */
