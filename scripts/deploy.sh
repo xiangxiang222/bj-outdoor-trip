@@ -19,8 +19,8 @@ KEY="${DEPLOY_SSH_KEY:-$HOME/.ssh/id_ed25519}"
 mkdir -p "$HOME/.ssh"
 chmod 700 "$HOME/.ssh"
 ssh-keyscan -H "$HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
-SSH=(ssh -i "$KEY" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=10 "$USER@$HOST")
-RSYNC_SSH="ssh -i $KEY -o IdentitiesOnly=yes -o BatchMode=yes"
+SSH=(ssh -i "$KEY" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=15 "$USER@$HOST")
+RSYNC_SSH="ssh -i $KEY -o IdentitiesOnly=yes -o BatchMode=yes -o ServerAliveInterval=15"
 
 cd "$ROOT"
 
@@ -38,7 +38,8 @@ fi
 
 echo "==> 同步代码到 $USER@$HOST:$DIR"
 "${SSH[@]}" "sudo mkdir -p '$DIR' && sudo chown -R '$USER:$USER' '$DIR'"
-rsync -az --delete -e "$RSYNC_SSH" \
+# 整目录排除 data：新机若已拷库，--delete 删不掉非空目录会让 rsync 失败并卡住。
+rsync -az --delete --timeout=120 -e "$RSYNC_SSH" \
   --exclude '.git/' \
   --exclude 'node_modules/' \
   --exclude 'web/node_modules/' \
@@ -46,8 +47,7 @@ rsync -az --delete -e "$RSYNC_SSH" \
   --exclude 'web/dist/' \
   --exclude 'coverage/' \
   --exclude 'server/coverage/' \
-  --exclude 'server/data/*.sqlite' \
-  --exclude 'server/data/*.sqlite-*' \
+  --exclude 'server/data/' \
   --exclude 'server/public/static/uploads/' \
   --exclude '.env' \
   --exclude '.env.local' \
@@ -62,6 +62,7 @@ DIR="$1"
 HOST="$2"
 cd "$DIR"
 chmod +x scripts/server-setup.sh scripts/prod-start.sh
+mkdir -p server/data server/public/static/uploads
 
 if ! command -v node >/dev/null 2>&1 || ! command -v nginx >/dev/null 2>&1 || ! command -v pm2 >/dev/null 2>&1; then
   APP_DIR="$DIR" bash scripts/server-setup.sh
