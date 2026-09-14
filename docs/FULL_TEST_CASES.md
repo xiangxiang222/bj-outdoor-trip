@@ -6,7 +6,7 @@
 
 | 文件 | 作用 |
 | --- | --- |
-| [full-tests/AUTOMATED.md](./full-tests/AUTOMATED.md) | 仓库内全部 **345** 条 `it(` 名称（275 服务端 + 70 H5），`npm test` 一次跑完 |
+| [full-tests/AUTOMATED.md](./full-tests/AUTOMATED.md) | 仓库内全部 **372** 条 `it(` 名称（297 服务端 + 75 H5），`npm test` 一次跑完 |
 | [full-tests/screenshots/](./full-tests/screenshots/) | 本文手动走查按测试顺序截的图 |
 | [TESTING.md](./TESTING.md) | 怎么跑单测、覆盖率、e2e |
 | 发团专项（官方线路 + 用户发团） | 见 PR [#57](https://github.com/xiangxiang222/bj-outdoor-trip/pull/57) 的 `docs/PUBLISH_TEST_CASES.md`（合入 `main` 后以仓库文件为准） |
@@ -17,7 +17,7 @@
 
 本仓库的遍历方式：
 
-1. **自动化 345 条**：每条接口/领域规则各断言一次，这是全量遍历。
+1. **自动化 372 条**：每条接口/领域规则各断言一次，这是全量遍历。
 2. **交互规则表（§2）**：每一条「允许 / 禁止」的组合至少对应一条自动化用例，关键组合另有 UI 截图。
 3. **手动走查（§3）**：按真实使用顺序走三端，每一步一张图。每个模块、每种用户身份、每种团型至少出现一次。
 
@@ -103,6 +103,7 @@ npm test
 | C19 | 志愿者领队 × 抽签池 | 不进 pending 池 | — | `api.oversub` volunteer leaders out |
 | C20 | 校友 × `alumniOk=0` | 拒绝；`=1` 可报 | 035 文案含校友 | `api.oversub` alumni flag |
 | C21 | 个人山野团 × 普通报名 | 先报名后付款，要身份证/紧急联系人/弃权 | 027 / 027b / 030 | `api.enroll` individual |
+| C21b | 团费自己付 / 代付 / 众筹 | 可付清余额或指定整数元分摊；取消按付款人原路退 | — | `api.pay` share / crowdfund；`pay-ledger` |
 | C22 | 个人山野团 × 摄影师 | 团费 ¥0，保险另计，本团一位 | 029 | `api.enroll` photographer；`api.home` waive |
 | C23 | 同城局 × 姓名+手机 | 不要身份证；免费局直接已报名 | 031 / 032 | `api.enroll` city activity |
 | C24 | 同城局 × 摄影师 | 拒绝 | 029b 为同城局轻报名对照 | `api.enroll` / home：活动拒摄影师 |
@@ -507,7 +508,7 @@ npm test
 
 ---
 
-## 4. 自动化全表（345 条，一次跑完）
+## 4. 自动化全表（372 条，一次跑完）
 
 按文件的 `it(` 计数。逐条英文名称见 [full-tests/AUTOMATED.md](./full-tests/AUTOMATED.md)。
 
@@ -529,7 +530,7 @@ npm test
 | `api.lottery.test.js` | 9 | 抽奖时机、指定中奖、库存 |
 | `api.notices.test.js` | 4 | 认证待办 |
 | `api.oversub.test.js` | 6 | 报超会抽 |
-| `api.pay.test.js` | 7 | mock / JSAPI / 会员 |
+| `api.pay.test.js` | 12 | mock / JSAPI / 自己付代付众筹 |
 | `api.pulse.test.js` | 6 | 首页动态脱敏 |
 | `api.refund.test.js` | 3 | 退费档 |
 | `api.reviews.test.js` | 4 | 评价资格 |
@@ -552,6 +553,7 @@ npm test
 | `idcard.test.js` | 10 | 身份证 |
 | `image-helpers.test.js` | 6 | 封面 |
 | `oversub.service.test.js` | 1 | 抽签 rng |
+| `pay-ledger.test.js` | 3 | 分摊退款与付款备注 |
 | `policy.test.js` | 2 | 装备与免责 |
 | `refund.test.js` | 3 | 退费匹配 |
 | `route-draft.test.js` | 22 | 线路起草 |
@@ -559,7 +561,7 @@ npm test
 | `story.service.test.js` | 4 | 图文 |
 | `video.test.js` | 6 | 视频地址 |
 | `weather.test.js` | 2 | 天气 |
-| `wechat.test.js` | 6 | 微信会话与支付 XML |
+| `wechat.test.js` | 7 | 微信会话与支付 XML |
 
 ### 4.2 H5 工具函数（70）
 
@@ -604,7 +606,7 @@ npm test
 
 ## 7. 建议回归顺序（上线前）
 
-1. `npm test`（345 条，隔离临时库）。
+1. `npm test`（372 条，隔离临时库）。
 2. `npm run test:coverage`（行/语句/函数 80%，分支 65%）。
 3. 按本文 M-01 → M-71 点一遍三端（本地 `npm run dev`）。
 4. `npm run test:e2e` 或 `npm run test:e2e:live`（不要对生产 `--unsafe`）。

@@ -1,6 +1,6 @@
 # 自动化用例全表
 
-对照日期 2026-09-13，仓库内 `it(` 共 **345** 条（275 服务端 + 70 H5）。组合规则、手动走查顺序和截图见 [../FULL_TEST_CASES.md](../FULL_TEST_CASES.md)。
+对照日期 2026-09-14，仓库内 `it(` 共 **372** 条（297 服务端 + 75 H5）。组合规则、手动走查顺序和截图见 [../FULL_TEST_CASES.md](../FULL_TEST_CASES.md)。
 
 ## `server/test/api.admin.test.js`
 
@@ -161,6 +161,11 @@
 5. rejects mock-success when live pay is on
 6. asks for wechat login when live pay has no openid
 7. refuses live pay when merchant key is missing
+8. lets the traveler pay remaining and exposes a share token
+9. lets a friend pay the remaining amount as 代付
+10. accepts partial crowdfund payments until the fee is covered
+11. refunds each crowdfund payer on cancel
+12. rejects an unknown pay share token
 
 ## `server/test/api.pulse.test.js`
 
@@ -176,6 +181,12 @@
 1. exposes default global refund ladder on meta and route detail
 2. saves global rules and per-route override
 3. refunds a paid cancel by ladder and blocks after the trip starts
+
+## `server/test/pay-ledger.test.js`
+
+1. splits a refund across payers with largest remainder
+2. parses integer pay amounts against remaining
+3. labels self pay, proxy pay and crowdfund
 
 ## `server/test/api.reviews.test.js`
 
@@ -415,6 +426,7 @@
 4. code2session calls wechat when AppSecret is configured
 5. mockPrepay returns demo pay params
 6. signs and parses wechat xml
+7. refunds as mock when live pay is off
 
 ## `web/src/utils/activityKind.test.js`
 
@@ -491,6 +503,7 @@
 1. does not use system share inside WeChat webview
 2. builds a schedule share url with optional token
 3. writes invite copy for the poster card
+4. builds a pay share link and copy
 
 ## `web/src/utils/story.test.js`
 

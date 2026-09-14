@@ -22,6 +22,7 @@
             <strong>{{ nextTrip.title }}</strong>
             <p class="muted" style="margin:6px 0 0">{{ nextTrip.start_date }} {{ nextTrip.meetup_time || "" }} · {{ nextTrip.meetup_point || nextTrip.city || "" }}</p>
           </div>
+          <button v-if="nextTrip.canPay" class="cancel-link" type="button" @click.stop="goPay(nextTrip)">去支付</button>
           <button v-if="nextTrip.canCancel" class="cancel-link" type="button" :disabled="cancelling === nextTrip.id" @click.stop="cancel(nextTrip)">取消报名</button>
         </div>
         <article class="card" v-for="o in restUpcoming" :key="o.id">
@@ -46,6 +47,7 @@
               </div>
             </div>
           </div>
+          <button v-if="o.canPay" class="cancel-link" type="button" @click.stop="goPay(o)">去支付</button>
           <button v-if="o.canCancel" class="cancel-link" type="button" :disabled="cancelling === o.id" @click.stop="cancel(o)">取消报名</button>
         </article>
         <div v-if="!upcoming.length && !waitlist.length && !past.length" class="card act-empty">
@@ -166,7 +168,10 @@ function kindLabel(o) {
 }
 function moneyText(o) {
   if (o.channel === "activity" && Number(o.pay_amount || 0) === 0) return "免费";
-  return "¥" + o.pay_amount;
+  if (o.pay_status === "unpaid" && Number(o.remainAmount || 0) > 0) {
+    return Number(o.paidAmount || 0) > 0 ? `已付 ¥${o.paidAmount} / ¥${o.payAmount || o.pay_amount}` : "待付 ¥" + (o.remainAmount || o.pay_amount);
+  }
+  return "¥" + (o.payAmount || o.pay_amount);
 }
 function statusLine(o) {
   if (o.channel === "activity" && o.status === "joined") return "已报名";
@@ -177,6 +182,10 @@ function goLogin() {
 }
 function goSchedule(o) {
   if (o.schedule_id) router.push("/m/schedule/" + o.schedule_id);
+}
+function goPay(o) {
+  if (o.payShareToken) router.push("/m/pay/" + o.payShareToken);
+  else goSchedule(o);
 }
 function openReview(o) {
   reviewing.value = o.id;
@@ -202,7 +211,7 @@ async function submitReview(o) {
   }
 }
 async function cancel(o) {
-  if (!window.confirm(o.refundHint ? `确定取消报名？${o.refundHint}。名额将释放给其他人。` : "确定取消报名？名额将释放给其他人。已付款的会按退费规则标记退款。")) return;
+  if (!window.confirm(o.refundHint ? `确定取消报名？${o.refundHint}。名额将释放给其他人。已付款按付款人原路退回。` : "确定取消报名？名额将释放给其他人。已付款按付款人原路退回。")) return;
   cancelling.value = o.id;
   msg.value = "";
   try {

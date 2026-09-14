@@ -19,7 +19,7 @@
 - 微信登录、图片验证码、短信、支付均可在演示模式下闭环（不依赖真实商户号）
 - 生产可部署到腾讯云轻量（Nginx 反代 Express，PM2 常驻）
 
-非目标（后续迭代）：真实短信网关、微信原路退款、轨迹导航、券商城。候补、座位图、保险加购、天气提醒、企业支付分账、导游 H5 工作台、出行评价、紧急联系人与风险确认、铁定出发、装备清单与行前 FAQ、官方/规则页、个人相册、候选团与替代团、虚拟用户、双领队与推荐报名、行程公开限量优惠券、定向发券、学生/团体认证、抽奖与完成活动评选、高校师生/校友限制、报超会抽已落地。
+非目标（后续迭代）：真实短信网关、轨迹导航、券商城。候补、座位图、保险加购、天气提醒、企业支付分账、导游 H5 工作台、出行评价、紧急联系人与风险确认、铁定出发、装备清单与行前 FAQ、官方/规则页、个人相册、候选团与替代团、虚拟用户、双领队与推荐报名、行程公开限量优惠券、定向发券、学生/团体认证、抽奖与完成活动评选、高校师生/校友限制、报超会抽、团费自己付/代付/众筹分摊与按付款人退款已落地。真实微信退款需商户 API 证书。
 
 ## 2. 系统架构
 
@@ -74,6 +74,7 @@
 | `MMC_SKIP_WEB` | `1` 时不托管前端 dist | 未设置则 dist 存在即托管 |
 | `WX_APPID` / `WX_APPSECRET` / `WX_MCH_ID` / `WX_MCH_KEY` | 小程序与商户 | 默认 AppID `wx205ca387929c002a`、商户号 `17501360384`；Secret / APIv2 密钥只放服务器 `.env` |
 | `WX_PAY_MOCK` | `0` 关闭 mock，走 JSAPI | 默认开启 mock |
+| `WX_MCH_CERT_PATH` / `WX_MCH_KEY_PATH` | 商户 API 证书（原路退款） | 真收款后才需要 |
 | `WEATHER_LIVE` | `1` 强制 Open-Meteo；`0` 强制模拟 | 生产默认实时，本地默认 mock |
 | `WX_PAY_NOTIFY` | 支付回调 URL | 默认 `http://togetherbetter.cn/api/pay/wechat/notify` |
 
@@ -199,28 +200,28 @@ User 1──n Favorite / PointsLedger / Review
    - 优先导游 `specialties` 包含线路 `category`（如「长城」）
    - 否则空闲导游，再否则任意在岗导游
    - 无导游仍将排期标为 `confirmed`
-6. 发起人填写理由后解散：取消报名、已付标记退款、写 `sms_logs`
+6. 发起人填写理由后解散：取消报名、已付款按付款人原路退、写 `sms_logs`
 
 ### 4.3 支付与退款标记
 
 ```
 个人报名 ──► unpaid 占座（不调起支付）；0 元则直接 paid
-        ──► 出行前再付（演示环境尚未在报名后强制 mock）
+        ──► 出行前自己付 / 他人代付 / 众筹分摊（演示立即入账；真实支付走 JSAPI）
 
 公司报名 ──► company_pending
 开团人   ──► /pay/company-settle（仅 organizer_id）
 后台     ──► /admin/schedules/:id/settle
 
 用户取消 ──► POST /orders/:id/cancel（山野团：开团前按比例退；同城局：出发日前）
-        ──► 释放座位；paid → refunded（金额按档位）
+        ──► 释放座位；已收款（含分摊）→ refunded，按各付款人原路退
 
-解散拼团 ──► 全部有效报名 cancelled；paid → refunded + 退款支付单
+解散拼团 ──► 全部有效报名 cancelled；已收款 → refunded，按各付款人原路退
 会员开通 ──► POST /member/buy（演示立即 success；真实支付返回 JSAPI，入账后 grantMembership）
 ```
 
 `/pay/mock-success` 仍可用于调试把报名改为已付，或 `scene=member` 开通会员；真实支付开启后该接口 403。
 
-真实微信支付：服务器 `.env` 配齐 AppSecret 与 APIv2 密钥，`WX_PAY_MOCK=0`。小程序 `wx.requestPayment` 后调 `POST /pay/confirm` 查单；微信也会 POST `/pay/wechat/notify`。H5 无法使用小程序 JSAPI，提示去小程序付款。原路退款尚未对接。
+真实微信支付：服务器 `.env` 配齐 AppSecret 与 APIv2 密钥，`WX_PAY_MOCK=0`。小程序 `wx.requestPayment` 后调 `POST /pay/confirm` 查单；微信也会 POST `/pay/wechat/notify`。H5 无法使用小程序 JSAPI，提示去小程序付款。团费可自己付、他人代付或按金额分摊；取消/解散按各付款人原路退（演示记退款单；真收款另需商户 API 证书 `WX_MCH_CERT_PATH` / `WX_MCH_KEY_PATH`）。
 
 山野团退费档存在 `settings.refund_rules`，默认 10 天前 100%、3 天前 80%、不足 3 天（含出发当天未正式开团）50%、导游点正式开团后 0%。线路 `refund_rules_json` 为空则用全局；后台可按线路覆盖。用户自行取消按档位计算；解散与后台代取消仍全额。同城局不走这套比例。
 

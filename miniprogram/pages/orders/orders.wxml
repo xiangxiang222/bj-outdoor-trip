@@ -20,6 +20,7 @@
         <view class="title">{{nextTrip.title}}</view>
         <view class="muted">{{nextTrip.start_date}} {{nextTrip.meetup_time}} · {{nextTrip.meetup_point}}</view>
       </view>
+      <view wx:if="{{nextTrip.canPay}}" class="cancel-link" catchtap="goPay" data-token="{{nextTrip.payShareToken}}" data-sid="{{nextTrip.schedule_id}}">去支付</view>
       <view wx:if="{{nextTrip.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{nextTrip.id}}">取消报名</view>
     </view>
     <view class="card" wx:for="{{restUpcoming}}" wx:key="id">
@@ -31,6 +32,7 @@
         <view class="muted">{{item.meetup_time}} {{item.meetup_point}}</view>
         <view class="muted">{{item.statusText}} · {{item.moneyText}}</view>
       </view>
+      <view wx:if="{{item.canPay}}" class="cancel-link" catchtap="goPay" data-token="{{item.payShareToken}}" data-sid="{{item.schedule_id}}">去支付</view>
       <view wx:if="{{item.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{item.id}}">取消报名</view>
     </view>
 

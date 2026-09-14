@@ -81,7 +81,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `pulse.js` | 首页/线路/团实时动态：汇报名、浏览、收藏、评价、开团；浏览写入 `page_views` |
 | `dissolve.js` | 解散拼团 |
 | `account.js` | 注销 |
-| `wechat.js` / `payment.js` / `member.js` / `sms.js` / `captcha.js` | 微信登录与 JSAPI 支付、会员开通、短信 888888、图片验证码 |
+| `wechat.js` / `payment.js` / `pay-ledger.js` / `member.js` / `sms.js` / `captcha.js` | 微信登录与 JSAPI；团费自己付/代付/众筹分摊；按付款人退款；会员开通、短信 888888、图片验证码 |
 | `staff.js` | 后台角色与权限 |
 | `profile.js` | 公开主页 |
 | `supplies.js` | 随车补给加购 |
@@ -108,6 +108,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `/m/student` | Student | 学校/学院/专业可选（先学校再该校学院再该院专业），学号、学生证，待后台审核 |
 | `/m/group` | Group | 团体认证 |
 | `/m/schedule/:id` | ScheduleDetail | 山野团：座位/保险/画像；同城局：时间地点人数 |
+| `/m/pay/:token` | PayShare | 团费自己付、代付或输入金额分摊并转发 |
 | `/m/enroll/:id` | Enroll | 同城局姓名+手机；山野团实名 |
 | `/m/publish` | Publish | `channel=trip\|activity`，提交后待审 |
 | `/m/route/:id` | RouteDetail | 30 条线路图文 |

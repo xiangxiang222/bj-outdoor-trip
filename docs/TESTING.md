@@ -2,7 +2,7 @@
 
 本文说明测试分层、环境隔离、命令、覆盖率门槛，以及如何为新接口补用例。单元测试**不会**写入开发用的 `server/data/app.sqlite`，也**不会**下载 30 条线路的实景照片。
 
-当前用例数（`it(` 计数，对照 2026-09-14 代码）：**288** 条服务端 + **74** 条 H5。
+当前用例数（`it(` 计数，对照 2026-09-14 代码）：**297** 条服务端 + **75** 条 H5。
 
 ## 1. 依赖
 
@@ -83,7 +83,8 @@ npx vitest run src/utils/share.test.js
 | --- | --- |
 | `idcard.test.js` | 身份证校验（含校验码）、男女、籍贯、掩码、年龄段 |
 | `biz.test.js` | 阶梯价、会员价、积分抵现 20% 与至少 1 元、画像聚合、排期状态、姓名脱敏、手机打码 |
-| `wechat.test.js` | mock openid、无密钥时不打微信、有 AppSecret 时 jscode2session、预支付、XML 签名 |
+| `wechat.test.js` | mock openid、无密钥时不打微信、有 AppSecret 时 jscode2session、预支付、XML 签名、演示退款 |
+| `pay-ledger.test.js` | 多付款人按份额退、整数元金额、自己付/代付/分摊备注 |
 | `auth.middleware.test.js` | 用户/管理员 JWT、过期、错误 typ、query token、已注销账号、停用管理员 |
 | `captcha.test.js` | 图片验证码生成与比对 |
 | `routes-data.test.js` | 30 条线唯一编号、天数 ∈ {1,2,3,5}、R29 `coverKey=wutai` |
@@ -117,7 +118,7 @@ npx vitest run src/utils/share.test.js
 | `api.routes.test.js` | 筛选、收藏标记、名单脱敏、分享 302、开团校验、海报 QR、导游列表与详情（无需登录） |
 | `api.enroll.test.js` | 个人占座（`needPay: false`）、紧急联系人/健康/免责、`/me/trips`、公司挂账与结算权限、满员、成团导游、取消报名（已过出发日 / 正式开团后不可取消）、会员购买、收藏、**同城局姓名+手机即可报名**、行程页报名摄影师 |
 | `api.refund.test.js` | 默认/全局/线路退费档、已付按比例退、出发当天未开团可退 50%、开团后不可取消 |
-| `api.pay.test.js` | 绑定 openid、JSAPI 下单、支付回调入账、查单开通会员、真实支付时禁止 mock-success |
+| `api.pay.test.js` | 绑定 openid、JSAPI 下单、支付回调入账、查单开通会员、真实支付时禁止 mock-success；自己付/代付/众筹分摊与取消按付款人退款 |
 | `api.waitlist.test.js` | 候补与递补 |
 | `api.seats.test.js` | 选座、锁座 |
 | `api.insurance.test.js` | 保险加购 |

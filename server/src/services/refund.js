@@ -89,9 +89,9 @@ function proportionLines(tiers) {
 
 function extraCancelItems() {
   return [
-    "发起人或平台解散拼团：全部报名取消，已付款按全额标记退款。",
+    "发起人或平台解散拼团：全部报名取消，已付款按全额、按各付款人原路退回。",
     "天气、景区封山等不可抗力导致无法出行时，由发起人解散或改期，已收款按解散规则处理。",
-    "候补未递补前取消，不影响在团人数。已付款按当时比例记退款（演示环境为标记，未对接微信原路退款）。",
+    "候补未递补前取消，不影响在团人数。已付款按当时比例、按各付款人原路退回（演示立即记账；真收款需商户退款证书）。",
   ];
 }
 
@@ -229,7 +229,9 @@ function cancelQuote(en, sch) {
     return { canCancel: false, percent: 0, remainingDays: remaining, started: false, amount: 0, hint: "已过出发日，不可取消" };
   }
   const percent = matchPercent(schedule.tiers, remaining);
-  const paid = en.pay_status === "paid" && Number(en.pay_amount || 0) > 0;
+  const { refundableOf } = require("./pay-ledger");
+  const collected = en && en.id ? refundableOf(en) : en && en.pay_status === "paid" ? Number(en.pay_amount || 0) : 0;
+  const paid = collected > 0;
   if (paid && percent <= 0) {
     return {
       canCancel: false,
@@ -240,7 +242,7 @@ function cancelQuote(en, sch) {
       hint: "当前时段不退费，无法取消",
     };
   }
-  const amount = paid ? refundAmount(en.pay_amount, percent) : 0;
+  const amount = paid ? refundAmount(collected, percent) : 0;
   const hint = paid
     ? `现在取消可退 ${percent}%（¥${amount}）`
     : remaining === 0

@@ -720,6 +720,13 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "lottery_draws", "level", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "lottery_draws", "claimed_at", "TEXT");
   addColumnIfMissing(db, "payments", "scene", "TEXT");
+  addColumnIfMissing(db, "payments", "wechat_transaction_id", "TEXT");
+  addColumnIfMissing(db, "payments", "refunded_amount", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "payments", "refund_of", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "enrollments", "pay_share_token", "TEXT");
+  db.exec(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_enrollments_pay_share ON enrollments(pay_share_token) WHERE pay_share_token IS NOT NULL AND pay_share_token != ''"
+  );
   ensurePaymentTradeNoIndex(db);
   addColumnIfMissing(db, "lottery_campaigns", "draw_mode", "TEXT DEFAULT 'both'");
   addColumnIfMissing(db, "coupon_campaigns", "valid_hours", "INTEGER DEFAULT 0");

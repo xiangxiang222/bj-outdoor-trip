@@ -7,12 +7,23 @@ const {
   yuanToFen,
   unifiedOrder,
   queryOrder,
+  refundOrder,
   jsapiPayParams,
   xmlToObj,
   verifySign,
   notifyReply,
   code2session,
 } = require("./wechat");
+const {
+  expireStalePendings,
+  remainingDue,
+  remainingForPayer,
+  parsePayYuan,
+  remarkForPay,
+  planPayerRefunds,
+  enrollmentByPayToken,
+  leftoverOf,
+} = require("./pay-ledger");
 
 function fail(status, message, extra) {
   const err = new Error(message);
@@ -25,18 +36,24 @@ function newTradeNo(prefix, userId) {
   return `${prefix}${Date.now()}${userId}`.slice(0, 32);
 }
 
-function pendingOf({ userId, enrollmentId, scene }) {
+function pendingOf({ userId, enrollmentId, scene, amount }) {
   const db = getDb();
   if (scene === "member") {
     return db
       .prepare("SELECT * FROM payments WHERE user_id=? AND scene='member' AND status='pending' ORDER BY id DESC LIMIT 1")
       .get(userId);
   }
-  return db
+  const row = db
     .prepare(
-      "SELECT * FROM payments WHERE enrollment_id=? AND user_id=? AND scene='enrollment' AND status='pending' ORDER BY id DESC LIMIT 1"
+      "SELECT * FROM payments WHERE enrollment_id=? AND user_id=? AND IFNULL(scene,'enrollment')='enrollment' AND status='pending' ORDER BY id DESC LIMIT 1"
     )
     .get(enrollmentId, userId);
+  if (!row) return null;
+  if (amount != null && Number(row.amount) !== Number(amount)) {
+    db.prepare("UPDATE payments SET status='cancelled' WHERE id=?").run(row.id);
+    return null;
+  }
+  return row;
 }
 
 function insertPending({ enrollmentId, userId, scheduleId, amount, scene, remark, tradeNo }) {
@@ -99,50 +116,158 @@ async function jsapiCharge({ userId, amount, body, tradeNo, clientIp, paymentId 
   };
 }
 
-function completeEnrollmentPay(en, payerId, amount, opts = {}) {
+function stampTransaction(tradeNo, transactionId) {
+  if (!tradeNo || !transactionId) return;
+  getDb().prepare("UPDATE payments SET wechat_transaction_id=? WHERE trade_no=?").run(String(transactionId), String(tradeNo));
+}
+
+function applyEnrollmentCharge(en, payerId, amount, opts = {}) {
   const db = getDb();
+  const due = remainingDue(en);
+  const charged = Number(amount) || 0;
+  const applied = Math.min(charged, Math.max(due, 0));
+  const excess = Math.max(0, charged - applied);
   const proxy = Number(payerId) !== Number(en.user_id);
-  db.prepare("UPDATE enrollments SET pay_status='paid', pay_channel='wechat' WHERE id=?").run(en.id);
   const tradeNo = opts.tradeNo || newTradeNo("P", payerId);
+  const remark =
+    opts.remark ||
+    remarkForPay({ payerId, enrolleeId: en.user_id, amount: applied || charged, remainingBefore: due || charged });
   if (opts.paymentId) {
-    db.prepare("UPDATE payments SET status='success' WHERE id=?").run(opts.paymentId);
+    db.prepare("UPDATE payments SET status='success', remark=? WHERE id=?").run(remark, opts.paymentId);
   } else {
     db.prepare(
       "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (?,?,?,?,?,?,?,?,?)"
-    ).run(en.id, payerId, en.schedule_id, amount, "wechat", "success", tradeNo, proxy ? "行程页代付" : "行程页支付", "enrollment");
+    ).run(en.id, payerId, en.schedule_id, charged, "wechat", "success", tradeNo, remark, "enrollment");
+  }
+  const nextEn = db.prepare("SELECT * FROM enrollments WHERE id=?").get(en.id);
+  if (remainingDue(nextEn) <= 0 && Number(nextEn.pay_amount || 0) >= 0 && nextEn.pay_status !== "refunded") {
+    db.prepare("UPDATE enrollments SET pay_status='paid', pay_channel='wechat' WHERE id=?").run(en.id);
   }
   const traveler = db.prepare("SELECT * FROM users WHERE id=?").get(en.user_id);
-  const earn = Math.floor(amount * (isMember(traveler) ? config.member.pointsBonus : 1));
+  const earn = Math.floor(applied * (isMember(traveler) ? config.member.pointsBonus : 1));
   if (earn > 0 && en.user_id) addPoints(en.user_id, earn, "参加活动积分", "enrollment", en.id);
   maybeMatchGuide(en.schedule_id);
+  const fresh = db.prepare("SELECT * FROM enrollments WHERE id=?").get(en.id);
   return {
     enrollmentId: en.id,
-    payStatus: "paid",
-    amount,
+    payStatus: fresh.pay_status,
+    amount: applied,
+    charged,
+    excess,
     proxy,
     tradeNo,
+    remainAmount: remainingDue(fresh),
     needPay: false,
     mock: true,
+    paymentId: opts.paymentId || 0,
   };
 }
 
-async function payEnrollment(enrollmentId, payerId, opts = {}) {
+function completeEnrollmentPay(en, payerId, amount, opts = {}) {
+  return applyEnrollmentCharge(en, payerId, amount, opts);
+}
+
+function recordRefundSlice(en, slice, refundNo, remark) {
   const db = getDb();
-  const en = db.prepare("SELECT * FROM enrollments WHERE id=?").get(enrollmentId);
-  if (!en) fail(404, "报名不存在");
+  if (slice.paymentId) {
+    db.prepare("UPDATE payments SET refunded_amount=IFNULL(refunded_amount,0)+? WHERE id=?").run(slice.amount, slice.paymentId);
+  }
+  db.prepare(
+    `INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene,refund_of) VALUES (?,?,?,?,?,?,?,?,?,?)`
+  ).run(
+    en.id,
+    slice.userId,
+    en.schedule_id,
+    slice.amount,
+    "wechat",
+    "refunded",
+    refundNo,
+    remark,
+    "enrollment",
+    slice.paymentId || 0
+  );
+}
+
+async function refundEnrollmentToPayers(en, { amount, remark } = {}) {
+  const plan = planPayerRefunds(en, amount);
+  const results = [];
+  for (const slice of plan) {
+    const refundNo = newTradeNo("RF", slice.userId);
+    if (payLive() && slice.tradeNo) {
+      await refundOrder({
+        tradeNo: slice.tradeNo,
+        transactionId: slice.transactionId,
+        refundNo,
+        totalFen: yuanToFen(slice.chargeAmount),
+        refundFen: yuanToFen(slice.amount),
+      });
+    }
+    recordRefundSlice(en, slice, refundNo, remark || "原路退款");
+    results.push({
+      userId: slice.userId,
+      amount: slice.amount,
+      tradeNo: refundNo,
+      originalTradeNo: slice.tradeNo || "",
+    });
+  }
+  return results;
+}
+
+async function refundPaymentExcess(pay, excess, remark) {
+  if (excess <= 0 || !pay) return null;
+  const leftover = leftoverOf(pay);
+  const amount = Math.min(excess, leftover);
+  if (amount <= 0) return null;
+  const refundNo = newTradeNo("RX", pay.user_id);
+  if (payLive() && pay.trade_no) {
+    await refundOrder({
+      tradeNo: pay.trade_no,
+      transactionId: pay.wechat_transaction_id,
+      refundNo,
+      totalFen: yuanToFen(pay.amount),
+      refundFen: yuanToFen(amount),
+    });
+  }
+  const en = { id: pay.enrollment_id, schedule_id: pay.schedule_id, user_id: pay.user_id, pay_status: "unpaid", pay_amount: 0 };
+  recordRefundSlice(en, { paymentId: pay.id, userId: pay.user_id, amount, tradeNo: pay.trade_no, chargeAmount: pay.amount }, refundNo, remark || "超额原路退回");
+  return { userId: pay.user_id, amount, tradeNo: refundNo };
+}
+
+function loadEnrollmentForPay(enrollmentId, token) {
+  const db = getDb();
+  const en = token ? enrollmentByPayToken(token) : db.prepare("SELECT * FROM enrollments WHERE id=?").get(enrollmentId);
+  if (!en) fail(token ? 404 : 404, token ? "付款分享不存在或已失效" : "报名不存在");
   if (en.status !== "joined") fail(400, "候补或已取消的报名不能支付");
   if (en.pay_status === "paid") fail(400, "该报名已支付");
   if (en.pay_status === "company_pending") fail(400, "公司团请由开团方统一支付");
   if (en.pay_status === "refunded") fail(400, "该报名已退款");
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(en.schedule_id);
   if (!sch || sch.status === "cancelled") fail(400, "该拼团已解散");
-  const amount = Number(en.pay_amount || 0) || quoteForSchedule(sch, enrolledCount(sch.id), null).originPrice;
+  if (!Number(en.pay_amount || 0)) {
+    en.pay_amount = quoteForSchedule(sch, enrolledCount(sch.id), null).originPrice;
+  }
+  expireStalePendings(en.id);
+  return { en, sch };
+}
+
+async function payEnrollment(enrollmentId, payerId, opts = {}) {
+  const { en, sch } = loadEnrollmentForPay(enrollmentId, opts.token);
+  const remaining = remainingForPayer(en, payerId);
+  if (remaining <= 0) fail(400, "该报名已支付或他人正在支付");
+  const amount = parsePayYuan(opts.amount, remaining);
+  if (amount <= 0) fail(400, "该报名已支付");
+  const remark = remarkForPay({
+    payerId,
+    enrolleeId: en.user_id,
+    amount,
+    remainingBefore: remaining,
+  });
   await ensurePayerWechat(payerId, opts.code);
   if (config.wechat.mock || amount <= 0) {
-    return completeEnrollmentPay(en, payerId, amount);
+    return applyEnrollmentCharge(en, payerId, amount, { remark });
   }
   if (!payLive()) fail(400, "未配置微信支付密钥，无法收款");
-  const pending = pendingOf({ userId: payerId, enrollmentId: en.id, scene: "enrollment" });
+  const pending = pendingOf({ userId: payerId, enrollmentId: en.id, scene: "enrollment", amount });
   const row =
     pending ||
     insertPending({
@@ -151,7 +276,7 @@ async function payEnrollment(enrollmentId, payerId, opts = {}) {
       scheduleId: sch.id,
       amount,
       scene: "enrollment",
-      remark: Number(payerId) !== Number(en.user_id) ? "行程页代付" : "行程页支付",
+      remark,
       tradeNo: newTradeNo("P", payerId),
     });
   const charged = await jsapiCharge({
@@ -162,7 +287,14 @@ async function payEnrollment(enrollmentId, payerId, opts = {}) {
     clientIp: opts.clientIp,
     paymentId: row.id,
   });
-  return { ...charged, enrollmentId: en.id, payStatus: "unpaid", proxy: Number(payerId) !== Number(en.user_id) };
+  const next = getDb().prepare("SELECT * FROM enrollments WHERE id=?").get(en.id);
+  return {
+    ...charged,
+    enrollmentId: en.id,
+    payStatus: next.pay_status,
+    proxy: Number(payerId) !== Number(en.user_id),
+    remainAmount: remainingDue(next),
+  };
 }
 
 async function buyMembership(userId, opts = {}) {
@@ -200,11 +332,15 @@ async function buyMembership(userId, opts = {}) {
   return { ...charged, user: getDb().prepare("SELECT * FROM users WHERE id=?").get(userId) };
 }
 
-function settleByTradeNo(tradeNo) {
+async function settleByTradeNo(tradeNo, extra = {}) {
   const db = getDb();
+  stampTransaction(tradeNo, extra.transactionId);
   const pay = db.prepare("SELECT * FROM payments WHERE trade_no=?").get(tradeNo);
   if (!pay) fail(400, "支付单不存在");
   if (pay.status === "success") {
+    return { already: true, pay };
+  }
+  if (pay.status === "refunded" || pay.status === "cancelled") {
     return { already: true, pay };
   }
   const scene = pay.scene || (pay.remark === "会员年费" ? "member" : "enrollment");
@@ -215,22 +351,28 @@ function settleByTradeNo(tradeNo) {
   }
   const en = db.prepare("SELECT * FROM enrollments WHERE id=?").get(pay.enrollment_id);
   if (!en) fail(400, "报名不存在");
-  if (en.pay_status === "paid") {
+  if (en.status === "cancelled" || en.pay_status === "refunded" || remainingDue(en) <= 0) {
     db.prepare("UPDATE payments SET status='success' WHERE id=?").run(pay.id);
-    return { already: true, pay, scene: "enrollment" };
+    const fresh = db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id);
+    await refundPaymentExcess(fresh, Number(fresh.amount || 0), "报名已结束，原路退回");
+    return { already: true, pay: db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id), scene: "enrollment" };
   }
-  completeEnrollmentPay(en, pay.user_id, pay.amount, { paymentId: pay.id, tradeNo: pay.trade_no });
+  const result = applyEnrollmentCharge(en, pay.user_id, pay.amount, { paymentId: pay.id, tradeNo: pay.trade_no, remark: pay.remark });
+  if (result.excess > 0) {
+    const fresh = db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id);
+    await refundPaymentExcess(fresh, result.excess, "超额原路退回");
+  }
   return { already: false, pay: db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id), scene: "enrollment" };
 }
 
-function handleWechatNotify(xml) {
+async function handleWechatNotify(xml) {
   const data = xmlToObj(xml);
   if (!verifySign(data, config.wechat.mchKey)) return notifyReply(false, "签名失败");
   if (data.return_code !== "SUCCESS" || data.result_code !== "SUCCESS") return notifyReply(false, data.return_msg || "FAIL");
   if (data.mch_id && data.mch_id !== String(config.wechat.mchId)) return notifyReply(false, "商户号不匹配");
   if (!data.out_trade_no) return notifyReply(false, "缺少订单号");
   try {
-    settleByTradeNo(data.out_trade_no);
+    await settleByTradeNo(data.out_trade_no, { transactionId: data.transaction_id });
   } catch {
     return notifyReply(false, "处理失败");
   }
@@ -246,7 +388,7 @@ async function confirmTrade(tradeNo) {
     if (!payLive()) fail(400, "当前为演示支付");
     const data = await queryOrder(tradeNo);
     if (data.trade_state !== "SUCCESS") fail(400, "尚未支付完成");
-    settleByTradeNo(tradeNo);
+    await settleByTradeNo(tradeNo, { transactionId: data.transaction_id });
   }
   const next = db.prepare("SELECT * FROM payments WHERE trade_no=?").get(tradeNo);
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(next.user_id);
@@ -258,6 +400,7 @@ async function confirmTrade(tradeNo) {
     already: pay.status === "success",
     user,
     enrollmentId: next.enrollment_id || 0,
+    remainAmount: en ? remainingDue(en) : 0,
   };
 }
 
@@ -268,6 +411,8 @@ module.exports = {
   handleWechatNotify,
   confirmTrade,
   completeEnrollmentPay,
+  applyEnrollmentCharge,
+  refundEnrollmentToPayers,
   applyWechatSession,
   ensurePayerWechat,
 };

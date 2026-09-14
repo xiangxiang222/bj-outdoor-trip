@@ -41,7 +41,8 @@ const {
 } = require("./services/home");
 const { offerMeta, liveMemberPrice, liveStudentPrice, flagOn } = require("./services/offer");
 const { publicUserProfile, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
-const { payEnrollment, buyMembership, confirmTrade, applyWechatSession } = require("./services/payment");
+const { payEnrollment, buyMembership, confirmTrade, applyWechatSession, applyEnrollmentCharge } = require("./services/payment");
+const { payShareView, collectedMapForSchedule, payProgress, ensurePayShareToken, contributorsOf } = require("./services/pay-ledger");
 const { grantMembership } = require("./services/member");
 const { addPhoto, removePhoto, ensureReferralCode, resolveLiveUser, adoptOrganizer } = require("./services/profile");
 const { leadersOf, applyLeader, settleLeaderRewards, recruitPayload } = require("./services/leaders");
@@ -698,9 +699,9 @@ router.get("/me/trips", authUser, (req, res) => {
   res.json({ ok: true, data: rows });
 });
 
-router.delete("/me", authUser, (req, res) => {
+router.delete("/me", authUser, async (req, res) => {
   try {
-    deleteAccount(req.userId);
+    await deleteAccount(req.userId);
     res.json({ ok: true, data: { deleted: true } });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
@@ -1104,14 +1105,15 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
   const includeCancelled = sch.status === "cancelled";
   const chainSql = includeCancelled
-    ? `SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar
+    ? `SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.pay_amount,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar
        FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3 END, e.id`
-    : `SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar
+    : `SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.pay_amount,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar
        FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? AND e.status!='cancelled' ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3 END, e.id`;
+  const paidMap = collectedMapForSchedule(sch.id);
   const chain = db()
     .prepare(chainSql)
     .all(sch.id)
-    .map((e, i) => chainItem(e, i, req));
+    .map((e, i) => chainItem(e, i, req, { paidAmount: paidMap[e.id] || 0, payAmount: e.pay_amount }));
   const groupText = sch.consult_group || contacts.officialWechat;
   let myEnrollment = null;
   if (req.userId) {
@@ -1121,12 +1123,19 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
       )
       .get(sch.id, req.userId);
     if (mine) {
+      const progress = payProgress(mine);
       myEnrollment = {
         id: mine.id,
         status: mine.status,
         seatNo: mine.seat_no || "",
         autoAlt: !!mine.auto_alt,
         fallbacks: listFallbacks(mine.id),
+        payStatus: mine.pay_status,
+        payAmount: progress.payAmount,
+        paidAmount: progress.paidAmount,
+        remainAmount: progress.remainAmount,
+        payShareToken: mine.pay_status === "unpaid" ? ensurePayShareToken(mine.id) : mine.pay_share_token || "",
+        contributors: contributorsOf(mine.id),
       };
     }
   }
@@ -1272,9 +1281,9 @@ router.post("/schedules", authUser, (req, res) => {
 });
 
 function dissolveHandler(actor) {
-  return (req, res) => {
+  return async (req, res) => {
     try {
-      const data = dissolveSchedule(req.params.id, {
+      const data = await dissolveSchedule(req.params.id, {
         reason: (req.body || {}).reason,
         actor,
         actorId: actor === "admin" ? req.adminId : req.userId,
@@ -1498,11 +1507,25 @@ router.post("/enroll", authUser, (req, res) => {
   }
 });
 
+router.get("/pay/share/:token", optionalUser, (req, res) => {
+  try {
+    const data = payShareView(req.params.token, { userId: req.userId, req });
+    res.json({ ok: true, data });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
 router.post("/pay/for-enrollment", authUser, async (req, res) => {
   try {
     const body = req.body || {};
-    const enrollmentId = Number(body.enrollmentId);
-    const data = await payEnrollment(enrollmentId, req.userId, { code: body.code, clientIp: clientIp(req) });
+    const enrollmentId = Number(body.enrollmentId || 0);
+    const data = await payEnrollment(enrollmentId, req.userId, {
+      token: body.token,
+      amount: body.amount,
+      code: body.code,
+      clientIp: clientIp(req),
+    });
     res.json({ ok: true, data });
   } catch (e) {
     jsonError(res, e);
@@ -1533,14 +1556,10 @@ router.post("/pay/mock-success", authUser, (req, res) => {
   }
   const pay = db().prepare("SELECT * FROM payments WHERE trade_no=? OR enrollment_id=?").get(tradeNo || "", enrollmentId || 0);
   if (!pay) return res.status(400).json({ ok: false, message: "支付单不存在" });
-  db().prepare("UPDATE payments SET status='success' WHERE id=?").run(pay.id);
   const en = db().prepare("SELECT * FROM enrollments WHERE id=?").get(pay.enrollment_id);
-  db().prepare("UPDATE enrollments SET pay_status='paid', pay_channel='wechat' WHERE id=?").run(en.id);
-  if (en.points_used) addPoints(en.user_id, -en.points_used, "积分抵现", "enrollment", en.id);
-  const earn = Math.floor(pay.amount * (isMember(db().prepare("SELECT * FROM users WHERE id=?").get(en.user_id)) ? config.member.pointsBonus : 1));
-  addPoints(en.user_id, earn, "参加活动积分", "enrollment", en.id);
-  maybeMatchGuide(en.schedule_id);
-  res.json({ ok: true, data: { enrollmentId: en.id, payStatus: "paid" } });
+  if (!en) return res.status(400).json({ ok: false, message: "报名不存在" });
+  const data = applyEnrollmentCharge(en, pay.user_id, pay.amount, { paymentId: pay.id, tradeNo: pay.trade_no, remark: pay.remark });
+  res.json({ ok: true, data });
 });
 
 router.post("/pay/company-settle", authUser, (req, res) => {
@@ -1595,6 +1614,7 @@ router.get("/orders", authUser, (req, res) => {
         channel: e.channel,
         refundRulesJson: e.refund_rules_json,
       });
+      const progress = payProgress(e);
       const { refund_rules_json, ...rest } = e;
       return {
         ...rest,
@@ -1604,6 +1624,11 @@ router.get("/orders", authUser, (req, res) => {
         refundPercent: quote.percent,
         refundHint: quote.hint,
         refundAmount: quote.amount || 0,
+        payAmount: progress.payAmount,
+        paidAmount: progress.paidAmount,
+        remainAmount: progress.remainAmount,
+        canPay: e.status === "joined" && e.pay_status === "unpaid" && progress.remainAmount > 0,
+        payShareToken: e.pay_status === "unpaid" ? ensurePayShareToken(e.id) : e.pay_share_token || "",
         reviewed: reviewed.has(e.schedule_id),
         canReview: e.status === "joined" && !reviewed.has(e.schedule_id),
         completed: !!e.completed_at,
@@ -1613,9 +1638,9 @@ router.get("/orders", authUser, (req, res) => {
   res.json({ ok: true, data: rows });
 });
 
-router.post("/orders/:id/cancel", authUser, (req, res) => {
+router.post("/orders/:id/cancel", authUser, async (req, res) => {
   try {
-    const data = cancelEnrollment(Number(req.params.id), req.userId);
+    const data = await cancelEnrollment(Number(req.params.id), req.userId);
     res.json({ ok: true, data });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
@@ -2256,9 +2281,9 @@ router.get("/admin/schedules", authAdmin, requireCap("roster"), (req, res) => {
   res.json({ ok: true, data: rows });
 });
 
-router.post("/admin/schedules/dissolve-all", authAdmin, requireCap("ops"), (req, res) => {
+router.post("/admin/schedules/dissolve-all", authAdmin, requireCap("ops"), async (req, res) => {
   try {
-    const data = dissolveAllSchedules({
+    const data = await dissolveAllSchedules({
       reason: (req.body || {}).reason,
       actorId: req.adminId,
     });
@@ -2628,9 +2653,9 @@ router.get("/admin/enrollments", authAdmin, requireCap("roster"), (req, res) => 
   res.json({ ok: true, data: rows });
 });
 
-router.post("/admin/enrollments/:id/cancel", authAdmin, requireCap("ops"), (req, res) => {
+router.post("/admin/enrollments/:id/cancel", authAdmin, requireCap("ops"), async (req, res) => {
   try {
-    const data = cancelEnrollment(Number(req.params.id), 0, { admin: true, force: true });
+    const data = await cancelEnrollment(Number(req.params.id), 0, { admin: true, force: true });
     res.json({ ok: true, data });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
@@ -2818,9 +2843,9 @@ router.post("/admin/users/:id/points", authAdmin, requireCap("ops"), (req, res) 
   res.json({ ok: true, data: adminUserView(next) });
 });
 
-router.post("/admin/users/:id/close", authAdmin, requireCap("ops"), (req, res) => {
+router.post("/admin/users/:id/close", authAdmin, requireCap("ops"), async (req, res) => {
   try {
-    deleteAccount(Number(req.params.id));
+    await deleteAccount(Number(req.params.id));
     res.json({ ok: true, data: { deleted: true } });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });

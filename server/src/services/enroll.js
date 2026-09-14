@@ -22,6 +22,8 @@ const { resolveSupplies } = require("./supplies");
 const { isOversubPending } = require("./oversub");
 const { assertJoinCode } = require("./joinCode");
 const { cancelQuote, refundAmount } = require("./refund");
+const { ensurePayShareToken, refundableOf } = require("./pay-ledger");
+const { refundEnrollmentToPayers } = require("./payment");
 
 function fail(status, message, extra) {
   const err = new Error(message);
@@ -280,6 +282,7 @@ function enrollUser({
       supply.fee
     );
   const enrollmentId = Number(info.lastInsertRowid);
+  const payShareToken = payStatus === "unpaid" ? ensurePayShareToken(enrollmentId) : "";
   if (couponApplied) {
     attachCouponToEnrollment(couponPack.coupon.id, enrollmentId, waitlisted || appliedOnly);
   }
@@ -298,6 +301,7 @@ function enrollUser({
   const position = waitlisted ? waitlistCount(sch.id) : 0;
   return {
     enrollmentId,
+    payShareToken,
     payStatus,
     status,
     waitlisted,
@@ -369,7 +373,7 @@ function promoteWaitlist(scheduleId) {
   return { enrollmentId: next.id, userId: next.user_id };
 }
 
-function cancelEnrollment(enrollmentId, userId, options = {}) {
+async function cancelEnrollment(enrollmentId, userId, options = {}) {
   const db = getDb();
   const en = db.prepare("SELECT * FROM enrollments WHERE id=?").get(enrollmentId);
   if (!en) fail(404, "报名不存在");
@@ -381,7 +385,8 @@ function cancelEnrollment(enrollmentId, userId, options = {}) {
   if (sch.status === "cancelled" && !options.force) fail(400, "拼团已解散，报名已取消");
 
   const route = db.prepare("SELECT * FROM routes WHERE id=?").get(sch.route_id);
-  const paid = en.pay_status === "paid" && Number(en.pay_amount || 0) > 0;
+  const refundable = refundableOf(en);
+  const hasMoney = refundable > 0;
   let refundPercent = 100;
   let refundedAmount = 0;
   if (!options.force && !options.admin) {
@@ -394,13 +399,13 @@ function cancelEnrollment(enrollmentId, userId, options = {}) {
     });
     if (!quote.canCancel) fail(400, quote.hint || "当前不可取消报名");
     refundPercent = quote.percent;
-    refundedAmount = paid ? refundAmount(en.pay_amount, refundPercent) : 0;
-    if (paid && refundPercent <= 0) fail(400, "当前时段不退费，无法取消报名");
-  } else if (paid) {
-    refundedAmount = Number(en.pay_amount) || 0;
+    refundedAmount = hasMoney ? refundAmount(refundable, refundPercent) : 0;
+    if (hasMoney && refundPercent <= 0) fail(400, "当前时段不退费，无法取消报名");
+  } else if (hasMoney) {
+    refundedAmount = refundable;
   }
 
-  const nextPay = paid ? "refunded" : en.pay_status;
+  const nextPay = hasMoney ? "refunded" : en.pay_status;
   const wasJoined = en.status === "joined";
   const remark = options.admin
     ? "后台取消报名退款"
@@ -408,24 +413,15 @@ function cancelEnrollment(enrollmentId, userId, options = {}) {
       ? "用户取消报名退款"
       : `用户取消报名退款 ${refundPercent}%`;
 
+  let refunds = [];
+  if (hasMoney && refundedAmount > 0) {
+    refunds = await refundEnrollmentToPayers(en, { amount: refundedAmount, remark });
+  }
+
   const run = db.transaction(() => {
     db.prepare("UPDATE enrollments SET status='cancelled', pay_status=? WHERE id=?").run(nextPay, en.id);
     releaseCouponByEnrollment(en.id);
-    if (paid && refundedAmount > 0) {
-      db.prepare(
-        `INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark) VALUES (?,?,?,?,?,?,?,?)`
-      ).run(
-        en.id,
-        en.user_id,
-        sch.id,
-        refundedAmount,
-        en.pay_channel || "wechat",
-        "refunded",
-        `C${Date.now()}${en.id}`,
-        remark
-      );
-      if (en.points_used) addPoints(en.user_id, en.points_used, "取消报名退还积分", "enrollment", en.id);
-    }
+    if (hasMoney && en.points_used) addPoints(en.user_id, en.points_used, "取消报名退还积分", "enrollment", en.id);
     const n = enrolledCount(sch.id);
     if (n < sch.min_group_size && sch.guide_id) {
       db.prepare("UPDATE guides SET status='idle' WHERE id=? AND status='assigned'").run(sch.guide_id);
@@ -440,9 +436,10 @@ function cancelEnrollment(enrollmentId, userId, options = {}) {
     enrollmentId: en.id,
     status: "cancelled",
     payStatus: nextPay,
-    refunded: paid,
+    refunded: hasMoney,
     refundAmount: refundedAmount,
     refundPercent,
+    refunds,
     promoted: promoted ? { enrollmentId: promoted.enrollmentId } : null,
   };
 }

@@ -24,3 +24,13 @@ export function scheduleShareText({ organizerName, title, startDate, enrolled, u
   const lock = code ? ` 入团口令 ${code}` : "";
   return `${organizerName || "同行者众"}邀请你参加「${title || "行程"}」${startDate || ""}出发，已有${enrolled || 0}人报名：${url}${lock}`;
 }
+
+export function payShareUrl(origin, token) {
+  const t = String(token || "").trim();
+  return `${String(origin || "").replace(/\/$/, "")}/m/pay/${encodeURIComponent(t)}`;
+}
+
+export function payShareText({ travelerName, title, remainAmount, url }) {
+  const who = travelerName || "同行";
+  return `${who}的「${title || "行程"}」团费还差 ¥${Number(remainAmount) || 0}，可代付全款或分摊一部分：${url}`;
+}
