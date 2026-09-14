@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 在本机项目根目录执行：把代码同步到腾讯云轻量服务器并启动。
 # 用法：./scripts/deploy.sh
-# 可选环境变量：DEPLOY_HOST DEPLOY_USER DEPLOY_DIR DEPLOY_SSH_KEY
+# 可选环境变量：DEPLOY_HOST DEPLOY_USER DEPLOY_DIR DEPLOY_SSH_KEY PUBLIC_URL
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -13,6 +13,7 @@ if [ "$HOST" = "$RETIRED_HOST" ]; then
   echo "==> 忽略已下线主机 $RETIRED_HOST，改连 $DEFAULT_HOST"
   HOST="$DEFAULT_HOST"
 fi
+PUBLIC_URL="${PUBLIC_URL:-http://togetherbetter.cn}"
 USER="${DEPLOY_USER:-ubuntu}"
 DIR="${DEPLOY_DIR:-/var/www/beiyexing}"
 KEY="${DEPLOY_SSH_KEY:-$HOME/.ssh/id_ed25519}"
@@ -58,11 +59,12 @@ rsync -az --delete --partial --timeout=120 --human-readable --info=stats2 -e "$R
 echo "==> rsync 结束 $(date -u +%H:%M:%S) UTC"
 
 echo "==> 远程安装依赖并启动"
-"${SSH[@]}" bash -s -- "$DIR" "$HOST" <<'REMOTE'
+"${SSH[@]}" bash -s -- "$DIR" "$HOST" "$PUBLIC_URL" <<'REMOTE'
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 DIR="$1"
 HOST="$2"
+PUBLIC_URL="$3"
 cd "$DIR"
 chmod +x scripts/server-setup.sh scripts/prod-start.sh
 mkdir -p server/data server/public/static/uploads
@@ -84,7 +86,7 @@ PORT=3780
 NODE_ENV=production
 JWT_SECRET=$JWT
 WX_PAY_MOCK=1
-WX_PAY_NOTIFY=http://$HOST/api/pay/wechat/notify
+WX_PAY_NOTIFY=$PUBLIC_URL/api/pay/wechat/notify
 WEATHER_LIVE=1
 ENV
   chmod 600 .env
@@ -92,6 +94,10 @@ ENV
 fi
 if ! grep -q '^WEATHER_LIVE=' .env; then
   echo 'WEATHER_LIVE=1' >> .env
+fi
+if grep -qE '^WX_PAY_NOTIFY=http://(192\.144\.167\.212|140\.143\.171\.77)/' .env; then
+  sed -i -E "s|^WX_PAY_NOTIFY=http://[0-9.]+|WX_PAY_NOTIFY=$PUBLIC_URL|" .env
+  echo "已把 WX_PAY_NOTIFY 改到 $PUBLIC_URL"
 fi
 
 npm install --omit=dev
@@ -121,5 +127,5 @@ if [ "$ok" -ne 1 ]; then
   pm2 logs beiyexing --err --lines 120 --nostream || true
   exit 1
 fi
-echo "deploy ok: http://$HOST/m  http://$HOST/admin"
+echo "deploy ok: $PUBLIC_URL/m  $PUBLIC_URL/admin"
 REMOTE

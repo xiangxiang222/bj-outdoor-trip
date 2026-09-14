@@ -3,7 +3,7 @@ import { mediaSrc, slideBg, slideFallback, slideRouteTarget } from "./media";
 
 describe("mediaSrc", () => {
   it("keeps site-relative static paths", () => {
-    expect(mediaSrc("http://140.143.171.77/static/photos/juyong.jpg")).toBe("/static/photos/juyong.jpg");
+    expect(mediaSrc("http://togetherbetter.cn/static/photos/juyong.jpg")).toBe("/static/photos/juyong.jpg");
     expect(mediaSrc("/static/photos/juyong.jpg")).toBe("/static/photos/juyong.jpg");
   });
 

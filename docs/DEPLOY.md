@@ -2,7 +2,7 @@
 
 改代码、**合并到 GitHub 的 `main`** 之后：先跑 **Unit tests**，通过了才 **Deploy** 到腾讯云。部署发生在 GitHub Actions 的云主机上，不发生在你的 iPhone 或 Cursor 云环境里。功能分支和 Pull Request 不会自动上线。手机没有系统 SSH 不影响自动上线。
 
-线上地址：<http://140.143.171.77/m>
+线上地址：<http://togetherbetter.cn/m>（`www.togetherbetter.cn` 同样可用）。SSH 部署仍登录 `ubuntu@140.143.171.77`；以后换机把域名解析指到新 IP 即可，用户端不用改地址。HTTPS 还没开，先走 http；轻量控制台「设置 HTTPS」配好证书后，再改 https，并在小程序后台加 request / upload 合法域名。
 
 换机时仓库里默认主机就是这个 IP。新机还要：安全组放行 **22 / 80**；用户是 **`ubuntu`**；GitHub Secret `DEPLOY_SSH_KEY` 对应的公钥写进新机 `~/.ssh/authorized_keys`。若要保留旧数据，先把旧机 `/var/www/beiyexing/server/data/app.sqlite*`、`.env`、`server/public/static/uploads/` 拷到新机同路径（部署脚本不会覆盖已有 `.env` 和数据库）。小程序后台的 request / upload 合法域名也要改成新地址。GitHub Actions 的 `deploy.yml` 里两处 IP 也要改成新机；若暂时改不了 workflow 文件，`scripts/deploy.sh` 会把已下线的旧 IP 转到这台新机。
 
@@ -73,7 +73,7 @@ cat ~/.ssh/github_deploy
 
 1. 打开 <https://github.com/xiangxiang222/bj-outdoor-trip/actions/workflows/deploy.yml>
 2. 右侧 **Run workflow** → 选 `main` → Run
-3. 等绿灯后访问 <http://140.143.171.77/m>
+3. 等绿灯后访问 <http://togetherbetter.cn/m>
 
 以后只要 `main` 有新推送，就会自动再部署，iPhone 上不用再做任何 SSH。
 
