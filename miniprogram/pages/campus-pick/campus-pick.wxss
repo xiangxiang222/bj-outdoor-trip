@@ -1,0 +1,18 @@
+.campus-pick-list { padding: 0 8rpx 16rpx; }
+.campus-pick-row {
+  padding: 24rpx 24rpx;
+  border-bottom: 1rpx dashed #eceee8;
+  background: #fff;
+  font-size: 30rpx;
+}
+.campus-pick-row.on { font-weight: 700; color: #1b4332; background: #eef8c8; }
+.campus-pick-row.custom { color: #2d6a4f; }
+.campus-pick-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 8rpx 16rpx 0;
+}
+.campus-pick-btn { flex: 1; margin: 8rpx; }
+.campus-pick-page { padding: 0 12rpx; }

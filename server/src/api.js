@@ -57,6 +57,7 @@ const { startTrip, openCheckin, markCheckin, unmarkCheckin, confirmCheckin, trip
 const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
 const { eligibilityView, applyEnrollLimit, expandEnrollLimit, resolveEnrollLimit } = require("./services/eligibility");
+const { queryCampuses } = require("./services/campuses");
 const { oversubView, isOversubPending, drawOversub } = require("./services/oversub");
 const { parseVideoInput, videoViews } = require("./services/video");
 const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
@@ -174,6 +175,7 @@ function userPublic(u, req) {
     campusKind: u.campus_kind === "alumni" ? "alumni" : u.student_status || u.is_student ? "student" : "",
     school: u.school || "",
     college: u.college || "",
+    major: u.major || "",
     studentNo: u.student_no || "",
     studentCardUrl: attachAssetHost(req, u.student_card_url) || "",
     groupStatus: u.group_status || "",
@@ -753,23 +755,39 @@ function parseStudentCardUrl(raw) {
   return "";
 }
 
+function optionalCampusName(raw, label) {
+  const value = String(raw || "").trim().slice(0, 40);
+  if (value && value.length < 2) {
+    const err = new Error(`请选择或填写${label}`);
+    err.status = 400;
+    throw err;
+  }
+  return value;
+}
+
 router.post("/me/student", authUser, (req, res) => {
   const body = req.body || {};
-  const school = String(body.school || "").trim().slice(0, 40);
-  const college = String(body.college || "").trim().slice(0, 40);
+  let school;
+  let college;
+  let major;
+  try {
+    school = optionalCampusName(body.school, "学校全称");
+    college = optionalCampusName(body.college, "学院");
+    major = optionalCampusName(body.major, "专业");
+  } catch (e) {
+    return res.status(e.status || 400).json({ ok: false, message: e.message });
+  }
   const studentNo = String(body.studentNo || body.student_no || "").trim().slice(0, 32);
   const studentCardUrl = parseStudentCardUrl(body.studentCardUrl || body.student_card_url);
-  if (school.length < 2) return res.status(400).json({ ok: false, message: "请填写学校全称" });
-  if (college.length < 2) return res.status(400).json({ ok: false, message: "请填写学院" });
   const rawKind = String(body.campusKind || body.campus_kind || "student").toLowerCase();
   const campusKind = rawKind === "alumni" ? "alumni" : "student";
   if (campusKind === "student" && studentNo.length < 4) return res.status(400).json({ ok: false, message: "请填写学号" });
   if (!studentCardUrl) return res.status(400).json({ ok: false, message: "请上传学生证照片" });
   db()
     .prepare(
-      "UPDATE users SET school=?, college=?, student_no=?, student_card_url=?, campus_kind=?, student_status='pending', is_student=0 WHERE id=?"
+      "UPDATE users SET school=?, college=?, major=?, student_no=?, student_card_url=?, campus_kind=?, student_status='pending', is_student=0 WHERE id=?"
     )
-    .run(school, college, studentNo, studentCardUrl, campusKind, req.userId);
+    .run(school, college, major, studentNo, studentCardUrl, campusKind, req.userId);
   const next = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
   noticeCampus(next);
   res.json({
@@ -892,6 +910,15 @@ router.get("/users/:id", (req, res) => {
   const data = publicUserProfile(user, req);
   if (!data) return res.status(404).json({ ok: false, message: "用户不存在" });
   res.json({ ok: true, data });
+});
+
+router.get("/campuses", (req, res) => {
+  try {
+    const data = queryCampuses(req.query || {});
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 router.get("/buses", (req, res) => {
@@ -1863,6 +1890,7 @@ function adminUserView(user) {
     campusKind: user.campus_kind === "alumni" ? "alumni" : user.student_status || user.is_student ? "student" : "",
     school: user.school || "",
     college: user.college || "",
+    major: user.major || "",
     studentNo: user.student_no || "",
     studentCardUrl: user.student_card_url || "",
     groupStatus: user.group_status || "",
@@ -2628,12 +2656,12 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
   const q = String(req.query.q || "").trim();
   const pending = String(req.query.pending || "").trim();
   let sql =
-    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,college,student_no,student_card_url,campus_kind,group_status,group_name,role,leader_status,leader_name,leader_years,leader_intro FROM users WHERE deleted_at IS NULL";
+    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,college,major,student_no,student_card_url,campus_kind,group_status,group_name,role,leader_status,leader_name,leader_years,leader_intro FROM users WHERE deleted_at IS NULL";
   const args = [];
   if (q) {
-    sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ? OR IFNULL(school,'') LIKE ? OR IFNULL(college,'') LIKE ? OR IFNULL(group_name,'') LIKE ? OR IFNULL(leader_name,'') LIKE ?)";
+    sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ? OR IFNULL(school,'') LIKE ? OR IFNULL(college,'') LIKE ? OR IFNULL(major,'') LIKE ? OR IFNULL(group_name,'') LIKE ? OR IFNULL(leader_name,'') LIKE ?)";
     const like = `%${q}%`;
-    args.push(like, like, like, like, like, like, like);
+    args.push(like, like, like, like, like, like, like, like);
   }
   if (pending === "campus") sql += " AND student_status='pending'";
   else if (pending === "group") sql += " AND group_status='pending'";
@@ -2654,6 +2682,7 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
       campusKind: u.campus_kind === "alumni" ? "alumni" : u.student_status || u.is_student ? "student" : "",
       school: u.school || "",
       college: u.college || "",
+      major: u.major || "",
       studentNo: u.student_no || "",
       studentCardUrl: attachAssetHost(req, u.student_card_url) || "",
       groupStatus: u.group_status || "",

@@ -1,0 +1,14 @@
+<view class="pad muted">可留空。搜不到时点「使用该名称」即可自己填。</view>
+<input class="input" value="{{q}}" placeholder="{{searchPlaceholder}}" bindinput="onSearch" />
+<view class="campus-pick-list">
+  <view class="campus-pick-row custom" wx:if="{{custom}}" bindtap="useCustom">使用「{{custom}}」</view>
+  <view class="campus-pick-row {{item.on ? 'on' : ''}}" wx:for="{{list}}" wx:key="name" data-name="{{item.name}}" bindtap="toggle">{{item.name}}</view>
+  <view class="pad muted" wx:if="{{!loading && !list.length && !custom}}">没有匹配项</view>
+</view>
+<view class="campus-pick-foot">
+  <view class="btn ghost campus-pick-btn" bindtap="prev" wx:if="{{page > 1}}">上一页</view>
+  <view class="muted campus-pick-page">{{page}}/{{pages}}</view>
+  <view class="btn ghost campus-pick-btn" bindtap="next" wx:if="{{page < pages}}">下一页</view>
+</view>
+<view class="btn ghost" bindtap="clear">不选</view>
+<button wx:if="{{multiple}}" bindtap="confirm">确定（已选 {{picked.length}}）</button>

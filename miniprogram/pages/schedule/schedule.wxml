@@ -195,11 +195,11 @@
 <view class="card" wx:if="{{s.isOrganizer && s.status!='cancelled' && s.eligibility.schools.length}}">
   <view class="pad muted">当前范围：{{s.eligibility.label}}。可以再开放其他学院或学校，不能收窄。</view>
   <block wx:if="{{s.eligibility.colleges.length}}">
-    <input class="input" placeholder="开放学院，例如计算机学院" value="{{addCollege}}" bindinput="setAddCollege" />
+    <view class="input" bindtap="pickAddCollege">{{addCollege || '开放学院，例如计算机学院'}}</view>
     <view class="btn ghost" bindtap="expandColleges">开放学院</view>
     <view class="btn ghost" bindtap="expandAllColleges">本校全部学院可报</view>
   </block>
-  <input class="input" placeholder="开放学校，例如清华大学" value="{{addSchool}}" bindinput="setAddSchool" />
+  <view class="input" bindtap="pickAddSchool">{{addSchool || '开放学校，例如清华大学'}}</view>
   <view class="btn ghost" bindtap="expandSchools">开放学校</view>
 </view>
 <view class="btn clay" wx:if="{{s.isOrganizer && s.status!='cancelled'}}" bindtap="toggleDissolve">解散拼团</view>

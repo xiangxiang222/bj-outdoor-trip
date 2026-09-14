@@ -24,6 +24,7 @@ bj-outdoor-trip/
     src/config.js           端口、JWT、会员/学生折扣、微信 mock
     src/middleware/auth.js  user / admin / guide JWT
     src/services/           业务规则（报名、报价、券、座位…）
+    src/data/               北京高校名录等静态数据
     src/seed/               30 条线路 + 4 场演示同城局 + 演示账号
     public/static/          封面、相册、品牌标、上传文件
     data/app.sqlite         开发库（单测不用这份）
@@ -33,7 +34,7 @@ bj-outdoor-trip/
     src/views/admin         Element Plus 后台（/admin）
     src/views/guide         导游工作台（/g）
     src/layouts             MobileLayout / AdminLayout / GuideLayout
-    src/components          TripPrices、WeatherChart、LivePulse、RefundRulesEditor
+    src/components          TripPrices、WeatherChart、LivePulse、RefundRulesEditor、CampusNamePicker
     src/styles/app.css      色板与顶栏
     public/brand            logo.jpg（原标识）与 mark.png（顶栏裁切）
     src/utils/*.test.js     Vitest
@@ -64,6 +65,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `biz.js` | 阶梯价、会员价、积分抵现、排期状态、姓名脱敏 |
 | `offer.js` | 特价类型；学生价 = 原价 × `config.student.discountRate`（0.9） |
 | `eligibility.js` | 仅学生 / 指定高校 |
+| `campuses.js` | 北京高校/学院/专业名录检索与分页 |
 | `video.js` | 线路视频链接：B 站 BV/av 转播放器、YouTube、mp4、其它外链 |
 | `combo.js` | 组合团另一半条件 |
 | `coupons.js` | 公开/会员/定向/通用/免费券，指定必领与用户搜索分页发放，高校名单筛选与按校发放，领取后限时，按出行记录定向与随机发放，核销与退回 |
@@ -103,7 +105,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `/m/orders` | Orders | 下一趟 + 待出行/候补/历史 |
 | `/m/mine` | Mine | WeUI 分组：出行 / 权益 / 服务 |
 | `/m/official` | Official | 客服与规则；`/m/rules` 重定向到 `#rules` |
-| `/m/student` | Student | 学校、学院、学号、学生证，待后台审核 |
+| `/m/student` | Student | 学校/学院/专业可选（北京名录搜索分页），学号、学生证，待后台审核 |
 | `/m/group` | Group | 团体认证 |
 | `/m/schedule/:id` | ScheduleDetail | 山野团：座位/保险/画像；同城局：时间地点人数 |
 | `/m/enroll/:id` | Enroll | 同城局姓名+手机；山野团实名 |
@@ -122,11 +124,11 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 
 Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中色 `#6b2178`。
 
-主包页面与 H5 基本一一对应。线路详情在分包 `pkg-detail/detail`。首页 / 团 / 线路顶图下用 `components/live-pulse` 滚动态。
+主包页面与 H5 基本一一对应。线路详情在分包 `pkg-detail/detail`。首页 / 团 / 线路顶图下用 `components/live-pulse` 滚动态。校园选择在 `pages/campus-pick`。
 
 **和 H5 的差：**
 
-- 有独立「校园认证」页（学校/学院/学号/学生证）。没有独立「团体认证」页。首页学生认证按钮进认证页。自己的个人主页可按朋友圈九宫格传相册。
+- 有独立「校园认证」页（学校/学院/专业可选、学号、学生证）。没有独立「团体认证」页。首页学生认证按钮进认证页。自己的个人主页可按朋友圈九宫格传相册。
 - 「我的」权益组有优惠券、会员、抽奖、领队申请、校园认证；没有团体/推荐报名入口（这些在 H5 有）。点团详情「报名领队」未认证时弹窗跳到领队申请。点「报名摄影师」未报名时进报名页。
 - 官方页快捷入口有「学生认证」磁贴。
 - `miniprogram/config.js`：`USE_LOCAL_API` 默认 `false`，请求 `http://togetherbetter.cn`。

@@ -1,4 +1,4 @@
-<view class="pad muted">认证时请上传学生证或校友证，并填写学校、学院。通过后可走学生价；部分团只对本院、本校或指定学校学院开放。校友不享受学生价。</view>
+<view class="pad muted">认证时请上传学生证或校友证。学校、学院、专业可从北京高校名单里选，也可以不填。通过后可走学生价；部分团只对本院、本校或指定学校学院开放。校友不享受学生价。</view>
 <view class="pad" wx:if="{{certified}}" style="color:#2d6a4f">已认证{{kindLabel}}{{placeText}}</view>
 <view class="pad muted" wx:elif="{{pending}}">审核中{{placeText}}</view>
 <view class="pad muted" wx:elif="{{rejected}}">上次未通过，可修改后再次提交。</view>
@@ -7,10 +7,12 @@
 <picker mode="selector" range="{{kindLabels}}" value="{{kindIndex}}" disabled="{{certified}}" bindchange="setKind">
   <view class="input">{{kindLabels[kindIndex]}}</view>
 </picker>
-<view class="pad">学校</view>
-<input class="input" value="{{school}}" placeholder="填写学校全称" disabled="{{certified}}" bindinput="onSchool" />
-<view class="pad">学院</view>
-<input class="input" value="{{college}}" placeholder="例如：信息科学技术学院" disabled="{{certified}}" bindinput="onCollege" />
+<view class="pad">学校（可空）</view>
+<view class="input" bindtap="pickSchool">{{school || '可选，搜索北京高校'}}</view>
+<view class="pad">学院（可空）</view>
+<view class="input" bindtap="pickCollege">{{college || '可选，先选学校再搜学院'}}</view>
+<view class="pad">专业（可空）</view>
+<view class="input" bindtap="pickMajor">{{major || '可选，搜索专业'}}</view>
 <block wx:if="{{campusKind=='student'}}">
   <view class="pad">学号</view>
   <input class="input" value="{{studentNo}}" placeholder="学生证上的学号" disabled="{{certified}}" bindinput="onNo" />

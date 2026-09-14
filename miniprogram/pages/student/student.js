@@ -1,4 +1,5 @@
 const { request, setAuth } = require("../../utils/request");
+const { openCampusPick } = require("../../utils/campus");
 const app = getApp();
 
 function uploadFile(filePath) {
@@ -35,6 +36,7 @@ Page({
     kindLabel: "师生",
     school: "",
     college: "",
+    major: "",
     studentNo: "",
     studentCardUrl: "",
     placeText: "",
@@ -51,20 +53,23 @@ Page({
     this.syncUser(app.globalData.user || {});
   },
   syncUser(u) {
-    const school = u.school || this.data.school || "";
-    const college = u.college || this.data.college || "";
+    const certified = !!(u.isStudent || u.isAlumni);
+    const school = certified ? u.school || "" : this.data.school || u.school || "";
+    const college = certified ? u.college || "" : this.data.college || u.college || "";
+    const major = certified ? u.major || "" : this.data.major || u.major || "";
     const campusKind = u.campusKind === "alumni" ? "alumni" : "student";
-    const bits = [school, college].filter(Boolean);
+    const bits = [school, college, major].filter(Boolean);
     this.setData({
       school,
       college,
-      studentNo: u.studentNo || this.data.studentNo || "",
-      studentCardUrl: u.studentCardUrl || this.data.studentCardUrl || "",
+      major,
+      studentNo: certified ? u.studentNo || "" : this.data.studentNo || u.studentNo || "",
+      studentCardUrl: this.data.studentCardUrl || u.studentCardUrl || "",
       campusKind,
       kindIndex: campusKind === "alumni" ? 1 : 0,
       kindLabel: campusKind === "alumni" ? "校友" : "师生",
       placeText: bits.length ? " · " + bits.join(" ") : "",
-      certified: !!(u.isStudent || u.isAlumni),
+      certified,
       pending: u.studentStatus === "pending",
       rejected: u.studentStatus === "rejected",
     });
@@ -73,11 +78,35 @@ Page({
     const i = Number(e.detail.value);
     this.setData({ campusKind: i === 1 ? "alumni" : "student", kindIndex: i, kindLabel: i === 1 ? "校友" : "师生" });
   },
-  onSchool(e) {
-    this.setData({ school: e.detail.value });
+  pickSchool() {
+    if (this.data.certified) return;
+    openCampusPick({
+      kind: "school",
+      title: "选择学校",
+      selected: this.data.school,
+      onPick: (names) => this.setData({ school: names[0] || "", college: "", major: "" }),
+    });
   },
-  onCollege(e) {
-    this.setData({ college: e.detail.value });
+  pickCollege() {
+    if (this.data.certified) return;
+    openCampusPick({
+      kind: "college",
+      school: this.data.school,
+      title: "选择学院",
+      selected: this.data.college,
+      onPick: (names) => this.setData({ college: names[0] || "", major: "" }),
+    });
+  },
+  pickMajor() {
+    if (this.data.certified) return;
+    openCampusPick({
+      kind: "major",
+      school: this.data.school,
+      college: this.data.college,
+      title: "选择专业",
+      selected: this.data.major,
+      onPick: (names) => this.setData({ major: names[0] || "" }),
+    });
   },
   onNo(e) {
     this.setData({ studentNo: e.detail.value });
@@ -112,6 +141,7 @@ Page({
       const res = await request("/me/student", "POST", {
         school: this.data.school,
         college: this.data.college,
+        major: this.data.major,
         studentNo: this.data.studentNo,
         studentCardUrl: this.data.studentCardUrl,
         campusKind: this.data.campusKind,

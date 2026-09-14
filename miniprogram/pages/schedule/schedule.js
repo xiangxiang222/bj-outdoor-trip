@@ -5,6 +5,7 @@ const { shareCover } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
 const { dateOf } = require("../../utils/activity-kind");
 const { peopleLine, trustChips, dockPrice, enrollCta, canShowEnroll, ticketState } = require("../../utils/scan-facts");
+const { openCampusPick } = require("../../utils/campus");
 const app = getApp();
 
 function busLine(s) {
@@ -382,6 +383,24 @@ Page({
   },
   setAddCollege(e) { this.setData({ addCollege: e.detail.value }); },
   setAddSchool(e) { this.setData({ addSchool: e.detail.value }); },
+  pickAddCollege() {
+    const schools = (this.data.s && this.data.s.eligibility && this.data.s.eligibility.schools) || [];
+    openCampusPick({
+      kind: "college",
+      school: schools[0] || "",
+      title: "开放学院",
+      selected: this.data.addCollege,
+      onPick: (names) => this.setData({ addCollege: names[0] || "" }),
+    });
+  },
+  pickAddSchool() {
+    openCampusPick({
+      kind: "school",
+      title: "开放学校",
+      selected: this.data.addSchool,
+      onPick: (names) => this.setData({ addSchool: names[0] || "" }),
+    });
+  },
   expandColleges() { this.expandLimit({ addColleges: this.data.addCollege }); },
   expandSchools() { this.expandLimit({ addSchools: this.data.addSchool }); },
   expandAllColleges() { this.expandLimit({ openAllColleges: true }); },

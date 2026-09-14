@@ -104,7 +104,7 @@ function syncFromRoute() {
 
 function campusText(row) {
   const status = row.isAlumni ? "校友" : row.isStudent ? "已认证" : row.studentStatus === "pending" ? "待审" : "";
-  const place = [row.school, row.college].filter(Boolean).join(" ");
+  const place = [row.school, row.college, row.major].filter(Boolean).join(" ");
   if (status && place) return `${status} · ${place}`;
   return status || place || "—";
 }

@@ -25,6 +25,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | GET | `/play-tags` | 想怎么玩标签（名称、颜色、配图） |
 | GET | `/users/:id` | 用户公开主页：昵称、头像、相册、拟出行/已参与/关注的线路。不含手机号 |
 | GET | `/weather` | 目的地天气（含 `hourly` 分时气温/降水）。Query：`region` `date`。生产默认走 Open-Meteo 实时预报；本地开发默认 mock。`WEATHER_LIVE=1` 强制实时，`WEATHER_LIVE=0` 强制模拟 |
+| GET | `/campuses` | 北京高校/学院/专业名录。Query：`kind=school\|college\|major`、`q`、`school`、`college`、`page`、`pageSize`（默认 20，最大 50）。返回 `{ list:[{name}], total, page, pageSize, custom }`。`custom` 仅在搜不到时给出，便于名单外自填。无需登录 |
 | GET | `/buses` | 车型 |
 | GET | `/guides` | 在岗导游公开资料（不含手机号） |
 | GET | `/guides/recruit` | 推荐领队文案与奖励（200 元），登录后带推荐码 |
@@ -57,14 +58,14 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | POST | `/auth/login` | 否 | `phone` `password` `captchaToken` `captcha` |
 | POST | `/auth/login-sms` | 否 | `phone` `code`；无用户则创建。当前 UI 未使用 |
 | POST | `/auth/wechat` | 否（登录后可选） | `code` `nickname` `avatar`。未登录则按 openid 登录或建号；已登录则绑定当前账号的 openid，返回 `bound: true`。`user.wechatBound` 表示是否已绑微信 |
-| GET | `/me` | 用户 | 当前用户（证件掩码；含学生/团体/领队状态、`isAlumni`/`campusKind`/`isLeader`、`college` `studentNo` `studentCardUrl`） |
+| GET | `/me` | 用户 | 当前用户（证件掩码；含学生/团体/领队状态、`isAlumni`/`campusKind`/`isLeader`、`college` `major` `studentNo` `studentCardUrl`） |
 | GET | `/me/trips` | 用户 | 即将出行：已报名且团未解散、出发日 ≥ 昨天的 `joined`/`waitlist`/`applied` |
 | GET | `/me/coupons` | 用户 | 我领取的券（含未用/已用/候补占用）。含 `expiresAt` `claimedAt` `validHours` `universal` |
 | GET | `/me/referral` | 用户 | 推荐码、专属二维码、5% 按人结算明细。Query：`scheduleId` |
 | POST | `/me/photos` | 用户 | `{ url }` 写入个人相册 |
 | DELETE | `/me/photos/:id` | 用户 | 删除自己的相册照片 |
 | PUT | `/me` | 用户 | `nickname` `gender` `birthday` `idCard` `companyName` `avatar` |
-| POST | `/me/student` | 用户 | `{ school, college, studentCardUrl }`，在读师生须 `studentNo`，可选 `campusKind=student\|alumni`。`studentCardUrl` 为 `/upload` 返回的地址。写入 pending，待后台审核。学号与证件只出现在 `/me` 与后台 |
+| POST | `/me/student` | 用户 | `{ school, college, major, studentCardUrl }`，学校/学院/专业均可空；若填写须 ≥2 字。在读师生须 `studentNo`，可选 `campusKind=student\|alumni`。`studentCardUrl` 为 `/upload` 返回的地址。写入 pending，待后台审核。学号与证件只出现在 `/me` 与后台 |
 | POST | `/me/group` | 用户 | `{ name, kind }` 团体认证，pending |
 | POST | `/me/leader` | 用户 | `{ name, years, intro }` 个人领队申请，pending。已通过则 400 |
 | POST | `/feedback` | 用户 | `{ kind: suggest\|bug, content }`，内容至少 4 字 |

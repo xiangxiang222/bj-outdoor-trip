@@ -12,21 +12,21 @@
     <label class="check-row"><input type="checkbox" v-model="form.alumniOk" /> 允许已认证校友</label>
     <template v-if="form.campusScope === 'college' || form.campusScope === 'school' || form.campusScope === 'colleges'">
       <label>学校</label>
-      <input class="input" v-model="form.campusSchool" placeholder="学校全称" />
+      <CampusNamePicker v-model="form.campusSchool" kind="school" title="选择学校" placeholder="可选，搜索学校" />
     </template>
     <template v-if="form.campusScope === 'college'">
       <label>学院</label>
-      <input class="input" v-model="form.campusCollege" placeholder="例如：信息科学技术学院" />
+      <CampusNamePicker v-model="form.campusCollege" kind="college" :school="form.campusSchool" title="选择学院" placeholder="可选，搜索学院" />
     </template>
     <template v-if="form.campusScope === 'colleges'">
       <label>开放学院</label>
-      <input class="input" v-model="form.colleges" placeholder="逗号分隔，例如：信息科学技术学院,计算机学院" />
+      <CampusNamePicker v-model="form.colleges" kind="college" :school="form.campusSchool" multiple title="选择学院" placeholder="可选，搜索后多选" />
     </template>
     <template v-if="form.campusScope === 'schools'">
       <label>开放学校</label>
-      <input class="input" v-model="form.schools" placeholder="逗号分隔，例如：北京大学,清华大学" />
+      <CampusNamePicker v-model="form.schools" kind="school" multiple title="选择学校" placeholder="可选，搜索后多选" />
       <label>限定学院（可空）</label>
-      <input class="input" v-model="form.colleges" placeholder="填写则各校同名学院可报" />
+      <CampusNamePicker v-model="form.colleges" kind="college" multiple title="选择学院" placeholder="可空，填写则各校同名学院可报" />
     </template>
     <p class="muted">{{ hint }}</p>
   </div>
@@ -34,6 +34,7 @@
 
 <script setup>
 import { computed, watch } from "vue";
+import CampusNamePicker from "@/components/CampusNamePicker.vue";
 
 const form = defineModel({ type: Object, required: true });
 const props = defineProps({

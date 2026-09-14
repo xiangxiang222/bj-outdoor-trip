@@ -85,7 +85,7 @@ npm test
 | C02 | 注册 × 两次密码不一致 | 「两次密码不一致」 | 005 | 前端校验；接口另测正常注册 |
 | C03 | 短信登录 × 新手机 | 自动建号并发 token | API / e2e | `api.auth` logs in by sms |
 | C04 | 微信演示登录 | 「微信游客 · 未绑定手机」 | 066 | `api.auth` wechat demo |
-| C05 | 新用户 × 校园表单缺学校 | 「请填写学校全称」 | 008b | `api.eligibility` 要求学校学院证件 |
+| C05 | 新用户 × 校园表单缺证件 | 「请上传学生证照片」 | 008b | `api.eligibility` / `api.campuses` 学校学院可空，证件仍必填 |
 | C06 | 师生 × 学生证照片 | 待审；后台校园 Tab 可见 | 009 / 018 | `api.notices` 校园待办 |
 | C07 | 校友 × 无学号 + 有证件 | 可提交；不享受学生价 | 010 / 011 | `api.eligibility` alumni skip studentNo |
 | C08 | 团体（学生组织）× 待审 | 「团体认证审核中」 | 013 / 016 / 019 | `api.notices` 团体 |
@@ -178,12 +178,12 @@ npm test
 ### 3.2 校园 / 校友认证
 
 **M-09 校园认证空表**  
-身份默认「在读师生」，要学校、学院、学号、学生证照片。
+身份默认「在读师生」，学校、学院、专业可从北京高校名单里选（可空），在读须学号和学生证照片。
 
 ![M-09](full-tests/screenshots/008_student_form.png)
 
 **M-10 空表提交**  
-「请填写学校全称」。
+学校学院可空；缺学生证时报「请上传学生证照片」。
 
 ![M-10](full-tests/screenshots/008b_student_required.png)
 

@@ -60,7 +60,8 @@ function noticeCampus(user) {
   const who = user.nickname || user.phone || "用户";
   const school = String(user.school || "").trim();
   const college = String(user.college || "").trim();
-  const place = [school, college].filter(Boolean).join("");
+  const major = String(user.major || "").trim();
+  const place = [school, college, major].filter(Boolean).join("");
   const kindLabel = user.campus_kind === "alumni" ? "校友" : "师生";
   return pushNotice({
     kind: "campus",

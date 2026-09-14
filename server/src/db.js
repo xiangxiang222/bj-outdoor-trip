@@ -476,6 +476,7 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "users", "student_status", "TEXT");
   addColumnIfMissing(db, "users", "school", "TEXT");
   addColumnIfMissing(db, "users", "college", "TEXT");
+  addColumnIfMissing(db, "users", "major", "TEXT");
   addColumnIfMissing(db, "users", "student_no", "TEXT");
   addColumnIfMissing(db, "users", "student_card_url", "TEXT");
   addColumnIfMissing(db, "users", "campus_kind", "TEXT");
