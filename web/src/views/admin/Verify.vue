@@ -85,7 +85,7 @@ function applyText(row) {
     return bits.join(" · ");
   }
   if (row.kind === "group") return row.user.groupName || "团体认证";
-  const bits = [row.user.school, row.user.college, row.user.studentNo].filter(Boolean);
+  const bits = [row.user.school, row.user.college, row.user.major, row.user.studentNo].filter(Boolean);
   return bits.join(" · ") || "校园认证";
 }
 

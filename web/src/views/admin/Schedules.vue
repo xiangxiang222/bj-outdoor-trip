@@ -120,7 +120,7 @@
           <el-input v-model="neu.companyName" placeholder="公司全称" />
         </el-form-item>
         <el-form-item v-if="neu.organizerType === 'campus'" label="学校名">
-          <el-input v-model="neu.companyName" placeholder="例如：北京大学" />
+          <CampusCatalogSelect v-model="neu.companyName" kind="school" placeholder="例如：北京大学" />
         </el-form-item>
         <el-form-item label="车型">
           <el-select v-model="neu.busTypeId">
@@ -161,10 +161,10 @@
           <el-input v-model="neu.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" />
         </el-form-item>
         <el-form-item label="限定高校">
-          <el-input v-model="neu.schools" placeholder="逗号分隔，如 北京大学,清华大学" />
+          <CampusCatalogSelect v-model="neu.schools" kind="school" multiple placeholder="可选，搜索后多选。留空则不限学校" />
         </el-form-item>
         <el-form-item label="限定学院">
-          <el-input v-model="neu.colleges" placeholder="逗号分隔，如 信息科学技术学院。留空则名单内学校各学院可报" />
+          <CampusCatalogSelect v-model="neu.colleges" kind="college" multiple placeholder="可选。留空则名单内学校各学院可报" />
         </el-form-item>
         <el-form-item label="虚拟报名">
           <el-input-number v-model="neu.virtualCount" :min="0" :max="80" />
@@ -285,10 +285,10 @@
           <el-switch v-model="limitForm.oversub" />
         </el-form-item>
         <el-form-item label="限定高校">
-          <el-input v-model="limitForm.schools" type="textarea" :rows="2" placeholder="逗号分隔，如 北京大学,清华大学。留空则不限学校。" />
+          <CampusCatalogSelect v-model="limitForm.schools" kind="school" multiple placeholder="可选，搜索后多选。留空则不限学校" />
         </el-form-item>
         <el-form-item label="限定学院">
-          <el-input v-model="limitForm.colleges" type="textarea" :rows="2" placeholder="逗号分隔。留空则名单内学校各学院可报。" />
+          <CampusCatalogSelect v-model="limitForm.colleges" kind="college" multiple placeholder="可选。留空则名单内学校各学院可报" />
         </el-form-item>
         <p class="muted">报超会抽：先报名待确认。人数超过座位才抽签，未超过则全部确认。不要对外说「抽名额」。</p>
       </el-form>
@@ -351,6 +351,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { organizerTypeText, scheduleStatusText } from "@/utils/labels";
 import http from "@/api/http";
 import { hasCap } from "@/utils/staff";
+import CampusCatalogSelect from "@/components/admin/CampusCatalogSelect.vue";
 const $router = useRouter();
 const me = ref({ caps: [] });
 const canOps = computed(() => hasCap(me.value, "ops"));

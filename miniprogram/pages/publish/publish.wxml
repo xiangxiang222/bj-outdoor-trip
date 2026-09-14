@@ -47,7 +47,7 @@
     <picker range="{{comboRequireLabels}}" value="{{comboRequireIndex}}" bindchange="setComboRequire">
       <view class="input">另一半身份：{{comboRequireLabels[comboRequireIndex]}}</view>
     </picker>
-    <input class="input" placeholder="另一半学校（可空）" value="{{form.comboRule.school}}" bindinput="setComboSchool" />
+    <view class="input" bindtap="pickComboSchool">{{form.comboRule.school || '另一半学校（可空）'}}</view>
   </view>
   <input class="input" type="number" placeholder="原价（元）" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
   <view class="pad" bindtap="toggleAlumniOk">{{form.alumniOk ? '☑' : '☐'}} 允许已认证校友</view>
@@ -56,11 +56,11 @@
   <picker mode="selector" range="{{scopeLabels}}" value="{{scopeIndex}}" bindchange="setScope">
     <view class="input">{{scopeLabels[scopeIndex]}}</view>
   </picker>
-  <input wx:if="{{form.campusScope=='college' || form.campusScope=='school' || form.campusScope=='colleges'}}" class="input" placeholder="学校全称" value="{{form.campusSchool}}" bindinput="setField" data-k="campusSchool" />
-  <input wx:if="{{form.campusScope=='college'}}" class="input" placeholder="学院，例如信息科学技术学院" value="{{form.campusCollege}}" bindinput="setField" data-k="campusCollege" />
-  <input wx:if="{{form.campusScope=='colleges'}}" class="input" placeholder="开放学院，逗号分隔" value="{{form.colleges}}" bindinput="setField" data-k="colleges" />
-  <input wx:if="{{form.campusScope=='schools'}}" class="input" placeholder="开放学校，逗号分隔" value="{{form.schools}}" bindinput="setField" data-k="schools" />
-  <input wx:if="{{form.campusScope=='schools'}}" class="input" placeholder="限定学院可空" value="{{form.colleges}}" bindinput="setField" data-k="colleges" />
+  <view wx:if="{{form.campusScope=='college' || form.campusScope=='school' || form.campusScope=='colleges'}}" class="input" bindtap="pickCampusSchool">{{form.campusSchool || '学校全称'}}</view>
+  <view wx:if="{{form.campusScope=='college'}}" class="input" bindtap="pickCampusCollege">{{form.campusCollege || '学院，例如信息科学技术学院'}}</view>
+  <view wx:if="{{form.campusScope=='colleges'}}" class="input" bindtap="pickColleges">{{form.colleges || '开放学院，可多选'}}</view>
+  <view wx:if="{{form.campusScope=='schools'}}" class="input" bindtap="pickSchools">{{form.schools || '开放学校，可多选'}}</view>
+  <view wx:if="{{form.campusScope=='schools'}}" class="input" bindtap="pickColleges">{{form.colleges || '限定学院可空'}}</view>
   <view class="label">出发日期</view>
   <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
     <view class="input">{{dateLabels[dateIndex]}}</view>
@@ -76,13 +76,11 @@
     value="{{form.companyName}}"
     bindinput="setCompanyName"
   />
-  <input
+  <view
     wx:if="{{form.organizerType === 'campus'}}"
     class="input"
-    placeholder="学校名称（高校开团必填）"
-    value="{{form.companyName}}"
-    bindinput="setCompanyName"
-  />
+    bindtap="pickCompanySchool"
+  >{{form.companyName || '学校名称（高校开团必填）'}}</view>
   <view class="label">车型</view>
   <picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">
     <view class="input">{{busNames[busIndex]}}</view>

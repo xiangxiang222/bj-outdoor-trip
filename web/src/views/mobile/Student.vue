@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p class="muted">认证时请上传学生证或校友证，并填写学校、学院。通过后可走学生价；部分团只对本院、本校或指定学校学院开放。校友不享受学生价。</p>
+    <p class="muted">认证时请上传学生证或校友证。学校、学院、专业可从北京高校名单里选，也可以不填。通过后可走学生价；部分团只对本院、本校或指定学校学院开放。校友不享受学生价。</p>
     <p v-if="store.profile?.isAlumni" style="color:var(--leaf)">已认证校友{{ placeText }}</p>
     <p v-else-if="store.profile?.isStudent" style="color:var(--leaf)">已认证师生{{ placeText }}</p>
     <p v-else-if="store.profile?.studentStatus === 'pending'" class="muted">审核中{{ placeText }}</p>
@@ -9,10 +9,12 @@
       <option value="student">在读师生</option>
       <option value="alumni">校友</option>
     </select>
-    <label>学校</label>
-    <input class="input" v-model="school" placeholder="填写学校全称" :disabled="certified" />
-    <label>学院</label>
-    <input class="input" v-model="college" placeholder="例如：信息科学技术学院" :disabled="certified" />
+    <label>学校（可空）</label>
+    <CampusNamePicker v-model="school" kind="school" title="选择学校" placeholder="可选，搜索北京高校" :disabled="certified" />
+    <label>学院（可空）</label>
+    <CampusNamePicker v-model="college" kind="college" :school="school" title="选择学院" placeholder="可选，先选学校再搜学院" :disabled="certified" />
+    <label>专业（可空）</label>
+    <CampusNamePicker v-model="major" kind="major" :school="school" :college="college" title="选择专业" placeholder="可选，搜索专业" :disabled="certified" />
     <label v-if="campusKind === 'student'">学号</label>
     <input v-if="campusKind === 'student'" class="input" v-model="studentNo" placeholder="学生证上的学号" :disabled="certified" />
     <label>学生证 / 校友证</label>
@@ -24,17 +26,19 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
+import CampusNamePicker from "@/components/CampusNamePicker.vue";
 
 const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const school = ref(store.profile?.school || "");
 const college = ref(store.profile?.college || "");
+const major = ref(store.profile?.major || "");
 const studentNo = ref(store.profile?.studentNo || "");
 const studentCardUrl = ref(store.profile?.studentCardUrl || "");
 const campusKind = ref(store.profile?.campusKind === "alumni" ? "alumni" : "student");
@@ -43,8 +47,20 @@ const ok = ref(false);
 const loading = ref(false);
 const certified = computed(() => !!(store.profile?.isStudent || store.profile?.isAlumni));
 const placeText = computed(() => {
-  const bits = [store.profile?.school, store.profile?.college].filter(Boolean);
+  const bits = [store.profile?.school, store.profile?.college, store.profile?.major].filter(Boolean);
   return bits.length ? " · " + bits.join(" ") : "";
+});
+
+watch(school, (next, prev) => {
+  if (certified.value) return;
+  if (next !== prev) {
+    college.value = "";
+    major.value = "";
+  }
+});
+watch(college, (next, prev) => {
+  if (certified.value) return;
+  if (next !== prev) major.value = "";
 });
 
 async function onCard(e) {
@@ -70,6 +86,7 @@ async function submit() {
     const res = await http.post("/me/student", {
       school: school.value,
       college: college.value,
+      major: major.value,
       studentNo: studentNo.value,
       studentCardUrl: studentCardUrl.value,
       campusKind: campusKind.value,

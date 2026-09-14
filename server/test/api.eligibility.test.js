@@ -208,11 +208,11 @@ describe("student and school enroll limits", () => {
     assert.equal(ok.body.data.status, "applied");
   });
 
-  it("requires school, college and student card on campus certification", async () => {
+  it("lets school and college stay empty but still requires a student card", async () => {
     const token = await loginUser(agent);
-    const missing = await agent.post("/api/me/student").set(auth(token)).send({ school: "北京大学" });
+    const missing = await agent.post("/api/me/student").set(auth(token)).send({ school: "北京大学", studentNo: "1700012345" });
     assert.equal(missing.status, 400);
-    assert.match(missing.body.message, /学院/);
+    assert.match(missing.body.message, /学生证/);
 
     const submitted = await agent.post("/api/me/student").set(auth(token)).send(campusPayload()).expect(200);
     assert.equal(submitted.body.data.studentStatus, "pending");

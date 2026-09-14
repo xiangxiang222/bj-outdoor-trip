@@ -1,6 +1,7 @@
 const { request, showError } = require("../../utils/request");
 const { OFFER_TYPES } = require("../../utils/offer");
 const { KINDS } = require("../../utils/activity-kind");
+const { openCampusPick, joinNames } = require("../../utils/campus");
 
 const MEETUPS = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
 const DAYS = [1, 2, 3, "multi"];
@@ -186,6 +187,58 @@ Page({
   },
   setComboSchool(e) {
     this.setData({ "form.comboRule.school": e.detail.value });
+  },
+  pickComboSchool() {
+    openCampusPick({
+      kind: "school",
+      title: "另一半学校",
+      selected: this.data.form.comboRule.school,
+      onPick: (names) => this.setData({ "form.comboRule.school": names[0] || "" }),
+    });
+  },
+  pickCampusSchool() {
+    openCampusPick({
+      kind: "school",
+      title: "选择学校",
+      selected: this.data.form.campusSchool,
+      onPick: (names) => this.setData({ "form.campusSchool": names[0] || "" }),
+    });
+  },
+  pickCampusCollege() {
+    openCampusPick({
+      kind: "college",
+      school: this.data.form.campusSchool,
+      title: "选择学院",
+      selected: this.data.form.campusCollege,
+      onPick: (names) => this.setData({ "form.campusCollege": names[0] || "" }),
+    });
+  },
+  pickSchools() {
+    openCampusPick({
+      kind: "school",
+      multiple: true,
+      title: "开放学校",
+      selected: this.data.form.schools,
+      onPick: (names) => this.setData({ "form.schools": joinNames(names) }),
+    });
+  },
+  pickColleges() {
+    openCampusPick({
+      kind: "college",
+      school: this.data.form.campusSchool,
+      multiple: true,
+      title: "选择学院",
+      selected: this.data.form.colleges,
+      onPick: (names) => this.setData({ "form.colleges": joinNames(names) }),
+    });
+  },
+  pickCompanySchool() {
+    openCampusPick({
+      kind: "school",
+      title: "学校名称",
+      selected: this.data.form.companyName,
+      onPick: (names) => this.setData({ "form.companyName": names[0] || "" }),
+    });
   },
   toggleAlumniOk() {
     this.setData({ "form.alumniOk": !this.data.form.alumniOk });

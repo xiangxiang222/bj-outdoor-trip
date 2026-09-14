@@ -18,22 +18,27 @@
   bindinput="setCo"
 />
 <input
-  wx:if="{{form.organizerType === 'campus'}}"
+  wx:if="{{form.organizerType === 'company'}}"
   class="input"
-  placeholder="学校名称（高校开团必填）"
+  placeholder="公司名称（公司开团必填）"
   value="{{form.companyName}}"
   bindinput="setCo"
 />
+<view
+  wx:if="{{form.organizerType === 'campus'}}"
+  class="input"
+  bindtap="pickCompanySchool"
+>{{form.companyName || '学校名称（高校开团必填）'}}</view>
 
 <view class="label">校园范围</view>
 <picker mode="selector" range="{{scopeLabels}}" value="{{scopeIndex}}" bindchange="setScope">
   <view class="input">{{scopeLabels[scopeIndex]}}</view>
 </picker>
-<input wx:if="{{form.campusScope=='college' || form.campusScope=='school' || form.campusScope=='colleges'}}" class="input" placeholder="学校全称" value="{{form.campusSchool}}" bindinput="setCampusSchool" />
-<input wx:if="{{form.campusScope=='college'}}" class="input" placeholder="学院，例如信息科学技术学院" value="{{form.campusCollege}}" bindinput="setCampusCollege" />
-<input wx:if="{{form.campusScope=='colleges'}}" class="input" placeholder="开放学院，逗号分隔" value="{{form.colleges}}" bindinput="setColleges" />
-<input wx:if="{{form.campusScope=='schools'}}" class="input" placeholder="开放学校，逗号分隔" value="{{form.schools}}" bindinput="setSchools" />
-<input wx:if="{{form.campusScope=='schools'}}" class="input" placeholder="限定学院可空" value="{{form.colleges}}" bindinput="setColleges" />
+<view wx:if="{{form.campusScope=='college' || form.campusScope=='school' || form.campusScope=='colleges'}}" class="input" bindtap="pickCampusSchool">{{form.campusSchool || '学校全称'}}</view>
+<view wx:if="{{form.campusScope=='college'}}" class="input" bindtap="pickCampusCollege">{{form.campusCollege || '学院，例如信息科学技术学院'}}</view>
+<view wx:if="{{form.campusScope=='colleges'}}" class="input" bindtap="pickColleges">{{form.colleges || '开放学院，可多选'}}</view>
+<view wx:if="{{form.campusScope=='schools'}}" class="input" bindtap="pickSchools">{{form.schools || '开放学校，可多选'}}</view>
+<view wx:if="{{form.campusScope=='schools'}}" class="input" bindtap="pickColleges">{{form.colleges || '限定学院可空'}}</view>
 <view class="pad" bindtap="toggleAlumniOk">{{form.alumniOk ? '☑' : '☐'}} 允许已认证校友</view>
 <view class="pad" bindtap="togglePrivateJoin">{{form.privateJoin ? '☑' : '☐'}} 加密团（报名要口令）</view>
 <input wx:if="{{form.privateJoin}}" class="input" placeholder="入团口令 4～16 字，可空则自动生成" value="{{form.joinCode}}" bindinput="setJoinCode" maxlength="16" />

@@ -9,14 +9,21 @@
       <option value="company">公司开团（先报名，最后统一支付）</option>
       <option value="campus">高校开团（先报名，出行前付款）</option>
     </select>
-    <label v-if="form.organizerType === 'company'">公司名称</label>
-    <label v-if="form.organizerType === 'campus'">学校名称</label>
-    <input
-      v-if="form.organizerType === 'company' || form.organizerType === 'campus'"
-      class="input"
-      v-model="form.companyName"
-      :placeholder="form.organizerType === 'campus' ? '例如：北京大学' : '公司全称'"
-    />
+      <label v-if="form.organizerType === 'company'">公司名称</label>
+      <label v-if="form.organizerType === 'campus'">学校名称</label>
+      <input
+        v-if="form.organizerType === 'company'"
+        class="input"
+        v-model="form.companyName"
+        placeholder="公司全称"
+      />
+      <CampusNamePicker
+        v-if="form.organizerType === 'campus'"
+        v-model="form.companyName"
+        kind="school"
+        title="选择学校"
+        placeholder="例如：北京大学"
+      />
     <label>大巴车型</label>
     <select class="select" v-model="form.busTypeId">
       <option v-for="b in buses" :key="b.id" :value="b.id">{{ b.name }}（{{ b.seats }}座）</option>
@@ -60,6 +67,7 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import CampusAudienceFields from "@/components/CampusAudienceFields.vue";
+import CampusNamePicker from "@/components/CampusNamePicker.vue";
 
 const route = useRoute();
 const router = useRouter();

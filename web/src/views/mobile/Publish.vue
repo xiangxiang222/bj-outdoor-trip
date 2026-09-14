@@ -89,7 +89,7 @@
           <option value="group">仅已认证学生组织</option>
         </select>
         <label>另一半学校（可空）</label>
-        <input class="input" v-model="form.comboRule.school" placeholder="例如：北京大学" />
+        <CampusNamePicker v-model="form.comboRule.school" kind="school" title="选择学校" placeholder="可选，例如北京大学" />
       </div></div>
       <label>原价（元）</label>
       <input class="input" type="number" v-model.number="form.originPrice" />
@@ -112,10 +112,17 @@
       <label v-if="form.organizerType === 'company'">公司名称</label>
       <label v-if="form.organizerType === 'campus'">学校名称</label>
       <input
-        v-if="form.organizerType === 'company' || form.organizerType === 'campus'"
+        v-if="form.organizerType === 'company'"
         class="input"
         v-model="form.companyName"
-        :placeholder="form.organizerType === 'campus' ? '例如：北京大学' : '公司全称'"
+        placeholder="公司全称"
+      />
+      <CampusNamePicker
+        v-if="form.organizerType === 'campus'"
+        v-model="form.companyName"
+        kind="school"
+        title="选择学校"
+        placeholder="例如：北京大学"
       />
       <label>大巴车型</label>
       <select class="select" v-model="form.busTypeId">
@@ -166,6 +173,7 @@ import { OFFER_TYPES } from "@/utils/offer";
 import { ACTIVITY_KINDS } from "@/utils/activityKind";
 import { todayYmd } from "@/utils/trips";
 import CampusAudienceFields from "@/components/CampusAudienceFields.vue";
+import CampusNamePicker from "@/components/CampusNamePicker.vue";
 
 const route = useRoute();
 const router = useRouter();
