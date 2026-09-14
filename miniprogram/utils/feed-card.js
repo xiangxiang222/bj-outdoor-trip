@@ -43,9 +43,12 @@ function coverOf(row) {
 }
 
 function taglineOf(row) {
+  const lock = row && row.private ? row.privateLabel || "加密团" : "";
   const tags = ((row && row.playTags) || []).map((t) => t.name || t).filter(Boolean);
-  if (tags.length) return tags.slice(0, 3).join(" · ");
-  return (row && row.route && row.route.subtitle) || (row && row.eligibility && row.eligibility.label) || "";
+  const rest = tags.length
+    ? tags.slice(0, 3).join(" · ")
+    : (row && row.route && row.route.subtitle) || (row && row.eligibility && row.eligibility.label) || "";
+  return [lock, rest].filter(Boolean).join(" · ");
 }
 
 function coverMark(row) {

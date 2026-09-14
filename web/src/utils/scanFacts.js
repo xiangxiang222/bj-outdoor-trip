@@ -35,6 +35,7 @@ export function trustChips(row) {
   if (!row) return chips;
   chips.push(row.organizerType === "company" ? "公司统一支付" : "先报名后付款");
   chips.push("出发日前可取消");
+  if (row.private) chips.push(row.privateLabel || "加密团");
   if (row.channel === "activity") chips.push("到场找发起人");
   else chips.push("山野可加购意外险");
   return chips;

@@ -20,6 +20,7 @@ const { assertComboEnroll, parseComboWant } = require("./combo");
 const { assertEnrollLimit } = require("./eligibility");
 const { resolveSupplies } = require("./supplies");
 const { isOversubPending } = require("./oversub");
+const { assertJoinCode } = require("./joinCode");
 const { cancelQuote, refundAmount } = require("./refund");
 
 function fail(status, message, extra) {
@@ -127,6 +128,7 @@ function enrollUser({
   joinMode,
   comboWant,
   supplies,
+  joinCode,
 }) {
   const db = getDb();
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
@@ -135,6 +137,7 @@ function enrollUser({
   if (!sch) fail(400, "排期不存在");
   if (sch.status === "cancelled") fail(400, "该拼团已解散，无法报名");
   if ((sch.review_status || "approved") !== "approved") fail(400, "该团正在审核或未通过，暂不能报名");
+  assertJoinCode(sch, joinCode, user);
   assertEnrollLimit(user, sch);
   assertComboEnroll(user, sch);
   const isActivity = sch.channel === "activity";

@@ -31,7 +31,7 @@
   </view>
   <view class="feed-body">
     <view class="feed-when">{{item.feedWhen}} · {{item.city}}</view>
-    <view class="feed-title">{{item.route.title}}</view>
+    <view class="feed-title"><text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{item.privateLabel || '加密团'}}</text> {{item.route.title}}</view>
     <view class="feed-host">{{item.host}}<text wx:if="{{item.kindLabel}}"> · {{item.kindLabel}}</text></view>
     <view class="feed-tagline" wx:if="{{item.tagline}}">{{item.tagline}}</view>
     <view class="feed-price" wx:if="{{item.free}}">免费</view>

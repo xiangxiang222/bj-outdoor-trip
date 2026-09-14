@@ -125,6 +125,7 @@ npx vitest run src/utils/share.test.js
 | `api.eligibility.test.js` | 仅学生 / 高校名单 / 学院名单 / 高校免费团仍检查学校限制；发起人只扩不缩 |
 | `api.combo.test.js` | 组合团 |
 | `api.trip.test.js` | 用户发团与审核 |
+| `api.joinCode.test.js` | 加密团：勾选后自动生成 6 位口令；游客看不到口令；错口令 400；对口令可报；发起人免填 |
 | `api.oversub.test.js` | 报超会抽：未超座位全员确认、超员抽签、重复确认 400、校友资格、中签取消后按抽签顺序递补、志愿者不进抽签池、高校免费团默认抽签 |
 | `oversub.service.test.js` | 抽签乱序可注入 rng，不改原数组 |
 | `api.coupon.test.js` | 公开限量领取、每人一张、会员与券取低不叠、赠团不核销、候补占用/递补核销/取消退券、公司团与暂停领取、仅会员领取、定向发放与演示短信、领取后过期、通用券、叠加会员、久未参加/出行次数、人多随机发放、免费券、用户搜索分页选人、公开/会员指定必领与预留库存、按高校名单筛选并发放 |
@@ -155,6 +156,9 @@ npx vitest run src/utils/share.test.js
 | `web/src/utils/chinaAreas.test.js` | 全国省市县树、旧地区回填、北京周边/跨省选项 |
 | `web/src/utils/pulse.test.js` | 访客 id 复用、动态条跳转线路/团、头像字 |
 | `web/src/utils/wechatPay.test.js` | H5 识别真实 JSAPI 并提示去小程序 |
+| `web/src/utils/feedCard.test.js` | 卡片上车人数、主理人、加密团 tagline |
+| `web/src/utils/scanFacts.test.js` | 人数文案、信任条（含加密团）、底栏价格与报名 CTA |
+| `web/src/utils/share.test.js` | 微信内不走系统分享；分享链接可带入团口令 |
 
 Vue 页面与小程序以手动/演示验收为主（依赖浏览器与微信开发者工具）；完整接口顺序见第 8 节走查。走查脚本目前按户外团路径打公开接口、报名、取消、解散、会员、注销；后台发券挂在个人团上（公司团发券会 400）。同城局轻报名以 `api.enroll.test.js` / `api.home.test.js` 为准。
 

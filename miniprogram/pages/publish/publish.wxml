@@ -102,4 +102,6 @@
   <view class="input">{{lotteryLabels[lotteryIndex]}}</view>
 </picker>
 <view class="pad muted">中奖后立刻看到奖品和中奖率，跟团结束后才能领奖。</view>
+<view class="pad" bindtap="togglePrivateJoin">{{form.privateJoin ? '☑' : '☐'}} 加密团（报名要口令）</view>
+<input wx:if="{{form.privateJoin}}" class="input" placeholder="入团口令 4～16 字，可空则自动生成" value="{{form.joinCode}}" bindinput="setField" data-k="joinCode" maxlength="16" />
 <view class="btn" bindtap="submit">提交审核</view>

@@ -14,6 +14,7 @@ const { buildDemographics, maskPhone } = require("./services/biz");
 const { code2session, payLive, clientIp } = require("./services/wechat");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
+const { resolveJoinCode, joinLockView } = require("./services/joinCode");
 const { scheduleSeats, setLockedSeats, toggleLockedSeat, assignSeat, pickMySeat } = require("./services/seats");
 const { forecast } = require("./services/weather");
 const { listSplits, createSplitsForSchedule } = require("./services/split");
@@ -367,6 +368,7 @@ function scheduleView(sch, req) {
     eligibility: eligibilityView(sch, viewer),
     oversub: oversubView(sch),
     refundPolicy: refundPolicyView(route, sch),
+    ...joinLockView(sch, req),
     ...lotteryPublic(sch.id),
   };
 }
@@ -391,9 +393,10 @@ function applyScheduleExtras(id, body, route, user) {
   const studentOn = flagOn(body.studentPriceOn ?? body.student_price_on) ? 1 : 0;
   const comboRule = JSON.stringify(parseComboRule(body.comboRule || body.combo_rule || {}));
   const limit = resolveEnrollLimit(body, user);
+  const joinCode = resolveJoinCode(body);
   db()
     .prepare(
-      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=?, student_only=?, schools_json=?, colleges_json=?, alumni_ok=?, oversub=? WHERE id=?"
+      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=?, student_only=?, schools_json=?, colleges_json=?, alumni_ok=?, oversub=?, join_code=? WHERE id=?"
     )
     .run(
       offerType,
@@ -410,6 +413,7 @@ function applyScheduleExtras(id, body, route, user) {
       JSON.stringify(limit.colleges),
       limit.alumniOk ? 1 : 0,
       limit.oversub ? 1 : 0,
+      joinCode,
       id
     );
 }
@@ -1436,6 +1440,7 @@ router.post("/enroll", authUser, (req, res) => {
       wantGender,
       wantSchool,
       comboNote,
+      joinCode,
     } = req.body || {};
     const data = enrollUser({
       userId: req.userId,
@@ -1457,6 +1462,7 @@ router.post("/enroll", authUser, (req, res) => {
       joinMode,
       supplies,
       comboWant: comboWant || { wantGender, wantSchool, note: comboNote },
+      joinCode: joinCode || req.query.joinCode || req.query.code,
     });
     res.json({ ok: true, data });
   } catch (e) {

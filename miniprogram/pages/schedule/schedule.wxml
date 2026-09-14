@@ -8,6 +8,7 @@
   <view class="pad">
     <view class="title">
       <text class="offer-chip inline" wx:if="{{s.offerLabel}}" style="background:{{s.offerColor}}">{{s.offerLabel}}</text>
+      <text class="offer-chip inline" wx:if="{{s.private}}" style="background:#4c1d95">{{s.privateLabel || '加密团'}}</text>
       {{s.route.title}}
     </view>
     <view class="tag">{{statusTag}}</view>
@@ -59,6 +60,10 @@
     <view class="muted" wx:if="{{s.guaranteed && !isActivity}}" style="color:#2d6a4f">已成团 · 铁定出发</view>
     <view class="trust-row">
       <view class="trust-chip" wx:for="{{trusts}}" wx:key="*this">{{item}}</view>
+    </view>
+    <view class="ticket-card posted" wx:if="{{s.joinCode}}">
+      <view class="title">入团口令 {{s.joinCode}}</view>
+      <view class="muted">把这串口令发给要来的人。列表上会显示「加密团」，没有口令不能报名。</view>
     </view>
     <view class="ticket-card {{ticket.kind=='waitlist'?'wait':(ticket.kind=='posted'?'posted':'')}}" wx:if="{{ticket}}">
       <view class="title">{{ticket.title}}</view>

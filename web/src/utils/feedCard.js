@@ -39,9 +39,12 @@ export function coverOf(row) {
 }
 
 export function taglineOf(row) {
+  const lock = row?.private ? row.privateLabel || "加密团" : "";
   const tags = (row?.playTags || []).map((t) => t.name || t).filter(Boolean);
-  if (tags.length) return tags.slice(0, 3).join(" · ");
-  return row?.route?.subtitle || [row?.eligibility?.label, row?.oversub?.label].filter(Boolean).join(" · ") || "";
+  const rest = tags.length
+    ? tags.slice(0, 3).join(" · ")
+    : row?.route?.subtitle || [row?.eligibility?.label, row?.oversub?.label].filter(Boolean).join(" · ") || "";
+  return [lock, rest].filter(Boolean).join(" · ");
 }
 
 export function isFreeOffer(row) {

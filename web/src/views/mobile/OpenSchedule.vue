@@ -39,6 +39,9 @@
     <label class="check-row"><input type="checkbox" v-model="form.oversub" /> 报超会抽（车位不够才抽）</label>
     <p v-if="form.organizerType === 'campus' && form.offerType === 'free'" class="muted">高校免费团会默认打开抽签：先报名待确认，人数超过座位才抽签。</p>
     <CampusAudienceFields v-model="form" :profile="store.profile" />
+    <label class="check-row"><input type="checkbox" v-model="form.privateJoin" /> 加密团（报名要口令）</label>
+    <p class="muted">列表会显示「加密团」。把口令发给要来的人；不填则自动生成 6 位。</p>
+    <input v-if="form.privateJoin" class="input" v-model="form.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" />
     <label>想怎么玩</label>
     <div class="chips">
       <div class="play-tag" v-for="t in tags" :key="t.id" :style="{ background: t.color, opacity: form.playTagIds.includes(t.id) ? 1 : 0.4 }" @click="toggleTag(t.id)">{{ t.name }}</div>
@@ -84,6 +87,8 @@ const form = ref({
   campusCollege: store.profile?.college || "",
   schools: "",
   colleges: "",
+  privateJoin: false,
+  joinCode: "",
 });
 
 watch(

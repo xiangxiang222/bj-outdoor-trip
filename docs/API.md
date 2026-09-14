@@ -30,10 +30,10 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | GET | `/guides/recruit` | 推荐领队文案与奖励（200 元），登录后带推荐码 |
 | GET | `/guides/:id` | 导游详情、带团次数、近期行程。停用或不存在返回 404 |
 | GET | `/routes` | 上架线路。排除只被同城局引用的线路。Query：`days`（`multi` 表示 4 日及以上）`category` `tag` `city` `difficulty` `q` |
-| GET | `/schedules` | Query：`routeId` `organizerType` `city` `tag` `offerType` `month` `date` `channel=activity\|trip`（不含已解散、待审核）。含满员（`remain=0`），前端列表保留供候补。不含 `virtualEnrolled`。首页传 `channel=trip`，活动 Tab 传 `channel=activity` |
+| GET | `/schedules` | Query：`routeId` `organizerType` `city` `tag` `offerType` `month` `date` `channel=activity\|trip`（不含已解散、待审核）。含满员（`remain=0`），前端列表保留供候补。不含 `virtualEnrolled`。加密团带 `private` `privateLabel`，不含口令。首页传 `channel=trip`，活动 Tab 传 `channel=activity` |
 | GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条）、`videos`（B 站等可嵌播放器）、`refundPolicy`（`source`=`default\|global\|route`，档位、摘要、条目） |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
-| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`photographer`、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友/高校/学院限制、`scope` `colleges`）、`oversub`（报超会抽）、`refundPolicy`（含按该团出发日计算的 `current.percent` / `hint`）。同城局名单不含年龄段展示字段的使用由前端控制 |
+| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`photographer`、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友/高校/学院限制、`scope` `colleges`）、`oversub`（报超会抽）、`refundPolicy`（含按该团出发日计算的 `current.percent` / `hint`）、加密团 `private` `privateLabel` `joinCodeRequired`。`joinCode` 只给发起人、已报名、后台、本团导游。同城局名单不含年龄段展示字段的使用由前端控制 |
 | GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
 | POST | `/schedules/:id/seats/pick` | 已报名用户改座 |
 | POST | `/schedules/:id/leaders/apply` | 报名领队（最多两位）。须已通过领队申请，否则 403 `need_leader_apply` / `leader_pending` |
@@ -84,8 +84,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 
 | 方法 | 路径 | 鉴权 | 说明 |
 | --- | --- | --- | --- |
-| POST | `/schedules` | 用户 | 基于已有线路开团。`organizerType` 为 `individual` / `company` / `campus`。公司须 `companyName`，高校须学校名（`companyName` 或 `campusName`）。可带 `offerType` `playTagIds` `studentOnly` `alumniOk` `oversub` `schools` `colleges` `campusScope`（`open\|certified\|college\|school\|colleges\|schools`）`campusSchool` `campusCollege` `lotteryMode`（`off\|pre\|enroll\|both`） |
-| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `schools` `colleges` `campusScope` `comboRule` `lotteryMode`、`videos`/`videoUrls`（B 站等视频链接）。提交后 `review_status=pending`，审核通过才上首页或活动 Tab |
+| POST | `/schedules` | 用户 | 基于已有线路开团。`organizerType` 为 `individual` / `company` / `campus`。公司须 `companyName`，高校须学校名（`companyName` 或 `campusName`）。可带 `offerType` `playTagIds` `studentOnly` `alumniOk` `oversub` `schools` `colleges` `campusScope`（`open\|certified\|college\|school\|colleges\|schools`）`campusSchool` `campusCollege` `lotteryMode`（`off\|pre\|enroll\|both`）、`privateJoin` `joinCode`（加密团口令，4～16 字；勾选加密且口令为空则自动生成 6 位） |
+| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `schools` `colleges` `campusScope` `comboRule` `lotteryMode`、`videos`/`videoUrls`（B 站等视频链接）、`privateJoin` `joinCode`。提交后 `review_status=pending`，审核通过才上首页或活动 Tab |
 | POST | `/upload` | 用户 | 发团封面、学生证。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
 | PUT | `/schedules/:id/limit` | 用户 | 仅发起人，只扩不缩。`addSchools` `addColleges` `openAllColleges`。不能把「不限学校」收成指定高校，也不能把「本校各学院」收成指定学院 |
@@ -138,7 +138,8 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
   "emergencyPhone": "13700000002",
   "waiverAccepted": true,
   "healthOk": true,
-  "joinMode": "chain"
+  "joinMode": "chain",
+  "joinCode": "长城口令"
 }
 ```
 
@@ -146,9 +147,9 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 
 **同城局**（`schedules.channel=activity`）：不校验身份证、紧急联系人与弃权书；同一用户对同一局未取消的报名不可重复（400「你已报名本局」）。候补文案为「本局已满」。免费成功文案「已报名，到场即可」。同城局不走报超会抽。
 
-已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序（抽签团按 `draw_rank`）自动递补。报超会抽且名单未确认时 `status=applied`，不占座。当前实现报名时 `points_used=0`，不读取抵现开关。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds`。`joinMode` 可为 `assistant` / `photographer`（免个人团费，保险另计；摄影师每团一位）。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补/`applied` `held`，占座成功才 `used`。
+已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序（抽签团按 `draw_rank`）自动递补。报超会抽且名单未确认时 `status=applied`，不占座。当前实现报名时 `points_used=0`，不读取抵现开关。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds` `joinCode`（加密团必填，忽略大小写；也可走 query `code`/`joinCode`）。发起人报名可免填。`joinMode` 可为 `assistant` / `photographer`（免个人团费，保险另计；摄影师每团一位）。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补/`applied` `held`，占座成功才 `used`。
 
-排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`、`channel`、`oversub`、`photographer`、`refundPolicy`；名单项含 `waitlisted`、`applied`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位；报超待确认时不选座。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`，已付款按档位返回 `refundPercent` `refundAmount`。前端有 `myEnrollment` 时不再展示报名按钮。
+排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`、`channel`、`oversub`、`photographer`、`refundPolicy`、加密团 `private` / `joinCodeRequired`；名单项含 `waitlisted`、`applied`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位；报超待确认时不选座。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`，已付款按档位返回 `refundPercent` `refundAmount`。前端有 `myEnrollment` 时不再展示报名按钮。
 
 报名成功示例：
 
@@ -195,9 +196,9 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 | POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` `videos`（视频链接数组）、`refundUseGlobal`（默认 true）、`refundTiers` |
 | PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换；`videos` 为视频链接数组（省略则保留原值）；`refundUseGlobal`/`refundTiers` 省略则保留原退费设置 |
 | DELETE | `/admin/routes/:id` | 下架 |
-| POST | `/admin/schedules` | 后台发布排期。可选 `virtualCount` 发布后从虚拟用户池抽人占座；`lotteryMode` 非 off 时挂上默认 4 奖转盘。`organizerType=campus` 且 `offerType=free` 时默认打开报超会抽、仅师生，并用学校名作为限定高校。可带 `colleges` |
+| POST | `/admin/schedules` | 后台发布排期。可选 `virtualCount` 发布后从虚拟用户池抽人占座；`lotteryMode` 非 off 时挂上默认 4 奖转盘。`organizerType=campus` 且 `offerType=free` 时默认打开报超会抽、仅师生，并用学校名作为限定高校。可带 `colleges`、`privateJoin` `joinCode` |
 | POST | `/admin/schedules/:id/review` | 用户发团审核。`status=approved|rejected` |
-| GET | `/admin/schedules` | 含成本、收入、利润、导游、`startedAt` |
+| GET | `/admin/schedules` | 含成本、收入、利润、导游、`startedAt`。后台可见加密团口令 |
 | POST | `/admin/schedules/:id/start` | 现场权限。正式开团 |
 | GET | `/admin/schedules/:id/checkin` | 现场权限。开团状态、签到点、本轮名单 |
 | POST | `/admin/schedules/:id/checkins` | 现场权限。发起一轮签到，body 同导游端 |

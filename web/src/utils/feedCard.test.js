@@ -22,6 +22,7 @@ describe("feedCard", () => {
     expect(coverOf({ route: { cover: "/a.jpg" } })).toBe("/a.jpg");
     expect(coverOf({ gallery: [{ thumb: "/t.jpg" }] })).toBe("/t.jpg");
     expect(taglineOf({ playTags: [{ name: "徒步" }, { name: "摄影" }] })).toBe("徒步 · 摄影");
+    expect(taglineOf({ private: true, privateLabel: "加密团", playTags: [{ name: "徒步" }] })).toBe("加密团 · 徒步");
     expect(isFreeOffer({ offerType: "free", quote: { originPrice: 99 } })).toBe(true);
     expect(isFreeOffer({ quote: { originPrice: 0 } })).toBe(true);
     expect(isFreeOffer({ quote: { originPrice: 199 } })).toBe(false);
