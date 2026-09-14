@@ -35,6 +35,8 @@
 <input wx:if="{{form.campusScope=='schools'}}" class="input" placeholder="开放学校，逗号分隔" value="{{form.schools}}" bindinput="setSchools" />
 <input wx:if="{{form.campusScope=='schools'}}" class="input" placeholder="限定学院可空" value="{{form.colleges}}" bindinput="setColleges" />
 <view class="pad" bindtap="toggleAlumniOk">{{form.alumniOk ? '☑' : '☐'}} 允许已认证校友</view>
+<view class="pad" bindtap="togglePrivateJoin">{{form.privateJoin ? '☑' : '☐'}} 加密团（报名要口令）</view>
+<input wx:if="{{form.privateJoin}}" class="input" placeholder="入团口令 4～16 字，可空则自动生成" value="{{form.joinCode}}" bindinput="setJoinCode" maxlength="16" />
 
 <view class="label">大巴车型</view>
 <picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">

@@ -10,6 +10,12 @@ describe("scanFacts", () => {
   it("shows pay / cancel / insurance chips", () => {
     expect(trustChips({ channel: "trip" })).toEqual(["先报名后付款", "出发日前可取消", "山野可加购意外险"]);
     expect(trustChips({ channel: "activity" })).toEqual(["先报名后付款", "出发日前可取消", "到场找发起人"]);
+    expect(trustChips({ channel: "trip", private: true, privateLabel: "加密团" })).toEqual([
+      "先报名后付款",
+      "出发日前可取消",
+      "加密团",
+      "山野可加购意外险",
+    ]);
   });
 
   it("builds dock price and enroll CTA", () => {

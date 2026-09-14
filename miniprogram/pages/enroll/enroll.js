@@ -12,7 +12,7 @@ Page({
     idOk: false,
     isActivity: false,
     isFree: false,
-    form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", joinMode: "chain", seatNo: "", insuranceCode: "outdoor", emergencyName: "", emergencyPhone: "", waiverAccepted: false, healthOk: false, wantGender: "any", wantSchool: "", comboNote: "" },
+    form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", joinMode: "chain", seatNo: "", insuranceCode: "outdoor", emergencyName: "", emergencyPhone: "", waiverAccepted: false, healthOk: false, wantGender: "any", wantSchool: "", comboNote: "", joinCode: "" },
     genderLabels: ["不限", "女生", "男生"],
     genderKeys: ["any", "female", "male"],
     genderIndex: 0,
@@ -24,7 +24,10 @@ Page({
   },
   onLoad(q) {
     if (!app.globalData.token) {
-      wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/enroll/enroll?id=" + q.id + (q.coupon ? "&coupon=" + q.coupon : "")) });
+      const back = "/pages/enroll/enroll?id=" + q.id
+        + (q.coupon ? "&coupon=" + encodeURIComponent(q.coupon) : "")
+        + (q.joinCode || q.code ? "&joinCode=" + encodeURIComponent(q.joinCode || q.code) : "");
+      wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(back) });
       return;
     }
     this.setData({
@@ -34,6 +37,7 @@ Page({
       "form.travelerName": (app.globalData.user || {}).nickname || "",
       "form.travelerPhone": (app.globalData.user || {}).phone || "",
       "form.joinMode": q.joinMode === "photographer" || q.joinMode === "assistant" ? q.joinMode : "chain",
+      "form.joinCode": q.code || q.joinCode || "",
     });
     request("/schedules/" + q.id).then((r) => {
       const s = r.data;
@@ -96,6 +100,7 @@ Page({
   },
   setName(e) { this.setData({ "form.travelerName": e.detail.value }); },
   setPhone(e) { this.setData({ "form.travelerPhone": e.detail.value }); },
+  setJoinCode(e) { this.setData({ "form.joinCode": e.detail.value }); },
   setEmergencyName(e) { this.setData({ "form.emergencyName": e.detail.value }); },
   setEmergencyPhone(e) { this.setData({ "form.emergencyPhone": e.detail.value }); },
   toggleHealth() { this.setData({ "form.healthOk": !this.data.form.healthOk }); },
@@ -143,6 +148,10 @@ Page({
       wx.showToast({ title: "请填写姓名和手机", icon: "none" });
       return;
     }
+    if (this.data.s && this.data.s.joinCodeRequired && !this.data.s.joinCode && !String(this.data.form.joinCode || "").trim()) {
+      wx.showToast({ title: "请填写入团口令", icon: "none" });
+      return;
+    }
     if (this.data.isActivity) {
       if (!/^1\d{10}$/.test(String(this.data.form.travelerPhone))) {
         wx.showToast({ title: "手机号不正确", icon: "none" });
@@ -177,10 +186,12 @@ Page({
             scheduleId: Number(this.data.id),
             travelerName: this.data.form.travelerName,
             travelerPhone: this.data.form.travelerPhone,
+            joinCode: this.data.form.joinCode || (this.data.s && this.data.s.joinCode) || "",
           }
         : {
             scheduleId: Number(this.data.id),
             ...this.data.form,
+            joinCode: this.data.form.joinCode || (this.data.s && this.data.s.joinCode) || "",
             idCard: this.checkId().idCard,
             referrerCode: this.data.ref,
             couponCode: this.data.coupon || undefined,

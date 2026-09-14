@@ -31,6 +31,9 @@
       <el-table-column label="报名限制" width="140">
         <template #default="{ row }">{{ [row.eligibility?.label, row.oversub?.enabled ? row.oversub.label : ""].filter(Boolean).join(" · ") || "—" }}</template>
       </el-table-column>
+      <el-table-column label="加密" width="120">
+        <template #default="{ row }">{{ row.private ? row.joinCode || row.privateLabel || "加密团" : "—" }}</template>
+      </el-table-column>
       <el-table-column label="人数" width="130">
         <template #default="{ row }">
           {{ row.enrolled }}/{{ row.maxSeats }}
@@ -150,6 +153,12 @@
         <el-form-item label="报超会抽">
           <el-switch v-model="neu.oversub" />
           <span v-if="neu.organizerType === 'campus' && neu.offerType === 'free'" class="muted" style="margin-left:8px">高校免费团默认开启：先报名待确认，超过座位才抽签</span>
+        </el-form-item>
+        <el-form-item label="加密团">
+          <el-switch v-model="neu.privateJoin" />
+        </el-form-item>
+        <el-form-item v-if="neu.privateJoin" label="入团口令">
+          <el-input v-model="neu.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" />
         </el-form-item>
         <el-form-item label="限定高校">
           <el-input v-model="neu.schools" placeholder="逗号分隔，如 北京大学,清华大学" />
@@ -409,6 +418,8 @@ const neu = ref({
   studentOnly: false,
   alumniOk: false,
   oversub: false,
+  privateJoin: false,
+  joinCode: "",
   schools: "",
   colleges: "",
   virtualCount: 0,

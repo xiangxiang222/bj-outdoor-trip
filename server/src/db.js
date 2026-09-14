@@ -467,6 +467,7 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "oversub", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "schedules", "drawn_at", "TEXT");
   addColumnIfMissing(db, "schedules", "draw_over", "INTEGER");
+  addColumnIfMissing(db, "schedules", "join_code", "TEXT");
   addColumnIfMissing(db, "enrollments", "draw_rank", "INTEGER");
   addColumnIfMissing(db, "enrollments", "combo_json", "TEXT");
   addColumnIfMissing(db, "enrollments", "supplies_json", "TEXT");

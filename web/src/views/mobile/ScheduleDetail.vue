@@ -17,6 +17,7 @@
         <div class="row">
           <strong>
             <span v-if="s.offerLabel" class="offer-chip inline" :style="{ background: s.offerColor }">{{ s.offerLabel }}</span>
+            <span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">{{ s.privateLabel || "加密团" }}</span>
             {{ s.route.title }}
           </strong>
           <span class="tag">{{ statusTag }}</span>
@@ -64,6 +65,10 @@
           <p v-if="s.guaranteed && !isActivity" class="muted" style="color:var(--leaf)">已成团 · 铁定出发（人数已达最低成团线）</p>
           <div class="trust-row">
             <span class="trust-chip" v-for="c in trusts" :key="c">{{ c }}</span>
+          </div>
+          <div v-if="s.joinCode" class="ticket-card posted">
+            <strong>入团口令 {{ s.joinCode }}</strong>
+            <p class="muted" style="margin:6px 0 0">把这串口令发给要来的人。列表上会显示「加密团」，没有口令不能报名。</p>
           </div>
           <div v-if="ticket" class="ticket-card" :class="{ wait: ticket.kind === 'waitlist', posted: ticket.kind === 'posted' }">
             <strong>{{ ticket.title }}</strong>
@@ -495,6 +500,8 @@ const enrollHref = computed(() => {
   const q = new URLSearchParams();
   if (route.query.ref) q.set("ref", String(route.query.ref));
   if (route.query.coupon) q.set("coupon", String(route.query.coupon));
+  const code = route.query.joinCode || route.query.code;
+  if (code) q.set("joinCode", String(code));
   const s = q.toString();
   return "/m/enroll/" + (route.params.id || "") + (s ? "?" + s : "");
 });
@@ -502,6 +509,8 @@ const photoEnrollHref = computed(() => {
   const q = new URLSearchParams();
   if (route.query.ref) q.set("ref", String(route.query.ref));
   if (route.query.coupon) q.set("coupon", String(route.query.coupon));
+  const code = route.query.joinCode || route.query.code;
+  if (code) q.set("joinCode", String(code));
   q.set("joinMode", "photographer");
   return "/m/enroll/" + (route.params.id || "") + "?" + q.toString();
 });
@@ -825,7 +834,7 @@ function closeShare() {
 }
 
 async function share() {
-  const url = scheduleShareUrl(location.origin, s.value.id, s.value.shareToken);
+  const url = scheduleShareUrl(location.origin, s.value.id, s.value.shareToken, s.value.joinCode);
   shareUrl.value = url;
   shareText.value = scheduleShareText({
     organizerName: s.value.organizerName,
@@ -833,6 +842,7 @@ async function share() {
     startDate: s.value.startDate,
     enrolled: s.value.enrolled,
     url,
+    joinCode: s.value.joinCode,
   });
   shareQr.value = "";
   shareHint.value = "";

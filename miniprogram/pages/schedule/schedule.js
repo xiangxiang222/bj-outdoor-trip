@@ -57,11 +57,19 @@ Page({
     statusTag: "",
     posted: "",
     joinedHint: "",
+    inboundJoinCode: "",
     leaderSlots: [{ slot: 1, label: "领队1", leader: null }, { slot: 2, label: "领队2", leader: null }],
   },
   onLoad(q) {
     const tab = ["trip", "route", "rules"].includes(q.tab) ? q.tab : "trip";
-    this.setData({ id: q.id, coupon: q.coupon || "", posted: q.posted || "", joinedHint: q.joined || "", tab });
+    this.setData({
+      id: q.id,
+      coupon: q.coupon || "",
+      posted: q.posted || "",
+      joinedHint: q.joined || "",
+      inboundJoinCode: q.joinCode || q.code || "",
+      tab,
+    });
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
   },
   onShow() { this.load(); },
@@ -297,7 +305,9 @@ Page({
   },
   applyPhotographer() {
     const back = "/pages/schedule/schedule?id=" + this.data.id;
-    const enroll = "/pages/enroll/enroll?id=" + this.data.id + "&joinMode=photographer";
+    let enroll = "/pages/enroll/enroll?id=" + this.data.id + "&joinMode=photographer";
+    const photoCode = (this.data.s && this.data.s.joinCode) || this.data.inboundJoinCode;
+    if (photoCode) enroll += "&joinCode=" + encodeURIComponent(photoCode);
     if (!app.globalData.token) {
       wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(back) });
       return;
@@ -348,7 +358,9 @@ Page({
   },
   enroll() {
     let url = "/pages/enroll/enroll?id=" + this.data.id;
-    if (this.data.coupon) url += "&coupon=" + this.data.coupon;
+    if (this.data.coupon) url += "&coupon=" + encodeURIComponent(this.data.coupon);
+    const code = (this.data.s && this.data.s.joinCode) || this.data.inboundJoinCode;
+    if (code) url += "&joinCode=" + encodeURIComponent(code);
     wx.navigateTo({ url });
   },
   goCoupon() {
@@ -407,9 +419,11 @@ Page({
     const title = s && s.route
       ? (s.organizerName || "同行者众") + "邀请你报名「" + s.route.title + "」"
       : "同行者众 · 一起出发";
+    let path = "/pages/schedule/schedule?id=" + this.data.id;
+    if (s && s.joinCode) path += "&joinCode=" + encodeURIComponent(s.joinCode);
     return {
       title,
-      path: "/pages/schedule/schedule?id=" + this.data.id,
+      path,
       imageUrl: shareCover(s && s.route && s.route.cover),
     };
   },

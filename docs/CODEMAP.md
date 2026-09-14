@@ -58,7 +58,8 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 
 | 文件 | 职责 |
 | --- | --- |
-| `enroll.js` | 报名。`channel=activity` 只校验姓名+手机，按 `user_id` 去重；山野团要身份证/紧急联系人/弃权 |
+| `enroll.js` | 报名。`channel=activity` 只校验姓名+手机，按 `user_id` 去重；山野团要身份证/紧急联系人/弃权。加密团校验入团口令 |
+| `joinCode.js` | 加密团口令：规范化、自动生成 6 位、比对忽略大小写、详情页按身份决定是否返回口令 |
 | `home.js` | 首页轮播、城市、节日、玩法标签；同城局线路不进景点轮播 |
 | `biz.js` | 阶梯价、会员价、积分抵现、排期状态、姓名脱敏 |
 | `offer.js` | 特价类型；学生价 = 原价 × `config.student.discountRate`（0.9） |

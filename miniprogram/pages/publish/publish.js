@@ -86,6 +86,8 @@ Page({
       schools: "",
       colleges: "",
       lotteryMode: "off",
+      privateJoin: false,
+      joinCode: "",
     },
   },
   onLoad(q) {
@@ -190,6 +192,9 @@ Page({
   },
   toggleOversub() {
     this.setData({ "form.oversub": !this.data.form.oversub });
+  },
+  togglePrivateJoin() {
+    this.setData({ "form.privateJoin": !this.data.form.privateJoin });
   },
   setDate(e) {
     const i = Number(e.detail.value);

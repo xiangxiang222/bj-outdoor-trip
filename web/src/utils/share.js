@@ -8,12 +8,19 @@ export function nativeShareSupported(nav) {
   return true;
 }
 
-export function scheduleShareUrl(origin, id, token) {
+export function scheduleShareUrl(origin, id, token, joinCode) {
   const base = `${String(origin || "").replace(/\/$/, "")}/m/schedule/${id}`;
+  const q = new URLSearchParams();
   const t = String(token || "").trim();
-  return t ? `${base}?token=${encodeURIComponent(t)}` : base;
+  if (t) q.set("token", t);
+  const code = String(joinCode || "").trim();
+  if (code) q.set("joinCode", code);
+  const qs = q.toString();
+  return qs ? `${base}?${qs}` : base;
 }
 
-export function scheduleShareText({ organizerName, title, startDate, enrolled, url }) {
-  return `${organizerName || "同行者众"}邀请你参加「${title || "行程"}」${startDate || ""}出发，已有${enrolled || 0}人报名：${url}`;
+export function scheduleShareText({ organizerName, title, startDate, enrolled, url, joinCode }) {
+  const code = String(joinCode || "").trim();
+  const lock = code ? ` 入团口令 ${code}` : "";
+  return `${organizerName || "同行者众"}邀请你参加「${title || "行程"}」${startDate || ""}出发，已有${enrolled || 0}人报名：${url}${lock}`;
 }

@@ -6,6 +6,7 @@
     <view class="row">
       <view>
         <text class="offer-chip inline" style="background:{{item.offerColor}}">{{item.offerLabel}}</text>
+        <text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{item.privateLabel || '加密团'}}</text>
         <text class="title">{{item.route.title}}</text>
       </view>
       <text class="tag">{{item.startDate}}</text>

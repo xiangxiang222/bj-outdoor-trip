@@ -12,6 +12,7 @@
         <div class="row">
           <strong>
             <span class="offer-chip inline" :style="{ background: s.offerColor }">{{ s.offerLabel }}</span>
+            <span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">{{ s.privateLabel || "加密团" }}</span>
             <span v-if="s.eligibility?.label" class="offer-chip inline" style="background:#1d4e89">{{ s.eligibility.label }}</span>
             <span v-if="s.oversub?.label" class="offer-chip inline" style="background:#9a3412">{{ s.oversub.label }}</span>
             {{ s.route.title }}

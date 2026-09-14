@@ -20,7 +20,13 @@
         {{ s.eligibility.reason }}
         <router-link to="/m/student">去校园认证</router-link>
       </p>
+      <p v-if="s.private" class="muted">这是加密团，报名需要发起人给的口令。</p>
     </div></div>
+
+    <template v-if="s.joinCodeRequired && !s.joinCode">
+      <label>入团口令</label>
+      <input class="input" v-model="form.joinCode" maxlength="16" placeholder="向发起人要 4～16 个字的口令" />
+    </template>
 
     <label>{{ isActivity ? "怎么称呼" : "出行人姓名" }}</label>
     <input class="input" v-model="form.travelerName" :placeholder="isActivity ? '群里好认就行' : '与身份证一致'" />
@@ -192,6 +198,7 @@ const form = ref({
   wantGender: "any",
   wantSchool: "",
   comboNote: "",
+  joinCode: "",
 });
 const fallbackOptions = ref([]);
 const waiver = ref("");
@@ -239,6 +246,9 @@ onMounted(async () => {
     form.value.joinMode = String(route.query.joinMode);
   }
   couponCode.value = String(route.query.coupon || "");
+  if (route.query.code || route.query.joinCode) {
+    form.value.joinCode = String(route.query.code || route.query.joinCode);
+  }
   if (couponCode.value) {
     try {
       const c = (await http.get("/coupons/" + couponCode.value)).data;
@@ -307,6 +317,10 @@ async function submit() {
     err.value = "请填写出行人姓名和手机";
     return;
   }
+  if (s.value.joinCodeRequired && !s.value.joinCode && !String(form.value.joinCode || "").trim()) {
+    err.value = "这是加密团，请填写入团口令";
+    return;
+  }
   if (isActivity.value) {
     if (!/^1\d{10}$/.test(String(form.value.travelerPhone))) {
       err.value = "手机号不正确";
@@ -342,10 +356,12 @@ async function submit() {
           scheduleId: Number(route.params.id),
           travelerName: form.value.travelerName,
           travelerPhone: form.value.travelerPhone,
+          joinCode: form.value.joinCode || s.value.joinCode,
         }
       : {
           scheduleId: Number(route.params.id),
           ...form.value,
+          joinCode: form.value.joinCode || s.value.joinCode,
           seatNo: form.value.seatNo || undefined,
           referrerCode: route.query.ref,
           couponCode: couponCode.value || undefined,

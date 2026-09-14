@@ -116,6 +116,7 @@ User 1──n Favorite / PointsLedger / Review
 | `status` | `recruiting` 招募 / `confirmed` 已成团 / `cancelled` 已解散；满员与结束可由人数与日期推导 |
 | `review_status` | 用户发团 `pending` → 后台 `approved` / `rejected` |
 | `offer_type` | 如 `full` / `free` / 各类特价 |
+| `join_code` | 入团口令。有值即为加密团；列表展示「加密团」，报名须对上口令（忽略大小写）。口令只返回给发起人、已报名、后台、本团导游 |
 | `cancel_reason` 等 | 解散理由、时间、操作者类型与 id |
 | 成本六项 | 大巴、门票、住宿、餐食、导游、其他；利润 = 已收 `pay_amount` 合计 − 成本合计 |
 
@@ -132,7 +133,8 @@ User 1──n Favorite / PointsLedger / Review
 
 - 必须填写出行人姓名、手机。
 - **山野团**另须 **18 位身份证**（校验出生日期与校验码；用于性别/生日/籍贯统计；禁止同团重复有效证件）、紧急联系人（11 位手机，且不能与出行人相同），并确认健康声明与户外风险告知。可选座位、保险、补给。
-- **同城局**只校验姓名与 11 位手机，按 `user_id` 去重（「你已报名本局」），不写身份证、紧急联系人与弃权时间。成功文案「已报名，到场即可」（免费时）；满员候补「本局已满」，不再说「本车」。
+- 发团勾选加密或填写 `joinCode` 后写入 `schedules.join_code`。公开接口只暴露 `private` / `privateLabel` / `joinCodeRequired`，不把口令给路人。`POST /enroll` 须带正确 `joinCode`（发起人免填）。
+- **同城局**只校验姓名与 11 位手机，按 `user_id` 去重（「你已报名本局」），不写身份证、紧急联系人与弃权时间。成功文案「已报名，到场即可」（免费时）；满员候补「本局已满」，不再说「本车」。加密局同样要口令。
 - 个人拼团 / 高校团：`pay_status=unpaid`（应付 > 0）或 `paid`（0 元），占座，`needPay=false`，报名时不生成预支付单
 - 公司团：`pay_status=company_pending`，金额暂记 0，由开团公司或后台结算
 - `status`：`joined` / `applied`（报超会抽待确认） / `waitlist` / `cancelled`。候补与 `applied` 不占座；有人取消后按报名顺序（抽签团按 `draw_rank`）递补

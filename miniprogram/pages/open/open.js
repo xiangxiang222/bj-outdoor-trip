@@ -82,6 +82,8 @@ Page({
       schools: "",
       colleges: "",
       alumniOk: false,
+      privateJoin: false,
+      joinCode: "",
     },
   },
   onLoad(q) {
@@ -190,6 +192,12 @@ Page({
   },
   toggleAlumniOk() {
     this.setData({ "form.alumniOk": !this.data.form.alumniOk });
+  },
+  togglePrivateJoin() {
+    this.setData({ "form.privateJoin": !this.data.form.privateJoin });
+  },
+  setJoinCode(e) {
+    this.setData({ "form.joinCode": e.detail.value });
   },
   async submit() {
     const form = this.data.form;
