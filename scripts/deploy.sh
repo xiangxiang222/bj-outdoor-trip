@@ -5,10 +5,20 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-HOST="${DEPLOY_HOST:-140.143.171.77}"
+DEFAULT_HOST="140.143.171.77"
+RETIRED_HOST="192.144.167.212"
+HOST="${DEPLOY_HOST:-$DEFAULT_HOST}"
+# Actions 的 deploy.yml 仍可能 export 已下线 IP（改 workflow 需要额外授权）。
+if [ "$HOST" = "$RETIRED_HOST" ]; then
+  echo "==> 忽略已下线主机 $RETIRED_HOST，改连 $DEFAULT_HOST"
+  HOST="$DEFAULT_HOST"
+fi
 USER="${DEPLOY_USER:-ubuntu}"
 DIR="${DEPLOY_DIR:-/var/www/beiyexing}"
 KEY="${DEPLOY_SSH_KEY:-$HOME/.ssh/id_ed25519}"
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+ssh-keyscan -H "$HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null || true
 SSH=(ssh -i "$KEY" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=10 "$USER@$HOST")
 RSYNC_SSH="ssh -i $KEY -o IdentitiesOnly=yes -o BatchMode=yes"
 
