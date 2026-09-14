@@ -65,7 +65,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `biz.js` | 阶梯价、会员价、积分抵现、排期状态、姓名脱敏 |
 | `offer.js` | 特价类型；学生价 = 原价 × `config.student.discountRate`（0.9） |
 | `eligibility.js` | 仅学生 / 指定高校 |
-| `campuses.js` | 北京高校/学院/专业名录检索与分页 |
+| `campuses.js` | 北京高校名录：学校→学院→专业一对多检索与分页 |
 | `video.js` | 线路视频链接：B 站 BV/av 转播放器、YouTube、mp4、其它外链 |
 | `combo.js` | 组合团另一半条件 |
 | `coupons.js` | 公开/会员/定向/通用/免费券，指定必领与用户搜索分页发放，高校名单筛选与按校发放，领取后限时，按出行记录定向与随机发放，核销与退回 |
@@ -105,7 +105,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `/m/orders` | Orders | 下一趟 + 待出行/候补/历史 |
 | `/m/mine` | Mine | WeUI 分组：出行 / 权益 / 服务 |
 | `/m/official` | Official | 客服与规则；`/m/rules` 重定向到 `#rules` |
-| `/m/student` | Student | 学校/学院/专业可选（北京名录搜索分页），学号、学生证，待后台审核 |
+| `/m/student` | Student | 学校/学院/专业可选（先学校再该校学院再该院专业），学号、学生证，待后台审核 |
 | `/m/group` | Group | 团体认证 |
 | `/m/schedule/:id` | ScheduleDetail | 山野团：座位/保险/画像；同城局：时间地点人数 |
 | `/m/enroll/:id` | Enroll | 同城局姓名+手机；山野团实名 |

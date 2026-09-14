@@ -89,6 +89,10 @@ Page({
   },
   pickCollege() {
     if (this.data.certified) return;
+    if (!this.data.school) {
+      wx.showToast({ title: "请先选择学校", icon: "none" });
+      return;
+    }
     openCampusPick({
       kind: "college",
       school: this.data.school,
@@ -99,6 +103,10 @@ Page({
   },
   pickMajor() {
     if (this.data.certified) return;
+    if (!this.data.college) {
+      wx.showToast({ title: "请先选择学院", icon: "none" });
+      return;
+    }
     openCampusPick({
       kind: "major",
       school: this.data.school,

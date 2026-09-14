@@ -41,6 +41,31 @@ describe("beijing campus catalog", () => {
     assert.ok(majors.total >= 1);
   });
 
+  it("keeps school → college → major as one-to-many cascades", () => {
+    const noSchool = queryCampuses({ kind: "college" });
+    assert.equal(noSchool.total, 0);
+    assert.equal(noSchool.list.length, 0);
+    const typed = queryCampuses({ kind: "college", q: "未来学院" });
+    assert.equal(typed.total, 0);
+    assert.equal(typed.custom, "未来学院");
+
+    const mixed = queryCampuses({ kind: "college", school: "北京大学，清华大学", q: "元培" });
+    assert.ok(mixed.list.some((row) => row.name === "元培学院"));
+    const wudaokou = queryCampuses({ kind: "college", school: "北京大学，清华大学", q: "五道口" });
+    assert.ok(wudaokou.list.some((row) => row.name === "五道口金融学院"));
+    const police = queryCampuses({ kind: "college", school: "北京大学，清华大学", q: "侦查" });
+    assert.equal(police.total, 0);
+
+    const noCollege = queryCampuses({ kind: "major", school: "北京大学" });
+    assert.equal(noCollege.total, 0);
+
+    const cs = queryCampuses({ kind: "major", school: "北京大学", college: "计算机学院" });
+    assert.ok(cs.list.some((row) => row.name === "计算机科学与技术"));
+    const art = queryCampuses({ kind: "major", school: "清华大学", college: "美术学院", pageSize: 20 });
+    assert.ok(art.list.some((row) => row.name === "美术学" || row.name === "绘画"));
+    assert.ok(!art.list.some((row) => row.name === "计算机科学与技术"));
+  });
+
   it("rejects unknown kinds", () => {
     assert.throws(() => queryCampuses({ kind: "grade" }), /school、college 或 major/);
   });
@@ -58,6 +83,10 @@ describe("GET /campuses and optional campus certification", () => {
     assert.ok(res.body.data.list.some((row) => row.name === "清华大学"));
     const colleges = await agent.get("/api/campuses").query({ kind: "college", school: "清华大学", q: "计算机" }).expect(200);
     assert.ok(colleges.body.data.list.length >= 1);
+    const cascade = await agent.get("/api/campuses").query({ kind: "college", school: "北京大学，清华大学", q: "元培" }).expect(200);
+    assert.ok(cascade.body.data.list.some((row) => row.name === "元培学院"));
+    const needSchool = await agent.get("/api/campuses").query({ kind: "college" }).expect(200);
+    assert.equal(needSchool.body.data.total, 0);
     const bad = await agent.get("/api/campuses?kind=grade").expect(400);
     assert.match(bad.body.message, /school/);
   });

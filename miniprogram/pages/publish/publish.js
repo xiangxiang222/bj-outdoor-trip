@@ -201,10 +201,18 @@ Page({
       kind: "school",
       title: "选择学校",
       selected: this.data.form.campusSchool,
-      onPick: (names) => this.setData({ "form.campusSchool": names[0] || "" }),
+      onPick: (names) => {
+        const patch = { "form.campusSchool": names[0] || "", "form.campusCollege": "" };
+        if (this.data.form.campusScope === "colleges") patch["form.colleges"] = "";
+        this.setData(patch);
+      },
     });
   },
   pickCampusCollege() {
+    if (!this.data.form.campusSchool) {
+      wx.showToast({ title: "请先选择学校", icon: "none" });
+      return;
+    }
     openCampusPick({
       kind: "college",
       school: this.data.form.campusSchool,
@@ -219,13 +227,18 @@ Page({
       multiple: true,
       title: "开放学校",
       selected: this.data.form.schools,
-      onPick: (names) => this.setData({ "form.schools": joinNames(names) }),
+      onPick: (names) => this.setData({ "form.schools": joinNames(names), "form.colleges": "" }),
     });
   },
   pickColleges() {
+    const school = this.data.form.campusScope === "schools" ? this.data.form.schools : this.data.form.campusSchool;
+    if (!String(school || "").trim()) {
+      wx.showToast({ title: "请先选择学校", icon: "none" });
+      return;
+    }
     openCampusPick({
       kind: "college",
-      school: this.data.form.campusSchool,
+      school,
       multiple: true,
       title: "选择学院",
       selected: this.data.form.colleges,

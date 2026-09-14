@@ -3,7 +3,7 @@
 <view class="campus-pick-list">
   <view class="campus-pick-row custom" wx:if="{{custom}}" bindtap="useCustom">使用「{{custom}}」</view>
   <view class="campus-pick-row {{item.on ? 'on' : ''}}" wx:for="{{list}}" wx:key="name" data-name="{{item.name}}" bindtap="toggle">{{item.name}}</view>
-  <view class="pad muted" wx:if="{{!loading && !list.length && !custom}}">没有匹配项</view>
+  <view class="pad muted" wx:if="{{!loading && !list.length && !custom}}">{{emptyHint}}</view>
 </view>
 <view class="campus-pick-foot">
   <view class="btn ghost campus-pick-btn" bindtap="prev" wx:if="{{page > 1}}">上一页</view>

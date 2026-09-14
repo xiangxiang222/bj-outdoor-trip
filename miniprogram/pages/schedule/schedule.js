@@ -5,7 +5,7 @@ const { shareCover } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
 const { dateOf } = require("../../utils/activity-kind");
 const { peopleLine, trustChips, dockPrice, enrollCta, canShowEnroll, ticketState } = require("../../utils/scan-facts");
-const { openCampusPick } = require("../../utils/campus");
+const { openCampusPick, joinNames } = require("../../utils/campus");
 const app = getApp();
 
 function busLine(s) {
@@ -387,7 +387,7 @@ Page({
     const schools = (this.data.s && this.data.s.eligibility && this.data.s.eligibility.schools) || [];
     openCampusPick({
       kind: "college",
-      school: schools[0] || "",
+      school: joinNames(schools),
       title: "开放学院",
       selected: this.data.addCollege,
       onPick: (names) => this.setData({ addCollege: names[0] || "" }),

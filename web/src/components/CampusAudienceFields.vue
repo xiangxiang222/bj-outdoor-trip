@@ -16,17 +16,40 @@
     </template>
     <template v-if="form.campusScope === 'college'">
       <label>学院</label>
-      <CampusNamePicker v-model="form.campusCollege" kind="college" :school="form.campusSchool" title="选择学院" placeholder="可选，搜索学院" />
+      <CampusNamePicker
+        v-model="form.campusCollege"
+        kind="college"
+        :school="form.campusSchool"
+        :disabled="!form.campusSchool"
+        title="选择学院"
+        :placeholder="form.campusSchool ? '可选，搜索该校学院' : '请先选择学校'"
+      />
     </template>
     <template v-if="form.campusScope === 'colleges'">
       <label>开放学院</label>
-      <CampusNamePicker v-model="form.colleges" kind="college" :school="form.campusSchool" multiple title="选择学院" placeholder="可选，搜索后多选" />
+      <CampusNamePicker
+        v-model="form.colleges"
+        kind="college"
+        :school="form.campusSchool"
+        multiple
+        :disabled="!form.campusSchool"
+        title="选择学院"
+        :placeholder="form.campusSchool ? '可选，搜索后多选该校学院' : '请先选择学校'"
+      />
     </template>
     <template v-if="form.campusScope === 'schools'">
       <label>开放学校</label>
       <CampusNamePicker v-model="form.schools" kind="school" multiple title="选择学校" placeholder="可选，搜索后多选" />
       <label>限定学院（可空）</label>
-      <CampusNamePicker v-model="form.colleges" kind="college" multiple title="选择学院" placeholder="可空，填写则各校同名学院可报" />
+      <CampusNamePicker
+        v-model="form.colleges"
+        kind="college"
+        :school="form.schools"
+        multiple
+        :disabled="!form.schools"
+        title="选择学院"
+        :placeholder="form.schools ? '可空，只列出已选学校的学院' : '请先选择开放学校'"
+      />
     </template>
     <p class="muted">{{ hint }}</p>
   </div>
@@ -52,13 +75,28 @@ watch(
     if (scope === "schools" && school && !String(form.value.schools || "").trim()) form.value.schools = school;
   }
 );
+watch(
+  () => form.value.campusSchool,
+  (next, prev) => {
+    if (!prev || next === prev) return;
+    if (form.value.campusScope === "college") form.value.campusCollege = "";
+    if (form.value.campusScope === "colleges") form.value.colleges = "";
+  }
+);
+watch(
+  () => form.value.schools,
+  (next, prev) => {
+    if (!prev || next === prev) return;
+    if (form.value.campusScope === "schools") form.value.colleges = "";
+  }
+);
 
 const hint = computed(() => {
   const scope = form.value.campusScope;
   if (scope === "college") return "先对本学院开放，开团后仍可再开放其他学院或学校。";
   if (scope === "school") return "本校各学院可报。开团后仍可再开放其他学校。";
   if (scope === "colleges") return "本校指定学院可报，开团后可继续加学院或学校。";
-  if (scope === "schools") return "名单内学校可报。学院留空表示这些学校的各学院都能加入。";
+  if (scope === "schools") return "名单内学校可报。学院按这些学校列出，留空表示各学院都能加入。";
   if (scope === "certified") return "已认证师生均可报名，不限学校学院。";
   return "不限制校园范围。高校免费团仍会默认仅本校。";
 });

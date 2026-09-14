@@ -6,6 +6,12 @@ function searchPlaceholder(kind) {
   return "搜索学校";
 }
 
+function emptyHint(kind, school, college) {
+  if (kind === "college" && !String(school || "").trim()) return "请先选择学校，学院按学校列出";
+  if (kind === "major" && !String(college || "").trim()) return "请先选择学院，专业按学院列出";
+  return "没有匹配项";
+}
+
 Page({
   data: {
     kind: "school",
@@ -21,6 +27,7 @@ Page({
     loading: false,
     picked: [],
     searchPlaceholder: "搜索学校",
+    emptyHint: "没有匹配项",
   },
   onLoad() {
     const opts = (getApp().globalData && getApp().globalData.campusPick) || {};
@@ -33,6 +40,7 @@ Page({
       multiple: !!opts.multiple,
       picked: opts.selected || [],
       searchPlaceholder: searchPlaceholder(kind),
+      emptyHint: emptyHint(kind, opts.school || "", opts.college || ""),
     });
     this.load(1);
   },
