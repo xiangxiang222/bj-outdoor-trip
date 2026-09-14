@@ -56,9 +56,9 @@ npm run dev
 
 | 入口 | 地址 |
 | --- | --- |
-| 用户端 | http://192.144.167.212/m |
-| 管理后台 | http://192.144.167.212/admin |
-| 导游端 | http://192.144.167.212/g |
+| 用户端 | http://140.143.171.77/m |
+| 管理后台 | http://140.143.171.77/admin |
+| 导游端 | http://140.143.171.77/g |
 
 Pull Request 会跑 **Unit tests**（`npm run test:coverage`）。给 `main` 配上必过检查 `unit-tests` 后，没绿灯不能合入。合入 `main` 且 UT 通过后才会 **Deploy**。部署发生在 GitHub Actions 上，**不需要 iPhone 能 SSH**。功能分支不会部署。也可在 Actions 里手动 Run workflow，或在能登录服务器的电脑上执行 `./scripts/deploy.sh`（同步到腾讯云、构建、PM2 进程名 `beiyexing`，目录 `/var/www/beiyexing`）。
 
@@ -121,7 +121,7 @@ Pull Request 会跑 **Unit tests**（`npm run test:coverage`）。给 `main` 配
 
 原生小程序在 `miniprogram/`。用微信开发者工具打开该目录：
 
-1. 默认请求线上 `http://192.144.167.212`。本地联调把 `miniprogram/config.js` 的 `USE_LOCAL_API` 改为 `true`
+1. 默认请求线上 `http://140.143.171.77`。本地联调把 `miniprogram/config.js` 的 `USE_LOCAL_API` 改为 `true`
 2. 详情里关闭「校验合法域名、web-view、TLS」，以便真机请求 HTTP IP
 3. 正式上线：开发者工具填真实 AppId `wx205ca387929c002a`（已写在 `miniprogram/project.config.json`）。服务器 `.env` 填 `WX_APPSECRET` 与商户 `WX_MCH_KEY`，并把 `WX_PAY_MOCK=0`。密钥不要提交进仓库。
 

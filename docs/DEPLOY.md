@@ -2,7 +2,9 @@
 
 改代码、**合并到 GitHub 的 `main`** 之后：先跑 **Unit tests**，通过了才 **Deploy** 到腾讯云。部署发生在 GitHub Actions 的云主机上，不发生在你的 iPhone 或 Cursor 云环境里。功能分支和 Pull Request 不会自动上线。手机没有系统 SSH 不影响自动上线。
 
-线上地址：<http://192.144.167.212/m>
+线上地址：<http://140.143.171.77/m>
+
+换机时仓库里默认主机就是这个 IP。新机还要：安全组放行 **22 / 80**；用户是 **`ubuntu`**；GitHub Secret `DEPLOY_SSH_KEY` 对应的公钥写进新机 `~/.ssh/authorized_keys`。若要保留旧数据，先把旧机 `/var/www/beiyexing/server/data/app.sqlite*`、`.env`、`server/public/static/uploads/` 拷到新机同路径（部署脚本不会覆盖已有 `.env` 和数据库）。小程序后台的 request / upload 合法域名也要改成新地址。
 
 合入前必须 UT 绿灯：在 [Rulesets](https://github.com/xiangxiang222/bj-outdoor-trip/settings/rules) 给 `main` 勾选 Require status checks → `unit-tests`。说明见 [TESTING.md](./TESTING.md) 第 7 节。
 
@@ -18,7 +20,7 @@
 
 ## 一次性：让 GitHub 能登录腾讯云
 
-仓库已有 `.github/workflows/deploy.yml`。它需要一个 **Actions Secret**，名字必须是 **`DEPLOY_SSH_KEY`**，内容是能登录服务器 `ubuntu@192.144.167.212` 的 **SSH 私钥全文**（含头尾 `BEGIN` / `END` 那两行）。
+仓库已有 `.github/workflows/deploy.yml`。它需要一个 **Actions Secret**，名字必须是 **`DEPLOY_SSH_KEY`**，内容是能登录服务器 `ubuntu@140.143.171.77` 的 **SSH 私钥全文**（含头尾 `BEGIN` / `END` 那两行）。
 
 注意：
 
@@ -35,7 +37,7 @@
 **A. 腾讯云控制台生成（推荐，只有手机时最省事）**
 
 1. 打开 [轻量应用服务器控制台](https://console.cloud.tencent.com/lighthouse/instance)
-2. 找到 `192.144.167.212` 这台机
+2. 找到 `140.143.171.77` 这台机
 3. 用控制台的 **网页终端 / 登录** 进系统（走腾讯云网页，不走系统 SSH）
 4. 在网页终端执行：
 
@@ -71,13 +73,13 @@ cat ~/.ssh/github_deploy
 
 1. 打开 <https://github.com/xiangxiang222/bj-outdoor-trip/actions/workflows/deploy.yml>
 2. 右侧 **Run workflow** → 选 `main` → Run
-3. 等绿灯后访问 <http://192.144.167.212/m>
+3. 等绿灯后访问 <http://140.143.171.77/m>
 
 以后只要 `main` 有新推送，就会自动再部署，iPhone 上不用再做任何 SSH。
 
 ## 电脑（可选）
 
-本机已经能 `ssh ubuntu@192.144.167.212` 时，在项目根目录：
+本机已经能 `ssh ubuntu@140.143.171.77` 时，在项目根目录：
 
 ```bash
 ./scripts/deploy.sh

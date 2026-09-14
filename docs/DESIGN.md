@@ -75,7 +75,7 @@
 | `WX_APPID` / `WX_APPSECRET` / `WX_MCH_ID` / `WX_MCH_KEY` | 小程序与商户 | 默认 AppID `wx205ca387929c002a`、商户号 `17501360384`；Secret / APIv2 密钥只放服务器 `.env` |
 | `WX_PAY_MOCK` | `0` 关闭 mock，走 JSAPI | 默认开启 mock |
 | `WEATHER_LIVE` | `1` 强制 Open-Meteo；`0` 强制模拟 | 生产默认实时，本地默认 mock |
-| `WX_PAY_NOTIFY` | 支付回调 URL | 默认 `http://192.144.167.212/api/pay/wechat/notify` |
+| `WX_PAY_NOTIFY` | 支付回调 URL | 默认 `http://140.143.171.77/api/pay/wechat/notify` |
 
 JWT 有效期：用户/导游 `jwtExpire=30d`，后台 `adminJwtExpire=7d`。
 

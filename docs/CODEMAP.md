@@ -46,10 +46,10 @@ bj-outdoor-trip/
 
 | 端 | 本地 | 线上 | 源码 |
 | --- | --- | --- | --- |
-| 用户 H5 | http://127.0.0.1:3781/m | http://192.144.167.212/m | `web/src/views/mobile` + `MobileLayout.vue` |
-| 管理后台 | http://127.0.0.1:3781/admin | http://192.144.167.212/admin | `web/src/views/admin` |
-| 导游端 | http://127.0.0.1:3781/g | http://192.144.167.212/g | `web/src/views/guide` |
-| API | http://127.0.0.1:3780/api | http://192.144.167.212/api | `server/src/api.js` |
+| 用户 H5 | http://127.0.0.1:3781/m | http://140.143.171.77/m | `web/src/views/mobile` + `MobileLayout.vue` |
+| 管理后台 | http://127.0.0.1:3781/admin | http://140.143.171.77/admin | `web/src/views/admin` |
+| 导游端 | http://127.0.0.1:3781/g | http://140.143.171.77/g | `web/src/views/guide` |
+| API | http://127.0.0.1:3780/api | http://140.143.171.77/api | `server/src/api.js` |
 | 小程序 | 开发者工具打开 `miniprogram/` | 默认请求线上 API | `miniprogram/pages/*` |
 
 Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `npm run build` 后 Express 托管 `web/dist`，Nginx 把 80 转到 3780。
@@ -128,7 +128,7 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 - 有独立「校园认证」页（学校/学院/学号/学生证）。没有独立「团体认证」页。首页学生认证按钮进认证页。自己的个人主页可按朋友圈九宫格传相册。
 - 「我的」权益组有优惠券、会员、抽奖、领队申请、校园认证；没有团体/推荐报名入口（这些在 H5 有）。点团详情「报名领队」未认证时弹窗跳到领队申请。点「报名摄影师」未报名时进报名页。
 - 官方页快捷入口有「学生认证」磁贴。
-- `miniprogram/config.js`：`USE_LOCAL_API` 默认 `false`，请求 `http://192.144.167.212`。
+- `miniprogram/config.js`：`USE_LOCAL_API` 默认 `false`，请求 `http://140.143.171.77`。
 - `app.js` `onShow`：已登录且有未使用券时弹窗，同一次打开只提一次；点「去看看」进券包。
 
 ## 6. 后台与导游端
