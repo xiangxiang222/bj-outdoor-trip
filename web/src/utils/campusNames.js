@@ -20,3 +20,7 @@ export function campusPickLabel(value, emptyText) {
   if (!names.length) return emptyText || "";
   return names.join("、");
 }
+
+export function hasCampusNames(value) {
+  return splitCampusNames(value).length > 0;
+}

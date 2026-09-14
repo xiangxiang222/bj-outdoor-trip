@@ -23,7 +23,7 @@
               :class="{ on: picked.includes(row.name) }"
               @click="toggle(row.name)"
             >{{ row.name }}</button>
-            <p v-if="!loading && !list.length && !custom" class="muted">没有匹配项</p>
+            <p v-if="!loading && !list.length && !custom" class="muted">{{ emptyHint }}</p>
           </div>
           <div class="campus-sheet-foot">
             <button type="button" class="btn ghost" :disabled="page <= 1 || loading" @click="go(page - 1)">上一页</button>
@@ -73,6 +73,14 @@ const searchPlaceholder = computed(() => {
   if (props.kind === "major") return "搜索专业";
   return "搜索学校";
 });
+const emptyHint = computed(() => {
+  if (props.kind === "college" && !String(props.school || "").trim()) return "请先选择学校，学院按学校列出";
+  if (props.kind === "major" && !String(props.college || "").trim()) return "请先选择学院，专业按学院列出";
+  return "没有匹配项";
+});
+function parentParam(value) {
+  return Array.isArray(value) ? joinCampusNames(value) : String(value || "");
+}
 
 watch(
   () => [props.school, props.college, props.kind],
@@ -110,8 +118,8 @@ async function load(nextPage) {
       params: {
         kind: props.kind,
         q: q.value,
-        school: props.school,
-        college: props.college,
+        school: parentParam(props.school),
+        college: parentParam(props.college),
         page: nextPage,
         pageSize,
       },

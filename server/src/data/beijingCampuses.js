@@ -447,8 +447,69 @@ const DEFAULT_MAJORS = [
   "马克思主义理论",
 ];
 
+const MAJOR_GROUPS = [
+  { keys: ["计算机", "软件", "信息科学", "网络空间", "人工智能", "数据科学"], majors: ["计算机科学与技术", "软件工程", "网络空间安全", "人工智能", "数据科学与大数据技术", "物联网工程", "信息安全", "智能科学与技术"] },
+  { keys: ["电子", "通信", "邮电", "光电", "微电子", "集成电路"], majors: ["电子信息工程", "通信工程", "微电子科学与工程", "光电信息科学与工程", "集成电路设计与集成系统"] },
+  { keys: ["机械", "车辆", "汽车", "工业工程"], majors: ["机械设计制造及其自动化", "车辆工程", "工业工程"] },
+  { keys: ["土木", "建筑", "城乡", "水利"], majors: ["土木工程", "建筑学", "城乡规划", "水利水电工程", "工程管理"] },
+  { keys: ["环境", "化学工程", "化工"], majors: ["环境工程", "化学工程与工艺"] },
+  { keys: ["材料"], majors: ["材料科学与工程"] },
+  { keys: ["能源", "动力", "电气", "电机"], majors: ["能源与动力工程", "电气工程及其自动化"] },
+  { keys: ["航空", "宇航", "航天"], majors: ["航空航天工程"] },
+  { keys: ["自动化"], majors: ["自动化"] },
+  { keys: ["数学"], majors: ["数学与应用数学", "信息与计算科学", "统计学"] },
+  { keys: ["物理"], majors: ["物理学", "应用物理学"] },
+  { keys: ["化学"], majors: ["化学", "应用化学"] },
+  { keys: ["生命", "生物"], majors: ["生物科学", "生物技术", "生物医学工程"] },
+  { keys: ["医学", "临床", "协和"], majors: ["临床医学", "口腔医学", "预防医学", "麻醉学", "医学影像学"] },
+  { keys: ["护理"], majors: ["护理学"] },
+  { keys: ["药"], majors: ["药学", "中药学"] },
+  { keys: ["中医", "针灸"], majors: ["中医学", "针灸推拿学"] },
+  { keys: ["口腔"], majors: ["口腔医学"] },
+  { keys: ["经济"], majors: ["经济学", "国际经济与贸易", "数字经济"] },
+  { keys: ["金融", "财政", "保险", "五道口"], majors: ["金融学", "财政学", "保险学"] },
+  { keys: ["管理", "商学院", "工商"], majors: ["工商管理", "会计学", "财务管理", "人力资源管理", "市场营销"] },
+  { keys: ["会计"], majors: ["会计学", "财务管理"] },
+  { keys: ["旅游"], majors: ["旅游管理"] },
+  { keys: ["法"], majors: ["法学", "知识产权"] },
+  { keys: ["新闻", "传播", "传媒"], majors: ["新闻学", "广播电视学", "广告学", "网络与新媒体"] },
+  { keys: ["外国语", "英语", "日语", "俄语", "法语", "德语", "翻译", "语言"], majors: ["英语", "日语", "俄语", "德语", "法语", "西班牙语", "翻译", "汉语国际教育"] },
+  { keys: ["中文", "文学", "汉语"], majors: ["汉语言文学", "汉语国际教育"] },
+  { keys: ["历史", "考古"], majors: ["历史学", "考古学", "文物与博物馆学"] },
+  { keys: ["哲学"], majors: ["哲学"] },
+  { keys: ["教育", "师范"], majors: ["教育学", "学前教育", "小学教育"] },
+  { keys: ["心理"], majors: ["心理学"] },
+  { keys: ["体育", "运动"], majors: ["体育教育", "运动训练"] },
+  { keys: ["音乐"], majors: ["音乐学", "音乐表演"] },
+  { keys: ["舞蹈"], majors: ["舞蹈学", "舞蹈表演"] },
+  { keys: ["美术", "绘画", "设计"], majors: ["美术学", "绘画", "视觉传达设计", "环境设计", "产品设计", "数字媒体艺术"] },
+  { keys: ["戏剧", "表演", "影视", "电影", "导演"], majors: ["表演", "戏剧影视文学", "广播电视编导", "动画"] },
+  { keys: ["服装"], majors: ["服装与服饰设计"] },
+  { keys: ["农", "园艺", "林", "园林"], majors: ["农学", "园艺", "林学", "园林"] },
+  { keys: ["动物"], majors: ["动物科学", "动物医学"] },
+  { keys: ["马克思主义"], majors: ["马克思主义理论", "哲学"] },
+  { keys: ["公共管理", "政府", "行政"], majors: ["行政管理", "公共事业管理", "政治学与行政学"] },
+  { keys: ["社会"], majors: ["社会学", "社会工作"] },
+];
+
+function majorsForCollegeName(collegeName) {
+  const n = String(collegeName || "");
+  if (!n) return [];
+  const hit = [];
+  const seen = new Set();
+  for (const g of MAJOR_GROUPS) {
+    if (!g.keys.some((k) => n.includes(k))) continue;
+    for (const m of g.majors) {
+      if (seen.has(m)) continue;
+      seen.add(m);
+      hit.push(m);
+    }
+  }
+  return hit.length ? hit : DEFAULT_MAJORS.slice();
+}
+
 function packColleges(names) {
-  return names.map((n) => ({ name: n, majors: [] }));
+  return names.map((n) => ({ name: n, majors: majorsForCollegeName(n) }));
 }
 
 function school(name, aliases, kind, colleges) {
@@ -713,4 +774,5 @@ module.exports = {
   SCHOOLS,
   DEFAULT_MAJORS,
   COLLEGE_SETS,
+  majorsForCollegeName,
 };

@@ -25,7 +25,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | GET | `/play-tags` | 想怎么玩标签（名称、颜色、配图） |
 | GET | `/users/:id` | 用户公开主页：昵称、头像、相册、拟出行/已参与/关注的线路。不含手机号 |
 | GET | `/weather` | 目的地天气（含 `hourly` 分时气温/降水）。Query：`region` `date`。生产默认走 Open-Meteo 实时预报；本地开发默认 mock。`WEATHER_LIVE=1` 强制实时，`WEATHER_LIVE=0` 强制模拟 |
-| GET | `/campuses` | 北京高校/学院/专业名录。Query：`kind=school\|college\|major`、`q`、`school`、`college`、`page`、`pageSize`（默认 20，最大 50）。返回 `{ list:[{name}], total, page, pageSize, custom }`。`custom` 仅在搜不到时给出，便于名单外自填。无需登录 |
+| GET | `/campuses` | 北京高校/学院/专业名录。Query：`kind=school\|college\|major`、`q`、`school`、`college`、`page`、`pageSize`（默认 20，最大 50）。`school`/`college` 可逗号或顿号多选。查学院须带 `school`（多校为这些学校学院的并集）；查专业须带 `college`（可再带 `school` 限定该校该院）。返回 `{ list:[{name}], total, page, pageSize, custom }`。`custom` 仅在搜不到时给出，便于名单外自填。无需登录 |
 | GET | `/buses` | 车型 |
 | GET | `/guides` | 在岗导游公开资料（不含手机号） |
 | GET | `/guides/recruit` | 推荐领队文案与奖励（200 元），登录后带推荐码 |

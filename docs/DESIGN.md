@@ -166,7 +166,7 @@ User 1──n Favorite / PointsLedger / Review
 
 - 角色：`user` / `company`（公司账号带 `company_name`） / `leader`（个人领队申请通过后写入；公司账号通过后仍为 `company`，靠 `leader_status=approved`）
 - 会员：年费 99 元，有效期 365 天，会员价 95 折，开通赠一次 100 元以内团。演示环境 `POST /member/buy` 立即记成功；真实支付等微信入账后再开通
-- 学生：`POST /me/student` 可选学校、学院、专业（北京名录 `GET /campuses` 搜索分页），在读须学号并上传学生证 → `student_status=pending` → 后台 `POST /admin/users/:id/verify` `kind=student` 通过后 `is_student=1`。部分团 `studentOnly`、`schools` 或 `colleges` 名单（名称包含匹配）。有学院名单时必须同时匹配学校。提交时写入 `admin_notices`，后台消息点开 `/admin/verify?kind=campus&userId=`。学号和证件只给本人与后台。
+- 学生：`POST /me/student` 可选学校、学院、专业（北京名录 `GET /campuses` 搜索分页，学校→学院→专业一对多级联），在读须学号并上传学生证 → `student_status=pending` → 后台 `POST /admin/users/:id/verify` `kind=student` 通过后 `is_student=1`。部分团 `studentOnly`、`schools` 或 `colleges` 名单（名称包含匹配）。有学院名单时必须同时匹配学校。提交时写入 `admin_notices`，后台消息点开 `/admin/verify?kind=campus&userId=`。学号和证件只给本人与后台。
 - 团体：`POST /me/group` → 待审 → 后台审核，同样写入待办消息
 - 领队：`POST /me/leader` 填姓名、带队年限、经历 → `leader_status=pending` → 后台 `kind=leader` 通过后 `isLeader`。未通过时团详情「报名领队」提示去填写申请。消息点开 `/admin/verify?kind=leader&userId=`
 - 积分：消费 1 元积 1 分；会员入账 ×1.2；抵现规则仍为 **100 分 = 1 元**，最多抵应付的 **20%**，且实付至少 **1 元**。当前报名接口不扣积分

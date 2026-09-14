@@ -10,9 +10,9 @@
 <view class="pad">学校（可空）</view>
 <view class="input" bindtap="pickSchool">{{school || '可选，搜索北京高校'}}</view>
 <view class="pad">学院（可空）</view>
-<view class="input" bindtap="pickCollege">{{college || '可选，先选学校再搜学院'}}</view>
+<view class="input" bindtap="pickCollege">{{college || (school ? '可选，搜索该校学院' : '请先选择学校')}}</view>
 <view class="pad">专业（可空）</view>
-<view class="input" bindtap="pickMajor">{{major || '可选，搜索专业'}}</view>
+<view class="input" bindtap="pickMajor">{{major || (college ? '可选，搜索该院专业' : '请先选择学院')}}</view>
 <block wx:if="{{campusKind=='student'}}">
   <view class="pad">学号</view>
   <input class="input" value="{{studentNo}}" placeholder="学生证上的学号" disabled="{{certified}}" bindinput="onNo" />

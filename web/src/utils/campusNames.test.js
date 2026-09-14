@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { splitCampusNames, joinCampusNames, campusPickLabel } from "./campusNames";
+import { splitCampusNames, joinCampusNames, campusPickLabel, hasCampusNames } from "./campusNames";
 
 describe("campus name helpers", () => {
   it("splits comma lists and joins with a Chinese comma", () => {
@@ -11,5 +11,10 @@ describe("campus name helpers", () => {
   it("renders a compact picker label", () => {
     expect(campusPickLabel("", "可选，从名单里选")).toBe("可选，从名单里选");
     expect(campusPickLabel("北京大学，清华大学")).toBe("北京大学、清华大学");
+  });
+
+  it("tells whether any campus name is selected", () => {
+    expect(hasCampusNames("")).toBe(false);
+    expect(hasCampusNames("首都师范大学，北京大学")).toBe(true);
   });
 });

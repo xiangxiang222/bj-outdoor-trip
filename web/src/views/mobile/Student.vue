@@ -12,9 +12,24 @@
     <label>学校（可空）</label>
     <CampusNamePicker v-model="school" kind="school" title="选择学校" placeholder="可选，搜索北京高校" :disabled="certified" />
     <label>学院（可空）</label>
-    <CampusNamePicker v-model="college" kind="college" :school="school" title="选择学院" placeholder="可选，先选学校再搜学院" :disabled="certified" />
+    <CampusNamePicker
+      v-model="college"
+      kind="college"
+      :school="school"
+      title="选择学院"
+      :placeholder="school ? '可选，搜索该校学院' : '请先选择学校'"
+      :disabled="certified || !school"
+    />
     <label>专业（可空）</label>
-    <CampusNamePicker v-model="major" kind="major" :school="school" :college="college" title="选择专业" placeholder="可选，搜索专业" :disabled="certified" />
+    <CampusNamePicker
+      v-model="major"
+      kind="major"
+      :school="school"
+      :college="college"
+      title="选择专业"
+      :placeholder="college ? '可选，搜索该院专业' : '请先选择学院'"
+      :disabled="certified || !college"
+    />
     <label v-if="campusKind === 'student'">学号</label>
     <input v-if="campusKind === 'student'" class="input" v-model="studentNo" placeholder="学生证上的学号" :disabled="certified" />
     <label>学生证 / 校友证</label>

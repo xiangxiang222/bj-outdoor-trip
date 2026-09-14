@@ -42,8 +42,8 @@ import { joinCampusNames, splitCampusNames } from "@/utils/campusNames";
 const props = defineProps({
   modelValue: { type: [String, Array], default: "" },
   kind: { type: String, default: "school" },
-  school: { type: String, default: "" },
-  college: { type: String, default: "" },
+  school: { type: [String, Array], default: "" },
+  college: { type: [String, Array], default: "" },
   multiple: { type: Boolean, default: false },
   disabled: { type: Boolean, default: false },
   placeholder: { type: String, default: "可选，搜索后选择" },
@@ -87,8 +87,8 @@ async function load(nextPage = 1) {
       params: {
         kind: props.kind,
         q: q.value,
-        school: props.school,
-        college: props.college,
+        school: Array.isArray(props.school) ? joinCampusNames(props.school) : props.school,
+        college: Array.isArray(props.college) ? joinCampusNames(props.college) : props.college,
         page: nextPage,
         pageSize,
       },

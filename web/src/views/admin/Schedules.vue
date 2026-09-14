@@ -164,7 +164,14 @@
           <CampusCatalogSelect v-model="neu.schools" kind="school" multiple placeholder="可选，搜索后多选。留空则不限学校" />
         </el-form-item>
         <el-form-item label="限定学院">
-          <CampusCatalogSelect v-model="neu.colleges" kind="college" multiple placeholder="可选。留空则名单内学校各学院可报" />
+          <CampusCatalogSelect
+            v-model="neu.colleges"
+            kind="college"
+            multiple
+            :school="neu.schools"
+            :disabled="!hasNeuSchools"
+            :placeholder="hasNeuSchools ? '可选。留空则名单内学校各学院可报' : '请先选择限定高校'"
+          />
         </el-form-item>
         <el-form-item label="虚拟报名">
           <el-input-number v-model="neu.virtualCount" :min="0" :max="80" />
@@ -288,7 +295,14 @@
           <CampusCatalogSelect v-model="limitForm.schools" kind="school" multiple placeholder="可选，搜索后多选。留空则不限学校" />
         </el-form-item>
         <el-form-item label="限定学院">
-          <CampusCatalogSelect v-model="limitForm.colleges" kind="college" multiple placeholder="可选。留空则名单内学校各学院可报" />
+          <CampusCatalogSelect
+            v-model="limitForm.colleges"
+            kind="college"
+            multiple
+            :school="limitForm.schools"
+            :disabled="!hasLimitSchools"
+            :placeholder="hasLimitSchools ? '可选。留空则名单内学校各学院可报' : '请先选择限定高校'"
+          />
         </el-form-item>
         <p class="muted">报超会抽：先报名待确认。人数超过座位才抽签，未超过则全部确认。不要对外说「抽名额」。</p>
       </el-form>
@@ -352,6 +366,7 @@ import { organizerTypeText, scheduleStatusText } from "@/utils/labels";
 import http from "@/api/http";
 import { hasCap } from "@/utils/staff";
 import CampusCatalogSelect from "@/components/admin/CampusCatalogSelect.vue";
+import { splitCampusNames } from "@/utils/campusNames";
 const $router = useRouter();
 const me = ref({ caps: [] });
 const canOps = computed(() => hasCap(me.value, "ops"));
@@ -438,6 +453,20 @@ watch(
     } else if (isCampusFree && name && !String(neu.value.schools || "").trim()) {
       neu.value.schools = name;
     }
+  }
+);
+const hasNeuSchools = computed(() => splitCampusNames(neu.value.schools).length > 0);
+const hasLimitSchools = computed(() => splitCampusNames(limitForm.value.schools).length > 0);
+watch(
+  () => neu.value.schools,
+  (next) => {
+    if (!splitCampusNames(next).length) neu.value.colleges = "";
+  }
+);
+watch(
+  () => limitForm.value.schools,
+  (next) => {
+    if (!splitCampusNames(next).length) limitForm.value.colleges = "";
   }
 );
 function openLimit(row) {
