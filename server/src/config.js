@@ -17,7 +17,7 @@ module.exports = {
     appSecret: process.env.WX_APPSECRET || "wx_demo_secret",
     mchId: process.env.WX_MCH_ID || "17501360384",
     mchKey: process.env.WX_MCH_KEY || "",
-    notifyUrl: process.env.WX_PAY_NOTIFY || "http://192.144.167.212/api/pay/wechat/notify",
+    notifyUrl: process.env.WX_PAY_NOTIFY || "http://140.143.171.77/api/pay/wechat/notify",
     mock: process.env.WX_PAY_MOCK !== "0",
   },
   points: {

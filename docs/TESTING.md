@@ -216,7 +216,7 @@ npm run test:e2e
 
 ```bash
 npm run test:e2e:live
-node scripts/e2e.js --live --base http://192.144.167.212
+node scripts/e2e.js --live --base http://140.143.171.77
 ```
 
 线上模式只用临时手机号，结束时注销测试账号，**不会**执行「解散全部拼团」。若确实要在目标环境解散全部，显式加 `--unsafe`。

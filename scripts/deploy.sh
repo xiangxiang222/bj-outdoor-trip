@@ -5,7 +5,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-HOST="${DEPLOY_HOST:-192.144.167.212}"
+HOST="${DEPLOY_HOST:-140.143.171.77}"
 USER="${DEPLOY_USER:-ubuntu}"
 DIR="${DEPLOY_DIR:-/var/www/beiyexing}"
 KEY="${DEPLOY_SSH_KEY:-$HOME/.ssh/id_ed25519}"

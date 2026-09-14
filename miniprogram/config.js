@@ -2,7 +2,7 @@
 const USE_LOCAL_API = false;
 const DEVTOOLS_URL = "http://127.0.0.1:3780";
 const LOCAL_PHONE_URL = "http://192.168.1.72:3780";
-const PROD_URL = "http://192.144.167.212";
+const PROD_URL = "http://140.143.171.77";
 
 function getBaseUrl() {
   if (!USE_LOCAL_API) return PROD_URL;
