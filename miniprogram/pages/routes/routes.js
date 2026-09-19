@@ -51,4 +51,11 @@ Page({
   go(e) {
     wx.navigateTo({ url: detailUrl(e.currentTarget.dataset.id) });
   },
+  goApply() {
+    if (!getApp().globalData.token) {
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/route-apply/route-apply") });
+      return;
+    }
+    wx.navigateTo({ url: "/pages/route-apply/route-apply" });
+  },
 });

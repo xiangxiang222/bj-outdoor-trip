@@ -70,6 +70,9 @@
       <button class="cell" type="button" @click="goAuth('/m/feedback')">
         <span>功能建议与找 BUG</span><i>›</i>
       </button>
+      <button class="cell" type="button" @click="goAuth('/m/route-apply')">
+        <span>申请收录线路</span><i>首次成团奖 300 ›</i>
+      </button>
       <button class="cell" type="button" @click="goAuth('/m/publish')">
         <span>去发团 / 发起一局</span><i>›</i>
       </button>

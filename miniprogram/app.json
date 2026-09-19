@@ -26,6 +26,7 @@
     "pages/user/user",
     "pages/publish/publish",
     "pages/leader/leader",
+    "pages/route-apply/route-apply",
     "pages/student/student",
     "pages/campus-pick/campus-pick"
   ],

@@ -282,6 +282,14 @@ Page({
     }
     wx.navigateTo({ url: "/pages/publish/publish" });
   },
+  goRouteApply() {
+    const app = getApp();
+    if (!app.globalData.token) {
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/route-apply/route-apply") });
+      return;
+    }
+    wx.navigateTo({ url: "/pages/route-apply/route-apply" });
+  },
   loadUpcoming() {
     const app = getApp();
     if (!app.globalData.token) {

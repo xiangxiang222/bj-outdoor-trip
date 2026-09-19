@@ -1,5 +1,17 @@
 <template>
   <div v-if="r">
+    <div v-if="r.reviewStatus === 'pending'" class="card">
+      <div class="pad">
+        <p style="margin-top:0;color:var(--leaf)">已提交审核，通过后会出现在线路目录。</p>
+        <p class="muted" style="margin-bottom:0">{{ r.bountyHint }}。可先加客服微信。</p>
+      </div>
+    </div>
+    <div v-else-if="r.reviewStatus === 'rejected'" class="card">
+      <div class="pad">
+        <p style="margin-top:0;color:var(--clay)">未通过{{ r.reviewNote ? "：" + r.reviewNote : "" }}</p>
+        <button class="btn ghost block" type="button" @click="$router.push('/m/route-apply')">改完再申请</button>
+      </div>
+    </div>
     <RouteProfile
       :route="r"
       :reviews="reviews"

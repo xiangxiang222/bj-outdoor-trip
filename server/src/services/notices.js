@@ -87,6 +87,19 @@ function noticeGroup(user) {
   });
 }
 
+function noticeRouteApply(row) {
+  if (!row) return null;
+  const who = row.applicant_name || row.contact_wechat || "用户";
+  return pushNotice({
+    kind: "route",
+    title: "线路申请待审",
+    body: `${who} 申请发布「${row.title || "新线路"}」`,
+    href: `/admin/routes?review=pending&id=${row.id}`,
+    refType: "route",
+    refId: row.id,
+  });
+}
+
 function noticeLeader(user) {
   if (!user) return null;
   const who = user.nickname || user.phone || "用户";
@@ -140,6 +153,7 @@ module.exports = {
   pushNotice,
   noticeCampus,
   noticeGroup,
+  noticeRouteApply,
   noticeLeader,
   listNotices,
   markRead,

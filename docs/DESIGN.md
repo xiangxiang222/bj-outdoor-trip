@@ -102,9 +102,12 @@ User 1──n Favorite / PointsLedger / Review
 - `code`：R01–R30（种子户外线），A01–A04（种子同城局对应的轻量线路）；后台可新增
 - `days ∈ {1,2,3,5}`
 - `min_group_size`：成团人数；排期可覆盖
-- `status`：`on` 上架 / `off` 下架（删除接口实际为下架）
+- `status`：`on` 上架 / `off` 下架（删除接口实际为下架）；用户申请收录为 `pending` 直到后台通过
+- `submitted_by` / `contact_phone` / `contact_wechat`：用户申请收录时写入。官方线路为空，不发成团奖励
+- `review_status`：用户申请 `pending` → 后台 `approved` / `rejected`。官方线路默认 `approved`
+- `bounty_status` / `bounty_amount`：申请时 `pending` + 300 元；该线首次真实成团后记 `payments.scene=route_bounty` 并标 `paid`。发团（`POST /trips`）不走这条奖励
 - 图文：封面、相册、**视频链接**（B 站 BV / YouTube / mp4，线路页嵌播放器）、亮点、行程、费用含/不含、装备、须知、集合点
-- `GET /routes` 会排除「只被同城局排期引用」的线路，避免掼蛋局出现在山野目录
+- `GET /routes` 会排除「只被同城局排期引用」的线路，避免掼蛋局出现在山野目录；也排除未过审申请
 
 ### 3.2 排期 Schedule
 

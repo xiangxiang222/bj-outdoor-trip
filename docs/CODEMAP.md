@@ -87,9 +87,10 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `supplies.js` | 随车补给加购 |
 | `split.js` | 演示分账 |
 | `trip.js` | 发团审核相关辅助 |
-| `helpers.js` | 报价、成团匹配导游、积分入账 |
+| `helpers.js` | 报价、成团匹配导游、积分入账；成团时尝试结算线路申请奖励 |
 | `fallback.js` | 候选团 / 替代团 |
-| `notices.js` | 后台待办：校园/团体认证写入 `admin_notices`，点开 `/admin/verify?kind=&userId=` |
+| `notices.js` | 后台待办：校园/团体/领队认证点开 `/admin/verify`；线路申请点开 `/admin/routes?review=pending&id=` |
+| `route-apply.js` | 用户申请收录线路、后台审批、首次成团奖励 300 元 |
 | `route-draft.js` | 后台发线路起草：有密钥走兼容 OpenAI 的聊天接口，否则模板；图片先对已有景点库，再搜百度 / 360 |
 
 路由全集中在 `api.js`，不在 services 里挂 HTTP。
@@ -111,6 +112,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `/m/pay/:token` | PayShare | 团费自己付、代付或输入金额分摊并转发 |
 | `/m/enroll/:id` | Enroll | 同城局姓名+手机；山野团实名 |
 | `/m/publish` | Publish | `channel=trip\|activity`，提交后待审 |
+| `/m/route-apply` | RouteApply | 申请收录线路（不是发团）。留下手机/微信，提交后出示客服微信；通过并首次成团奖 300 元 |
 | `/m/route/:id` | RouteDetail | 30 条线路图文 |
 | `/m/routes` | RouteList | 线路目录（底栏不再放入口，可直接打开） |
 | `/m/login` | Login | 图片验证码 + 密码；微信演示授权 |
@@ -130,14 +132,14 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 **和 H5 的差：**
 
 - 有独立「校园认证」页（学校/学院/专业可选、学号、学生证）。没有独立「团体认证」页。首页学生认证按钮进认证页。自己的个人主页可按朋友圈九宫格传相册。
-- 「我的」权益组有优惠券、会员、抽奖、领队申请、校园认证；没有团体/推荐报名入口（这些在 H5 有）。点团详情「报名领队」未认证时弹窗跳到领队申请。点「报名摄影师」未报名时进报名页。
-- 官方页快捷入口有「学生认证」磁贴。
+- 「我的」权益组有优惠券、会员、抽奖、领队申请、校园认证；服务组有申请收录线路。没有团体/推荐报名入口（这些在 H5 有）。点团详情「报名领队」未认证时弹窗跳到领队申请。点「报名摄影师」未报名时进报名页。
+- 官方页快捷入口有「学生认证」「申请收录线路」磁贴。
 - `miniprogram/config.js`：`USE_LOCAL_API` 默认 `false`，请求 `http://togetherbetter.cn`。
 - `app.js` `onShow`：已登录且有未使用券时弹窗，同一次打开只提一次；点「去看看」进券包。
 
 ## 6. 后台与导游端
 
-后台 `/admin`：看板、线路、拼团与成本、报名、优惠券、抽奖、用户与会员、认证审批、玩法标签、退费规则、管理员。壳子按电商商家后台：红顶栏、深色侧栏、灰底白卡片。登录页与顶栏用原来的 `logo.jpg`。有运营权限时顶栏有「消息」，点开跳到 `/admin/verify?kind=campus|group|leader&userId=`。发线路表单在 `web/src/views/admin/Routes.vue`，地区级联数据在 `web/src/utils/chinaAreas.js`。抽奖页 `web/src/views/admin/Lottery.vue`。退费规则页 `web/src/views/admin/Refund.vue`。
+后台 `/admin`：看板、线路（含用户申请审批）、拼团与成本、报名、优惠券、抽奖、用户与会员、认证审批、玩法标签、退费规则、管理员。壳子按电商商家后台：红顶栏、深色侧栏、灰底白卡片。登录页与顶栏用原来的 `logo.jpg`。有运营权限时顶栏有「消息」，点开跳到 `/admin/verify?kind=campus|group|leader&userId=` 或 `/admin/routes?review=pending&id=`。发线路表单在 `web/src/views/admin/Routes.vue`，地区级联数据在 `web/src/utils/chinaAreas.js`。抽奖页 `web/src/views/admin/Lottery.vue`。退费规则页 `web/src/views/admin/Refund.vue`。
 
 导游 `/g`：图片验证码登录 → 行程列表 → 正式开团 / 多轮签到确认 / 游客详情 / 锁座调座 / 车牌。演示号 `13700001101`。
 
@@ -164,6 +166,7 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 行程 GET /orders  （H5 Orders.vue 拆待出行/历史）
 我的 GET /me + GET /me/coupons
 发团 POST /trips（review_status=pending）→ 后台 POST /admin/schedules/:id/review
+申请收录 POST /routes/apply → 后台 POST /admin/routes/:id/review；首次成团 settleRouteBounty
 ```
 
 `schedules.channel`：`trip`（默认）山野团；`activity` 同城局。首页与景点轮播排除 activity 线路。

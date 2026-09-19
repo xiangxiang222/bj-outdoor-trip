@@ -28,6 +28,7 @@
 <view class="cell-group">
   <view class="cell" bindtap="goOfficial"><text>客服与规则</text><text class="muted">加微信、FAQ ›</text></view>
   <view class="cell" bindtap="go" data-url="/pages/feedback/feedback"><text>功能建议与找 BUG</text><text class="muted">›</text></view>
+  <view class="cell" bindtap="go" data-url="/pages/route-apply/route-apply"><text>申请收录线路</text><text class="muted">首次成团奖 300 ›</text></view>
   <view class="cell" bindtap="go" data-url="/pages/publish/publish"><text>去发团 / 发起一局</text><text class="muted">›</text></view>
 </view>
 

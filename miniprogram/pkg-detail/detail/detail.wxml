@@ -1,4 +1,16 @@
 <view wx:if="{{err}}" class="muted pad">{{err}}</view>
+<view class="card" wx:if="{{r.reviewStatus=='pending'}}">
+  <view class="pad">
+    <view style="color:#2d6a4f">已提交审核，通过后会出现在线路目录。</view>
+    <view class="muted">{{r.bountyHint}}。可先加客服微信。</view>
+  </view>
+</view>
+<view class="card" wx:elif="{{r.reviewStatus=='rejected'}}">
+  <view class="pad">
+    <view style="color:#bc4749">未通过{{r.reviewNote ? '：' + r.reviewNote : ''}}</view>
+    <view class="btn ghost" bindtap="goApply">改完再申请</view>
+  </view>
+</view>
 <image class="cover" src="{{r.cover}}" mode="aspectFill" style="height:400rpx;margin:0" bindtap="preview" data-index="0" />
 <live-pulse wx:if="{{id}}" flush scope="route" routeId="{{id}}"></live-pulse>
 <view class="pad">
@@ -63,7 +75,7 @@
   </view>
 </view>
 <button class="btn" open-type="share">分享到微信</button>
-<view class="btn ghost" bindtap="open">发布排期</view>
+<view class="btn ghost" wx:if="{{r.reviewStatus!='pending' && r.reviewStatus!='rejected'}}" bindtap="open">发布排期</view>
 <view class="pad"><view class="title">装备清单</view>
   <view wx:for="{{r.packingList}}" wx:key="*this" class="muted">· {{item}}</view>
   <view wx:if="{{!r.packingList || !r.packingList.length}}" class="muted">{{r.equipment}}</view>

@@ -59,7 +59,7 @@ const tabNames = new Set(["home", "activities", "orders", "mine"]);
 const isHome = computed(() => route.name === "home");
 const showBack = computed(() => !tabNames.has(route.name));
 const mineActive = computed(() =>
-  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/student", "/m/group", "/m/leader", "/m/official", "/m/feedback"].some(
+  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback"].some(
     (p) => route.path === p || route.path.startsWith(p + "/")
   )
 );
@@ -103,6 +103,7 @@ const title = computed(() => {
     guide: "导游详情",
     user: "个人主页",
     publish: "发布",
+    "route-apply": "申请收录线路",
   };
   return chromeTitle.value || map[route.name] || "同行者众";
 });
@@ -117,6 +118,7 @@ const subtitle = computed(() => {
     mine: "账号、权益与客服",
     orders: "下一趟，以及走过的局",
     publish: "提交后需管理员审核",
+    "route-apply": "通过并首次成团后奖励 300 元",
   };
   return chromeSubtitle.value || map[route.name] || "在山野，遇见爱";
 });

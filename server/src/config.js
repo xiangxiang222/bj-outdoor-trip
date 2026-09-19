@@ -65,4 +65,7 @@ module.exports = {
     enrollRate: 0.05,
     leaderReward: 200,
   },
+  routeApply: {
+    bounty: 300,
+  },
 };

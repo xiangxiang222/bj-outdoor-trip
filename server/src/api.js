@@ -63,6 +63,7 @@ const { oversubView, isOversubPending, drawOversub } = require("./services/overs
 const { parseVideoInput, videoViews } = require("./services/video");
 const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
 const { draftRoute } = require("./services/route-draft");
+const { submitApply, listMine: listRouteApps, reviewApply, adminFields, bountyYuan, applicationView, reviewOf, isListed } = require("./services/route-apply");
 const { noticeCampus, noticeGroup, noticeLeader, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -457,6 +458,7 @@ router.get("/meta", (req, res) => {
       leaderRecruitCopy,
       referralRate: config.referral.enrollRate,
       leaderReward: config.referral.leaderReward,
+      routeBounty: config.routeApply.bounty,
       offers: Object.values(require("./services/offer").OFFER_TYPES),
     },
   });
@@ -990,7 +992,7 @@ router.get("/guides/:id", (req, res) => {
 
 router.get("/routes", (req, res) => {
   const { days, category, q, difficulty, tag, city } = req.query;
-  let sql = "SELECT * FROM routes WHERE status='on' AND id NOT IN (SELECT DISTINCT route_id FROM schedules WHERE IFNULL(channel,'trip')='activity')";
+  let sql = "SELECT * FROM routes WHERE status='on' AND IFNULL(review_status,'approved')='approved' AND id NOT IN (SELECT DISTINCT route_id FROM schedules WHERE IFNULL(channel,'trip')='activity')";
   const args = [];
   if (String(days) === "multi") {
     sql += " AND days>=4";
@@ -1038,9 +1040,22 @@ router.get("/routes", (req, res) => {
   res.json({ ok: true, data });
 });
 
+router.get("/routes/apps", authUser, (req, res) => {
+  res.json({
+    ok: true,
+    data: {
+      list: listRouteApps(req.userId),
+      bounty: bountyYuan(),
+      contacts,
+    },
+  });
+});
+
 router.get("/routes/:id", optionalUser, (req, res) => {
   const row = db().prepare("SELECT * FROM routes WHERE id=?").get(req.params.id);
   if (!row) return res.status(404).json({ ok: false, message: "线路不存在" });
+  const mine = req.userId && Number(row.submitted_by || 0) === Number(req.userId);
+  if (!isListed(row) && !mine) return res.status(404).json({ ok: false, message: "线路不存在" });
   const bundle = loadRouteBundle(row.id);
   const schedules = db()
     .prepare("SELECT * FROM schedules WHERE route_id=? AND start_date>=date('now','-1 day') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved' ORDER BY start_date")
@@ -1061,6 +1076,7 @@ router.get("/routes/:id", optionalUser, (req, res) => {
       schedules,
       favored,
       playTags,
+      ...(mine ? applicationView(row) : {}),
     }),
   });
 });
@@ -1237,6 +1253,9 @@ router.post("/schedules", authUser, (req, res) => {
   const { routeId, startDate, busTypeId, minGroupSize, meetupPoint, meetupTime, notes } = req.body || {};
   const route = db().prepare("SELECT * FROM routes WHERE id=?").get(routeId);
   if (!route) return res.status(400).json({ ok: false, message: "线路不存在" });
+  if ((route.status || "on") !== "on" || reviewOf(route) !== "approved") {
+    return res.status(400).json({ ok: false, message: "线路尚未通过审核，暂不能发排期" });
+  }
   const bus = db().prepare("SELECT * FROM bus_types WHERE id=?").get(busTypeId);
   if (!bus) return res.status(400).json({ ok: false, message: "请选择车型" });
   if (!startDate) return res.status(400).json({ ok: false, message: "请选择出发日期" });
@@ -1318,6 +1337,24 @@ router.post("/upload", authUser, (req, res) => {
     if (!req.file) return res.status(400).json({ ok: false, message: "请选择图片" });
     res.json({ ok: true, data: { url: `/static/uploads/${req.file.filename}` } });
   });
+});
+
+router.post("/routes/apply", authUser, (req, res) => {
+  try {
+    const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+    const data = submitApply(user, req.body || {});
+    res.json({
+      ok: true,
+      data: {
+        ...data,
+        bounty: bountyYuan(),
+        contacts,
+        message: `已提交审核。通过并首次成团后奖励 ¥${bountyYuan()}。可先加客服微信 ${contacts.officialWechat}。`,
+      },
+    });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 router.post("/trips", authUser, (req, res) => {
@@ -2091,8 +2128,13 @@ router.post("/admin/routes/draft", authAdmin, requireCap("ops"), async (req, res
 });
 
 router.get("/admin/routes", authAdmin, requireCap("roster"), (req, res) => {
+  const review = String(req.query.review || "").trim();
   const rows = db()
-    .prepare("SELECT * FROM routes ORDER BY id")
+    .prepare(
+      `SELECT r.*, u.nickname AS applicant_name FROM routes r
+       LEFT JOIN users u ON u.id=r.submitted_by
+       ORDER BY CASE WHEN IFNULL(r.review_status,'approved')='pending' THEN 0 ELSE 1 END, r.id DESC`
+    )
     .all()
     .map((r) => {
       const bundle = loadRouteBundle(r.id) || { tiers: [], buses: [] };
@@ -2104,8 +2146,10 @@ router.get("/admin/routes", authAdmin, requireCap("roster"), (req, res) => {
           memberPrice: t.member_price,
         })),
         buses: (bundle.buses || []).map((b) => b.id),
+        ...adminFields(r),
       });
-    });
+    })
+    .filter((r) => !review || r.reviewStatus === review);
   res.json({ ok: true, data: rows });
 });
 
@@ -2158,6 +2202,10 @@ router.post("/admin/routes", authAdmin, requireCap("ops"), (req, res) => {
 router.put("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
   const b = req.body || {};
   const id = req.params.id;
+  const cur = db().prepare("SELECT * FROM routes WHERE id=?").get(id);
+  if (!cur) return res.status(404).json({ ok: false, message: "线路不存在" });
+  const keepPending = reviewOf(cur) === "pending" && Number(cur.submitted_by || 0);
+  const status = keepPending ? "pending" : b.status || cur.status;
   db().prepare(
     `UPDATE routes SET title=?, subtitle=?, days=?, distance_km=?, difficulty=?, category=?, region=?, season=?, tags_json=?, cover=?, gallery_json=?, min_group_size=?, description=?, story_json=?, highlights_json=?, itinerary_json=?, fee_include=?, fee_exclude=?, equipment=?, notices=?, meetup_json=?, status=? WHERE id=?`
   ).run(
@@ -2182,7 +2230,7 @@ router.put("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
     b.equipment,
     b.notices,
     JSON.stringify(b.meetupPoints || []),
-    b.status || "on",
+    status,
     id
   );
   saveRouteVideos(id, b);
@@ -2204,6 +2252,20 @@ router.put("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
   res.json({ ok: true });
 });
 
+router.post("/admin/routes/:id/review", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    const b = req.body || {};
+    const data = reviewApply(req.params.id, {
+      action: b.action || b.status,
+      note: b.note || b.reason,
+      adminId: req.adminId,
+    });
+    res.json({ ok: true, data });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
 router.delete("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
   db().prepare("UPDATE routes SET status='off' WHERE id=?").run(req.params.id);
   res.json({ ok: true });
@@ -2214,6 +2276,9 @@ router.post("/admin/schedules", authAdmin, requireCap("ops"), (req, res) => {
   const { routeId, startDate, busTypeId, minGroupSize, meetupPoint, meetupTime, notes } = req.body || {};
   const route = db().prepare("SELECT * FROM routes WHERE id=?").get(routeId);
   if (!route) return res.status(400).json({ ok: false, message: "线路不存在" });
+  if ((route.status || "on") !== "on" || reviewOf(route) !== "approved") {
+    return res.status(400).json({ ok: false, message: "线路尚未通过审核，暂不能发排期" });
+  }
   if (!startDate) return res.status(400).json({ ok: false, message: "请选择出发日期" });
   const bus = db().prepare("SELECT * FROM bus_types WHERE id=?").get(busTypeId);
   if (!bus) return res.status(400).json({ ok: false, message: "请选择车型" });
