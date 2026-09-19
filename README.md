@@ -60,9 +60,9 @@ npm run dev
 | 管理后台 | http://togetherbetter.cn/admin |
 | 导游端 | http://togetherbetter.cn/g |
 
-部署发生在 GitHub Actions 上，**不需要 iPhone 能 SSH**。**合并到 `main`**（或直接推 `main`）会自动上线；功能分支不会部署。也可在 Actions 里手动 Run workflow，或在能登录服务器的电脑上执行 `./scripts/deploy.sh`（同步到腾讯云、构建、PM2 进程名 `beiyexing`，目录 `/var/www/beiyexing`）。
+部署发生在 GitHub Actions 上，**不需要 iPhone 能 SSH**。当前 **Deploy 已停用**（旧机 `192.144.167.212` 已回收）。合并 `main` 仍跑单元测试，但不会再 SSH 上线。换新机后的步骤见 [docs/DEPLOY.md](docs/DEPLOY.md)。本机若已能登录新服务器，可执行 `./scripts/deploy.sh`（构建、PM2 进程名 `beiyexing`，目录 `/var/www/beiyexing`）。
 
-第一次需要在仓库 **Settings → Secrets and variables → Actions** 配置 Secret `DEPLOY_SSH_KEY`（当前机 **`ubuntu@140.143.171.77`** 的私钥全文）。没有密钥时 Deploy 会跳过，不会把 `main` 刷红。旧机 `192.144.167.212` 已回收。不要配成 Deploy keys，也不要用 `root`。**只用手机也可以配完**，步骤见 [docs/DEPLOY.md](docs/DEPLOY.md)。**不要**在生产库执行 `npm run seed`（会清空业务数据）。部署脚本仅在目标机还没有数据库文件时才会 seed。
+第一次上线需要 Secret `DEPLOY_SSH_KEY`（**`ubuntu`** 用户私钥全文）和 Variable `DEPLOY_HOST`。不要配成 Deploy keys，也不要用 `root`。**不要**在生产库执行 `npm run seed`（会清空业务数据）。部署脚本仅在目标机还没有数据库文件时才会 seed。
 
 ## 30 条线路从哪来
 

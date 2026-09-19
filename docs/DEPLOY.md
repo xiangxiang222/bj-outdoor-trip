@@ -6,6 +6,15 @@
 
 合入前必须 UT 绿灯：在 [Rulesets](https://github.com/xiangxiang222/bj-outdoor-trip/settings/rules) 给 `main` 勾选 Require status checks → `unit-tests`。说明见 [TESTING.md](./TESTING.md) 第 7 节。
 
+**Deploy 已停用。** `192.144.167.212` 到期回收后，Actions 还在打这台机，缺密钥就会把 `main` 刷红。仓库里的 Deploy workflow 已关掉。换新机后再打开：
+
+1. 轻量机用户 `ubuntu`，安全组放行 22 / 80，域名 `togetherbetter.cn` 解析到新 IP
+2. Settings → Secrets `DEPLOY_SSH_KEY` = 该机私钥全文；Variables `DEPLOY_HOST` = 新 IP
+3. 把 `scripts/deploy.workflow.yml` 覆盖到 `.github/workflows/deploy.yml`（改 workflow 文件需要 GitHub token 的 `workflow` 权限，网页改文件或本机 `gh auth refresh -s workflow` 后再推）
+4. `gh workflow enable deploy.yml`，再 Actions → Deploy → Run workflow
+
+未配置密钥或主机仍是已回收 IP 时，新 workflow 会跳过而不是失败。
+
 ## 日常（配好密钥之后）
 
 1. 开 Pull Request，等 Actions 里 **Unit tests / unit-tests** 绿灯后再合并
