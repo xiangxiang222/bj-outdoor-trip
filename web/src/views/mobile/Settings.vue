@@ -7,9 +7,6 @@
       <button class="cell" type="button" @click="$router.push('/m/wallet/pin')">
         <span>支付密码管理</span><i>{{ store.profile?.walletPinSet ? "已设置 ›" : "未设置 ›" }}</i>
       </button>
-      <button class="cell" type="button" @click="$router.push('/m/wallet/cards')">
-        <span>银行卡</span><i>提现到账 ›</i>
-      </button>
       <button class="cell" type="button" @click="$router.push('/m/wallet')">
         <span>我的钱包</span><i>余额 ¥{{ store.profile?.walletBalance || 0 }} ›</i>
       </button>

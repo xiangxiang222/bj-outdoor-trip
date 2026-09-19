@@ -1,25 +1,10 @@
 const bcrypt = require("bcryptjs");
 const { getDb } = require("../db");
+const config = require("../config");
 const { maskName, maskPhone } = require("./biz");
 const { maskIdCard } = require("./idcard");
 
-const BANKS = [
-  "工商银行",
-  "建设银行",
-  "农业银行",
-  "中国银行",
-  "交通银行",
-  "招商银行",
-  "邮储银行",
-  "民生银行",
-  "兴业银行",
-  "浦发银行",
-  "中信银行",
-  "光大银行",
-  "华夏银行",
-  "北京银行",
-  "其他",
-];
+const CARD_CLOSED = "已改为提现到微信零钱，不再支持绑定银行卡";
 
 const SCENE_LABEL = {
   referral: "分享报名返点",
@@ -27,8 +12,8 @@ const SCENE_LABEL = {
   route_bounty: "线路成团奖励",
   enrollment_pay: "报名支付",
   refund: "报名退款",
-  topup: "钱包充值",
-  withdraw: "提现到银行卡",
+  topup: "微信支付充值",
+  withdraw: "提现到微信零钱",
 };
 
 function fail(status, message, extra) {
@@ -117,65 +102,12 @@ function billView(row) {
   };
 }
 
-function listCards(userId) {
-  return getDb()
-    .prepare("SELECT * FROM bank_cards WHERE user_id=? ORDER BY id DESC")
-    .all(userId)
-    .map(cardView);
+function addCard() {
+  fail(400, CARD_CLOSED);
 }
 
-function cardView(row) {
-  return {
-    id: row.id,
-    holderName: maskName(row.holder_name),
-    bankName: row.bank_name || "",
-    last4: row.last4 || "",
-    masked: row.card_no_masked || "",
-    createdAt: row.created_at,
-  };
-}
-
-function digitsOf(raw) {
-  return String(raw || "").replace(/\D/g, "");
-}
-
-function maskCardNo(digits) {
-  if (digits.length < 8) return `****${digits.slice(-4)}`;
-  return `${digits.slice(0, 4)} **** **** ${digits.slice(-4)}`;
-}
-
-function normalizeBank(name) {
-  const value = String(name || "").trim();
-  if (BANKS.includes(value)) return value;
-  if (value.length >= 2 && value.length <= 12) return value;
-  fail(400, "请选择开户银行");
-}
-
-function addCard(userId, body = {}) {
-  const holder = String(body.holderName || body.holder_name || "").trim();
-  if (holder.length < 2 || holder.length > 20) fail(400, "请填写 2～20 字持卡人姓名");
-  const digits = digitsOf(body.cardNo || body.card_no);
-  if (digits.length < 13 || digits.length > 19) fail(400, "请填写 13～19 位银行卡号");
-  const bankName = normalizeBank(body.bankName || body.bank_name);
-  const db = getDb();
-  const count = db.prepare("SELECT COUNT(*) AS c FROM bank_cards WHERE user_id=?").get(userId).c;
-  if (count >= 3) fail(400, "最多绑定 3 张银行卡");
-  const last4 = digits.slice(-4);
-  const masked = maskCardNo(digits);
-  const dup = db.prepare("SELECT id FROM bank_cards WHERE user_id=? AND last4=? AND bank_name=?").get(userId, last4, bankName);
-  if (dup) fail(400, "该卡已绑定");
-  const info = db
-    .prepare("INSERT INTO bank_cards (user_id,holder_name,bank_name,last4,card_no_masked) VALUES (?,?,?,?,?)")
-    .run(userId, holder, bankName, last4, masked);
-  return cardView(db.prepare("SELECT * FROM bank_cards WHERE id=?").get(info.lastInsertRowid));
-}
-
-function removeCard(userId, cardId) {
-  const db = getDb();
-  const row = db.prepare("SELECT * FROM bank_cards WHERE id=? AND user_id=?").get(Number(cardId), userId);
-  if (!row) fail(404, "银行卡不存在");
-  db.prepare("DELETE FROM bank_cards WHERE id=?").run(row.id);
-  return { deleted: true, id: row.id };
+function removeCard() {
+  fail(400, CARD_CLOSED);
 }
 
 function loadUser(userId) {
@@ -219,25 +151,23 @@ function withdraw(userId, body = {}) {
   const user = loadUser(userId);
   if (!user.id_card) fail(400, "提现前请先完成实名");
   verifyPin(user, body.pin);
-  const cards = listCards(userId);
-  if (!cards.length) fail(400, "请先绑定银行卡");
-  const cardId = Number(body.cardId || body.card_id || cards[0].id);
-  const card = getDb().prepare("SELECT * FROM bank_cards WHERE id=? AND user_id=?").get(cardId, userId);
-  if (!card) fail(404, "银行卡不存在");
   const bal = balanceOf(userId);
-  if (bal <= 0) fail(400, "余额不足，请先充值");
+  if (bal <= 0) fail(400, "余额不足");
   const amount = parseYuan(body.amount, { min: 1, max: 200000 });
-  if (amount > bal) fail(400, "余额不足，请先充值");
+  if (amount > bal) fail(400, "余额不足");
+  const mock = Boolean(config.wechat.mock);
+  if (!mock && !user.wechat_openid) fail(400, "请先用微信登录后再提现到微信零钱");
+  if (!mock) fail(400, "尚未开通微信商家转账到零钱，暂不能自动提现");
   const row = debit(userId, amount, {
-    reason: `提现到${card.bank_name}（尾号${card.last4}）`,
+    reason: "提现到微信零钱",
     scene: "withdraw",
-    refType: "bank_card",
-    refId: card.id,
+    refType: "wechat",
+    refId: 0,
   });
   return {
     amount,
     balance: row.balance,
-    card: cardView(card),
+    channel: "wechat",
     mock: true,
   };
 }
@@ -286,9 +216,9 @@ function snapshot(userId) {
     idCardMasked: maskIdCard(user.id_card),
     gender: user.gender || "",
     points: Number(user.points || 0),
-    cards: listCards(userId),
+    wechatBound: Boolean(user.wechat_openid),
+    withdrawChannel: "wechat",
     bills: listBills(userId),
-    banks: BANKS,
     upcomingCount: counts.upcoming,
     waitlistCount: counts.waitlist,
     unpaidCount: counts.unpaid,
@@ -346,7 +276,6 @@ function backfillHistoricCredits(db) {
 }
 
 module.exports = {
-  BANKS,
   SCENE_LABEL,
   fail,
   parseYuan,
@@ -354,7 +283,6 @@ module.exports = {
   credit,
   debit,
   listBills,
-  listCards,
   addCard,
   removeCard,
   setPin,

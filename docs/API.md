@@ -59,11 +59,11 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | POST | `/auth/login-sms` | 否 | `phone` `code`；无用户则创建。当前 UI 未使用 |
 | POST | `/auth/wechat` | 否（登录后可选） | `code` `nickname` `avatar`。未登录则按 openid 登录或建号；已登录则绑定当前账号的 openid，返回 `bound: true`。`user.wechatBound` 表示是否已绑微信 |
 | GET | `/me` | 用户 | 当前用户（证件掩码；含 `walletBalance` `walletPinSet` `realNamed`、学生/团体/领队状态、`isAlumni`/`campusKind`/`isLeader`、`college` `major` `studentNo` `studentCardUrl`） |
-| GET | `/me/wallet` | 用户 | 钱包：余额、账单、银行卡（仅掩码/后四位）、是否已设支付密码、实名状态、待支付/待出发数量 |
-| POST | `/me/wallet/topup` | 用户 | `{ amount }` 整数 1～5000 元。演示立即入账；真实支付返回 JSAPI，成功后入账。可带 `code` |
-| POST | `/me/wallet/withdraw` | 用户 | `{ amount, cardId, pin }`。须已实名、已绑卡、已设 6 位支付密码。演示立即扣余额 |
-| POST | `/me/wallet/cards` | 用户 | `{ holderName, bankName, cardNo }`。最多 3 张，只存开户行与后四位，不存完整卡号 |
-| DELETE | `/me/wallet/cards/:id` | 用户 | 解绑自己的卡 |
+| GET | `/me/wallet` | 用户 | 钱包：余额、账单、`withdrawChannel=wechat`、是否已设支付密码、实名、是否绑微信、待支付/待出发数量。不返回银行卡 |
+| POST | `/me/wallet/topup` | 用户 | `{ amount }` 整数 1～5000 元。走微信支付；演示立即入账；真实支付返回 JSAPI。可带 `code` |
+| POST | `/me/wallet/withdraw` | 用户 | `{ amount, pin }`。提现到微信零钱。须已实名、已设 6 位支付密码。演示立即扣余额；未开商家转账的正式环境返回 400 |
+| POST | `/me/wallet/cards` | 用户 | 已关闭，400「已改为提现到微信零钱」 |
+| DELETE | `/me/wallet/cards/:id` | 用户 | 已关闭，同上 |
 | POST | `/me/wallet/pin` | 用户 | `{ pin, oldPin }`。6 位数字。已设置时须带原密码 |
 | POST | `/me/wallet/pin/reset` | 用户 | `{ idCard, pin }`。身份证须与实名一致 |
 | GET | `/me/trips` | 用户 | 即将出行：已报名且团未解散、出发日 ≥ 昨天的 `joined`/`waitlist`/`applied` |

@@ -170,7 +170,7 @@
 ## `server/test/api.wallet.test.js`
 
 1. shows zero balance and accepts wechat mock topup
-2. binds a masked bank card, sets pin, and withdraws to that card
+2. rejects bank cards and withdraws to wechat with a pin
 3. pays enrollment from wallet and refunds back on cancel
 4. credits referral rebate and personal bounty into the wallet
 
