@@ -2,18 +2,9 @@
 
 改代码、**合并到 GitHub 的 `main`** 之后：先跑 **Unit tests**，通过了才 **Deploy** 到腾讯云。部署发生在 GitHub Actions 的云主机上，不发生在你的 iPhone 或 Cursor 云环境里。功能分支和 Pull Request 不会自动上线。手机没有系统 SSH 不影响自动上线。
 
-线上地址：<http://togetherbetter.cn/m>（`www.togetherbetter.cn` 同样可用）。SSH 部署默认登录 `ubuntu@140.143.171.77`。**`192.144.167.212` 已到期回收**，不要再写进 workflow。换机后：在仓库 Settings → Secrets and variables → Actions → **Variables** 把 `DEPLOY_HOST` 设成新 IP；安全组放行 **22 / 80**；用户是 **`ubuntu`**；GitHub Secret `DEPLOY_SSH_KEY` 对应的公钥写进新机 `~/.ssh/authorized_keys`。若要保留旧数据，先把旧机 `/var/www/beiyexing/server/data/app.sqlite*`、`.env`、`server/public/static/uploads/` 拷到新机同路径（部署脚本不会覆盖已有 `.env` 和数据库）。小程序后台的 request / upload 合法域名也要改成新地址。未配置密钥或主机仍指向已回收 IP 时，Deploy 会**跳过**而不是报红。HTTPS 还没开，先走 http；轻量控制台「设置 HTTPS」配好证书后，再改 https。
+线上地址：<http://togetherbetter.cn/m>（`www.togetherbetter.cn` 同样可用）。SSH 部署默认登录 `ubuntu@140.143.171.77`。**`192.144.167.212` 已到期回收**，不要再写进 workflow。主机写在仓库 Variable `DEPLOY_HOST`；GitHub Secret `DEPLOY_SSH_KEY` 对应的公钥必须在新机 `ubuntu` 的 `~/.ssh/authorized_keys`。轻量安全组放行 **22 / 80**（22 要对 GitHub Actions 网段开放，不能只放行家里的 IP）。部署脚本不会覆盖已有 `.env` 和数据库。小程序后台的 request / upload 合法域名也要改成新地址。未配置密钥或主机仍指向已回收 IP 时，Deploy 会**跳过**而不是报红。HTTPS 还没开，先走 http；轻量控制台「设置 HTTPS」配好证书后，再改 https。
 
 合入前必须 UT 绿灯：在 [Rulesets](https://github.com/xiangxiang222/bj-outdoor-trip/settings/rules) 给 `main` 勾选 Require status checks → `unit-tests`。说明见 [TESTING.md](./TESTING.md) 第 7 节。
-
-**Deploy 已停用。** `192.144.167.212` 到期回收后，Actions 还在打这台机，缺密钥就会把 `main` 刷红。仓库里的 Deploy workflow 已关掉。换新机后再打开：
-
-1. 轻量机用户 `ubuntu`，安全组放行 22 / 80，域名 `togetherbetter.cn` 解析到新 IP
-2. Settings → Secrets `DEPLOY_SSH_KEY` = 该机私钥全文；Variables `DEPLOY_HOST` = 新 IP
-3. 把 `scripts/deploy.workflow.yml` 覆盖到 `.github/workflows/deploy.yml`（改 workflow 文件需要 GitHub token 的 `workflow` 权限，网页改文件或本机 `gh auth refresh -s workflow` 后再推）
-4. `gh workflow enable deploy.yml`，再 Actions → Deploy → Run workflow
-
-未配置密钥或主机仍是已回收 IP 时，新 workflow 会跳过而不是失败。
 
 ## 日常（配好密钥之后）
 

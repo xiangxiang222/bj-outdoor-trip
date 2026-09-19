@@ -60,9 +60,7 @@ npm run dev
 | 管理后台 | http://togetherbetter.cn/admin |
 | 导游端 | http://togetherbetter.cn/g |
 
-部署发生在 GitHub Actions 上，**不需要 iPhone 能 SSH**。当前 **Deploy 已停用**（旧机 `192.144.167.212` 已回收）。合并 `main` 仍跑单元测试，但不会再 SSH 上线。换新机后的步骤见 [docs/DEPLOY.md](docs/DEPLOY.md)。本机若已能登录新服务器，可执行 `./scripts/deploy.sh`（构建、PM2 进程名 `beiyexing`，目录 `/var/www/beiyexing`）。
-
-第一次上线需要 Secret `DEPLOY_SSH_KEY`（**`ubuntu`** 用户私钥全文）和 Variable `DEPLOY_HOST`。不要配成 Deploy keys，也不要用 `root`。**不要**在生产库执行 `npm run seed`（会清空业务数据）。部署脚本仅在目标机还没有数据库文件时才会 seed。
+部署发生在 GitHub Actions 上：`main` 合入后先跑 **Unit tests**，通过再 **Deploy** 到 `ubuntu@140.143.171.77`。不需要本机 SSH。密钥是仓库 Secret `DEPLOY_SSH_KEY`，主机是 Variable `DEPLOY_HOST`。不要配成 Deploy keys，也不要用 `root`。**不要**在生产库执行 `npm run seed`。细节见 [docs/DEPLOY.md](docs/DEPLOY.md)。
 
 ## 30 条线路从哪来
 
