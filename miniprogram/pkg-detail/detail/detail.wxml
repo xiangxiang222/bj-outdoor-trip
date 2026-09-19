@@ -67,7 +67,7 @@
   <view wx:if="{{!r.schedules || !r.schedules.length}}" class="muted">暂无排期，发布后会显示在这里。</view>
   <view class="card" wx:for="{{r.schedules}}" wx:key="id" bindtap="goSch" data-id="{{item.id}}">
     <view class="pad">
-      <view class="row"><text>{{item.startDate}}</text><text class="tag">{{item.organizerType=='company'?'公司团':'个人拼团'}}</text></view>
+      <view class="row"><text>{{item.startDate}}</text><view class="trip-kind {{item.kind || item.organizerType || 'individual'}}"><view class="trip-kind-ico"></view>{{item.kindLabel || '个人'}}</view></view>
       <view class="muted">{{item.enrolled}}/{{item.maxSeats}} · {{item.bus.name}}</view>
       <view wx:if="{{item.guide}}" class="guide-hit" catchtap="goGuide" data-id="{{item.guide.id}}">导游 {{item.guide.name}} · 查看详情</view>
       <view wx:else class="muted guide-hit" catchtap="goGuides">成团后匹配导游 · 先看看领队</view>

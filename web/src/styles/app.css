@@ -1551,6 +1551,38 @@ html.admin-theme .el-dialog__footer {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.trip-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 7px 0 5px;
+  margin-right: 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 18px;
+  vertical-align: middle;
+  color: #fff;
+  flex: none;
+}
+.trip-kind-ico {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  background: currentColor;
+  opacity: 0.92;
+}
+.trip-kind.official { background: #1b4332; }
+.trip-kind.official .trip-kind-ico { clip-path: polygon(18% 100%, 18% 12%, 88% 32%, 18% 48%); }
+.trip-kind.individual { background: #2d6a4f; }
+.trip-kind.individual .trip-kind-ico { border-radius: 50%; }
+.trip-kind.company { background: #1d4e89; }
+.trip-kind.company .trip-kind-ico { clip-path: polygon(12% 100%, 12% 42%, 38% 42%, 38% 18%, 88% 18%, 88% 100%); }
+.trip-kind.campus { background: #6b2178; }
+.trip-kind.campus .trip-kind-ico { clip-path: polygon(50% 6%, 96% 32%, 50% 52%, 4% 32%); }
+.trip-kind.activity { background: #9a3412; }
+.trip-kind.activity .trip-kind-ico { clip-path: polygon(20% 80%, 50% 8%, 80% 80%); }
 .feed-host {
   margin: 0;
   font-size: 12px;

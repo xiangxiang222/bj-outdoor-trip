@@ -31,5 +31,10 @@ export function splitTrips(rows, today = todayYmd()) {
 }
 
 export function tripKindLabel(row) {
-  return row?.channel === "activity" ? "同城局" : "山野团";
+  if (row?.channel === "activity") return "同城局";
+  const type = row?.kind || row?.organizerType || row?.organizer_type || "";
+  if (type === "official") return "官方团";
+  if (type === "company") return "公司团";
+  if (type === "campus") return "高校团";
+  return "个人拼团";
 }

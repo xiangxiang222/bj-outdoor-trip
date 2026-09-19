@@ -23,6 +23,7 @@ export function boardedLine(row, channel) {
 
 export function hostName(row) {
   if (!row) return "";
+  if (row.organizerType === "official" || row.kind === "official") return "同行者众";
   if (row.organizerType === "company" || row.organizerType === "campus") {
     return row.companyName || (row.eligibility?.schools || [])[0] || row.organizerName || "";
   }

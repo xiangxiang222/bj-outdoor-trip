@@ -87,10 +87,11 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `supplies.js` | 随车补给加购 |
 | `split.js` | 演示分账 |
 | `trip.js` | 发团审核相关辅助 |
-| `helpers.js` | 报价、成团匹配导游、积分入账；成团时尝试结算线路申请奖励 |
+| `helpers.js` | 报价、成团匹配导游、积分入账；成团时尝试结算线路申请奖励和个人发团奖励 |
 | `fallback.js` | 候选团 / 替代团 |
 | `notices.js` | 后台待办：校园/团体/领队认证点开 `/admin/verify`；线路申请点开 `/admin/routes?review=pending&id=` |
 | `route-apply.js` | 用户申请收录线路、后台审批、首次成团奖励 300 元 |
+| `official-trip.js` | 官方团滚动开团、出行前一天并入未成团、个人发团成团奖 200 元 |
 | `route-draft.js` | 后台发线路起草：有密钥走兼容 OpenAI 的聊天接口，否则模板；图片先对已有景点库，再搜百度 / 360 |
 
 路由全集中在 `api.js`，不在 services 里挂 HTTP。
@@ -101,7 +102,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 
 | 路径 | 页面 | 说明 |
 | --- | --- | --- |
-| `/m` | Home | 山野发现：轮播下实时动态条；搜索、城市/玩法、公司/高校/个人、排序（即将出发/快满员/最新）、满员可候补仍出现在列表，日历进筛选 |
+| `/m` | Home | 山野发现：轮播下实时动态条；搜索、城市/玩法、官方/公司/高校/个人、排序（即将出发/快满员/最新）、满员可候补仍出现在列表，日历进筛选 |
 | `/m/activities` | Activities | 同城局：搜索、分类、同一套 feed 排序；含候补 |
 | `/m/orders` | Orders | 下一趟 + 待出行/候补/历史 |
 | `/m/mine` | Mine | WeUI 分组：出行 / 权益 / 服务 |
@@ -165,8 +166,9 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 报名 POST /enroll → services/enroll.js
 行程 GET /orders  （H5 Orders.vue 拆待出行/历史）
 我的 GET /me + GET /me/coupons
-发团 POST /trips（review_status=pending）→ 后台 POST /admin/schedules/:id/review
+发团 POST /trips（review_status=pending）→ 后台 POST /admin/schedules/:id/review；个人成团 settlePersonalBounty 200 元
 申请收录 POST /routes/apply → 后台 POST /admin/routes/:id/review；首次成团 settleRouteBounty
+官方团 启动时补齐近 10 日 → 出行前一天 mergeDueTrips
 ```
 
 `schedules.channel`：`trip`（默认）山野团；`activity` 同城局。首页与景点轮播排除 activity 线路。

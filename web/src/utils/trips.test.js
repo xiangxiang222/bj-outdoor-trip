@@ -35,9 +35,11 @@ describe("splitTrips", () => {
     expect(isUpcomingTrip({ start_date: today, status: "joined" }, today)).toBe(true);
   });
 
-  it("labels activity vs outdoor", () => {
+  it("labels activity vs organizer type", () => {
     expect(tripKindLabel({ channel: "activity" })).toBe("同城局");
-    expect(tripKindLabel({ channel: "trip" })).toBe("山野团");
-    expect(tripKindLabel({})).toBe("山野团");
+    expect(tripKindLabel({ channel: "trip", organizerType: "official" })).toBe("官方团");
+    expect(tripKindLabel({ channel: "trip", kind: "company" })).toBe("公司团");
+    expect(tripKindLabel({ channel: "trip" })).toBe("个人拼团");
+    expect(tripKindLabel({})).toBe("个人拼团");
   });
 });

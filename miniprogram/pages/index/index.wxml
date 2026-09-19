@@ -40,6 +40,7 @@
 </scroll-view>
 <scroll-view scroll-x class="city-bar">
   <view class="chip {{!hostKind?'on':''}}" bindtap="clearHost">全部团</view>
+  <view class="chip {{hostKind=='official'?'on':''}}" bindtap="setHost" data-kind="official">官方</view>
   <view class="chip {{hostKind=='company'?'on':''}}" bindtap="setHost" data-kind="company">公司</view>
   <view class="chip {{hostKind=='campus'?'on':''}}" bindtap="setHost" data-kind="campus">高校</view>
   <view class="chip {{hostKind=='individual'?'on':''}}" bindtap="setHost" data-kind="individual">个人</view>
@@ -96,7 +97,7 @@
   </view>
   <view class="feed-body">
     <view class="feed-when">{{item.feedWhen}} · {{item.city}}</view>
-    <view class="feed-title"><text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{item.privateLabel || '加密团'}}</text> {{item.route.title}}</view>
+    <view class="feed-title"><view class="trip-kind {{item.kind || 'individual'}}"><view class="trip-kind-ico"></view>{{item.kindLabel || '个人'}}</view> <text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{item.privateLabel || '加密团'}}</text> {{item.route.title}}</view>
     <view class="feed-host">{{item.host}}</view>
     <view class="feed-tagline" wx:if="{{item.tagline}}">{{item.tagline}}</view>
     <view class="feed-price" wx:if="{{item.free}}">免费</view>

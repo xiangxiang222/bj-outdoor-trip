@@ -39,6 +39,7 @@ describe("labels", () => {
   });
 
   it("shortens organizer type and schedule status", () => {
+    expect(organizerTypeText("official", true)).toBe("官方");
     expect(organizerTypeText("company")).toBe("公司团");
     expect(organizerTypeText("campus", true)).toBe("高校");
     expect(organizerTypeText("individual")).toBe("个人拼团");

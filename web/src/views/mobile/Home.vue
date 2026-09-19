@@ -74,6 +74,7 @@
 
     <div class="chips">
       <div class="chip" :class="{ on: !hostKind }" @click="clearHost()">全部团</div>
+      <div class="chip" :class="{ on: hostKind === 'official' }" @click="toggleHost('official')">官方</div>
       <div class="chip" :class="{ on: hostKind === 'company' }" @click="toggleHost('company')">公司</div>
       <div class="chip" :class="{ on: hostKind === 'campus' }" @click="toggleHost('campus')">高校</div>
       <div class="chip" :class="{ on: hostKind === 'individual' }" @click="toggleHost('individual')">个人</div>
@@ -139,7 +140,7 @@
       </div>
       <div class="feed-body">
         <p class="feed-when">{{ feedWhen(s.startDate, s.meetupTime) }} · {{ s.city || s.route?.region }}</p>
-        <h3 class="feed-title"><span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">加密团</span> {{ s.route?.title }}</h3>
+        <h3 class="feed-title"><TripKind :kind="s.kind" :type="s.organizerType" :channel="s.channel" /> <span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">加密团</span> {{ s.route?.title }}</h3>
         <p class="feed-host">{{ hostName(s) }}<template v-if="s.meetupPoint"> · {{ s.meetupPoint }}</template></p>
         <p class="feed-tagline" v-if="taglineOf(s)">{{ taglineOf(s) }}</p>
         <p class="feed-price">
@@ -183,6 +184,7 @@ import { boardedLine, coverMark, coverOf, feedWhen, hostName, isFreeOffer, tagli
 import { cycleSort, hostFacets as collectHostFacets, processFeed, sortLabel } from "@/utils/feedList";
 import RouteCatalog from "@/components/RouteCatalog.vue";
 import LivePulse from "@/components/LivePulse.vue";
+import TripKind from "@/components/TripKind.vue";
 
 const pageRoute = useRoute();
 const router = useRouter();
@@ -266,6 +268,7 @@ const picked = computed(() => {
     const o = offers.find((x) => x.key === offerFilter.value);
     if (o) rows.push({ key: "offer", label: o.label, clear: () => { offerFilter.value = ""; } });
   }
+  if (hostKind.value === "official") rows.push({ key: "host", label: "官方团", clear: () => clearHost() });
   if (hostKind.value === "company") rows.push({ key: "host", label: "公司团", clear: () => clearHost() });
   if (hostKind.value === "campus") rows.push({ key: "host", label: "高校团", clear: () => clearHost() });
   if (hostKind.value === "individual") rows.push({ key: "host", label: "个人拼团", clear: () => clearHost() });

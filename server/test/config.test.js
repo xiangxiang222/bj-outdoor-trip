@@ -17,6 +17,8 @@ describe("config env overrides", () => {
     assert.equal(config.insurance.plans.length, 3);
     assert.equal(config.referral.leaderReward, 200);
     assert.equal(config.routeApply.bounty, 300);
+    assert.equal(config.personalTrip.bounty, 200);
+    assert.equal(config.officialTrip.horizonDays, 10);
     assert.equal(config.ai.apiKey, "");
     assert.equal(config.ai.model, "gpt-4o-mini");
     assert.match(config.ai.baseUrl, /openai/);

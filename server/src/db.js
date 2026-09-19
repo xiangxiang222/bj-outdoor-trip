@@ -748,6 +748,10 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "started_at", "TEXT");
   addColumnIfMissing(db, "schedules", "started_by", "TEXT");
   addColumnIfMissing(db, "schedules", "started_by_id", "INTEGER");
+  addColumnIfMissing(db, "schedules", "bounty_status", "TEXT DEFAULT ''");
+  addColumnIfMissing(db, "schedules", "bounty_amount", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "schedules", "bounty_paid_at", "TEXT");
+  addColumnIfMissing(db, "schedules", "merged_into", "INTEGER");
   db.exec(`
     CREATE TABLE IF NOT EXISTS checkin_sessions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

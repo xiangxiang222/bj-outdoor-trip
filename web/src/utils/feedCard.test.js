@@ -18,6 +18,7 @@ describe("feedCard", () => {
   it("picks host, cover, tagline and free price", () => {
     expect(hostName({ organizerType: "company", companyName: "青旅", organizerName: "张三" })).toBe("青旅");
     expect(hostName({ organizerType: "campus", companyName: "北京大学", organizerName: "张三" })).toBe("北京大学");
+    expect(hostName({ organizerType: "official", organizerName: "平台管理员" })).toBe("同行者众");
     expect(hostName({ organizerName: "李四" })).toBe("李四");
     expect(coverOf({ route: { cover: "/a.jpg" } })).toBe("/a.jpg");
     expect(coverOf({ gallery: [{ thumb: "/t.jpg" }] })).toBe("/t.jpg");
