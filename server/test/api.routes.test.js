@@ -78,6 +78,9 @@ describe("routes and schedules API", () => {
     const res = await agent.get("/api/share/shareind01").redirects(0);
     assert.equal(res.status, 302);
     assert.match(res.headers.location, /\/m\/schedule\//);
+    const withRef = await agent.get("/api/share/shareind01?ref=BX1").redirects(0);
+    assert.equal(withRef.status, 302);
+    assert.match(withRef.headers.location, /ref=BX1/);
     await agent.get("/api/share/no-such-token").expect(404);
   });
 
@@ -152,6 +155,14 @@ describe("routes and schedules API", () => {
     const res = await agent.get(`/api/schedules/${seed.individualScheduleId}/poster`).expect(200);
     assert.match(res.body.data.qr, /^data:image\/png;base64,/);
     assert.match(res.body.data.url, /\/m\/schedule\//);
+    assert.match(res.body.data.posterSvg, /svg/);
+    assert.match(res.body.data.shareTitle, /立即报名|免费/);
+    assert.equal(res.body.data.referralCode, "");
+    const token = await loginUser(agent);
+    const mine = await agent.get(`/api/schedules/${seed.individualScheduleId}/poster`).set(auth(token)).expect(200);
+    assert.ok(mine.body.data.referralCode);
+    assert.match(mine.body.data.url, new RegExp(`ref=${mine.body.data.referralCode}`));
+    assert.match(mine.body.data.mpPath, /ref=/);
     await agent.get("/api/schedules/99999/poster").expect(404);
   });
 });

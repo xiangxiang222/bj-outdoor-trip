@@ -8,13 +8,16 @@ export function nativeShareSupported(nav) {
   return true;
 }
 
-export function scheduleShareUrl(origin, id, token, joinCode) {
+export function scheduleShareUrl(origin, id, token, joinCode, ref) {
+  const extra = token && typeof token === "object" ? token : { token, joinCode, ref };
   const base = `${String(origin || "").replace(/\/$/, "")}/m/schedule/${id}`;
   const q = new URLSearchParams();
-  const t = String(token || "").trim();
+  const t = String(extra.token || "").trim();
   if (t) q.set("token", t);
-  const code = String(joinCode || "").trim();
+  const code = String(extra.joinCode || "").trim();
   if (code) q.set("joinCode", code);
+  const r = String(extra.ref || "").trim();
+  if (r) q.set("ref", r);
   const qs = q.toString();
   return qs ? `${base}?${qs}` : base;
 }

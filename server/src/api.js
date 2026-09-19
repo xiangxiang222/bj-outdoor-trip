@@ -4,7 +4,6 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const { nanoid } = require("nanoid");
 const dayjs = require("dayjs");
-const QRCode = require("qrcode");
 const multer = require("multer");
 const { getDb, toRoute } = require("./db");
 const config = require("./config");
@@ -12,6 +11,7 @@ const { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authG
 const { parseIdCard, maskIdCard, lifeStageFromPerson } = require("./services/idcard");
 const { buildDemographics, maskPhone } = require("./services/biz");
 const { code2session, payLive, clientIp } = require("./services/wechat");
+const { buildSchedulePoster } = require("./services/share-poster");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
 const { resolveJoinCode, joinLockView } = require("./services/joinCode");
@@ -475,6 +475,9 @@ router.get("/meta", (req, res) => {
       leaderReward: config.referral.leaderReward,
       routeBounty: config.routeApply.bounty,
       tripBounty: config.personalTrip.bounty,
+      subscribeTemplates: {
+        merge: config.wechat.subscribeMerge || "",
+      },
       offers: Object.values(require("./services/offer").OFFER_TYPES),
     },
   });
@@ -1188,7 +1191,11 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
 router.get("/share/:token", (req, res) => {
   const sch = db().prepare("SELECT * FROM schedules WHERE share_token=?").get(req.params.token);
   if (!sch) return res.status(404).json({ ok: false, message: "分享已失效" });
-  res.redirect(`/m/schedule/${sch.id}?token=${sch.share_token}`);
+  const q = new URLSearchParams();
+  q.set("token", sch.share_token);
+  if (req.query.ref) q.set("ref", String(req.query.ref));
+  if (req.query.joinCode || req.query.code) q.set("joinCode", String(req.query.joinCode || req.query.code));
+  res.redirect(`/m/schedule/${sch.id}?${q.toString()}`);
 });
 
 router.get("/schedules/:id/seats", optionalUser, (req, res) => {
@@ -1249,12 +1256,15 @@ router.post("/enrollments/:id/fallbacks", authUser, (req, res) => {
   }
 });
 
-router.get("/schedules/:id/poster", async (req, res) => {
+router.get("/schedules/:id/poster", optionalUser, async (req, res) => {
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
-  const url = `${req.protocol}://${req.get("host")}/m/schedule/${sch.id}?token=${sch.share_token}`;
-  const qr = await QRCode.toDataURL(url);
-  res.json({ ok: true, data: { url, qr } });
+  try {
+    const data = await buildSchedulePoster(sch, req, { userId: req.userId });
+    res.json({ ok: true, data });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 router.post("/schedules", authUser, (req, res) => {

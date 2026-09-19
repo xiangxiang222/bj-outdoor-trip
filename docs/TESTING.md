@@ -115,7 +115,8 @@ npx vitest run src/utils/share.test.js
 | --- | --- |
 | `api.auth.test.js` | meta、短信、图片验证码注册/登录、微信演示登录、改资料、注销 |
 | `api.home.test.js` | 首页轮播不含同城局线路；`GET /schedules?channel=activity`；发线路带 B 站视频 |
-| `api.routes.test.js` | 筛选、收藏标记、名单脱敏、分享 302、开团校验、海报 QR、导游列表与详情（无需登录） |
+| `api.routes.test.js` | 筛选、收藏标记、名单脱敏、分享 302 可带 ref、开团校验、海报 QR/推荐码、导游列表与详情 |
+| `share-poster.test.js` | 小程序 scene 编解码、分享 query 带推荐码 |
 | `api.enroll.test.js` | 个人占座（`needPay: false`）、紧急联系人/健康/免责、`/me/trips`、公司挂账与结算权限、满员、成团导游、取消报名（已过出发日 / 正式开团后不可取消）、会员购买、收藏、**同城局姓名+手机即可报名**、行程页报名摄影师 |
 | `api.refund.test.js` | 默认/全局/线路退费档、已付按比例退、出发当天未开团可退 50%、开团后不可取消 |
 | `api.pay.test.js` | 绑定 openid、JSAPI 下单、支付回调入账、查单开通会员、真实支付时禁止 mock-success；自己付/代付/众筹分摊与取消按付款人退款 |
@@ -136,7 +137,7 @@ npx vitest run src/utils/share.test.js
 | `api.lottery.test.js` | 报名前/后抽奖、本团奖池与指定中奖、库存用尽回落、报名后抽且跟团结束后领奖、交费未签到也可行后抽、后台抽奖列表、中奖人报名/奖品详情 |
 | `api.leader.test.js` | 个人领队申请、待审不能报名、通过后占位、公司账号保持 company、拒绝后可再申请 |
 | `api.route-apply.test.js` | 用户申请收录线路、待审对路人隐藏、后台审批、首次成团奖励 300 元只发一次、驳回不发奖 |
-| `api.official-trip.test.js` | 后台官方团、用户不能发官方团、按日补齐、个人成团奖 200、出行前一天并入并扩座 |
+| `api.official-trip.test.js` | 后台官方团、用户不能发官方团、按日补齐、个人成团奖 200、出行前一天并入并扩座，并短信+小程序通知 |
 | `api.social.test.js` | 相册、主页、虚拟用户池与按团抽人、真人占座腾座 |
 | `api.split.test.js` | 演示分账 |
 | `api.dissolve.test.js` | 发起人解散、非发起人 403、后台解散单团与全部、重复解散 |
@@ -162,7 +163,7 @@ npx vitest run src/utils/share.test.js
 | `web/src/utils/wechatPay.test.js` | H5 识别真实 JSAPI 并提示去小程序 |
 | `web/src/utils/feedCard.test.js` | 卡片上车人数、主理人、加密团 tagline |
 | `web/src/utils/scanFacts.test.js` | 人数文案、信任条（含加密团）、底栏价格与报名 CTA |
-| `web/src/utils/share.test.js` | 微信内不走系统分享；分享链接可带入团口令 |
+| `web/src/utils/share.test.js` | 微信内不走系统分享；分享链接可带入团口令和推荐码 |
 | `web/src/utils/campusNames.test.js` | 高校名单逗号拆分与选择器文案 |
 | `web/src/utils/campusTargets.test.js` | 学校-学院-专业组合绑定，无学院则丢掉专业 |
 

@@ -250,6 +250,82 @@ function clientIp(req) {
   return ip.replace(/^::ffff:/, "") || "127.0.0.1";
 }
 
+const tokenCache = { value: "", exp: 0 };
+
+async function getAccessToken() {
+  if (!loginLive()) return { access_token: "mock_token", mock: true };
+  if (tokenCache.value && Date.now() < tokenCache.exp) {
+    return { access_token: tokenCache.value, mock: false };
+  }
+  const url =
+    "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" +
+    encodeURIComponent(config.wechat.appId) +
+    "&secret=" +
+    encodeURIComponent(config.wechat.appSecret);
+  const res = await fetch(url);
+  const data = await res.json();
+  if (!data.access_token) {
+    const err = new Error(data.errmsg || "获取微信 access_token 失败");
+    err.payload = data;
+    throw err;
+  }
+  tokenCache.value = data.access_token;
+  tokenCache.exp = Date.now() + Math.max(60, Number(data.expires_in || 7200) - 120) * 1000;
+  return { access_token: data.access_token, mock: false };
+}
+
+function toSubscribeData(data) {
+  const out = {};
+  Object.entries(data || {}).forEach(([key, value]) => {
+    out[key] = { value: String(value == null ? " " : value) };
+  });
+  return out;
+}
+
+async function sendSubscribeMessage({ openid, templateId, page, data }) {
+  if (!openid || !templateId) return { errcode: 0, errmsg: "skipped", mock: true };
+  if (!loginLive()) return { errcode: 0, errmsg: "ok", mock: true };
+  const { access_token } = await getAccessToken();
+  const res = await fetch(
+    "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=" + encodeURIComponent(access_token),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        touser: openid,
+        template_id: templateId,
+        page: page || "",
+        data: toSubscribeData(data),
+        miniprogram_state: config.wechat.mpState || "formal",
+      }),
+    }
+  );
+  return res.json();
+}
+
+async function getWxaCode({ scene, page }) {
+  if (!loginLive()) return null;
+  const { access_token } = await getAccessToken();
+  const res = await fetch(
+    "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=" + encodeURIComponent(access_token),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        scene: String(scene || "").slice(0, 32),
+        page: page || "pages/schedule/schedule",
+        check_path: false,
+        env_version: config.wechat.mpState === "formal" ? "release" : "trial",
+        width: 280,
+      }),
+    }
+  );
+  const buf = Buffer.from(await res.arrayBuffer());
+  const head = buf.slice(0, 32).toString("utf8");
+  if (head.includes("errcode") || head.includes("{")) return null;
+  return buf;
+}
+
 module.exports = {
   code2session,
   mockPrepay,
@@ -269,6 +345,9 @@ module.exports = {
   refundCertLive,
   loadMchCert,
   clientIp,
+  getAccessToken,
+  sendSubscribeMessage,
+  getWxaCode,
   UNIFIED_ORDER_URL,
   ORDER_QUERY_URL,
   REFUND_URL,

@@ -22,6 +22,8 @@ module.exports = {
     mchCertPath: process.env.WX_MCH_CERT_PATH || "",
     mchKeyPath: process.env.WX_MCH_KEY_PATH || "",
     mchCertPass: process.env.WX_MCH_CERT_PASS || "",
+    subscribeMerge: process.env.WX_TPL_MERGE || "",
+    mpState: process.env.WX_MP_STATE || "formal",
   },
   points: {
     earnRate: 1,

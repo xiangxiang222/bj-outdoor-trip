@@ -34,3 +34,27 @@
 }
 .story-text { white-space: pre-wrap; line-height: 1.7; margin: 12rpx 0 20rpx; }
 .story-img { width: 100%; border-radius: 12rpx; margin: 8rpx 0 16rpx; display: block; }
+.share-offscreen { position: fixed; left: -2000px; top: 0; width: 500px; height: 500px; }
+.poster-mask {
+  position: fixed;
+  left: 0; right: 0; top: 0; bottom: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+}
+.poster-sheet {
+  width: 100%;
+  max-width: 640rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+.poster-cover { width: 100%; height: 280rpx; display: block; }
+.poster-body { padding: 24rpx; }
+.poster-title { font-size: 32rpx; font-weight: 700; margin-bottom: 16rpx; }
+.poster-split { display: flex; gap: 16rpx; align-items: flex-start; margin-bottom: 16rpx; }
+.poster-facts { flex: 1; }
+.poster-qr { width: 180rpx; height: 180rpx; background: #fff; flex-shrink: 0; }

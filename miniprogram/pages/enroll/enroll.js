@@ -21,10 +21,12 @@ Page({
     supplies: [],
     waiver: "",
     cancelSummary: "出发日前可取消；出发当天不可取消。",
+    mergeTpl: "",
   },
   onLoad(q) {
     if (!app.globalData.token) {
       const back = "/pages/enroll/enroll?id=" + q.id
+        + (q.ref ? "&ref=" + encodeURIComponent(q.ref) : "")
         + (q.coupon ? "&coupon=" + encodeURIComponent(q.coupon) : "")
         + (q.joinCode || q.code ? "&joinCode=" + encodeURIComponent(q.joinCode || q.code) : "");
       wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(back) });
@@ -72,6 +74,7 @@ Page({
         supplies: (data.supplies || []).map((p) => Object.assign({}, p, { qty: 0 })),
         waiver: data.waiverText || "",
         cancelSummary: (this.data.s && this.data.s.refundPolicy && this.data.s.refundPolicy.summary) || (data.cancelPolicy && data.cancelPolicy.summary) || this.data.cancelSummary,
+        mergeTpl: (data.subscribeTemplates && data.subscribeTemplates.merge) || "",
       });
     }).catch(() => {});
   },
@@ -206,7 +209,16 @@ Page({
         }
       }
       wx.showToast({ title: res.data.waitlisted ? "已加入候补" : "报名成功" });
-      wx.redirectTo({ url: "/pages/schedule/schedule?id=" + this.data.id });
+      const tpl = this.data.mergeTpl;
+      const go = () => wx.redirectTo({ url: "/pages/schedule/schedule?id=" + this.data.id });
+      if (tpl && wx.requestSubscribeMessage) {
+        wx.requestSubscribeMessage({
+          tmplIds: [tpl],
+          complete: go,
+        });
+      } else {
+        go();
+      }
     } catch (e) {
       wx.showModal({ title: "报名失败", content: e.message, showCancel: false });
     }

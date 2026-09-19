@@ -6,6 +6,7 @@ const { realEnrolledCount, enrolledCount, maybeMatchGuide } = require("./helpers
 const { isListed } = require("./route-apply");
 const { cityOf } = require("./home");
 const { sendSms } = require("./sms");
+const { clip, notifyUser } = require("./notify");
 
 function personalBountyYuan() {
   return Math.max(0, Math.round(Number(config.personalTrip?.bounty || 200)));
@@ -211,13 +212,23 @@ function moveEnrollment(en, dest) {
 }
 
 function notifyMerged(en, dest, routeTitle) {
-  if (!en.traveler_phone) return;
-  const user = en.user_id ? getDb().prepare("SELECT is_virtual FROM users WHERE id=?").get(en.user_id) : null;
-  if (user && Number(user.is_virtual)) return;
-  sendSms({
+  const when = `${dest.start_date} ${dest.meetup_time || ""}`.trim();
+  const point = dest.meetup_point || "";
+  notifyUser({
+    userId: en.user_id,
     phone: en.traveler_phone,
     scene: "merge",
-    content: `【同行者众】原团未成团，已并入「${routeTitle}」官方团。${dest.start_date} ${dest.meetup_time || ""} ${dest.meetup_point || ""} 集合。`,
+    sms: `【同行者众】原团未成团，已并入「${routeTitle}」官方团。${when} ${point} 集合。`,
+    wechat: {
+      title: "已并入官方团",
+      page: `pages/schedule/schedule?id=${dest.id}`,
+      data: {
+        thing1: clip(routeTitle, 20),
+        time2: clip(when, 20),
+        thing3: clip(point, 20),
+        thing4: "原团未成团，已并入官方团",
+      },
+    },
     refType: "schedule",
     refId: dest.id,
   });
