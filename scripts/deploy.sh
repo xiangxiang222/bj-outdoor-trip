@@ -42,7 +42,7 @@ echo "==> 准备目录 $USER@$HOST:$DIR"
 echo "==> rsync 开始 $(date -u +%H:%M:%S) UTC"
 # 整目录排除 data：新机若已拷库，--delete 删不掉非空目录会让 rsync 失败并卡住。
 # 不用 chown -R：新机若已有 node_modules / 照片，递归改属主可以闷头跑十几分钟。
-rsync -az --delete --partial --timeout=120 --human-readable --info=stats2 -e "$RSYNC_SSH" \
+rsync -azh --delete --partial --timeout=120 --stats -e "$RSYNC_SSH" \
   --exclude '.git/' \
   --exclude 'node_modules/' \
   --exclude 'web/node_modules/' \
