@@ -6,15 +6,18 @@
 
 用户端「发团」是另一条路：`POST /api/trips` 会新建一条 `status=pending` 的线路（编号 `U…`）和待审排期，后台点通过后才上首页「团」。不要把它和后台发布官方线路混在一起。
 
+用户端「申请收录线路」又是第三条路：`POST /api/routes/apply` 只收录线路、不发排期。留下手机和微信，提交后出示客服微信。后台「线路管理」通过后上架；该线首次成团奖励 300 元。
+
 范围：
 
-1. **后台发布线路**（主路径）：`/admin/routes` 新增 / 编辑 / 上架 / 下架。`POST/PUT /api/admin/routes`，可 AI 起草。
+1. **后台发布线路**（主路径）：`/admin/routes` 新增 / 编辑 / 上架 / 下架。`POST/PUT /api/admin/routes`，可 AI 起草。也可审用户申请收录（`POST /api/admin/routes/:id/review`）。
 2. **后台发布拼团**：`/admin/schedules`「发布拼团」。立即通过，用户端可报名。
 3. **用户发新线路 / 发团**：H5 `/m/publish`（`POST /api/trips`），`review_status=pending`，后台通过才上首页「团」。
-4. **发起同城局**：`/m/publish?channel=activity`，通过后上活动 Tab，不上首页线路目录。
-5. **已有线路发布排期**：线路详情「发布排期」`/m/open/:id`（`POST /api/schedules`），立即通过，可报名。
+4. **用户申请收录**：H5 `/m/route-apply`（`POST /api/routes/apply`），通过后上「线路」目录，首次成团奖 300 元。
+5. **发起同城局**：`/m/publish?channel=activity`，通过后上活动 Tab，不上首页线路目录。
+6. **已有线路发布排期**：线路详情「发布排期」`/m/open/:id`（`POST /api/schedules`），立即通过，可报名。
 
-小程序对应页：`pages/publish/publish`、`pages/open/open`。用户端截图在 H5 演示壳（430px）；后台截图在桌面宽度（1440px）。微信开发者工具需另行打开真机预览。
+小程序对应页：`pages/publish/publish`、`pages/open/open`、`pages/route-apply/route-apply`。用户端截图在 H5 演示壳（430px）；后台截图在桌面宽度（1440px）。微信开发者工具需另行打开真机预览。
 
 ## 0. 环境与账号
 

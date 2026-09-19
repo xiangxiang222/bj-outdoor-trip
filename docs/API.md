@@ -18,7 +18,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/meta` | 品牌名、口号 `slogan`（在山野，遇见爱）、演示短信码、会员年费/95折/赠团文案、`studentDiscountRate`（0.9）、积分规则、保险方案、补给、可选天数、退改说明（含按距出发日比例的 `refundPolicy` / `cancelPolicy`）、风险告知、常见问题、官方账号、公共规则、推荐领队文案、`wechatPayMock` `wechatPayLive` `wechatAppId` |
+| GET | `/meta` | 品牌名、口号 `slogan`（在山野，遇见爱）、演示短信码、会员年费/95折/赠团文案、`studentDiscountRate`（0.9）、积分规则、保险方案、补给、可选天数、退改说明（含按距出发日比例的 `refundPolicy` / `cancelPolicy`）、风险告知、常见问题、官方账号、公共规则、推荐领队文案、`routeBounty`（用户线路申请首次成团奖励，默认 300 元）、`wechatPayMock` `wechatPayLive` `wechatAppId` |
 | GET | `/home` | 首页：全部上架景点轮播（`brand.slides`，含 `routeId`/`title`/`url`）、按城市分组的景点轮播、玩法标签、节日、月份、天数缩略图。同城局线路不进轮播。Query：`month=YYYY-MM` 返回该月日历（不含 activity） |
 | GET | `/live/pulse` | 首页/线路/团顶部动态条。Query：`scope=home\|route\|schedule`、`routeId`、`scheduleId`。可选用户 token 与 `X-Visitor-Id`。返回 `{ items, watchingNow, watchingText }`。`items[].text` 已拼好，姓名脱敏、不含手机号。同城局报名不进首页。匿名浏览只计入 `watchingNow` |
 | POST | `/live/view` | 记录一次浏览。body：`scope` `routeId` `scheduleId`。同一访客对同一目标 10 分钟内不重复写入。可选用户 token |
@@ -32,7 +32,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | GET | `/guides/:id` | 导游详情、带团次数、近期行程。停用或不存在返回 404 |
 | GET | `/routes` | 上架线路。排除只被同城局引用的线路。Query：`days`（`multi` 表示 4 日及以上）`category` `tag` `city` `difficulty` `q` |
 | GET | `/schedules` | Query：`routeId` `organizerType` `city` `tag` `offerType` `month` `date` `channel=activity\|trip`（不含已解散、待审核）。含满员（`remain=0`），前端列表保留供候补。不含 `virtualEnrolled`。加密团带 `private` `privateLabel`，不含口令。首页传 `channel=trip`，活动 Tab 传 `channel=activity` |
-| GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条）、`videos`（B 站等可嵌播放器）、`refundPolicy`（`source`=`default\|global\|route`，档位、摘要、条目） |
+| GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条）、`videos`（B 站等可嵌播放器）、`refundPolicy`（`source`=`default\|global\|route`，档位、摘要、条目）。未过审的用户申请对路人 404，申请人本人可见 `reviewStatus` `contactPhone` `bountyHint` |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
 | GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`photographer`、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友限制、`targets` 为学校-学院-专业组合、`schools`/`colleges`/`majors` 为派生名单、`scope`）、`oversub`（报超会抽）、`refundPolicy`（含按该团出发日计算的 `current.percent` / `hint`）、加密团 `private` `privateLabel` `joinCodeRequired`。`joinCode` 只给发起人、已报名、后台、本团导游。同城局名单不含年龄段展示字段的使用由前端控制 |
 | GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
@@ -68,6 +68,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | POST | `/me/student` | 用户 | `{ school, college, major, studentCardUrl }`，学校/学院/专业均可空；若填写须 ≥2 字。在读师生须 `studentNo`，可选 `campusKind=student\|alumni`。`studentCardUrl` 为 `/upload` 返回的地址。写入 pending，待后台审核。学号与证件只出现在 `/me` 与后台 |
 | POST | `/me/group` | 用户 | `{ name, kind }` 团体认证，pending |
 | POST | `/me/leader` | 用户 | `{ name, years, intro }` 个人领队申请，pending。已通过则 400 |
+| GET | `/routes/apps` | 用户 | 我提交的线路申请、`bounty`、客服 `contacts` |
+| POST | `/routes/apply` | 用户 | 申请收录线路（不是发团）。`title` `region` `contactPhone` `contactWechat` 必填，可选 `subtitle` `days` `minGroupSize` `originPrice` `cover` `description`。写入 `review_status=pending`，后台通过并首次成团后记账 `route_bounty`（默认 300 元）。返回文案含客服微信 |
 | POST | `/feedback` | 用户 | `{ kind: suggest\|bug, content }`，内容至少 4 字 |
 | GET | `/lottery` | 可选用户 | 抽奖状态与圆盘奖品（不含权重）。Query：`scheduleId`。返回 `drawMode` `canPre` `canPost` `canClaim`。有本团配置则用本团奖池。不带 `scheduleId` 时另给 `trips[]`（已抽或已报名的本团抽奖）和平台默认转盘 |
 | POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }`。服务端先出结果再让圆盘转到 `sectorIndex`，返回 `rate` `prizeInfo` `deferred` `claimHint`。指定中奖不会返回给用户。本团奖池中奖先记账，跟团结束后领取。平台默认行后抽：交费（或已占座）且行程结束即可，不必签到或点完成活动 |
@@ -193,10 +195,11 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 | DELETE | `/admin/play-tags/:id` | 下架 |
 | GET | `/admin/refund-rules` | 全局退费档位。返回 `tiers` `summary` `lines` `items` `defaults` |
 | PUT | `/admin/refund-rules` | 保存全局档位。`tiers:[{minDays,percent}]`，须含 `minDays=0` 一档；`reset:true` 恢复默认 10/3/0 天 |
-| GET | `/admin/routes` | 含下架；`priceTiers` 为 camelCase，`buses` 为车型 id 数组，`refundPolicy` 为生效中的退费规则 |
+| GET | `/admin/routes` | 含下架；待审申请排在前面。Query：`review=pending\|approved\|rejected`。含 `reviewStatus` `submittedBy` `contactPhone` `contactWechat` `bountyStatus`。`priceTiers` 为 camelCase，`buses` 为车型 id 数组，`refundPolicy` 为生效中的退费规则 |
 | POST | `/admin/routes/draft` | 起草。body：`title`（必填）`region` `days` `category` `notes`。返回文案字段 + `cover` `gallery` + `source`=`llm`/`template` + `photoSource`=`library`/`search`/空。无密钥用模板；图片先用已有景点库，再搜百度 / 360 |
 | POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` `videos`（视频链接数组）、`refundUseGlobal`（默认 true）、`refundTiers` |
-| PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换；`videos` 为视频链接数组（省略则保留原值）；`refundUseGlobal`/`refundTiers` 省略则保留原退费设置 |
+| PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换；`videos` 为视频链接数组（省略则保留原值）；`refundUseGlobal`/`refundTiers` 省略则保留原退费设置。用户申请待审时不能靠这个接口改成上架 |
+| POST | `/admin/routes/:id/review` | 审用户申请收录。`action`/`status`=`approve\|reject`，可选 `note`。通过后上架；驳回后下架。官方线路返回 400 |
 | DELETE | `/admin/routes/:id` | 下架 |
 | POST | `/admin/schedules` | 后台发布排期。可选 `virtualCount` 发布后从虚拟用户池抽人占座；`lotteryMode` 非 off 时挂上默认 4 奖转盘。`organizerType=campus` 且 `offerType=free` 时默认打开报超会抽、仅师生，并用学校名作为限定高校。可带 `campusTargets`（学校-学院-专业组合，学院/专业可空）、旧字段 `schools` `colleges`、`privateJoin` `joinCode` |
 | POST | `/admin/schedules/:id/review` | 用户发团审核。`status=approved|rejected` |

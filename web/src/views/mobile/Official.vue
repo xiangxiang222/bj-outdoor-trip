@@ -21,6 +21,7 @@
       <router-link class="svc-tile" to="/m/lottery">报名前抽奖</router-link>
       <router-link class="svc-tile" to="/m/student">学生认证</router-link>
       <router-link class="svc-tile" to="/m/leader">领队申请</router-link>
+      <router-link class="svc-tile" to="/m/route-apply">申请收录线路</router-link>
       <a class="svc-tile" href="#rules" @click.prevent="jumpRules">平台规则</a>
     </div>
 

@@ -153,7 +153,7 @@ function approvedScheduleSql() {
 function buildHome(req) {
   const db = getDb();
   ensureDefaultPlayTags(db);
-  const routes = db.prepare("SELECT * FROM routes WHERE status='on' ORDER BY id").all();
+  const routes = db.prepare("SELECT * FROM routes WHERE status='on' AND IFNULL(review_status,'approved')='approved' ORDER BY id").all();
   const activityRouteIds = new Set(
     db.prepare("SELECT DISTINCT route_id FROM schedules WHERE IFNULL(channel,'trip')='activity'").all().map((r) => r.route_id)
   );

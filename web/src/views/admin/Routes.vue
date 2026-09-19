@@ -2,30 +2,55 @@
   <div>
     <div class="row">
       <h2>线路管理</h2>
+      <el-radio-group class="admin-verify-filter" size="small" :model-value="reviewFilter || 'all'" @change="setReview">
+        <el-radio-button label="all">全部</el-radio-button>
+        <el-radio-button label="pending">待审申请</el-radio-button>
+        <el-radio-button label="approved">已通过</el-radio-button>
+        <el-radio-button label="rejected">已驳回</el-radio-button>
+      </el-radio-group>
       <el-button type="success" @click="openCreate">新增线路</el-button>
     </div>
-    <el-table :data="list" stripe>
+    <p class="admin-scroll-hint">用户申请收录会出现在待审。通过后上架，该线首次成团奖励 300 元。消息点进来会高亮对应申请。</p>
+    <el-table :data="list" stripe row-key="id" :row-class-name="rowClass">
       <el-table-column label="封面" width="88">
         <template #default="{ row }">
           <el-image v-if="row.cover" :src="row.cover" fit="cover" style="width:64px;height:40px;border-radius:6px" />
           <span v-else class="muted">无</span>
         </template>
       </el-table-column>
-      <el-table-column prop="code" label="编号" width="80" />
+      <el-table-column prop="code" label="编号" width="90" />
       <el-table-column prop="title" label="标题" min-width="180" />
       <el-table-column prop="days" label="天数" width="70" />
-      <el-table-column prop="category" label="类型" width="90" />
-      <el-table-column prop="region" label="地区" min-width="160" />
-      <el-table-column prop="minGroupSize" label="成团" width="80" />
-      <el-table-column prop="status" label="状态" width="80" />
-      <el-table-column label="操作" width="240">
+      <el-table-column prop="region" label="地区" min-width="140" />
+      <el-table-column prop="minGroupSize" label="成团" width="70" />
+      <el-table-column label="审批" width="90">
+        <template #default="{ row }">{{ reviewLabel(row) }}</template>
+      </el-table-column>
+      <el-table-column label="申请人" min-width="160">
         <template #default="{ row }">
+          <span v-if="row.submittedBy">{{ row.applicantName || "用户" }} · {{ row.contactPhone }} / {{ row.contactWechat }}</span>
+          <span v-else class="muted">官方</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="奖励" width="90">
+        <template #default="{ row }">
+          <span v-if="row.bountyStatus === 'paid'">已发 ¥{{ row.bountyAmount }}</span>
+          <span v-else-if="row.submittedBy && row.reviewStatus === 'approved'">待成团</span>
+          <span v-else-if="row.submittedBy && row.reviewStatus === 'pending'">¥{{ row.bountyAmount || 300 }}</span>
+          <span v-else class="muted">—</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="280" fixed="right">
+        <template #default="{ row }">
+          <el-button v-if="row.submittedBy && row.reviewStatus === 'pending'" size="small" type="success" @click="decide(row, 'approve')">通过</el-button>
+          <el-button v-if="row.submittedBy && row.reviewStatus === 'pending'" size="small" type="danger" @click="decide(row, 'reject')">驳回</el-button>
           <el-button size="small" @click="edit(row)">编辑</el-button>
           <el-button size="small" @click="openReview(row)">评价</el-button>
-          <el-button size="small" type="danger" @click="off(row)">下架</el-button>
+          <el-button v-if="row.status === 'on'" size="small" type="danger" @click="off(row)">下架</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <p v-if="!list.length" class="muted" style="margin-top:16px">没有符合筛选的线路</p>
 
     <el-dialog v-model="show" :title="form.id ? '编辑线路' : '新增线路'" width="880px" top="4vh" align-center :close-on-click-modal="false">
       <el-form label-width="100px">
@@ -40,8 +65,11 @@
         <el-form-item label="标题"><el-input v-model="form.title" placeholder="例如：慕田峪长城缆车一日游" /></el-form-item>
         <el-form-item label="副标题"><el-input v-model="form.subtitle" placeholder="一句话卖点，可空" /></el-form-item>
         <el-form-item label="上架">
-          <el-switch v-model="form.status" active-value="on" inactive-value="off" />
-          <span class="inline-hint">关掉后用户端不再展示，已有拼团还在。</span>
+          <el-switch v-model="form.status" active-value="on" inactive-value="off" :disabled="pendingApply" />
+          <span class="inline-hint">{{ pendingApply ? "用户申请待审，请用列表的通过 / 驳回，不能直接上架。" : "关掉后用户端不再展示，已有拼团还在。" }}</span>
+        </el-form-item>
+        <el-form-item v-if="form.submittedBy" label="申请人">
+          <span>{{ form.applicantName || "用户" }} · {{ form.contactPhone }} / {{ form.contactWechat }}</span>
         </el-form-item>
         <el-form-item label="天数">
           <el-select v-model="form.days" class="field-select">
@@ -279,8 +307,9 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
-import { ElMessage } from "element-plus";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { ElMessage, ElMessageBox } from "element-plus";
 import http from "@/api/http";
 import {
   COMMON_MEETUPS,
@@ -305,10 +334,15 @@ function nextKey() {
   return `b${blockSeed}`;
 }
 
+const route = useRoute();
+const router = useRouter();
 const list = ref([]);
 const buses = ref([]);
 const show = ref(false);
 const form = ref({});
+const reviewFilter = ref("");
+const focusId = ref("");
+const pendingApply = computed(() => form.value.reviewStatus === "pending" && Number(form.value.submittedBy || 0));
 const globalRefund = ref({ tiers: [], summary: "" });
 const showReview = ref(false);
 const savingReview = ref(false);
@@ -350,20 +384,46 @@ function cloneTiers(list) {
 }
 
 async function load() {
-  list.value = (await http.get("/admin/routes")).data;
+  const params = reviewFilter.value ? { review: reviewFilter.value } : {};
+  list.value = (await http.get("/admin/routes", { params })).data;
   try {
     globalRefund.value = (await http.get("/admin/refund-rules")).data || { tiers: [], summary: "" };
   } catch {
     globalRefund.value = { tiers: [], summary: "" };
   }
+  await nextTick();
+  if (!focusId.value) return;
+  const el = document.querySelector(".admin-row-focus");
+  if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
 }
 async function loadBuses() {
   buses.value = (await http.get("/buses")).data || [];
 }
-onMounted(() => {
+function syncFromRoute() {
+  const next = String(route.query.review || "");
+  reviewFilter.value = next === "pending" || next === "approved" || next === "rejected" ? next : "";
+  focusId.value = String(route.query.id || "");
   load();
+}
+function setReview(value) {
+  const next = value === "pending" || value === "approved" || value === "rejected" ? value : "";
+  router.replace({ path: "/admin/routes", query: next ? { review: next } : {} });
+}
+function rowClass({ row }) {
+  if (focusId.value && String(row.id) === focusId.value) return "admin-row-focus";
+  return "";
+}
+function reviewLabel(row) {
+  if (!row.submittedBy) return row.status === "on" ? "上架" : "下架";
+  if (row.reviewStatus === "pending") return "待审";
+  if (row.reviewStatus === "rejected") return "已驳回";
+  return "已通过";
+}
+onMounted(() => {
+  syncFromRoute();
   loadBuses();
 });
+watch(() => [route.query.review, route.query.id], syncFromRoute);
 
 function blankForm() {
   return {
@@ -648,6 +708,28 @@ async function off(row) {
   await http.delete("/admin/routes/" + row.id);
   ElMessage.success("已下架");
   load();
+}
+async function decide(row, action) {
+  try {
+    let note = "";
+    if (action === "reject") {
+      const res = await ElMessageBox.prompt(`驳回「${row.title}」？可填写原因。`, "驳回申请", {
+        confirmButtonText: "驳回",
+        cancelButtonText: "取消",
+        inputPlaceholder: "原因，可空",
+        type: "warning",
+      });
+      note = String(res.value || "").trim();
+    } else {
+      await ElMessageBox.confirm(`通过「${row.title}」并上架？首次成团后奖励 ¥${row.bountyAmount || 300}。`, "通过申请", { type: "success" });
+    }
+    await http.post(`/admin/routes/${row.id}/review`, { action, note });
+    ElMessage.success(action === "approve" ? "已通过并上架" : "已驳回");
+    window.dispatchEvent(new Event("admin-notices-refresh"));
+    await load();
+  } catch (e) {
+    if (e !== "cancel") ElMessage.error(e.message || "已取消");
+  }
 }
 function openReview(row) {
   reviewRow.value = row;

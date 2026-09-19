@@ -32,6 +32,7 @@
       </div>
     </div>
     <p class="muted" v-if="ready && !list.length">没有匹配的线路</p>
+    <button class="btn ghost block" type="button" style="margin-top:12px" @click="$router.push('/m/route-apply')">没有想走的线？申请收录，首次成团奖 ¥300</button>
   </div>
 </template>
 

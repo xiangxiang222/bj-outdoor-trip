@@ -144,5 +144,11 @@
     </view>
   </view>
   <view wx:if="{{!routeList.length}}" class="muted pad">没有匹配的线路</view>
+  <view class="card" bindtap="goRouteApply">
+    <view class="pad">
+      <view class="title">申请收录线路</view>
+      <view class="muted">留下联系方式，通过并首次成团奖励 300 元</view>
+    </view>
+  </view>
 </block>
 <view class="home-foot muted" bindtap="goOfficial">客服与规则</view>

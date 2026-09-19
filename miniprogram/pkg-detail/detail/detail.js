@@ -146,6 +146,15 @@ Page({
         wx.showToast({ title: "原图加载失败", icon: "none" });
       });
   },
+  goApply() {
+    const app = getApp();
+    const url = "/pages/route-apply/route-apply";
+    if (!app.globalData.token) {
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(url) });
+      return;
+    }
+    wx.navigateTo({ url });
+  },
   open() {
     wx.navigateTo({ url: "/pages/open/open?id=" + this.data.id });
   },

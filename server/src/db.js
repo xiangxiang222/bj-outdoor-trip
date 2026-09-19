@@ -724,6 +724,16 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "payments", "refunded_amount", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "payments", "refund_of", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "enrollments", "pay_share_token", "TEXT");
+  addColumnIfMissing(db, "routes", "submitted_by", "INTEGER");
+  addColumnIfMissing(db, "routes", "contact_phone", "TEXT");
+  addColumnIfMissing(db, "routes", "contact_wechat", "TEXT");
+  addColumnIfMissing(db, "routes", "review_status", "TEXT DEFAULT 'approved'");
+  addColumnIfMissing(db, "routes", "review_note", "TEXT");
+  addColumnIfMissing(db, "routes", "reviewed_at", "TEXT");
+  addColumnIfMissing(db, "routes", "bounty_status", "TEXT DEFAULT ''");
+  addColumnIfMissing(db, "routes", "bounty_amount", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "routes", "bounty_paid_at", "TEXT");
+  addColumnIfMissing(db, "routes", "bounty_schedule_id", "INTEGER");
   db.exec(
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_enrollments_pay_share ON enrollments(pay_share_token) WHERE pay_share_token IS NOT NULL AND pay_share_token != ''"
   );

@@ -104,7 +104,13 @@ function quoteForSchedule(schedule, people, user) {
 function maybeMatchGuide(scheduleId) {
   const db = getDb();
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
-  if (!sch || sch.guide_id || sch.status === "cancelled") return sch;
+  if (!sch || sch.status === "cancelled") return sch;
+  try {
+    require("./route-apply").settleRouteBounty(sch);
+  } catch {
+    /* 成团奖励不影响匹配导游 */
+  }
+  if (sch.guide_id) return sch;
   const n = realEnrolledCount(scheduleId);
   if (n < sch.min_group_size) return sch;
   const route = db.prepare("SELECT * FROM routes WHERE id=?").get(sch.route_id);

@@ -135,11 +135,12 @@ npx vitest run src/utils/share.test.js
 | `api.lottery.test.js` | 报名前/后抽奖、本团奖池与指定中奖、库存用尽回落、报名后抽且跟团结束后领奖、交费未签到也可行后抽、后台抽奖列表、中奖人报名/奖品详情 |
 | `api.lottery.test.js` | 报名前/后抽奖、本团奖池与指定中奖、库存用尽回落、报名后抽且跟团结束后领奖、交费未签到也可行后抽、后台抽奖列表、中奖人报名/奖品详情 |
 | `api.leader.test.js` | 个人领队申请、待审不能报名、通过后占位、公司账号保持 company、拒绝后可再申请 |
+| `api.route-apply.test.js` | 用户申请收录线路、待审对路人隐藏、后台审批、首次成团奖励 300 元只发一次、驳回不发奖 |
 | `api.social.test.js` | 相册、主页、虚拟用户池与按团抽人、真人占座腾座 |
 | `api.split.test.js` | 演示分账 |
 | `api.dissolve.test.js` | 发起人解散、非发起人 403、后台解散单团与全部、重复解散 |
 | `api.admin.test.js` | 看板、线路起草/增改下架、B 站视频链接、封面上传、排期成本利润、后台结算、报名脱敏、用户列表 |
-| `api.notices.test.js` | 校园/团体/领队认证写入后台待办，点开带 `/admin/verify` 与 `kind`/`userId`，通过后未读清零 |
+| `api.notices.test.js` | 校园/团体/领队认证写入后台待办，点开带 `/admin/verify` 与 `kind`/`userId`，通过后未读清零；线路申请点开 `/admin/routes?review=pending` |
 | `api.guide.test.js` | 导游登录、行程名单开团前手机打码、游客详情、正式开团后可见完整号码、多轮签到确认、后台现场签到 |
 | `api.pulse.test.js` | 首页/线路实时动态：报名脱敏、浏览节流、匿名浏览只计入在看人数、同城局不进首页、评价与开团 |
 | `api.staff.test.js` | 后台账号增删改/停用、改密、运营权限、用户会员积分注销、后台代取消报名 |

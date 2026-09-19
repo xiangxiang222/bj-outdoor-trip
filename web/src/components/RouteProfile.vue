@@ -143,7 +143,7 @@
 
     <div v-if="!embedded" style="display:flex;gap:8px;margin-top:12px">
       <button class="btn ghost" style="flex:1" type="button" @click="$emit('share')">分享报名</button>
-      <button class="btn" style="flex:1" type="button" @click="$emit('open-schedule-create')">发布排期</button>
+      <button v-if="route.status === 'on'" class="btn" style="flex:1" type="button" @click="$emit('open-schedule-create')">发布排期</button>
     </div>
 
     <Teleport to="body">
