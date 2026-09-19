@@ -81,7 +81,8 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `pulse.js` | 首页/线路/团实时动态：汇报名、浏览、收藏、评价、开团；浏览写入 `page_views` |
 | `dissolve.js` | 解散拼团 |
 | `account.js` | 注销 |
-| `wechat.js` / `payment.js` / `pay-ledger.js` / `member.js` / `sms.js` / `captcha.js` | 微信登录与 JSAPI；团费自己付/代付/众筹分摊；按付款人退款；会员开通、短信 888888、图片验证码 |
+| `wechat.js` / `payment.js` / `pay-ledger.js` / `member.js` / `sms.js` / `captcha.js` | 微信登录与 JSAPI；订阅消息/小程序码；团费自己付/代付/众筹分摊；按付款人退款；会员开通、短信 888888、图片验证码 |
+| `notify.js` | 短信 + 小程序通知（并团等） |
 | `staff.js` | 后台角色与权限 |
 | `profile.js` | 公开主页 |
 | `supplies.js` | 随车补给加购 |
@@ -91,7 +92,8 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `fallback.js` | 候选团 / 替代团 |
 | `notices.js` | 后台待办：校园/团体/领队认证点开 `/admin/verify`；线路申请点开 `/admin/routes?review=pending&id=` |
 | `route-apply.js` | 用户申请收录线路、后台审批、首次成团奖励 300 元 |
-| `official-trip.js` | 官方团滚动开团、出行前一天并入未成团、个人发团成团奖 200 元 |
+| `official-trip.js` | 官方团滚动开团、出行前一天并入未成团并通知、个人发团成团奖 200 元 |
+| `share-poster.js` | 分享链接/二维码带推荐码、详情海报 SVG |
 | `route-draft.js` | 后台发线路起草：有密钥走兼容 OpenAI 的聊天接口，否则模板；图片先对已有景点库，再搜百度 / 360 |
 
 路由全集中在 `api.js`，不在 services 里挂 HTTP。

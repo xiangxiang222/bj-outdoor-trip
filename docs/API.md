@@ -18,7 +18,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/meta` | 品牌名、口号 `slogan`（在山野，遇见爱）、演示短信码、会员年费/95折/赠团文案、`studentDiscountRate`（0.9）、积分规则、保险方案、补给、可选天数、退改说明（含按距出发日比例的 `refundPolicy` / `cancelPolicy`）、风险告知、常见问题、官方账号、公共规则、推荐领队文案、`routeBounty`（用户线路申请首次成团奖励，默认 300 元）、`tripBounty`（个人发团成团奖励，默认 200 元）、`wechatPayMock` `wechatPayLive` `wechatAppId` |
+| GET | `/meta` | 品牌名、口号 `slogan`（在山野，遇见爱）、演示短信码、会员年费/95折/赠团文案、`studentDiscountRate`（0.9）、积分规则、保险方案、补给、可选天数、退改说明（含按距出发日比例的 `refundPolicy` / `cancelPolicy`）、风险告知、常见问题、官方账号、公共规则、推荐领队文案、`routeBounty`（用户线路申请首次成团奖励，默认 300 元）、`tripBounty`（个人发团成团奖励，默认 200 元）、`subscribeTemplates.merge`（并团小程序通知模板）、`wechatPayMock` `wechatPayLive` `wechatAppId` |
 | GET | `/home` | 首页：全部上架景点轮播（`brand.slides`，含 `routeId`/`title`/`url`）、按城市分组的景点轮播、玩法标签、节日、月份、天数缩略图。同城局线路不进轮播。Query：`month=YYYY-MM` 返回该月日历（不含 activity） |
 | GET | `/live/pulse` | 首页/线路/团顶部动态条。Query：`scope=home\|route\|schedule`、`routeId`、`scheduleId`。可选用户 token 与 `X-Visitor-Id`。返回 `{ items, watchingNow, watchingText }`。`items[].text` 已拼好，姓名脱敏、不含手机号。同城局报名不进首页。匿名浏览只计入 `watchingNow` |
 | POST | `/live/view` | 记录一次浏览。body：`scope` `routeId` `scheduleId`。同一访客对同一目标 10 分钟内不重复写入。可选用户 token |
@@ -42,8 +42,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | POST | `/enrollments/:id/fallbacks` | 设置候选团与替代团 |
 | GET | `/schedules/:id/demographics` | 本团画像 |
 | GET | `/schedules/:id/reviews` | 该团评价列表。`{ list, count, avg }` |
-| GET | `/schedules/:id/poster` | 分享 URL + QR DataURL（**无需登录**） |
-| GET | `/share/:token` | 302 到 `/m/schedule/:id?token=` |
+| GET | `/schedules/:id/poster` | 可选用户。分享 URL、二维码、小程序 path、详情海报 SVG。登录后 URL/二维码带 `ref` 推荐码，好友报名返点 5% |
+| GET | `/share/:token` | 302 到 `/m/schedule/:id?token=`，可附带 `ref` `joinCode` |
 | GET | `/coupons/:code` | 公开券详情、剩余、报价预览。登录后带 `claimedByMe`、`myCoupon.expiresAt`。`universal` 通用券无指定团。可选用户 token |
 | POST | `/coupons/:code/claim` | 用户。领取（已领则幂等返回）。每人每活动 1 张，库存按领取扣 |
 

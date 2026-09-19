@@ -241,7 +241,7 @@
       <template v-if="!isActivity">
         <div class="h2">推荐报名</div>
         <div class="card"><div class="pad" style="text-align:center">
-          <p class="muted">推荐成功后按人数结算报名费的 5%</p>
+          <p class="muted">推荐成功后按人数结算报名费的 5%。去分享时链接和海报二维码会带上你的推荐码。</p>
           <img v-if="referral.qr" :src="referral.qr" alt="推荐二维码" style="width:160px;height:160px;background:#fff;border-radius:12px" />
           <p class="muted" style="word-break:break-all">{{ referral.url }}</p>
           <p v-if="referral.code">我的推荐码 {{ referral.code }} · 待结 ¥{{ referral.pending || 0 }} / 已结 ¥{{ referral.earned || 0 }}</p>
@@ -391,14 +391,20 @@
 
     <div v-if="showShare" class="lightbox share-sheet" @click.self="closeShare">
       <div class="share-card" @click.stop>
-        <p class="share-title">发给微信好友或群</p>
-        <p class="muted">扫码即可打开本团报名页</p>
-        <img v-if="shareQr" class="share-qr" :src="shareQr" alt="报名二维码" />
-        <p v-else class="muted">正在生成二维码…</p>
+        <p class="share-title">发给微信好友</p>
+        <p class="muted">微信小程序转发是聊天卡片；也可保存详情图，让对方扫码报名。通过你的链接/二维码报名，成团后返点团费 {{ Math.round((sharePoster.rate || 0.05) * 100) }}%。</p>
+        <div class="share-poster-preview">
+          <img v-if="sharePosterImg" :src="sharePosterImg" alt="行程分享图" />
+          <div v-else class="share-poster-fallback">
+            <img v-if="shareQr" class="share-qr" :src="shareQr" alt="报名二维码" />
+            <p v-else class="muted">正在生成海报…</p>
+          </div>
+        </div>
         <p class="muted share-url">{{ shareUrl }}</p>
         <p v-if="shareHint" class="share-hint">{{ shareHint }}</p>
         <div class="share-actions">
           <button class="btn ghost" type="button" @click="closeShare">关闭</button>
+          <button class="btn ghost" type="button" :disabled="savingPoster" @click="savePoster">保存图片</button>
           <button v-if="nativeShareOk" class="btn ghost" type="button" @click="nativeShare">系统分享</button>
           <button class="btn" type="button" @click="copyShare">复制链接</button>
         </div>
@@ -437,6 +443,7 @@ import { payStatusText, scheduleStatusText, starText } from "@/utils/labels";
 import { formatActivityDate, activityKindOf } from "@/utils/activityKind";
 import { canShowEnroll, dockPrice, enrollCta, peopleLine, ticketState, trustChips } from "@/utils/scanFacts";
 import { nativeShareSupported, scheduleShareText, scheduleShareUrl } from "@/utils/share";
+import { drawTripPoster, downloadPosterPng, posterDataUrl } from "@/utils/sharePoster";
 import { setChrome } from "@/utils/pageChrome";
 import WeatherChart from "@/components/WeatherChart.vue";
 import TripPrices from "@/components/TripPrices.vue";
@@ -497,6 +504,9 @@ const shareUrl = ref("");
 const shareQr = ref("");
 const shareText = ref("");
 const shareHint = ref("");
+const sharePoster = ref({});
+const sharePosterImg = ref("");
+const savingPoster = ref(false);
 const nativeShareOk = computed(() => nativeShareSupported(typeof navigator === "undefined" ? {} : navigator));
 const reason = ref("");
 const dissolveErr = ref("");
@@ -891,7 +901,8 @@ function closeShare() {
 }
 
 async function share() {
-  const url = scheduleShareUrl(location.origin, s.value.id, s.value.shareToken, s.value.joinCode);
+  const inboundRef = String(route.query.ref || "").trim();
+  const url = scheduleShareUrl(location.origin, s.value.id, s.value.shareToken, s.value.joinCode, inboundRef);
   shareUrl.value = url;
   shareText.value = scheduleShareText({
     organizerName: s.value.organizerName,
@@ -903,12 +914,60 @@ async function share() {
   });
   shareQr.value = "";
   shareHint.value = "";
+  sharePoster.value = {};
+  sharePosterImg.value = "";
   showShare.value = true;
   try {
     const res = await http.get(`/schedules/${s.value.id}/poster`);
+    sharePoster.value = res.data || {};
     shareQr.value = res.data.qr;
+    shareUrl.value = scheduleShareUrl(
+      location.origin,
+      s.value.id,
+      s.value.shareToken,
+      s.value.joinCode,
+      res.data.referralCode || inboundRef
+    );
+    sharePosterImg.value = posterDataUrl(res.data.posterSvg);
+    shareText.value = scheduleShareText({
+      organizerName: s.value.organizerName,
+      title: s.value.route.title,
+      startDate: s.value.startDate,
+      enrolled: s.value.enrolled,
+      url: shareUrl.value,
+      joinCode: s.value.joinCode,
+    });
   } catch {
     /* 二维码失败时仍可复制链接 */
+  }
+}
+
+async function savePoster() {
+  savingPoster.value = true;
+  try {
+    const canvas = await drawTripPoster(sharePoster.value.facts || {
+      title: s.value.route?.title,
+      cover: gallery.value[0],
+      kindLabel: s.value.kindLabel,
+      originPrice: s.value.quote?.originPrice,
+      memberPrice: s.value.quote?.memberPrice,
+      studentPrice: s.value.quote?.studentPrice,
+      price: s.value.quote?.price,
+      startDate: s.value.startDate,
+      meetupTime: s.value.meetupTime,
+      meetupPoint: s.value.meetupPoint,
+      enrolled: s.value.enrolled,
+      maxSeats: s.value.maxSeats,
+      minGroup: s.value.minGroupSize,
+      organizerName: s.value.organizerName,
+      rate: sharePoster.value.rate,
+    }, shareQr.value);
+    await downloadPosterPng(canvas, `${s.value.route?.title || "行程"}-报名.png`);
+    shareHint.value = "已开始下载分享图";
+  } catch {
+    shareHint.value = "浏览器限制保存时，请长按上方图片另存";
+  } finally {
+    savingPoster.value = false;
   }
 }
 

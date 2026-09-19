@@ -147,6 +147,7 @@ describe("official trips, personal bounty and merge", () => {
 
   it("merges unformed same-slot trips into official the day before and expands seats", async () => {
     const token = await loginUser(agent);
+    getDb().prepare("UPDATE users SET wechat_openid=? WHERE id=?").run("o_merge_demo", seed.userId);
     const admin = await loginAdmin(agent);
     const now = dayjs("2026-09-19");
     const tomorrow = now.add(1, "day").format("YYYY-MM-DD");
@@ -234,6 +235,14 @@ describe("official trips, personal bounty and merge", () => {
       .prepare("SELECT COUNT(*) AS c FROM enrollments WHERE schedule_id=? AND status='joined'")
       .get(official.body.data.id);
     assert.equal(moved.c, 2);
+
+    const sms = getDb().prepare("SELECT * FROM sms_logs WHERE scene='merge' ORDER BY id").all();
+    assert.equal(sms.length, 2);
+    assert.match(sms[0].content, /官方团/);
+    const wx = getDb().prepare("SELECT * FROM wechat_notices WHERE scene='merge'").all();
+    assert.ok(wx.length >= 1);
+    assert.equal(wx[0].status, "sent");
+    assert.match(wx[0].page, /pages\/schedule\/schedule/);
 
     const bounty = getDb()
       .prepare("SELECT * FROM payments WHERE scene='trip_bounty' AND schedule_id=?")

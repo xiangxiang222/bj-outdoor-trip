@@ -323,6 +323,20 @@ function createSchema(db) {
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
+    CREATE TABLE IF NOT EXISTS wechat_notices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      openid TEXT,
+      scene TEXT,
+      template_id TEXT,
+      page TEXT,
+      payload TEXT,
+      status TEXT,
+      ref_type TEXT,
+      ref_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+
     CREATE TABLE IF NOT EXISTS coupon_campaigns (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       code TEXT UNIQUE,
@@ -752,6 +766,21 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "bounty_amount", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "schedules", "bounty_paid_at", "TEXT");
   addColumnIfMissing(db, "schedules", "merged_into", "INTEGER");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS wechat_notices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      openid TEXT,
+      scene TEXT,
+      template_id TEXT,
+      page TEXT,
+      payload TEXT,
+      status TEXT,
+      ref_type TEXT,
+      ref_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+  `);
   db.exec(`
     CREATE TABLE IF NOT EXISTS checkin_sessions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

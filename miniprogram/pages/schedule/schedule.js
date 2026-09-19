@@ -1,11 +1,14 @@
 const { request } = require("../../utils/request");
 const { invokeWechatPay, ensureWechatCode } = require("../../utils/pay");
 const { payStatusText, starText } = require("../../utils/labels");
-const { shareCover } = require("../../utils/media");
+const { shareCover, absMedia } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
 const { dateOf } = require("../../utils/activity-kind");
 const { peopleLine, trustChips, dockPrice, enrollCta, canShowEnroll, ticketState } = require("../../utils/scan-facts");
 const { openCampusPick } = require("../../utils/campus");
+const { decodeShareScene, persistRef, readRef, enrollQuery } = require("../../utils/share-scene");
+const { drawShareCard, drawSharePoster } = require("../../utils/share-card");
+const { baseUrl } = require("../../config");
 const app = getApp();
 
 function busLine(s) {
@@ -60,16 +63,28 @@ Page({
     posted: "",
     joinedHint: "",
     inboundJoinCode: "",
+    ref: "",
+    shareCardPath: "",
+    shareTitle: "",
+    showPoster: false,
+    posterQr: "",
+    posterCover: "",
+    posterHint: "",
+    mergeTpl: "",
     leaderSlots: [{ slot: 1, label: "领队1", leader: null }, { slot: 2, label: "领队2", leader: null }],
   },
   onLoad(q) {
+    const scene = decodeShareScene(q.scene || q.q || "");
+    const id = q.id || scene.id;
+    const ref = persistRef(id, q.ref || scene.ref) || readRef(id);
     const tab = ["trip", "route", "rules"].includes(q.tab) ? q.tab : "trip";
     this.setData({
-      id: q.id,
+      id,
       coupon: q.coupon || "",
       posted: q.posted || "",
       joinedHint: q.joined || "",
-      inboundJoinCode: q.joinCode || q.code || "",
+      inboundJoinCode: q.joinCode || q.code || scene.joinCode || "",
+      ref,
       tab,
     });
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
@@ -128,6 +143,7 @@ Page({
       });
       wx.setNavigationBarTitle({ title: isActivity ? "局详情" : "行程详情" });
       this.loadRoute(s.routeId || (s.route && s.route.id));
+      this.prepareShare(s);
       const region = s && s.route && [s.route.region, s.route.title].filter(Boolean).join(" ");
       const date = s && s.startDate;
       if (region && !isActivity) {
@@ -164,6 +180,7 @@ Page({
         waiverText: data.waiverText || "",
         faqs: data.faqs || [],
         contacts: data.contacts || this.data.contacts,
+        mergeTpl: (data.subscribeTemplates && data.subscribeTemplates.merge) || "",
       };
       if (!(this.data.s && this.data.s.refundPolicy)) {
         patch.cancelSummary = (data.cancelPolicy && data.cancelPolicy.summary) || "";
@@ -311,9 +328,7 @@ Page({
   },
   applyPhotographer() {
     const back = "/pages/schedule/schedule?id=" + this.data.id;
-    let enroll = "/pages/enroll/enroll?id=" + this.data.id + "&joinMode=photographer";
-    const photoCode = (this.data.s && this.data.s.joinCode) || this.data.inboundJoinCode;
-    if (photoCode) enroll += "&joinCode=" + encodeURIComponent(photoCode);
+    let enroll = "/pages/enroll/enroll?" + enrollQuery(this, "joinMode=photographer");
     if (!app.globalData.token) {
       wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(back) });
       return;
@@ -376,11 +391,7 @@ Page({
     wx.switchTab({ url: "/pages/orders/orders" });
   },
   enroll() {
-    let url = "/pages/enroll/enroll?id=" + this.data.id;
-    if (this.data.coupon) url += "&coupon=" + encodeURIComponent(this.data.coupon);
-    const code = (this.data.s && this.data.s.joinCode) || this.data.inboundJoinCode;
-    if (code) url += "&joinCode=" + encodeURIComponent(code);
-    wx.navigateTo({ url });
+    wx.navigateTo({ url: "/pages/enroll/enroll?" + enrollQuery(this) });
   },
   goCoupon() {
     const c = this.data.s && this.data.s.coupon;
@@ -474,24 +485,92 @@ Page({
       wx.showModal({ title: "解散失败", content: e.message, showCancel: false });
     }
   },
+  prepareShare(s) {
+    const quote = (s && s.quote) || {};
+    const cover = absMedia((s.gallery && s.gallery[0]) || (s.route && s.route.cover) || "", baseUrl);
+    const facts = {
+      title: (s.route && s.route.title) || "行程",
+      cover,
+      kindLabel: s.kindLabel || "个人",
+      originPrice: quote.originPrice,
+      memberPrice: quote.memberPrice,
+      studentPrice: quote.studentPrice,
+      price: quote.price,
+      free: Number(quote.price || 0) === 0 && Number(quote.originPrice || 0) === 0,
+      startDate: s.startDate,
+      meetupTime: s.meetupTime,
+      meetupPoint: s.meetupPoint,
+      enrolled: s.enrolled,
+      maxSeats: s.maxSeats,
+      minGroup: s.minGroupSize,
+      organizerName: s.organizerName,
+    };
+    this._shareFacts = facts;
+    const title = facts.free ? facts.title + " 免费报名" : facts.title + " ¥" + Math.round(Number(facts.price || 0)) + " 立即报名";
+    this.setData({ shareTitle: title, posterCover: cover });
+    request("/schedules/" + this.data.id + "/poster").then((res) => {
+      const data = (res && res.data) || {};
+      if (data.referralCode) persistRef(this.data.id, data.referralCode);
+      this.setData({
+        ref: data.referralCode || this.data.ref,
+        posterQr: data.qr || this.data.posterQr,
+      });
+    }).catch(() => {});
+    wx.nextTick(() => {
+      drawShareCard(this, facts).then((path) => this.setData({ shareCardPath: path })).catch(() => {});
+    });
+  },
+  openPoster() {
+    this.setData({ showPoster: true, posterHint: "正在生成带二维码的详情图…" });
+    request("/schedules/" + this.data.id + "/poster").then((res) => {
+      const data = (res && res.data) || {};
+      if (data.referralCode) persistRef(this.data.id, data.referralCode);
+      this.setData({
+        posterQr: data.qr || "",
+        ref: data.referralCode || this.data.ref,
+        posterHint: data.referralCode ? "好友扫码报名，成团后你拿团费 5%" : "登录后分享可绑定你的推荐返点",
+      });
+    }).catch(() => this.setData({ posterHint: "二维码生成失败，仍可转发小程序卡片" }));
+  },
+  closePoster() {
+    this.setData({ showPoster: false });
+  },
+  savePoster() {
+    const facts = this._shareFacts || {};
+    drawSharePoster(this, facts, this.data.posterQr).then((path) => {
+      wx.saveImageToPhotosAlbum({
+        filePath: path,
+        success: () => wx.showToast({ title: "已保存到相册", icon: "none" }),
+        fail: () => {
+          wx.previewImage({ urls: [path] });
+          wx.showToast({ title: "请长按图片保存", icon: "none" });
+        },
+      });
+    }).catch(() => wx.showToast({ title: "保存失败，可长按二维码截图", icon: "none" }));
+  },
   onShareAppMessage() {
     const s = this.data.s;
-    const title = s && s.route
+    const title = this.data.shareTitle || (s && s.route
       ? (s.organizerName || "同行者众") + "邀请你报名「" + s.route.title + "」"
-      : "同行者众 · 一起出发";
+      : "同行者众 · 一起出发");
     let path = "/pages/schedule/schedule?id=" + this.data.id;
+    const ref = this.data.ref;
+    if (ref) path += "&ref=" + encodeURIComponent(ref);
     if (s && s.joinCode) path += "&joinCode=" + encodeURIComponent(s.joinCode);
     return {
       title,
       path,
-      imageUrl: shareCover(s && s.route && s.route.cover),
+      imageUrl: this.data.shareCardPath || shareCover(s && s.route && s.route.cover),
     };
   },
   onShareTimeline() {
     const s = this.data.s;
+    let query = "id=" + this.data.id;
+    if (this.data.ref) query += "&ref=" + encodeURIComponent(this.data.ref);
     return {
-      title: (s && s.route && s.route.title) || "同行者众",
-      query: "id=" + this.data.id,
+      title: this.data.shareTitle || ((s && s.route && s.route.title) || "同行者众"),
+      query,
+      imageUrl: this.data.shareCardPath || shareCover(s && s.route && s.route.cover),
     };
   },
 });

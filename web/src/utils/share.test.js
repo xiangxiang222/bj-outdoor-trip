@@ -15,6 +15,9 @@ describe("share helpers", () => {
     expect(scheduleShareUrl("https://example.com", 12, "abc", "长城口令")).toBe(
       "https://example.com/m/schedule/12?token=abc&joinCode=%E9%95%BF%E5%9F%8E%E5%8F%A3%E4%BB%A4"
     );
+    expect(scheduleShareUrl("https://example.com", 12, "abc", "", "BX1")).toBe(
+      "https://example.com/m/schedule/12?token=abc&ref=BX1"
+    );
   });
 
   it("writes invite copy for the poster card", () => {

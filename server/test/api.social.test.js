@@ -17,6 +17,7 @@ describe("social homepage leaders referral virtual fallback", () => {
     assert.ok(res.body.data.commonRules.sections.length >= 4);
     assert.match(res.body.data.leaderRecruitCopy, /200/);
     assert.equal(res.body.data.referralRate, 0.05);
+    assert.ok("merge" in (res.body.data.subscribeTemplates || {}));
   });
 
   it("opens the new organizer homepage after the old account was closed", async () => {

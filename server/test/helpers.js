@@ -38,6 +38,7 @@ function wipe(db) {
     DELETE FROM routes;
     DELETE FROM guides;
     DELETE FROM bus_types;
+    DELETE FROM wechat_notices;
     DELETE FROM sms_logs;
     DELETE FROM sms_codes;
     DELETE FROM captchas;

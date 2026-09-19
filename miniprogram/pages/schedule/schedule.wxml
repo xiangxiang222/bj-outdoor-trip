@@ -202,7 +202,8 @@
   </view>
 </view>
 <view class="btn ghost" wx:if="{{!isActivity}}" bindtap="stats">本团画像</view>
-<button class="btn ghost" open-type="share">分享到微信</button>
+<button class="btn" open-type="share">分享到微信</button>
+<view class="btn ghost" bindtap="openPoster">生成报名海报</view>
 <view class="card" wx:if="{{s.isOrganizer && s.status!='cancelled' && s.eligibility.schools.length}}">
   <view class="pad muted">当前范围：{{s.eligibility.label}}。可以再开放学校-学院-专业组合，不能收窄。</view>
   <view class="input" bindtap="pickAddSchool">{{addSchool || '学校'}}</view>
@@ -344,4 +345,33 @@
     <view class="btn dock-cta" bindtap="enroll">{{ctaText}}</view>
   </view>
   <view class="pad muted" wx:elif="{{s.myEnrollment}}" style="text-align:center">{{ticket.title || '已报名'}}<text wx:if="{{isActivity && s.myEnrollment.status != 'waitlist'}}">，到场找发起人即可</text></view>
+</view>
+
+<canvas type="2d" id="shareCardCanvas" class="share-offscreen"></canvas>
+<canvas type="2d" id="sharePosterCanvas" class="share-offscreen"></canvas>
+
+<view class="poster-mask" wx:if="{{showPoster}}" catchtap="closePoster">
+  <view class="poster-sheet" catchtap>
+    <image class="poster-cover" src="{{posterCover}}" mode="aspectFill" wx:if="{{posterCover}}"/>
+    <view class="poster-body">
+      <view class="poster-title">
+        <view class="trip-kind {{s.kind || 'individual'}}" wx:if="{{s}}"><view class="trip-kind-ico"></view>{{s.kindLabel || '个人'}}</view>
+        {{s.route.title}}
+      </view>
+      <view class="poster-split">
+        <view class="poster-facts">
+          <view class="price" wx:if="{{!isFree}}">¥{{s.quote.originPrice}} <text class="muted">会员 ¥{{s.quote.memberPrice}}</text></view>
+          <view class="price" wx:else>免费</view>
+          <view class="muted">时间 {{whenText}}</view>
+          <view class="muted">集合 {{s.meetupPoint}} {{s.meetupTime}}</view>
+          <view class="muted">{{peopleText}}</view>
+        </view>
+        <image class="poster-qr" src="{{posterQr}}" wx:if="{{posterQr}}" show-menu-by-longpress/>
+      </view>
+      <view class="muted">{{posterHint}}</view>
+      <button class="btn" open-type="share">发给微信好友</button>
+      <view class="btn ghost" bindtap="savePoster">保存图片</view>
+      <view class="btn ghost" bindtap="closePoster">关闭</view>
+    </view>
+  </view>
 </view>
