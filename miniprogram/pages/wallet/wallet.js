@@ -4,13 +4,12 @@ const app = getApp();
 
 Page({
   data: {
-    data: { bills: [], cards: [], balance: 0 },
+    data: { bills: [], balance: 0 },
     mode: "",
     topupAmount: "100",
     withdrawAmount: "",
     pin: "",
     quick: [50, 100, 200, 500],
-    pickedCard: {},
     msg: "",
   },
   onShow() {
@@ -23,10 +22,8 @@ Page({
     }
     try {
       const res = await request("/me/wallet");
-      const data = res.data || { bills: [], cards: [] };
       this.setData({
-        data,
-        pickedCard: (data.cards && data.cards[0]) || {},
+        data: res.data || { bills: [] },
         msg: "",
       });
     } catch (e) {
@@ -68,11 +65,10 @@ Page({
     try {
       const res = await request("/me/wallet/withdraw", "POST", {
         amount: Number(this.data.withdrawAmount),
-        cardId: this.data.pickedCard.id,
         pin: this.data.pin,
       });
       if (res.data.user) setAuth(app.globalData.token, res.data.user);
-      wx.showToast({ title: "已提现", icon: "none" });
+      wx.showToast({ title: "已提现到微信", icon: "none" });
       this.setData({ mode: "", pin: "" });
       this.load();
     } catch (e) {

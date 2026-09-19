@@ -97,7 +97,7 @@ const title = computed(() => {
     settings: "设置",
     profile: "实名信息",
     wallet: "我的钱包",
-    "wallet-cards": "银行卡",
+    "wallet-cards": "提现说明",
     "wallet-pin": "支付密码",
     login: "登录 / 注册",
     member: "会员中心",

@@ -1,17 +1,2 @@
-<view class="pad muted">只保存开户行和卡号后四位，不保存完整卡号。</view>
-<view class="cell-group" wx:if="{{cards.length}}">
-  <view class="cell" wx:for="{{cards}}" wx:key="id">
-    <view>{{item.bankName}} {{item.masked}}</view>
-    <text class="muted" catchtap="remove" data-id="{{item.id}}">解绑</text>
-  </view>
-</view>
-<view class="pad muted" wx:else>还没有银行卡。</view>
-<view class="pad muted">持卡人</view>
-<input class="input" value="{{holderName}}" bindinput="setHolder" />
-<view class="pad muted">开户银行</view>
-<picker range="{{banks}}" value="{{bankIndex}}" bindchange="setBank">
-  <view class="input">{{banks[bankIndex]}}</view>
-</picker>
-<view class="pad muted">银行卡号</view>
-<input class="input" type="number" value="{{cardNo}}" maxlength="19" bindinput="setCard" />
-<view class="btn" bindtap="add">绑定银行卡</view>
+<view class="pad">不再支持绑定银行卡。充值和提现都走微信。</view>
+<view class="btn" bindtap="goWallet">去我的钱包</view>

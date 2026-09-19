@@ -32,42 +32,32 @@ describe("wallet API", () => {
     assert.equal(wallet.body.data.bills[0].delta, 200);
   });
 
-  it("binds a masked bank card, sets pin, and withdraws to that card", async () => {
+  it("rejects bank cards and withdraws to wechat with a pin", async () => {
     const token = await loginUser(agent);
     await agent.post("/api/me/wallet/topup").set(auth(token)).send({ amount: 300 }).expect(200);
-    const cardNo = "6222021234567890123";
     const card = await agent
       .post("/api/me/wallet/cards")
       .set(auth(token))
-      .send({ holderName: "林北野", bankName: "招商银行", cardNo })
-      .expect(200);
-    assert.equal(card.body.data.last4, "0123");
-    assert.match(card.body.data.masked, /\*\*\*\*/);
-    assert.equal(card.body.data.masked.includes(cardNo), false);
-    const stored = seed.db.prepare("SELECT * FROM bank_cards WHERE id=?").get(card.body.data.id);
-    assert.equal(JSON.stringify(stored).includes(cardNo), false);
+      .send({ holderName: "林北野", bankName: "招商银行", cardNo: "6222021234567890123" });
+    assert.equal(card.status, 400);
 
-    const needPin = await agent
-      .post("/api/me/wallet/withdraw")
-      .set(auth(token))
-      .send({ amount: 50, cardId: card.body.data.id, pin: "258369" });
+    const needPin = await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 50, pin: "258369" });
     assert.equal(needPin.status, 400);
 
     await agent.post("/api/me/wallet/pin").set(auth(token)).send({ pin: "258369" }).expect(200);
-    const wrong = await agent
-      .post("/api/me/wallet/withdraw")
-      .set(auth(token))
-      .send({ amount: 50, cardId: card.body.data.id, pin: "000000" });
+    const wrong = await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 50, pin: "000000" });
     assert.equal(wrong.status, 400);
 
-    const out = await agent
-      .post("/api/me/wallet/withdraw")
-      .set(auth(token))
-      .send({ amount: 50, cardId: card.body.data.id, pin: "258369" })
-      .expect(200);
+    const out = await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 50, pin: "258369" }).expect(200);
     assert.equal(out.body.data.amount, 50);
     assert.equal(out.body.data.balance, 250);
+    assert.equal(out.body.data.channel, "wechat");
     assert.equal(out.body.data.user.walletBalance, 250);
+
+    const wallet = await agent.get("/api/me/wallet").set(auth(token)).expect(200);
+    assert.equal(wallet.body.data.withdrawChannel, "wechat");
+    assert.equal(wallet.body.data.bills[0].scene, "withdraw");
+    assert.equal(wallet.body.data.bills[0].reason, "提现到微信零钱");
   });
 
   it("pays enrollment from wallet and refunds back on cancel", async () => {
