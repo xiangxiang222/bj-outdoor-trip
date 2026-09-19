@@ -59,7 +59,7 @@ const tabNames = new Set(["home", "activities", "orders", "mine"]);
 const isHome = computed(() => route.name === "home");
 const showBack = computed(() => !tabNames.has(route.name));
 const mineActive = computed(() =>
-  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback"].some(
+  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/settings", "/m/profile"].some(
     (p) => route.path === p || route.path.startsWith(p + "/")
   )
 );
@@ -94,6 +94,11 @@ const title = computed(() => {
     open: "发布排期",
     chain: "进行中的团",
     mine: "我的",
+    settings: "设置",
+    profile: "实名信息",
+    wallet: "我的钱包",
+    "wallet-cards": "银行卡",
+    "wallet-pin": "支付密码",
     login: "登录 / 注册",
     member: "会员中心",
     orders: "行程",

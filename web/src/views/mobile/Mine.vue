@@ -1,100 +1,136 @@
 <template>
-  <div>
-    <div v-if="store.token && store.profile" class="card mine-hero">
-      <div class="pad">
-        <div class="row">
-          <div>
-            <div class="mine-name">{{ store.profile.nickname }}</div>
-            <div class="muted" style="opacity:.85">{{ store.profile.phone || "未绑定手机" }}</div>
+  <div class="mine-page">
+    <template v-if="store.token && store.profile">
+      <div class="mine-hero-card">
+        <button class="mine-user" type="button" @click="$router.push('/m/user/' + store.profile.id)">
+          <div class="mine-avatar">
+            <img v-if="store.profile.avatar" :src="store.profile.avatar" alt="" />
+            <span v-else>{{ (store.profile.nickname || "友").slice(0, 1) }}</span>
           </div>
-          <span class="tag" style="background:#ffd166;color:#1b4332">{{ store.profile.isMember ? "会员" : "普通用户" }}</span>
+          <div class="mine-user-main">
+            <div class="mine-name">{{ store.profile.nickname }}</div>
+            <div class="mine-phone">{{ maskPhone(store.profile.phone) }}</div>
+          </div>
+        </button>
+        <button class="mine-gear" type="button" @click="goAuth('/m/settings')">设置</button>
+      </div>
+
+      <button class="mine-member" type="button" @click="openMember">
+        <div>
+          <strong>{{ store.profile.isMember ? "会员" : "开通会员" }}</strong>
+          <span>{{ store.profile.points || 0 }} 积分<template v-if="store.profile.isMember"> · {{ store.profile.memberExpireAt }}</template></span>
         </div>
-        <div class="row" style="margin-top:16px">
-          <div>积分 {{ store.profile.points }}</div>
-          <div v-if="store.profile.isMember">有效期 {{ store.profile.memberExpireAt }}</div>
+        <i>会员中心 ›</i>
+      </button>
+
+      <div class="mine-shortcuts">
+        <button type="button" @click="$router.push('/m/orders')">
+          <b>{{ (hub.upcomingCount || 0) + (hub.waitlistCount || 0) }}</b>
+          <span>全部行程</span>
+        </button>
+        <button type="button" @click="$router.push('/m/orders')">
+          <b>{{ hub.upcomingCount || 0 }}</b>
+          <span>待出发</span>
+        </button>
+        <button type="button" @click="$router.push('/m/orders')">
+          <b>{{ hub.unpaidCount || 0 }}</b>
+          <span>待支付</span>
+        </button>
+        <button type="button" @click="$router.push('/m/official')">
+          <b>客服</b>
+          <span>加微信</span>
+        </button>
+      </div>
+
+      <button class="mine-wallet" type="button" @click="goAuth('/m/wallet')">
+        <div class="mine-wallet-item">
+          <strong>{{ hub.balance ?? store.profile.walletBalance ?? 0 }}</strong>
+          <span>余额（元）</span>
         </div>
+        <div class="mine-wallet-item">
+          <strong>{{ hub.couponCount || coupons.length || 0 }}</strong>
+          <span>优惠券</span>
+        </div>
+        <div class="mine-wallet-item">
+          <strong>{{ store.profile.points || 0 }}</strong>
+          <span>积分</span>
+        </div>
+        <i>我的钱包 ›</i>
+      </button>
+    </template>
+
+    <div v-else class="card">
+      <div class="pad">
+        <p style="margin-top:0">登录后可报名、开团，余额也能用来付团费和提现。</p>
+        <button class="btn block" type="button" @click="goLogin()">登录</button>
+        <button class="btn ghost block" type="button" style="margin-top:8px" @click="goLogin('', 'register')">注册</button>
       </div>
     </div>
-    <div v-else class="card"><div class="pad">
-      <p style="margin-top:0">登录后可报名、开团、查看会员价和积分。</p>
-      <button class="btn block" @click="goLogin()">登录</button>
-      <button class="btn ghost block" style="margin-top:8px" @click="goLogin('', 'register')">注册</button>
-    </div></div>
 
-    <p class="cell-label">出行</p>
+    <p class="cell-label">常用</p>
+    <div class="mine-grid">
+      <button type="button" @click="goAuth('/m/favorites')"><span>★</span>我的收藏</button>
+      <button type="button" @click="goAuth('/m/student')"><span>学</span>{{ campusShort }}</button>
+      <button type="button" @click="goAuth('/m/leader')"><span>队</span>{{ leaderShort }}</button>
+      <button type="button" @click="goAuth('/m/publish')"><span>团</span>去发团</button>
+      <button type="button" @click="goReferral"><span>荐</span>推荐报名</button>
+      <button type="button" @click="goAuth('/m/lottery')"><span>奖</span>抽奖</button>
+      <button type="button" @click="goAuth('/m/route-apply')"><span>线</span>收录线路</button>
+      <button type="button" @click="goAuth('/m/feedback')"><span>问</span>建议反馈</button>
+    </div>
+
+    <p class="cell-label">服务</p>
     <div class="cell-group">
-      <button v-if="store.token && store.profile" class="cell" type="button" @click="$router.push('/m/user/' + store.profile.id)">
-        <span>个人主页</span><i>相册与过往 ›</i>
+      <button class="cell" type="button" @click="goAuth('/m/group')">
+        <span>{{ groupLabel }}</span><i>›</i>
+      </button>
+      <button class="cell" type="button" @click="$router.push('/m/official')">
+        <span>客服与规则</span><i>加微信、FAQ ›</i>
       </button>
       <button class="cell" type="button" @click="$router.push({ path: '/m', query: { view: 'routes' } })">
         <span>看线路</span><i>官方目的地 ›</i>
       </button>
-      <button class="cell" type="button" @click="goAuth('/m/favorites')">
-        <span>我的收藏</span><i>›</i>
-      </button>
     </div>
-
-    <p class="cell-label">权益</p>
-    <div class="cell-group">
-      <button class="cell" type="button" @click="goAuth('/m/coupons')">
-        <span>优惠券</span>
-        <i>{{ coupons.length ? coupons.length + " 张可用 ›" : "›" }}</i>
-      </button>
-      <button class="cell" type="button" @click="openMember">
-        <span>{{ store.profile?.isMember ? "会员中心" : "开通会员" }}</span><i>年费 99 · 95 折 ›</i>
-      </button>
-      <button class="cell" type="button" @click="goAuth('/m/student')">
-        <span>{{ store.profile?.isAlumni ? "校友已认证" : store.profile?.isStudent ? "学生已认证" : store.profile?.studentStatus === "pending" ? "校园认证审核中" : "校园认证" }}</span><i>›</i>
-      </button>
-      <button class="cell" type="button" @click="goAuth('/m/group')">
-        <span>{{ store.profile?.groupStatus === "approved" ? "团体已认证" : store.profile?.groupStatus === "pending" ? "团体认证审核中" : "团体认证" }}</span><i>›</i>
-      </button>
-      <button class="cell" type="button" @click="goAuth('/m/leader')">
-        <span>{{ store.profile?.isLeader ? "领队已认证" : store.profile?.leaderStatus === "pending" ? "领队申请审核中" : "领队申请" }}</span><i>›</i>
-      </button>
-      <button class="cell" type="button" @click="goReferral">
-        <span>推荐报名</span><i>按人数结 5% ›</i>
-      </button>
-      <button class="cell" type="button" @click="goAuth('/m/guides')">
-        <span>推荐领队</span><i>首次带队奖 200 ›</i>
-      </button>
-      <button class="cell" type="button" @click="goAuth('/m/lottery')">
-        <span>抽奖</span><i>本团中奖看这里 ›</i>
-      </button>
-    </div>
-    <p class="cell-label">服务</p>
-    <div class="cell-group">
-      <button class="cell" type="button" @click="$router.push('/m/official')">
-        <span>客服与规则</span><i>加微信、FAQ ›</i>
-      </button>
-      <button class="cell" type="button" @click="goAuth('/m/feedback')">
-        <span>功能建议与找 BUG</span><i>›</i>
-      </button>
-      <button class="cell" type="button" @click="goAuth('/m/route-apply')">
-        <span>申请收录线路</span><i>首次成团奖 300 ›</i>
-      </button>
-      <button class="cell" type="button" @click="goAuth('/m/publish')">
-        <span>去发团 / 发起一局</span><i>›</i>
-      </button>
-    </div>
-
-    <button v-if="store.token" class="btn ghost block" style="margin-top:16px" @click="store.logout(); $router.replace('/m/mine')">退出登录</button>
-    <button v-if="store.token" class="btn ghost block" style="color:var(--clay);margin-top:8px" @click="closeAccount">注销账号</button>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { liveWechatPay, MINIPROGRAM_PAY_HINT } from "@/utils/wechatPay";
+import { maskPhone } from "@/utils/labels";
 
 const store = useUserStore();
 const router = useRouter();
 const opening = ref(false);
 const coupons = ref([]);
-onMounted(async () => {
+const hub = ref({});
+
+const campusShort = computed(() => {
+  const u = store.profile;
+  if (u?.isAlumni) return "校友已认证";
+  if (u?.isStudent) return "学生已认证";
+  if (u?.studentStatus === "pending") return "认证审核中";
+  return "校园认证";
+});
+const leaderShort = computed(() => {
+  const u = store.profile;
+  if (u?.isLeader) return "领队已认证";
+  if (u?.leaderStatus === "pending") return "申请审核中";
+  return "领队申请";
+});
+const groupLabel = computed(() => {
+  const u = store.profile;
+  if (u?.groupStatus === "approved") return "团体已认证";
+  if (u?.groupStatus === "pending") return "团体认证审核中";
+  return "团体认证";
+});
+
+onMounted(load);
+
+async function load() {
   await store.fetchMe().catch(() => {});
   if (!store.token) return;
   try {
@@ -103,7 +139,12 @@ onMounted(async () => {
   } catch {
     coupons.value = [];
   }
-});
+  try {
+    hub.value = (await http.get("/me/wallet")).data || {};
+  } catch {
+    hub.value = {};
+  }
+}
 
 function goLogin(redirect, tab) {
   const query = {};
@@ -142,16 +183,6 @@ async function openMember() {
     window.alert(e.message || "开通失败");
   } finally {
     opening.value = false;
-  }
-}
-async function closeAccount() {
-  if (!window.confirm("注销后账号信息将被删除，未出行的报名会取消。同一手机号可以重新注册。确定注销？")) return;
-  try {
-    await http.delete("/me");
-    store.logout();
-    router.replace("/m/mine");
-  } catch (e) {
-    window.alert(e.message || "注销失败");
   }
 }
 </script>

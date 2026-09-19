@@ -40,7 +40,18 @@ function settleEnrollReferrals() {
     )
     .all();
   for (const row of rows) {
-    db.prepare("UPDATE referrals SET status='settled' WHERE id=?").run(row.id);
+    const locked = db.prepare("UPDATE referrals SET status='settled' WHERE id=? AND status='pending'").run(row.id);
+    if (!locked.changes) continue;
+    try {
+      require("./wallet").credit(row.referrer_id, row.amount, {
+        reason: "分享报名返点",
+        scene: "referral",
+        refType: "referral",
+        refId: row.id,
+      });
+    } catch {
+      /* 入账失败仍保留已结算，避免重复打款；补账走 backfill */
+    }
   }
   return rows.length;
 }

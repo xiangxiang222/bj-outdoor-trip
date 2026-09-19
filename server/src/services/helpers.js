@@ -115,6 +115,11 @@ function maybeMatchGuide(scheduleId) {
   } catch {
     /* 个人发团成团奖励不影响匹配导游 */
   }
+  try {
+    require("./referral").settleEnrollReferrals();
+  } catch {
+    /* 分享返点入账不影响匹配导游 */
+  }
   if (sch.guide_id) return sch;
   const n = realEnrolledCount(scheduleId);
   if (n < sch.min_group_size) return sch;

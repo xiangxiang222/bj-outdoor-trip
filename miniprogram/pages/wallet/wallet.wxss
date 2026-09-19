@@ -1,0 +1,2 @@
+.wallet-hero { background: linear-gradient(160deg, #fff7f2, #fff 55%); border-radius: 16rpx; margin: 16rpx; padding: 32rpx 24rpx; }
+.wallet-balance { font-size: 64rpx; font-weight: 800; }

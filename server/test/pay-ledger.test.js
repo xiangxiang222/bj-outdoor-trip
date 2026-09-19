@@ -26,5 +26,9 @@ describe("pay ledger helpers", () => {
     assert.equal(remarkForPay({ payerId: 1, enrolleeId: 1, amount: 80, remainingBefore: 199 }), "自己支付（分摊）");
     assert.equal(remarkForPay({ payerId: 2, enrolleeId: 1, amount: 199, remainingBefore: 199 }), "他人代付");
     assert.equal(remarkForPay({ payerId: 2, enrolleeId: 1, amount: 50, remainingBefore: 199 }), "众筹分摊");
+    assert.equal(
+      remarkForPay({ payerId: 1, enrolleeId: 1, amount: 199, remainingBefore: 199, channel: "wallet" }),
+      "自己支付（余额）"
+    );
   });
 });

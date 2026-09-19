@@ -4,6 +4,14 @@ function genderText(gender) {
   return gender ? "未填" : "";
 }
 
+function maskPhone(phone) {
+  const s = String(phone || "").replace(/[\s-]+/g, "");
+  if (/^1\d{10}$/.test(s)) return s.slice(0, 3) + "****" + s.slice(7);
+  if (s.length <= 4) return s ? "****" : "";
+  if (!s) return "";
+  return s.slice(0, 2) + "****" + s.slice(-2);
+}
+
 function starText(n) {
   const r = Math.max(0, Math.min(5, Number(n) || 0));
   return "★".repeat(r) + "☆".repeat(5 - r);
@@ -49,4 +57,4 @@ function scheduleStatusText(status) {
   );
 }
 
-module.exports = { payStatusText, enrollStatusText, organizerTypeText, scheduleStatusText, starText, genderText };
+module.exports = { payStatusText, enrollStatusText, organizerTypeText, scheduleStatusText, starText, genderText, maskPhone };

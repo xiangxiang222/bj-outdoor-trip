@@ -330,16 +330,26 @@ function settlePersonalBounty(sch) {
   if (!locked.changes) return null;
   if (amount > 0) {
     const tradeNo = `TB${Date.now()}${sch.organizer_id}`.slice(0, 32);
-    db.prepare(
+    const info = db.prepare(
       "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (?,?,?,?,?,?,?,?,?)"
     ).run(0, sch.organizer_id, sch.id, amount, "bounty", "success", tradeNo, "个人发团成团奖励", "trip_bounty");
+    try {
+      require("./wallet").credit(sch.organizer_id, amount, {
+        reason: "个人发团成团奖励",
+        scene: "trip_bounty",
+        refType: "payment",
+        refId: Number(info.lastInsertRowid),
+      });
+    } catch {
+      /* 钱包入账失败不影响成团标记 */
+    }
     const user = db.prepare("SELECT phone FROM users WHERE id=?").get(sch.organizer_id);
     const route = db.prepare("SELECT title FROM routes WHERE id=?").get(sch.route_id);
     if (user?.phone) {
       sendSms({
         phone: user.phone,
         scene: "trip",
-        content: `【同行者众】你发的「${route?.title || "活动"}」已成团，奖励 ${amount} 元已记账。`,
+        content: `【同行者众】你发的「${route?.title || "活动"}」已成团，奖励 ${amount} 元已入账钱包。`,
         refType: "schedule",
         refId: sch.id,
       });

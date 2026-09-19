@@ -7,7 +7,7 @@
         <p class="muted" style="margin:6px 0 0">{{ data.startDate }} 出发</p>
         <p class="price" style="margin:12px 0 0">待付 ¥{{ data.remainAmount }} / 共 ¥{{ data.payAmount }}</p>
         <p v-if="data.paidAmount" class="muted">已收到 ¥{{ data.paidAmount }}</p>
-        <p class="muted">可以自己付、帮人付全款，或改成更少金额转发给朋友一起分摊。退款按付款人原路退回。</p>
+        <p class="muted">可以余额付、微信付、帮人付全款，或改成更少金额转发给朋友一起分摊。退款按付款人原路退回。</p>
       </div>
     </div>
 
@@ -24,7 +24,8 @@
       <label>本次支付金额（元）</label>
       <input class="input" v-model="amount" type="number" min="1" :max="data.remainAmount" />
       <p v-if="msg" :style="ok ? '' : 'color:var(--clay)'">{{ msg }}</p>
-      <button class="btn block" type="button" :disabled="paying" @click="pay">{{ payLabel }}</button>
+      <button v-if="walletCanCover" class="btn block" type="button" :disabled="paying" @click="pay('wallet')">余额支付 ¥{{ amount }}（余额 {{ walletBalance }}）</button>
+      <button class="btn block" type="button" :class="{ ghost: walletCanCover }" :style="walletCanCover ? 'margin-top:8px' : ''" :disabled="paying" @click="pay()">{{ payLabel }}</button>
       <button class="btn ghost block" type="button" style="margin-top:8px" @click="fillRemain">付剩余全部 ¥{{ data.remainAmount }}</button>
     </template>
     <p v-else-if="data.company" class="muted">公司团由开团方统一支付。</p>
@@ -61,18 +62,21 @@ const amount = ref("");
 const payLabel = computed(() => {
   const n = Number(amount.value);
   if (data.value && n === Number(data.value.remainAmount)) {
-    return store.token && data.value.isOwner ? `自己支付 ¥${n}` : `代付 ¥${n}`;
+    return store.token && data.value.isOwner ? `微信支付 ¥${n}` : `微信代付 ¥${n}`;
   }
-  if (n > 0) return `支付 ¥${n}`;
+  if (n > 0) return `微信支付 ¥${n}`;
   return "去支付";
 });
+const walletBalance = computed(() => Number(store.profile?.walletBalance || 0));
+const walletCanCover = computed(() => walletBalance.value >= Number(amount.value || 0) && Number(amount.value || 0) > 0);
 
 onMounted(load);
 
 async function load() {
-  setChrome("付团费", "自己付、代付或分摊");
+  setChrome("付团费", "余额、微信或分摊");
   err.value = "";
   try {
+    await store.fetchMe().catch(() => {});
     const res = await http.get("/pay/share/" + route.params.token);
     data.value = res.data;
     amount.value = String(res.data.remainAmount || "");
@@ -85,7 +89,7 @@ function fillRemain() {
   if (data.value) amount.value = String(data.value.remainAmount);
 }
 
-async function pay() {
+async function pay(channel) {
   msg.value = "";
   ok.value = false;
   if (!requireLogin(store, router, route)) return;
@@ -94,6 +98,7 @@ async function pay() {
     const res = await http.post("/pay/for-enrollment", {
       token: route.params.token,
       amount: Number(amount.value),
+      channel,
     });
     if (liveWechatPay(res.data)) {
       msg.value = MINIPROGRAM_PAY_HINT;
@@ -101,6 +106,7 @@ async function pay() {
     }
     ok.value = true;
     msg.value = res.data.payStatus === "paid" ? "已付清" : "已支付 ¥" + (res.data.amount || amount.value) + "，还差 ¥" + (res.data.remainAmount || 0);
+    if (channel === "wallet") await store.fetchMe().catch(() => {});
     await load();
   } catch (e) {
     msg.value = e.message;

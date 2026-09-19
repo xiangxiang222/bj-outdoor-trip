@@ -1781,6 +1781,148 @@ html.admin-theme .el-dialog__footer {
 .home-foot a { color: var(--leaf); }
 .mine-hero { background: linear-gradient(118deg,#3a1848,#161218 48%,#4a1420); color: #fff; }
 .mine-name { font-size: 20px; font-weight: 700; }
+.mine-page { padding-bottom: 8px; }
+.mine-hero-card {
+  background: var(--paper);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mine-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+.mine-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #f3e8ff;
+  color: var(--thu);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  overflow: hidden;
+  flex: none;
+}
+.mine-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.mine-phone { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.mine-gear {
+  border: 0;
+  background: #f6f3ee;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+  color: var(--ink);
+}
+.mine-member {
+  width: 100%;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(118deg,#ece2ff,#d8c4f7);
+  color: #4b2d7a;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.mine-member strong { display: block; font-size: 16px; }
+.mine-member span { font-size: 12px; opacity: .8; }
+.mine-member i { font-style: normal; font-size: 13px; }
+.mine-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+  background: var(--paper);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 12px 8px;
+}
+.mine-shortcuts button {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+.mine-shortcuts b { display: block; font-size: 18px; }
+.mine-shortcuts span { font-size: 12px; color: var(--muted); }
+.mine-wallet {
+  width: 100%;
+  border: 0;
+  background: var(--paper);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 16px 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  align-items: end;
+  gap: 8px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mine-wallet-item strong { display: block; font-size: 20px; }
+.mine-wallet-item span { font-size: 12px; color: var(--muted); }
+.mine-wallet i { font-style: normal; color: var(--muted); font-size: 12px; }
+.mine-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  background: var(--paper);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 14px 8px 10px;
+  margin-bottom: 8px;
+}
+.mine-grid button {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  color: inherit;
+  cursor: pointer;
+}
+.mine-grid span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 6px;
+  border-radius: 12px;
+  background: #f6f3ee;
+  font-weight: 700;
+  color: var(--thu);
+}
+.wallet-hero {
+  background: linear-gradient(160deg,#fff7f2,#ffffff 55%);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 20px 16px;
+  margin-bottom: 12px;
+}
+.wallet-balance { font-size: 36px; font-weight: 800; letter-spacing: -1px; }
+.wallet-balance small { font-size: 14px; margin-left: 6px; font-weight: 500; color: var(--muted); }
+.wallet-actions { display: flex; gap: 8px; margin-top: 16px; }
+.wallet-actions .btn { flex: 1; }
 .cell-label {
   font-size: 12px;
   font-weight: 650;

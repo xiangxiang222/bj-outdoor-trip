@@ -7,6 +7,7 @@ import {
   payStatusText,
   organizerTypeText,
   scheduleStatusText,
+  maskPhone,
 } from "./labels";
 
 describe("labels", () => {
@@ -22,6 +23,8 @@ describe("labels", () => {
     expect(genderText("female")).toBe("女");
     expect(genderText("other")).toBe("未填");
     expect(genderText("")).toBe("");
+    expect(maskPhone("17612342020")).toBe("176****2020");
+    expect(maskPhone("")).toBe("");
     expect(insuranceText("plus")).toBe("升级高额险");
     expect(insuranceText("outdoor")).toBe("户外意外险");
     expect(insuranceText("none")).toBe("未加购");

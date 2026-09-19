@@ -167,6 +167,13 @@
 11. refunds each crowdfund payer on cancel
 12. rejects an unknown pay share token
 
+## `server/test/api.wallet.test.js`
+
+1. shows zero balance and accepts wechat mock topup
+2. binds a masked bank card, sets pin, and withdraws to that card
+3. pays enrollment from wallet and refunds back on cancel
+4. credits referral rebate and personal bounty into the wallet
+
 ## `server/test/api.pulse.test.js`
 
 1. masks names and city, formats relative time and ticker copy

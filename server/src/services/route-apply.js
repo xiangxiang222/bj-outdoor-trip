@@ -218,13 +218,23 @@ function settleRouteBounty(sch) {
     .run(sch.id, route.id);
   if (!locked.changes) return null;
   const tradeNo = `RB${Date.now()}${route.submitted_by}`.slice(0, 32);
-  db.prepare(
+  const info = db.prepare(
     "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (?,?,?,?,?,?,?,?,?)"
   ).run(0, route.submitted_by, sch.id, amount, "bounty", "success", tradeNo, "线路首次成团奖励", "route_bounty");
+  try {
+    require("./wallet").credit(route.submitted_by, amount, {
+      reason: "线路首次成团奖励",
+      scene: "route_bounty",
+      refType: "payment",
+      refId: Number(info.lastInsertRowid),
+    });
+  } catch {
+    /* 钱包入账失败不影响成团标记 */
+  }
   sendSms({
     phone: route.contact_phone,
     scene: "route",
-    content: `【同行者众】线路「${route.title}」首次成团，奖励 ${amount} 元已记账。`,
+    content: `【同行者众】线路「${route.title}」首次成团，奖励 ${amount} 元已入账钱包。`,
     refType: "route",
     refId: route.id,
   });
