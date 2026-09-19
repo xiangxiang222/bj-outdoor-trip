@@ -1,4 +1,5 @@
 const WEEKDAY = ["日", "一", "二", "三", "四", "五", "六"];
+const { organizerTypeText } = require("./labels");
 
 function feedWhen(iso, time) {
   const raw = String(iso || "").slice(0, 10);
@@ -25,6 +26,7 @@ function boardedLine(row, channel) {
 
 function hostName(row) {
   if (!row) return "";
+  if (row.organizerType === "official" || row.kind === "official") return "同行者众";
   if (row.organizerType === "company" || row.organizerType === "campus") {
     const schools = (row.eligibility && row.eligibility.schools) || [];
     return row.companyName || schools[0] || row.organizerName || "";
@@ -68,6 +70,8 @@ function decorateFeed(row, channel) {
     tagline: taglineOf(row),
     free: price === 0 || row.offerType === "free",
     price,
+    kind: row.kind || row.organizerType || "individual",
+    kindLabel: row.kindLabel || organizerTypeText(row.kind || row.organizerType, true),
   });
 }
 

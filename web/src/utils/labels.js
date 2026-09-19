@@ -37,9 +37,18 @@ export function payStatusText(status) {
 }
 
 export function organizerTypeText(type, short = false) {
+  if (type === "official") return short ? "官方" : "官方团";
   if (type === "company") return short ? "公司" : "公司团";
   if (type === "campus") return short ? "高校" : "高校团";
   return short ? "个人" : "个人拼团";
+}
+
+export function tripKindMeta(type, channel) {
+  if (channel === "activity" || type === "activity") return { key: "activity", label: "同城局" };
+  if (type === "official") return { key: "official", label: "官方" };
+  if (type === "company") return { key: "company", label: "公司" };
+  if (type === "campus") return { key: "campus", label: "高校" };
+  return { key: "individual", label: "个人" };
 }
 
 export function scheduleStatusText(status) {

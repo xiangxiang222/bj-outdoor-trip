@@ -16,6 +16,7 @@
       <div class="pad trip-head">
         <div class="row">
           <strong>
+            <TripKind :kind="s.kind" :type="s.organizerType" :channel="s.channel" />
             <span v-if="s.offerLabel" class="offer-chip inline" :style="{ background: s.offerColor }">{{ s.offerLabel }}</span>
             <span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">{{ s.privateLabel || "加密团" }}</span>
             {{ s.route.title }}
@@ -443,6 +444,7 @@ import GoodsTabs from "@/components/GoodsTabs.vue";
 import RouteProfile from "@/components/RouteProfile.vue";
 import LivePulse from "@/components/LivePulse.vue";
 import CampusNamePicker from "@/components/CampusNamePicker.vue";
+import TripKind from "@/components/TripKind.vue";
 import { liveWechatPay, MINIPROGRAM_PAY_HINT } from "@/utils/wechatPay";
 
 const TAB_IDS = ["trip", "route", "rules"];

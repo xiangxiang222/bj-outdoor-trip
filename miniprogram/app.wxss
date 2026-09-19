@@ -286,6 +286,35 @@ button.btn::after { border: none; }
 .feed-body { flex: 1; min-width: 0; }
 .feed-when { font-size: 22rpx; color: #7a7d74; }
 .feed-title { font-size: 30rpx; font-weight: 750; margin-top: 4rpx; }
+.trip-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  height: 36rpx;
+  padding: 0 12rpx 0 8rpx;
+  margin-right: 8rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 750;
+  line-height: 36rpx;
+  color: #fff;
+  vertical-align: middle;
+}
+.trip-kind-ico {
+  width: 18rpx;
+  height: 18rpx;
+  background: currentColor;
+  opacity: 0.92;
+}
+.trip-kind.official { background: #1b4332; }
+.trip-kind.official .trip-kind-ico { clip-path: polygon(18% 100%, 18% 12%, 88% 32%, 18% 48%); }
+.trip-kind.individual { background: #2d6a4f; }
+.trip-kind.individual .trip-kind-ico { border-radius: 50%; }
+.trip-kind.company { background: #1d4e89; }
+.trip-kind.company .trip-kind-ico { clip-path: polygon(12% 100%, 12% 42%, 38% 42%, 38% 18%, 88% 18%, 88% 100%); }
+.trip-kind.campus { background: #6b2178; }
+.trip-kind.campus .trip-kind-ico { clip-path: polygon(50% 6%, 96% 32%, 50% 52%, 4% 32%); }
+.trip-kind.activity { background: #9a3412; }
 .feed-host { font-size: 22rpx; color: #7a7d74; margin-top: 4rpx; }
 .feed-tagline {
   margin-top: 8rpx;

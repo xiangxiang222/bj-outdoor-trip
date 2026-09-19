@@ -72,6 +72,7 @@ export function sortFeed(rows, sortKey) {
 
 export const HOST_KINDS = [
   { key: "", label: "全部团" },
+  { key: "official", label: "官方" },
   { key: "company", label: "公司" },
   { key: "campus", label: "高校" },
   { key: "individual", label: "个人" },
@@ -103,9 +104,10 @@ export function matchesHost(row, opts = {}) {
   const company = String(opts.companyName || "").trim();
   const school = String(opts.school || "").trim();
   const organizer = row?.organizerType || row?.organizer_type || "individual";
+  if (kind === "official" && organizer !== "official") return false;
   if (kind === "company" && organizer !== "company") return false;
   if (kind === "campus" && !isCampusTrip(row)) return false;
-  if (kind === "individual" && (organizer === "company" || isCampusTrip(row))) return false;
+  if (kind === "individual" && (organizer === "company" || organizer === "official" || isCampusTrip(row))) return false;
   if (company && companyNameOf(row) !== company) return false;
   if (school && !schoolsOf(row).includes(school)) return false;
   return true;

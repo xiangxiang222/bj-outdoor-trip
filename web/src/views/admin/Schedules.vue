@@ -7,10 +7,11 @@
           显示已解散<span v-if="cancelledCount">（{{ cancelledCount }}）</span>
         </el-checkbox>
         <el-button v-if="canOps" type="danger" plain :disabled="!activeCount" @click="openDissolveAll">解散全部拼团（{{ activeCount }}）</el-button>
+        <el-button v-if="canOps" @click="syncOfficial">补齐官方团</el-button>
         <el-button v-if="canOps" type="success" @click="open">发布拼团</el-button>
       </div>
     </div>
-    <p class="admin-scroll-hint">表格较宽时可左右滑动。线路、出发会钉在左侧，操作在最右侧。</p>
+    <p class="admin-scroll-hint">表格较宽时可左右滑动。线路、出发会钉在左侧，操作在最右侧。上架线路会自动滚动开官方团；出行前一天，同集合点未成团的会并入官方团。</p>
     <el-table :data="visibleList" stripe :fit="false" class="admin-schedules-table" :empty-text="emptyText">
       <el-table-column prop="route.title" label="线路" width="168" fixed="left" />
       <el-table-column prop="startDate" label="出发" width="112" fixed="left" />
@@ -111,10 +112,12 @@
         <el-form-item label="日期"><el-input v-model="neu.startDate" type="date" /></el-form-item>
         <el-form-item label="类型">
           <el-select v-model="neu.organizerType">
+            <el-option label="官方开团" value="official" />
             <el-option label="个人开团" value="individual" />
             <el-option label="公司开团" value="company" />
             <el-option label="高校开团" value="campus" />
           </el-select>
+          <p v-if="neu.organizerType === 'official'" class="muted" style="margin:6px 0 0">官方团用户端直接显示「官方」。上架线路会按天自动补，也可在这里手开一场。</p>
         </el-form-item>
         <el-form-item v-if="neu.organizerType === 'company'" label="公司名">
           <el-input v-model="neu.companyName" placeholder="公司全称" />
@@ -404,7 +407,7 @@ const g1 = ref();
 const g2 = ref();
 const g3 = ref();
 const neu = ref({
-  organizerType: "individual",
+  organizerType: "official",
   minGroupSize: 10,
   busTypeId: "bus30",
   meetupPoint: "东直门东方银座C口",
@@ -493,6 +496,15 @@ const emptyText = computed(() => (
     : "暂无数据"
 ));
 function open() { showNew.value = true; }
+async function syncOfficial() {
+  try {
+    const res = await http.post("/admin/schedules/official-sync");
+    ElMessage.success(res.message || "已补齐官方团");
+    await load();
+  } catch (e) {
+    ElMessage.error(e.message || "补齐失败");
+  }
+}
 function openVirtual(row) {
   cur.value = row;
   virtualCount.value = Number(row.virtualEnrolled || 0);

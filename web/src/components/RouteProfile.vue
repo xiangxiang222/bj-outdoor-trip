@@ -100,7 +100,7 @@
         <div class="pad">
           <div class="row">
             <strong>{{ s.startDate }}{{ s.endDate !== s.startDate ? " 至 " + s.endDate : "" }}</strong>
-            <span class="tag">{{ organizerTypeText(s.organizerType) }}</span>
+            <TripKind :kind="s.kind" :type="s.organizerType" :channel="s.channel" />
           </div>
           <div class="muted">{{ s.bus?.name }} · {{ s.meetupPoint }} {{ s.meetupTime }}</div>
           <p v-if="s.guide" class="guide-hit" @click.stop="$emit('open-guide', s.guide.id)">导游 {{ s.guide.name }} · 查看详情</p>
@@ -162,12 +162,13 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { organizerTypeText, starText } from "@/utils/labels";
+import { starText } from "@/utils/labels";
 import { storyAlbum } from "@/utils/story";
 import TripPrices from "@/components/TripPrices.vue";
 import RouteStory from "@/components/RouteStory.vue";
 import RouteVideos from "@/components/RouteVideos.vue";
 import LivePulse from "@/components/LivePulse.vue";
+import TripKind from "@/components/TripKind.vue";
 
 const props = defineProps({
   route: { type: Object, default: null },

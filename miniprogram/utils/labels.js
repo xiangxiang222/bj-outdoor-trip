@@ -30,10 +30,11 @@ function payStatusText(status) {
   );
 }
 
-function organizerTypeText(type) {
-  if (type === "company") return "公司团";
-  if (type === "campus") return "高校团";
-  return "个人拼团";
+function organizerTypeText(type, short) {
+  if (type === "official") return short ? "官方" : "官方团";
+  if (type === "company") return short ? "公司" : "公司团";
+  if (type === "campus") return short ? "高校" : "高校团";
+  return short ? "个人" : "个人拼团";
 }
 
 function scheduleStatusText(status) {

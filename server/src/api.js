@@ -109,12 +109,21 @@ const {
   addPoints,
   attachAssetHost,
 } = require("./services/helpers");
+const {
+  markPersonalBounty,
+  runOfficialJobs,
+  tripKindOf,
+  personalBountyYuan,
+} = require("./services/official-trip");
 
 const router = express.Router();
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
 
-function resolveOrganizer(body, user, forceIndividual) {
-  const type = forceIndividual ? "individual" : normalizeOrganizerType(body && body.organizerType);
+function resolveOrganizer(body, user, forceIndividual, allowOfficial) {
+  const type = forceIndividual
+    ? "individual"
+    : normalizeOrganizerType(body && body.organizerType, { allowOfficial });
+  if (type === "official") return { type, name: "同行者众" };
   const name = forceIndividual ? "" : hostOrgName(type, body, user);
   if (type === "company" && !name) {
     const err = new Error("公司开团请填写公司名称");
@@ -304,6 +313,8 @@ function scheduleView(sch, req) {
   const leaders = leadersOf(sch.id, req);
   const viewer = req.userId ? db().prepare("SELECT * FROM users WHERE id=?").get(req.userId) : null;
   const organizer = adoptOrganizer(sch);
+  const kind = tripKindOf(sch.organizer_type, sch.channel === "activity" ? "activity" : "trip");
+  const official = sch.organizer_type === "official";
   return {
     id: sch.id,
     routeId: sch.route_id,
@@ -311,9 +322,11 @@ function scheduleView(sch, req) {
     gallery: galleryOfSchedule(mappedRoute, req),
     startDate: sch.start_date,
     endDate: sch.end_date,
-    organizerType: sch.organizer_type,
-    organizerId: organizer ? organizer.id : sch.organizer_id,
-    organizerName: organizer?.nickname || sch.organizer_name,
+    organizerType: official ? "official" : sch.organizer_type,
+    organizerId: official ? 0 : organizer ? organizer.id : sch.organizer_id,
+    organizerName: official ? sch.organizer_name || "同行者众" : organizer?.nickname || sch.organizer_name,
+    kind: kind.key,
+    kindLabel: kind.label,
     companyName: sch.company_name,
     bus: mapBus(bus, sch, req),
     minGroupSize: sch.min_group_size,
@@ -347,7 +360,6 @@ function scheduleView(sch, req) {
       : {}),
     canEnrollDirect: isOversubPending(sch) || Math.max(0, sch.max_seats - live - lockedCount) > 0 || virtualLive > 0,
     cost,
-    cost,
     costBreakdown: {
       transport: sch.cost_transport,
       ticket: sch.cost_ticket,
@@ -374,6 +386,9 @@ function scheduleView(sch, req) {
     refundPolicy: refundPolicyView(route, sch),
     ...joinLockView(sch, req),
     ...lotteryPublic(sch.id),
+    bountyAmount: Number(sch.bounty_amount || 0),
+    bountyStatus: sch.bounty_status || "",
+    mergedInto: Number(sch.merged_into || 0) || 0,
   };
 }
 
@@ -459,6 +474,7 @@ router.get("/meta", (req, res) => {
       referralRate: config.referral.enrollRate,
       leaderReward: config.referral.leaderReward,
       routeBounty: config.routeApply.bounty,
+      tripBounty: config.personalTrip.bounty,
       offers: Object.values(require("./services/offer").OFFER_TYPES),
     },
   });
@@ -1295,6 +1311,7 @@ router.post("/schedules", authUser, (req, res) => {
     return jsonError(res, e);
   }
   attachLotteryOnCreate(info.lastInsertRowid, req.body || {});
+  markPersonalBounty(info.lastInsertRowid);
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(info.lastInsertRowid);
   res.json({ ok: true, data: scheduleView(sch, req) });
 });
@@ -1480,6 +1497,7 @@ router.post("/trips", authUser, (req, res) => {
     return jsonError(res, e);
   }
   attachLotteryOnCreate(schInfo.lastInsertRowid, b);
+  markPersonalBounty(schInfo.lastInsertRowid);
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(schInfo.lastInsertRowid);
   res.json({
     ok: true,
@@ -1670,6 +1688,9 @@ router.get("/orders", authUser, (req, res) => {
         canReview: e.status === "joined" && !reviewed.has(e.schedule_id),
         completed: !!e.completed_at,
         canComplete: e.status === "joined" && !e.completed_at && !dayjs(e.start_date).isAfter(dayjs(), "day"),
+        organizerType: e.organizer_type,
+        kind: tripKindOf(e.organizer_type, e.channel).key,
+        kindLabel: tripKindOf(e.organizer_type, e.channel).label,
       };
     });
   res.json({ ok: true, data: rows });
@@ -2284,7 +2305,7 @@ router.post("/admin/schedules", authAdmin, requireCap("ops"), (req, res) => {
   if (!bus) return res.status(400).json({ ok: false, message: "请选择车型" });
   let organizer;
   try {
-    organizer = resolveOrganizer(req.body, {}, false);
+    organizer = resolveOrganizer(req.body, {}, false, true);
   } catch (e) {
     return res.status(e.status || 400).json({ ok: false, message: e.message });
   }
@@ -2300,7 +2321,7 @@ router.post("/admin/schedules", authAdmin, requireCap("ops"), (req, res) => {
       end,
       organizer.type,
       0,
-      admin.name,
+      organizer.type === "official" ? "同行者众" : admin.name,
       organizer.name,
       bus.id,
       minGroupSize || route.min_group_size,
@@ -2344,6 +2365,15 @@ router.post("/admin/schedules", authAdmin, requireCap("ops"), (req, res) => {
 router.get("/admin/schedules", authAdmin, requireCap("roster"), (req, res) => {
   const rows = db().prepare("SELECT * FROM schedules ORDER BY start_date DESC").all().map((s) => scheduleView(s, req));
   res.json({ ok: true, data: rows });
+});
+
+router.post("/admin/schedules/official-sync", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    const data = runOfficialJobs();
+    res.json({ ok: true, data, message: `已补齐 ${data.created.count} 个官方团，并入 ${data.merged.sources.length} 个未成团` });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 router.post("/admin/schedules/dissolve-all", authAdmin, requireCap("ops"), async (req, res) => {

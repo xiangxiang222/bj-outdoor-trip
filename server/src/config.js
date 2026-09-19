@@ -68,4 +68,11 @@ module.exports = {
   routeApply: {
     bounty: 300,
   },
+  personalTrip: {
+    bounty: 200,
+  },
+  officialTrip: {
+    horizonDays: 10,
+    meetupTime: "07:30",
+  },
 };

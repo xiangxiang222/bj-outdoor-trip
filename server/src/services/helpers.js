@@ -108,7 +108,12 @@ function maybeMatchGuide(scheduleId) {
   try {
     require("./route-apply").settleRouteBounty(sch);
   } catch {
-    /* 成团奖励不影响匹配导游 */
+    /* 线路成团奖励不影响匹配导游 */
+  }
+  try {
+    require("./official-trip").settlePersonalBounty(sch);
+  } catch {
+    /* 个人发团成团奖励不影响匹配导游 */
   }
   if (sch.guide_id) return sch;
   const n = realEnrolledCount(scheduleId);
@@ -212,8 +217,9 @@ function publicMediaUrl(url) {
   return resolveStoredMedia(url);
 }
 
-function normalizeOrganizerType(raw) {
+function normalizeOrganizerType(raw, opts = {}) {
   const t = String(raw || "").trim().toLowerCase();
+  if (opts.allowOfficial && (t === "official" || t === "平台" || t === "官方")) return "official";
   if (t === "company") return "company";
   if (t === "campus" || t === "school" || t === "university" || t === "高校") return "campus";
   return "individual";

@@ -87,6 +87,7 @@ Page({
       const o = this.data.offers.find((x) => x.key === offerFilter);
       if (o) picked.push({ key: "offer", label: o.label });
     }
+    if (hostKind === "official") picked.push({ key: "host", label: "官方团" });
     if (hostKind === "company") picked.push({ key: "host", label: "公司团" });
     if (hostKind === "campus") picked.push({ key: "host", label: "高校团" });
     if (hostKind === "individual") picked.push({ key: "host", label: "个人拼团" });

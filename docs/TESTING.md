@@ -136,6 +136,7 @@ npx vitest run src/utils/share.test.js
 | `api.lottery.test.js` | 报名前/后抽奖、本团奖池与指定中奖、库存用尽回落、报名后抽且跟团结束后领奖、交费未签到也可行后抽、后台抽奖列表、中奖人报名/奖品详情 |
 | `api.leader.test.js` | 个人领队申请、待审不能报名、通过后占位、公司账号保持 company、拒绝后可再申请 |
 | `api.route-apply.test.js` | 用户申请收录线路、待审对路人隐藏、后台审批、首次成团奖励 300 元只发一次、驳回不发奖 |
+| `api.official-trip.test.js` | 后台官方团、用户不能发官方团、按日补齐、个人成团奖 200、出行前一天并入并扩座 |
 | `api.social.test.js` | 相册、主页、虚拟用户池与按团抽人、真人占座腾座 |
 | `api.split.test.js` | 演示分账 |
 | `api.dissolve.test.js` | 发起人解散、非发起人 403、后台解散单团与全部、重复解散 |

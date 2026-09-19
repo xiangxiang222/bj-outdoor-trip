@@ -114,13 +114,15 @@ User 1──n Favorite / PointsLedger / Review
 | 字段 | 说明 |
 | --- | --- |
 | `channel` | `trip` 山野团（默认）/ `activity` 同城局 |
-| `organizer_type` | `individual` 个人拼团 / `company` 公司团 / `campus` 高校团（付款同个人，学校名写在 `company_name`） |
+| `organizer_type` | `official` 官方团 / `individual` 个人拼团 / `company` 公司团 / `campus` 高校团（付款同个人，学校名写在 `company_name`） |
 | `max_seats` | 山野团取自车型座位数；同城局为人数上限 |
 | `share_token` | 分享短链 |
 | `status` | `recruiting` 招募 / `confirmed` 已成团 / `cancelled` 已解散；满员与结束可由人数与日期推导 |
 | `review_status` | 用户发团 `pending` → 后台 `approved` / `rejected` |
 | `offer_type` | 如 `full` / `free` / 各类特价 |
 | `join_code` | 入团口令。有值即为加密团；列表展示「加密团」，报名须对上口令（忽略大小写）。口令只返回给发起人、已报名、后台、本团导游 |
+| `bounty_status` / `bounty_amount` | 用户个人发团为 `pending` + 200；成团后记 `trip_bounty` 并标 `paid`。官方/公司/高校不发 |
+| `merged_into` | 出行前一天并入的官方团 id |
 | `cancel_reason` 等 | 解散理由、时间、操作者类型与 id |
 | 成本六项 | 大巴、门票、住宿、餐食、导游、其他；利润 = 已收 `pay_amount` 合计 − 成本合计 |
 
@@ -195,15 +197,16 @@ User 1──n Favorite / PointsLedger / Review
 
 ### 4.2 开团与拼团
 
-1. **山野团**：用户选择线路、日期、车型、集合点，或 `POST /trips` 发新线路；个人须登录；公司须有公司名。提交后 `review_status=pending`，后台审核通过才上首页。
-2. **同城局**：活动 Tab「发起一局」→ `POST /trips` 且 `channel=activity`，选掼蛋/跑步/电影/招募、地点、时间、人数，不必选大巴。审核通过后出现在活动 Tab。
-3. 分享：小程序原生转发；H5 调公开海报接口拿二维码并复制链接；短链 `/api/share/:token`（302 到排期页）
-4. 报名写入 `enrollments`，名单对外只展示脱敏姓名（`林**`）。同城局名单不展示年龄段。
-5. 山野团人数达到 `min_group_size` 后 `maybeMatchGuide`：
+1. **山野团**：用户选择线路、日期、车型、集合点，或 `POST /trips` 发新线路；个人须登录；公司须有公司名。提交后 `review_status=pending`，后台审核通过才上首页。个人发团成团后记账 200 元（`payments.scene=trip_bounty`）。用户端不能发官方团。
+2. **官方团**：后台可手开；上架线路会滚动补近 10 日出发展。出行前一天，同一线路、同一集合时间与地点还没成团的其他团并入官方团；人数超过座位则换更大车。
+3. **同城局**：活动 Tab「发起一局」→ `POST /trips` 且 `channel=activity`，选掼蛋/跑步/电影/招募、地点、时间、人数，不必选大巴。审核通过后出现在活动 Tab。
+4. 分享：小程序原生转发；H5 调公开海报接口拿二维码并复制链接；短链 `/api/share/:token`（302 到排期页）
+5. 报名写入 `enrollments`，名单对外只展示脱敏姓名（`林**`）。同城局名单不展示年龄段。
+6. 山野团人数达到 `min_group_size` 后 `maybeMatchGuide`：
    - 优先导游 `specialties` 包含线路 `category`（如「长城」）
    - 否则空闲导游，再否则任意在岗导游
    - 无导游仍将排期标为 `confirmed`
-6. 发起人填写理由后解散：取消报名、已付款按付款人原路退、写 `sms_logs`
+7. 发起人填写理由后解散：取消报名、已付款按付款人原路退、写 `sms_logs`
 
 ### 4.3 支付与退款标记
 
