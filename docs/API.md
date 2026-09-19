@@ -58,10 +58,17 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | POST | `/auth/login` | 否 | `phone` `password` `captchaToken` `captcha` |
 | POST | `/auth/login-sms` | 否 | `phone` `code`；无用户则创建。当前 UI 未使用 |
 | POST | `/auth/wechat` | 否（登录后可选） | `code` `nickname` `avatar`。未登录则按 openid 登录或建号；已登录则绑定当前账号的 openid，返回 `bound: true`。`user.wechatBound` 表示是否已绑微信 |
-| GET | `/me` | 用户 | 当前用户（证件掩码；含学生/团体/领队状态、`isAlumni`/`campusKind`/`isLeader`、`college` `major` `studentNo` `studentCardUrl`） |
+| GET | `/me` | 用户 | 当前用户（证件掩码；含 `walletBalance` `walletPinSet` `realNamed`、学生/团体/领队状态、`isAlumni`/`campusKind`/`isLeader`、`college` `major` `studentNo` `studentCardUrl`） |
+| GET | `/me/wallet` | 用户 | 钱包：余额、账单、银行卡（仅掩码/后四位）、是否已设支付密码、实名状态、待支付/待出发数量 |
+| POST | `/me/wallet/topup` | 用户 | `{ amount }` 整数 1～5000 元。演示立即入账；真实支付返回 JSAPI，成功后入账。可带 `code` |
+| POST | `/me/wallet/withdraw` | 用户 | `{ amount, cardId, pin }`。须已实名、已绑卡、已设 6 位支付密码。演示立即扣余额 |
+| POST | `/me/wallet/cards` | 用户 | `{ holderName, bankName, cardNo }`。最多 3 张，只存开户行与后四位，不存完整卡号 |
+| DELETE | `/me/wallet/cards/:id` | 用户 | 解绑自己的卡 |
+| POST | `/me/wallet/pin` | 用户 | `{ pin, oldPin }`。6 位数字。已设置时须带原密码 |
+| POST | `/me/wallet/pin/reset` | 用户 | `{ idCard, pin }`。身份证须与实名一致 |
 | GET | `/me/trips` | 用户 | 即将出行：已报名且团未解散、出发日 ≥ 昨天的 `joined`/`waitlist`/`applied` |
 | GET | `/me/coupons` | 用户 | 我领取的券（含未用/已用/候补占用）。含 `expiresAt` `claimedAt` `validHours` `universal` |
-| GET | `/me/referral` | 用户 | 推荐码、专属二维码、5% 按人结算明细。Query：`scheduleId` |
+| GET | `/me/referral` | 用户 | 推荐码、专属二维码、5% 按人结算明细。Query：`scheduleId`。访问时会把已成团报名的 pending 结算进钱包 |
 | POST | `/me/photos` | 用户 | `{ url }` 写入个人相册 |
 | DELETE | `/me/photos/:id` | 用户 | 删除自己的相册照片 |
 | PUT | `/me` | 用户 | `nickname` `gender` `birthday` `idCard` `companyName` `avatar` |
@@ -69,7 +76,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | POST | `/me/group` | 用户 | `{ name, kind }` 团体认证，pending |
 | POST | `/me/leader` | 用户 | `{ name, years, intro }` 个人领队申请，pending。已通过则 400 |
 | GET | `/routes/apps` | 用户 | 我提交的线路申请、`bounty`、客服 `contacts` |
-| POST | `/routes/apply` | 用户 | 申请收录线路（不是发团）。`title` `region` `contactPhone` `contactWechat` 必填，可选 `subtitle` `days` `minGroupSize` `originPrice` `cover` `description`。写入 `review_status=pending`，后台通过并首次成团后记账 `route_bounty`（默认 300 元）。返回文案含客服微信 |
+| POST | `/routes/apply` | 用户 | 申请收录线路（不是发团）。`title` `region` `contactPhone` `contactWechat` 必填，可选 `subtitle` `days` `minGroupSize` `originPrice` `cover` `description`。写入 `review_status=pending`，后台通过并首次成团后奖励 300 元入账钱包（`route_bounty`）。返回文案含客服微信 |
 | POST | `/feedback` | 用户 | `{ kind: suggest\|bug, content }`，内容至少 4 字 |
 | GET | `/lottery` | 可选用户 | 抽奖状态与圆盘奖品（不含权重）。Query：`scheduleId`。返回 `drawMode` `canPre` `canPost` `canClaim`。有本团配置则用本团奖池。不带 `scheduleId` 时另给 `trips[]`（已抽或已报名的本团抽奖）和平台默认转盘 |
 | POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }`。服务端先出结果再让圆盘转到 `sectorIndex`，返回 `rate` `prizeInfo` `deferred` `claimHint`。指定中奖不会返回给用户。本团奖池中奖先记账，跟团结束后领取。平台默认行后抽：交费（或已占座）且行程结束即可，不必签到或点完成活动 |
@@ -88,13 +95,13 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | 方法 | 路径 | 鉴权 | 说明 |
 | --- | --- | --- | --- |
 | POST | `/schedules` | 用户 | 基于已有线路开团。`organizerType` 为 `individual` / `company` / `campus`。公司须 `companyName`，高校须学校名（`companyName` 或 `campusName`）。可带 `offerType` `playTagIds` `studentOnly` `alumniOk` `oversub` `campusTargets`（`[{school,college,major}]`，三项绑定；学院/专业可空）或旧字段 `schools` `colleges`、`campusScope`（`open\|certified\|college\|school\|colleges\|schools`）`campusSchool` `campusCollege` `lotteryMode`（`off\|pre\|enroll\|both`）、`privateJoin` `joinCode`（加密团口令，4～16 字；勾选加密且口令为空则自动生成 6 位）。`campusScope=schools` 用 `campusTargets`，不要把多校学院名并成一份名单 |
-| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `campusTargets` `schools` `colleges` `campusScope` `comboRule` `lotteryMode`、`videos`/`videoUrls`（B 站等视频链接）、`privateJoin` `joinCode`。用户端不能发官方团（`organizerType=official` 会当成个人）。个人山野团提交后待审，成团记账 `trip_bounty` 200 元。审核通过才上首页或活动 Tab |
+| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `campusTargets` `schools` `colleges` `campusScope` `comboRule` `lotteryMode`、`videos`/`videoUrls`（B 站等视频链接）、`privateJoin` `joinCode`。用户端不能发官方团（`organizerType=official` 会当成个人）。个人山野团提交后待审，成团奖励入钱包（`trip_bounty` 200 元）。审核通过才上首页或活动 Tab |
 | POST | `/upload` | 用户 | 发团封面、学生证。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
 | PUT | `/schedules/:id/limit` | 用户 | 仅发起人，只扩不缩。`addTargets`（`[{school,college,major}]`）`addSchools` `addColleges` `openAllColleges`。多校时 `addColleges` 必须带 `school`，两校同名学院不能混。不能把「不限学校」收成指定高校，也不能把「本校各学院」收成指定学院 |
 | POST | `/enroll` | 用户 | 见下方报名 body。报超会抽且名单未确认时写入 `applied`（不占座）；确认后中签 `joined`、未中 `waitlist`。候补/`applied` 券为 `held` |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。`WX_PAY_MOCK=0` 时返回 403 |
-| POST | `/pay/for-enrollment` | 用户 | 自己付、他人代付或众筹分摊。`enrollmentId` 或付款分享 `token`；可选 `amount`（整数元，默认付清余额）。演示立即成功。真实支付返回 `{ needPay, wechatPay, tradeNo }`，需小程序 `wx.requestPayment`。公司挂账不可用 |
+| POST | `/pay/for-enrollment` | 用户 | 自己付、他人代付或众筹分摊。`enrollmentId` 或付款分享 `token`；可选 `amount`（整数元，默认付清余额）、`channel=wallet` 用余额（不足则 400）。演示立即成功。真实微信支付返回 `{ needPay, wechatPay, tradeNo }`，需小程序 `wx.requestPayment`。公司挂账不可用。余额支付退款退回钱包 |
 | GET | `/pay/share/:token` | 可选 | 付款分享：待付余额、已付款名单。登录后 `isOwner`/`self` 更准 |
 | POST | `/pay/confirm` | 用户 | `{ tradeNo }`。向微信查单，成功则入账（报名已付或开通会员） |
 | POST | `/pay/wechat/notify` | 否 | 微信支付 XML 回调，验签后入账。返回微信 XML |

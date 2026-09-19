@@ -1,33 +1,50 @@
 const { request, setAuth, showError } = require("../../utils/request");
 const { buyMembership } = require("../../utils/pay");
+const { maskPhone } = require("../../utils/labels");
 const app = getApp();
 Page({
-  data: { user: null, coupon: null, leaderLabel: "领队申请", campusLabel: "校园认证" },
+  data: {
+    user: null,
+    phone: "",
+    nickHead: "友",
+    coupon: null,
+    leaderLabel: "领队申请",
+    campusLabel: "校园认证",
+    hub: { balance: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, couponCount: 0 },
+  },
   onShow() {
     const user = app.globalData.user;
     this.setData({
       user,
+      phone: maskPhone(user && user.phone),
+      nickHead: user && user.nickname ? user.nickname.slice(0, 1) : "友",
       leaderLabel: user && user.isLeader ? "领队已认证" : user && user.leaderStatus === "pending" ? "领队申请审核中" : "领队申请",
       campusLabel: user && user.isAlumni ? "校友已认证" : user && user.isStudent ? "学生已认证" : user && user.studentStatus === "pending" ? "校园认证审核中" : "校园认证",
     });
-    this.loadCoupon();
+    this.loadHub();
   },
-  async loadCoupon() {
+  async loadHub() {
     if (!app.globalData.token) {
-      this.setData({ coupon: null });
+      this.setData({ coupon: null, hub: { balance: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, couponCount: 0 } });
       return;
     }
     try {
-      const res = await request("/me/coupons");
-      const rows = (res.data || []).filter((c) => c.status === "unused");
-      this.setData({ coupon: rows[0] || null });
+      const res = await request("/me/wallet");
+      this.setData({ hub: res.data || {} });
     } catch {
-      this.setData({ coupon: null });
+      this.setData({ hub: { balance: (app.globalData.user && app.globalData.user.walletBalance) || 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, couponCount: 0 } });
     }
-  },
-  goCoupon() {
-    const c = this.data.coupon;
-    if (c && c.campaignCode) wx.navigateTo({ url: "/pages/coupon/coupon?code=" + c.campaignCode });
+    try {
+      const me = await request("/me");
+      setAuth(app.globalData.token, me.data);
+      this.setData({
+        user: me.data,
+        phone: maskPhone(me.data && me.data.phone),
+        nickHead: me.data && me.data.nickname ? me.data.nickname.slice(0, 1) : "友",
+      });
+    } catch {
+      /* keep cached */
+    }
   },
   goHome() {
     const u = this.data.user;
@@ -40,8 +57,15 @@ Page({
     getApp().globalData.homeView = "routes";
     wx.switchTab({ url: "/pages/index/index" });
   },
-  login() { wx.navigateTo({ url: "/pages/login/login" }); },
-  register() { wx.navigateTo({ url: "/pages/login/login?tab=register" }); },
+  goOrders() {
+    wx.switchTab({ url: "/pages/orders/orders" });
+  },
+  login() {
+    wx.navigateTo({ url: "/pages/login/login" });
+  },
+  register() {
+    wx.navigateTo({ url: "/pages/login/login?tab=register" });
+  },
   go(e) {
     const url = e.currentTarget.dataset.url;
     if (!app.globalData.token) {
@@ -67,24 +91,5 @@ Page({
     } catch (e) {
       showError("开通失败", e);
     }
-  },
-  out() { setAuth("", null); this.setData({ user: null }); },
-  closeAccount() {
-    wx.showModal({
-      title: "注销账号",
-      content: "注销后账号信息将被删除，未出行的报名会取消。同一手机号可以重新注册。",
-      confirmColor: "#bc4749",
-      success: async (res) => {
-        if (!res.confirm) return;
-        try {
-          await request("/me", "DELETE");
-          setAuth("", null);
-          this.setData({ user: null });
-          wx.showToast({ title: "已注销", icon: "none" });
-        } catch (e) {
-          showError("注销失败", e);
-        }
-      },
-    });
   },
 });

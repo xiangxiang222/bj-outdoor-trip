@@ -38,10 +38,10 @@ function newTradeNo(prefix, userId) {
 
 function pendingOf({ userId, enrollmentId, scene, amount }) {
   const db = getDb();
-  if (scene === "member") {
+  if (scene === "member" || scene === "wallet_topup") {
     return db
-      .prepare("SELECT * FROM payments WHERE user_id=? AND scene='member' AND status='pending' ORDER BY id DESC LIMIT 1")
-      .get(userId);
+      .prepare("SELECT * FROM payments WHERE user_id=? AND scene=? AND status='pending' ORDER BY id DESC LIMIT 1")
+      .get(userId, scene);
   }
   const row = db
     .prepare(
@@ -132,16 +132,17 @@ function applyEnrollmentCharge(en, payerId, amount, opts = {}) {
   const remark =
     opts.remark ||
     remarkForPay({ payerId, enrolleeId: en.user_id, amount: applied || charged, remainingBefore: due || charged });
+  const channel = opts.channel === "wallet" ? "wallet" : "wechat";
   if (opts.paymentId) {
-    db.prepare("UPDATE payments SET status='success', remark=? WHERE id=?").run(remark, opts.paymentId);
+    db.prepare("UPDATE payments SET status='success', remark=?, channel=? WHERE id=?").run(remark, channel, opts.paymentId);
   } else {
     db.prepare(
       "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (?,?,?,?,?,?,?,?,?)"
-    ).run(en.id, payerId, en.schedule_id, charged, "wechat", "success", tradeNo, remark, "enrollment");
+    ).run(en.id, payerId, en.schedule_id, charged, channel, "success", tradeNo, remark, "enrollment");
   }
   const nextEn = db.prepare("SELECT * FROM enrollments WHERE id=?").get(en.id);
   if (remainingDue(nextEn) <= 0 && Number(nextEn.pay_amount || 0) >= 0 && nextEn.pay_status !== "refunded") {
-    db.prepare("UPDATE enrollments SET pay_status='paid', pay_channel='wechat' WHERE id=?").run(en.id);
+    db.prepare("UPDATE enrollments SET pay_status='paid', pay_channel=? WHERE id=?").run(channel, en.id);
   }
   const traveler = db.prepare("SELECT * FROM users WHERE id=?").get(en.user_id);
   const earn = Math.floor(applied * (isMember(traveler) ? config.member.pointsBonus : 1));
@@ -169,6 +170,7 @@ function completeEnrollmentPay(en, payerId, amount, opts = {}) {
 
 function recordRefundSlice(en, slice, refundNo, remark) {
   const db = getDb();
+  const channel = slice.channel === "wallet" ? "wallet" : "wechat";
   if (slice.paymentId) {
     db.prepare("UPDATE payments SET refunded_amount=IFNULL(refunded_amount,0)+? WHERE id=?").run(slice.amount, slice.paymentId);
   }
@@ -179,7 +181,7 @@ function recordRefundSlice(en, slice, refundNo, remark) {
     slice.userId,
     en.schedule_id,
     slice.amount,
-    "wechat",
+    channel,
     "refunded",
     refundNo,
     remark,
@@ -193,7 +195,14 @@ async function refundEnrollmentToPayers(en, { amount, remark } = {}) {
   const results = [];
   for (const slice of plan) {
     const refundNo = newTradeNo("RF", slice.userId);
-    if (payLive() && slice.tradeNo) {
+    if (slice.channel === "wallet") {
+      require("./wallet").credit(slice.userId, slice.amount, {
+        reason: remark || "报名退款",
+        scene: "refund",
+        refType: "enrollment",
+        refId: en.id,
+      });
+    } else if (payLive() && slice.tradeNo) {
       await refundOrder({
         tradeNo: slice.tradeNo,
         transactionId: slice.transactionId,
@@ -219,7 +228,14 @@ async function refundPaymentExcess(pay, excess, remark) {
   const amount = Math.min(excess, leftover);
   if (amount <= 0) return null;
   const refundNo = newTradeNo("RX", pay.user_id);
-  if (payLive() && pay.trade_no) {
+  if (pay.channel === "wallet") {
+    require("./wallet").credit(pay.user_id, amount, {
+      reason: remark || "超额退回钱包",
+      scene: "refund",
+      refType: "payment",
+      refId: pay.id,
+    });
+  } else if (payLive() && pay.trade_no) {
     await refundOrder({
       tradeNo: pay.trade_no,
       transactionId: pay.wechat_transaction_id,
@@ -229,7 +245,12 @@ async function refundPaymentExcess(pay, excess, remark) {
     });
   }
   const en = { id: pay.enrollment_id, schedule_id: pay.schedule_id, user_id: pay.user_id, pay_status: "unpaid", pay_amount: 0 };
-  recordRefundSlice(en, { paymentId: pay.id, userId: pay.user_id, amount, tradeNo: pay.trade_no, chargeAmount: pay.amount }, refundNo, remark || "超额原路退回");
+  recordRefundSlice(
+    en,
+    { paymentId: pay.id, userId: pay.user_id, amount, tradeNo: pay.trade_no, chargeAmount: pay.amount, channel: pay.channel },
+    refundNo,
+    remark || "超额原路退回"
+  );
   return { userId: pay.user_id, amount, tradeNo: refundNo };
 }
 
@@ -261,7 +282,21 @@ async function payEnrollment(enrollmentId, payerId, opts = {}) {
     enrolleeId: en.user_id,
     amount,
     remainingBefore: remaining,
+    channel: opts.channel,
   });
+  if (String(opts.channel || "") === "wallet") {
+    const { debit, balanceOf } = require("./wallet");
+    const charged = getDb().transaction(() => {
+      debit(payerId, amount, {
+        reason: remark,
+        scene: "enrollment_pay",
+        refType: "enrollment",
+        refId: en.id,
+      });
+      return applyEnrollmentCharge(en, payerId, amount, { remark, channel: "wallet" });
+    })();
+    return { ...charged, channel: "wallet", walletBalance: balanceOf(payerId) };
+  }
   await ensurePayerWechat(payerId, opts.code);
   if (config.wechat.mock || amount <= 0) {
     return applyEnrollmentCharge(en, payerId, amount, { remark });
@@ -332,6 +367,48 @@ async function buyMembership(userId, opts = {}) {
   return { ...charged, user: getDb().prepare("SELECT * FROM users WHERE id=?").get(userId) };
 }
 
+async function buyWalletTopup(userId, opts = {}) {
+  const { parseYuan, credit, balanceOf } = require("./wallet");
+  const amount = parseYuan(opts.amount, { min: 1, max: 5000 });
+  await ensurePayerWechat(userId, opts.code);
+  if (config.wechat.mock) {
+    const tradeNo = newTradeNo("W", userId);
+    const info = getDb()
+      .prepare(
+        "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (0,?,0,?,?,?,?,?,?)"
+      )
+      .run(userId, amount, "wechat", "success", tradeNo, "钱包充值", "wallet_topup");
+    credit(userId, amount, {
+      reason: "钱包充值",
+      scene: "topup",
+      refType: "payment",
+      refId: Number(info.lastInsertRowid),
+    });
+    const user = getDb().prepare("SELECT * FROM users WHERE id=?").get(userId);
+    return { tradeNo, amount, needPay: false, mock: true, balance: balanceOf(userId), user };
+  }
+  if (!payLive()) fail(400, "未配置微信支付密钥，无法收款");
+  const pending = pendingOf({ userId, scene: "wallet_topup" });
+  const row =
+    pending ||
+    insertPending({
+      userId,
+      amount,
+      scene: "wallet_topup",
+      remark: "钱包充值",
+      tradeNo: newTradeNo("W", userId),
+    });
+  const charged = await jsapiCharge({
+    userId,
+    amount,
+    body: "同行者众-钱包充值",
+    tradeNo: row.trade_no,
+    clientIp: opts.clientIp,
+    paymentId: row.id,
+  });
+  return { ...charged, user: getDb().prepare("SELECT * FROM users WHERE id=?").get(userId) };
+}
+
 async function settleByTradeNo(tradeNo, extra = {}) {
   const db = getDb();
   stampTransaction(tradeNo, extra.transactionId);
@@ -348,6 +425,17 @@ async function settleByTradeNo(tradeNo, extra = {}) {
     db.prepare("UPDATE payments SET status='success' WHERE id=?").run(pay.id);
     grantMembership(pay.user_id);
     return { already: false, pay: db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id), scene: "member" };
+  }
+  if (scene === "wallet_topup") {
+    const { credit } = require("./wallet");
+    db.prepare("UPDATE payments SET status='success' WHERE id=?").run(pay.id);
+    credit(pay.user_id, pay.amount, {
+      reason: "钱包充值",
+      scene: "topup",
+      refType: "payment",
+      refId: pay.id,
+    });
+    return { already: false, pay: db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id), scene: "wallet_topup" };
   }
   const en = db.prepare("SELECT * FROM enrollments WHERE id=?").get(pay.enrollment_id);
   if (!en) fail(400, "报名不存在");
@@ -407,6 +495,7 @@ async function confirmTrade(tradeNo) {
 module.exports = {
   payEnrollment,
   buyMembership,
+  buyWalletTopup,
   settleByTradeNo,
   handleWechatNotify,
   confirmTrade,

@@ -1,36 +1,78 @@
-<view class="card mine-hero" wx:if="{{user}}">
-  <view class="pad">
-    <view class="title">{{user.nickname}}</view>
-    <view class="muted">{{user.phone}}</view>
-    <view>{{user.isMember ? '会员' : '普通用户'}} · 积分 {{user.points}}</view>
+<view class="mine-page" wx:if="{{user}}">
+  <view class="mine-hero-card">
+    <view class="mine-user" bindtap="goHome">
+      <view class="mine-avatar">
+        <image wx:if="{{user.avatar}}" src="{{user.avatar}}" mode="aspectFill" />
+        <text wx:else>{{nickHead}}</text>
+      </view>
+      <view>
+        <view class="title">{{user.nickname}}</view>
+        <view class="muted">{{phone}}</view>
+      </view>
+    </view>
+    <view class="mine-gear" bindtap="go" data-url="/pages/settings/settings">设置</view>
+  </view>
+
+  <view class="mine-member" bindtap="openMember">
+    <view>
+      <view class="title">{{user.isMember ? '会员' : '开通会员'}}</view>
+      <view class="muted">{{user.points}} 积分</view>
+    </view>
+    <view class="muted">会员中心 ›</view>
+  </view>
+
+  <view class="mine-shortcuts">
+    <view bindtap="goOrders">
+      <view class="title">{{hub.upcomingCount + hub.waitlistCount}}</view>
+      <view class="muted">全部行程</view>
+    </view>
+    <view bindtap="goOrders">
+      <view class="title">{{hub.upcomingCount}}</view>
+      <view class="muted">待出发</view>
+    </view>
+    <view bindtap="goOrders">
+      <view class="title">{{hub.unpaidCount}}</view>
+      <view class="muted">待支付</view>
+    </view>
+    <view bindtap="goOfficial">
+      <view class="title">客服</view>
+      <view class="muted">加微信</view>
+    </view>
+  </view>
+
+  <view class="mine-wallet" bindtap="go" data-url="/pages/wallet/wallet">
+    <view>
+      <view class="title">{{hub.balance}}</view>
+      <view class="muted">余额（元）</view>
+    </view>
+    <view>
+      <view class="title">{{hub.couponCount}}</view>
+      <view class="muted">优惠券</view>
+    </view>
+    <view>
+      <view class="title">{{user.points}}</view>
+      <view class="muted">积分</view>
+    </view>
+    <view class="muted">钱包 ›</view>
   </view>
 </view>
+
 <view class="btn" wx:if="{{!user}}" bindtap="login">登录</view>
 <view class="btn ghost" wx:if="{{!user}}" bindtap="register">注册</view>
 
-<view class="cell-label">出行</view>
-<view class="cell-group">
-  <view class="cell" wx:if="{{user}}" bindtap="goHome"><text>个人主页</text><text class="muted">相册与过往 ›</text></view>
-  <view class="cell" bindtap="goRoutes"><text>看线路</text><text class="muted">官方目的地 ›</text></view>
-  <view class="cell" bindtap="go" data-url="/pages/favorites/favorites"><text>我的收藏</text><text class="muted">›</text></view>
-</view>
-
-<view class="cell-label">权益</view>
-<view class="cell-group">
-  <view class="cell" bindtap="go" data-url="/pages/coupons/coupons"><text>优惠券</text><text class="muted">{{coupon ? coupon.label : ''}} ›</text></view>
-  <view class="cell" bindtap="openMember"><text>{{user.isMember ? '会员中心' : '开通会员'}}</text><text class="muted">年费 99 ›</text></view>
-  <view class="cell" bindtap="go" data-url="/pages/lottery/lottery"><text>抽奖</text><text class="muted">本团中奖看这里 ›</text></view>
-  <view class="cell" bindtap="go" data-url="/pages/leader/leader"><text>{{leaderLabel}}</text><text class="muted">›</text></view>
-  <view class="cell" bindtap="go" data-url="/pages/student/student"><text>{{campusLabel}}</text><text class="muted">›</text></view>
+<view class="cell-label">常用</view>
+<view class="mine-grid">
+  <view bindtap="go" data-url="/pages/favorites/favorites"><view class="ico">★</view>收藏</view>
+  <view bindtap="go" data-url="/pages/student/student"><view class="ico">学</view>{{campusLabel}}</view>
+  <view bindtap="go" data-url="/pages/leader/leader"><view class="ico">队</view>{{leaderLabel}}</view>
+  <view bindtap="go" data-url="/pages/publish/publish"><view class="ico">团</view>发团</view>
+  <view bindtap="go" data-url="/pages/lottery/lottery"><view class="ico">奖</view>抽奖</view>
+  <view bindtap="go" data-url="/pages/route-apply/route-apply"><view class="ico">线</view>收录线路</view>
+  <view bindtap="go" data-url="/pages/feedback/feedback"><view class="ico">问</view>建议</view>
+  <view bindtap="goRoutes"><view class="ico">目</view>看线路</view>
 </view>
 
 <view class="cell-label">服务</view>
 <view class="cell-group">
   <view class="cell" bindtap="goOfficial"><text>客服与规则</text><text class="muted">加微信、FAQ ›</text></view>
-  <view class="cell" bindtap="go" data-url="/pages/feedback/feedback"><text>功能建议与找 BUG</text><text class="muted">›</text></view>
-  <view class="cell" bindtap="go" data-url="/pages/route-apply/route-apply"><text>申请收录线路</text><text class="muted">首次成团奖 300 ›</text></view>
-  <view class="cell" bindtap="go" data-url="/pages/publish/publish"><text>去发团 / 发起一局</text><text class="muted">›</text></view>
 </view>
-
-<view class="btn ghost" wx:if="{{user}}" bindtap="out">退出</view>
-<view class="btn ghost" wx:if="{{user}}" bindtap="closeAccount" style="color:#bc4749">注销账号</view>

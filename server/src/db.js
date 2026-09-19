@@ -31,6 +31,8 @@ function createSchema(db) {
       member_expire_at TEXT,
       member_gift_left INTEGER DEFAULT 0,
       points INTEGER DEFAULT 0,
+      wallet_balance INTEGER DEFAULT 0,
+      wallet_pin_hash TEXT,
       company_name TEXT,
       role TEXT DEFAULT 'user',
       deleted_at TEXT,
@@ -766,6 +768,36 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "bounty_amount", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "schedules", "bounty_paid_at", "TEXT");
   addColumnIfMissing(db, "schedules", "merged_into", "INTEGER");
+  addColumnIfMissing(db, "users", "wallet_balance", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "users", "wallet_pin_hash", "TEXT");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS wallet_ledger (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      delta INTEGER NOT NULL,
+      balance INTEGER NOT NULL,
+      reason TEXT,
+      scene TEXT,
+      ref_type TEXT,
+      ref_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_wallet_ledger_user ON wallet_ledger(user_id, id DESC);
+    CREATE TABLE IF NOT EXISTS bank_cards (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      holder_name TEXT,
+      bank_name TEXT,
+      last4 TEXT,
+      card_no_masked TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+  `);
+  try {
+    require("./services/wallet").backfillHistoricCredits(db);
+  } catch {
+    /* 旧库补账失败不影响启动 */
+  }
   db.exec(`
     CREATE TABLE IF NOT EXISTS wechat_notices (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

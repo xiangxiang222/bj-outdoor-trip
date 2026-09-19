@@ -25,6 +25,7 @@ async function deleteAccount(userId) {
   }
 
   db.prepare("DELETE FROM favorites WHERE user_id=?").run(userId);
+  db.prepare("DELETE FROM bank_cards WHERE user_id=?").run(userId);
   db.prepare(
     `UPDATE users SET
       phone=NULL,
@@ -41,6 +42,8 @@ async function deleteAccount(userId) {
       is_member=0,
       member_expire_at=NULL,
       points=0,
+      wallet_balance=0,
+      wallet_pin_hash=NULL,
       deleted_at=datetime('now','localtime')
      WHERE id=?`
   ).run(userId);

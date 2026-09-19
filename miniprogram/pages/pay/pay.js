@@ -1,18 +1,24 @@
-const { request } = require("../../utils/request");
+const { request, setAuth } = require("../../utils/request");
 const { invokeWechatPay, ensureWechatCode } = require("../../utils/pay");
 const app = getApp();
 
 function payLabel(data, amount) {
   const n = Number(amount);
   if (data && n === Number(data.remainAmount)) {
-    return data.isOwner ? "自己支付 ¥" + n : "代付 ¥" + n;
+    return data.isOwner ? "微信支付 ¥" + n : "微信代付 ¥" + n;
   }
-  if (n > 0) return "支付 ¥" + n;
+  if (n > 0) return "微信支付 ¥" + n;
   return "去支付";
 }
 
+function walletState(amount) {
+  const bal = Number((app.globalData.user && app.globalData.user.walletBalance) || 0);
+  const n = Number(amount || 0);
+  return { walletBalance: bal, walletCanCover: bal >= n && n > 0 };
+}
+
 Page({
-  data: { token: "", data: null, amount: "", msg: "", err: "", payLabel: "去支付" },
+  data: { token: "", data: null, amount: "", msg: "", err: "", payLabel: "去支付", walletBalance: 0, walletCanCover: false },
   onLoad(q) {
     this.setData({ token: q.token || "" });
     this.load();
@@ -26,6 +32,10 @@ Page({
       return;
     }
     try {
+      if (app.globalData.token) {
+        const me = await request("/me");
+        setAuth(app.globalData.token, me.data);
+      }
       const res = await request("/pay/share/" + this.data.token);
       const data = res.data || {};
       this.setData({
@@ -33,6 +43,7 @@ Page({
         amount: String(data.remainAmount || ""),
         err: "",
         payLabel: payLabel(data, data.remainAmount),
+        ...walletState(data.remainAmount),
       });
     } catch (e) {
       this.setData({ err: e.message || "付款分享不存在" });
@@ -40,13 +51,19 @@ Page({
   },
   setAmount(e) {
     const amount = e.detail.value;
-    this.setData({ amount, payLabel: payLabel(this.data.data, amount) });
+    this.setData({ amount, payLabel: payLabel(this.data.data, amount), ...walletState(amount) });
   },
   fillRemain() {
     const remain = this.data.data && this.data.data.remainAmount;
-    this.setData({ amount: String(remain || ""), payLabel: payLabel(this.data.data, remain) });
+    this.setData({ amount: String(remain || ""), payLabel: payLabel(this.data.data, remain), ...walletState(remain) });
   },
-  async pay() {
+  pay() {
+    return this.charge("");
+  },
+  payWallet() {
+    return this.charge("wallet");
+  },
+  async charge(channel) {
     if (!app.globalData.token) {
       wx.navigateTo({
         url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/pay/pay?token=" + this.data.token),
@@ -55,12 +72,9 @@ Page({
     }
     this.setData({ msg: "" });
     try {
-      const code = await ensureWechatCode();
-      const res = await request("/pay/for-enrollment", "POST", {
-        token: this.data.token,
-        amount: Number(this.data.amount),
-        code,
-      });
+      const payload = { token: this.data.token, amount: Number(this.data.amount), channel };
+      if (channel !== "wallet") payload.code = await ensureWechatCode();
+      const res = await request("/pay/for-enrollment", "POST", payload);
       await invokeWechatPay(res.data);
       wx.showToast({
         title: res.data.payStatus === "paid" ? "已付清" : "已支付",

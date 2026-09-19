@@ -13,7 +13,8 @@
 <block wx:if="{{data && data.canPay}}">
   <view class="pad muted">本次支付金额（元）</view>
   <input class="input" type="number" value="{{amount}}" bindinput="setAmount" />
-  <view class="btn" bindtap="pay">{{payLabel}}</view>
+  <view class="btn" wx:if="{{walletCanCover}}" bindtap="payWallet">余额支付 ¥{{amount}}（余额 {{walletBalance}}）</view>
+  <view class="btn {{walletCanCover ? 'ghost' : ''}}" bindtap="pay">{{payLabel}}</view>
   <view class="btn ghost" bindtap="fillRemain">付剩余全部 ¥{{data.remainAmount}}</view>
 </block>
 <view class="pad muted" wx:elif="{{data && data.company}}">公司团由开团方统一支付。</view>

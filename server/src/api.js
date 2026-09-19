@@ -41,7 +41,7 @@ const {
 } = require("./services/home");
 const { offerMeta, liveMemberPrice, liveStudentPrice, flagOn } = require("./services/offer");
 const { publicUserProfile, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
-const { payEnrollment, buyMembership, confirmTrade, applyWechatSession, applyEnrollmentCharge } = require("./services/payment");
+const { payEnrollment, buyMembership, buyWalletTopup, confirmTrade, applyWechatSession, applyEnrollmentCharge } = require("./services/payment");
 const { payShareView, collectedMapForSchedule, payProgress, ensurePayShareToken, contributorsOf } = require("./services/pay-ledger");
 const { grantMembership } = require("./services/member");
 const { addPhoto, removePhoto, ensureReferralCode, resolveLiveUser, adoptOrganizer } = require("./services/profile");
@@ -51,6 +51,7 @@ const { optionsForSchedule, setFallbacks, listFallbacks } = require("./services/
 const { generateVirtualUsers, setVirtualUsersForSchedule, growVirtualPool, virtualPoolStats } = require("./services/virtual");
 const { listPulse, recordView, parseVisitorId } = require("./services/pulse");
 const { deleteAccount } = require("./services/account");
+const { snapshot: walletSnapshot, addCard, removeCard, setPin, resetPin, withdraw } = require("./services/wallet");
 const { drawPre, drawPost, claimPrizes, lotteryState, lotteryPublic } = require("./services/lottery");
 const { getAdminLottery, listAdminLotteries, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate } = require("./services/lottery-admin");
 const { completeTrip, afterTripState } = require("./services/aftertrip");
@@ -200,6 +201,9 @@ function userPublic(u, req) {
     referralCode: ensureReferralCode(u.id),
     idCardMasked: maskIdCard(u.id_card),
     wechatBound: Boolean(u.wechat_openid),
+    walletBalance: Number(u.wallet_balance || 0),
+    walletPinSet: Boolean(u.wallet_pin_hash),
+    realNamed: Boolean(u.id_card),
   };
 }
 
@@ -653,6 +657,76 @@ router.get("/me", authUser, (req, res) => {
   res.json({ ok: true, data: userPublic(user, req) });
 });
 
+router.get("/me/wallet", authUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: walletSnapshot(req.userId) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.post("/me/wallet/topup", authUser, async (req, res) => {
+  try {
+    const body = req.body || {};
+    const data = await buyWalletTopup(req.userId, {
+      amount: body.amount,
+      code: body.code,
+      clientIp: clientIp(req),
+    });
+    res.json({
+      ok: true,
+      data: {
+        ...data,
+        user: userPublic(data.user, req),
+      },
+    });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.post("/me/wallet/withdraw", authUser, (req, res) => {
+  try {
+    const data = withdraw(req.userId, req.body || {});
+    const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+    res.json({ ok: true, data: { ...data, user: userPublic(user, req) } });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.post("/me/wallet/cards", authUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: addCard(req.userId, req.body || {}) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.delete("/me/wallet/cards/:id", authUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: removeCard(req.userId, req.params.id) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.post("/me/wallet/pin", authUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: setPin(req.userId, req.body || {}) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.post("/me/wallet/pin/reset", authUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: resetPin(req.userId, req.body || {}) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
 router.get("/me/coupons", authUser, (req, res) => {
   res.json({ ok: true, data: listMine(req.userId) });
 });
@@ -761,10 +835,22 @@ router.delete("/me/photos/:id", authUser, (req, res) => {
 router.put("/me", authUser, (req, res) => {
   const { nickname, gender, birthday, idCard, companyName, avatar } = req.body || {};
   const parsed = idCard ? parseIdCard(idCard) : {};
+  if (idCard && parsed.valid === false) {
+    return res.status(400).json({ ok: false, message: parsed.error || "身份证号无效" });
+  }
   db().prepare(
     `UPDATE users SET nickname=COALESCE(?,nickname), gender=COALESCE(?,gender), birthday=COALESCE(?,birthday),
      id_card=COALESCE(?,id_card), hometown=COALESCE(?,hometown), company_name=COALESCE(?,company_name), avatar=COALESCE(?,avatar) WHERE id=?`
-  ).run(nickname, gender, birthday || parsed.birthday, idCard, parsed.hometown, companyName, avatar, req.userId);
+  ).run(
+    nickname,
+    parsed.gender || gender,
+    birthday || parsed.birthday,
+    parsed.idCard || idCard,
+    parsed.hometown,
+    companyName,
+    avatar,
+    req.userId
+  );
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
   res.json({ ok: true, data: userPublic(user, req) });
 });
@@ -1589,6 +1675,7 @@ router.post("/pay/for-enrollment", authUser, async (req, res) => {
       token: body.token,
       amount: body.amount,
       code: body.code,
+      channel: body.channel,
       clientIp: clientIp(req),
     });
     res.json({ ok: true, data });

@@ -179,11 +179,12 @@ function parsePayYuan(raw, remaining) {
   return yuan;
 }
 
-function remarkForPay({ payerId, enrolleeId, amount, remainingBefore }) {
+function remarkForPay({ payerId, enrolleeId, amount, remainingBefore, channel }) {
   const self = Number(payerId) === Number(enrolleeId);
   const portion = amount < remainingBefore;
-  if (self) return portion ? "自己支付（分摊）" : "自己支付";
-  return portion ? "众筹分摊" : "他人代付";
+  const wallet = channel === "wallet" ? "（余额）" : "";
+  if (self) return (portion ? "自己支付（分摊）" : "自己支付") + wallet;
+  return (portion ? "众筹分摊" : "他人代付") + wallet;
 }
 
 function planPayerRefunds(en, refundTotal) {
@@ -200,6 +201,7 @@ function planPayerRefunds(en, refundTotal) {
           tradeNo: "",
           transactionId: "",
           chargeAmount: Number(en.pay_amount),
+          channel: en.pay_channel === "wallet" ? "wallet" : "wechat",
         },
       ];
     }
@@ -215,6 +217,7 @@ function planPayerRefunds(en, refundTotal) {
       tradeNo: row.trade_no || "",
       transactionId: row.wechat_transaction_id || "",
       chargeAmount: Number(row.amount || 0),
+      channel: row.channel === "wallet" ? "wallet" : "wechat",
     }))
     .filter((row) => row.amount > 0);
 }

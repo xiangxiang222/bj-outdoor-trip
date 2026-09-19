@@ -1,4 +1,4 @@
-const { request } = require("../../utils/request");
+const { request, setAuth } = require("../../utils/request");
 const { invokeWechatPay, ensureWechatCode } = require("../../utils/pay");
 const { payStatusText, starText } = require("../../utils/labels");
 const { shareCover, absMedia } = require("../../utils/media");
@@ -356,13 +356,18 @@ Page({
       wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/schedule/schedule?id=" + this.data.id) });
       return;
     }
+    const enrollmentId = e.currentTarget.dataset.id;
+    const channel = e.currentTarget.dataset.channel || "";
     try {
-      const code = await ensureWechatCode();
-      const res = await request("/pay/for-enrollment", "POST", {
-        enrollmentId: e.currentTarget.dataset.id,
-        code,
-      });
+      const payload = { enrollmentId, channel };
+      if (channel !== "wallet") payload.code = await ensureWechatCode();
+      const res = await request("/pay/for-enrollment", "POST", payload);
       await invokeWechatPay(res.data);
+      if (res.data.user) setAuth(app.globalData.token, res.data.user);
+      else if (channel === "wallet") {
+        const me = await request("/me");
+        setAuth(app.globalData.token, me.data);
+      }
       wx.showToast({ title: res.data.payStatus === "paid" ? "已付清" : "已支付", icon: "none" });
       this.load();
     } catch (err) {
@@ -372,7 +377,20 @@ Page({
   payMine() {
     const mine = this.data.s && this.data.s.myEnrollment;
     if (!mine) return;
-    this.payFor({ currentTarget: { dataset: { id: mine.id, name: "自己" } } });
+    const remain = Number(mine.remainAmount || 0);
+    const bal = Number((app.globalData.user && app.globalData.user.walletBalance) || 0);
+    if (bal >= remain && remain > 0) {
+      wx.showActionSheet({
+        itemList: ["余额支付 ¥" + remain, "微信支付"],
+        success: (res) => {
+          this.payFor({
+            currentTarget: { dataset: { id: mine.id, channel: res.tapIndex === 0 ? "wallet" : "" } },
+          });
+        },
+      });
+      return;
+    }
+    this.payFor({ currentTarget: { dataset: { id: mine.id } } });
   },
   invitePay() {
     const mine = this.data.s && this.data.s.myEnrollment;

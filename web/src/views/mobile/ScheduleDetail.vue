@@ -207,8 +207,9 @@
           <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
           <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
           <template v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">
-            <p>费用待付 ¥{{ s.myEnrollment.remainAmount }}。</p>
-            <button class="btn block" type="button" @click="payMine">自己支付</button>
+            <p>费用待付 ¥{{ s.myEnrollment.remainAmount }}。可用余额或微信付款。</p>
+            <button v-if="walletCanCover(s.myEnrollment.remainAmount)" class="btn block" type="button" @click="payMine('wallet')">余额支付 ¥{{ s.myEnrollment.remainAmount }}</button>
+            <button class="btn block" type="button" :class="{ ghost: walletCanCover(s.myEnrollment.remainAmount) }" :style="walletCanCover(s.myEnrollment.remainAmount) ? 'margin-top:8px' : ''" @click="payMine()">微信支付</button>
             <button class="btn ghost block" type="button" style="margin-top:8px" @click="invitePay">邀请代付或分摊</button>
           </template>
         </template>
@@ -230,8 +231,9 @@
           </label>
           <button class="btn ghost block" style="margin-top:8px" :disabled="savingFallbacks" @click="saveFallbacks">保存备选</button>
           <template v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">
-            <p>团费待付 ¥{{ s.myEnrollment.remainAmount }} / ¥{{ s.myEnrollment.payAmount }}。可自己付、请人代付，或转发分摊。</p>
-            <button class="btn block" type="button" @click="payMine">自己支付</button>
+            <p>团费待付 ¥{{ s.myEnrollment.remainAmount }} / ¥{{ s.myEnrollment.payAmount }}。可余额付、微信付、请人代付，或转发分摊。</p>
+            <button v-if="walletCanCover(s.myEnrollment.remainAmount)" class="btn block" type="button" @click="payMine('wallet')">余额支付 ¥{{ s.myEnrollment.remainAmount }}</button>
+            <button class="btn block" type="button" :class="{ ghost: walletCanCover(s.myEnrollment.remainAmount) }" :style="walletCanCover(s.myEnrollment.remainAmount) ? 'margin-top:8px' : ''" @click="payMine()">微信支付</button>
             <button class="btn ghost block" type="button" style="margin-top:8px" @click="invitePay">邀请代付或分摊</button>
           </template>
           <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
@@ -647,6 +649,7 @@ function scrollTabsToTop() {
 }
 
 async function load() {
+  if (store.token) await store.fetchMe().catch(() => {});
   s.value = (await http.get("/schedules/" + route.params.id)).data;
   heroIndex.value = 0;
   fallbackIds.value = (s.value.myEnrollment?.fallbacks || []).map((f) => f.id);
@@ -708,9 +711,13 @@ function rosterPayText(c) {
   return seat + payStatusText(c.payStatus);
 }
 
-async function payMine() {
+async function payMine(channel) {
   if (!s.value?.myEnrollment) return;
-  await payFor({ enrollmentId: s.value.myEnrollment.id, name: "自己" });
+  await payFor({ enrollmentId: s.value.myEnrollment.id, name: "自己" }, channel);
+}
+
+function walletCanCover(amount) {
+  return Number(store.profile?.walletBalance || 0) >= Number(amount || 0) && Number(amount || 0) > 0;
 }
 
 function invitePay() {
@@ -868,18 +875,19 @@ async function favRoute() {
   }
 }
 
-async function payFor(c) {
+async function payFor(c, channel) {
   if (!store.token) {
     router.push("/m/login?redirect=" + encodeURIComponent(route.fullPath));
     return;
   }
   try {
-    const res = await http.post("/pay/for-enrollment", { enrollmentId: c.enrollmentId });
+    const res = await http.post("/pay/for-enrollment", { enrollmentId: c.enrollmentId, channel });
     if (liveWechatPay(res.data)) {
       msg.value = MINIPROGRAM_PAY_HINT;
       return;
     }
     msg.value = "已为 " + c.name + " 完成支付";
+    if (channel === "wallet") await store.fetchMe().catch(() => {});
     await load();
   } catch (e) {
     msg.value = e.message;

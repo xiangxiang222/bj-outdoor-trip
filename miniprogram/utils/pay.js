@@ -20,7 +20,7 @@ async function ensureWechatCode() {
 }
 
 async function invokeWechatPay(data) {
-  if (!data || !data.needPay || !data.wechatPay || data.wechatPay.mock) return data;
+  if (!data || data.channel === "wallet" || !data.needPay || !data.wechatPay || data.wechatPay.mock) return data;
   try {
     await wx.requestPayment(payArgs(data.wechatPay));
   } catch (e) {

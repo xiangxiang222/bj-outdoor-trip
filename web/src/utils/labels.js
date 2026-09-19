@@ -9,6 +9,14 @@ export function genderText(gender) {
   return gender ? "未填" : "";
 }
 
+export function maskPhone(phone) {
+  const s = String(phone || "").replace(/[\s-]+/g, "");
+  if (/^1\d{10}$/.test(s)) return `${s.slice(0, 3)}****${s.slice(7)}`;
+  if (s.length <= 4) return s ? "****" : "";
+  if (!s) return "";
+  return `${s.slice(0, 2)}****${s.slice(-2)}`;
+}
+
 export function insuranceText(code) {
   if (code === "plus") return "升级高额险";
   if (code === "outdoor") return "户外意外险";
