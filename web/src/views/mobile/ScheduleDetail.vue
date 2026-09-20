@@ -310,10 +310,10 @@
 
       <div v-if="!isActivity" style="display:flex;gap:8px;margin:12px 0">
         <button class="btn ghost" style="flex:1" @click="$router.push('/m/stats/' + s.id)">本团画像</button>
-        <button class="btn ghost" style="flex:1" @click="share">分享到微信</button>
+        <button class="btn ghost" style="flex:1" @click="share">分享报名</button>
       </div>
       <div v-else style="margin:12px 0">
-        <button class="btn ghost block" @click="share">分享到微信</button>
+        <button class="btn ghost block" @click="share">分享报名</button>
       </div>
     </div>
 
