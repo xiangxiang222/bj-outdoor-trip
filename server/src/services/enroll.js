@@ -2,7 +2,7 @@ const dayjs = require("dayjs");
 const { getDb } = require("../db");
 const { parseIdCard } = require("./idcard");
 const { calcPayable } = require("./biz");
-const { addPoints, attachAssetHost, enrolledCount, waitlistCount, quoteForSchedule, maybeMatchGuide } = require("./helpers");
+const { addPoints, attachAssetHost, enrolledCount, realEnrolledCount, waitlistCount, quoteForSchedule, maybeMatchGuide } = require("./helpers");
 const { sendSms } = require("./sms");
 const { assertSeatAvailable, firstFreeSeat } = require("./seats");
 const { kickVirtualSeat, trimVirtuals } = require("./virtual");
@@ -203,7 +203,8 @@ function enrollUser({
   }
   const referrer = findReferrer(referrerCode);
   const referrerId = referrer && Number(referrer.id) !== Number(user.id) ? referrer.id : null;
-  const quote = quoteForSchedule(sch, Math.max(waitlisted ? occupied : occupied + 1, 1), user);
+  const quotePeople = realEnrolledCount(sch.id);
+  const quote = quoteForSchedule(sch, Math.max(waitlisted ? quotePeople : quotePeople + 1, 1), user);
   const company = sch.organizer_type === "company";
   const couponPack = couponCode
     ? resolveCouponForEnroll({ userId: user.id, couponCode, scheduleId: sch.id, company })
@@ -422,7 +423,7 @@ async function cancelEnrollment(enrollmentId, userId, options = {}) {
     db.prepare("UPDATE enrollments SET status='cancelled', pay_status=? WHERE id=?").run(nextPay, en.id);
     releaseCouponByEnrollment(en.id);
     if (hasMoney && en.points_used) addPoints(en.user_id, en.points_used, "取消报名退还积分", "enrollment", en.id);
-    const n = enrolledCount(sch.id);
+    const n = realEnrolledCount(sch.id);
     if (n < sch.min_group_size && sch.guide_id) {
       db.prepare("UPDATE guides SET status='idle' WHERE id=? AND status='assigned'").run(sch.guide_id);
       db.prepare("UPDATE schedules SET guide_id=NULL, status='recruiting' WHERE id=?").run(sch.id);
@@ -431,6 +432,13 @@ async function cancelEnrollment(enrollmentId, userId, options = {}) {
   run();
 
   const promoted = wasJoined ? promoteWaitlist(sch.id) : null;
+  if (wasJoined) {
+    try {
+      trimVirtuals(sch.id);
+    } catch {
+      /* 热度回补失败不影响取消 */
+    }
+  }
 
   return {
     enrollmentId: en.id,

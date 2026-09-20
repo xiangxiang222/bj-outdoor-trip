@@ -18,6 +18,9 @@ describe("config env overrides", () => {
     assert.equal(config.referral.leaderReward, 200);
     assert.equal(config.routeApply.bounty, 300);
     assert.equal(config.personalTrip.bounty, 200);
+    assert.equal(config.virtualHeat.poolSize, 2000);
+    assert.equal(config.virtualHeat.yieldMode, "replace");
+    assert.equal(config.virtualHeat.seedRatio, 0.45);
     assert.equal(config.officialTrip.horizonDays, 10);
     assert.equal(config.ai.apiKey, "");
     assert.equal(config.ai.model, "gpt-4o-mini");

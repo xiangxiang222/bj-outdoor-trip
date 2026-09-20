@@ -9,7 +9,7 @@
     </div>
     <p class="admin-scroll-hint">校园、团体和领队认证请到「认证审批」。这里只管会员、积分和账号。</p>
     <div class="virtual-pool">
-      <span>虚拟用户池 {{ pool.total }} 人，空闲 {{ pool.idle }}，正在占座 {{ pool.busy }}。各团从这里抽人，不够会自动补进池。</span>
+      <span>虚拟用户池 {{ pool.total }} 人，空闲 {{ pool.idle }}，正在占座 {{ pool.busy }}。上限 2000，各团自动热度从这里抽人。</span>
       <el-input-number v-model="poolCount" :min="1" :max="200" />
       <el-button type="success" :loading="growingPool" @click="growPool">生成虚拟用户</el-button>
     </div>

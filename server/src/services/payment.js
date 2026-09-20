@@ -1,5 +1,5 @@
 const { getDb } = require("../db");
-const { addPoints, isMember, quoteForSchedule, enrolledCount, maybeMatchGuide } = require("./helpers");
+const { addPoints, isMember, quoteForSchedule, realEnrolledCount, maybeMatchGuide } = require("./helpers");
 const { grantMembership } = require("./member");
 const config = require("../config");
 const {
@@ -265,7 +265,7 @@ function loadEnrollmentForPay(enrollmentId, token) {
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(en.schedule_id);
   if (!sch || sch.status === "cancelled") fail(400, "该拼团已解散");
   if (!Number(en.pay_amount || 0)) {
-    en.pay_amount = quoteForSchedule(sch, enrolledCount(sch.id), null).originPrice;
+    en.pay_amount = quoteForSchedule(sch, Math.max(realEnrolledCount(sch.id), 1), null).originPrice;
   }
   expireStalePendings(en.id);
   return { en, sch };

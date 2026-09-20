@@ -77,7 +77,8 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `weather.js` | Open-Meteo 或 mock |
 | `leaders.js` / `referral.js` | 双领队、推荐码 5%、领队奖 200 |
 | `lottery.js` / `lottery-admin.js` / `aftertrip.js` / `contest.js` / `trip-run.js` | 抽奖圆盘、本团奖池与指定中奖、完成活动、评选、正式开团与多轮签到 |
-| `virtual.js` | 虚拟用户池、按团抽人占座，真人报名腾座 |
+| `virtual.js` | 虚拟用户池（上限 2000）、按团抽人占座，真人报名腾座 |
+| `virtual-heat.js` | 自动热度：规则 A 水位、夜间静默、出发前清空；5 分钟任务在 `index.js` |
 | `pulse.js` | 首页/线路/团实时动态：汇报名、浏览、收藏、评价、开团；浏览写入 `page_views` |
 | `dissolve.js` | 解散拼团 |
 | `account.js` | 注销 |

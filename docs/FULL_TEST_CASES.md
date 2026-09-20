@@ -537,6 +537,8 @@ npm test
 | `api.routes.test.js` | 7 | 线路排期分享 |
 | `api.seats.test.js` | 2 | 选座 |
 | `api.social.test.js` | 9 | 主页、推荐、虚拟用户 |
+| `virtual-heat.service.test.js` | 6 | 自动热度水位与让位 |
+| `api.virtual-heat.test.js` | 6 | 官方/用户团自动热度、并团与报价 |
 | `api.split.test.js` | 1 | 公司分账 |
 | `api.staff.test.js` | 7 | 后台账号权限 |
 | `api.supplies.test.js` | 1 | 补给 |

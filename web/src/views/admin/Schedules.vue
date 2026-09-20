@@ -294,19 +294,24 @@
         <el-button type="success" :loading="savingLimit" @click="saveLimit">保存</el-button>
       </template>
     </el-dialog>
-    <el-dialog v-model="showVirtual" title="本团虚拟报名" width="480px">
+    <el-dialog v-model="showVirtual" title="本团虚拟报名" width="520px">
       <p v-if="cur">
-        「{{ cur.route?.title }} {{ cur.startDate }}」当前真实 {{ cur.realEnrolled || 0 }} 人、虚拟 {{ cur.virtualEnrolled || 0 }} 人、座位 {{ cur.maxSeats }}。
+        「{{ cur.route?.title }} {{ cur.startDate }}」真实 {{ cur.realEnrolled || 0 }} 人、虚拟 {{ cur.virtualEnrolled || 0 }} 人、座位 {{ cur.maxSeats }}。
       </p>
-      <p class="muted">从虚拟用户池抽人占座。池中空闲 {{ virtualPool.idle }} / 共 {{ virtualPool.total }} 人，不够会自动补进池。人数可随时改；真人占座时会腾出虚拟座位。</p>
+      <p class="muted">官方团和用户自建团默认开自动热度（规则 A：真人 +1 则虚拟 −1，展示钉在成团人数约 45%，且低于成团线）。加密团、同城局不开。改人数会暂停自动。</p>
+      <p v-if="cur?.heat" class="muted">底线 {{ cur.heat.floor }} · 种子 {{ cur.heat.seed }} · 上限 {{ cur.heat.ceiling }} · 当前目标 {{ cur.heat.target }}{{ cur.heatLocked ? " · 已锁手工人数" : "" }}</p>
       <el-form label-width="120px">
+        <el-form-item label="自动热度">
+          <el-switch v-model="heatAuto" />
+        </el-form-item>
         <el-form-item label="虚拟报名人数">
           <el-input-number v-model="virtualCount" :min="0" :max="80" />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showVirtual = false">取消</el-button>
-        <el-button type="success" :loading="savingVirtual" @click="saveVirtual">确定</el-button>
+        <el-button @click="saveHeatAuto">{{ heatAuto ? "恢复自动" : "关闭自动" }}</el-button>
+        <el-button type="success" :loading="savingVirtual" @click="saveVirtual">保存人数</el-button>
       </template>
     </el-dialog>
     <el-dialog v-model="showReview" :title="cur ? `虚拟评价 · ${cur.route?.title || ''} ${cur.startDate || ''}` : '虚拟评价'" width="480px">
@@ -389,6 +394,7 @@ const drawingId = ref(0);
 const limitForm = ref({ studentOnly: false, alumniOk: false, oversub: false, campusTargets: [] });
 const showVirtual = ref(false);
 const virtualCount = ref(0);
+const heatAuto = ref(true);
 const savingVirtual = ref(false);
 const virtualPool = ref({ total: 0, idle: 0, busy: 0 });
 const showReview = ref(false);
@@ -508,6 +514,7 @@ async function syncOfficial() {
 function openVirtual(row) {
   cur.value = row;
   virtualCount.value = Number(row.virtualEnrolled || 0);
+  heatAuto.value = (row.heatMode || "auto") !== "off";
   showVirtual.value = true;
   http.get("/admin/virtual-users/pool").then((res) => {
     virtualPool.value = res.data || virtualPool.value;
@@ -530,10 +537,31 @@ async function saveReview() {
     savingReview.value = false;
   }
 }
+async function saveHeatAuto() {
+  savingVirtual.value = true;
+  try {
+    const res = await http.post(`/admin/schedules/${cur.value.id}/virtual-users`, {
+      heatMode: heatAuto.value ? "auto" : "off",
+      lock: false,
+    });
+    showVirtual.value = false;
+    ElMessage.success(heatAuto.value ? "已打开自动热度" : "已关闭自动热度");
+    await load();
+    return res;
+  } catch (e) {
+    ElMessage.error(e.message || "设置失败");
+  } finally {
+    savingVirtual.value = false;
+  }
+}
 async function saveVirtual() {
   savingVirtual.value = true;
   try {
-    const res = await http.post(`/admin/schedules/${cur.value.id}/virtual-users`, { count: virtualCount.value });
+    const res = await http.post(`/admin/schedules/${cur.value.id}/virtual-users`, {
+      count: virtualCount.value,
+      heatMode: heatAuto.value ? "auto" : "off",
+      lock: true,
+    });
     showVirtual.value = false;
     ElMessage.success(res.message || "已更新虚拟报名");
     await load();

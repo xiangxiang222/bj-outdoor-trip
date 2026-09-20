@@ -77,4 +77,18 @@ module.exports = {
     horizonDays: 10,
     meetupTime: "07:30",
   },
+  virtualHeat: {
+    poolSize: 2000,
+    fillHours: 24,
+    floorRatio: 0.25,
+    seedRatio: 0.45,
+    yieldMode: "replace",
+    nightQuiet: true,
+    stopRefillHoursBeforeStart: 48,
+    clearVirtualHoursBeforeStart: 24,
+    realReserve: 2,
+    minIntervalMinutes: 8,
+    maxPerHour: 3,
+    maxAddPerTick: 20,
+  },
 };

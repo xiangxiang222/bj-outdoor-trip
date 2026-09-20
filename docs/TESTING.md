@@ -140,6 +140,8 @@ npx vitest run src/utils/share.test.js
 | `api.route-apply.test.js` | 用户申请收录线路、待审对路人隐藏、后台审批、首次成团奖励 300 元只发一次、驳回不发奖 |
 | `api.official-trip.test.js` | 后台官方团、用户不能发官方团、按日补齐、个人成团奖 200、出行前一天并入并扩座，并短信+小程序通知 |
 | `api.social.test.js` | 相册、主页、虚拟用户池与按团抽人、真人占座腾座 |
+| `virtual-heat.service.test.js` | 成团 10 人水位、20 小时抬到种子、规则 A 让位、出发前清空、加密/同城局关闭、池上限 |
+| `api.virtual-heat.test.js` | 官方/用户团默认自动热度、加密与同城局关闭、真人报名让位、报价不看虚拟、动态排除、并团不带走虚拟、虚拟号不能微信登录 |
 | `api.split.test.js` | 演示分账 |
 | `api.dissolve.test.js` | 发起人解散、非发起人 403、后台解散单团与全部、重复解散 |
 | `api.admin.test.js` | 看板、线路起草/增改下架、B 站视频链接、封面上传、排期成本利润、后台结算、报名脱敏、用户列表 |
