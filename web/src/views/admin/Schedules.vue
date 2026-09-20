@@ -488,9 +488,18 @@ async function load() {
   } catch {
     me.value = { caps: [] };
   }
-  list.value = (await http.get("/admin/schedules")).data;
-  routes.value = (await http.get("/admin/routes")).data;
-  buses.value = (await http.get("/buses")).data;
+  try {
+    list.value = (await http.get("/admin/schedules")).data || [];
+  } catch (e) {
+    list.value = [];
+    ElMessage.error(e.message || "拼团列表加载失败");
+  }
+  try {
+    routes.value = (await http.get("/admin/routes")).data;
+    buses.value = (await http.get("/buses")).data;
+  } catch (e) {
+    ElMessage.error(e.message || "线路加载失败");
+  }
 }
 onMounted(load);
 const activeCount = computed(() => list.value.filter((s) => s.status !== "cancelled").length);
@@ -518,6 +527,12 @@ function openVirtual(row) {
   showVirtual.value = true;
   http.get("/admin/virtual-users/pool").then((res) => {
     virtualPool.value = res.data || virtualPool.value;
+  }).catch(() => {});
+  http.get(`/admin/schedules/${row.id}`).then((res) => {
+    if (!res.data) return;
+    cur.value = res.data;
+    virtualCount.value = Number(res.data.virtualEnrolled || virtualCount.value);
+    heatAuto.value = (res.data.heatMode || "auto") !== "off";
   }).catch(() => {});
 }
 function openReview(row) {
