@@ -286,7 +286,14 @@ function mapBus(bus, sch, req) {
   };
 }
 
-function scheduleView(sch, req) {
+function compactRoute(row) {
+  if (!row) return { id: 0, title: "", code: "", region: "", category: "", tags: [] };
+  const r = toRoute(row);
+  return { id: r.id, title: r.title, code: r.code, region: r.region, category: r.category, tags: r.tags || [] };
+}
+
+function scheduleView(sch, req, opts = {}) {
+  const compact = Boolean(opts.compact);
   const route = db().prepare("SELECT * FROM routes WHERE id=?").get(sch.route_id);
   const bus = db().prepare("SELECT * FROM bus_types WHERE id=?").get(sch.bus_type_id);
   const guideRow = sch.guide_id ? db().prepare("SELECT * FROM guides WHERE id=?").get(sch.guide_id) : null;
@@ -296,7 +303,8 @@ function scheduleView(sch, req) {
   const people = Math.max(live || enrolled, 1);
   const realLive = realEnrolledCount(sch.id);
   const virtualLive = virtualEnrolledCount(sch.id);
-  const quote = quoteForSchedule(sch, realLive || sch.min_group_size, null);
+  const quote = compact ? null : quoteForSchedule(sch, realLive || sch.min_group_size, null);
+  const offer = offerMeta(sch.offer_type);
   const cost =
     (sch.cost_transport || 0) +
     (sch.cost_ticket || 0) +
@@ -305,7 +313,7 @@ function scheduleView(sch, req) {
     (sch.cost_guide || 0) +
     (sch.cost_other || 0);
     const revenue = db().prepare("SELECT IFNULL(SUM(pay_amount),0) AS s FROM enrollments WHERE schedule_id=? AND status='joined'").get(sch.id).s;
-  const mappedRoute = mapRoute(route, req);
+  const mappedRoute = compact ? compactRoute(route) : mapRoute(route, req);
   const meetup = meetupMap(sch.meetup_point);
   let lockedCount = 0;
   try {
@@ -314,7 +322,7 @@ function scheduleView(sch, req) {
   } catch {
     lockedCount = 0;
   }
-  const leaders = leadersOf(sch.id, req);
+  const leaders = compact ? [] : leadersOf(sch.id, req);
   const viewer = req.userId ? db().prepare("SELECT * FROM users WHERE id=?").get(req.userId) : null;
   const organizer = adoptOrganizer(sch);
   const kind = tripKindOf(sch.organizer_type, sch.channel === "activity" ? "activity" : "trip");
@@ -323,7 +331,7 @@ function scheduleView(sch, req) {
     id: sch.id,
     routeId: sch.route_id,
     route: mappedRoute,
-    gallery: galleryOfSchedule(mappedRoute, req),
+    gallery: compact ? [] : galleryOfSchedule(mappedRoute, req),
     startDate: sch.start_date,
     endDate: sch.end_date,
     organizerType: official ? "official" : sch.organizer_type,
@@ -332,12 +340,16 @@ function scheduleView(sch, req) {
     kind: kind.key,
     kindLabel: kind.label,
     companyName: sch.company_name,
-    bus: mapBus(bus, sch, req),
+    bus: compact
+      ? bus
+        ? { id: bus.id, name: bus.name, seats: bus.seats, plateNo: sch.plate_no || "" }
+        : null
+      : mapBus(bus, sch, req),
     minGroupSize: sch.min_group_size,
     maxSeats: sch.max_seats,
     meetupPoint: sch.meetup_point,
     meetupTime: sch.meetup_time,
-    meetupMapUrl: meetup.url,
+    meetupMapUrl: compact ? "" : meetup.url,
     meetupLat: meetup.lat,
     meetupLng: meetup.lng,
     meetupPrecise: meetup.precise,
@@ -353,19 +365,19 @@ function scheduleView(sch, req) {
     enrolled,
     waitlistCount: waitlistCount(sch.id),
     remain: Math.max(0, sch.max_seats - live - lockedCount),
-    quote,
+    quote: quote || { originPrice: 0, price: 0, offerType: offer.key, offerLabel: offer.label, offerColor: offer.color },
     people,
     guide,
     leaders,
-    photographer: photographerOf(sch.id, req),
-    leaderRecruitCopy,
+    photographer: compact ? null : photographerOf(sch.id, req),
+    leaderRecruitCopy: compact ? "" : leaderRecruitCopy,
     ...(req.adminId
       ? {
           realEnrolled: realLive,
           virtualEnrolled: virtualLive,
           heatMode: sch.heat_mode || "auto",
           heatLocked: Boolean(Number(sch.heat_locked)),
-          heat: require("./services/virtual-heat").snapshotOf(sch),
+          ...(compact ? {} : { heat: require("./services/virtual-heat").snapshotOf(sch) }),
         }
       : {}),
     canEnrollDirect: isOversubPending(sch) || Math.max(0, sch.max_seats - live - lockedCount) > 0 || virtualLive > 0,
@@ -385,17 +397,17 @@ function scheduleView(sch, req) {
     channel: sch.channel === "activity" ? "activity" : "trip",
     memberPriceOn: flagOn(sch.member_price_on),
     studentPriceOn: flagOn(sch.student_price_on),
-    offerType: quote.offerType || sch.offer_type || "full",
-    offerLabel: quote.offerLabel || offerMeta(sch.offer_type).label,
-    offerColor: quote.offerColor || offerMeta(sch.offer_type).color,
-    playTags: resolvePlayTags(sch, mappedRoute, req),
+    offerType: (quote && quote.offerType) || sch.offer_type || "full",
+    offerLabel: (quote && quote.offerLabel) || offer.label,
+    offerColor: (quote && quote.offerColor) || offer.color,
+    playTags: compact ? [] : resolvePlayTags(sch, mappedRoute, req),
     reviewStatus: sch.review_status || "approved",
-    combo: comboView(sch, viewer),
+    combo: compact ? null : comboView(sch, viewer),
     eligibility: eligibilityView(sch, viewer),
     oversub: oversubView(sch),
-    refundPolicy: refundPolicyView(route, sch),
+    refundPolicy: compact ? null : refundPolicyView(route, sch),
     ...joinLockView(sch, req),
-    ...lotteryPublic(sch.id),
+    ...(compact ? {} : lotteryPublic(sch.id)),
     bountyAmount: Number(sch.bounty_amount || 0),
     bountyStatus: sch.bounty_status || "",
     mergedInto: Number(sch.merged_into || 0) || 0,
@@ -2481,8 +2493,25 @@ router.post("/admin/schedules", authAdmin, requireCap("ops"), (req, res) => {
 });
 
 router.get("/admin/schedules", authAdmin, requireCap("roster"), (req, res) => {
-  const rows = db().prepare("SELECT * FROM schedules ORDER BY start_date DESC").all().map((s) => scheduleView(s, req));
-  res.json({ ok: true, data: rows });
+  try {
+    const rows = db()
+      .prepare("SELECT * FROM schedules ORDER BY start_date DESC")
+      .all()
+      .map((s) => scheduleView(s, req, { compact: true }));
+    res.json({ ok: true, data: rows });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.get("/admin/schedules/:id", authAdmin, requireCap("roster"), (req, res) => {
+  const sch = loadAdminSchedule(req, res);
+  if (!sch) return;
+  try {
+    res.json({ ok: true, data: scheduleView(sch, req) });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 router.post("/admin/schedules/official-sync", authAdmin, requireCap("ops"), (req, res) => {

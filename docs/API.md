@@ -211,7 +211,8 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 | POST | `/admin/schedules` | 后台发布排期。`organizerType=official` 为官方团（用户端显示官方图标，`organizer_id=0`）。可选 `virtualCount` 发布后从虚拟用户池抽人占座；`lotteryMode` 非 off 时挂上默认 4 奖转盘。`organizerType=campus` 且 `offerType=free` 时默认打开报超会抽、仅师生，并用学校名作为限定高校。可带 `campusTargets`（学校-学院-专业组合，学院/专业可空）、旧字段 `schools` `colleges`、`privateJoin` `joinCode` |
 | POST | `/admin/schedules/official-sync` | 立刻补齐近 10 日官方团，并把出发日前一天、同集合点未成团的团并入官方团（人多则扩座） |
 | POST | `/admin/schedules/:id/review` | 用户发团审核。`status=approved|rejected` |
-| GET | `/admin/schedules` | 含成本、收入、利润、导游、`startedAt`。后台可见加密团口令 |
+| GET | `/admin/schedules` | 列表用摘要（不含线路图文、热度快照），含成本、收入、利润、导游、`startedAt`、`heatMode`。后台可见加密团口令 |
+| GET | `/admin/schedules/:id` | 单团完整详情，含热度快照 |
 | POST | `/admin/schedules/:id/start` | 现场权限。正式开团 |
 | GET | `/admin/schedules/:id/checkin` | 现场权限。开团状态、签到点、本轮名单 |
 | POST | `/admin/schedules/:id/checkins` | 现场权限。发起一轮签到，body 同导游端 |

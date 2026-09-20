@@ -160,7 +160,12 @@ describe("admin API", () => {
     assert.equal(settle.body.data.count, 1);
 
     const all = await agent.get("/api/admin/schedules").set(auth(adminToken)).expect(200);
-    assert.ok(all.body.data.some((s) => s.id === scheduleId));
+    const listed = all.body.data.find((s) => s.id === scheduleId);
+    assert.ok(listed);
+    assert.equal(listed.route.story, undefined);
+    assert.equal(listed.heat, undefined);
+    const one = await agent.get(`/api/admin/schedules/${scheduleId}`).set(auth(adminToken)).expect(200);
+    assert.ok(one.body.data.heat);
 
     const ens = await agent.get(`/api/admin/enrollments?scheduleId=${scheduleId}`).set(auth(adminToken)).expect(200);
     assert.equal(ens.body.data.length, 1);
