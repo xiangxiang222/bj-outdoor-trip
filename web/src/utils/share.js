@@ -28,6 +28,16 @@ export function scheduleShareText({ organizerName, title, startDate, enrolled, u
   return `${organizerName || "同行者众"}邀请你参加「${title || "行程"}」${startDate || ""}出发，已有${enrolled || 0}人报名：${url}${lock}`;
 }
 
+export function douyinShareText({ organizerName, title, startDate, enrolled, url, joinCode }) {
+  const who = organizerName || "同行者众";
+  const when = startDate ? `${startDate}出发，` : "";
+  const lock = String(joinCode || "").trim() ? `\n入团口令 ${String(joinCode).trim()}` : "";
+  return `${who}邀你报名「${title || "行程"}」
+${when}已有${enrolled || 0}人
+报名：${url}${lock}
+#同行者众 #北京周边游 #户外`;
+}
+
 export function payShareUrl(origin, token) {
   const t = String(token || "").trim();
   return `${String(origin || "").replace(/\/$/, "")}/m/pay/${encodeURIComponent(t)}`;

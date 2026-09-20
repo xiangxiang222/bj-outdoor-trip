@@ -125,9 +125,12 @@ Page({
   copyVideo(e) {
     const url = e.currentTarget.dataset.url;
     if (!url) return;
+    const provider = e.currentTarget.dataset.provider || "";
+    const toast =
+      provider === "douyin" ? "已复制，打开抖音观看" : provider === "tiktok" ? "已复制，打开 TikTok 观看" : "链接已复制";
     wx.setClipboardData({
-      data: url,
-      success: () => wx.showToast({ title: "链接已复制", icon: "none" }),
+      data: String(url),
+      success: () => wx.showToast({ title: toast, icon: "none" }),
     });
   },
   preview(e) {

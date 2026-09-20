@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isWeChatWebView, nativeShareSupported, scheduleShareText, scheduleShareUrl, payShareUrl, payShareText } from "./share";
+import { isWeChatWebView, nativeShareSupported, scheduleShareText, scheduleShareUrl, payShareUrl, payShareText, douyinShareText } from "./share";
 
 describe("share helpers", () => {
   it("does not use system share inside WeChat webview", () => {
@@ -40,6 +40,21 @@ describe("share helpers", () => {
         joinCode: "长城口令",
       })
     ).toBe("老周邀请你参加「香山秋日」2026-09-20出发，已有8人报名：https://example.com/m/schedule/12 入团口令 长城口令");
+  });
+
+  it("writes Douyin caption with hashtags", () => {
+    expect(
+      douyinShareText({
+        organizerName: "老周",
+        title: "香山秋日",
+        startDate: "2026-09-20",
+        enrolled: 8,
+        url: "https://example.com/m/schedule/12",
+        joinCode: "长城口令",
+      })
+    ).toBe(
+      "老周邀你报名「香山秋日」\n2026-09-20出发，已有8人\n报名：https://example.com/m/schedule/12\n入团口令 长城口令\n#同行者众 #北京周边游 #户外"
+    );
   });
 
   it("builds a pay share link and copy", () => {

@@ -14,6 +14,9 @@ describe("social homepage leaders referral virtual fallback", () => {
   it("exposes official accounts, rules and leader copy on /meta", async () => {
     const res = await agent.get("/api/meta").expect(200);
     assert.ok(res.body.data.officialAccounts.length >= 4);
+    const douyin = res.body.data.officialAccounts.find((a) => a.platform === "抖音");
+    assert.ok(douyin && douyin.url && /douyin\.com/.test(douyin.url));
+    assert.ok(res.body.data.faqs.some((f) => /抖音/.test(f.q)));
     assert.ok(res.body.data.commonRules.sections.length >= 4);
     assert.match(res.body.data.leaderRecruitCopy, /200/);
     assert.equal(res.body.data.referralRate, 0.05);

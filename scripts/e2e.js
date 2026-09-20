@@ -234,6 +234,10 @@ async function run(opts) {
     assert(Array.isArray(meta.insurance) && meta.insurance.length >= 2, "保险方案缺失");
     assert(meta.waiverText && meta.cancelPolicy && Array.isArray(meta.faqs), "行前政策缺失");
     assert(meta.contacts && meta.contacts.officialWechat, "官方联系方式缺失");
+    assert(
+      Array.isArray(meta.officialAccounts) && meta.officialAccounts.some((a) => a.platform === "抖音" && a.url),
+      "抖音官方账号缺失"
+    );
     const forecast = apiOk(await request("GET", "/api/weather?region=北京怀柔"), "weather");
     assert(forecast.summary && Array.isArray(forecast.alerts), "天气提醒不完整");
     assert(Array.isArray(forecast.hourly) && forecast.hourly.length > 0, "缺少分时天气");

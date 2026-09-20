@@ -243,6 +243,13 @@
     <view class="title">线路介绍</view>
     <view class="story-text">{{routeDetail.description}}</view>
   </view>
+  <view class="pad" wx:if="{{routeDetail.videos && routeDetail.videos.length}}">
+    <view class="title">线路视频</view>
+    <block wx:for="{{routeDetail.videos}}" wx:key="url">
+      <video wx:if="{{item.kind==='video'}}" src="{{item.embedUrl}}" controls style="width:100%;margin:12rpx 0;border-radius:16rpx;background:#000" />
+      <view wx:else class="video-link" bindtap="copyVideo" data-url="{{item.url}}" data-provider="{{item.provider}}">{{item.label}} · {{item.provider==='douyin' ? '复制后打开抖音观看' : item.provider==='tiktok' ? '复制后打开 TikTok 观看' : '复制链接去浏览器播放'}}</view>
+    </block>
+  </view>
   <view class="pad" wx:if="{{routeAlbum.length}}"><view class="title">更多照片</view></view>
   <view class="gallery" style="display:flex;flex-wrap:wrap;padding:0 16rpx" wx:if="{{routeAlbum.length}}">
     <image wx:for="{{routeAlbum}}" wx:key="*this" src="{{item}}" mode="aspectFill" style="width:48%;height:200rpx;margin:1%;border-radius:12rpx" bindtap="previewStory" data-url="{{item}}" />
@@ -370,6 +377,7 @@
       </view>
       <view class="muted">{{posterHint}}</view>
       <button class="btn" open-type="share">发给微信好友</button>
+      <view class="btn ghost" bindtap="copyDouyin">复制抖音文案</view>
       <view class="btn ghost" bindtap="savePoster">保存图片</view>
       <view class="btn ghost" bindtap="closePoster">关闭</view>
     </view>

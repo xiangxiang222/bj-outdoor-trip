@@ -153,12 +153,12 @@
         <el-form-item label="视频">
           <div class="list-edit">
             <div v-for="(v, i) in form.videos" :key="'v' + i" class="line-row">
-              <el-input v-model="form.videos[i]" placeholder="https://www.bilibili.com/video/BVxxxx" />
+              <el-input v-model="form.videos[i]" placeholder="https://www.douyin.com/video/ 或 B 站 BV 链接" />
               <el-button link type="danger" @click="form.videos.splice(i, 1)">删除</el-button>
             </div>
             <el-button @click="form.videos = [...(form.videos || []), '']">加一条视频链接</el-button>
           </div>
-          <div class="muted">一行一条。支持 B 站完整分享链接（含 BV 号）、YouTube、mp4 直链。线路页会嵌播放器。请不要只用 b23 短链。</div>
+          <div class="muted">一行一条。支持抖音完整分享链接、TikTok、B 站（含 BV 号）、YouTube、mp4 直链。TikTok / B 站 / YouTube 会嵌播放器；抖音打开抖音观看。短链（v.douyin.com、b23）只能当外链打开。</div>
         </el-form-item>
 
         <div class="sec">介绍</div>

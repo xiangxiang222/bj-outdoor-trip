@@ -62,7 +62,7 @@
 
 | 编号 | 用例名 | 文件 | 断言要点 |
 | --- | --- | --- | --- |
-| A-01 | user publish waits for review and then appears | `server/test/api.home.test.js` | `POST /trips` → `reviewStatus=pending`；公开列表没有；报名 400；管理员 `approved` 后出现在 `GET /schedules`；可带 B 站视频 |
+| A-01 | user publish waits for review and then appears | `server/test/api.home.test.js` | `POST /trips` → `reviewStatus=pending`；公开列表没有；报名 400；管理员 `approved` 后出现在 `GET /schedules`；可带 B 站 / 抖音视频 |
 | A-02 | city activities stay off the trip list and route catalog | 同上 | `channel=activity` 审核后只出现在 `?channel=activity`；不进 `GET /routes`、不进首页轮播 |
 | A-03 | city activity enrolls with name and phone only | `server/test/api.enroll.test.js` | 发同城局并审核后，姓名+手机即可报，不强制身份证 |
 | A-04 | keeps activity enrollments off the home ticker | `server/test/api.pulse.test.js` | 同城局报名不上首页动态条 |
@@ -172,7 +172,7 @@
 
 **步骤**：在弹窗内向下滚。
 
-**照片**：封面、相册、B 站/YouTube/mp4 视频链接。
+**照片**：封面、相册、抖音/TikTok/B 站/YouTube/mp4 视频链接。
 
 ![照片](publish-tests/screenshots/51_admin_create_photos.png)
 
@@ -368,7 +368,7 @@
 ### TC-10 价格、组织类型、车型、集合、抽奖
 
 **步骤**：继续下滚户外表单。  
-**期望**：会员价/学生价/报超会抽；出发日期；个人/公司/高校开团；车型；成团人数；四个固定集合点；介绍；B 站视频链接；抽奖四档；主按钮「提交审核」。
+**期望**：会员价/学生价/报超会抽；出发日期；个人/公司/高校开团；车型；成团人数；四个固定集合点；介绍；抖音 / B 站视频链接；抽奖四档；主按钮「提交审核」。
 
 ![价格与校园范围默认](publish-tests/screenshots/08_publish_outdoor_campus_org.png)
 
@@ -501,6 +501,7 @@
 | TC-24 | 封面上传非图片或超过 5MB | 400 |
 | TC-25 | 非法视频链接 | 线路页不嵌播放器（见 `video.test.js`） |
 | TC-26 | 合法 B 站 BV 链接 | 详情/线路可嵌 iframe（A-01） |
+| TC-27 | 合法抖音 / TikTok 链接 | 抖音打开观看；TikTok 嵌 iframe（`video.test.js`） |
 | TC-27 | `lotteryMode=pre/enroll/both` | 详情出现对应抽奖文案 |
 | TC-28 | 天数 `multi` | 线路天数按 5 日写库 |
 | TC-29 | 同城局费用 > 0 | `offerType` 按收费团，不是免费 |

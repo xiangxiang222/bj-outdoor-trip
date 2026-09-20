@@ -28,6 +28,13 @@ Page({
     const toast = e.currentTarget.dataset.toast || "已复制";
     wx.setClipboardData({ data: String(text), success: () => wx.showToast({ title: toast, icon: "none" }) });
   },
+  follow(e) {
+    const text = e.currentTarget.dataset.text;
+    const platform = e.currentTarget.dataset.platform || "";
+    if (!text) return;
+    const toast = platform === "抖音" ? "已复制，打开抖音搜索" : "已复制";
+    wx.setClipboardData({ data: String(text), success: () => wx.showToast({ title: toast, icon: "none" }) });
+  },
   toggleFaq(e) {
     const i = Number(e.currentTarget.dataset.index);
     this.setData({ openFaq: this.data.openFaq === i ? -1 : i });

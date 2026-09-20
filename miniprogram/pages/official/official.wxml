@@ -17,7 +17,7 @@
 </view>
 <view class="pad title">关注我们</view>
 <view class="follow-grid">
-  <view class="follow-card" wx:for="{{accounts}}" wx:key="platform" bindtap="copy" data-text="{{item.id}}" data-toast="已复制">
+  <view class="follow-card" wx:for="{{accounts}}" wx:key="platform" bindtap="follow" data-text="{{item.id}}" data-url="{{item.url}}" data-platform="{{item.platform}}">
     <view class="title">{{item.platform}}</view>
     <view>{{item.name}}</view>
     <view class="muted">{{item.id}}</view>

@@ -27,10 +27,10 @@
 
     <div class="h2">关注我们</div>
     <div class="follow-grid">
-      <button class="follow-card" type="button" v-for="a in accounts" :key="a.platform" @click="copy(a.id, a.platform)">
+      <button class="follow-card" type="button" v-for="a in accounts" :key="a.platform" @click="follow(a)">
         <strong>{{ a.platform }}</strong>
         <em>{{ a.name }}</em>
-        <span class="muted">{{ copied === a.platform ? "已复制" : a.id }}</span>
+        <span class="muted">{{ copied === a.platform ? (a.url ? "已复制，正在打开" : "已复制") : a.id }}</span>
         <small class="muted">{{ a.remark }}</small>
       </button>
     </div>
@@ -123,5 +123,10 @@ async function copy(text, key) {
   setTimeout(() => {
     if (copied.value === key) copied.value = "";
   }, 1600);
+}
+
+async function follow(account) {
+  if (account.url) window.open(account.url, "_blank", "noopener,noreferrer");
+  await copy(account.id, account.platform);
 }
 </script>

@@ -393,8 +393,8 @@
 
     <div v-if="showShare" class="lightbox share-sheet" @click.self="closeShare">
       <div class="share-card" @click.stop>
-        <p class="share-title">发给微信好友</p>
-        <p class="muted">微信小程序转发是聊天卡片；也可保存详情图，让对方扫码报名。通过你的链接/二维码报名，成团后返点团费 {{ Math.round((sharePoster.rate || 0.05) * 100) }}%。</p>
+        <p class="share-title">分享报名</p>
+        <p class="muted">发给微信好友，或复制抖音文案发作品。保存详情图可让对方扫码报名。通过你的链接/二维码报名，成团后返点团费 {{ Math.round((sharePoster.rate || 0.05) * 100) }}%。</p>
         <div class="share-poster-preview">
           <img v-if="sharePosterImg" :src="sharePosterImg" alt="行程分享图" />
           <div v-else class="share-poster-fallback">
@@ -408,6 +408,7 @@
           <button class="btn ghost" type="button" @click="closeShare">关闭</button>
           <button class="btn ghost" type="button" :disabled="savingPoster" @click="savePoster">保存图片</button>
           <button v-if="nativeShareOk" class="btn ghost" type="button" @click="nativeShare">系统分享</button>
+          <button class="btn ghost" type="button" @click="copyDouyin">复制抖音文案</button>
           <button class="btn" type="button" @click="copyShare">复制链接</button>
         </div>
       </div>
@@ -444,7 +445,7 @@ import { useUserStore } from "@/stores/user";
 import { payStatusText, scheduleStatusText, starText } from "@/utils/labels";
 import { formatActivityDate, activityKindOf } from "@/utils/activityKind";
 import { canShowEnroll, dockPrice, enrollCta, peopleLine, ticketState, trustChips } from "@/utils/scanFacts";
-import { nativeShareSupported, scheduleShareText, scheduleShareUrl } from "@/utils/share";
+import { nativeShareSupported, scheduleShareText, scheduleShareUrl, douyinShareText } from "@/utils/share";
 import { drawTripPoster, downloadPosterPng, posterDataUrl } from "@/utils/sharePoster";
 import { setChrome } from "@/utils/pageChrome";
 import WeatherChart from "@/components/WeatherChart.vue";
@@ -1001,6 +1002,25 @@ async function copyShare() {
   } catch {
     shareHint.value = "请长按上方链接复制";
     msg.value = shareHint.value;
+  }
+}
+
+async function copyDouyin() {
+  const text = douyinShareText({
+    organizerName: s.value.organizerName,
+    title: s.value.route?.title,
+    startDate: s.value.startDate,
+    enrolled: s.value.enrolled,
+    url: shareUrl.value,
+    joinCode: s.value.joinCode,
+  });
+  try {
+    await navigator.clipboard.writeText(text);
+    shareHint.value = "抖音文案已复制，打开抖音发作品时粘贴，可配上上方海报";
+    msg.value = shareHint.value;
+  } catch {
+    shareHint.value = "请长按复制下面的抖音文案";
+    msg.value = text;
   }
 }
 

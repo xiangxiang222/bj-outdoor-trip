@@ -89,13 +89,13 @@ npx vitest run src/utils/share.test.js
 | `captcha.test.js` | 图片验证码生成与比对 |
 | `routes-data.test.js` | 30 条线唯一编号、天数 ∈ {1,2,3,5}、R29 `coverKey=wutai` |
 | `image-helpers.test.js` | SVG 封面、缺图回退、download 失败/过小/异常 |
-| `policy.test.js` | 装备拆条、地图 URL、`/meta` 退改与免责 |
+| `policy.test.js` | 装备拆条、地图 URL、`/meta` 退改与免责、抖音账号 |
 | `refund.test.js` | 默认档位匹配、校验、文案 |
 | `config.test.js` | 测试环境目录覆盖是否生效 |
 | `weather.test.js` | mock / 实时开关 |
 | `coupons.service.test.js` | 折扣封顶、立减与保底价、免费券、会员叠加、领取后有效小时 |
 | `route-draft.test.js` | 线路模板/模型文案、百度 / 360 搜图过滤与下载、本地景点库回退、无标题拒绝 |
-| `video.test.js` | B 站 BV/av 转播放器、b23 短链、YouTube、mp4、非法地址 |
+| `video.test.js` | B 站 BV/av 转播放器、b23 短链、YouTube、mp4、抖音/TikTok、非法地址 |
 
 ### 4.2 带数据库的服务
 
@@ -114,7 +114,7 @@ npx vitest run src/utils/share.test.js
 | 文件 | 覆盖点 |
 | --- | --- |
 | `api.auth.test.js` | meta、短信、图片验证码注册/登录、微信演示登录、改资料、注销 |
-| `api.home.test.js` | 首页轮播不含同城局线路；`GET /schedules?channel=activity`；发线路带 B 站视频 |
+| `api.home.test.js` | 首页轮播不含同城局线路；`GET /schedules?channel=activity`；发线路带 B 站 / 抖音视频 |
 | `api.routes.test.js` | 筛选、收藏标记、名单脱敏、分享 302 可带 ref、开团校验、海报 QR/推荐码、导游列表与详情 |
 | `share-poster.test.js` | 小程序 scene 编解码、分享 query 带推荐码、海报封面内嵌 |
 | `api.enroll.test.js` | 个人占座（`needPay: false`）、紧急联系人/健康/免责、`/me/trips`、公司挂账与结算权限、满员、成团导游、取消报名（已过出发日 / 正式开团后不可取消）、会员购买、收藏、**同城局姓名+手机即可报名**、行程页报名摄影师 |
@@ -144,7 +144,7 @@ npx vitest run src/utils/share.test.js
 | `api.virtual-heat.test.js` | 官方/用户团默认自动热度、加密与同城局关闭、真人报名让位、报价不看虚拟、动态排除、并团不带走虚拟、虚拟号不能微信登录 |
 | `api.split.test.js` | 演示分账 |
 | `api.dissolve.test.js` | 发起人解散、非发起人 403、后台解散单团与全部、重复解散 |
-| `api.admin.test.js` | 看板、线路起草/增改下架、B 站视频链接、封面上传、排期成本利润、后台结算、报名脱敏、用户列表 |
+| `api.admin.test.js` | 看板、线路起草/增改下架、B 站/抖音视频链接、封面上传、排期成本利润、后台结算、报名脱敏、用户列表 |
 | `api.notices.test.js` | 校园/团体/领队认证写入后台待办，点开带 `/admin/verify` 与 `kind`/`userId`，通过后未读清零；线路申请点开 `/admin/routes?review=pending` |
 | `api.guide.test.js` | 导游登录、行程名单开团前手机打码、游客详情、正式开团后可见完整号码、多轮签到确认、后台现场签到 |
 | `api.pulse.test.js` | 首页/线路实时动态：报名脱敏、浏览节流、匿名浏览只计入在看人数、同城局不进首页、评价与开团 |

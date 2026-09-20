@@ -18,7 +18,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/meta` | 品牌名、口号 `slogan`（在山野，遇见爱）、演示短信码、会员年费/95折/赠团文案、`studentDiscountRate`（0.9）、积分规则、保险方案、补给、可选天数、退改说明（含按距出发日比例的 `refundPolicy` / `cancelPolicy`）、风险告知、常见问题、官方账号、公共规则、推荐领队文案、`routeBounty`（用户线路申请首次成团奖励，默认 300 元）、`tripBounty`（个人发团成团奖励，默认 200 元）、`subscribeTemplates.merge`（并团小程序通知模板）、`wechatPayMock` `wechatPayLive` `wechatAppId` |
+| GET | `/meta` | 品牌名、口号 `slogan`（在山野，遇见爱）、演示短信码、会员年费/95折/赠团文案、`studentDiscountRate`（0.9）、积分规则、保险方案、补给、可选天数、退改说明（含按距出发日比例的 `refundPolicy` / `cancelPolicy`）、风险告知、常见问题、官方账号（抖音带 `url` 搜索页）、公共规则、推荐领队文案、`routeBounty`（用户线路申请首次成团奖励，默认 300 元）、`tripBounty`（个人发团成团奖励，默认 200 元）、`subscribeTemplates.merge`（并团小程序通知模板）、`wechatPayMock` `wechatPayLive` `wechatAppId` |
 | GET | `/home` | 首页：全部上架景点轮播（`brand.slides`，含 `routeId`/`title`/`url`）、按城市分组的景点轮播、玩法标签、节日、月份、天数缩略图。同城局线路不进轮播。Query：`month=YYYY-MM` 返回该月日历（不含 activity） |
 | GET | `/live/pulse` | 首页/线路/团顶部动态条。Query：`scope=home\|route\|schedule`、`routeId`、`scheduleId`。可选用户 token 与 `X-Visitor-Id`。返回 `{ items, watchingNow, watchingText }`。`items[].text` 已拼好，姓名脱敏、不含手机号。同城局报名不进首页。匿名浏览只计入 `watchingNow` |
 | POST | `/live/view` | 记录一次浏览。body：`scope` `routeId` `scheduleId`。同一访客对同一目标 10 分钟内不重复写入。可选用户 token |
@@ -32,7 +32,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | GET | `/guides/:id` | 导游详情、带团次数、近期行程。停用或不存在返回 404 |
 | GET | `/routes` | 上架线路。排除只被同城局引用的线路。Query：`days`（`multi` 表示 4 日及以上）`category` `tag` `city` `difficulty` `q` |
 | GET | `/schedules` | Query：`routeId` `organizerType`（`official\|individual\|company\|campus`） `city` `tag` `offerType` `month` `date` `channel=activity\|trip`（不含已解散、待审核）。含满员（`remain=0`），前端列表保留供候补。不含 `virtualEnrolled`。加密团带 `private` `privateLabel`，不含口令。排期带 `kind` `kindLabel`（官方/个人/公司/高校，同城局为活动）。首页传 `channel=trip`，活动 Tab 传 `channel=activity` |
-| GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条）、`videos`（B 站等可嵌播放器）、`refundPolicy`（`source`=`default\|global\|route`，档位、摘要、条目）。未过审的用户申请对路人 404，申请人本人可见 `reviewStatus` `contactPhone` `bountyHint` |
+| GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条）、`videos`（抖音打开观看，TikTok / B 站 / YouTube 可嵌播放器）、`refundPolicy`（`source`=`default\|global\|route`，档位、摘要、条目）。未过审的用户申请对路人 404，申请人本人可见 `reviewStatus` `contactPhone` `bountyHint` |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
 | GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`photographer`、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友限制、`targets` 为学校-学院-专业组合、`schools`/`colleges`/`majors` 为派生名单、`scope`）、`oversub`（报超会抽）、`refundPolicy`（含按该团出发日计算的 `current.percent` / `hint`）、加密团 `private` `privateLabel` `joinCodeRequired`。`joinCode` 只给发起人、已报名、后台、本团导游。同城局名单不含年龄段展示字段的使用由前端控制 |
 | GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
@@ -95,7 +95,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | 方法 | 路径 | 鉴权 | 说明 |
 | --- | --- | --- | --- |
 | POST | `/schedules` | 用户 | 基于已有线路开团。`organizerType` 为 `individual` / `company` / `campus`。公司须 `companyName`，高校须学校名（`companyName` 或 `campusName`）。可带 `offerType` `playTagIds` `studentOnly` `alumniOk` `oversub` `campusTargets`（`[{school,college,major}]`，三项绑定；学院/专业可空）或旧字段 `schools` `colleges`、`campusScope`（`open\|certified\|college\|school\|colleges\|schools`）`campusSchool` `campusCollege` `lotteryMode`（`off\|pre\|enroll\|both`）、`privateJoin` `joinCode`（加密团口令，4～16 字；勾选加密且口令为空则自动生成 6 位）。`campusScope=schools` 用 `campusTargets`，不要把多校学院名并成一份名单 |
-| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `campusTargets` `schools` `colleges` `campusScope` `comboRule` `lotteryMode`、`videos`/`videoUrls`（B 站等视频链接）、`privateJoin` `joinCode`。用户端不能发官方团（`organizerType=official` 会当成个人）。个人山野团提交后待审，成团奖励入钱包（`trip_bounty` 200 元）。审核通过才上首页或活动 Tab |
+| POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `campusTargets` `schools` `colleges` `campusScope` `comboRule` `lotteryMode`、`videos`/`videoUrls`（抖音 / TikTok / B 站等视频链接）、`privateJoin` `joinCode`。用户端不能发官方团（`organizerType=official` 会当成个人）。个人山野团提交后待审，成团奖励入钱包（`trip_bounty` 200 元）。审核通过才上首页或活动 Tab |
 | POST | `/upload` | 用户 | 发团封面、学生证。字段 `file` |
 | POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
 | PUT | `/schedules/:id/limit` | 用户 | 仅发起人，只扩不缩。`addTargets`（`[{school,college,major}]`）`addSchools` `addColleges` `openAllColleges`。多校时 `addColleges` 必须带 `school`，两校同名学院不能混。不能把「不限学校」收成指定高校，也不能把「本校各学院」收成指定学院 |
