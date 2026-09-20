@@ -53,6 +53,18 @@ function firstFreeSeat(scheduleId, maxSeats) {
   return null;
 }
 
+function lastFreeSeat(scheduleId, maxSeats) {
+  const taken = new Set(occupiedSeatNos(scheduleId));
+  const sch = getDb().prepare("SELECT locked_seats FROM schedules WHERE id=?").get(scheduleId) || {};
+  const locked = new Set(parseLockedSeats(sch));
+  const seats = seatLayout(maxSeats).seats;
+  for (let i = seats.length - 1; i >= 0; i -= 1) {
+    const seat = seats[i];
+    if (!taken.has(seat.no) && !locked.has(seat.no)) return seat.no;
+  }
+  return null;
+}
+
 function assertSeatAvailable(scheduleId, maxSeats, seatNo, { currentEnrollmentId } = {}) {
   const layout = seatLayout(maxSeats);
   const hit = layout.seats.find((s) => s.no === String(seatNo || "").toUpperCase());
@@ -192,6 +204,7 @@ module.exports = {
   seatLayout,
   occupiedSeatNos,
   firstFreeSeat,
+  lastFreeSeat,
   assertSeatAvailable,
   scheduleSeats,
   parseLockedSeats,

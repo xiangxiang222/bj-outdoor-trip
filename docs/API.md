@@ -247,9 +247,9 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 | POST | `/admin/notices/:id/read` | 运营。单条标已读 |
 | GET | `/admin/users` | Query：`q`、`pending=campus\|group\|any`。不含已注销、不含证件；带 `isMember` `isVirtual` `isStudent` `isAlumni` `campusKind` `school` `studentStatus` `groupStatus`。待审排在前面 |
 | GET | `/admin/virtual-users/pool` | 虚拟用户池 `{ total, idle, busy }` |
-| POST | `/admin/virtual-users/pool` | `{ count }` 预生成虚拟用户（一次最多 200，池上限 800） |
-| POST | `/admin/virtual-users` | `{ scheduleId, count }` 将该团虚拟报名人数设为 `count`（从池里抽人，可增可减） |
-| POST | `/admin/schedules/:id/virtual-users` | `{ count }` 同上，按路径指定行程 |
+| POST | `/admin/virtual-users/pool` | `{ count }` 预生成虚拟用户（一次最多 200，池上限 2000） |
+| POST | `/admin/virtual-users` | `{ scheduleId, count, heatMode, lock }`。只改 `heatMode=auto|off` 可开关自动热度；带 `count` 则把虚拟报名人数设为该值（从池里抽人，可增可减）。手改人数默认 `lock`，暂停自动 |
+| POST | `/admin/schedules/:id/virtual-users` | 同上，按路径指定行程 |
 | POST | `/admin/routes/:id/reviews` | 用虚拟用户给线路写评价。`count` `rating` `content`，可选 `scheduleId` |
 | POST | `/admin/schedules/:id/reviews` | 同上，挂在指定排期 |
 | POST | `/admin/users/:id/verify` | `{ kind: student\|group\|leader, action: approve\|reject }`。校友通过后 `is_student=0`；领队通过后 `role=leader`（公司账号保持 `company`） |

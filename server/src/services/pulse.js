@@ -167,6 +167,7 @@ function collectEvents({ scope, routeId, scheduleId }) {
        JOIN routes r ON r.id=s.route_id
        LEFT JOIN users u ON u.id=e.user_id
        WHERE e.status='joined' AND e.created_at>=?
+         AND IFNULL(u.is_virtual,0)=0
          AND IFNULL(s.review_status,'approved')='approved' AND s.status!='cancelled' AND r.status='on'
          AND (u.id IS NULL OR u.deleted_at IS NULL)
          ${channelSql} ${routeSql}

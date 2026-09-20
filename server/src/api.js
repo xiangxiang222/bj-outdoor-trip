@@ -294,7 +294,9 @@ function scheduleView(sch, req) {
   const live = enrolledCount(sch.id);
   const enrolled = sch.status === "cancelled" ? enrolledCount(sch.id, true) : live;
   const people = Math.max(live || enrolled, 1);
-  const quote = quoteForSchedule(sch, live || sch.min_group_size, null);
+  const realLive = realEnrolledCount(sch.id);
+  const virtualLive = virtualEnrolledCount(sch.id);
+  const quote = quoteForSchedule(sch, realLive || sch.min_group_size, null);
   const cost =
     (sch.cost_transport || 0) +
     (sch.cost_ticket || 0) +
@@ -312,8 +314,6 @@ function scheduleView(sch, req) {
   } catch {
     lockedCount = 0;
   }
-  const realLive = realEnrolledCount(sch.id);
-  const virtualLive = virtualEnrolledCount(sch.id);
   const leaders = leadersOf(sch.id, req);
   const viewer = req.userId ? db().prepare("SELECT * FROM users WHERE id=?").get(req.userId) : null;
   const organizer = adoptOrganizer(sch);
@@ -360,7 +360,13 @@ function scheduleView(sch, req) {
     photographer: photographerOf(sch.id, req),
     leaderRecruitCopy,
     ...(req.adminId
-      ? { realEnrolled: realLive, virtualEnrolled: virtualLive }
+      ? {
+          realEnrolled: realLive,
+          virtualEnrolled: virtualLive,
+          heatMode: sch.heat_mode || "auto",
+          heatLocked: Boolean(Number(sch.heat_locked)),
+          heat: require("./services/virtual-heat").snapshotOf(sch),
+        }
       : {}),
     canEnrollDirect: isOversubPending(sch) || Math.max(0, sch.max_seats - live - lockedCount) > 0 || virtualLive > 0,
     cost,
@@ -417,9 +423,18 @@ function applyScheduleExtras(id, body, route, user) {
   const comboRule = JSON.stringify(parseComboRule(body.comboRule || body.combo_rule || {}));
   const limit = resolveEnrollLimit(body, user);
   const joinCode = resolveJoinCode(body);
+  let heatMode = String(body.heatMode || body.heat_mode || "").trim();
+  if (heatMode !== "off" && heatMode !== "auto") {
+    if (joinCode || channel === "activity") {
+      heatMode = "off";
+    } else {
+      const prev = db().prepare("SELECT heat_mode FROM schedules WHERE id=?").get(id);
+      heatMode = String(prev?.heat_mode || "auto") === "off" ? "off" : "auto";
+    }
+  }
   db()
     .prepare(
-      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=?, student_only=?, schools_json=?, colleges_json=?, campus_targets_json=?, alumni_ok=?, oversub=?, join_code=? WHERE id=?"
+      "UPDATE schedules SET offer_type=?, offer_price=?, review_status=?, play_tags_json=?, city=?, channel=?, member_price_on=?, student_price_on=?, combo_rule_json=?, student_only=?, schools_json=?, colleges_json=?, campus_targets_json=?, alumni_ok=?, oversub=?, join_code=?, heat_mode=? WHERE id=?"
     )
     .run(
       offerType,
@@ -438,6 +453,7 @@ function applyScheduleExtras(id, body, route, user) {
       limit.alumniOk ? 1 : 0,
       limit.oversub ? 1 : 0,
       joinCode,
+      heatMode,
       id
     );
 }
@@ -614,6 +630,7 @@ router.post("/auth/login", (req, res) => {
   if (!user || !user.password_hash || !bcrypt.compareSync(password || "", user.password_hash)) {
     return res.status(400).json({ ok: false, message: "手机号或密码错误" });
   }
+  if (Number(user.is_virtual)) return res.status(400).json({ ok: false, message: "虚拟账号不能登录" });
   res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req) } });
 });
 
@@ -625,6 +642,7 @@ router.post("/auth/login-sms", (req, res) => {
     const info = db().prepare("INSERT INTO users (phone,nickname) VALUES (?,?)").run(phone, `同行者众${phone.slice(-4)}`);
     user = db().prepare("SELECT * FROM users WHERE id=?").get(info.lastInsertRowid);
   }
+  if (Number(user.is_virtual)) return res.status(400).json({ ok: false, message: "虚拟账号不能登录" });
   res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req) } });
 });
 
@@ -635,6 +653,8 @@ router.post("/auth/wechat", optionalUser, async (req, res) => {
     if (sess.errcode) return res.status(400).json({ ok: false, message: sess.errmsg || "微信登录失败" });
     if (!sess.openid) return res.status(400).json({ ok: false, message: "微信登录失败" });
     if (req.userId) {
+      const bound = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+      if (bound && Number(bound.is_virtual)) return res.status(400).json({ ok: false, message: "虚拟账号不能登录" });
       applyWechatSession(req.userId, sess);
       const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
       return res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req), bound: true } });
@@ -646,6 +666,7 @@ router.post("/auth/wechat", optionalUser, async (req, res) => {
         .run(nickname || "微信用户", avatar || "", sess.openid, sess.unionid || "");
       user = db().prepare("SELECT * FROM users WHERE id=?").get(info.lastInsertRowid);
     }
+    if (Number(user.is_virtual)) return res.status(400).json({ ok: false, message: "虚拟账号不能登录" });
     res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req) } });
   } catch (e) {
     jsonError(res, e);
@@ -1721,7 +1742,7 @@ router.post("/pay/company-settle", authUser, (req, res) => {
   if (sch.status === "cancelled") return res.status(400).json({ ok: false, message: "该拼团已解散" });
   if (sch.organizer_id !== req.userId) return res.status(403).json({ ok: false, message: "仅开团公司可统一支付" });
   const pending = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending' AND status='joined'").all(sch.id);
-  const quote = quoteForSchedule(sch, enrolledCount(sch.id), null);
+  const quote = quoteForSchedule(sch, Math.max(realEnrolledCount(sch.id), 1), null);
   let total = 0;
   for (const en of pending) {
     const amount = quote.originPrice + Number(en.insurance_fee || 0) + Number(en.supplies_fee || 0);
@@ -2441,7 +2462,7 @@ router.post("/admin/schedules", authAdmin, requireCap("ops"), (req, res) => {
   let virtual = null;
   if (virtualRaw != null && virtualRaw !== "" && Number(virtualRaw) > 0) {
     try {
-      virtual = setVirtualUsersForSchedule(createdId, virtualRaw);
+      virtual = setVirtualUsersForSchedule(createdId, virtualRaw, { lock: true });
     } catch (e) {
       const view = scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(createdId), req);
       return res.status(e.status || 400).json({
@@ -2680,7 +2701,7 @@ router.post("/admin/schedules/:id/settle", authAdmin, requireCap("ops"), (req, r
   if (!sch) return res.status(400).json({ ok: false, message: "排期不存在" });
   if (sch.status === "cancelled") return res.status(400).json({ ok: false, message: "该拼团已解散" });
   const pending = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending' AND status='joined'").all(sch.id);
-  const quote = quoteForSchedule(sch, enrolledCount(sch.id), null);
+  const quote = quoteForSchedule(sch, Math.max(realEnrolledCount(sch.id), 1), null);
   for (const en of pending) {
     const amount = quote.originPrice + Number(en.insurance_fee || 0) + Number(en.supplies_fee || 0);
     db().prepare("UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=?").run(amount, en.id);
@@ -2918,9 +2939,18 @@ function virtualUsersHandler(req, res) {
   try {
     const body = req.body || {};
     const scheduleId = req.params.id || body.scheduleId || body.schedule_id;
-    const data = generateVirtualUsers({ scheduleId, count: body.count });
+    const data = generateVirtualUsers({
+      scheduleId,
+      count: body.count,
+      heatMode: body.heatMode || body.heat_mode,
+      lock: body.lock == null ? body.count != null && body.heatMode !== "auto" : Boolean(body.lock),
+    });
     const extra = data.capped ? `（座位上限 ${data.maxVirtual}，已按可报名人数截取）` : "";
-    res.json({ ok: true, data, message: `已将本团虚拟报名设为 ${data.count} 人${extra}` });
+    const heatOnly = body.count == null || body.count === "";
+    const message = heatOnly
+      ? (data.heat && data.heat.mode === "off" ? "已关闭自动热度" : "已打开自动热度")
+      : `已将本团虚拟报名设为 ${data.count} 人${extra}`;
+    res.json({ ok: true, data, message });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }

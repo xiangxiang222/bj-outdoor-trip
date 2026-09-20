@@ -175,7 +175,9 @@ function createSchema(db) {
       started_at TEXT,
       started_by TEXT,
       started_by_id INTEGER,
-      created_at TEXT DEFAULT (datetime('now','localtime'))
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      heat_mode TEXT DEFAULT 'auto',
+      heat_locked INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS play_tags (
@@ -770,6 +772,11 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "merged_into", "INTEGER");
   addColumnIfMissing(db, "users", "wallet_balance", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "users", "wallet_pin_hash", "TEXT");
+  addColumnIfMissing(db, "schedules", "created_at", "TEXT");
+  addColumnIfMissing(db, "schedules", "heat_mode", "TEXT DEFAULT 'auto'");
+  addColumnIfMissing(db, "schedules", "heat_locked", "INTEGER DEFAULT 0");
+  db.prepare("UPDATE schedules SET created_at=datetime('now','localtime') WHERE created_at IS NULL OR created_at=''").run();
+  db.prepare("UPDATE schedules SET heat_mode='auto' WHERE heat_mode IS NULL OR heat_mode=''").run();
   db.exec(`
     CREATE TABLE IF NOT EXISTS wallet_ledger (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

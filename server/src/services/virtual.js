@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 const dayjs = require("dayjs");
 const { getDb } = require("../db");
 const { CITIES, makeIdCard, parseIdCard } = require("./idcard");
-const { firstFreeSeat, parseLockedSeats } = require("./seats");
+const { firstFreeSeat, lastFreeSeat, parseLockedSeats } = require("./seats");
 const { enrolledCount, virtualEnrolledCount, realEnrolledCount, quoteForSchedule } = require("./helpers");
 const config = require("../config");
 
@@ -311,13 +311,16 @@ function kickVirtualSeat(scheduleId) {
   return true;
 }
 
-function trimVirtuals() {
-  return 0;
+function trimVirtuals(scheduleId, now) {
+  if (!scheduleId) return 0;
+  const before = virtualEnrolledCount(scheduleId);
+  require("./virtual-heat").tickScheduleHeat(scheduleId, { now, ignoreRate: true, addBudget: 0 });
+  return Math.max(0, before - virtualEnrolledCount(scheduleId));
 }
 
 function restoreVirtual(sch, enrollmentId) {
   const db = getDb();
-  const seat = firstFreeSeat(sch.id, sch.max_seats);
+  const seat = lastFreeSeat(sch.id, sch.max_seats) || firstFreeSeat(sch.id, sch.max_seats);
   if (!seat) return false;
   const pay = payFields(sch);
   db.prepare(
@@ -349,8 +352,9 @@ function growVirtualPool(count) {
   const n = Math.floor(Number(count));
   if (!Number.isFinite(n) || n < 1) fail(400, "请填写要生成的人数");
   if (n > 200) fail(400, "一次最多生成 200 人");
+  const cap = Number(config.virtualHeat?.poolSize || 2000);
   const stats = virtualPoolStats();
-  if (stats.total + n > 800) fail(400, "虚拟用户池最多 800 人");
+  if (stats.total + n > cap) fail(400, `虚拟用户池最多 ${cap} 人`);
   let created = 0;
   for (let i = 0; i < n; i += 1) {
     createVirtualUser();
@@ -379,7 +383,7 @@ function enrollVirtualUser(sch, user) {
     .get(sch.id, user.id);
   if (existing && existing.status === "joined") return false;
   if (existing && existing.status === "cancelled") return restoreVirtual(sch, existing.id);
-  const seat = firstFreeSeat(sch.id, sch.max_seats);
+  const seat = lastFreeSeat(sch.id, sch.max_seats) || firstFreeSeat(sch.id, sch.max_seats);
   if (!seat) return false;
   const name = travelerNameOf(user);
   const last = lastEnrollmentOf(user.id);
@@ -434,11 +438,26 @@ function createVirtualEnrollment(sch) {
   return enrollVirtualUser(sch, user);
 }
 
-function setVirtualUsersForSchedule(scheduleId, count) {
+function setVirtualUsersForSchedule(scheduleId, count, opts = {}) {
   const db = getDb();
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
   if (!sch) fail(404, "排期不存在");
   if (sch.status === "cancelled") fail(400, "该拼团已解散，无法设置虚拟报名");
+  if (opts.heatMode === "off" || opts.heatMode === "auto") {
+    db.prepare("UPDATE schedules SET heat_mode=? WHERE id=?").run(opts.heatMode, sch.id);
+  }
+  if (opts.lock) {
+    db.prepare("UPDATE schedules SET heat_locked=1 WHERE id=?").run(sch.id);
+  } else if (opts.lock === false) {
+    db.prepare("UPDATE schedules SET heat_locked=0 WHERE id=?").run(sch.id);
+  } else if (opts.heatMode === "auto") {
+    db.prepare("UPDATE schedules SET heat_locked=0 WHERE id=?").run(sch.id);
+  }
+  if (count == null || count === "") {
+    const { snapshotOf } = require("./virtual-heat");
+    const fresh = db.prepare("SELECT * FROM schedules WHERE id=?").get(sch.id);
+    return { scheduleId: Number(sch.id), count: virtualEnrolledCount(sch.id), pool: virtualPoolStats(), heat: snapshotOf(fresh) };
+  }
   const requested = Number(count);
   if (!Number.isFinite(requested) || requested < 0) fail(400, "请填写虚拟报名人数");
   const want = Math.floor(requested);
@@ -468,6 +487,8 @@ function setVirtualUsersForSchedule(scheduleId, count) {
     }
   }
   current = virtualEnrolledCount(sch.id);
+  const { snapshotOf } = require("./virtual-heat");
+  const fresh = db.prepare("SELECT * FROM schedules WHERE id=?").get(sch.id);
   return {
     scheduleId: Number(sch.id),
     requested: want,
@@ -478,13 +499,15 @@ function setVirtualUsersForSchedule(scheduleId, count) {
     capped: want > cap,
     maxVirtual: cap,
     pool: virtualPoolStats(),
+    heat: snapshotOf(fresh),
   };
 }
 
 function generateVirtualUsers(opts = {}) {
   const scheduleId = opts.scheduleId || opts.schedule_id;
   if (!scheduleId) fail(400, "请指定行程 scheduleId，在该团设置虚拟报名人数");
-  return setVirtualUsersForSchedule(scheduleId, opts.count);
+  const lock = opts.lock == null ? true : Boolean(opts.lock);
+  return setVirtualUsersForSchedule(scheduleId, opts.count, { lock, heatMode: opts.heatMode });
 }
 
 module.exports = {

@@ -113,8 +113,8 @@ function createOfficialSchedule(route, startDate, meetup) {
   const minGroup = Math.max(1, Number(route.min_group_size) || 10);
   const info = db
     .prepare(
-      `INSERT INTO schedules (route_id,start_date,end_date,organizer_type,organizer_id,organizer_name,company_name,bus_type_id,min_group_size,max_seats,meetup_point,meetup_time,status,share_token,notes,review_status,channel,city)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO schedules (route_id,start_date,end_date,organizer_type,organizer_id,organizer_name,company_name,bus_type_id,min_group_size,max_seats,meetup_point,meetup_time,status,share_token,notes,review_status,channel,city,heat_mode,heat_locked)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
     .run(
       route.id,
@@ -134,7 +134,9 @@ function createOfficialSchedule(route, startDate, meetup) {
       "平台官方团，出行前一天会并入同集合点未成团的个人/公司/高校团。",
       "approved",
       "trip",
-      cityOf(route.region)
+      cityOf(route.region),
+      "auto",
+      0
     );
   return {
     schedule: db.prepare("SELECT * FROM schedules WHERE id=?").get(info.lastInsertRowid),
@@ -239,6 +241,11 @@ function mergeScheduleInto(source, dest) {
   const enrollments = db.prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status!='cancelled'").all(source.id);
   let moved = 0;
   for (const en of enrollments) {
+    const person = en.user_id ? db.prepare("SELECT is_virtual FROM users WHERE id=?").get(en.user_id) : null;
+    if (person && Number(person.is_virtual)) {
+      db.prepare("UPDATE enrollments SET status='cancelled' WHERE id=? AND status!='cancelled'").run(en.id);
+      continue;
+    }
     if (moveEnrollment(en, dest) === "moved") {
       moved += 1;
       notifyMerged(en, dest, db.prepare("SELECT title FROM routes WHERE id=?").get(dest.route_id)?.title || "活动");
@@ -293,6 +300,11 @@ function mergeDueTrips({ now } = {}) {
       require("./enroll").promoteWaitlist(id);
     } catch {
       /* 候补递补失败不影响并团 */
+    }
+    try {
+      require("./virtual").trimVirtuals(id);
+    } catch {
+      /* 热度回补失败不影响并团 */
     }
     maybeMatchGuide(id);
   }
