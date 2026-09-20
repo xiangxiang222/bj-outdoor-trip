@@ -42,7 +42,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `http://togetherbette
 | POST | `/enrollments/:id/fallbacks` | 设置候选团与替代团 |
 | GET | `/schedules/:id/demographics` | 本团画像 |
 | GET | `/schedules/:id/reviews` | 该团评价列表。`{ list, count, avg }` |
-| GET | `/schedules/:id/poster` | 可选用户。分享 URL、二维码、小程序 path、详情海报 SVG。登录后 URL/二维码带 `ref` 推荐码，好友报名返点 5% |
+| GET | `/schedules/:id/poster` | 可选用户。分享 URL、二维码、小程序 path、详情海报 SVG（封面内嵌 data URL，H5 用 `<img>` 才能显示）。登录后 URL/二维码带 `ref` 推荐码，好友报名返点 5% |
 | GET | `/share/:token` | 302 到 `/m/schedule/:id?token=`，可附带 `ref` `joinCode` |
 | GET | `/coupons/:code` | 公开券详情、剩余、报价预览。登录后带 `claimedByMe`、`myCoupon.expiresAt`。`universal` 通用券无指定团。可选用户 token |
 | POST | `/coupons/:code/claim` | 用户。领取（已领则幂等返回）。每人每活动 1 张，库存按领取扣 |

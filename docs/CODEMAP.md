@@ -95,7 +95,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `route-apply.js` | 用户申请收录线路、后台审批、首次成团奖励 300 元 |
 | `official-trip.js` | 官方团滚动开团、出行前一天并入未成团并通知、个人发团成团奖 200 元入钱包 |
 | `wallet.js` | 余额账本、微信支付充值、提现到微信零钱、6 位支付密码；返点与成团奖励入账。银行卡接口已关闭 |
-| `share-poster.js` | 分享链接/二维码带推荐码、详情海报 SVG |
+| `share-poster.js` | 分享链接/二维码带推荐码、详情海报 SVG（封面内嵌 data URL） |
 | `route-draft.js` | 后台发线路起草：有密钥走兼容 OpenAI 的聊天接口，否则模板；图片先对已有景点库，再搜百度 / 360 |
 
 路由全集中在 `api.js`，不在 services 里挂 HTTP。

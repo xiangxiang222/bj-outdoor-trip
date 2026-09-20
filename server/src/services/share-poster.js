@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const QRCode = require("qrcode");
 const { getDb, toRoute } = require("../db");
 const config = require("../config");
@@ -5,6 +7,33 @@ const { enrolledCount, quoteForSchedule, attachAssetHost, publicBase } = require
 const { ensureReferralCode } = require("./profile");
 const { tripKindOf } = require("./official-trip");
 const { loginLive, getWxaCode } = require("./wechat");
+
+const COVER_MIME = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+};
+
+const MAX_EMBED_BYTES = 1.5 * 1024 * 1024;
+
+function embedLocalMedia(url) {
+  const rel = String(url || "").match(/\/static\/[^?#]+/)?.[0]?.replace(/^\//, "") || "";
+  if (!rel.startsWith("static/")) return "";
+  const file = path.join(config.publicDir, rel);
+  try {
+    if (!fs.existsSync(file)) return "";
+    const mime = COVER_MIME[path.extname(file).toLowerCase()];
+    if (!mime) return "";
+    const buf = fs.readFileSync(file);
+    if (!buf.length || buf.length > MAX_EMBED_BYTES) return "";
+    return `data:${mime};base64,${buf.toString("base64")}`;
+  } catch {
+    return "";
+  }
+}
 
 function escapeXml(raw) {
   return String(raw || "")
@@ -167,10 +196,13 @@ async function buildSchedulePoster(sch, req, { userId } = {}) {
   const mpPath = mpSharePath({ id: sch.id, ref, joinCode });
   const scene = encodeShareScene({ id: sch.id, ref, joinCode });
   const qr = await qrForShare({ h5Url, scene, joinCode });
+  const publicCover = attachAssetHost(req, route?.cover || "");
+  const coverEmbed = embedLocalMedia(route?.cover || publicCover);
   const facts = {
     id: sch.id,
     title: route?.title || "行程",
-    cover: attachAssetHost(req, route?.cover || ""),
+    cover: publicCover,
+    coverEmbed,
     kind: kind.key,
     kindLabel: kind.label,
     originPrice: quote.originPrice,
@@ -193,11 +225,11 @@ async function buildSchedulePoster(sch, req, { userId } = {}) {
     mpPath,
     scene,
     shareTitle: shareTitleOf(facts),
-    shareImage: facts.cover || "",
+    shareImage: publicCover || "",
     referralCode: ref,
     rate: facts.rate,
-    posterSvg: renderPosterSvg(facts, qr),
-    cardSvg: renderCardSvg(facts),
+    posterSvg: renderPosterSvg({ ...facts, cover: coverEmbed }, qr),
+    cardSvg: renderCardSvg({ ...facts, cover: coverEmbed }),
     facts,
   };
 }
@@ -207,6 +239,7 @@ module.exports = {
   decodeShareScene,
   shareQuery,
   mpSharePath,
+  embedLocalMedia,
   buildSchedulePoster,
   renderPosterSvg,
   renderCardSvg,

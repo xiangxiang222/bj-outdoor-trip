@@ -152,10 +152,25 @@ describe("routes and schedules API", () => {
   });
 
   it("returns poster qr", async () => {
+    const fs = require("fs");
+    const path = require("path");
+    const config = require("../src/config");
+    const dir = path.join(config.publicDir, "static", "photos");
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(
+      path.join(dir, "wall1.jpg"),
+      Buffer.from(
+        "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=",
+        "base64"
+      )
+    );
     const res = await agent.get(`/api/schedules/${seed.individualScheduleId}/poster`).expect(200);
     assert.match(res.body.data.qr, /^data:image\/png;base64,/);
     assert.match(res.body.data.url, /\/m\/schedule\//);
     assert.match(res.body.data.posterSvg, /svg/);
+    assert.match(res.body.data.posterSvg, /href="data:image\/jpeg;base64,/);
+    assert.match(res.body.data.facts.coverEmbed, /^data:image\/jpeg;base64,/);
+    assert.match(res.body.data.facts.cover, /\/static\/photos\/wall1\.jpg/);
     assert.match(res.body.data.shareTitle, /立即报名|免费/);
     assert.equal(res.body.data.referralCode, "");
     const token = await loginUser(agent);

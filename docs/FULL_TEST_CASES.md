@@ -6,7 +6,7 @@
 
 | 文件 | 作用 |
 | --- | --- |
-| [full-tests/AUTOMATED.md](./full-tests/AUTOMATED.md) | 仓库内全部 **372** 条 `it(` 名称（297 服务端 + 75 H5），`npm test` 一次跑完 |
+| [full-tests/AUTOMATED.md](./full-tests/AUTOMATED.md) | 仓库内全部 **374** 条 `it(` 名称（299 服务端 + 75 H5），`npm test` 一次跑完 |
 | [full-tests/screenshots/](./full-tests/screenshots/) | 本文手动走查按测试顺序截的图 |
 | [TESTING.md](./TESTING.md) | 怎么跑单测、覆盖率、e2e |
 | 发团专项（官方线路 + 用户发团） | 见 PR [#57](https://github.com/xiangxiang222/bj-outdoor-trip/pull/57) 的 `docs/PUBLISH_TEST_CASES.md`（合入 `main` 后以仓库文件为准） |
@@ -17,7 +17,7 @@
 
 本仓库的遍历方式：
 
-1. **自动化 372 条**：每条接口/领域规则各断言一次，这是全量遍历。
+1. **自动化 374 条**：每条接口/领域规则各断言一次，这是全量遍历。
 2. **交互规则表（§2）**：每一条「允许 / 禁止」的组合至少对应一条自动化用例，关键组合另有 UI 截图。
 3. **手动走查（§3）**：按真实使用顺序走三端，每一步一张图。每个模块、每种用户身份、每种团型至少出现一次。
 
@@ -508,7 +508,7 @@ npm test
 
 ---
 
-## 4. 自动化全表（372 条，一次跑完）
+## 4. 自动化全表（374 条，一次跑完）
 
 按文件的 `it(` 计数。逐条英文名称见 [full-tests/AUTOMATED.md](./full-tests/AUTOMATED.md)。
 
@@ -535,6 +535,7 @@ npm test
 | `api.refund.test.js` | 3 | 退费档 |
 | `api.reviews.test.js` | 4 | 评价资格 |
 | `api.routes.test.js` | 7 | 线路排期分享 |
+| `share-poster.test.js` | 4 | 分享 scene 与海报封面内嵌 |
 | `api.seats.test.js` | 2 | 选座 |
 | `api.social.test.js` | 9 | 主页、推荐、虚拟用户 |
 | `virtual-heat.service.test.js` | 6 | 自动热度水位与让位 |
@@ -608,7 +609,7 @@ npm test
 
 ## 7. 建议回归顺序（上线前）
 
-1. `npm test`（372 条，隔离临时库）。
+1. `npm test`（374 条，隔离临时库）。
 2. `npm run test:coverage`（行/语句/函数 80%，分支 65%）。
 3. 按本文 M-01 → M-71 点一遍三端（本地 `npm run dev`）。
 4. `npm run test:e2e` 或 `npm run test:e2e:live`（不要对生产 `--unsafe`）。

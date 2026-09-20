@@ -1,6 +1,6 @@
 # 自动化用例全表
 
-对照日期 2026-09-14，仓库内 `it(` 共 **372** 条（297 服务端 + 75 H5）。组合规则、手动走查顺序和截图见 [../FULL_TEST_CASES.md](../FULL_TEST_CASES.md)。
+对照日期 2026-09-14，仓库内 `it(` 共 **374** 条（299 服务端 + 75 H5）。组合规则、手动走查顺序和截图见 [../FULL_TEST_CASES.md](../FULL_TEST_CASES.md)。
 
 ## `server/test/api.admin.test.js`
 
@@ -210,7 +210,7 @@
 4. lists and details schedules with masked chain names
 5. share token redirects; invalid token 404
 6. creates individual and company schedules
-7. returns poster qr
+7. returns poster qr（封面内嵌 data URL）
 
 ## `server/test/api.seats.test.js`
 
@@ -393,6 +393,13 @@
 20. keeps copy when the model works and photos fail
 21. drafts from the template without live net in unit tests
 22. falls back to the template when the model throws
+
+## `server/test/share-poster.test.js`
+
+1. encodes and decodes a compact mini-program scene with ref
+2. builds h5 query and mini path with referral code
+3. embeds a local cover so SVG used as an image can show the photo
+4. skips embed when the cover file is missing
 
 ## `server/test/routes-data.test.js`
 
