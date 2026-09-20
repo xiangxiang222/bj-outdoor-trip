@@ -40,7 +40,7 @@ export async function drawTripPoster(facts, qrSrc) {
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, width, height);
 
-  const cover = await loadImage(facts.cover);
+  const cover = await loadImage(facts.coverEmbed || facts.cover);
   if (cover) {
     const ratio = Math.max(width / cover.width, 360 / cover.height);
     const cw = cover.width * ratio;

@@ -116,7 +116,7 @@ npx vitest run src/utils/share.test.js
 | `api.auth.test.js` | meta、短信、图片验证码注册/登录、微信演示登录、改资料、注销 |
 | `api.home.test.js` | 首页轮播不含同城局线路；`GET /schedules?channel=activity`；发线路带 B 站视频 |
 | `api.routes.test.js` | 筛选、收藏标记、名单脱敏、分享 302 可带 ref、开团校验、海报 QR/推荐码、导游列表与详情 |
-| `share-poster.test.js` | 小程序 scene 编解码、分享 query 带推荐码 |
+| `share-poster.test.js` | 小程序 scene 编解码、分享 query 带推荐码、海报封面内嵌 |
 | `api.enroll.test.js` | 个人占座（`needPay: false`）、紧急联系人/健康/免责、`/me/trips`、公司挂账与结算权限、满员、成团导游、取消报名（已过出发日 / 正式开团后不可取消）、会员购买、收藏、**同城局姓名+手机即可报名**、行程页报名摄影师 |
 | `api.refund.test.js` | 默认/全局/线路退费档、已付按比例退、出发当天未开团可退 50%、开团后不可取消 |
 | `api.pay.test.js` | 绑定 openid、JSAPI 下单、支付回调入账、查单开通会员、真实支付时禁止 mock-success；自己付/代付/众筹分摊与取消按付款人退款 |
