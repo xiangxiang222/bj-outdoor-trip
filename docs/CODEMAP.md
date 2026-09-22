@@ -13,7 +13,9 @@ bj-outdoor-trip/
     deploy.sh               rsync 到腾讯云 + 远程构建 + PM2
     prod-start.sh           生产启动（读 .env，必要时 seed）
     server-setup.sh         首次装 Node / Nginx / PM2
-    nginx-beiyexing.conf    80 → 3780
+    nginx-beiyexing.conf    未装证书时 80 → 3780
+    nginx-beiyexing-https.conf  有证书时 80 与 443 都反代到 3780
+    enable-https.sh         申请 Let's Encrypt 并切换到 HTTPS 配置
     e2e.js                  全功能走查
   .github/workflows/deploy.yml   推 main 自动部署
   server/

@@ -76,7 +76,7 @@
 | `WX_PAY_MOCK` | `0` 关闭 mock，走 JSAPI | 默认开启 mock |
 | `WX_MCH_CERT_PATH` / `WX_MCH_KEY_PATH` | 商户 API 证书（原路退款） | 真收款后才需要 |
 | `WEATHER_LIVE` | `1` 强制 Open-Meteo；`0` 强制模拟 | 生产默认实时，本地默认 mock |
-| `WX_PAY_NOTIFY` | 支付回调 URL | 默认 `http://togetherbetter.cn/api/pay/wechat/notify` |
+| `WX_PAY_NOTIFY` | 支付回调 URL | 默认 `https://togetherbetter.cn/api/pay/wechat/notify` |
 
 JWT 有效期：用户/导游 `jwtExpire=30d`，后台 `adminJwtExpire=7d`。
 

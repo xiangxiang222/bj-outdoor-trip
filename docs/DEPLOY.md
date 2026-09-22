@@ -2,7 +2,7 @@
 
 改代码、**合并到 GitHub 的 `main`** 之后：先跑 **Unit tests**，通过了才 **Deploy** 到腾讯云。部署发生在 GitHub Actions 的云主机上，不发生在你的 iPhone 或 Cursor 云环境里。功能分支和 Pull Request 不会自动上线。手机没有系统 SSH 不影响自动上线。
 
-线上地址：<http://togetherbetter.cn/m>（`www.togetherbetter.cn` 同样可用）。SSH 部署默认登录 `ubuntu@140.143.171.77`。**`192.144.167.212` 已到期回收**，不要再写进 workflow。主机写在仓库 Variable `DEPLOY_HOST`；GitHub Secret `DEPLOY_SSH_KEY` 对应的公钥必须在新机 `ubuntu` 的 `~/.ssh/authorized_keys`。轻量安全组放行 **22 / 80**（22 要对 GitHub Actions 网段开放，不能只放行家里的 IP）。部署脚本不会覆盖已有 `.env` 和数据库。小程序后台的 request / upload 合法域名也要改成新地址。未配置密钥或主机仍指向已回收 IP 时，Deploy 会**跳过**而不是报红。HTTPS 还没开，先走 http；轻量控制台「设置 HTTPS」配好证书后，再改 https。
+线上地址：<http://togetherbetter.cn/m>（`www.togetherbetter.cn` 同样可用）。SSH 部署默认登录 `ubuntu@140.143.171.77`。**`192.144.167.212` 已到期回收**，不要再写进 workflow。主机写在仓库 Variable `DEPLOY_HOST`；GitHub Secret `DEPLOY_SSH_KEY` 对应的公钥必须在新机 `ubuntu` 的 `~/.ssh/authorized_keys`。轻量安全组放行 **22 / 80 / 443**（22 要对 GitHub Actions 网段开放，不能只放行家里的 IP）。部署脚本不会覆盖已有 `.env` 和数据库。证书用 `scripts/enable-https.sh` 签到 `/etc/letsencrypt`（Let's Encrypt，不进仓库）；已有证书时 Nginx 同时听 443。公网 443 目前会被轻量防火墙丢掉，要在控制台放行 TCP 443 之后 `https://togetherbetter.cn/m` 才能打开。放行前不要把 80 跳转到 HTTPS。小程序后台的 request / uploadFile / downloadFile 合法域名填 `https://togetherbetter.cn`。未配置密钥或主机仍指向已回收 IP 时，Deploy 会**跳过**而不是报红。
 
 合入前必须 UT 绿灯：在 [Rulesets](https://github.com/xiangxiang222/bj-outdoor-trip/settings/rules) 给 `main` 勾选 Require status checks → `unit-tests`。说明见 [TESTING.md](./TESTING.md) 第 7 节。
 
