@@ -15,7 +15,7 @@ function useLivePay() {
     mchKey: config.wechat.mchKey,
   };
   config.wechat.mock = false;
-  config.wechat.appId = "wx205ca387929c002a";
+  config.wechat.appId = "wx255ca387929c502a";
   config.wechat.appSecret = "live_secret_value";
   config.wechat.mchId = "17501360384";
   config.wechat.mchKey = LIVE_KEY;
@@ -62,7 +62,7 @@ describe("wechat live pay", () => {
 
   it("exposes app id on /meta while keeping mock pay in tests", async () => {
     const res = await agent.get("/api/meta").expect(200);
-    assert.equal(res.body.data.wechatAppId, "wx205ca387929c002a");
+    assert.equal(res.body.data.wechatAppId, "wx255ca387929c502a");
     assert.equal(res.body.data.wechatPayMock, true);
     assert.equal(res.body.data.wechatPayLive, false);
   });

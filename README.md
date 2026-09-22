@@ -121,7 +121,7 @@ npm run dev
 
 1. 默认请求线上 `https://togetherbetter.cn`。本地联调把 `miniprogram/config.js` 的 `USE_LOCAL_API` 改为 `true`
 2. 连本机 IP 调试时，详情里关闭「校验合法域名、web-view、TLS」。正式版请求 `https://togetherbetter.cn`，并在小程序后台把该域名配进 request / uploadFile / downloadFile
-3. 正式上线：开发者工具填真实 AppId `wx205ca387929c002a`（已写在 `miniprogram/project.config.json`）。服务器 `.env` 填 `WX_APPSECRET` 与商户 `WX_MCH_KEY`，并把 `WX_PAY_MOCK=0`。密钥不要提交进仓库。
+3. 正式上线：开发者工具填真实 AppId `wx255ca387929c502a`（已写在 `miniprogram/project.config.json`）。服务器 `.env` 填 `WX_APPSECRET` 与商户 `WX_MCH_KEY`，并把 `WX_PAY_MOCK=0`。密钥不要提交进仓库。
 
 H5 用户端与小程序打同一套 API。H5 有独立学生/团体认证页；小程序首页「学生认证」在已登录时跳到「我的」，独立页尚未做。
 
@@ -141,7 +141,7 @@ npm run test:e2e
 
 默认 `WX_PAY_MOCK=1`，个人拼团报名**不调起支付**（`needPay: false`），出行前在团页自己付、代付或转发分摊。开通会员、团页付款在演示环境立即记成功。公司团由开团人或后台结算。
 
-已写入小程序 AppID `wx205ca387929c002a`、商户号 `17501360384`。服务器配齐 `WX_APPSECRET`、商户平台 APIv2 密钥 `WX_MCH_KEY` 后设 `WX_PAY_MOCK=0`：小程序走微信 JSAPI（`wx.requestPayment`），支付结果以回调 `/api/pay/wechat/notify` 或小程序内 `POST /pay/confirm` 查单为准。H5 不能调起 JSAPI，会提示去小程序付款。
+已写入小程序 AppID `wx255ca387929c502a`、商户号 `17501360384`。服务器配齐 `WX_APPSECRET`、商户平台 APIv2 密钥 `WX_MCH_KEY` 后设 `WX_PAY_MOCK=0`：小程序走微信 JSAPI（`wx.requestPayment`），支付结果以回调 `/api/pay/wechat/notify` 或小程序内 `POST /pay/confirm` 查单为准。H5 不能调起 JSAPI，会提示去小程序付款。
 
 取消报名、解散拼团按各付款人原路退回。演示环境只记账；真收款另配商户 API 证书 `WX_MCH_CERT_PATH` / `WX_MCH_KEY_PATH`。
 

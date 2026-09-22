@@ -13,7 +13,7 @@ module.exports = {
   webDistDir: process.env.MMC_WEB_DIST_DIR || path.join(rootDir, "..", "web", "dist"),
   demoSmsCode: "888888",
   wechat: {
-    appId: process.env.WX_APPID || "wx205ca387929c002a",
+    appId: process.env.WX_APPID || "wx255ca387929c502a",
     appSecret: process.env.WX_APPSECRET || "wx_demo_secret",
     mchId: process.env.WX_MCH_ID || "17501360384",
     mchKey: process.env.WX_MCH_KEY || "",
