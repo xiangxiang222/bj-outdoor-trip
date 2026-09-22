@@ -10,7 +10,7 @@ describe("config env overrides", () => {
     assert.equal(config.demoSmsCode, "888888");
     assert.equal(config.wechat.mock, true);
     assert.equal(config.wechat.appId, "wx255ca387929c502a");
-    assert.equal(config.wechat.mchId, "17501360384");
+    assert.equal(config.wechat.mchId, "1750196084");
     assert.equal(config.points.redeemRate, 100);
     assert.equal(config.points.maxOffsetRatio, 0.2);
     assert.equal(config.member.annualFee, 99);
