@@ -15,7 +15,7 @@ module.exports = {
   wechat: {
     appId: process.env.WX_APPID || "wx255ca387929c502a",
     appSecret: process.env.WX_APPSECRET || "wx_demo_secret",
-    mchId: process.env.WX_MCH_ID || "17501360384",
+    mchId: process.env.WX_MCH_ID || "1750196084",
     mchKey: process.env.WX_MCH_KEY || "",
     notifyUrl: process.env.WX_PAY_NOTIFY || "https://togetherbetter.cn/api/pay/wechat/notify",
     mock: process.env.WX_PAY_MOCK !== "0",

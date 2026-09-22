@@ -17,7 +17,7 @@ function useLivePay() {
   config.wechat.mock = false;
   config.wechat.appId = "wx255ca387929c502a";
   config.wechat.appSecret = "live_secret_value";
-  config.wechat.mchId = "17501360384";
+  config.wechat.mchId = "1750196084";
   config.wechat.mchKey = LIVE_KEY;
   return () => Object.assign(config.wechat, prev);
 }
@@ -108,7 +108,7 @@ describe("wechat live pay", () => {
       const params = {
         return_code: "SUCCESS",
         result_code: "SUCCESS",
-        mch_id: "17501360384",
+        mch_id: "1750196084",
         out_trade_no: tradeNo,
       };
       params.sign = signMd5(params, LIVE_KEY);
