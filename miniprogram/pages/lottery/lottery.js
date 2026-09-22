@@ -59,7 +59,7 @@ function hintOf(state, canDraw, hasResult) {
 
 Page({
   data: {
-    state: { pre: null, post: null, canPre: false, canPost: false, canClaim: false, prizes: [], title: "活动抽奖", spinSeconds: 5 },
+    state: { pre: null, post: null, canPre: false, canPost: false, canClaim: false, prizes: [], title: "活动", spinSeconds: 5 },
     msg: "",
     scheduleId: 0,
     phase: "pre",
@@ -148,7 +148,7 @@ Page({
       });
       this.load();
     } catch (e) {
-      this.setData({ spinning: false, msg: (e && e.message) || "抽奖失败" });
+      this.setData({ spinning: false, msg: (e && e.message) || "操作失败" });
     }
   },
   async claim() {

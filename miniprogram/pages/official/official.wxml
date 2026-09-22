@@ -10,7 +10,6 @@
 <view class="pad muted">{{contacts.hint}}</view>
 <view class="svc-grid">
   <view class="svc-tile" bindtap="go" data-url="/pages/feedback/feedback">意见反馈</view>
-  <view class="svc-tile" bindtap="go" data-url="/pages/lottery/lottery">报名前抽奖</view>
   <view class="svc-tile" bindtap="go" data-url="/pages/student/student">学生认证</view>
   <view class="svc-tile" bindtap="go" data-url="/pages/route-apply/route-apply">申请收录线路</view>
   <view class="svc-tile" bindtap="jumpRules">平台规则</view>

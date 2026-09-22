@@ -140,7 +140,7 @@ async function drawSharePoster(page, facts, qrSrc) {
   ctx.fill();
   ctx.fillStyle = "#1b4332";
   ctx.font = "700 14px sans-serif";
-  ctx.fillText("好友报名，分享人得团费 5%", 28, 396);
+  ctx.fillText("把这张图发给好友，扫码即可报名", 28, 396);
   ctx.fillStyle = "#555555";
   ctx.font = "12px sans-serif";
   ctx.fillText("点右上角转发给微信好友，卡片可直接打开小程序。", 28, 422);

@@ -1,7 +1,7 @@
 <view class="wallet-hero">
   <view class="muted">账户安全保障中</view>
   <view class="wallet-balance">{{data.balance || 0}}<text class="muted"> 元</text></view>
-  <view class="muted">返点、成团奖励会进这里。充值走微信支付，提现到微信零钱。不支持银行卡。</view>
+  <view class="muted">余额可付团费。充值走微信支付，提现到微信零钱。不支持银行卡。</view>
   <view class="row" style="margin-top:24rpx">
     <view class="btn" style="flex:1;margin:0 8rpx 0 0" bindtap="showTopup">微信支付充值</view>
     <view class="btn ghost" style="flex:1;margin:0" bindtap="showWithdraw">提现到微信</view>
@@ -23,7 +23,7 @@
   <block wx:else>
     <view class="pad muted">提现金额（元）</view>
     <input class="input" type="number" value="{{withdrawAmount}}" bindinput="setWithdraw" />
-    <view class="pad muted">到账微信零钱。演示环境立即记账。</view>
+    <view class="pad muted">到账微信零钱。</view>
     <view class="pad muted">支付密码</view>
     <input class="input" password value="{{pin}}" maxlength="6" bindinput="setPin" />
     <view class="btn" bindtap="withdraw">确认提现到微信</view>

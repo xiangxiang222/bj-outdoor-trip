@@ -48,9 +48,6 @@ Page({
     buses: [],
     busNames: [],
     busIndex: 0,
-    lotteryLabels: ["不开抽奖", "报名前抽奖", "报名后抽奖", "报名前和报名后都抽"],
-    lotteryKeys: ["off", "pre", "enroll", "both"],
-    lotteryIndex: 0,
     meetupNames: MEETUPS,
     meetupIndex: 0,
     organizerLabels: ["个人开团（先报名，出行前付款）", "公司开团（先报名，最后统一支付）", "高校开团（先报名，出行前付款）"],
@@ -347,10 +344,6 @@ Page({
   setBus(e) {
     const i = Number(e.detail.value);
     this.setData({ busIndex: i, "form.busTypeId": this.data.buses[i].id });
-  },
-  setLottery(e) {
-    const i = Number(e.detail.value);
-    this.setData({ lotteryIndex: i, "form.lotteryMode": this.data.lotteryKeys[i] });
   },
   setMeetup(e) {
     const i = Number(e.detail.value);

@@ -546,7 +546,7 @@ Page({
       this.setData({
         posterQr: data.qr || "",
         ref: data.referralCode || this.data.ref,
-        posterHint: data.referralCode ? "好友扫码报名，成团后你拿团费 5%" : "登录后分享可绑定你的推荐返点",
+        posterHint: "把海报发给好友，扫码即可报名",
       });
     }).catch(() => this.setData({ posterHint: "二维码生成失败，仍可转发小程序卡片" }));
   },

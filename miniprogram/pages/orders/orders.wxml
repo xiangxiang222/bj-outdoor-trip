@@ -71,7 +71,7 @@
         </view>
         <view class="muted">{{item.start_date}} · {{item.statusText}} · {{item.moneyText}}</view>
       </view>
-      <view wx:if="{{item.canComplete || item.completed}}" class="btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{item.completed ? '评价 / 抽奖 / 评选' : '完成活动'}}</view>
+      <view wx:if="{{item.canComplete || item.completed}}" class="btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{item.completed ? '评价 / 评选' : '完成活动'}}</view>
       <view wx:if="{{item.canReview}}">
         <view wx:if="{{reviewingId != item.id}}" class="btn ghost" catchtap="openReview" data-id="{{item.id}}">去评价</view>
         <view wx:else class="pad">

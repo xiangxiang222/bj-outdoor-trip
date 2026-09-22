@@ -66,7 +66,6 @@
   <view bindtap="go" data-url="/pages/student/student"><view class="ico">学</view>{{campusLabel}}</view>
   <view bindtap="go" data-url="/pages/leader/leader"><view class="ico">队</view>{{leaderLabel}}</view>
   <view bindtap="go" data-url="/pages/publish/publish"><view class="ico">团</view>发团</view>
-  <view bindtap="go" data-url="/pages/lottery/lottery"><view class="ico">奖</view>抽奖</view>
   <view bindtap="go" data-url="/pages/route-apply/route-apply"><view class="ico">线</view>收录线路</view>
   <view bindtap="go" data-url="/pages/feedback/feedback"><view class="ico">问</view>建议</view>
   <view bindtap="goRoutes"><view class="ico">目</view>看线路</view>
