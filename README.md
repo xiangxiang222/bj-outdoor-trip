@@ -56,9 +56,9 @@ npm run dev
 
 | 入口 | 地址 |
 | --- | --- |
-| 用户端 | http://togetherbetter.cn/m |
-| 管理后台 | http://togetherbetter.cn/admin |
-| 导游端 | http://togetherbetter.cn/g |
+| 用户端 | https://togetherbetter.cn/m |
+| 管理后台 | https://togetherbetter.cn/admin |
+| 导游端 | https://togetherbetter.cn/g |
 
 部署发生在 GitHub Actions 上：`main` 合入后先跑 **Unit tests**，通过再 **Deploy** 到 `ubuntu@140.143.171.77`。不需要本机 SSH。密钥是仓库 Secret `DEPLOY_SSH_KEY`，主机是 Variable `DEPLOY_HOST`。不要配成 Deploy keys，也不要用 `root`。**不要**在生产库执行 `npm run seed`。细节见 [docs/DEPLOY.md](docs/DEPLOY.md)。
 
@@ -119,8 +119,8 @@ npm run dev
 
 原生小程序在 `miniprogram/`。用微信开发者工具打开该目录：
 
-1. 默认请求线上 `http://togetherbetter.cn`。本地联调把 `miniprogram/config.js` 的 `USE_LOCAL_API` 改为 `true`
-2. 详情里关闭「校验合法域名、web-view、TLS」，以便真机请求 HTTP 域名
+1. 默认请求线上 `https://togetherbetter.cn`。本地联调把 `miniprogram/config.js` 的 `USE_LOCAL_API` 改为 `true`
+2. 连本机 IP 调试时，详情里关闭「校验合法域名、web-view、TLS」。正式版请求 `https://togetherbetter.cn`，并在小程序后台把该域名配进 request / uploadFile / downloadFile
 3. 正式上线：开发者工具填真实 AppId `wx205ca387929c002a`（已写在 `miniprogram/project.config.json`）。服务器 `.env` 填 `WX_APPSECRET` 与商户 `WX_MCH_KEY`，并把 `WX_PAY_MOCK=0`。密钥不要提交进仓库。
 
 H5 用户端与小程序打同一套 API。H5 有独立学生/团体认证页；小程序首页「学生认证」在已登录时跳到「我的」，独立页尚未做。

@@ -4,7 +4,7 @@
 
 - 后台：[http://127.0.0.1:3781/admin](http://127.0.0.1:3781/admin)
 - 若已执行 `npm run build` 并由 API 托管静态资源，也可访问 [http://127.0.0.1:3780/admin](http://127.0.0.1:3780/admin)
-- 线上：[http://togetherbetter.cn/admin](http://togetherbetter.cn/admin)
+- 线上：[https://togetherbetter.cn/admin](https://togetherbetter.cn/admin)
 
 ## 1. 登录
 

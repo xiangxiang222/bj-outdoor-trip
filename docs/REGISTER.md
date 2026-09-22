@@ -49,7 +49,7 @@
 2. 点 `140.143.171.77` 这台机 → 防火墙
 3. 添加规则：协议 TCP，端口 443，来源 0.0.0.0/0
 
-80 已经通。443 没放行时，公网连上去会超时，所以 Nginx 先同时提供 HTTP 和 HTTPS，不把用户跳到 HTTPS。放行后打开 https://togetherbetter.cn/m ，再把 80 改成跳转。
+防火墙已放行 TCP 443。域名的 HTTP 会跳到 HTTPS，直接打开 https://togetherbetter.cn/m 。
 
 
 五、微信小程序

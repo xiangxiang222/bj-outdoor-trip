@@ -9,7 +9,7 @@
 | 端 | 怎么打开 |
 | --- | --- |
 | 本地 H5 | 启动后访问 http://127.0.0.1:3781/m （若系统开了 HTTP 代理，请用 `127.0.0.1` 而不是 `localhost`） |
-| 线上 H5 | http://togetherbetter.cn/m |
+| 线上 H5 | https://togetherbetter.cn/m |
 | 小程序 | 微信开发者工具导入 `miniprogram/`。默认请求线上 API。真机调试 HTTP 域名时关闭「校验合法域名」 |
 
 演示账号（本地执行 `npm run seed` 后；线上演示环境同样可用）：
@@ -216,6 +216,6 @@
 | 学生 / 团体认证 | `/m/student`、`/m/group` | 校园认证独立页；团体认证仍无独立页 |
 | 图形标 | 原 logo 裁切 `/brand/mark.png` | `images/logo.jpg`（官方页） |
 
-小程序默认请求线上 `http://togetherbetter.cn`。本地联调时把 `miniprogram/config.js` 里的 `USE_LOCAL_API` 改为 `true`（开发者工具走 `127.0.0.1:3780`，真机走局域网地址）。真机访问 HTTP 域名需关闭合法域名校验。
+小程序默认请求线上 `https://togetherbetter.cn`。本地联调时把 `miniprogram/config.js` 里的 `USE_LOCAL_API` 改为 `true`（开发者工具走 `127.0.0.1:3780`，真机走局域网地址）。连本机 IP 时关闭合法域名校验。
 
-正式上线：`miniprogram/project.config.json` 已是真实 AppId。服务器填写 `WX_APPSECRET` / `WX_MCH_KEY`，`WX_PAY_MOCK=0`，并配置 HTTPS 合法域名。
+正式上线：`miniprogram/project.config.json` 已是真实 AppId。公众平台服务器域名填 `https://togetherbetter.cn`。服务器填写 `WX_APPSECRET` / `WX_MCH_KEY`，并把 `WX_PAY_MOCK=0`。

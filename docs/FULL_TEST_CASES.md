@@ -615,4 +615,4 @@ npm test
 4. `npm run test:e2e` 或 `npm run test:e2e:live`（不要对生产 `--unsafe`）。
 5. 发团走 PR #57 的官方发布路径。
 
-线上演示站 `http://togetherbetter.cn` 可做只读对照，不要在生产 seed，也不要解散全部拼团。
+线上演示站 `https://togetherbetter.cn` 可做只读对照，不要在生产 seed，也不要解散全部拼团。

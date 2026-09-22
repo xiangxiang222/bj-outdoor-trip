@@ -14,7 +14,7 @@ bj-outdoor-trip/
     prod-start.sh           生产启动（读 .env，必要时 seed）
     server-setup.sh         首次装 Node / Nginx / PM2
     nginx-beiyexing.conf    未装证书时 80 → 3780
-    nginx-beiyexing-https.conf  有证书时 80 与 443 都反代到 3780
+    nginx-beiyexing-https.conf  域名 80 跳 HTTPS，443 → 3780
     enable-https.sh         申请 Let's Encrypt 并切换到 HTTPS 配置
     e2e.js                  全功能走查
   .github/workflows/deploy.yml   推 main 自动部署
@@ -49,10 +49,10 @@ bj-outdoor-trip/
 
 | 端 | 本地 | 线上 | 源码 |
 | --- | --- | --- | --- |
-| 用户 H5 | http://127.0.0.1:3781/m | http://togetherbetter.cn/m | `web/src/views/mobile` + `MobileLayout.vue` |
-| 管理后台 | http://127.0.0.1:3781/admin | http://togetherbetter.cn/admin | `web/src/views/admin` |
-| 导游端 | http://127.0.0.1:3781/g | http://togetherbetter.cn/g | `web/src/views/guide` |
-| API | http://127.0.0.1:3780/api | http://togetherbetter.cn/api | `server/src/api.js` |
+| 用户 H5 | http://127.0.0.1:3781/m | https://togetherbetter.cn/m | `web/src/views/mobile` + `MobileLayout.vue` |
+| 管理后台 | http://127.0.0.1:3781/admin | https://togetherbetter.cn/admin | `web/src/views/admin` |
+| 导游端 | http://127.0.0.1:3781/g | https://togetherbetter.cn/g | `web/src/views/guide` |
+| API | http://127.0.0.1:3780/api | https://togetherbetter.cn/api | `server/src/api.js` |
 | 小程序 | 开发者工具打开 `miniprogram/` | 默认请求线上 API | `miniprogram/pages/*` |
 
 Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `npm run build` 后 Express 托管 `web/dist`，Nginx 把 80 转到 3780。
@@ -146,7 +146,7 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#3a1848`，选中
 - 有独立「校园认证」页（学校/学院/专业可选、学号、学生证）。没有独立「团体认证」页。首页学生认证按钮进认证页。自己的个人主页可按朋友圈九宫格传相册。
 - 「我的」顶部有设置和钱包余额条（微信支付充值、提现到微信零钱、账单、支付密码）；常用宫格有收藏、认证、发团、抽奖、收录线路。没有团体/推荐报名入口（这些在 H5 有）。点团详情「报名领队」未认证时弹窗跳到领队申请。点「报名摄影师」未报名时进报名页。
 - 官方页快捷入口有「学生认证」「申请收录线路」磁贴。
-- `miniprogram/config.js`：`USE_LOCAL_API` 默认 `false`，请求 `http://togetherbetter.cn`。
+- `miniprogram/config.js`：`USE_LOCAL_API` 默认 `false`，请求 `https://togetherbetter.cn`。
 - `app.js` `onShow`：已登录且有未使用券时弹窗，同一次打开只提一次；点「去看看」进券包。
 
 ## 6. 后台与导游端
