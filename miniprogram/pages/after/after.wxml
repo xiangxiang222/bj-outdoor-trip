@@ -1,30 +1,11 @@
 <view class="card" wx:if="{{s}}"><view class="pad">
   <view class="title">{{s.title}}</view>
-  <view class="muted">{{s.startDate}} · 交过费即可在行程结束后抽奖，不必签到。回来的大巴上点完成后再评价、评选。</view>
+  <view class="muted">{{s.startDate}} · 回来的大巴上点完成后再评价、评选。</view>
   <view wx:if="{{s.completed}}" style="color:#2d6a4f">已完成活动</view>
   <view wx:elif="{{!s.joined}}" class="muted">报名参加后才能完成活动。</view>
 </view></view>
 <view class="pad" wx:if="{{msg}}">{{msg}}</view>
 <view class="btn" wx:if="{{s.canComplete}}" bindtap="complete">完成活动</view>
-
-<block wx:if="{{s.lottery}}">
-  <view class="pad title" wx:if="{{s.lottery.drawMode !== 'pre'}}">{{s.lottery.drawMode === 'enroll' ? '报名后抽奖' : '行程结束后抽奖'}}</view>
-  <view class="card" wx:if="{{s.lottery.drawMode !== 'pre'}}"><view class="pad">
-    <view class="muted" wx:if="{{s.lottery.pre}}">报名前抽到：{{s.lottery.pre.prizeLabel}}</view>
-    <block wx:if="{{s.lottery.post}}">
-      <view class="title">{{s.lottery.post.prizeLabel}}{{s.lottery.post.rate != null ? ' · 中奖率 ' + s.lottery.post.rate + '%' : ''}}{{s.lottery.post.doubled ? ' · 两次一致' : ''}}</view>
-      <view class="muted" wx:if="{{s.lottery.post.claimHint}}">{{s.lottery.post.claimHint}}</view>
-    </block>
-    <view class="btn" wx:if="{{!s.lottery.post && s.lottery.canPost}}" bindtap="goLottery">去转盘抽奖</view>
-  </view></view>
-  <view class="card" wx:if="{{s.lottery.drawMode === 'pre' && s.lottery.pre}}"><view class="pad">
-    <view class="muted">报名前抽到</view>
-    <view class="title">{{s.lottery.pre.prizeLabel}}</view>
-    <view class="muted" wx:if="{{s.lottery.pre.prizeInfo && s.lottery.pre.level < 9}}">{{s.lottery.pre.prizeInfo}}{{s.lottery.pre.rate != null ? ' · 中奖率 ' + s.lottery.pre.rate + '%' : ''}}</view>
-    <view class="muted" wx:if="{{s.lottery.pre.claimHint}}">{{s.lottery.pre.claimHint}}</view>
-  </view></view>
-  <view class="btn" wx:if="{{s.lottery.canClaim}}" bindtap="claim">{{claiming ? '领取中…' : '领取奖品'}}</view>
-</block>
 
 <block wx:if="{{s.completed}}">
   <view class="pad title">评价领队和路线</view>

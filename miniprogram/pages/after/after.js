@@ -42,7 +42,7 @@ Page({
     if (!this.needLogin()) return;
     try {
       await request("/schedules/" + this.data.id + "/complete", "POST");
-      this.setData({ msg: "已完成，可以评价、抽奖和参加评选" });
+      this.setData({ msg: "已完成，可以评价和参加评选" });
       this.load();
     } catch (e) {
       this.setData({ msg: (e && e.message) || "提交失败" });
