@@ -13,7 +13,7 @@ if [ "$HOST" = "$RETIRED_HOST" ]; then
   echo "==> 忽略已下线主机 $RETIRED_HOST，改连 $DEFAULT_HOST"
   HOST="$DEFAULT_HOST"
 fi
-PUBLIC_URL="${PUBLIC_URL:-http://togetherbetter.cn}"
+PUBLIC_URL="${PUBLIC_URL:-https://togetherbetter.cn}"
 USER="${DEPLOY_USER:-ubuntu}"
 DIR="${DEPLOY_DIR:-/var/www/beiyexing}"
 KEY="${DEPLOY_SSH_KEY:-$HOME/.ssh/id_ed25519}"
@@ -72,7 +72,11 @@ mkdir -p server/data server/public/static/uploads
 if ! command -v node >/dev/null 2>&1 || ! command -v nginx >/dev/null 2>&1 || ! command -v pm2 >/dev/null 2>&1; then
   APP_DIR="$DIR" bash scripts/server-setup.sh
 else
-  sudo cp scripts/nginx-beiyexing.conf /etc/nginx/sites-available/beiyexing
+  NGINX_CONF="scripts/nginx-beiyexing.conf"
+  if [ -f /etc/letsencrypt/live/togetherbetter.cn/fullchain.pem ]; then
+    NGINX_CONF="scripts/nginx-beiyexing-https.conf"
+  fi
+  sudo cp "$NGINX_CONF" /etc/nginx/sites-available/beiyexing
   sudo ln -sfn /etc/nginx/sites-available/beiyexing /etc/nginx/sites-enabled/beiyexing
   sudo rm -f /etc/nginx/sites-enabled/default
   sudo nginx -t
@@ -95,8 +99,8 @@ fi
 if ! grep -q '^WEATHER_LIVE=' .env; then
   echo 'WEATHER_LIVE=1' >> .env
 fi
-if grep -qE '^WX_PAY_NOTIFY=http://(192\.144\.167\.212|140\.143\.171\.77)/' .env; then
-  sed -i -E "s|^WX_PAY_NOTIFY=http://[0-9.]+|WX_PAY_NOTIFY=$PUBLIC_URL|" .env
+if grep -qE '^WX_PAY_NOTIFY=http://(192\.144\.167\.212|140\.143\.171\.77|togetherbetter\.cn|www\.togetherbetter\.cn)(/|$)' .env; then
+  sed -i -E 's|^WX_PAY_NOTIFY=.*|WX_PAY_NOTIFY='"$PUBLIC_URL"'/api/pay/wechat/notify|' .env
   echo "已把 WX_PAY_NOTIFY 改到 $PUBLIC_URL"
 fi
 

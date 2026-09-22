@@ -41,8 +41,15 @@
 
 四、HTTPS 证书（小程序和支付都要求 https）
 
-腾讯云免费证书：https://console.cloud.tencent.com/ssl
-域名备案通过后申请，交给技术安装即可
+网站备案通过后，在服务器执行 `scripts/enable-https.sh`，用 Let's Encrypt 签 `togetherbetter.cn` 和 `www.togetherbetter.cn`。证书不进仓库，到期前由 certbot 自动续。不必再去腾讯云控制台单独买证书，除非要换成他们的证书。
+
+还要在轻量控制台放行 **TCP 443**，来源 `0.0.0.0/0`：
+
+1. 打开 https://console.cloud.tencent.com/lighthouse/instance
+2. 点 `140.143.171.77` 这台机 → 防火墙
+3. 添加规则：协议 TCP，端口 443，来源 0.0.0.0/0
+
+80 已经通。443 没放行时，公网连上去会超时，所以 Nginx 先同时提供 HTTP 和 HTTPS，不把用户跳到 HTTPS。放行后打开 https://togetherbetter.cn/m ，再把 80 改成跳转。
 
 
 五、微信小程序
@@ -86,7 +93,11 @@ https://pay.weixin.qq.com/  右上角「接入微信支付」
 技术还需要（私下发，不要截长图进群）：
 1. 小程序 AppSecret：公众平台 → 开发 → 开发管理 → 开发设置
 2. 商户 APIv2 密钥（32 位）：微信支付商户平台 → 账户中心 → API 安全 → 设置 APIv2 密钥
-3. 支付回调目前是 `http://togetherbetter.cn/api/pay/wechat/notify`。正式环境微信要求 **HTTPS + 已备案域名**，并在小程序后台配 request / upload 合法域名。没有 HTTPS 时，小程序付款后会走服务端查单确认。
+3. 支付回调是 `https://togetherbetter.cn/api/pay/wechat/notify`。小程序后台「开发 → 开发管理 → 开发设置 → 服务器域名」填：
+
+   request、uploadFile、downloadFile 都填 `https://togetherbetter.cn`（不要带路径，不要写 IP）。
+
+   服务器上还没有 AppSecret / APIv2 密钥时，支付仍是演示模式（`WX_PAY_MOCK=1`），不会向微信真实扣款。
 
 配到服务器 `.env`：`WX_APPID` `WX_APPSECRET` `WX_MCH_ID` `WX_MCH_KEY`，并把 `WX_PAY_MOCK=0`。不要把密钥提交进 Git。原路退款再配 `WX_MCH_CERT_PATH`（apiclient_cert.pem）和 `WX_MCH_KEY_PATH`（apiclient_key.pem）。
 
