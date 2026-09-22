@@ -36,8 +36,9 @@
 工信部核验：https://beian.miit.gov.cn/
 初审后会收到 12381 短信，必须 24 小时内点开核验，过期要重来
 
-上线后还要做公安备案：https://www.beian.gov.cn/
+网站备案号 `京ICP备2026060284号-2`（主体号 `京ICP备2026060284号`），挂在 H5 底栏上方，链到 https://beian.miit.gov.cn/ 。
 
+上线后 30 日内还要做公安联网备案：https://www.beian.gov.cn/ 。做完得到「京公网安备」号，再挂到备案号旁边。
 
 四、HTTPS 证书（小程序和支付都要求 https）
 

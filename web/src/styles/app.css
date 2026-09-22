@@ -169,6 +169,16 @@ button, input, textarea, select { font-family: inherit; }
   padding: 12px 14px 16px;
 }
 
+.icp-foot {
+  flex: none;
+  display: block;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+  background: #fff;
+  padding: 6px 12px 2px;
+}
 .mp-tab {
   flex: none;
   position: relative;
