@@ -73,7 +73,8 @@ if ! command -v node >/dev/null 2>&1 || ! command -v nginx >/dev/null 2>&1 || ! 
   APP_DIR="$DIR" bash scripts/server-setup.sh
 else
   NGINX_CONF="scripts/nginx-beiyexing.conf"
-  if [ -f /etc/letsencrypt/live/togetherbetter.cn/fullchain.pem ]; then
+  # live 目录是 root:700，普通用户 -f 会误判成没证书，然后把 443 配掉。
+  if sudo test -f /etc/letsencrypt/live/togetherbetter.cn/fullchain.pem; then
     NGINX_CONF="scripts/nginx-beiyexing-https.conf"
   fi
   sudo cp "$NGINX_CONF" /etc/nginx/sites-available/beiyexing
