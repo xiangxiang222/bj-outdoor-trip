@@ -44,12 +44,12 @@ describe("wechat mock", () => {
 
   it("code2session calls wechat when AppSecret is configured", async () => {
     const prev = { appId: config.wechat.appId, appSecret: config.wechat.appSecret };
-    config.wechat.appId = "wx205ca387929c002a";
+    config.wechat.appId = "wx255ca387929c502a";
     config.wechat.appSecret = "live_secret_value";
     const origFetch = global.fetch;
     global.fetch = async (url) => {
       assert.match(String(url), /jscode2session/);
-      assert.match(String(url), /wx205ca387929c002a/);
+      assert.match(String(url), /wx255ca387929c502a/);
       return { json: async () => ({ openid: "real_openid", session_key: "sk" }) };
     };
     try {

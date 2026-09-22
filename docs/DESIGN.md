@@ -72,7 +72,7 @@
 | `JWT_SECRET` | 签发密钥 | 开发默认值，上线必须改 |
 | `MMC_DATA_DIR` / `MMC_DB_FILE` / `MMC_PUBLIC_DIR` / `MMC_WEB_DIST_DIR` | 数据、静态与前端 dist 目录（单测用临时目录） | `server/data`、`server/public`、`web/dist` |
 | `MMC_SKIP_WEB` | `1` 时不托管前端 dist | 未设置则 dist 存在即托管 |
-| `WX_APPID` / `WX_APPSECRET` / `WX_MCH_ID` / `WX_MCH_KEY` | 小程序与商户 | 默认 AppID `wx205ca387929c002a`、商户号 `17501360384`；Secret / APIv2 密钥只放服务器 `.env` |
+| `WX_APPID` / `WX_APPSECRET` / `WX_MCH_ID` / `WX_MCH_KEY` | 小程序与商户 | 默认 AppID `wx255ca387929c502a`、商户号 `17501360384`；Secret / APIv2 密钥只放服务器 `.env` |
 | `WX_PAY_MOCK` | `0` 关闭 mock，走 JSAPI | 默认开启 mock |
 | `WX_MCH_CERT_PATH` / `WX_MCH_KEY_PATH` | 商户 API 证书（原路退款） | 真收款后才需要 |
 | `WEATHER_LIVE` | `1` 强制 Open-Meteo；`0` 强制模拟 | 生产默认实时，本地默认 mock |
