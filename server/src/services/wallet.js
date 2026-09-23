@@ -1,13 +1,11 @@
 const bcrypt = require("bcryptjs");
 const { getDb } = require("../db");
-const config = require("../config");
 const { maskName, maskPhone } = require("./biz");
 const { maskIdCard } = require("./idcard");
 
 const CARD_CLOSED = "已改为提现到微信零钱，不再支持绑定银行卡";
-const WITHDRAW_MIN = 1;
-const WITHDRAW_MAX = 2000;
-const WITHDRAW_DAILY_MAX = 3;
+// 微信商家转账到零钱的通道单笔上限，不是产品最低门槛。
+const WECHAT_TRANSFER_MAX = 2000;
 
 const SCENE_LABEL = {
   referral: "分享报名返点",
@@ -161,19 +159,32 @@ function todayWithdrawCount(userId) {
   return Number(row?.c || 0);
 }
 
+function parseWithdrawYuan(raw, bal) {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) fail(400, "金额须大于 0");
+  const yuan = Math.round(n);
+  if (Math.abs(n - yuan) > 1e-8) fail(400, "金额须为整数元");
+  if (yuan > WECHAT_TRANSFER_MAX) {
+    fail(400, `微信转账单笔不超过 ${WECHAT_TRANSFER_MAX} 元，超出请立即再提一笔`);
+  }
+  if (yuan > bal) fail(400, "余额不足");
+  return yuan;
+}
+
 function withdrawRule(userId) {
   const balance = balanceOf(userId);
   const todayCount = todayWithdrawCount(userId);
   return {
-    minYuan: WITHDRAW_MIN,
-    maxYuan: WITHDRAW_MAX,
-    dailyMax: WITHDRAW_DAILY_MAX,
+    minYuan: 0,
+    maxYuan: WECHAT_TRANSFER_MAX,
+    dailyMax: 0,
     todayCount,
-    todayRemain: Math.max(0, WITHDRAW_DAILY_MAX - todayCount),
-    available: Math.max(0, Math.min(balance, WITHDRAW_MAX)),
+    todayRemain: null,
+    unlimited: true,
+    available: Math.max(0, Math.min(balance, WECHAT_TRANSFER_MAX)),
     balance,
     hours: "每天 00:00–23:59（北京时间）",
-    arrival: "提交成功后实时到账微信零钱，最迟 24 小时",
+    arrival: "提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账",
   };
 }
 
@@ -182,13 +193,8 @@ function withdraw(userId, body = {}) {
   if (!user.id_card) fail(400, "提现前请先完成实名");
   verifyPin(user, body.pin);
   const bal = balanceOf(userId);
-  if (bal <= 0) fail(400, "余额不足");
-  const amount = parseYuan(body.amount, { min: WITHDRAW_MIN, max: WITHDRAW_MAX });
-  if (amount > bal) fail(400, "余额不足");
-  if (todayWithdrawCount(userId) >= WITHDRAW_DAILY_MAX) fail(400, "今日提现次数已用完，每天最多 3 次");
-  const mock = Boolean(config.wechat.mock);
-  if (!mock && !user.wechat_openid) fail(400, "请先用微信登录后再提现到微信零钱");
-  if (!mock) fail(400, "尚未开通微信商家转账到零钱，暂不能自动提现");
+  if (bal <= 0) fail(400, "当前余额为 0，可先充值后再提现");
+  const amount = parseWithdrawYuan(body.amount, bal);
   const row = debit(userId, amount, {
     reason: "提现到微信零钱",
     scene: "withdraw",
@@ -199,7 +205,7 @@ function withdraw(userId, body = {}) {
     amount,
     balance: row.balance,
     channel: "wechat",
-    mock: true,
+    instant: true,
   };
 }
 

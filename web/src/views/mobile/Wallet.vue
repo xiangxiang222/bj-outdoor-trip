@@ -6,7 +6,7 @@
       <p class="muted">充值走微信支付，提现到微信零钱，可直接付团费。不支持银行卡。</p>
       <div class="wallet-actions">
         <button class="btn" type="button" @click="mode = mode === 'topup' ? '' : 'topup'">微信支付充值</button>
-        <button class="btn ghost" type="button" @click="mode = mode === 'withdraw' ? '' : 'withdraw'">提现到微信</button>
+        <button class="btn ghost" type="button" @click="showWithdraw">提现到微信</button>
       </div>
     </div>
 
@@ -14,14 +14,14 @@
       <div class="pad">
         <p class="rule-title">提现规则</p>
         <p class="rule-title">可提现额度</p>
-        <p class="muted">当前余额均可申请。单笔最低 1 元，最高 2000 元，须为整数元，且不超过账户余额。当前可提现 {{ rule.available }} 元。</p>
+        <p class="muted">当前账户余额全部可提现，不设最低提现金额。微信零钱按整数元记账。因微信商家转账到零钱单笔上限 2000 元，超过 2000 元时可连续分笔，每笔提交后立即处理。当前可提现 {{ rule.available }} 元。</p>
         <p class="rule-title">每日提现次数</p>
-        <p class="muted">每天最多 3 次。今日还可提现 {{ rule.todayRemain }} 次。</p>
+        <p class="muted">不限制次数，可随时申请。</p>
         <p class="rule-title">提现时间</p>
         <p class="muted">每天 00:00–23:59（北京时间），全天可申请。</p>
         <p class="rule-title">到账时间</p>
         <p class="muted">提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。</p>
-        <p class="muted">须完成实名并设置 6 位支付密码。仅支持提现到本人微信零钱，不支持银行卡。</p>
+        <p class="muted">微信支付转到零钱须完成实名并验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。</p>
         <p class="rule-title">充值规则</p>
         <p class="rule-title">单笔额度</p>
         <p class="muted">1～5000 元，须为整数元。</p>
@@ -46,16 +46,17 @@
 
     <div v-if="mode === 'withdraw'" class="card">
       <div class="pad">
-        <p v-if="!data.realNamed" class="muted">提现前请先<a href="#" @click.prevent="$router.push('/m/profile')">完成实名</a></p>
-        <p v-else-if="!data.pinSet" class="muted">请先<a href="#" @click.prevent="$router.push('/m/wallet/pin')">设置支付密码</a></p>
-        <template v-else>
-          <label>提现金额（元）</label>
-          <input class="input" v-model="withdrawAmount" type="number" min="1" :max="data.balance" />
-          <p class="muted">单笔 1～2000 元，今天还可提 {{ rule.todayRemain }} 次。提交成功后实时到账微信零钱，最迟 24 小时。</p>
-          <label>支付密码</label>
-          <input class="input" v-model="pin" type="password" maxlength="6" inputmode="numeric" placeholder="6 位数字" />
-          <button class="btn block" type="button" :disabled="busy" @click="doWithdraw">确认提现到微信</button>
-        </template>
+        <p v-if="!data.realNamed" class="muted">微信支付转到零钱须先<a href="#" @click.prevent="$router.push('/m/profile')">完成实名</a>后再提交。</p>
+        <p v-if="data.realNamed && !data.pinSet" class="muted">请先<a href="#" @click.prevent="$router.push('/m/wallet/pin')">设置 6 位支付密码</a>，再提交提现。</p>
+        <label>提现金额（元）</label>
+        <input class="input" v-model="withdrawAmount" type="number" min="0" :max="rule.available" />
+        <div v-if="rule.available > 0" class="chips" style="padding-left:0">
+          <div class="chip on" @click="fillAll">全部提现 {{ rule.available }} 元</div>
+        </div>
+        <p class="muted">当前余额全部可提，不设最低金额。微信转账单笔上限 2000 元，超出可立即再提。提交后实时到账微信零钱，最迟 24 小时。</p>
+        <label>支付密码</label>
+        <input class="input" v-model="pin" type="password" maxlength="6" inputmode="numeric" placeholder="6 位数字" />
+        <button class="btn block" type="button" :disabled="busy" @click="doWithdraw">确认提现到微信</button>
       </div>
     </div>
 
@@ -101,7 +102,7 @@ const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const data = ref({ bills: [] });
-const rule = ref({ available: 0, todayRemain: 3 });
+const rule = ref({ available: 0 });
 const mode = ref("");
 const topupAmount = ref("100");
 const withdrawAmount = ref("");
@@ -121,12 +122,26 @@ async function load() {
   const got = data.value.withdrawRule || {};
   const balance = Number(data.value.balance || 0);
   rule.value = {
-    available: got.available != null ? got.available : Math.min(balance, 2000),
-    todayRemain: got.todayRemain != null ? got.todayRemain : 3,
+    available: got.available != null ? Number(got.available) : Math.min(balance, 2000),
   };
   if (store.profile) {
     store.setAuth(store.token, { ...store.profile, walletBalance: data.value.balance, walletPinSet: data.value.pinSet });
   }
+}
+
+function showWithdraw() {
+  if (mode.value === "withdraw") {
+    mode.value = "";
+    return;
+  }
+  mode.value = "withdraw";
+  const available = Number(rule.value.available || 0);
+  if (available > 0) withdrawAmount.value = String(available);
+}
+
+function fillAll() {
+  const available = Number(rule.value.available || 0);
+  if (available > 0) withdrawAmount.value = String(available);
 }
 
 async function topup() {

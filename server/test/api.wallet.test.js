@@ -59,24 +59,58 @@ describe("wallet API", () => {
     assert.equal(wallet.body.data.bills[0].scene, "withdraw");
     assert.equal(wallet.body.data.bills[0].reason, "提现到微信零钱");
     assert.equal(wallet.body.data.withdrawRule.maxYuan, 2000);
-    assert.equal(wallet.body.data.withdrawRule.dailyMax, 3);
-    assert.equal(wallet.body.data.withdrawRule.todayRemain, 2);
+    assert.equal(wallet.body.data.withdrawRule.minYuan, 0);
+    assert.equal(wallet.body.data.withdrawRule.dailyMax, 0);
+    assert.equal(wallet.body.data.withdrawRule.unlimited, true);
+    assert.equal(wallet.body.data.withdrawRule.todayRemain, null);
+    assert.equal(wallet.body.data.withdrawRule.todayCount, 1);
   });
 
-  it("caps a withdrawal at 2000 yuan and three times a day", async () => {
+  it("does not cap daily withdrawals and still splits at the wechat 2000 yuan channel max", async () => {
     const token = await loginUser(agent);
     await agent.post("/api/me/wallet/topup").set(auth(token)).send({ amount: 5000 }).expect(200);
     await agent.post("/api/me/wallet/pin").set(auth(token)).send({ pin: "258369" }).expect(200);
     const over = await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 2001, pin: "258369" });
     assert.equal(over.status, 400);
-    for (let i = 0; i < 3; i += 1) {
+    assert.match(String(over.body.message || ""), /2000/);
+    for (let i = 0; i < 4; i += 1) {
       await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 1, pin: "258369" }).expect(200);
     }
-    const extra = await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 1, pin: "258369" });
-    assert.equal(extra.status, 400);
     const wallet = await agent.get("/api/me/wallet").set(auth(token)).expect(200);
-    assert.equal(wallet.body.data.withdrawRule.todayRemain, 0);
-    assert.equal(wallet.body.data.balance, 4997);
+    assert.equal(wallet.body.data.withdrawRule.dailyMax, 0);
+    assert.equal(wallet.body.data.withdrawRule.unlimited, true);
+    assert.equal(wallet.body.data.withdrawRule.todayCount, 4);
+    assert.equal(wallet.body.data.withdrawRule.todayRemain, null);
+    assert.equal(wallet.body.data.balance, 4996);
+  });
+
+  it("pays out instantly even when live wechat merchant transfer is not configured", async () => {
+    const config = require("../src/config");
+    const token = await loginUser(agent);
+    await agent.post("/api/me/wallet/topup").set(auth(token)).send({ amount: 80 }).expect(200);
+    await agent.post("/api/me/wallet/pin").set(auth(token)).send({ pin: "258369" }).expect(200);
+    const prev = config.wechat.mock;
+    config.wechat.mock = false;
+    try {
+      const out = await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 80, pin: "258369" }).expect(200);
+      assert.equal(out.body.data.amount, 80);
+      assert.equal(out.body.data.balance, 0);
+      assert.equal(out.body.data.instant, true);
+      assert.equal(out.body.data.channel, "wechat");
+    } finally {
+      config.wechat.mock = prev;
+    }
+  });
+
+  it("tells a zero-balance account to top up instead of blocking with a minimum", async () => {
+    const token = await loginUser(agent);
+    await agent.post("/api/me/wallet/pin").set(auth(token)).send({ pin: "258369" }).expect(200);
+    const empty = await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 1, pin: "258369" });
+    assert.equal(empty.status, 400);
+    assert.match(String(empty.body.message || ""), /充值/);
+    const wallet = await agent.get("/api/me/wallet").set(auth(token)).expect(200);
+    assert.equal(wallet.body.data.withdrawRule.minYuan, 0);
+    assert.equal(wallet.body.data.withdrawRule.available, 0);
   });
 
   it("pays enrollment from wallet and refunds back on cancel", async () => {

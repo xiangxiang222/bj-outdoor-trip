@@ -5,7 +5,6 @@ Page({
   data: {
     loaded: false,
     available: 0,
-    todayRemain: 3,
   },
   onShow() {
     this.load();
@@ -19,8 +18,7 @@ Page({
       const balance = Number(data.balance || 0);
       this.setData({
         loaded: true,
-        available: rule.available != null ? rule.available : Math.min(balance, 2000),
-        todayRemain: rule.todayRemain != null ? rule.todayRemain : 3,
+        available: rule.available != null ? Number(rule.available) : Math.min(balance, 2000),
       });
     } catch (e) {
       /* 规则文案不依赖接口 */
