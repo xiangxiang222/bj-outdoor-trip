@@ -185,6 +185,8 @@ describe("social homepage leaders referral virtual fallback", () => {
     }
     const pub = await agent.get(`/api/schedules/${seed.individualScheduleId}`).expect(200);
     assert.equal(pub.body.data.virtualEnrolled, undefined);
+    assert.equal(pub.body.data.enrolled, 0);
+    assert.equal(pub.body.data.chain.length, 0);
     const lowered = await agent
       .post("/api/admin/virtual-users")
       .set(auth(admin))

@@ -17,7 +17,7 @@
           <span v-else>{{ captchaLoading ? "加载中…" : "点击获取验证码" }}</span>
         </div>
         <input class="input" v-model="captcha" placeholder="请输入上图字符" maxlength="4" autocomplete="off" />
-        <p class="muted">演示账号 13800138000 / 123456 · 看不清请点击图片刷新</p>
+        <p class="muted">看不清请点击图片刷新</p>
         <button class="btn block" @click="loginPwd">登录</button>
       </template>
 
@@ -61,8 +61,8 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 
 const tab = ref("login");
-const phone = ref("13800138000");
-const password = ref("123456");
+const phone = ref("");
+const password = ref("");
 const password2 = ref("");
 const nickname = ref("");
 const captcha = ref("");
@@ -88,8 +88,6 @@ function goLogin() {
 
 function goRegister() {
   tab.value = "register";
-  if (phone.value === "13800138000") phone.value = "";
-  if (password.value === "123456") password.value = "";
   password2.value = "";
   captcha.value = "";
   err.value = "";

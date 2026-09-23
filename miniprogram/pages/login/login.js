@@ -4,8 +4,8 @@ Page({
   data: {
     account: false,
     tab: "login",
-    phone: "13800138000",
-    password: "123456",
+    phone: "",
+    password: "",
     password2: "",
     nickname: "",
     captcha: "",
@@ -21,19 +21,11 @@ Page({
       tab: q.tab === "register" ? "register" : "login",
       account,
     });
-    if (q.tab === "register") this.clearDemo();
     if (account) this.loadCaptcha();
-  },
-  clearDemo() {
-    const patch = { tab: "register" };
-    if (this.data.phone === "13800138000") patch.phone = "";
-    if (this.data.password === "123456") patch.password = "";
-    this.setData(patch);
   },
   setTab(e) {
     const tab = e.currentTarget.dataset.tab;
-    if (tab === "register") this.clearDemo();
-    else this.setData({ tab: "login" });
+    this.setData({ tab: tab === "register" ? "register" : "login" });
     this.loadCaptcha();
   },
   setPhone(e) { this.setData({ phone: e.detail.value }); },

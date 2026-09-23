@@ -76,10 +76,14 @@ function assertSeatAvailable(scheduleId, maxSeats, seatNo, { currentEnrollmentId
   if (locked.has(hit.no)) fail(400, "该座位已锁定");
   const holder = getDb()
     .prepare(
-      "SELECT id FROM enrollments WHERE schedule_id=? AND status='joined' AND seat_no=? AND id!=?"
+      `SELECT e.id, IFNULL(u.is_virtual,0) AS is_virtual
+       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id
+       WHERE e.schedule_id=? AND e.status='joined' AND e.seat_no=? AND e.id!=?`
     )
     .get(scheduleId, hit.no, currentEnrollmentId || 0);
-  if (holder) fail(400, "该座位已被占用");
+  if (holder && Number(holder.is_virtual)) {
+    getDb().prepare("UPDATE enrollments SET status='cancelled', seat_no='' WHERE id=?").run(holder.id);
+  } else if (holder) fail(400, "该座位已被占用");
   return hit.no;
 }
 
@@ -99,17 +103,18 @@ function occupantView(row) {
   };
 }
 
-function scheduleSeats(scheduleId) {
+function scheduleSeats(scheduleId, { includeVirtual = false } = {}) {
   const db = getDb();
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
   if (!sch) return null;
   const layout = seatLayout(sch.max_seats);
   const locked = new Set(parseLockedSeats(sch));
+  const virtualSql = includeVirtual ? "" : " AND IFNULL(u.is_virtual,0)=0";
   const taken = db
     .prepare(
       `SELECT e.id, e.seat_no, e.traveler_name, e.user_id, e.status, e.gender, e.birthday, e.id_card, e.pay_status, u.avatar, u.nickname
        FROM enrollments e LEFT JOIN users u ON u.id=e.user_id
-       WHERE e.schedule_id=? AND e.status='joined' AND e.seat_no IS NOT NULL AND e.seat_no!=''`
+       WHERE e.schedule_id=? AND e.status='joined' AND e.seat_no IS NOT NULL AND e.seat_no!=''${virtualSql}`
     )
     .all(scheduleId);
   const byNo = new Map(taken.map((row) => [row.seat_no, row]));
@@ -172,14 +177,22 @@ function assignSeat(scheduleId, enrollmentId, toSeatNo) {
   if (!en) fail(400, "报名不存在或未占座");
   const locked = new Set(parseLockedSeats(sch));
   const holder = db
-    .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND status='joined' AND seat_no=? AND id!=?")
+    .prepare(
+      `SELECT e.*, IFNULL(u.is_virtual,0) AS is_virtual
+       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id
+       WHERE e.schedule_id=? AND e.status='joined' AND e.seat_no=? AND e.id!=?`
+    )
     .get(scheduleId, to, en.id);
-  if (!holder && locked.has(to)) fail(400, "该座位已锁定");
+  if (holder && Number(holder.is_virtual)) {
+    db.prepare("UPDATE enrollments SET status='cancelled', seat_no='' WHERE id=?").run(holder.id);
+  }
+  const blocking = holder && !Number(holder.is_virtual) ? holder : null;
+  if (!blocking && locked.has(to)) fail(400, "该座位已锁定");
   const from = en.seat_no || "";
-  if (holder && !from) fail(400, "请先给该乘客指定座位再对调");
+  if (blocking && !from) fail(400, "请先给该乘客指定座位再对调");
   const run = db.transaction(() => {
-    if (holder) {
-      db.prepare("UPDATE enrollments SET seat_no=? WHERE id=?").run(from, holder.id);
+    if (blocking) {
+      db.prepare("UPDATE enrollments SET seat_no=? WHERE id=?").run(from, blocking.id);
     }
     db.prepare("UPDATE enrollments SET seat_no=? WHERE id=?").run(to, en.id);
   });
@@ -187,7 +200,7 @@ function assignSeat(scheduleId, enrollmentId, toSeatNo) {
   return {
     enrollmentId: en.id,
     seatNo: to,
-    swappedWith: holder ? holder.id : null,
+    swappedWith: blocking ? blocking.id : null,
   };
 }
 

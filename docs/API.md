@@ -34,7 +34,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | GET | `/schedules` | Query：`routeId` `organizerType`（`official\|individual\|company\|campus`） `city` `tag` `offerType` `month` `date` `channel=activity\|trip`（不含已解散、待审核）。含满员（`remain=0`），前端列表保留供候补。不含 `virtualEnrolled`。加密团带 `private` `privateLabel`，不含口令。排期带 `kind` `kindLabel`（官方/个人/公司/高校，同城局为活动）。首页传 `channel=trip`，活动 Tab 传 `channel=activity` |
 | GET | `/routes/:id` | 详情、阶梯价、车型、排期、是否已收藏；含 `packingList`（由装备字段拆条）、`videos`（B 站等可嵌播放器）、`refundPolicy`（`source`=`default\|global\|route`，档位、摘要、条目）。未过审的用户申请对路人 404，申请人本人可见 `reviewStatus` `contactPhone` `bountyHint` |
 | GET | `/routes/:id/reviews` | 该线路评价列表。`{ list, count, avg }`，姓名脱敏 |
-| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`photographer`、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友限制、`targets` 为学校-学院-专业组合、`schools`/`colleges`/`majors` 为派生名单、`scope`）、`oversub`（报超会抽）、`refundPolicy`（含按该团出发日计算的 `current.percent` / `hint`）、加密团 `private` `privateLabel` `joinCodeRequired`。`joinCode` 只给发起人、已报名、后台、本团导游。同城局名单不含年龄段展示字段的使用由前端控制 |
+| GET | `/schedules/:id` | 排期 + 脱敏名单 + 领队1/2、`photographer`、`myEnrollment`、`channel`、本团群二维码、候选团选项、`eligibility`（师生/校友限制、`targets` 为学校-学院-专业组合、`schools`/`colleges`/`majors` 为派生名单、`scope`）、`oversub`（报超会抽）、`refundPolicy`（含按该团出发日计算的 `current.percent` / `hint`）、加密团 `private` `privateLabel` `joinCodeRequired`。`joinCode` 只给发起人、已报名、后台、本团导游。同城局名单不含年龄段展示字段的使用由前端控制。对外的 `enrolled`、余座和名单不含虚拟报名；后台另给 `virtualEnrolled` |
 | GET | `/schedules/:id/seats` | 座位图。占用位带公开头像/性别/年龄段；锁定座位 `locked` |
 | POST | `/schedules/:id/seats/pick` | 已报名用户改座 |
 | POST | `/schedules/:id/leaders/apply` | 报名领队（最多两位）。须已通过领队申请，否则 403 `need_leader_apply` / `leader_pending` |

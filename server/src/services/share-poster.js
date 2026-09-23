@@ -3,7 +3,7 @@ const path = require("path");
 const QRCode = require("qrcode");
 const { getDb, toRoute } = require("../db");
 const config = require("../config");
-const { enrolledCount, quoteForSchedule, attachAssetHost, publicBase } = require("./helpers");
+const { realEnrolledCount, quoteForSchedule, attachAssetHost, publicBase } = require("./helpers");
 const { ensureReferralCode } = require("./profile");
 const { tripKindOf } = require("./official-trip");
 const { loginLive, getWxaCode } = require("./wechat");
@@ -186,7 +186,7 @@ async function buildSchedulePoster(sch, req, { userId } = {}) {
   const db = getDb();
   const routeRow = db.prepare("SELECT * FROM routes WHERE id=?").get(sch.route_id);
   const route = toRoute(routeRow);
-  const live = enrolledCount(sch.id);
+  const live = realEnrolledCount(sch.id);
   const quote = quoteForSchedule(sch, Math.max(1, live), null);
   const kind = tripKindOf(sch.organizer_type, sch.channel === "activity" ? "activity" : "trip");
   const ref = userId ? ensureReferralCode(userId) : "";
