@@ -1,6 +1,6 @@
 # 自动化用例全表
 
-对照日期 2026-09-14，仓库内 `it(` 共 **374** 条（299 服务端 + 75 H5）。组合规则、手动走查顺序和截图见 [../FULL_TEST_CASES.md](../FULL_TEST_CASES.md)。
+对照日期 2026-09-14，仓库内 `it(` 共 **375** 条（300 服务端 + 75 H5）。组合规则、手动走查顺序和截图见 [../FULL_TEST_CASES.md](../FULL_TEST_CASES.md)。
 
 ## `server/test/api.admin.test.js`
 
@@ -20,9 +20,10 @@
 4. registers with phone, image captcha and password then logs in
 5. rejects login without captcha or with wrong password
 6. logs in by sms and auto-creates user
-7. wechat demo login
-8. requires login for /me and updates profile from id card
-9. deletes account and allows the same phone to register again
+7. logs in with wechat phone authorization and binds an existing phone
+8. wechat demo login
+9. requires login for /me and updates profile from id card
+10. deletes account and allows the same phone to register again
 
 ## `server/test/api.combo.test.js`
 

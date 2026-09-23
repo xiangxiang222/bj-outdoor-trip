@@ -252,6 +252,43 @@ function clientIp(req) {
 
 const tokenCache = { value: "", exp: 0 };
 
+async function getUserPhoneNumber(phoneCode) {
+  if (!loginLive()) {
+    const err = new Error("未配置小程序密钥，无法向微信换手机号");
+    err.status = 400;
+    throw err;
+  }
+  const code = String(phoneCode || "").trim();
+  if (!code) {
+    const err = new Error("未授权手机号");
+    err.status = 400;
+    throw err;
+  }
+  const { access_token } = await getAccessToken();
+  const res = await fetch(
+    "https://api.weixin.qq.com/wxa/business/getuserphonenumber?access_token=" + encodeURIComponent(access_token),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code }),
+    }
+  );
+  const data = await res.json();
+  if (data.errcode) {
+    const err = new Error(data.errmsg || "获取手机号失败");
+    err.status = 400;
+    throw err;
+  }
+  const info = data.phone_info || {};
+  const phone = String(info.purePhoneNumber || info.phoneNumber || "").replace(/\D/g, "");
+  if (!/^1\d{10}$/.test(phone)) {
+    const err = new Error("微信没有返回可用手机号");
+    err.status = 400;
+    throw err;
+  }
+  return phone;
+}
+
 async function getAccessToken() {
   if (!loginLive()) return { access_token: "mock_token", mock: true };
   if (tokenCache.value && Date.now() < tokenCache.exp) {
@@ -346,6 +383,7 @@ module.exports = {
   loadMchCert,
   clientIp,
   getAccessToken,
+  getUserPhoneNumber,
   sendSubscribeMessage,
   getWxaCode,
   UNIFIED_ORDER_URL,

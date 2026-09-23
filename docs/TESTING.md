@@ -113,7 +113,7 @@ npx vitest run src/utils/share.test.js
 
 | 文件 | 覆盖点 |
 | --- | --- |
-| `api.auth.test.js` | meta、短信、图片验证码注册/登录、微信演示登录、改资料、注销 |
+| `api.auth.test.js` | meta、短信、图片验证码注册/登录、微信手机号授权登录、微信演示登录、改资料、注销 |
 | `api.home.test.js` | 首页轮播不含同城局线路；`GET /schedules?channel=activity`；发线路带 B 站视频 |
 | `api.routes.test.js` | 筛选、收藏标记、名单脱敏、分享 302 可带 ref、开团校验、海报 QR/推荐码、导游列表与详情 |
 | `share-poster.test.js` | 小程序 scene 编解码、分享 query 带推荐码、海报封面内嵌 |
