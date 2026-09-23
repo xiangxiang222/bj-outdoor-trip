@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p class="muted">把想收录的线路交给平台审。通过后会出现在「线路」里，任何人都能开团报名。审过且该线首次成团后奖励 ¥{{ bounty }}。这和首页「发团」不是同一件事。</p>
+    <p class="muted">把想收录的线路交给平台审。通过后会出现在「线路」里，任何人都能开团报名。这和首页「发团」不是同一件事。</p>
     <div v-if="done" class="card">
       <div class="pad">
         <p style="color:var(--leaf);margin-top:0">{{ done.message }}</p>

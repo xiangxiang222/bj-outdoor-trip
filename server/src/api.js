@@ -488,7 +488,7 @@ router.get("/meta", (req, res) => {
       memberAnnualFee: config.member.annualFee,
       memberDiscountRate: config.member.discountRate,
       memberGiftMaxPrice: config.member.giftMaxPrice,
-      memberCopy: "限时开通会员 年费 99元 赠送一次100以内的团 线路享受额外95折",
+      memberCopy: "报名报价按账号计算。",
       points: config.points,
       insurance: config.insurance.plans,
       supplies: config.supplies.items,
@@ -1546,7 +1546,7 @@ router.post("/routes/apply", authUser, (req, res) => {
         ...data,
         bounty: bountyYuan(),
         contacts,
-        message: `已提交审核。通过并首次成团后奖励 ¥${bountyYuan()}。可先加客服微信 ${contacts.officialWechat}。`,
+        message: `已提交审核。通过后会出现在线路目录。可先加客服微信 ${contacts.officialWechat}。`,
       },
     });
   } catch (e) {

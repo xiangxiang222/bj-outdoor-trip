@@ -15,7 +15,8 @@ describe("social homepage leaders referral virtual fallback", () => {
     const res = await agent.get("/api/meta").expect(200);
     assert.ok(res.body.data.officialAccounts.length >= 4);
     assert.ok(res.body.data.commonRules.sections.length >= 4);
-    assert.match(res.body.data.leaderRecruitCopy, /200/);
+    assert.match(res.body.data.leaderRecruitCopy, /报名带队/);
+    assert.doesNotMatch(res.body.data.leaderRecruitCopy, /200|奖励|5%/);
     assert.equal(res.body.data.referralRate, 0.05);
     assert.ok("merge" in (res.body.data.subscribeTemplates || {}));
   });
@@ -97,7 +98,7 @@ describe("social homepage leaders referral virtual fallback", () => {
     assert.equal(full.status, 400);
     const sch = await agent.get(`/api/schedules/${seed.individualScheduleId}`).expect(200);
     assert.equal(sch.body.data.leaders.length, 2);
-    assert.match(sch.body.data.leaderRecruitCopy, /推荐领队/);
+    assert.match(sch.body.data.leaderRecruitCopy, /报名带队/);
   });
 
   it("records 5% referral on successful enroll", async () => {

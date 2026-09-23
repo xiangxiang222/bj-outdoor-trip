@@ -1,4 +1,4 @@
-<view class="pad muted">把想收录的线路交给平台审。通过后会出现在「线路」里。审过且该线首次成团后奖励 ¥{{bounty}}。这和首页「发团」不是同一件事。</view>
+<view class="pad muted">把想收录的线路交给平台审。通过后会出现在「线路」里。这和首页「发团」不是同一件事。</view>
 
 <view class="card" wx:if="{{done}}">
   <view class="pad">

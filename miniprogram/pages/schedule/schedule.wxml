@@ -104,7 +104,6 @@
         </view>
         <view wx:else bindtap="applyPhotographer">摄影师 · 报名摄影师</view>
       </view>
-      <view class="muted">{{s.leaderRecruitCopy}}</view>
     </block>
   </view>
 </view>

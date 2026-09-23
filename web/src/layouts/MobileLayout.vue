@@ -124,7 +124,7 @@ const subtitle = computed(() => {
     mine: "账号、权益与客服",
     orders: "下一趟，以及走过的局",
     publish: "提交后需管理员审核",
-    "route-apply": "通过并首次成团后奖励 300 元",
+    "route-apply": "通过后出现在线路目录",
   };
   return chromeSubtitle.value || map[route.name] || "在山野，遇见爱";
 });

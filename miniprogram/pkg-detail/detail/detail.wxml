@@ -2,7 +2,7 @@
 <view class="card" wx:if="{{r.reviewStatus=='pending'}}">
   <view class="pad">
     <view style="color:#2d6a4f">已提交审核，通过后会出现在线路目录。</view>
-    <view class="muted">{{r.bountyHint}}。可先加客服微信。</view>
+    <view class="muted">通过后会出现在线路目录。可先加客服微信。</view>
   </view>
 </view>
 <view class="card" wx:elif="{{r.reviewStatus=='rejected'}}">

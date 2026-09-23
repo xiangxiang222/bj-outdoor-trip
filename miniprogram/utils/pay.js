@@ -35,11 +35,4 @@ async function invokeWechatPay(data) {
   return Object.assign({}, data, confirmed.data || {}, { needPay: false, mock: false });
 }
 
-async function buyMembership() {
-  const code = await ensureWechatCode();
-  const res = await request("/member/buy", "POST", { code });
-  const paid = await invokeWechatPay(res.data);
-  return paid.user || res.data.user;
-}
-
-module.exports = { invokeWechatPay, ensureWechatCode, payArgs, buyMembership };
+module.exports = { invokeWechatPay, ensureWechatCode, payArgs };

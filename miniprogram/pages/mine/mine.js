@@ -1,5 +1,4 @@
-const { request, setAuth, showError } = require("../../utils/request");
-const { buyMembership } = require("../../utils/pay");
+const { request, setAuth } = require("../../utils/request");
 const { maskPhone } = require("../../utils/labels");
 const app = getApp();
 Page({
@@ -74,22 +73,11 @@ Page({
     }
     wx.navigateTo({ url });
   },
-  async openMember() {
+  openMember() {
     if (!app.globalData.token) {
       wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/member/member") });
       return;
     }
-    if (app.globalData.user && app.globalData.user.isMember) {
-      wx.navigateTo({ url: "/pages/member/member" });
-      return;
-    }
-    try {
-      const user = await buyMembership();
-      setAuth(app.globalData.token, user);
-      this.setData({ user });
-      wx.navigateTo({ url: "/pages/member/member" });
-    } catch (e) {
-      showError("开通失败", e);
-    }
+    wx.navigateTo({ url: "/pages/member/member" });
   },
 });

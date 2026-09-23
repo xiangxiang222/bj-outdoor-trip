@@ -3,7 +3,7 @@
     <div v-if="r.reviewStatus === 'pending'" class="card">
       <div class="pad">
         <p style="margin-top:0;color:var(--leaf)">已提交审核，通过后会出现在线路目录。</p>
-        <p class="muted" style="margin-bottom:0">{{ r.bountyHint }}。可先加客服微信。</p>
+        <p class="muted" style="margin-bottom:0">通过后会出现在线路目录。可先加客服微信。</p>
       </div>
     </div>
     <div v-else-if="r.reviewStatus === 'rejected'" class="card">
