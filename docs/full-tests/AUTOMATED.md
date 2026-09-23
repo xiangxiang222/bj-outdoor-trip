@@ -1,6 +1,6 @@
 # 自动化用例全表
 
-对照日期 2026-09-14，仓库内 `it(` 共 **375** 条（300 服务端 + 75 H5）。组合规则、手动走查顺序和截图见 [../FULL_TEST_CASES.md](../FULL_TEST_CASES.md)。
+对照日期 2026-09-23，仓库内 `it(` 共 **376** 条（301 服务端 + 75 H5）。组合规则、手动走查顺序和截图见 [../FULL_TEST_CASES.md](../FULL_TEST_CASES.md)。
 
 ## `server/test/api.admin.test.js`
 
@@ -172,8 +172,9 @@
 
 1. shows zero balance and accepts wechat mock topup
 2. rejects bank cards and withdraws to wechat with a pin
-3. pays enrollment from wallet and refunds back on cancel
-4. credits referral rebate and personal bounty into the wallet
+3. caps a withdrawal at 2000 yuan and three times a day
+4. pays enrollment from wallet and refunds back on cancel
+5. credits referral rebate and personal bounty into the wallet
 
 ## `server/test/api.pulse.test.js`
 

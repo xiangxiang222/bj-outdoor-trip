@@ -5,6 +5,9 @@ const { maskName, maskPhone } = require("./biz");
 const { maskIdCard } = require("./idcard");
 
 const CARD_CLOSED = "已改为提现到微信零钱，不再支持绑定银行卡";
+const WITHDRAW_MIN = 1;
+const WITHDRAW_MAX = 2000;
+const WITHDRAW_DAILY_MAX = 3;
 
 const SCENE_LABEL = {
   referral: "分享报名返点",
@@ -147,14 +150,42 @@ function resetPin(userId, body = {}) {
   return { pinSet: true };
 }
 
+function todayWithdrawCount(userId) {
+  const row = getDb()
+    .prepare(
+      `SELECT COUNT(*) AS c FROM wallet_ledger
+       WHERE user_id=? AND scene='withdraw' AND delta<0
+         AND date(created_at)=date('now','localtime')`
+    )
+    .get(userId);
+  return Number(row?.c || 0);
+}
+
+function withdrawRule(userId) {
+  const balance = balanceOf(userId);
+  const todayCount = todayWithdrawCount(userId);
+  return {
+    minYuan: WITHDRAW_MIN,
+    maxYuan: WITHDRAW_MAX,
+    dailyMax: WITHDRAW_DAILY_MAX,
+    todayCount,
+    todayRemain: Math.max(0, WITHDRAW_DAILY_MAX - todayCount),
+    available: Math.max(0, Math.min(balance, WITHDRAW_MAX)),
+    balance,
+    hours: "每天 00:00–23:59（北京时间）",
+    arrival: "提交成功后实时到账微信零钱，最迟 24 小时",
+  };
+}
+
 function withdraw(userId, body = {}) {
   const user = loadUser(userId);
   if (!user.id_card) fail(400, "提现前请先完成实名");
   verifyPin(user, body.pin);
   const bal = balanceOf(userId);
   if (bal <= 0) fail(400, "余额不足");
-  const amount = parseYuan(body.amount, { min: 1, max: 200000 });
+  const amount = parseYuan(body.amount, { min: WITHDRAW_MIN, max: WITHDRAW_MAX });
   if (amount > bal) fail(400, "余额不足");
+  if (todayWithdrawCount(userId) >= WITHDRAW_DAILY_MAX) fail(400, "今日提现次数已用完，每天最多 3 次");
   const mock = Boolean(config.wechat.mock);
   if (!mock && !user.wechat_openid) fail(400, "请先用微信登录后再提现到微信零钱");
   if (!mock) fail(400, "尚未开通微信商家转账到零钱，暂不能自动提现");
@@ -218,6 +249,7 @@ function snapshot(userId) {
     points: Number(user.points || 0),
     wechatBound: Boolean(user.wechat_openid),
     withdrawChannel: "wechat",
+    withdrawRule: withdrawRule(userId),
     bills: listBills(userId),
     upcomingCount: counts.upcoming,
     waitlistCount: counts.waitlist,
@@ -289,6 +321,7 @@ module.exports = {
   resetPin,
   verifyPin,
   withdraw,
+  withdrawRule,
   snapshot,
   backfillHistoricCredits,
 };

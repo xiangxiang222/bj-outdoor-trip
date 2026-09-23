@@ -10,6 +10,7 @@ Page({
     withdrawAmount: "",
     pin: "",
     quick: [50, 100, 200, 500],
+    rule: { available: 0, todayRemain: 3 },
     msg: "",
   },
   onShow() {
@@ -22,8 +23,15 @@ Page({
     }
     try {
       const res = await request("/me/wallet");
+      const data = res.data || { bills: [] };
+      const rule = data.withdrawRule || {};
+      const balance = Number(data.balance || 0);
       this.setData({
-        data: res.data || { bills: [] },
+        data,
+        rule: {
+          available: rule.available != null ? rule.available : Math.min(balance, 2000),
+          todayRemain: rule.todayRemain != null ? rule.todayRemain : 3,
+        },
         msg: "",
       });
     } catch (e) {

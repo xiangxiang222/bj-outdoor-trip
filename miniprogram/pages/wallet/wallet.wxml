@@ -8,6 +8,21 @@
   </view>
 </view>
 
+<view class="card">
+  <view class="pad">
+    <view class="rule-title">提现规则</view>
+    <view class="rule-title">可提现额度</view>
+    <view class="muted">当前余额均可申请。单笔最低 1 元，最高 2000 元，须为整数元，且不超过账户余额。当前可提现 {{rule.available}} 元。</view>
+    <view class="rule-title">每日提现次数</view>
+    <view class="muted">每天最多 3 次。今日还可提现 {{rule.todayRemain}} 次。</view>
+    <view class="rule-title">提现时间</view>
+    <view class="muted">每天 00:00–23:59（北京时间），全天可申请。</view>
+    <view class="rule-title">到账时间</view>
+    <view class="muted">提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。</view>
+    <view class="muted rule-foot">须完成实名并设置 6 位支付密码。仅支持提现到本人微信零钱，不支持银行卡。</view>
+  </view>
+</view>
+
 <view class="card" wx:if="{{mode=='topup'}}">
   <view class="pad muted">充值金额（元）</view>
   <input class="input" type="number" value="{{topupAmount}}" bindinput="setTopup" />
@@ -23,7 +38,7 @@
   <block wx:else>
     <view class="pad muted">提现金额（元）</view>
     <input class="input" type="number" value="{{withdrawAmount}}" bindinput="setWithdraw" />
-    <view class="pad muted">到账微信零钱。</view>
+    <view class="pad muted">单笔 1～2000 元，今天还可提 {{rule.todayRemain}} 次。提交成功后实时到账微信零钱，最迟 24 小时。</view>
     <view class="pad muted">支付密码</view>
     <input class="input" password value="{{pin}}" maxlength="6" bindinput="setPin" />
     <view class="btn" bindtap="withdraw">确认提现到微信</view>

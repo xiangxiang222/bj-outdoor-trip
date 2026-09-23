@@ -10,6 +10,21 @@
       </div>
     </div>
 
+    <div class="card">
+      <div class="pad">
+        <p class="rule-title">提现规则</p>
+        <p class="rule-title">可提现额度</p>
+        <p class="muted">当前余额均可申请。单笔最低 1 元，最高 2000 元，须为整数元，且不超过账户余额。当前可提现 {{ rule.available }} 元。</p>
+        <p class="rule-title">每日提现次数</p>
+        <p class="muted">每天最多 3 次。今日还可提现 {{ rule.todayRemain }} 次。</p>
+        <p class="rule-title">提现时间</p>
+        <p class="muted">每天 00:00–23:59（北京时间），全天可申请。</p>
+        <p class="rule-title">到账时间</p>
+        <p class="muted">提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。</p>
+        <p class="muted">须完成实名并设置 6 位支付密码。仅支持提现到本人微信零钱，不支持银行卡。</p>
+      </div>
+    </div>
+
     <div v-if="mode === 'topup'" class="card">
       <div class="pad">
         <label>充值金额（元）</label>
@@ -28,7 +43,7 @@
         <template v-else>
           <label>提现金额（元）</label>
           <input class="input" v-model="withdrawAmount" type="number" min="1" :max="data.balance" />
-          <p class="muted">到账微信零钱。演示环境立即记账；正式环境需开通商家转账。</p>
+          <p class="muted">单笔 1～2000 元，今天还可提 {{ rule.todayRemain }} 次。提交成功后实时到账微信零钱，最迟 24 小时。</p>
           <label>支付密码</label>
           <input class="input" v-model="pin" type="password" maxlength="6" inputmode="numeric" placeholder="6 位数字" />
           <button class="btn block" type="button" :disabled="busy" @click="doWithdraw">确认提现到微信</button>
@@ -60,6 +75,11 @@
   </div>
 </template>
 
+<style scoped>
+.rule-title { font-weight: 700; margin: 16px 0 4px; }
+.rule-title:first-child { margin-top: 0; font-size: 16px; }
+</style>
+
 <script setup>
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
@@ -73,6 +93,7 @@ const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const data = ref({ bills: [] });
+const rule = ref({ available: 0, todayRemain: 3 });
 const mode = ref("");
 const topupAmount = ref("100");
 const withdrawAmount = ref("");
@@ -89,6 +110,12 @@ onMounted(async () => {
 
 async function load() {
   data.value = (await http.get("/me/wallet")).data || { bills: [] };
+  const got = data.value.withdrawRule || {};
+  const balance = Number(data.value.balance || 0);
+  rule.value = {
+    available: got.available != null ? got.available : Math.min(balance, 2000),
+    todayRemain: got.todayRemain != null ? got.todayRemain : 3,
+  };
   if (store.profile) {
     store.setAuth(store.token, { ...store.profile, walletBalance: data.value.balance, walletPinSet: data.value.pinSet });
   }

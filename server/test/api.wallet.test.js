@@ -58,6 +58,25 @@ describe("wallet API", () => {
     assert.equal(wallet.body.data.withdrawChannel, "wechat");
     assert.equal(wallet.body.data.bills[0].scene, "withdraw");
     assert.equal(wallet.body.data.bills[0].reason, "提现到微信零钱");
+    assert.equal(wallet.body.data.withdrawRule.maxYuan, 2000);
+    assert.equal(wallet.body.data.withdrawRule.dailyMax, 3);
+    assert.equal(wallet.body.data.withdrawRule.todayRemain, 2);
+  });
+
+  it("caps a withdrawal at 2000 yuan and three times a day", async () => {
+    const token = await loginUser(agent);
+    await agent.post("/api/me/wallet/topup").set(auth(token)).send({ amount: 5000 }).expect(200);
+    await agent.post("/api/me/wallet/pin").set(auth(token)).send({ pin: "258369" }).expect(200);
+    const over = await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 2001, pin: "258369" });
+    assert.equal(over.status, 400);
+    for (let i = 0; i < 3; i += 1) {
+      await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 1, pin: "258369" }).expect(200);
+    }
+    const extra = await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 1, pin: "258369" });
+    assert.equal(extra.status, 400);
+    const wallet = await agent.get("/api/me/wallet").set(auth(token)).expect(200);
+    assert.equal(wallet.body.data.withdrawRule.todayRemain, 0);
+    assert.equal(wallet.body.data.balance, 4997);
   });
 
   it("pays enrollment from wallet and refunds back on cancel", async () => {

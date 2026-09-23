@@ -60,9 +60,9 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | POST | `/auth/wechat` | 否（登录后可选） | `code` `nickname` `avatar`。未登录则按 openid 登录或建号；已登录则绑定当前账号的 openid，返回 `bound: true`。`user.wechatBound` 表示是否已绑微信 |
 | POST | `/auth/wechat-phone` | 否 | 小程序手机号授权登录。`loginCode` 为 `wx.login`，`phoneCode` 为 `getPhoneNumber` 返回的 code。已配置 AppSecret 时向微信换手机号；演示环境用 `phone`。按手机号登录或建号，并绑定 openid |
 | GET | `/me` | 用户 | 当前用户（证件掩码；含 `walletBalance` `walletPinSet` `realNamed`、学生/团体/领队状态、`isAlumni`/`campusKind`/`isLeader`、`college` `major` `studentNo` `studentCardUrl`） |
-| GET | `/me/wallet` | 用户 | 钱包：余额、账单、`withdrawChannel=wechat`、是否已设支付密码、实名、是否绑微信、待支付/待出发数量。不返回银行卡 |
+| GET | `/me/wallet` | 用户 | 钱包：余额、账单、`withdrawChannel=wechat`、`withdrawRule`（单笔 1～2000 元、每天最多 3 次、全天可提、实时到账最迟 24 小时）、是否已设支付密码、实名、是否绑微信、待支付/待出发数量。不返回银行卡 |
 | POST | `/me/wallet/topup` | 用户 | `{ amount }` 整数 1～5000 元。走微信支付；演示立即入账；真实支付返回 JSAPI。可带 `code` |
-| POST | `/me/wallet/withdraw` | 用户 | `{ amount, pin }`。提现到微信零钱。须已实名、已设 6 位支付密码。演示立即扣余额；未开商家转账的正式环境返回 400 |
+| POST | `/me/wallet/withdraw` | 用户 | `{ amount, pin }`。提现到微信零钱。单笔整数 1～2000 元且不超过余额，每天最多 3 次，全天可提。须已实名、已设 6 位支付密码。演示立即扣余额；未开商家转账的正式环境返回 400 |
 | POST | `/me/wallet/cards` | 用户 | 已关闭，400「已改为提现到微信零钱」 |
 | DELETE | `/me/wallet/cards/:id` | 用户 | 已关闭，同上 |
 | POST | `/me/wallet/pin` | 用户 | `{ pin, oldPin }`。6 位数字。已设置时须带原密码 |
