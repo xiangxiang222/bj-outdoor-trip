@@ -22,6 +22,13 @@
         <p class="rule-title">到账时间</p>
         <p class="muted">提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。</p>
         <p class="muted">须完成实名并设置 6 位支付密码。仅支持提现到本人微信零钱，不支持银行卡。</p>
+        <p class="rule-title">充值规则</p>
+        <p class="rule-title">单笔额度</p>
+        <p class="muted">1～5000 元，须为整数元。</p>
+        <p class="rule-title">到账时间</p>
+        <p class="muted">微信支付成功后立即进入余额。</p>
+        <p class="rule-title">用途</p>
+        <p class="muted">余额用于支付团费。不用时按上方提现规则转到微信零钱。不支持银行卡。</p>
       </div>
     </div>
 
@@ -32,6 +39,7 @@
         <div class="chips" style="padding-left:0">
           <div class="chip" v-for="n in [50, 100, 200, 500]" :key="n" :class="{ on: Number(topupAmount) === n }" @click="topupAmount = String(n)">{{ n }}</div>
         </div>
+        <p class="muted">单笔 1～5000 元。支付成功后立即进入余额，用于支付团费。请确认金额后再支付。</p>
         <button class="btn block" type="button" :disabled="busy" @click="topup">确认微信支付</button>
       </div>
     </div>
