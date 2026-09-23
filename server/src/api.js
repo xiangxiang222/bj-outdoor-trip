@@ -299,10 +299,13 @@ function scheduleView(sch, req, opts = {}) {
   const guideRow = sch.guide_id ? db().prepare("SELECT * FROM guides WHERE id=?").get(sch.guide_id) : null;
   const guide = publicGuideCard(guideRow, req);
   const live = enrolledCount(sch.id);
-  const enrolled = sch.status === "cancelled" ? enrolledCount(sch.id, true) : live;
-  const people = Math.max(live || enrolled, 1);
   const realLive = realEnrolledCount(sch.id);
   const virtualLive = virtualEnrolledCount(sch.id);
+  const shown = req.adminId ? live : realLive;
+  const enrolled = sch.status === "cancelled"
+    ? (req.adminId ? enrolledCount(sch.id, true) : realEnrolledCount(sch.id, true))
+    : shown;
+  const people = Math.max(shown || enrolled, 1);
   const quote = compact ? null : quoteForSchedule(sch, realLive || sch.min_group_size, null);
   const offer = offerMeta(sch.offer_type);
   const cost =
@@ -364,7 +367,7 @@ function scheduleView(sch, req, opts = {}) {
     consultGroup: sch.consult_group || "",
     enrolled,
     waitlistCount: waitlistCount(sch.id),
-    remain: Math.max(0, sch.max_seats - live - lockedCount),
+    remain: Math.max(0, sch.max_seats - shown - lockedCount),
     quote: quote || { originPrice: 0, price: 0, offerType: offer.key, offerLabel: offer.label, offerColor: offer.color },
     people,
     guide,
@@ -1305,11 +1308,12 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
   const includeCancelled = sch.status === "cancelled";
+  const hideVirtual = req.adminId ? "" : " AND IFNULL(u.is_virtual,0)=0";
   const chainSql = includeCancelled
     ? `SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.pay_amount,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar
-       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3 END, e.id`
+       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=?${hideVirtual} ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3 END, e.id`
     : `SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.pay_amount,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar
-       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? AND e.status!='cancelled' ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3 END, e.id`;
+       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? AND e.status!='cancelled'${hideVirtual} ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3 END, e.id`;
   const paidMap = collectedMapForSchedule(sch.id);
   const chain = db()
     .prepare(chainSql)
@@ -2114,7 +2118,7 @@ router.post("/guide/schedules/:id/seats/lock", authGuide, (req, res) => {
     const lockedSeats = Array.isArray(b.lockedSeats)
       ? setLockedSeats(req.params.id, b.lockedSeats)
       : toggleLockedSeat(req.params.id, b.seatNo, b.locked !== false);
-    res.json({ ok: true, data: { lockedSeats, seats: scheduleSeats(req.params.id) } });
+    res.json({ ok: true, data: { lockedSeats, seats: scheduleSeats(req.params.id, { includeVirtual: true }) } });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }
@@ -2684,7 +2688,7 @@ router.post("/admin/schedules/:id/seats/lock", authAdmin, requireCap("field"), (
     const lockedSeats = Array.isArray(b.lockedSeats)
       ? setLockedSeats(req.params.id, b.lockedSeats)
       : toggleLockedSeat(req.params.id, b.seatNo, b.locked !== false);
-    res.json({ ok: true, data: { lockedSeats, seats: scheduleSeats(req.params.id) } });
+    res.json({ ok: true, data: { lockedSeats, seats: scheduleSeats(req.params.id, { includeVirtual: true }) } });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }

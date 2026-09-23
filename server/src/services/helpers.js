@@ -35,12 +35,13 @@ function enrolledCount(scheduleId, includeCancelled = false) {
   return row.c;
 }
 
-function realEnrolledCount(scheduleId) {
+function realEnrolledCount(scheduleId, includeCancelled = false) {
+  const statusSql = includeCancelled ? "" : " AND e.status='joined'";
   return getDb()
     .prepare(
       `SELECT COUNT(*) AS c FROM enrollments e
        LEFT JOIN users u ON u.id=e.user_id
-       WHERE e.schedule_id=? AND e.status='joined' AND IFNULL(u.is_virtual,0)=0`
+       WHERE e.schedule_id=?${statusSql} AND IFNULL(u.is_virtual,0)=0`
     )
     .get(scheduleId).c;
 }
