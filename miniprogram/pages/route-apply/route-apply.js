@@ -31,7 +31,7 @@ function uploadFile(filePath) {
 }
 
 function statusText(a) {
-  if (a.bountyStatus === "paid") return "已发奖";
+  if (a.reviewStatus === "approved") return "已通过";
   if (a.reviewStatus === "pending") return "审核中";
   if (a.reviewStatus === "rejected") return "未通过";
   return "已通过";

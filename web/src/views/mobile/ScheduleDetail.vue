@@ -150,7 +150,6 @@
               </template>
               <a v-else class="nav-link" href="#" @click.prevent="applyPhotographer">摄影师 · 报名摄影师</a>
             </div>
-            <p class="muted">{{ s.leaderRecruitCopy }}</p>
             <div v-if="leaderNeedApply" class="card" style="margin-top:8px">
               <div class="pad">
                 <p style="margin:0 0 10px">{{ leaderNeedApplyText }}</p>
@@ -239,17 +238,6 @@
           <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
         </template>
       </div></div>
-
-      <template v-if="!isActivity">
-        <div class="h2">推荐报名</div>
-        <div class="card"><div class="pad" style="text-align:center">
-          <p class="muted">推荐成功后按人数结算报名费的 5%。去分享时链接和海报二维码会带上你的推荐码。</p>
-          <img v-if="referral.qr" :src="referral.qr" alt="推荐二维码" style="width:160px;height:160px;background:#fff;border-radius:12px" />
-          <p class="muted" style="word-break:break-all">{{ referral.url }}</p>
-          <p v-if="referral.code">我的推荐码 {{ referral.code }} · 待结 ¥{{ referral.pending || 0 }} / 已结 ¥{{ referral.earned || 0 }}</p>
-          <button class="btn ghost" @click="loadReferral">生成我的推荐码</button>
-        </div></div>
-      </template>
 
       <div class="h2" v-if="s.combo?.enabled">组合团 · 另一半条件</div>
       <div class="card" v-if="s.combo?.enabled"><div class="pad">
@@ -535,7 +523,6 @@ const commonRules = ref({ title: "", summary: "", sections: [] });
 const waiverText = ref("");
 const faqs = ref([]);
 const contacts = ref({ officialWechat: "同行者众", officialWechatName: "同行者众官方", officialGroup: "同行者众户外交流群", hint: "" });
-const referral = ref({});
 const fallbackIds = ref([]);
 const autoAlt = ref(false);
 const savingFallbacks = ref(false);
@@ -840,18 +827,6 @@ async function saveFallbacks() {
     msg.value = e.message;
   } finally {
     savingFallbacks.value = false;
-  }
-}
-
-async function loadReferral() {
-  if (!store.token) {
-    router.push("/m/login?redirect=" + encodeURIComponent(route.fullPath));
-    return;
-  }
-  try {
-    referral.value = (await http.get("/me/referral", { params: { scheduleId: s.value.id } })).data || {};
-  } catch (e) {
-    msg.value = e.message;
   }
 }
 

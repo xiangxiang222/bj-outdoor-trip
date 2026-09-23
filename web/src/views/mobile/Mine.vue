@@ -15,12 +15,12 @@
         <button class="mine-gear" type="button" @click="goAuth('/m/settings')">设置</button>
       </div>
 
-      <button class="mine-member" type="button" @click="openMember">
+      <button v-if="store.profile.isMember" class="mine-member" type="button" @click="openMember">
         <div>
-          <strong>{{ store.profile.isMember ? "会员" : "开通会员" }}</strong>
-          <span>{{ store.profile.points || 0 }} 积分<template v-if="store.profile.isMember"> · {{ store.profile.memberExpireAt }}</template></span>
+          <strong>会员</strong>
+          <span>{{ store.profile.points || 0 }} 积分 · {{ store.profile.memberExpireAt }}</span>
         </div>
-        <i>会员中心 ›</i>
+        <i>查看 ›</i>
       </button>
 
       <div class="mine-shortcuts">
@@ -99,12 +99,10 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
-import { liveWechatPay, MINIPROGRAM_PAY_HINT } from "@/utils/wechatPay";
 import { maskPhone } from "@/utils/labels";
 
 const store = useUserStore();
 const router = useRouter();
-const opening = ref(false);
 const coupons = ref([]);
 const hub = ref({});
 
@@ -160,29 +158,11 @@ function goReferral() {
   if (!store.token) goLogin("/m/mine");
   else router.push(store.profile?.id ? "/m/user/" + store.profile.id : "/m/orders");
 }
-async function openMember() {
+function openMember() {
   if (!store.token) {
     goLogin("/m/member");
     return;
   }
-  if (store.profile?.isMember) {
-    router.push("/m/member");
-    return;
-  }
-  if (opening.value) return;
-  opening.value = true;
-  try {
-    const res = await http.post("/member/buy");
-    if (liveWechatPay(res.data)) {
-      window.alert(MINIPROGRAM_PAY_HINT);
-      return;
-    }
-    store.setAuth(store.token, res.data.user);
-    router.push("/m/member");
-  } catch (e) {
-    window.alert(e.message || "开通失败");
-  } finally {
-    opening.value = false;
-  }
+  router.push("/m/member");
 }
 </script>

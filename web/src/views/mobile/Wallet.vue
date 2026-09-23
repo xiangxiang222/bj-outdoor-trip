@@ -3,7 +3,7 @@
     <div class="wallet-hero">
       <div class="muted">账户安全保障中</div>
       <div class="wallet-balance">{{ data.balance || 0 }}<small>元</small></div>
-      <p class="muted">返点、成团奖励会进这里。充值走微信支付，提现到微信零钱，可直接付团费。不支持银行卡。</p>
+      <p class="muted">充值走微信支付，提现到微信零钱，可直接付团费。不支持银行卡。</p>
       <div class="wallet-actions">
         <button class="btn" type="button" @click="mode = mode === 'topup' ? '' : 'topup'">微信支付充值</button>
         <button class="btn ghost" type="button" @click="mode = mode === 'withdraw' ? '' : 'withdraw'">提现到微信</button>
@@ -78,7 +78,7 @@
         <i :style="{ color: b.delta > 0 ? 'var(--leaf)' : 'inherit' }">{{ b.delta > 0 ? "+" : "" }}{{ b.delta }}</i>
       </div>
     </div>
-    <p v-else class="muted">还没有钱包流水。分享报名返点、成团奖励会记在这里。</p>
+    <p v-else class="muted">还没有钱包流水。</p>
     <p v-if="msg" :style="ok ? '' : 'color:var(--clay)'">{{ msg }}</p>
   </div>
 </template>

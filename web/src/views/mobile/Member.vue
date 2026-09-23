@@ -16,58 +16,24 @@
       </div>
     </div>
 
-    <div class="card"><div class="pad">
-      <h3 style="margin-top:0">{{ store.profile?.isMember ? "会员权益" : "开通同行者众会员" }}</h3>
-      <p>年费 ¥{{ fee }}，线路额外 95 折，赠送一次 100 元以内的团，积分 1.2 倍加速。</p>
-      <ul>
-        <li>会员价自动按 95 折计算</li>
-        <li>开通即赠一次 100 元以内团免费名额<template v-if="store.profile?.isMember">（剩余 {{ store.profile.memberGiftLeft || 0 }} 次）</template></li>
-        <li>参加活动累积积分，100 积分抵 1 元</li>
-        <li>开团、报名、分享不受限</li>
-      </ul>
-      <button class="btn block" :disabled="loading" @click="buy">
-        {{ loading ? "开通中…" : store.profile?.isMember ? "续费会员" : "开通会员" }}
-      </button>
-      <p class="muted">{{ msg }}</p>
+    <div v-else class="card"><div class="pad">
+      <h3 style="margin-top:0">会员</h3>
+      <p class="muted">报名报价会按账号本身计算。这里不提供单独开通或续费。</p>
     </div></div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
-import { liveWechatPay, MINIPROGRAM_PAY_HINT } from "@/utils/wechatPay";
 
 const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
-const fee = ref(99);
-const msg = ref("");
-const loading = ref(false);
 onMounted(async () => {
   if (!requireLogin(store, router, route)) return;
-  fee.value = store.meta?.memberAnnualFee || 99;
   await store.fetchMe().catch(() => {});
 });
-async function buy() {
-  loading.value = true;
-  msg.value = "";
-  try {
-    const wasMember = !!store.profile?.isMember;
-    const res = await http.post("/member/buy");
-    if (liveWechatPay(res.data)) {
-      msg.value = MINIPROGRAM_PAY_HINT;
-      return;
-    }
-    store.setAuth(store.token, res.data.user);
-    msg.value = wasMember ? "续费成功" : "开通成功";
-  } catch (e) {
-    msg.value = e.message || "开通失败";
-  } finally {
-    loading.value = false;
-  }
-}
 </script>

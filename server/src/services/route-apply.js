@@ -53,11 +53,11 @@ function applicationView(row, { admin } = {}) {
     bountyStatus,
     bountyPaidAt: row.bounty_paid_at || "",
     bountyHint:
-      bountyStatus === "paid"
-        ? `首次成团奖励 ¥${bountyAmount} 已记账`
-        : reviewStatus === "rejected"
-          ? "未通过，不发放成团奖励"
-          : `通过并首次成团后奖励 ¥${bountyAmount || bountyYuan()}`,
+      reviewStatus === "rejected"
+        ? "未通过"
+        : reviewStatus === "pending"
+          ? "审核中，通过后会出现在线路目录"
+          : "已通过，已出现在线路目录",
     status: row.status,
     createdAt: row.created_at || "",
   };
@@ -168,7 +168,7 @@ function reviewApply(routeId, { action, note, adminId } = {}) {
     sendSms({
       phone: row.contact_phone,
       scene: "route",
-      content: `【同行者众】线路「${row.title}」已通过。首次成团后奖励 ${row.bounty_amount || bountyYuan()} 元。`,
+      content: `【同行者众】线路「${row.title}」已通过，已出现在线路目录。`,
       refType: "route",
       refId: row.id,
     });

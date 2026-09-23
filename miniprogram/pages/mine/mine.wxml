@@ -13,12 +13,12 @@
     <view class="mine-gear" bindtap="go" data-url="/pages/settings/settings">设置</view>
   </view>
 
-  <view class="mine-member" bindtap="openMember">
+  <view class="mine-member" wx:if="{{user.isMember}}" bindtap="openMember">
     <view>
-      <view class="title">{{user.isMember ? '会员' : '开通会员'}}</view>
-      <view class="muted">{{user.points}} 积分</view>
+      <view class="title">会员</view>
+      <view class="muted">{{user.points}} 积分 · {{user.memberExpireAt}}</view>
     </view>
-    <view class="muted">会员中心 ›</view>
+    <view class="muted">查看 ›</view>
   </view>
 
   <view class="mine-shortcuts">

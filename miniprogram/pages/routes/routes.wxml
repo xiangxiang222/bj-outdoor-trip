@@ -16,7 +16,7 @@
 <view class="card" bindtap="goApply">
   <view class="pad">
     <view class="title">申请收录线路</view>
-    <view class="muted">留下联系方式，通过并首次成团奖励 300 元</view>
+    <view class="muted">留下联系方式，通过后会出现在线路目录</view>
   </view>
 </view>
 <view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
