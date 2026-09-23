@@ -20,5 +20,8 @@ describe("trip policies", () => {
     assert.ok(res.body.data.waiverText.includes("风险"));
     assert.ok(res.body.data.cancelPolicy.items.length >= 3);
     assert.ok(res.body.data.faqs.some((f) => /紧急联系人/.test(f.q)));
+    assert.ok(res.body.data.faqs.some((f) => /抖音/.test(f.q)));
+    const douyin = res.body.data.officialAccounts.find((a) => a.platform === "抖音");
+    assert.ok(douyin && /douyin\.com/.test(douyin.url || ""));
   });
 });

@@ -7,7 +7,7 @@ const { dateOf } = require("../../utils/activity-kind");
 const { peopleLine, trustChips, dockPrice, enrollCta, canShowEnroll, ticketState } = require("../../utils/scan-facts");
 const { openCampusPick } = require("../../utils/campus");
 const { decodeShareScene, persistRef, readRef, enrollQuery } = require("../../utils/share-scene");
-const { drawShareCard, drawSharePoster } = require("../../utils/share-card");
+const { drawShareCard, drawSharePoster, douyinShareText } = require("../../utils/share-card");
 const { baseUrl } = require("../../config");
 const app = getApp();
 
@@ -404,6 +404,35 @@ Page({
     const text = e.currentTarget.dataset.text;
     if (!text) return;
     wx.setClipboardData({ data: String(text), success: () => wx.showToast({ title: "已复制", icon: "none" }) });
+  },
+  copyDouyin() {
+    const s = this.data.s || {};
+    const origin = String(baseUrl || "http://togetherbetter.cn").replace(/\/$/, "");
+    let url = origin + "/m/schedule/" + this.data.id;
+    if (this.data.ref) url += (url.indexOf("?") >= 0 ? "&" : "?") + "ref=" + encodeURIComponent(this.data.ref);
+    const text = douyinShareText({
+      organizerName: s.organizerName,
+      title: s.route && s.route.title,
+      startDate: s.startDate,
+      enrolled: s.enrolled,
+      url,
+      joinCode: s.joinCode,
+    });
+    wx.setClipboardData({
+      data: text,
+      success: () => wx.showToast({ title: "已复制抖音文案", icon: "none" }),
+    });
+  },
+  copyVideo(e) {
+    const url = e.currentTarget.dataset.url;
+    if (!url) return;
+    const provider = e.currentTarget.dataset.provider || "";
+    const toast =
+      provider === "douyin" ? "已复制，打开抖音观看" : provider === "tiktok" ? "已复制，打开 TikTok 观看" : "链接已复制";
+    wx.setClipboardData({
+      data: String(url),
+      success: () => wx.showToast({ title: toast, icon: "none" }),
+    });
   },
   goOrders() {
     wx.switchTab({ url: "/pages/orders/orders" });

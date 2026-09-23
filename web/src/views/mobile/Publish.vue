@@ -139,8 +139,8 @@
       <label>介绍</label>
       <textarea class="input" v-model="form.description" rows="4" />
       <label>视频链接</label>
-      <textarea class="input" v-model="form.videoUrls" rows="3" placeholder="一行一条。支持 B 站分享链接，如 https://www.bilibili.com/video/BVxxxx" />
-      <p class="muted">线路页会直接嵌播放器。请粘贴含 BV 号的完整链接。</p>
+      <textarea class="input" v-model="form.videoUrls" rows="3" placeholder="一行一条。抖音 / TikTok / B 站分享链接，如 https://www.douyin.com/video/…" />
+      <p class="muted">抖音打开抖音观看；TikTok / B 站完整链接会嵌播放器。短链只能当外链打开。</p>
       <label>备注</label>
       <textarea class="input" v-model="form.notes" rows="2" />
     </template>

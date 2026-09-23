@@ -148,4 +148,23 @@ async function drawSharePoster(page, facts, qrSrc) {
   return canvasToFile(canvas);
 }
 
-module.exports = { drawShareCard, drawSharePoster };
+function douyinShareText({ organizerName, title, startDate, enrolled, url, joinCode }) {
+  const who = organizerName || "同行者众";
+  const when = startDate ? startDate + "出发，" : "";
+  const lock = String(joinCode || "").trim() ? "\n入团口令 " + String(joinCode).trim() : "";
+  return (
+    who +
+    "邀你报名「" +
+    (title || "行程") +
+    "」\n" +
+    when +
+    "已有" +
+    (enrolled || 0) +
+    "人\n报名：" +
+    url +
+    lock +
+    "\n#同行者众 #北京周边游 #户外"
+  );
+}
+
+module.exports = { drawShareCard, drawSharePoster, douyinShareText };

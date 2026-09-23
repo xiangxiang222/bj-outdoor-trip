@@ -99,8 +99,8 @@
   </picker>
   <textarea class="input" placeholder="介绍" value="{{form.description}}" bindinput="setField" data-k="description" />
   <view class="label">视频链接</view>
-  <textarea class="input" placeholder="一行一条 B 站链接，如 https://www.bilibili.com/video/BVxxxx" value="{{form.videoUrls}}" bindinput="setField" data-k="videoUrls" />
-  <view class="muted pad" style="padding-top:0">线路页会嵌播放器。请粘贴含 BV 号的完整链接。</view>
+  <textarea class="input" placeholder="一行一条抖音 / TikTok / B 站链接" value="{{form.videoUrls}}" bindinput="setField" data-k="videoUrls" />
+  <view class="muted pad" style="padding-top:0">抖音打开抖音观看；TikTok / B 站完整链接会嵌播放器。</view>
 </block>
 <view class="pad" bindtap="togglePrivateJoin">{{form.privateJoin ? '☑' : '☐'}} 加密团（报名要口令）</view>
 <input wx:if="{{form.privateJoin}}" class="input" placeholder="入团口令 4～16 字，可空则自动生成" value="{{form.joinCode}}" bindinput="setField" data-k="joinCode" maxlength="16" />

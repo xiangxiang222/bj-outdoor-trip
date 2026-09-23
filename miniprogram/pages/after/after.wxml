@@ -22,7 +22,7 @@
 
   <view class="pad title">评选 · 分享投票</view>
   <view class="card"><view class="pad">
-    <view class="muted">把朋友圈 / 小红书 / 视频号分享链接贴上来，团友投票。</view>
+    <view class="muted">把朋友圈 / 小红书 / 视频号 / 抖音分享链接贴上来，团友投票。</view>
     <input class="input" placeholder="https://" value="{{shareUrl}}" bindinput="setUrl" />
     <input class="input" placeholder="今天这团最想安利的一点" value="{{caption}}" bindinput="setCaption" />
     <view class="btn ghost" bindtap="submitPost">提交评选</view>

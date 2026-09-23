@@ -35,7 +35,7 @@
   <view class="title">线路视频</view>
   <block wx:for="{{r.videos}}" wx:key="url">
     <video wx:if="{{item.kind==='video'}}" src="{{item.embedUrl}}" controls style="width:100%;margin:12rpx 0;border-radius:16rpx;background:#000" />
-    <view wx:else class="video-link" bindtap="copyVideo" data-url="{{item.url}}">{{item.label}} · 复制链接去浏览器播放</view>
+    <view wx:else class="video-link" bindtap="copyVideo" data-url="{{item.url}}" data-provider="{{item.provider}}">{{item.label}} · {{item.provider==='douyin' ? '复制后打开抖音观看' : item.provider==='tiktok' ? '复制后打开 TikTok 观看' : '复制链接去浏览器播放'}}</view>
   </block>
 </view>
 <view class="pad" wx:if="{{r.gallery && r.gallery.length}}"><view class="title">线路相册</view></view>

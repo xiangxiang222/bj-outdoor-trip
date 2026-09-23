@@ -103,7 +103,7 @@ describe("admin API", () => {
         notices: "注意",
         meetupPoints: [],
         status: "on",
-        videos: ["https://www.bilibili.com/video/BV1GJ411x7h7", "https://cdn.example.com/trail.mp4"],
+        videos: ["https://www.bilibili.com/video/BV1GJ411x7h7", "https://www.douyin.com/video/7123456789012345678", "https://cdn.example.com/trail.mp4"],
         priceTiers: [{ minPeople: 10, price: 288, memberPrice: 265 }],
         buses: ["coaster10"],
       })
@@ -112,9 +112,12 @@ describe("admin API", () => {
     const after = await agent.get(`/api/routes/${id}`).expect(200);
     assert.equal(after.body.data.story[0].body, "先看城墙");
     assert.match(after.body.data.itinerary[0].photo || "", /wall1/);
-    assert.equal(after.body.data.videos.length, 2);
+    assert.equal(after.body.data.videos.length, 3);
     assert.equal(after.body.data.videos[0].kind, "iframe");
-    assert.equal(after.body.data.videos[1].kind, "video");
+    assert.equal(after.body.data.videos[1].provider, "douyin");
+    assert.equal(after.body.data.videos[1].kind, "link");
+    assert.equal(after.body.data.videos[1].videoId, "7123456789012345678");
+    assert.equal(after.body.data.videos[2].kind, "video");
 
     await agent.delete(`/api/admin/routes/${id}`).set(auth(adminToken)).expect(200);
     const publicList = await agent.get("/api/routes").expect(200);

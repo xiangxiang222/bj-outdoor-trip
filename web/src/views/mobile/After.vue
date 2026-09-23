@@ -54,7 +54,7 @@
 
       <div class="h2">评选 · 分享投票</div>
       <div class="card"><div class="pad">
-        <p class="muted">把朋友圈 / 小红书 / 视频号分享链接贴上来，团友投票。再结合平台本身的互动，按票数和规则评选。</p>
+        <p class="muted">把朋友圈 / 小红书 / 视频号 / 抖音分享链接贴上来，团友投票。再结合平台本身的互动，按票数和规则评选。</p>
         <label>分享链接</label>
         <input class="input" v-model="shareUrl" placeholder="https://" />
         <label>一句话</label>

@@ -562,13 +562,13 @@ npm test
 | `route-draft.test.js` | 22 | 线路起草 |
 | `routes-data.test.js` | 7 | 30 条线数据 |
 | `story.service.test.js` | 4 | 图文 |
-| `video.test.js` | 6 | 视频地址 |
+| `video.test.js` | 8 | 视频地址 |
 | `weather.test.js` | 2 | 天气 |
 | `wechat.test.js` | 7 | 微信会话与支付 XML |
 
 ### 4.2 H5 工具函数（70）
 
-`activityKind` 4、`auth` 3、`chinaAreas` 6、`couponTime` 3、`feedCard` 3、`feedList` 6、`idcard` 4、`labels` 4、`media` 3、`offer` 2、`pageChrome` 2、`phone` 2、`pulse` 1、`routeMeta` 6、`scanFacts` 5、`share` 3、`staff` 3、`story` 2、`trips` 4、`weatherChart` 2、`wechatPay` 2。
+`activityKind` 4、`auth` 3、`chinaAreas` 6、`couponTime` 3、`feedCard` 3、`feedList` 6、`idcard` 4、`labels` 4、`media` 3、`offer` 2、`pageChrome` 2、`phone` 2、`pulse` 1、`routeMeta` 6、`scanFacts` 5、`share` 5、`staff` 3、`story` 2、`trips` 4、`weatherChart` 2、`wechatPay` 2。
 
 `feedList` 覆盖首页公司 / 高校 / 个人筛选，与 M-34 对应。
 

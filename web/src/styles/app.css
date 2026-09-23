@@ -911,6 +911,29 @@ button, input, textarea, select { font-family: inherit; }
   color: var(--leaf);
   font-weight: 600;
 }
+.video-frame.portrait {
+  padding-top: 140%;
+  max-width: 360px;
+  margin: 0 auto;
+}
+.video-link-douyin,
+.video-link-tiktok {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 16px;
+  background: #16161a;
+  color: #fff;
+  text-decoration: none;
+}
+.video-link-douyin strong { color: #fe2c55; }
+.video-link-tiktok strong { color: #25f4ee; }
+.video-link-douyin span,
+.video-link-tiktok span {
+  color: rgba(255,255,255,.72);
+  font-weight: 400;
+  font-size: 13px;
+}
 .toast {
   position: fixed; left: 50%; top: 40%; transform: translate(-50%,-50%);
   background: rgba(0,0,0,.78); color: #fff; padding: 10px 16px; border-radius: 8px; z-index: 50;

@@ -71,6 +71,93 @@ function isDirectFile(href) {
   return /\.(mp4|webm|m4v|ogg)(\?|#|$)/i.test(href);
 }
 
+function hostnameOf(href) {
+  try {
+    return new URL(href).hostname.replace(/^www\./i, "").toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function isDouyinHost(host) {
+  return (
+    host === "douyin.com" ||
+    host === "iesdouyin.com" ||
+    host === "v.douyin.com" ||
+    host === "m.douyin.com" ||
+    host.endsWith(".douyin.com") ||
+    host.endsWith(".iesdouyin.com")
+  );
+}
+
+function isTikTokHost(host) {
+  return (
+    host === "tiktok.com" ||
+    host === "m.tiktok.com" ||
+    host === "vm.tiktok.com" ||
+    host === "vt.tiktok.com" ||
+    host.endsWith(".tiktok.com")
+  );
+}
+
+function shortVideoId(href) {
+  try {
+    const u = new URL(href);
+    for (const key of ["modal_id", "aweme_id", "vid", "video_id", "item_ids"]) {
+      const value = u.searchParams.get(key) || "";
+      if (/^\d{10,25}$/.test(value)) return value;
+    }
+    const path = u.pathname || "";
+    const dy = path.match(/\/(?:share\/)?(?:video|note|aweme)\/(\d{10,25})/i);
+    if (dy) return dy[1];
+    const tk = path.match(/\/(?:@[^/]+\/)?(?:video|photo)\/(\d{10,25})/i);
+    if (tk) return tk[1];
+  } catch {
+    /* ignore */
+  }
+  return "";
+}
+
+function douyinPlayer(href) {
+  const id = shortVideoId(href);
+  const watchUrl = id ? `https://www.douyin.com/video/${id}` : href;
+  return {
+    url: href,
+    provider: "douyin",
+    kind: "link",
+    embedUrl: "",
+    label: "抖音",
+    videoId: id,
+    watchUrl,
+    appUrl: id ? `snssdk1128://aweme/detail/${id}` : "snssdk1128://",
+  };
+}
+
+function tiktokPlayer(href) {
+  const id = shortVideoId(href);
+  if (id) {
+    return {
+      url: href,
+      provider: "tiktok",
+      kind: "iframe",
+      embedUrl: `https://www.tiktok.com/embed/v2/${encodeURIComponent(id)}`,
+      label: "TikTok",
+      videoId: id,
+      watchUrl: href,
+      layout: "portrait",
+    };
+  }
+  return {
+    url: href,
+    provider: "tiktok",
+    kind: "link",
+    embedUrl: "",
+    label: "TikTok",
+    videoId: "",
+    watchUrl: href,
+  };
+}
+
 function videoPlayerOf(url) {
   const href = normalizeHref(url);
   if (!href) return null;
@@ -107,6 +194,9 @@ function videoPlayerOf(url) {
       label: "YouTube",
     };
   }
+  const host = hostnameOf(href);
+  if (isDouyinHost(host)) return douyinPlayer(href);
+  if (isTikTokHost(host)) return tiktokPlayer(href);
   if (isDirectFile(href)) {
     return { url: href, provider: "file", kind: "video", embedUrl: href, label: "视频" };
   }
