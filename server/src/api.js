@@ -10,7 +10,7 @@ const config = require("./config");
 const { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide } = require("./middleware/auth");
 const { parseIdCard, maskIdCard, lifeStageFromPerson } = require("./services/idcard");
 const { buildDemographics, maskPhone } = require("./services/biz");
-const { code2session, payLive, clientIp } = require("./services/wechat");
+const { code2session, payLive, clientIp, loginLive, getUserPhoneNumber } = require("./services/wechat");
 const { buildSchedulePoster } = require("./services/share-poster");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
@@ -656,6 +656,53 @@ router.post("/auth/login-sms", (req, res) => {
   }
   if (Number(user.is_virtual)) return res.status(400).json({ ok: false, message: "虚拟账号不能登录" });
   res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req) } });
+});
+
+function chinaMobile(raw) {
+  const phone = String(raw || "").replace(/\D/g, "");
+  return /^1\d{10}$/.test(phone) ? phone : "";
+}
+
+router.post("/auth/wechat-phone", async (req, res) => {
+  try {
+    const body = req.body || {};
+    const sess = await code2session(body.loginCode || `demo_${Date.now()}`);
+    if (sess.errcode) return res.status(400).json({ ok: false, message: sess.errmsg || "微信登录失败" });
+    if (!sess.openid) return res.status(400).json({ ok: false, message: "微信登录失败" });
+    const phone = loginLive() ? await getUserPhoneNumber(body.phoneCode) : chinaMobile(body.phone || body.phoneCode);
+    if (!phone) return res.status(400).json({ ok: false, message: "未授权手机号" });
+    const database = db();
+    const byPhone = database.prepare("SELECT * FROM users WHERE phone=? AND deleted_at IS NULL").get(phone);
+    const byOpenid = database.prepare("SELECT * FROM users WHERE wechat_openid=? AND deleted_at IS NULL").get(sess.openid);
+    if ((byPhone && Number(byPhone.is_virtual)) || (byOpenid && Number(byOpenid.is_virtual))) {
+      return res.status(400).json({ ok: false, message: "虚拟账号不能登录" });
+    }
+    let user = byPhone || byOpenid;
+    if (byPhone && byOpenid && Number(byPhone.id) !== Number(byOpenid.id)) {
+      user = byPhone;
+    } else if (!user) {
+      const info = database
+        .prepare("INSERT INTO users (phone,nickname,wechat_openid,wechat_unionid) VALUES (?,?,?,?)")
+        .run(phone, `同行者众${phone.slice(-4)}`, sess.openid, sess.unionid || "");
+      user = database.prepare("SELECT * FROM users WHERE id=?").get(info.lastInsertRowid);
+    } else {
+      if (!user.phone) {
+        database.prepare("UPDATE users SET phone=? WHERE id=?").run(phone, user.id);
+      }
+      const openidOwner = byOpenid && Number(byOpenid.id) === Number(user.id);
+      if (!user.wechat_openid || openidOwner) {
+        database.prepare("UPDATE users SET wechat_openid=?, wechat_unionid=? WHERE id=?").run(
+          sess.openid,
+          sess.unionid || user.wechat_unionid || "",
+          user.id
+        );
+      }
+      user = database.prepare("SELECT * FROM users WHERE id=?").get(user.id);
+    }
+    res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req) } });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 router.post("/auth/wechat", optionalUser, async (req, res) => {

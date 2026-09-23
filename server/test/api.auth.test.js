@@ -109,6 +109,26 @@ describe("auth and profile API", () => {
     await agent.post("/api/auth/login-sms").send({ phone: "13500135000", code: "000000" }).expect(400);
   });
 
+  it("logs in with wechat phone authorization and binds an existing phone", async () => {
+    const created = await agent
+      .post("/api/auth/wechat-phone")
+      .send({ loginCode: "phone_login_a", phone: "13600136000" })
+      .expect(200);
+    assert.match(created.body.data.user.nickname, /6000/);
+    assert.equal(created.body.data.user.phone, "13600136000");
+    const again = await agent
+      .post("/api/auth/wechat-phone")
+      .send({ loginCode: "phone_login_a", phone: "13600136000" })
+      .expect(200);
+    assert.equal(again.body.data.user.id, created.body.data.user.id);
+    const known = await agent
+      .post("/api/auth/wechat-phone")
+      .send({ loginCode: "phone_login_lin", phone: "13800138000" })
+      .expect(200);
+    assert.equal(known.body.data.user.nickname, "林北野");
+    await agent.post("/api/auth/wechat-phone").send({ loginCode: "phone_login_bad" }).expect(400);
+  });
+
   it("wechat demo login", async () => {
     const res = await agent.post("/api/auth/wechat").send({ code: "demo_code", nickname: "微信游客" }).expect(200);
     assert.equal(res.body.data.user.nickname, "微信游客");

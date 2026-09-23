@@ -2,6 +2,7 @@ const { request, setAuth } = require("../../utils/request");
 const { saveCaptchaFile } = require("../../utils/captcha");
 Page({
   data: {
+    account: false,
     tab: "login",
     phone: "13800138000",
     password: "123456",
@@ -14,12 +15,14 @@ Page({
     redirect: "",
   },
   onLoad(q) {
+    const account = q.tab === "register" || q.account === "1";
     this.setData({
       redirect: q.redirect ? decodeURIComponent(q.redirect) : "",
       tab: q.tab === "register" ? "register" : "login",
+      account,
     });
     if (q.tab === "register") this.clearDemo();
-    this.loadCaptcha();
+    if (account) this.loadCaptcha();
   },
   clearDemo() {
     const patch = { tab: "register" };
@@ -116,12 +119,31 @@ Page({
       wx.showModal({ title: "注册失败", content: e.message, showCancel: false });
     }
   },
-  async wxLogin() {
+  cancel() {
+    wx.navigateBack({ fail: () => wx.switchTab({ url: "/pages/mine/mine" }) });
+  },
+  showAccount() {
+    this.setData({ account: true, tab: "login" });
+    this.loadCaptcha();
+  },
+  async onGetPhone(e) {
+    const detail = (e && e.detail) || {};
+    if (detail.errMsg && detail.errMsg.indexOf("ok") < 0) return;
+    if (!detail.code) {
+      wx.showToast({ title: "没有拿到手机号授权", icon: "none" });
+      return;
+    }
     try {
+      wx.showLoading({ title: "登录中", mask: true });
       const login = await wx.login();
-      await this.after(await request("/auth/wechat", "POST", { code: login.code, nickname: "微信用户" }));
-    } catch (e) {
-      wx.showToast({ title: e.message, icon: "none" });
+      await this.after(await request("/auth/wechat-phone", "POST", {
+        loginCode: login.code,
+        phoneCode: detail.code,
+      }));
+    } catch (err) {
+      wx.showToast({ title: (err && err.message) || "登录失败", icon: "none" });
+    } finally {
+      wx.hideLoading();
     }
   },
 });
