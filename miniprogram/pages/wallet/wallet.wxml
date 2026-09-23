@@ -8,6 +8,30 @@
   </view>
 </view>
 
+<view class="card" wx:if="{{mode=='topup'}}" id="wallet-form">
+  <view class="pad muted">充值金额（元）</view>
+  <input class="input" type="number" value="{{topupAmount}}" bindinput="setTopup" />
+  <view class="chips">
+    <view class="chip {{topupAmount==item ? 'on' : ''}}" wx:for="{{quick}}" wx:key="*this" bindtap="pickTopup" data-n="{{item}}">{{item}}</view>
+  </view>
+  <view class="pad muted">单笔 1～5000 元。支付成功后立即进入余额，用于支付团费。请确认金额后再支付。</view>
+  <view class="btn" bindtap="topup">确认微信支付</view>
+</view>
+
+<view class="card" wx:if="{{mode=='withdraw'}}" id="wallet-form">
+  <view class="pad muted" wx:if="{{!data.realNamed}}">微信支付转到零钱须先完成实名。请到下方「实名信息」完善后再提交。</view>
+  <view class="pad muted" wx:if="{{data.realNamed && !data.pinSet}}">请先到下方设置 6 位支付密码，再提交提现。</view>
+  <view class="pad muted">提现金额（元）</view>
+  <input class="input" type="number" value="{{withdrawAmount}}" bindinput="setWithdraw" />
+  <view class="chips" wx:if="{{rule.available > 0}}">
+    <view class="chip on" bindtap="fillAll">全部提现 {{rule.available}} 元</view>
+  </view>
+  <view class="pad muted">当前余额全部可提，不设最低金额。微信转账单笔上限 2000 元，超出可立即再提。提交后实时到账微信零钱，最迟 24 小时。</view>
+  <view class="pad muted">支付密码</view>
+  <input class="input" password value="{{pin}}" maxlength="6" bindinput="setPin" />
+  <view class="btn" bindtap="withdraw">确认提现到微信</view>
+</view>
+
 <view class="card">
   <view class="pad">
     <view class="rule-title">提现规则</view>
@@ -28,30 +52,6 @@
     <view class="rule-title">用途</view>
     <view class="muted">余额用于支付团费。不用时按上方提现规则转到微信零钱。不支持银行卡。</view>
   </view>
-</view>
-
-<view class="card" wx:if="{{mode=='topup'}}">
-  <view class="pad muted">充值金额（元）</view>
-  <input class="input" type="number" value="{{topupAmount}}" bindinput="setTopup" />
-  <view class="chips">
-    <view class="chip {{topupAmount==item ? 'on' : ''}}" wx:for="{{quick}}" wx:key="*this" bindtap="pickTopup" data-n="{{item}}">{{item}}</view>
-  </view>
-  <view class="pad muted">单笔 1～5000 元。支付成功后立即进入余额，用于支付团费。请确认金额后再支付。</view>
-  <view class="btn" bindtap="topup">确认微信支付</view>
-</view>
-
-<view class="card" wx:if="{{mode=='withdraw'}}">
-  <view class="pad muted" wx:if="{{!data.realNamed}}">微信支付转到零钱须先完成实名。请到下方「实名信息」完善后再提交。</view>
-  <view class="pad muted" wx:if="{{data.realNamed && !data.pinSet}}">请先到下方设置 6 位支付密码，再提交提现。</view>
-  <view class="pad muted">提现金额（元）</view>
-  <input class="input" type="number" value="{{withdrawAmount}}" bindinput="setWithdraw" />
-  <view class="chips" wx:if="{{rule.available > 0}}">
-    <view class="chip on" bindtap="fillAll">全部提现 {{rule.available}} 元</view>
-  </view>
-  <view class="pad muted">当前余额全部可提，不设最低金额。微信转账单笔上限 2000 元，超出可立即再提。提交后实时到账微信零钱，最迟 24 小时。</view>
-  <view class="pad muted">支付密码</view>
-  <input class="input" password value="{{pin}}" maxlength="6" bindinput="setPin" />
-  <view class="btn" bindtap="withdraw">确认提现到微信</view>
 </view>
 
 <view class="cell-group">

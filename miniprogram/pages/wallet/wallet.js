@@ -37,15 +37,23 @@ Page({
     }
   },
   showTopup() {
-    this.setData({ mode: this.data.mode === "topup" ? "" : "topup" });
+    const next = this.data.mode === "topup" ? "" : "topup";
+    this.setData({ mode: next }, () => {
+      if (next) wx.pageScrollTo({ selector: "#wallet-form", duration: 300 });
+    });
   },
   showWithdraw() {
     const next = this.data.mode === "withdraw" ? "" : "withdraw";
     const available = Number(this.data.rule.available || 0);
-    this.setData({
-      mode: next,
-      withdrawAmount: next === "withdraw" && available > 0 ? String(available) : this.data.withdrawAmount,
-    });
+    this.setData(
+      {
+        mode: next,
+        withdrawAmount: next === "withdraw" && available > 0 ? String(available) : this.data.withdrawAmount,
+      },
+      () => {
+        if (next) wx.pageScrollTo({ selector: "#wallet-form", duration: 300 });
+      }
+    );
   },
   fillAll() {
     const available = Number(this.data.rule.available || 0);
