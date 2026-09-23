@@ -120,7 +120,7 @@ npx vitest run src/utils/share.test.js
 | `api.enroll.test.js` | 个人占座（`needPay: false`）、紧急联系人/健康/免责、`/me/trips`、公司挂账与结算权限、满员、成团导游、取消报名（已过出发日 / 正式开团后不可取消）、会员购买、收藏、**同城局姓名+手机即可报名**、行程页报名摄影师 |
 | `api.refund.test.js` | 默认/全局/线路退费档、已付按比例退、出发当天未开团可退 50%、开团后不可取消 |
 | `api.pay.test.js` | 绑定 openid、JSAPI 下单、支付回调入账、查单开通会员、真实支付时禁止 mock-success；自己付/代付/众筹分摊与取消按付款人退款 |
-| `api.wallet.test.js` | 微信模拟充值入账、拒绝绑卡、支付密码提现到微信、余额报名与取消退回钱包、分享返点和个人发团奖励入钱包 |
+| `api.wallet.test.js` | 微信模拟充值入账、拒绝绑卡、支付密码提现到微信、不限制每日次数、通道单笔 2000 元、正式环境仍即时扣账、余额报名与取消退回钱包、分享返点和个人发团奖励入钱包 |
 | `api.waitlist.test.js` | 候补与递补 |
 | `api.seats.test.js` | 选座、锁座 |
 | `api.insurance.test.js` | 保险加购 |

@@ -10,7 +10,7 @@ Page({
     withdrawAmount: "",
     pin: "",
     quick: [50, 100, 200, 500],
-    rule: { available: 0, todayRemain: 3 },
+    rule: { available: 0 },
     msg: "",
   },
   onShow() {
@@ -26,12 +26,10 @@ Page({
       const data = res.data || { bills: [] };
       const rule = data.withdrawRule || {};
       const balance = Number(data.balance || 0);
+      const available = rule.available != null ? Number(rule.available) : Math.min(balance, 2000);
       this.setData({
         data,
-        rule: {
-          available: rule.available != null ? rule.available : Math.min(balance, 2000),
-          todayRemain: rule.todayRemain != null ? rule.todayRemain : 3,
-        },
+        rule: { available },
         msg: "",
       });
     } catch (e) {
@@ -39,10 +37,27 @@ Page({
     }
   },
   showTopup() {
-    this.setData({ mode: this.data.mode === "topup" ? "" : "topup" });
+    const next = this.data.mode === "topup" ? "" : "topup";
+    this.setData({ mode: next }, () => {
+      if (next) wx.pageScrollTo({ selector: "#wallet-form", duration: 300 });
+    });
   },
   showWithdraw() {
-    this.setData({ mode: this.data.mode === "withdraw" ? "" : "withdraw" });
+    const next = this.data.mode === "withdraw" ? "" : "withdraw";
+    const available = Number(this.data.rule.available || 0);
+    this.setData(
+      {
+        mode: next,
+        withdrawAmount: next === "withdraw" && available > 0 ? String(available) : this.data.withdrawAmount,
+      },
+      () => {
+        if (next) wx.pageScrollTo({ selector: "#wallet-form", duration: 300 });
+      }
+    );
+  },
+  fillAll() {
+    const available = Number(this.data.rule.available || 0);
+    if (available > 0) this.setData({ withdrawAmount: String(available) });
   },
   setTopup(e) {
     this.setData({ topupAmount: e.detail.value });
