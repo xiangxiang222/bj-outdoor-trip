@@ -1,1 +1,2 @@
-/* inherit */
+.rule-title { font-weight: 700; margin-top: 20rpx; }
+.rule-title:first-child { margin-top: 0; }
