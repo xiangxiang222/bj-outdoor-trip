@@ -412,6 +412,42 @@ async function sendSubscribeMessage({ openid, templateId, page, data }) {
   return res.json();
 }
 
+function shippingUploadTime() {
+  const shifted = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  return shifted.toISOString().replace("Z", "+08:00");
+}
+
+async function uploadVirtualShipping({ outTradeNo, transactionId, openid, itemDesc }) {
+  if (!loginLive()) return { mock: true };
+  if (!openid || !outTradeNo) return { skipped: true };
+  const { access_token } = await getAccessToken();
+  const order_key = transactionId
+    ? { order_number_type: 2, transaction_id: String(transactionId) }
+    : { order_number_type: 1, mchid: String(config.wechat.mchId), out_trade_no: String(outTradeNo) };
+  const res = await fetch(
+    "https://api.weixin.qq.com/wxa/sec/order/upload_shipping_info?access_token=" + encodeURIComponent(access_token),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        order_key,
+        logistics_type: 3,
+        delivery_mode: 1,
+        shipping_list: [{ item_desc: String(itemDesc || "同行者众").slice(0, 120) }],
+        upload_time: shippingUploadTime(),
+        payer: { openid: String(openid) },
+      }),
+    }
+  );
+  const data = await res.json();
+  if (data.errcode) {
+    const err = new Error(data.errmsg || "虚拟发货上报失败");
+    err.payload = data;
+    throw err;
+  }
+  return data;
+}
+
 async function getWxaCode({ scene, page }) {
   if (!loginLive()) return null;
   const { access_token } = await getAccessToken();
@@ -459,6 +495,7 @@ module.exports = {
   getUserPhoneNumber,
   sendSubscribeMessage,
   getWxaCode,
+  uploadVirtualShipping,
   UNIFIED_ORDER_URL,
   ORDER_QUERY_URL,
   REFUND_URL,

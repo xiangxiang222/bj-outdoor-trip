@@ -41,7 +41,7 @@ const {
 } = require("./services/home");
 const { offerMeta, liveMemberPrice, liveStudentPrice, flagOn } = require("./services/offer");
 const { publicUserProfile, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
-const { payEnrollment, buyWalletTopup, payCompanySchedule, confirmTrade, applyWechatSession, applyEnrollmentCharge } = require("./services/payment");
+const { payEnrollment, buyWalletTopup, payCompanySchedule, confirmTrade, orderByTradeNo, applyWechatSession, applyEnrollmentCharge } = require("./services/payment");
 const { payShareView, collectedMapForSchedule, payProgress, ensurePayShareToken, contributorsOf } = require("./services/pay-ledger");
 const { grantMembership, refundMembership } = require("./services/member");
 const { addPhoto, removePhoto, ensureReferralCode, resolveLiveUser, adoptOrganizer } = require("./services/profile");
@@ -1763,6 +1763,14 @@ router.post("/pay/for-enrollment", authUser, async (req, res) => {
       clientIp: clientIp(req),
     });
     res.json({ ok: true, data });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.get("/pay/order/:tradeNo", authUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: orderByTradeNo(req.params.tradeNo, req.userId) });
   } catch (e) {
     jsonError(res, e);
   }
