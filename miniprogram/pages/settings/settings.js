@@ -39,7 +39,7 @@ Page({
   closeAccount() {
     wx.showModal({
       title: "注销账号",
-      content: "注销后账号信息将被删除，未出行的报名会取消。同一手机号可以重新注册。",
+      content: "钱包还有余额，或有已支付、尚未出发的行程时，不能注销。请先提现或取消报名，等钱到账、余额为 0 后再注销。同一手机号可以重新注册。",
       confirmColor: "#bc4749",
       success: async (res) => {
         if (!res.confirm) return;
