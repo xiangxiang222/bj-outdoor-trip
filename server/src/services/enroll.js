@@ -2,11 +2,11 @@ const dayjs = require("dayjs");
 const { getDb } = require("../db");
 const { parseIdCard } = require("./idcard");
 const { calcPayable } = require("./biz");
-const { addPoints, attachAssetHost, enrolledCount, realEnrolledCount, waitlistCount, quoteForSchedule, maybeMatchGuide } = require("./helpers");
+const { addPoints, attachAssetHost, enrolledCount, realEnrolledCount, waitlistCount, quoteForSchedule, maybeMatchGuide, clawActivityPoints } = require("./helpers");
 const { sendSms } = require("./sms");
 const { assertSeatAvailable, firstFreeSeat } = require("./seats");
 const { kickVirtualSeat, trimVirtuals } = require("./virtual");
-const { findReferrer, recordEnrollReferral } = require("./referral");
+const { findReferrer, recordEnrollReferral, reverseEnrollReferral } = require("./referral");
 const { setFallbacks } = require("./fallback");
 const {
   resolveCouponForEnroll,
@@ -416,8 +416,10 @@ async function cancelEnrollment(enrollmentId, userId, options = {}) {
 
   let refunds = [];
   if (hasMoney && refundedAmount > 0) {
+    clawActivityPoints(en.user_id, en.id, refundedAmount, refundable);
     refunds = await refundEnrollmentToPayers(en, { amount: refundedAmount, remark });
   }
+  reverseEnrollReferral(en.id);
 
   const run = db.transaction(() => {
     db.prepare("UPDATE enrollments SET status='cancelled', pay_status=? WHERE id=?").run(nextPay, en.id);

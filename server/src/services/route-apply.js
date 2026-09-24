@@ -2,7 +2,7 @@ const dayjs = require("dayjs");
 const { getDb } = require("../db");
 const config = require("../config");
 const { liveMemberPrice } = require("./offer");
-const { realEnrolledCount } = require("./helpers");
+const { paidJoinedCount } = require("./helpers");
 const { sendSms } = require("./sms");
 const { noticeRouteApply, resolveNotices } = require("./notices");
 
@@ -204,7 +204,7 @@ function settleRouteBounty(sch) {
   if (route.bounty_status !== "pending") return null;
   const need = Number(sch.min_group_size || route.min_group_size || 0);
   if (need <= 0) return null;
-  if (realEnrolledCount(sch.id) < need) return null;
+  if (paidJoinedCount(sch.id) < need) return null;
   const amount = Number(route.bounty_amount || bountyYuan());
   if (amount <= 0) {
     db.prepare("UPDATE routes SET bounty_status='paid', bounty_paid_at=datetime('now','localtime'), bounty_schedule_id=? WHERE id=?").run(
@@ -214,14 +214,14 @@ function settleRouteBounty(sch) {
     return { amount: 0, mock: true };
   }
   const locked = db
-    .prepare("UPDATE routes SET bounty_status='paid', bounty_paid_at=datetime('now','localtime'), bounty_schedule_id=? WHERE id=? AND bounty_status='pending'")
+    .prepare("UPDATE routes SET bounty_status='paying', bounty_schedule_id=? WHERE id=? AND bounty_status='pending'")
     .run(sch.id, route.id);
   if (!locked.changes) return null;
   const tradeNo = `RB${Date.now()}${route.submitted_by}`.slice(0, 32);
-  const info = db.prepare(
-    "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (?,?,?,?,?,?,?,?,?)"
-  ).run(0, route.submitted_by, sch.id, amount, "bounty", "success", tradeNo, "线路首次成团奖励", "route_bounty");
   try {
+    const info = db.prepare(
+      "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (?,?,?,?,?,?,?,?,?)"
+    ).run(0, route.submitted_by, sch.id, amount, "bounty", "success", tradeNo, "线路首次成团奖励", "route_bounty");
     require("./wallet").credit(route.submitted_by, amount, {
       reason: "线路首次成团奖励",
       scene: "route_bounty",
@@ -229,8 +229,10 @@ function settleRouteBounty(sch) {
       refId: Number(info.lastInsertRowid),
     });
   } catch {
-    /* 钱包入账失败不影响成团标记 */
+    db.prepare("UPDATE routes SET bounty_status='pending' WHERE id=? AND bounty_status='paying'").run(route.id);
+    return null;
   }
+  db.prepare("UPDATE routes SET bounty_status='paid', bounty_paid_at=datetime('now','localtime') WHERE id=?").run(route.id);
   sendSms({
     phone: route.contact_phone,
     scene: "route",

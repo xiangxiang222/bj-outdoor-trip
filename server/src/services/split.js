@@ -15,13 +15,20 @@ function createSplitsForSchedule(scheduleId, { remark } = {}) {
   const db = getDb();
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
   if (!sch) fail(404, "排期不存在");
+  const total = Number(
+    db
+      .prepare(
+        `SELECT IFNULL(SUM(amount - IFNULL(refunded_amount,0)),0) AS s FROM payments
+         WHERE schedule_id=? AND status='success' AND IFNULL(refund_of,0)=0
+           AND IFNULL(scene,'') NOT IN ('member','route_bounty','trip_bounty','wallet_topup','company')`
+      )
+      .get(scheduleId).s
+  );
   const existing = listSplits(scheduleId);
-  if (existing.length) return { splits: existing, reused: true, total: existing.reduce((s, r) => s + r.amount, 0) };
-
-  const total = db
-    .prepare("SELECT IFNULL(SUM(pay_amount),0) AS s FROM enrollments WHERE schedule_id=? AND status='joined' AND pay_status='paid'")
-    .get(scheduleId).s;
+  const existingSum = existing.reduce((s, r) => s + Number(r.amount || 0), 0);
+  if (existing.length && existingSum === total) return { splits: existing, reused: true, total };
   if (!total) fail(400, "暂无已支付金额，无法分账");
+  if (existing.length) db.prepare("DELETE FROM payment_splits WHERE schedule_id=?").run(scheduleId);
 
   const guide = sch.guide_id ? db.prepare("SELECT name FROM guides WHERE id=?").get(sch.guide_id) : null;
   const platformRate = config.split.platformRate;
@@ -46,7 +53,7 @@ function createSplitsForSchedule(scheduleId, { remark } = {}) {
   );
   const run = db.transaction(() => {
     for (const row of rows) {
-      insert.run(scheduleId, row.party, row.name, row.amount, row.rate, "success", row.remark);
+      insert.run(scheduleId, row.party, row.name, row.amount, row.rate, "booked", row.remark);
     }
   });
   run();

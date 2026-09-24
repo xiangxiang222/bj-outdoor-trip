@@ -158,7 +158,7 @@ describe("wallet API", () => {
     const token = await loginUser(agent);
     const card = await agent.get("/api/me/referral").set(auth(token)).expect(200);
     const company = await loginUser(agent, "13900139000", "123456");
-    await agent
+    const joined = await agent
       .post("/api/enroll")
       .set(auth(company))
       .send(
@@ -170,6 +170,11 @@ describe("wallet API", () => {
           referrerCode: card.body.data.code,
         })
       )
+      .expect(200);
+    await agent
+      .post("/api/pay/for-enrollment")
+      .set(auth(company))
+      .send({ enrollmentId: joined.body.data.enrollmentId })
       .expect(200);
     const after = await agent.get("/api/me/referral").set(auth(token)).expect(200);
     assert.ok(after.body.data.earned >= 1);
@@ -190,7 +195,7 @@ describe("wallet API", () => {
         organizerType: "individual",
       })
       .expect(200);
-    await agent
+    const self = await agent
       .post("/api/enroll")
       .set(auth(token))
       .send(
@@ -201,6 +206,11 @@ describe("wallet API", () => {
           idCard: ID.maleBj,
         })
       )
+      .expect(200);
+    await agent
+      .post("/api/pay/for-enrollment")
+      .set(auth(token))
+      .send({ enrollmentId: self.body.data.enrollmentId })
       .expect(200);
     const paid = getDb().prepare("SELECT * FROM users WHERE id=?").get(seed.userId);
     assert.equal(Number(paid.wallet_balance), after.body.data.earned + 200);

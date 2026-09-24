@@ -981,6 +981,10 @@ async function copyShare() {
 
 async function settle() {
   const res = await http.post("/pay/company-settle", { scheduleId: s.value.id });
+  if (res.data.needPay) {
+    msg.value = "请打开微信小程序完成公司统一支付，支付成功后才会记为已付";
+    return;
+  }
   msg.value = `已为 ${res.data.count} 人统一支付，合计 ¥${res.data.total}`;
   await load();
 }

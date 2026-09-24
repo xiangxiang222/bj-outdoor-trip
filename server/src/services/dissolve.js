@@ -1,5 +1,6 @@
 const { getDb } = require("../db");
-const { addPoints } = require("./helpers");
+const { addPoints, clawActivityPoints } = require("./helpers");
+const { reverseEnrollReferral } = require("./referral");
 const { buildCancelSms, sendSms } = require("./sms");
 const { releaseCouponByEnrollment } = require("./coupons");
 const { refundableOf } = require("./pay-ledger");
@@ -36,11 +37,13 @@ async function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
   for (const en of enrollments) {
     const money = refundableOf(en);
     if (money > 0) {
+      clawActivityPoints(en.user_id, en.id, money, money);
       const rows = await refundEnrollmentToPayers(en, { amount: money, remark: `解散退款：${trimmed}` });
       refunds.push(...rows.map((row) => ({ ...row, enrollmentId: en.id })));
       refunded += 1;
       refundAmount += money;
     }
+    reverseEnrollReferral(en.id);
   }
 
   const run = db.transaction(() => {

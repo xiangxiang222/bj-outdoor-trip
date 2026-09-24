@@ -29,6 +29,24 @@ function recordEnrollReferral(referrerId, enrollmentId, payAmount) {
   return { id: Number(info.lastInsertRowid), amount, status: "pending" };
 }
 
+function reverseEnrollReferral(enrollmentId) {
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM referrals WHERE enrollment_id=?").get(enrollmentId);
+  if (!row || row.status === "reversed") return null;
+  if (row.status === "pending" || row.status === "paying") {
+    db.prepare("UPDATE referrals SET status='reversed' WHERE id=? AND status IN ('pending','paying')").run(row.id);
+    return { reversed: true, debited: 0 };
+  }
+  const claw = require("./wallet").clawback(row.referrer_id, row.amount, {
+    reason: "报名退款扣回返点",
+    scene: "referral",
+    refType: "referral",
+    refId: row.id,
+  });
+  db.prepare("UPDATE referrals SET status='reversed' WHERE id=?").run(row.id);
+  return { reversed: true, debited: claw.debited, shortfall: claw.shortfall };
+}
+
 function settleEnrollReferrals() {
   const db = getDb();
   const rows = db
@@ -36,11 +54,11 @@ function settleEnrollReferrals() {
       `SELECT rf.* FROM referrals rf
        JOIN enrollments e ON e.id=rf.enrollment_id
        JOIN schedules s ON s.id=e.schedule_id
-       WHERE rf.status='pending' AND e.status='joined' AND s.status!='cancelled'`
+       WHERE rf.status='pending' AND e.status='joined' AND e.pay_status='paid' AND s.status!='cancelled'`
     )
     .all();
   for (const row of rows) {
-    const locked = db.prepare("UPDATE referrals SET status='settled' WHERE id=? AND status='pending'").run(row.id);
+    const locked = db.prepare("UPDATE referrals SET status='paying' WHERE id=? AND status='pending'").run(row.id);
     if (!locked.changes) continue;
     try {
       require("./wallet").credit(row.referrer_id, row.amount, {
@@ -49,8 +67,9 @@ function settleEnrollReferrals() {
         refType: "referral",
         refId: row.id,
       });
+      db.prepare("UPDATE referrals SET status='settled' WHERE id=? AND status='paying'").run(row.id);
     } catch {
-      /* 入账失败仍保留已结算，避免重复打款；补账走 backfill */
+      db.prepare("UPDATE referrals SET status='pending' WHERE id=? AND status='paying'").run(row.id);
     }
   }
   return rows.length;
@@ -104,6 +123,7 @@ module.exports = {
   findReferrer,
   recordEnrollReferral,
   settleEnrollReferrals,
+  reverseEnrollReferral,
   referralCard,
   groupQrPayload,
   fail,

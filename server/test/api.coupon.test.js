@@ -149,7 +149,7 @@ describe("coupons", () => {
       captcha: cap.code,
     }).expect(200);
     const token = created.body.data.token;
-    await agent.post("/api/member/buy").set(auth(token)).expect(200);
+    seed.db.prepare("UPDATE users SET is_member=1, member_expire_at='2099-01-01', member_gift_left=1 WHERE id=?").run(created.body.data.user.id);
     seed.db.prepare("UPDATE schedules SET offer_type='deal', offer_price=80 WHERE id=?").run(seed.individualScheduleId);
     const { campaign } = await issueAmount(3, 30);
     const enrolled = await agent.post("/api/enroll").set(auth(token)).send({
