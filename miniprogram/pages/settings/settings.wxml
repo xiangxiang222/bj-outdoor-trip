@@ -1,7 +1,26 @@
-<view class="cell-group">
-  <view class="cell" bindtap="go" data-url="/pages/profile/profile"><text>实名信息</text><text class="muted">{{user.realNamed ? '已实名' : '待完善'}} ›</text></view>
-  <view class="cell" bindtap="go" data-url="/pages/wallet-pin/wallet-pin"><text>支付密码管理</text><text class="muted">{{user.walletPinSet ? '已设置' : '未设置'}} ›</text></view>
-  <view class="cell" bindtap="go" data-url="/pages/wallet/wallet"><text>我的钱包</text><text class="muted">余额 ¥{{user.walletBalance || 0}} ›</text></view>
+<view class="sec">当前账号</view>
+<view class="account">
+  <view class="avatar">{{nickHead}}</view>
+  <view>
+    <view class="name">{{user.nickname || '未设置昵称'}}</view>
+    <view class="phone">{{phone || '未绑定手机'}}</view>
+  </view>
 </view>
-<view class="btn ghost" bindtap="out">退出登录</view>
-<view class="btn ghost" bindtap="closeAccount" style="color:#bc4749">注销账号</view>
+<view class="list">
+  <view class="row" bindtap="go" data-url="/pages/profile/profile">
+    <text>实名信息</text>
+    <text class="hint">{{user.realNamed ? '已实名' : '待完善'}} ›</text>
+  </view>
+  <view class="row" bindtap="go" data-url="/pages/wallet-pin/wallet-pin">
+    <text>支付密码</text>
+    <text class="hint">{{user.walletPinSet ? '已设置' : '未设置'}} ›</text>
+  </view>
+  <view class="row" bindtap="go" data-url="/pages/wallet/wallet">
+    <text>我的钱包</text>
+    <text class="hint">余额 ¥{{user.walletBalance || 0}} ›</text>
+  </view>
+</view>
+<view class="list actions">
+  <view class="row center" bindtap="out">退出登录</view>
+  <view class="row center danger" bindtap="closeAccount">注销账号</view>
+</view>

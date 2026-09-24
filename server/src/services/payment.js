@@ -39,9 +39,15 @@ function newTradeNo(prefix, userId) {
 function pendingOf({ userId, enrollmentId, scene, amount }) {
   const db = getDb();
   if (scene === "member" || scene === "wallet_topup") {
-    return db
+    const row = db
       .prepare("SELECT * FROM payments WHERE user_id=? AND scene=? AND status='pending' ORDER BY id DESC LIMIT 1")
       .get(userId, scene);
+    if (!row) return null;
+    if (amount != null && Number(row.amount) !== Number(amount)) {
+      db.prepare("UPDATE payments SET status='cancelled' WHERE id=?").run(row.id);
+      return null;
+    }
+    return row;
   }
   const row = db
     .prepare(
@@ -388,7 +394,7 @@ async function buyWalletTopup(userId, opts = {}) {
     return { tradeNo, amount, needPay: false, mock: true, balance: balanceOf(userId), user };
   }
   if (!payLive()) fail(400, "未配置微信支付密钥，无法收款");
-  const pending = pendingOf({ userId, scene: "wallet_topup" });
+  const pending = pendingOf({ userId, scene: "wallet_topup", amount });
   const row =
     pending ||
     insertPending({
@@ -398,6 +404,16 @@ async function buyWalletTopup(userId, opts = {}) {
       remark: "钱包充值",
       tradeNo: newTradeNo("W", userId),
     });
+  if (row.wechat_prepay_id) {
+    return {
+      needPay: true,
+      mock: false,
+      tradeNo: row.trade_no,
+      amount: row.amount,
+      wechatPay: jsapiPayParams(row.wechat_prepay_id),
+      user: getDb().prepare("SELECT * FROM users WHERE id=?").get(userId),
+    };
+  }
   const charged = await jsapiCharge({
     userId,
     amount,

@@ -19,18 +19,34 @@ async function ensureWechatCode() {
   return login.code;
 }
 
+function requestPayment(args) {
+  return new Promise((resolve, reject) => {
+    wx.requestPayment({
+      timeStamp: args.timeStamp,
+      nonceStr: args.nonceStr,
+      package: args.package,
+      signType: args.signType || "MD5",
+      paySign: args.paySign,
+      success: resolve,
+      fail(e) {
+        const msg = (e && (e.errMsg || e.message)) || "微信支付没有完成";
+        if (String(msg).indexOf("cancel") >= 0) {
+          reject(new Error("已取消支付"));
+          return;
+        }
+        reject(new Error(String(msg).replace(/^requestPayment:fail\s*/, "") || "微信支付没有完成"));
+      },
+    });
+  });
+}
+
 async function invokeWechatPay(data) {
   if (!data || data.channel === "wallet" || !data.needPay || !data.wechatPay || data.wechatPay.mock) return data;
-  try {
-    await wx.requestPayment(payArgs(data.wechatPay));
-  } catch (e) {
-    const msg = (e && e.errMsg) || e.message || "";
-    if (String(msg).indexOf("cancel") >= 0) {
-      const err = new Error("已取消支付");
-      throw err;
-    }
-    throw e;
+  const pay = data.wechatPay;
+  if (!pay.paySign || !pay.package) {
+    throw new Error("支付参数不完整，请稍后再试");
   }
+  await requestPayment(payArgs(pay));
   const confirmed = await request("/pay/confirm", "POST", { tradeNo: data.tradeNo });
   return Object.assign({}, data, confirmed.data || {}, { needPay: false, mock: false });
 }

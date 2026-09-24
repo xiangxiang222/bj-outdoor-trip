@@ -60,8 +60,9 @@ function setAuth(token, user) {
 }
 
 function showError(title, err) {
-  const content = (err && err.message) || String(err || "请稍后重试");
-  wx.showModal({ title: title || "出错了", content, showCancel: false });
+  const raw = err && (err.errMsg || err.message);
+  const content = raw && typeof raw === "string" ? raw : raw ? JSON.stringify(raw) : "请稍后重试";
+  wx.showModal({ title: title || "出错了", content: content.slice(0, 200), showCancel: false });
 }
 
 module.exports = { request, setAuth, showError };
