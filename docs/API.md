@@ -62,7 +62,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | GET | `/me` | 用户 | 当前用户（证件掩码；含 `walletBalance` `walletPinSet` `realNamed`、学生/团体/领队状态、`isAlumni`/`campusKind`/`isLeader`、`college` `major` `studentNo` `studentCardUrl`） |
 | GET | `/me/wallet` | 用户 | 钱包：余额、账单、`withdrawChannel=wechat`、`withdrawRule`（无最低门槛、不限次数、全天可提、实时到账最迟 24 小时；微信转账单笔上限 2000 元可立即分笔）、是否已设支付密码、实名、是否绑微信、待支付/待出发数量。不返回银行卡 |
 | POST | `/me/wallet/topup` | 用户 | `{ amount }` 整数 1～5000 元。走微信支付；演示立即入账；真实支付返回 JSAPI。可带 `code` |
-| POST | `/me/wallet/withdraw` | 用户 | `{ amount, pin }`。提现到微信零钱。当前余额全部可提，不设最低金额；须为整数元且不超过余额。微信转账单笔上限 2000 元，超出请立即再提。不限制每日次数。须已实名、已设 6 位支付密码。提交成功后立即扣余额并记为实时到账 |
+| POST | `/me/wallet/withdraw` | 用户 | `{ amount, pin }`。提现走新版商家转账。当前余额全部可提，不设最低金额；须为整数元且不超过余额。微信转账单笔上限 2000 元。不限制每日次数。须已实名、已设 6 位支付密码、已微信登录。演示立即扣余额。正式环境创建转账单，返回 `needConfirm` 与 `packageInfo`，用户在微信确认收款后再扣余额 |
+| POST | `/me/wallet/withdraw/confirm` | 用户 | `{ outBillNo }`。查询转账单，状态为 SUCCESS 时扣余额 |
 | POST | `/me/wallet/cards` | 用户 | 已关闭，400「已改为提现到微信零钱」 |
 | DELETE | `/me/wallet/cards/:id` | 用户 | 已关闭，同上 |
 | POST | `/me/wallet/pin` | 用户 | `{ pin, oldPin }`。6 位数字。已设置时须带原密码 |

@@ -1,5 +1,5 @@
 const { request, setAuth, showError } = require("../../utils/request");
-const { invokeWechatPay, ensureWechatCode } = require("../../utils/pay");
+const { invokeWechatPay, ensureWechatCode, requestMerchantTransfer } = require("../../utils/pay");
 const app = getApp();
 
 Page({
@@ -90,8 +90,15 @@ Page({
         amount: Number(this.data.withdrawAmount),
         pin: this.data.pin,
       });
-      if (res.data.user) setAuth(app.globalData.token, res.data.user);
-      wx.showToast({ title: "已提现到微信", icon: "none" });
+      if (res.data.needConfirm && res.data.packageInfo) {
+        await requestMerchantTransfer(res.data);
+        const done = await request("/me/wallet/withdraw/confirm", "POST", { outBillNo: res.data.outBillNo });
+        if (done.data.user) setAuth(app.globalData.token, done.data.user);
+        wx.showToast({ title: done.data.pending ? "微信正在入账" : "已提现到微信", icon: "none" });
+      } else {
+        if (res.data.user) setAuth(app.globalData.token, res.data.user);
+        wx.showToast({ title: "已提现到微信", icon: "none" });
+      }
       this.setData({ mode: "", pin: "" });
       this.load();
     } catch (e) {

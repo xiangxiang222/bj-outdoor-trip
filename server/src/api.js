@@ -51,7 +51,7 @@ const { optionsForSchedule, setFallbacks, listFallbacks } = require("./services/
 const { generateVirtualUsers, setVirtualUsersForSchedule, growVirtualPool, virtualPoolStats } = require("./services/virtual");
 const { listPulse, recordView, parseVisitorId } = require("./services/pulse");
 const { deleteAccount } = require("./services/account");
-const { snapshot: walletSnapshot, addCard, removeCard, setPin, resetPin, withdraw } = require("./services/wallet");
+const { snapshot: walletSnapshot, addCard, removeCard, setPin, resetPin, withdraw, confirmWithdraw } = require("./services/wallet");
 const { drawPre, drawPost, claimPrizes, lotteryState, lotteryPublic } = require("./services/lottery");
 const { getAdminLottery, listAdminLotteries, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate } = require("./services/lottery-admin");
 const { completeTrip, afterTripState } = require("./services/aftertrip");
@@ -771,6 +771,16 @@ router.post("/me/wallet/topup", authUser, async (req, res) => {
 router.post("/me/wallet/withdraw", authUser, async (req, res) => {
   try {
     const data = await withdraw(req.userId, req.body || {});
+    const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+    res.json({ ok: true, data: { ...data, user: userPublic(user, req) } });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.post("/me/wallet/withdraw/confirm", authUser, async (req, res) => {
+  try {
+    const data = await confirmWithdraw(req.userId, req.body || {});
     const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
     res.json({ ok: true, data: { ...data, user: userPublic(user, req) } });
   } catch (e) {
