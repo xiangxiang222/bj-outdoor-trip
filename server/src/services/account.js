@@ -57,6 +57,8 @@ async function deleteAccount(userId) {
       gender=NULL,
       birthday=NULL,
       id_card=NULL,
+      real_name=NULL,
+      id_verified=0,
       hometown=NULL,
       company_name=NULL,
       is_member=0,

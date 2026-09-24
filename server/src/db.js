@@ -506,6 +506,8 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "users", "leader_name", "TEXT");
   addColumnIfMissing(db, "users", "leader_years", "INTEGER");
   addColumnIfMissing(db, "users", "leader_intro", "TEXT");
+  addColumnIfMissing(db, "users", "real_name", "TEXT");
+  addColumnIfMissing(db, "users", "id_verified", "INTEGER DEFAULT 0");
   db.exec(`
     CREATE TABLE IF NOT EXISTS feedbacks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

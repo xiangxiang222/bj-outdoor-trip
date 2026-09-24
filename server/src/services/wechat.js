@@ -412,6 +412,42 @@ async function getAccessToken() {
   return { access_token: data.access_token, mock: false };
 }
 
+async function checkRealNameInfo({ openid, realName, credId, code }) {
+  if (!loginLive()) {
+    if (code === "demo-ok") return { match: true };
+    const err = new Error("姓名与微信支付实名不一致");
+    err.status = 400;
+    throw err;
+  }
+  const { access_token } = await getAccessToken();
+  const res = await fetch(
+    "https://api.weixin.qq.com/intp/realname/checkrealnameinfo?access_token=" + encodeURIComponent(access_token),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        openid,
+        real_name: realName,
+        cred_id: credId,
+        cred_type: "1",
+        code,
+      }),
+    }
+  );
+  const data = await res.json();
+  if (data.errcode) {
+    const err = new Error(data.errmsg || "实名核验失败");
+    err.status = 400;
+    throw err;
+  }
+  const openidOk = data.verify_openid === "V_OP_NM_MA";
+  const nameOk = data.verify_real_name === "V_NM_ID_MA";
+  if (openidOk && nameOk) return { match: true };
+  const err = new Error(nameOk ? "与当前微信的支付实名不一致" : "姓名与身份证号不一致");
+  err.status = 400;
+  throw err;
+}
+
 function toSubscribeData(data) {
   const out = {};
   Object.entries(data || {}).forEach(([key, value]) => {
@@ -522,6 +558,7 @@ module.exports = {
   loadMchCert,
   clientIp,
   getAccessToken,
+  checkRealNameInfo,
   getUserPhoneNumber,
   sendSubscribeMessage,
   getWxaCode,

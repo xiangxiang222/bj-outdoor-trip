@@ -14,7 +14,11 @@ App({
     this.globalData.user = wx.getStorageSync("bj_user") || null;
     this.globalData.couponPrompted = false;
   },
-  onShow() {
+  onShow(options) {
+    const extra = options && options.referrerInfo && options.referrerInfo.extraData;
+    if (options && options.scene === 1038 && extra && extra.code) {
+      this.globalData.realnameCode = String(extra.code);
+    }
     this.maybePromptUnusedCoupons();
   },
   maybePromptUnusedCoupons() {

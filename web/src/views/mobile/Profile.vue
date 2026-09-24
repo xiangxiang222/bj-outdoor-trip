@@ -1,12 +1,13 @@
 <template>
   <div>
-    <p class="muted">根据法规要求，出行报名和提现需要核验身份。证件号仅本人可见，展示时脱敏。</p>
+    <p class="muted">实名核验在微信小程序里完成：授权后核对姓名和身份证是否与这张微信的支付实名一致。网页不能代替这次授权。</p>
     <div class="cell-group">
       <div class="cell"><span>姓名</span><i>{{ store.profile?.nickname || "未填" }}</i></div>
       <div class="cell"><span>性别</span><i>{{ genderText(store.profile?.gender) || "待补充" }}</i></div>
       <div class="cell"><span>手机</span><i>{{ maskPhone(store.profile?.phone) }}</i></div>
       <div class="cell"><span>证件类型</span><i>身份证</i></div>
       <div class="cell"><span>证件号码</span><i>{{ store.profile?.idCardMasked || "待补充" }}</i></div>
+      <div class="cell"><span>核验状态</span><i>{{ store.profile?.realNamed ? "已通过微信实名" : "待核验" }}</i></div>
     </div>
 
     <div class="card" style="margin-top:16px">
@@ -14,17 +15,15 @@
         <label>身份证号</label>
         <input class="input" v-model="idCard" maxlength="18" placeholder="18 位，末位数字或 X" />
         <p v-if="hint" class="muted" :style="okHint ? '' : 'color:var(--clay)'">{{ hint }}</p>
-        <button class="btn block" type="button" :disabled="busy" @click="save">保存实名信息</button>
+        <p class="muted">请打开同行者众小程序，在实名信息页完成微信授权。</p>
       </div>
     </div>
-    <p v-if="msg" :style="ok ? '' : 'color:var(--clay)'">{{ msg }}</p>
   </div>
 </template>
 
 <script setup>
 import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import { setChrome } from "@/utils/pageChrome";
@@ -36,9 +35,6 @@ const router = useRouter();
 const idCard = ref("");
 const hint = ref("");
 const okHint = ref(true);
-const busy = ref(false);
-const msg = ref("");
-const ok = ref(false);
 
 onMounted(async () => {
   setChrome("实名信息", "报名和提现用");
@@ -57,24 +53,7 @@ watch(idCard, (v) => {
     okHint.value = false;
     return;
   }
-  hint.value = "保存后用于提现核验，展示时脱敏。";
+  hint.value = "号码格式正确。核验需要在小程序里授权微信。";
   okHint.value = true;
 });
-
-async function save() {
-  msg.value = "";
-  ok.value = false;
-  busy.value = true;
-  try {
-    const res = await http.put("/me", { idCard: idCard.value });
-    store.setAuth(store.token, res.data);
-    ok.value = true;
-    msg.value = "已保存";
-    idCard.value = "";
-  } catch (e) {
-    msg.value = e.message || "保存失败";
-  } finally {
-    busy.value = false;
-  }
-}
 </script>

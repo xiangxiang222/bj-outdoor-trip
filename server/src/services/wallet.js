@@ -215,7 +215,7 @@ function recordWithdrawDebit(userId, amount, outBillNo) {
 
 async function withdraw(userId, body = {}) {
   const user = loadUser(userId);
-  if (!user.id_card) fail(400, "提现前请先完成实名");
+  if (!user.id_verified) fail(400, "提现前请先完成实名");
   verifyPin(user, body.pin);
   const bal = balanceOf(userId);
   if (bal <= 0) fail(400, "当前余额为 0，可先充值后再提现");
@@ -326,7 +326,7 @@ function snapshot(userId) {
   return {
     balance: Number(user.wallet_balance || 0),
     pinSet: Boolean(user.wallet_pin_hash),
-    realNamed: Boolean(user.id_card),
+    realNamed: Boolean(user.id_verified),
     realName: maskName(user.nickname || user.leader_name || ""),
     phoneMasked: maskPhone(user.phone),
     idCardMasked: maskIdCard(user.id_card),

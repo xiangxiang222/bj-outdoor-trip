@@ -10,7 +10,7 @@ const config = require("./config");
 const { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide } = require("./middleware/auth");
 const { parseIdCard, maskIdCard, lifeStageFromPerson } = require("./services/idcard");
 const { buildDemographics, maskPhone } = require("./services/biz");
-const { code2session, payLive, clientIp, loginLive, getUserPhoneNumber } = require("./services/wechat");
+const { code2session, payLive, clientIp, loginLive, getUserPhoneNumber, checkRealNameInfo } = require("./services/wechat");
 const { buildSchedulePoster } = require("./services/share-poster");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
@@ -200,10 +200,11 @@ function userPublic(u, req) {
     leaderIntro: u.leader_intro || "",
     referralCode: ensureReferralCode(u.id),
     idCardMasked: maskIdCard(u.id_card),
+    realName: u.real_name || "",
     wechatBound: Boolean(u.wechat_openid),
     walletBalance: Number(u.wallet_balance || 0),
     walletPinSet: Boolean(u.wallet_pin_hash),
-    realNamed: Boolean(u.id_card),
+    realNamed: Boolean(u.id_verified),
   };
 }
 
@@ -927,13 +928,17 @@ router.delete("/me/photos/:id", authUser, (req, res) => {
 
 router.put("/me", authUser, (req, res) => {
   const { nickname, gender, birthday, idCard, companyName, avatar } = req.body || {};
+  if (idCard && loginLive()) {
+    return res.status(400).json({ ok: false, message: "请在小程序里通过微信实名核验" });
+  }
   const parsed = idCard ? parseIdCard(idCard) : {};
   if (idCard && parsed.valid === false) {
     return res.status(400).json({ ok: false, message: parsed.error || "身份证号无效" });
   }
   db().prepare(
     `UPDATE users SET nickname=COALESCE(?,nickname), gender=COALESCE(?,gender), birthday=COALESCE(?,birthday),
-     id_card=COALESCE(?,id_card), hometown=COALESCE(?,hometown), company_name=COALESCE(?,company_name), avatar=COALESCE(?,avatar) WHERE id=?`
+     id_card=COALESCE(?,id_card), hometown=COALESCE(?,hometown), company_name=COALESCE(?,company_name), avatar=COALESCE(?,avatar),
+     id_verified=CASE WHEN ? THEN 1 ELSE id_verified END WHERE id=?`
   ).run(
     nickname,
     parsed.gender || gender,
@@ -942,10 +947,37 @@ router.put("/me", authUser, (req, res) => {
     parsed.hometown,
     companyName,
     avatar,
+    idCard ? 1 : 0,
     req.userId
   );
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
   res.json({ ok: true, data: userPublic(user, req) });
+});
+
+router.post("/me/realname", authUser, async (req, res) => {
+  try {
+    const realName = String((req.body || {}).realName || (req.body || {}).real_name || "").trim();
+    const code = String((req.body || {}).code || "").trim();
+    if (!realName) return res.status(400).json({ ok: false, message: "请填写真实姓名" });
+    if (!code) return res.status(400).json({ ok: false, message: "请先完成微信授权" });
+    const parsed = parseIdCard((req.body || {}).idCard || (req.body || {}).id_card);
+    if (parsed.valid === false) return res.status(400).json({ ok: false, message: parsed.error || "身份证号无效" });
+    const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+    if (!user.wechat_openid) return res.status(400).json({ ok: false, message: "请先用微信登录后再核验" });
+    await checkRealNameInfo({
+      openid: user.wechat_openid,
+      realName,
+      credId: parsed.idCard,
+      code,
+    });
+    db().prepare(
+      `UPDATE users SET real_name=?, id_card=?, gender=?, birthday=?, hometown=?, id_verified=1 WHERE id=?`
+    ).run(realName, parsed.idCard, parsed.gender, parsed.birthday, parsed.hometown, req.userId);
+    const next = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+    res.json({ ok: true, data: userPublic(next, req) });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 function parseStudentCardUrl(raw) {
