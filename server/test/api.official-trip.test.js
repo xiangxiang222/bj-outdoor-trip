@@ -93,7 +93,7 @@ describe("official trips, personal bounty and merge", () => {
         organizerType: "individual",
       })
       .expect(200);
-    await agent
+    const joined = await agent
       .post("/api/enroll")
       .set(auth(token))
       .send(
@@ -104,6 +104,15 @@ describe("official trips, personal bounty and merge", () => {
           idCard: ID.maleBj,
         })
       )
+      .expect(200);
+    const beforePay = getDb()
+      .prepare("SELECT * FROM payments WHERE scene='trip_bounty' AND schedule_id=?")
+      .get(personal.body.data.id);
+    assert.equal(beforePay, undefined);
+    await agent
+      .post("/api/pay/for-enrollment")
+      .set(auth(token))
+      .send({ enrollmentId: joined.body.data.enrollmentId })
       .expect(200);
     const paid = getDb()
       .prepare("SELECT * FROM payments WHERE scene='trip_bounty' AND schedule_id=?")
@@ -127,7 +136,7 @@ describe("official trips, personal bounty and merge", () => {
         organizerType: "official",
       })
       .expect(200);
-    await agent
+    const officialJoin = await agent
       .post("/api/enroll")
       .set(auth(token))
       .send(
@@ -138,6 +147,11 @@ describe("official trips, personal bounty and merge", () => {
           idCard: ID.femaleBj,
         })
       )
+      .expect(200);
+    await agent
+      .post("/api/pay/for-enrollment")
+      .set(auth(token))
+      .send({ enrollmentId: officialJoin.body.data.enrollmentId })
       .expect(200);
     const officialPay = getDb()
       .prepare("SELECT * FROM payments WHERE scene='trip_bounty' AND schedule_id=?")
