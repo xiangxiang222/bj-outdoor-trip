@@ -66,8 +66,8 @@ function seedMinimal() {
   );
 
   const insertUser = db.prepare(
-    `INSERT INTO users (phone,password_hash,nickname,gender,birthday,id_card,hometown,is_member,member_expire_at,points,company_name,role)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
+    `INSERT INTO users (phone,password_hash,nickname,gender,birthday,id_card,hometown,is_member,member_expire_at,points,company_name,role,id_verified)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)`
   );
   const userId = Number(
     insertUser.run(

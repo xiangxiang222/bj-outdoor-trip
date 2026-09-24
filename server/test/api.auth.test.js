@@ -149,6 +149,25 @@ describe("auth and profile API", () => {
     assert.equal(updated.body.data.nickname, "林改名");
     assert.equal(updated.body.data.hometown, "河北省石家庄市");
     assert.match(updated.body.data.idCardMasked, /130102\*{8}/);
+    assert.equal(updated.body.data.realNamed, true);
+  });
+
+  it("marks real-name only after wechat pay identity matches", async () => {
+    const token = await loginUser(agent);
+    await agent.post("/api/auth/wechat").set(auth(token)).send({ code: "realname_user" }).expect(200);
+    const mismatch = await agent
+      .post("/api/me/realname")
+      .set(auth(token))
+      .send({ realName: "林北野", idCard: "130102198805201218", code: "demo-bad" });
+    assert.equal(mismatch.status, 400);
+    const ok = await agent
+      .post("/api/me/realname")
+      .set(auth(token))
+      .send({ realName: "林北野", idCard: "130102198805201218", code: "demo-ok" })
+      .expect(200);
+    assert.equal(ok.body.data.realName, "林北野");
+    assert.equal(ok.body.data.realNamed, true);
+    assert.equal(ok.body.data.hometown, "河北省石家庄市");
   });
 
   it("deletes account and allows the same phone to register again", async () => {

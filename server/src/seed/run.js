@@ -42,8 +42,8 @@ async function run() {
   const adminHash = bcrypt.hashSync("admin123", 10);
   db.prepare("INSERT INTO admin_users (username, password_hash, name, role) VALUES (?,?,?,?)").run("admin", adminHash, "平台管理员", "admin");
 
-  const insertUser = db.prepare(`INSERT INTO users (phone, password_hash, nickname, avatar, gender, birthday, id_card, hometown, is_member, member_expire_at, points, company_name, role)
-    VALUES (@phone,@password_hash,@nickname,@avatar,@gender,@birthday,@id_card,@hometown,@is_member,@member_expire_at,@points,@company_name,@role)`);
+  const insertUser = db.prepare(`INSERT INTO users (phone, password_hash, nickname, avatar, gender, birthday, id_card, hometown, is_member, member_expire_at, points, company_name, role, id_verified)
+    VALUES (@phone,@password_hash,@nickname,@avatar,@gender,@birthday,@id_card,@hometown,@is_member,@member_expire_at,@points,@company_name,@role,1)`);
 
   const demoUsers = [
     { phone: "13800138000", nickname: "林北野", gender: "male", birthday: "1992-05-12", id_card: fakeId("110101", "19920512", "1"), hometown: "北京市", is_member: 1, member_expire_at: dayjs().add(300, "day").format("YYYY-MM-DD"), points: 1280, company_name: null, role: "user" },
