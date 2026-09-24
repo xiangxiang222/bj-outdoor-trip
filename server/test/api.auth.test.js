@@ -190,4 +190,33 @@ describe("auth and profile API", () => {
       .expect(200);
     assert.equal(created.body.data.user.nickname, "新林北野");
   });
+
+  it("refuses to delete an account that still has wallet balance or a paid upcoming trip", async () => {
+    const token = await loginUser(agent);
+    await agent.post("/api/me/wallet/topup").set(auth(token)).send({ amount: 20 }).expect(200);
+    const withBalance = await agent.delete("/api/me").set(auth(token));
+    assert.equal(withBalance.status, 400);
+    assert.match(withBalance.body.message, /提现/);
+    seed.db.prepare("UPDATE users SET wallet_balance=0 WHERE id=?").run(seed.userId);
+    const enrolled = await agent
+      .post("/api/enroll")
+      .set(auth(token))
+      .send({
+        scheduleId: seed.individualScheduleId,
+        travelerName: "林北野",
+        travelerPhone: "13800138000",
+        idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
+      })
+      .expect(200);
+    await agent.post("/api/pay/for-enrollment").set(auth(token)).send({ enrollmentId: enrolled.body.data.enrollmentId }).expect(200);
+    const withTrip = await agent.delete("/api/me").set(auth(token));
+    assert.equal(withTrip.status, 400);
+    assert.match(withTrip.body.message, /尚未出发/);
+    const still = await agent.get("/api/me").set(auth(token)).expect(200);
+    assert.equal(still.body.data.id, seed.userId);
+  });
 });

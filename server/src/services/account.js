@@ -1,5 +1,7 @@
+const dayjs = require("dayjs");
 const { getDb } = require("../db");
 const { cancelEnrollment } = require("./enroll");
+const { refundableOf } = require("./pay-ledger");
 
 function fail(status, message) {
   const err = new Error(message);
@@ -13,12 +15,30 @@ async function deleteAccount(userId) {
   if (!user) fail(404, "账号不存在");
   if (user.deleted_at) fail(400, "账号已注销");
 
+  if (Number(user.wallet_balance) > 0) {
+    fail(400, "钱包还有余额，请先提现到微信零钱，到账后再注销");
+  }
   const enrollments = db
-    .prepare("SELECT id FROM enrollments WHERE user_id=? AND status!='cancelled'")
+    .prepare(
+      `SELECT e.*, s.start_date, s.started_at
+       FROM enrollments e JOIN schedules s ON s.id=e.schedule_id
+       WHERE e.user_id=? AND e.status!='cancelled'`
+    )
     .all(userId);
+  const today = dayjs().startOf("day");
+  const paidUpcoming = enrollments.filter((en) => {
+    if (en.started_at) return false;
+    const start = dayjs(en.start_date).startOf("day");
+    if (!start.isValid() || start.isBefore(today)) return false;
+    return refundableOf(en) > 0;
+  });
+  if (paidUpcoming.length) {
+    fail(400, "还有已支付、尚未出发的行程。请先取消报名，等退款到账、钱包余额为 0 后再注销");
+  }
   for (const row of enrollments) {
+    if (refundableOf(row) > 0) continue;
     try {
-      await cancelEnrollment(row.id, userId, { force: true });
+      await cancelEnrollment(row.id, userId);
     } catch {
       db.prepare("UPDATE enrollments SET status='cancelled' WHERE id=?").run(row.id);
     }
