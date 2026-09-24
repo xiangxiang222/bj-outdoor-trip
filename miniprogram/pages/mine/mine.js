@@ -1,6 +1,32 @@
-const { request, setAuth } = require("../../utils/request");
+const { request, setAuth, showError } = require("../../utils/request");
 const { maskPhone } = require("../../utils/labels");
 const app = getApp();
+
+function uploadAvatar(filePath) {
+  return new Promise((resolve, reject) => {
+    wx.uploadFile({
+      url: app.globalData.baseUrl + "/api/upload",
+      filePath,
+      name: "file",
+      header: { Authorization: app.globalData.token ? "Bearer " + app.globalData.token : "" },
+      success(res) {
+        try {
+          const data = JSON.parse(res.data || "{}");
+          if (data.ok && data.data && data.data.url) {
+            resolve(data.data.url);
+            return;
+          }
+          reject(new Error((data && data.message) || "上传失败"));
+        } catch {
+          reject(new Error("上传失败"));
+        }
+      },
+      fail(err) {
+        reject(new Error((err && err.errMsg) || "上传失败"));
+      },
+    });
+  });
+}
 Page({
   data: {
     user: null,
@@ -10,6 +36,8 @@ Page({
     leaderLabel: "领队申请",
     campusLabel: "校园认证",
     hub: { balance: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, couponCount: 0 },
+    picker: false,
+    defaults: [],
   },
   onShow() {
     const user = app.globalData.user;
@@ -43,6 +71,69 @@ Page({
       });
     } catch {
       /* keep cached */
+    }
+  },
+  async openAvatar() {
+    if (!app.globalData.token) {
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/mine/mine") });
+      return;
+    }
+    this.setData({ picker: true });
+    if (this.data.defaults.length) return;
+    try {
+      const res = await request("/avatars/defaults");
+      this.setData({ defaults: res.data || [] });
+    } catch (e) {
+      showError("加载失败", e);
+    }
+  },
+  closeAvatar() {
+    this.setData({ picker: false });
+  },
+  noop() {},
+  async pickDefault(e) {
+    const url = e.currentTarget.dataset.url;
+    if (!url) return;
+    await this.saveAvatar(url);
+  },
+  shoot() {
+    this.pickImage(["camera"]);
+  },
+  album() {
+    this.pickImage(["album"]);
+  },
+  pickImage(sourceType) {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ["image"],
+      sourceType,
+      sizeType: ["compressed"],
+      success: async (res) => {
+        const file = (res.tempFiles || [])[0];
+        if (!file) return;
+        wx.showLoading({ title: "上传中", mask: true });
+        try {
+          const url = await uploadAvatar(file.tempFilePath);
+          await this.saveAvatar(url);
+        } catch (e) {
+          showError("上传失败", e);
+        } finally {
+          wx.hideLoading();
+        }
+      },
+    });
+  },
+  async saveAvatar(url) {
+    try {
+      const res = await request("/me", "PUT", { avatar: url });
+      setAuth(app.globalData.token, res.data);
+      this.setData({
+        user: res.data,
+        picker: false,
+        nickHead: res.data && res.data.nickname ? res.data.nickname.slice(0, 1) : "友",
+      });
+    } catch (e) {
+      showError("保存失败", e);
     }
   },
   goHome() {

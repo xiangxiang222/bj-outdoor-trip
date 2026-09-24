@@ -9,6 +9,13 @@
 .mine-user { display: flex; align-items: center; gap: 16rpx; flex: 1; }
 .mine-avatar { width: 96rpx; height: 96rpx; border-radius: 50%; background: #f3e8ff; color: #6b2178; text-align: center; line-height: 96rpx; font-weight: 700; overflow: hidden; }
 .mine-avatar image { width: 96rpx; height: 96rpx; }
+.avatar-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; background: rgba(0,0,0,.45); z-index: 20; display: flex; align-items: flex-end; }
+.avatar-sheet { width: 100%; background: #fff; border-radius: 24rpx 24rpx 0 0; padding: 28rpx 24rpx 48rpx; }
+.avatar-title { text-align: center; font-size: 28rpx; color: #6b705c; margin-bottom: 16rpx; }
+.avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16rpx; margin-bottom: 20rpx; }
+.avatar-grid image { width: 120rpx; height: 120rpx; border-radius: 50%; margin: 0 auto; }
+.avatar-action { text-align: center; padding: 28rpx 0; border-top: 1rpx solid #f0f1f3; font-size: 32rpx; }
+.avatar-action.cancel { color: #7a7d74; }
 .mine-gear { background: #f6f3ee; border-radius: 999rpx; padding: 12rpx 20rpx; font-size: 24rpx; }
 .mine-member { margin: 0 16rpx 16rpx; padding: 24rpx; border-radius: 16rpx; background: linear-gradient(118deg, #ece2ff, #d8c4f7); display: flex; justify-content: space-between; align-items: center; }
 .mine-shortcuts { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; margin: 0 16rpx 16rpx; border-radius: 16rpx; padding: 24rpx 8rpx; text-align: center; }
