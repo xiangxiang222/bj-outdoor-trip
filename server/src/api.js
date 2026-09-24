@@ -150,16 +150,21 @@ function acceptedAvatar(raw) {
 }
 
 function defaultAvatars(req) {
-  const dir = path.join(config.publicDir, "static", "avatars");
-  if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir)
-    .filter((name) => /^[a-z0-9-]+\.svg$/.test(name))
-    .sort()
-    .map((name) => ({
-      id: name.replace(/\.svg$/, ""),
-      url: attachAssetHost(req, `/static/avatars/${name}`),
-    }));
+  const dirs = [
+    path.join(config.publicDir, "static", "avatars"),
+    path.join(__dirname, "..", "public", "static", "avatars"),
+  ];
+  const names = new Set();
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) continue;
+    for (const name of fs.readdirSync(dir)) {
+      if (/^[a-z0-9-]+\.svg$/.test(name)) names.add(name);
+    }
+  }
+  return [...names].sort().map((name) => ({
+    id: name.replace(/\.svg$/, ""),
+    url: attachAssetHost(req, `/static/avatars/${name}`),
+  }));
 }
 
 function uploadsDir() {
