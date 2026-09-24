@@ -104,6 +104,22 @@ describe("wechat live pay", () => {
       assert.equal(charged.body.data.payStatus, "unpaid");
       assert.equal(charged.body.data.wechatPay.package, "prepay_id=wx_prepay_live");
       assert.ok(charged.body.data.wechatPay.paySign);
+      let unifiedCalls = 0;
+      const origFetch = global.fetch;
+      global.fetch = async (url, opts) => {
+        if (String(url) === UNIFIED_ORDER_URL) unifiedCalls += 1;
+        return origFetch(url, opts);
+      };
+      const again = await agent
+        .post("/api/pay/for-enrollment")
+        .set(auth(token))
+        .send({ enrollmentId: enrolled.body.data.enrollmentId })
+        .expect(200);
+      assert.equal(again.body.data.tradeNo, charged.body.data.tradeNo);
+      assert.equal(again.body.data.wechatPay.package, "prepay_id=wx_prepay_live");
+      assert.equal(unifiedCalls, 0);
+      global.fetch = origFetch;
+      seed.db.prepare("UPDATE payments SET status='cancelled' WHERE trade_no=?").run(charged.body.data.tradeNo);
       const tradeNo = charged.body.data.tradeNo;
       const params = {
         return_code: "SUCCESS",

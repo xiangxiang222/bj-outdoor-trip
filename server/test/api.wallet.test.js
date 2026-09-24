@@ -84,7 +84,7 @@ describe("wallet API", () => {
     assert.equal(wallet.body.data.balance, 4996);
   });
 
-  it("pays out instantly even when live wechat merchant transfer is not configured", async () => {
+  it("does not debit the wallet when live wechat transfer is not configured", async () => {
     const config = require("../src/config");
     const token = await loginUser(agent);
     await agent.post("/api/me/wallet/topup").set(auth(token)).send({ amount: 80 }).expect(200);
@@ -92,11 +92,11 @@ describe("wallet API", () => {
     const prev = config.wechat.mock;
     config.wechat.mock = false;
     try {
-      const out = await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 80, pin: "258369" }).expect(200);
-      assert.equal(out.body.data.amount, 80);
-      assert.equal(out.body.data.balance, 0);
-      assert.equal(out.body.data.instant, true);
-      assert.equal(out.body.data.channel, "wechat");
+      const out = await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 80, pin: "258369" });
+      assert.equal(out.status, 400);
+      assert.match(String(out.body.message || ""), /证书|微信登录/);
+      const wallet = await agent.get("/api/me/wallet").set(auth(token)).expect(200);
+      assert.equal(wallet.body.data.balance, 80);
     } finally {
       config.wechat.mock = prev;
     }

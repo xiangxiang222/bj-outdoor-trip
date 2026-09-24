@@ -210,6 +210,78 @@ function postXmlCert(url, params, cert) {
   });
 }
 
+function signWechatV3({ method, urlPath, body, privateKey, passphrase }) {
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const nonce = crypto.randomBytes(16).toString("hex");
+  const message = `${method}\n${urlPath}\n${timestamp}\n${nonce}\n${body}\n`;
+  const signature = crypto.createSign("RSA-SHA256").update(message).sign({ key: privateKey, passphrase: passphrase || undefined }, "base64");
+  return { timestamp, nonce, signature };
+}
+
+function merchantSerial(certPem) {
+  return new crypto.X509Certificate(certPem).serialNumber;
+}
+
+async function transferToBalance({ openid, amountFen, outBatchNo, outDetailNo, remark }) {
+  if (config.wechat.mock) return { mock: true, out_batch_no: outBatchNo };
+  const cert = loadMchCert();
+  if (!cert) {
+    const err = new Error("未配置商户API证书，无法提现到微信零钱");
+    err.status = 400;
+    throw err;
+  }
+  if (!openid) {
+    const err = new Error("请先用微信登录后再提现");
+    err.status = 400;
+    throw err;
+  }
+  const urlPath = "/v3/transfer/batches";
+  const payload = {
+    appid: config.wechat.appId,
+    out_batch_no: outBatchNo,
+    batch_name: "提现到零钱",
+    batch_remark: String(remark || "提现到零钱").slice(0, 32),
+    total_amount: amountFen,
+    total_num: 1,
+    transfer_detail_list: [
+      {
+        out_detail_no: outDetailNo,
+        transfer_amount: amountFen,
+        transfer_remark: String(remark || "提现").slice(0, 32),
+        openid,
+      },
+    ],
+  };
+  const body = JSON.stringify(payload);
+  const serial = merchantSerial(cert.cert);
+  const signed = signWechatV3({
+    method: "POST",
+    urlPath,
+    body,
+    privateKey: cert.key,
+    passphrase: cert.passphrase,
+  });
+  const authorization =
+    `WECHATPAY2-SHA256-RSA2048 mchid="${config.wechat.mchId}",nonce_str="${signed.nonce}",timestamp="${signed.timestamp}",serial_no="${serial}",signature="${signed.signature}"`;
+  const res = await fetch("https://api.mch.weixin.qq.com" + urlPath, {
+    method: "POST",
+    headers: {
+      Authorization: authorization,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "Wechatpay-Serial": serial,
+    },
+    body,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.code) {
+    const err = new Error(data.message || "提现到微信零钱失败");
+    err.status = 400;
+    throw err;
+  }
+  return data;
+}
+
 async function refundOrder({ tradeNo, transactionId, refundNo, totalFen, refundFen }) {
   if (!payLive()) {
     return { mock: true, refund_id: `mock_${refundNo}`, out_refund_no: refundNo };
@@ -379,6 +451,7 @@ module.exports = {
   unifiedOrder,
   queryOrder,
   refundOrder,
+  transferToBalance,
   refundCertLive,
   loadMchCert,
   clientIp,

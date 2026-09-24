@@ -1,7 +1,9 @@
 const bcrypt = require("bcryptjs");
 const { getDb } = require("../db");
+const config = require("../config");
 const { maskName, maskPhone } = require("./biz");
 const { maskIdCard } = require("./idcard");
+const { transferToBalance, yuanToFen } = require("./wechat");
 
 const CARD_CLOSED = "已改为提现到微信零钱，不再支持绑定银行卡";
 // 微信商家转账到零钱的通道单笔上限，不是产品最低门槛。
@@ -188,13 +190,24 @@ function withdrawRule(userId) {
   };
 }
 
-function withdraw(userId, body = {}) {
+async function withdraw(userId, body = {}) {
   const user = loadUser(userId);
   if (!user.id_card) fail(400, "提现前请先完成实名");
   verifyPin(user, body.pin);
   const bal = balanceOf(userId);
   if (bal <= 0) fail(400, "当前余额为 0，可先充值后再提现");
   const amount = parseWithdrawYuan(body.amount, bal);
+  if (!config.wechat.mock) {
+    if (!user.wechat_openid) fail(400, "请先用微信登录后再提现");
+    const outBatchNo = `WD${Date.now()}${userId}`.slice(0, 32);
+    await transferToBalance({
+      openid: user.wechat_openid,
+      amountFen: yuanToFen(amount),
+      outBatchNo,
+      outDetailNo: `D${outBatchNo}`.slice(0, 32),
+      remark: "提现到零钱",
+    });
+  }
   const row = debit(userId, amount, {
     reason: "提现到微信零钱",
     scene: "withdraw",

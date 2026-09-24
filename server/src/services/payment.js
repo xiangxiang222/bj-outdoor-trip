@@ -122,6 +122,38 @@ async function jsapiCharge({ userId, amount, body, tradeNo, clientIp, paymentId 
   };
 }
 
+function prepayReusable(row) {
+  if (!row || !row.wechat_prepay_id) return false;
+  const created = Date.parse(String(row.created_at || "").replace(" ", "T"));
+  if (!Number.isFinite(created)) return true;
+  return Date.now() - created < 110 * 60 * 1000;
+}
+
+async function placeJsapi(row, { userId, amount, body, clientIp, renew }) {
+  if (prepayReusable(row)) {
+    return {
+      needPay: true,
+      mock: false,
+      tradeNo: row.trade_no,
+      amount: row.amount,
+      wechatPay: jsapiPayParams(row.wechat_prepay_id),
+    };
+  }
+  let current = row;
+  if (row.wechat_prepay_id) {
+    getDb().prepare("UPDATE payments SET status='cancelled' WHERE id=? AND status='pending'").run(row.id);
+    current = renew();
+  }
+  return jsapiCharge({
+    userId,
+    amount,
+    body,
+    tradeNo: current.trade_no,
+    clientIp,
+    paymentId: current.id,
+  });
+}
+
 function stampTransaction(tradeNo, transactionId) {
   if (!tradeNo || !transactionId) return;
   getDb().prepare("UPDATE payments SET wechat_transaction_id=? WHERE trade_no=?").run(String(transactionId), String(tradeNo));
@@ -320,13 +352,21 @@ async function payEnrollment(enrollmentId, payerId, opts = {}) {
       remark,
       tradeNo: newTradeNo("P", payerId),
     });
-  const charged = await jsapiCharge({
+  const charged = await placeJsapi(row, {
     userId: payerId,
     amount,
     body: "同行者众-团费",
-    tradeNo: row.trade_no,
     clientIp: opts.clientIp,
-    paymentId: row.id,
+    renew: () =>
+      insertPending({
+        enrollmentId: en.id,
+        userId: payerId,
+        scheduleId: sch.id,
+        amount,
+        scene: "enrollment",
+        remark,
+        tradeNo: newTradeNo("P", payerId),
+      }),
   });
   const next = getDb().prepare("SELECT * FROM enrollments WHERE id=?").get(en.id);
   return {
@@ -362,13 +402,19 @@ async function buyMembership(userId, opts = {}) {
       remark: "会员年费",
       tradeNo: newTradeNo("M", userId),
     });
-  const charged = await jsapiCharge({
+  const charged = await placeJsapi(row, {
     userId,
     amount,
     body: "同行者众-会员年费",
-    tradeNo: row.trade_no,
     clientIp: opts.clientIp,
-    paymentId: row.id,
+    renew: () =>
+      insertPending({
+        userId,
+        amount,
+        scene: "member",
+        remark: "会员年费",
+        tradeNo: newTradeNo("M", userId),
+      }),
   });
   return { ...charged, user: getDb().prepare("SELECT * FROM users WHERE id=?").get(userId) };
 }
@@ -404,23 +450,19 @@ async function buyWalletTopup(userId, opts = {}) {
       remark: "钱包充值",
       tradeNo: newTradeNo("W", userId),
     });
-  if (row.wechat_prepay_id) {
-    return {
-      needPay: true,
-      mock: false,
-      tradeNo: row.trade_no,
-      amount: row.amount,
-      wechatPay: jsapiPayParams(row.wechat_prepay_id),
-      user: getDb().prepare("SELECT * FROM users WHERE id=?").get(userId),
-    };
-  }
-  const charged = await jsapiCharge({
+  const charged = await placeJsapi(row, {
     userId,
     amount,
     body: "同行者众-钱包充值",
-    tradeNo: row.trade_no,
     clientIp: opts.clientIp,
-    paymentId: row.id,
+    renew: () =>
+      insertPending({
+        userId,
+        amount,
+        scene: "wallet_topup",
+        remark: "钱包充值",
+        tradeNo: newTradeNo("W", userId),
+      }),
   });
   return { ...charged, user: getDb().prepare("SELECT * FROM users WHERE id=?").get(userId) };
 }
@@ -430,11 +472,15 @@ async function settleByTradeNo(tradeNo, extra = {}) {
   stampTransaction(tradeNo, extra.transactionId);
   const pay = db.prepare("SELECT * FROM payments WHERE trade_no=?").get(tradeNo);
   if (!pay) fail(400, "支付单不存在");
-  if (pay.status === "success") {
+  if (pay.status === "success" || pay.status === "refunded") {
     return { already: true, pay };
   }
-  if (pay.status === "refunded" || pay.status === "cancelled") {
-    return { already: true, pay };
+  const claimed = db
+    .prepare("UPDATE payments SET status='settling' WHERE id=? AND status IN ('pending','cancelled')")
+    .run(pay.id);
+  if (claimed.changes !== 1) {
+    const latest = db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id);
+    return { already: true, pay: latest };
   }
   const scene = pay.scene || (pay.remark === "会员年费" ? "member" : "enrollment");
   if (scene === "member") {
@@ -444,13 +490,18 @@ async function settleByTradeNo(tradeNo, extra = {}) {
   }
   if (scene === "wallet_topup") {
     const { credit } = require("./wallet");
+    try {
+      credit(pay.user_id, pay.amount, {
+        reason: "钱包充值",
+        scene: "topup",
+        refType: "payment",
+        refId: pay.id,
+      });
+    } catch (err) {
+      db.prepare("UPDATE payments SET status=? WHERE id=?").run(pay.status, pay.id);
+      throw err;
+    }
     db.prepare("UPDATE payments SET status='success' WHERE id=?").run(pay.id);
-    credit(pay.user_id, pay.amount, {
-      reason: "钱包充值",
-      scene: "topup",
-      refType: "payment",
-      refId: pay.id,
-    });
     return { already: false, pay: db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id), scene: "wallet_topup" };
   }
   const en = db.prepare("SELECT * FROM enrollments WHERE id=?").get(pay.enrollment_id);
@@ -477,7 +528,8 @@ async function handleWechatNotify(xml) {
   if (!data.out_trade_no) return notifyReply(false, "缺少订单号");
   try {
     await settleByTradeNo(data.out_trade_no, { transactionId: data.transaction_id });
-  } catch {
+  } catch (err) {
+    console.error("微信支付通知入账失败", data.out_trade_no, err && err.message);
     return notifyReply(false, "处理失败");
   }
   return notifyReply(true, "OK");

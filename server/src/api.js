@@ -768,9 +768,9 @@ router.post("/me/wallet/topup", authUser, async (req, res) => {
   }
 });
 
-router.post("/me/wallet/withdraw", authUser, (req, res) => {
+router.post("/me/wallet/withdraw", authUser, async (req, res) => {
   try {
-    const data = withdraw(req.userId, req.body || {});
+    const data = await withdraw(req.userId, req.body || {});
     const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
     res.json({ ok: true, data: { ...data, user: userPublic(user, req) } });
   } catch (e) {
