@@ -2,7 +2,7 @@ const dayjs = require("dayjs");
 const { nanoid } = require("nanoid");
 const { getDb } = require("../db");
 const config = require("../config");
-const { realEnrolledCount, enrolledCount, maybeMatchGuide } = require("./helpers");
+const { realEnrolledCount, paidJoinedCount, enrolledCount, maybeMatchGuide } = require("./helpers");
 const { isListed } = require("./route-apply");
 const { cityOf } = require("./home");
 const { sendSms } = require("./sms");
@@ -331,21 +331,19 @@ function settlePersonalBounty(sch) {
   if (!Number(sch.organizer_id || 0)) return null;
   if ((sch.bounty_status || "") !== "pending") return null;
   const need = Number(sch.min_group_size || 0);
-  if (need <= 0 || realEnrolledCount(sch.id) < need) return null;
+  if (need <= 0 || paidJoinedCount(sch.id) < need) return null;
   const db = getDb();
   const amount = Number(sch.bounty_amount || personalBountyYuan());
   const locked = db
-    .prepare(
-      "UPDATE schedules SET bounty_status='paid', bounty_paid_at=datetime('now','localtime') WHERE id=? AND bounty_status='pending'"
-    )
+    .prepare("UPDATE schedules SET bounty_status='paying' WHERE id=? AND bounty_status='pending'")
     .run(sch.id);
   if (!locked.changes) return null;
   if (amount > 0) {
     const tradeNo = `TB${Date.now()}${sch.organizer_id}`.slice(0, 32);
-    const info = db.prepare(
-      "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (?,?,?,?,?,?,?,?,?)"
-    ).run(0, sch.organizer_id, sch.id, amount, "bounty", "success", tradeNo, "个人发团成团奖励", "trip_bounty");
     try {
+      const info = db.prepare(
+        "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (?,?,?,?,?,?,?,?,?)"
+      ).run(0, sch.organizer_id, sch.id, amount, "bounty", "success", tradeNo, "个人发团成团奖励", "trip_bounty");
       require("./wallet").credit(sch.organizer_id, amount, {
         reason: "个人发团成团奖励",
         scene: "trip_bounty",
@@ -353,8 +351,12 @@ function settlePersonalBounty(sch) {
         refId: Number(info.lastInsertRowid),
       });
     } catch {
-      /* 钱包入账失败不影响成团标记 */
+      db.prepare("UPDATE schedules SET bounty_status='pending' WHERE id=? AND bounty_status='paying'").run(sch.id);
+      return null;
     }
+  }
+  db.prepare("UPDATE schedules SET bounty_status='paid', bounty_paid_at=datetime('now','localtime') WHERE id=?").run(sch.id);
+  if (amount > 0) {
     const user = db.prepare("SELECT phone FROM users WHERE id=?").get(sch.organizer_id);
     const route = db.prepare("SELECT title FROM routes WHERE id=?").get(sch.route_id);
     if (user?.phone) {
@@ -366,7 +368,7 @@ function settlePersonalBounty(sch) {
         refId: sch.id,
       });
     }
-    return { amount, mock: true, tradeNo };
+    return { amount, mock: true };
   }
   return { amount: 0, mock: true };
 }

@@ -84,6 +84,14 @@ function debit(userId, amount, opts = {}) {
   return applyDelta(userId, -yuan, opts);
 }
 
+function clawback(userId, amount, opts = {}) {
+  const yuan = Math.round(Number(amount) || 0);
+  if (yuan <= 0) return { debited: 0, shortfall: 0, balance: balanceOf(userId) };
+  const debited = Math.min(balanceOf(userId), yuan);
+  const row = debited > 0 ? debit(userId, debited, opts) : null;
+  return { debited, shortfall: yuan - debited, balance: row ? row.balance : balanceOf(userId) };
+}
+
 function listBills(userId, limit = 50) {
   const n = Math.min(100, Math.max(1, Number(limit) || 50));
   return getDb()
@@ -333,6 +341,7 @@ module.exports = {
   balanceOf,
   credit,
   debit,
+  clawback,
   listBills,
   addCard,
   removeCard,

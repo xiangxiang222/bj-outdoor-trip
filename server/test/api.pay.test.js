@@ -141,22 +141,11 @@ describe("wechat live pay", () => {
     }
   });
 
-  it("opens membership only after wechat query succeeds", async () => {
-    const restorePay = useLivePay();
-    const restoreFetch = mockWechatPay("SUCCESS");
-    try {
-      const token = await loginUser(agent);
-      seed.db.prepare("UPDATE users SET is_member=0, member_expire_at=NULL, member_gift_left=0 WHERE id=?").run(seed.userId);
-      const charged = await agent.post("/api/member/buy").set(auth(token)).send({ code: "member_code" }).expect(200);
-      assert.equal(charged.body.data.needPay, true);
-      assert.equal(charged.body.data.user.isMember, false);
-      await agent.post("/api/pay/confirm").set(auth(token)).send({ tradeNo: charged.body.data.tradeNo }).expect(200);
-      const me = await agent.get("/api/me").set(auth(token)).expect(200);
-      assert.equal(me.body.data.isMember, true);
-    } finally {
-      restoreFetch();
-      restorePay();
-    }
+  it("refuses to sell membership through wechat pay", async () => {
+    const token = await loginUser(agent);
+    const denied = await agent.post("/api/member/buy").set(auth(token)).send({ code: "member_code" });
+    assert.equal(denied.status, 400);
+    assert.match(String(denied.body.message || ""), /不在小程序内销售/);
   });
 
   it("rejects mock-success when live pay is on", async () => {
@@ -203,7 +192,25 @@ describe("wechat live pay", () => {
     config.wechat.mchKey = "";
     try {
       const token = await loginUser(agent);
-      const denied = await agent.post("/api/member/buy").set(auth(token)).send({}).expect(400);
+      const enrolled = await agent
+        .post("/api/enroll")
+        .set(auth(token))
+        .send({
+          scheduleId: seed.individualScheduleId,
+          travelerName: "林北野",
+          travelerPhone: "13800138000",
+          idCard: ID.maleBj,
+          emergencyName: "紧急联系人",
+          emergencyPhone: "13700000002",
+          waiverAccepted: true,
+          healthOk: true,
+        })
+        .expect(200);
+      const denied = await agent
+        .post("/api/pay/for-enrollment")
+        .set(auth(token))
+        .send({ enrollmentId: enrolled.body.data.enrollmentId })
+        .expect(400);
       assert.match(denied.body.message, /密钥/);
     } finally {
       restorePay();

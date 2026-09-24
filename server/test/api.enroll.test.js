@@ -316,20 +316,17 @@ describe("enroll pay member favorites", () => {
     assert.equal(sch.status, "confirmed");
   });
 
-  it("buys membership via mock pay", async () => {
+  it("refuses membership purchase in the mini program", async () => {
     const cap = await issueCaptcha(agent);
     const created = await agent
       .post("/api/auth/register")
       .send({ phone: "13600136002", password: "123456", captchaToken: cap.token, captcha: cap.code })
       .expect(200);
     const token = created.body.data.token;
-    const buy = await agent.post("/api/member/buy").set(auth(token)).expect(200);
-    assert.equal(buy.body.data.amount, 99);
-    assert.equal(buy.body.data.user.isMember, true);
-    assert.equal(buy.body.data.user.memberGiftLeft, 1);
-    assert.ok(buy.body.data.user.memberExpireAt);
+    const denied = await agent.post("/api/member/buy").set(auth(token));
+    assert.equal(denied.status, 400);
     const me = await agent.get("/api/me").set(auth(token)).expect(200);
-    assert.equal(me.body.data.isMember, true);
+    assert.equal(me.body.data.isMember, false);
   });
 
   it("applies one gift trip when member price is within 100", async () => {
@@ -339,7 +336,7 @@ describe("enroll pay member favorites", () => {
       .send({ phone: "13600136009", password: "123456", captchaToken: cap.token, captcha: cap.code })
       .expect(200);
     const token = created.body.data.token;
-    await agent.post("/api/member/buy").set(auth(token)).expect(200);
+    seed.db.prepare("UPDATE users SET is_member=1, member_expire_at='2099-01-01', member_gift_left=1 WHERE id=?").run(created.body.data.user.id);
     seed.db.prepare("UPDATE schedules SET offer_type='deal', offer_price=80 WHERE id=?").run(seed.individualScheduleId);
     const enrolled = await agent.post("/api/enroll").set(auth(token)).send({
       scheduleId: seed.individualScheduleId,

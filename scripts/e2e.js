@@ -566,9 +566,9 @@ async function run(opts) {
     assert(bad.status === 404, "无效分享令牌应 404");
   });
 
-  await step("会员：一键开通、积分流水、评价", async () => {
-    const buy = apiOk(await request("POST", "/api/member/buy", { token: ctx.token }), "member buy");
-    assert(buy.user && buy.user.isMember, "开通会员后 isMember 应为 true");
+  await step("会员：购买已关闭、积分流水、评价", async () => {
+    const buy = await request("POST", "/api/member/buy", { token: ctx.token });
+    assert(buy.status === 400, "会员购买应关闭");
     const points = apiOk(await request("GET", "/api/points", { token: ctx.token }), "points");
     assert(typeof points.points === "number", "积分余额缺失");
     apiOk(

@@ -240,12 +240,18 @@ async function refundEnrollmentToPayers(en, { amount, remark } = {}) {
         refType: "enrollment",
         refId: en.id,
       });
-    } else if (payLive() && slice.tradeNo) {
+    } else if (slice.channel === "wechat" && payLive() && slice.tradeNo) {
+      const orderTotal = getDb()
+        .prepare(
+          "SELECT IFNULL(SUM(amount),0) AS s FROM payments WHERE trade_no=? AND status='success' AND IFNULL(refund_of,0)=0 AND IFNULL(scene,'')!='company'"
+        )
+        .get(slice.tradeNo);
+      const totalYuan = Number(orderTotal?.s || 0) || Number(slice.chargeAmount || 0);
       await refundOrder({
         tradeNo: slice.tradeNo,
         transactionId: slice.transactionId,
         refundNo,
-        totalFen: yuanToFen(slice.chargeAmount),
+        totalFen: yuanToFen(totalYuan),
         refundFen: yuanToFen(slice.amount),
       });
     }
@@ -467,6 +473,120 @@ async function buyWalletTopup(userId, opts = {}) {
   return { ...charged, user: getDb().prepare("SELECT * FROM users WHERE id=?").get(userId) };
 }
 
+function applyCompanyShares(pay) {
+  const db = getDb();
+  let lines = [];
+  try {
+    lines = JSON.parse(pay.remark || "{}").lines || [];
+  } catch {
+    lines = [];
+  }
+  const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(pay.schedule_id);
+  if (!sch || !lines.length) return;
+  const channel = payLive() ? "wechat" : "company";
+  const tx = db.transaction(() => {
+    for (const line of lines) {
+      const updated = db
+        .prepare(
+          "UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=? AND pay_status='company_pending'"
+        )
+        .run(line.amount, line.id);
+      if (!updated.changes) continue;
+      db.prepare(
+        "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene,wechat_transaction_id) VALUES (?,?,?,?,?,?,?,?,?,?)"
+      ).run(
+        line.id,
+        line.userId,
+        sch.id,
+        line.amount,
+        channel,
+        "success",
+        pay.trade_no,
+        "公司统一支付",
+        "company_share",
+        pay.wechat_transaction_id || ""
+      );
+    }
+  });
+  tx();
+  try {
+    require("./split").createSplitsForSchedule(sch.id, { remark: "公司统一支付后分账" });
+  } catch {
+    /* 还没有实收时不分账 */
+  }
+  maybeMatchGuide(sch.id);
+}
+
+async function payCompanySchedule(userId, scheduleId, opts = {}) {
+  const db = getDb();
+  const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
+  if (!sch) fail(400, "排期不存在");
+  if (sch.status === "cancelled") fail(400, "该拼团已解散");
+  if (Number(sch.organizer_id) !== Number(userId)) fail(403, "仅开团公司可统一支付");
+  const pending = db
+    .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending' AND status='joined'")
+    .all(sch.id);
+  if (!pending.length) fail(400, "没有待统一支付的报名");
+  const quote = quoteForSchedule(sch, Math.max(realEnrolledCount(sch.id), 1), null);
+  const lines = pending.map((en) => ({
+    id: en.id,
+    userId: en.user_id,
+    amount: quote.originPrice + Number(en.insurance_fee || 0) + Number(en.supplies_fee || 0),
+  }));
+  const total = lines.reduce((sum, line) => sum + line.amount, 0);
+  const remark = JSON.stringify({ lines });
+  if (config.wechat.mock) {
+    const tradeNo = newTradeNo("CO", userId);
+    applyCompanyShares({ remark, trade_no: tradeNo, schedule_id: sch.id, wechat_transaction_id: "" });
+    return {
+      count: lines.length,
+      total,
+      price: quote.originPrice,
+      splits: require("./split").listSplits(sch.id),
+      needPay: false,
+      mock: true,
+    };
+  }
+  await ensurePayerWechat(userId, opts.code);
+  if (!payLive()) fail(400, "未配置微信支付密钥，无法收款");
+  let row = db
+    .prepare("SELECT * FROM payments WHERE user_id=? AND schedule_id=? AND scene='company' AND status='pending' ORDER BY id DESC")
+    .get(userId, sch.id);
+  if (row && Number(row.amount) !== total) {
+    db.prepare("UPDATE payments SET status='cancelled' WHERE id=?").run(row.id);
+    row = null;
+  }
+  if (!row) {
+    row = insertPending({
+      userId,
+      scheduleId: sch.id,
+      amount: total,
+      scene: "company",
+      remark,
+      tradeNo: newTradeNo("CO", userId),
+    });
+  } else {
+    db.prepare("UPDATE payments SET remark=? WHERE id=?").run(remark, row.id);
+    row = db.prepare("SELECT * FROM payments WHERE id=?").get(row.id);
+  }
+  const charged = await placeJsapi(row, {
+    userId,
+    amount: total,
+    body: "同行者众-公司统一支付",
+    clientIp: opts.clientIp,
+    renew: () =>
+      insertPending({
+        userId,
+        scheduleId: sch.id,
+        amount: total,
+        scene: "company",
+        remark,
+        tradeNo: newTradeNo("CO", userId),
+      }),
+  });
+  return { ...charged, count: lines.length, total, price: quote.originPrice, splits: [] };
+}
+
 async function settleByTradeNo(tradeNo, extra = {}) {
   const db = getDb();
   stampTransaction(tradeNo, extra.transactionId);
@@ -487,6 +607,11 @@ async function settleByTradeNo(tradeNo, extra = {}) {
     db.prepare("UPDATE payments SET status='success' WHERE id=?").run(pay.id);
     grantMembership(pay.user_id);
     return { already: false, pay: db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id), scene: "member" };
+  }
+  if (scene === "company") {
+    db.prepare("UPDATE payments SET status='success' WHERE id=?").run(pay.id);
+    applyCompanyShares(db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id));
+    return { already: false, pay: db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id), scene: "company" };
   }
   if (scene === "wallet_topup") {
     const { credit } = require("./wallet");
@@ -564,6 +689,7 @@ module.exports = {
   payEnrollment,
   buyMembership,
   buyWalletTopup,
+  payCompanySchedule,
   settleByTradeNo,
   handleWechatNotify,
   confirmTrade,

@@ -46,6 +46,33 @@ function realEnrolledCount(scheduleId, includeCancelled = false) {
     .get(scheduleId).c;
 }
 
+function paidJoinedCount(scheduleId) {
+  return getDb()
+    .prepare(
+      `SELECT COUNT(*) AS c FROM enrollments e
+       LEFT JOIN users u ON u.id=e.user_id
+       WHERE e.schedule_id=? AND e.status='joined' AND e.pay_status='paid' AND IFNULL(u.is_virtual,0)=0`
+    )
+    .get(scheduleId).c;
+}
+
+function clawActivityPoints(userId, enrollmentId, refundedAmount, baseAmount) {
+  const earned = getDb()
+    .prepare(
+      `SELECT IFNULL(SUM(delta),0) AS s FROM points_ledger
+       WHERE user_id=? AND ref_type='enrollment' AND ref_id=? AND reason IN ('参加活动积分','退款收回活动积分')`
+    )
+    .get(userId, enrollmentId);
+  const net = Math.max(0, Number(earned?.s || 0));
+  const base = Math.max(0, Number(baseAmount) || 0);
+  const refunded = Math.max(0, Number(refundedAmount) || 0);
+  if (!net || !refunded || !base) return 0;
+  const take = refunded >= base ? net : Math.min(net, Math.floor((net * refunded) / base));
+  if (take <= 0) return 0;
+  addPoints(userId, -take, "退款收回活动积分", "enrollment", enrollmentId);
+  return take;
+}
+
 function virtualEnrolledCount(scheduleId) {
   return getDb()
     .prepare(
@@ -263,6 +290,8 @@ module.exports = {
   hostOrgName,
   enrolledCount,
   realEnrolledCount,
+  paidJoinedCount,
+  clawActivityPoints,
   virtualEnrolledCount,
   waitlistCount,
   loadRouteBundle,

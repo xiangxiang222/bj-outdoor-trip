@@ -41,9 +41,9 @@ const {
 } = require("./services/home");
 const { offerMeta, liveMemberPrice, liveStudentPrice, flagOn } = require("./services/offer");
 const { publicUserProfile, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
-const { payEnrollment, buyMembership, buyWalletTopup, confirmTrade, applyWechatSession, applyEnrollmentCharge } = require("./services/payment");
+const { payEnrollment, buyWalletTopup, payCompanySchedule, confirmTrade, applyWechatSession, applyEnrollmentCharge } = require("./services/payment");
 const { payShareView, collectedMapForSchedule, payProgress, ensurePayShareToken, contributorsOf } = require("./services/pay-ledger");
-const { grantMembership } = require("./services/member");
+const { grantMembership, refundMembership } = require("./services/member");
 const { addPhoto, removePhoto, ensureReferralCode, resolveLiveUser, adoptOrganizer } = require("./services/profile");
 const { leadersOf, applyLeader, settleLeaderRewards, recruitPayload } = require("./services/leaders");
 const { referralCard, groupQrPayload, settleEnrollReferrals } = require("./services/referral");
@@ -1788,7 +1788,7 @@ router.post("/pay/mock-success", authUser, (req, res) => {
   if (payLive()) return res.status(403).json({ ok: false, message: "已接入真实支付，不能再模拟付款" });
   const { tradeNo, enrollmentId, scene } = req.body || {};
   if (scene === "member") {
-    return res.json({ ok: true, data: userPublic(grantMembership(req.userId), req) });
+    return res.status(400).json({ ok: false, message: "会员暂不在小程序内销售" });
   }
   const pay = db().prepare("SELECT * FROM payments WHERE trade_no=? OR enrollment_id=?").get(tradeNo || "", enrollmentId || 0);
   if (!pay) return res.status(400).json({ ok: false, message: "支付单不存在" });
@@ -1798,37 +1798,14 @@ router.post("/pay/mock-success", authUser, (req, res) => {
   res.json({ ok: true, data });
 });
 
-router.post("/pay/company-settle", authUser, (req, res) => {
-  const { scheduleId } = req.body || {};
-  const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
-  if (!sch) return res.status(400).json({ ok: false, message: "排期不存在" });
-  if (sch.status === "cancelled") return res.status(400).json({ ok: false, message: "该拼团已解散" });
-  if (sch.organizer_id !== req.userId) return res.status(403).json({ ok: false, message: "仅开团公司可统一支付" });
-  const pending = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending' AND status='joined'").all(sch.id);
-  const quote = quoteForSchedule(sch, Math.max(realEnrolledCount(sch.id), 1), null);
-  let total = 0;
-  for (const en of pending) {
-    const amount = quote.originPrice + Number(en.insurance_fee || 0) + Number(en.supplies_fee || 0);
-    total += amount;
-    db().prepare("UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=?").run(amount, en.id);
-    db().prepare("INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark) VALUES (?,?,?,?,?,?,?,?)").run(
-      en.id,
-      req.userId,
-      sch.id,
-      amount,
-      "wechat",
-      "success",
-      `CO${Date.now()}${en.id}`,
-      "公司统一微信支付"
-    );
-  }
-  let splits = null;
+router.post("/pay/company-settle", authUser, async (req, res) => {
   try {
-    splits = createSplitsForSchedule(sch.id, { remark: "公司统一支付后分账" });
+    const body = req.body || {};
+    const data = await payCompanySchedule(req.userId, body.scheduleId, { code: body.code, clientIp: clientIp(req) });
+    res.json({ ok: true, data });
   } catch (e) {
-    if (e.status !== 400) throw e;
+    jsonError(res, e);
   }
-  res.json({ ok: true, data: { count: pending.length, total, price: quote.originPrice, splits: splits?.splits || [] } });
 });
 
 router.get("/orders", authUser, (req, res) => {
@@ -1891,19 +1868,8 @@ router.get("/schedules/:id/demographics", optionalUser, (req, res) => {
   res.json({ ok: true, data: buildDemographics(list) });
 });
 
-router.post("/member/buy", authUser, async (req, res) => {
-  try {
-    const data = await buyMembership(req.userId, { code: (req.body || {}).code, clientIp: clientIp(req) });
-    res.json({
-      ok: true,
-      data: {
-        ...data,
-        user: userPublic(data.user, req),
-      },
-    });
-  } catch (e) {
-    jsonError(res, e);
-  }
+router.post("/member/buy", authUser, (req, res) => {
+  res.status(400).json({ ok: false, message: "会员暂不在小程序内销售" });
 });
 
 router.get("/points", authUser, (req, res) => {
@@ -3121,6 +3087,10 @@ router.post("/admin/users/:id/member", authAdmin, requireCap("ops"), (req, res) 
   const action = (req.body || {}).action || "grant";
   if (action === "revoke") {
     db().prepare("UPDATE users SET is_member=0, member_expire_at=NULL WHERE id=?").run(user.id);
+  } else if (action === "refund") {
+    return refundMembership(user.id)
+      .then((next) => res.json({ ok: true, data: adminUserView(next) }))
+      .catch((e) => jsonError(res, e));
   } else if (action === "grant") {
     grantMembership(user.id);
   } else {

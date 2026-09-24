@@ -217,7 +217,7 @@ function planPayerRefunds(en, refundTotal) {
       tradeNo: row.trade_no || "",
       transactionId: row.wechat_transaction_id || "",
       chargeAmount: Number(row.amount || 0),
-      channel: row.channel === "wallet" ? "wallet" : "wechat",
+      channel: row.channel === "wallet" ? "wallet" : row.channel === "wechat" ? "wechat" : "book",
     }))
     .filter((row) => row.amount > 0);
 }
