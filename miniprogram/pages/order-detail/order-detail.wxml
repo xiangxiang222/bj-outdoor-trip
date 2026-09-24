@@ -1,0 +1,9 @@
+<view class="card" wx:if="{{order}}">
+  <view class="pad title">{{order.title}}</view>
+  <view class="pad muted" wx:if="{{order.startDate}}">{{order.startDate}} 出发</view>
+  <view class="pad price">¥{{order.amount}}</view>
+  <view class="pad muted">{{statusText}}</view>
+</view>
+<view class="btn" wx:if="{{order && order.scheduleId}}" bindtap="goTrip">查看行程</view>
+<view class="btn ghost" wx:if="{{order && order.scene=='wallet_topup'}}" bindtap="goWallet">查看钱包</view>
+<view class="pad" wx:if="{{err}}" style="color:#bc4749">{{err}}</view>

@@ -24,10 +24,20 @@ function useLivePay() {
 
 function mockWechatPay(tradeState = "SUCCESS") {
   const orig = global.fetch;
+  const calls = [];
   global.fetch = async (url, opts) => {
     const href = String(url);
+    calls.push(href);
     if (href.includes("jscode2session")) {
       return { json: async () => ({ openid: "oLIVEPAYOPENID", session_key: "sk" }) };
+    }
+    if (href.includes("cgi-bin/token")) {
+      return { json: async () => ({ access_token: "test_token", expires_in: 7200 }) };
+    }
+    if (href.includes("upload_shipping_info")) {
+      const body = JSON.parse(String(opts && opts.body));
+      calls.push(body);
+      return { json: async () => ({ errcode: 0, errmsg: "ok" }) };
     }
     if (href === UNIFIED_ORDER_URL) {
       return { text: async () => objToXml({ return_code: "SUCCESS", result_code: "SUCCESS", prepay_id: "wx_prepay_live" }) };
@@ -42,13 +52,17 @@ function mockWechatPay(tradeState = "SUCCESS") {
             result_code: "SUCCESS",
             trade_state: tradeState,
             out_trade_no: tradeNo,
+            transaction_id: "4200000001",
           }),
       };
     }
     throw new Error("unexpected fetch " + href);
   };
-  return () => {
-    global.fetch = orig;
+  return {
+    calls,
+    restore() {
+      global.fetch = orig;
+    },
   };
 }
 
@@ -77,7 +91,7 @@ describe("wechat live pay", () => {
 
   it("creates a JSAPI order then settles enrollment after notify", async () => {
     const restorePay = useLivePay();
-    const restoreFetch = mockWechatPay("SUCCESS");
+    const wechat = mockWechatPay("SUCCESS");
     try {
       const token = await loginUser(agent);
       await agent.post("/api/auth/wechat").set(auth(token)).send({ code: "pay_code" }).expect(200);
@@ -130,13 +144,18 @@ describe("wechat live pay", () => {
       params.sign = signMd5(params, LIVE_KEY);
       const notify = await agent.post("/api/pay/wechat/notify").set("Content-Type", "text/xml").send(objToXml(params)).expect(200);
       assert.match(String(notify.text), /SUCCESS/);
+      const shipped = wechat.calls.find((item) => item && item.logistics_type === 3);
+      assert.equal(shipped.delivery_mode, 1);
+      assert.equal(shipped.shipping_list.length, 1);
+      assert.equal(shipped.payer.openid, "oLIVEPAYOPENID");
+      assert.equal(shipped.order_key.out_trade_no, tradeNo);
       const detail = await agent.get("/api/schedules/" + seed.individualScheduleId).expect(200);
       const row = (detail.body.data.chain || []).find((c) => c.userId === seed.userId);
       assert.equal(row.payStatus, "paid");
       const confirmed = await agent.post("/api/pay/confirm").set(auth(token)).send({ tradeNo }).expect(200);
       assert.equal(confirmed.body.data.already, true);
     } finally {
-      restoreFetch();
+      wechat.restore();
       restorePay();
     }
   });
@@ -330,5 +349,30 @@ describe("enrollment pay share and crowdfund", () => {
 
   it("rejects an unknown pay share token", async () => {
     await agent.get("/api/pay/share/no-such-token").expect(404);
+  });
+});
+
+describe("wechat order detail", () => {
+  let agent;
+  let seed;
+
+  beforeEach(() => {
+    ({ agent, seed } = harness());
+  });
+
+  it("opens a paid order by the wechat trade number for the payer", async () => {
+    const token = await loginUser(agent);
+    const title = seed.db.prepare("SELECT title FROM routes WHERE id=?").get(seed.routeId).title;
+    seed.db
+      .prepare(
+        "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (0,?,?,?,?,?,?,?,?)"
+      )
+      .run(seed.userId, seed.individualScheduleId, 199, "wechat", "success", "TN-ORDER-1", "", "enrollment");
+    const res = await agent.get("/api/pay/order/" + encodeURIComponent("TN-ORDER-1")).set(auth(token)).expect(200);
+    assert.equal(res.body.data.title, title);
+    assert.equal(res.body.data.scheduleId, seed.individualScheduleId);
+    assert.equal(res.body.data.amount, 199);
+    assert.equal(res.body.data.status, "success");
+    await agent.get("/api/pay/order/TN-ORDER-1").expect(401);
   });
 });

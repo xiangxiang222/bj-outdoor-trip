@@ -19,6 +19,7 @@
     "pages/schedule/schedule",
     "pages/enroll/enroll",
     "pages/pay/pay",
+    "pages/order-detail/order-detail",
     "pages/coupon/coupon",
     "pages/coupons/coupons",
     "pages/open/open",

@@ -13,6 +13,8 @@ const {
   verifySign,
   notifyReply,
   code2session,
+  loginLive,
+  uploadVirtualShipping,
 } = require("./wechat");
 const {
   expireStalePendings,
@@ -645,6 +647,61 @@ async function settleByTradeNo(tradeNo, extra = {}) {
   return { already: false, pay: db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id), scene: "enrollment" };
 }
 
+function chargeOf(tradeNo) {
+  return getDb()
+    .prepare("SELECT * FROM payments WHERE trade_no=? AND IFNULL(refund_of,0)=0 ORDER BY id ASC LIMIT 1")
+    .get(String(tradeNo || ""));
+}
+
+function shipmentDesc(pay) {
+  if ((pay.scene || "") === "wallet_topup") return "钱包充值";
+  if (pay.schedule_id) {
+    const row = getDb()
+      .prepare("SELECT r.title FROM schedules s JOIN routes r ON r.id=s.route_id WHERE s.id=?")
+      .get(pay.schedule_id);
+    if (row && row.title) return String(row.title).slice(0, 120);
+  }
+  return "同行者众";
+}
+
+async function reportSettledShipment(tradeNo) {
+  const pay = chargeOf(tradeNo);
+  if (!pay || pay.status !== "success" || !loginLive()) return;
+  const user = getDb().prepare("SELECT wechat_openid FROM users WHERE id=?").get(pay.user_id);
+  try {
+    await uploadVirtualShipping({
+      outTradeNo: pay.trade_no,
+      transactionId: pay.wechat_transaction_id,
+      openid: user && user.wechat_openid,
+      itemDesc: shipmentDesc(pay),
+    });
+  } catch (err) {
+    console.error("虚拟发货上报失败", pay.trade_no, err && err.message);
+  }
+}
+
+function orderByTradeNo(tradeNo, userId) {
+  const pay = chargeOf(tradeNo);
+  if (!pay) fail(404, "订单不存在");
+  if (Number(pay.user_id) !== Number(userId)) fail(403, "这不是你的订单");
+  const trip = pay.schedule_id
+    ? getDb()
+        .prepare(
+          "SELECT r.title, s.start_date FROM schedules s JOIN routes r ON r.id=s.route_id WHERE s.id=?"
+        )
+        .get(pay.schedule_id)
+    : null;
+  return {
+    tradeNo: pay.trade_no,
+    scene: pay.scene || "enrollment",
+    status: pay.status,
+    amount: pay.amount,
+    title: shipmentDesc(pay),
+    startDate: trip ? trip.start_date || "" : "",
+    scheduleId: pay.schedule_id || 0,
+  };
+}
+
 async function handleWechatNotify(xml) {
   const data = xmlToObj(xml);
   if (!verifySign(data, config.wechat.mchKey)) return notifyReply(false, "签名失败");
@@ -653,6 +710,7 @@ async function handleWechatNotify(xml) {
   if (!data.out_trade_no) return notifyReply(false, "缺少订单号");
   try {
     await settleByTradeNo(data.out_trade_no, { transactionId: data.transaction_id });
+    await reportSettledShipment(data.out_trade_no);
   } catch (err) {
     console.error("微信支付通知入账失败", data.out_trade_no, err && err.message);
     return notifyReply(false, "处理失败");
@@ -671,6 +729,7 @@ async function confirmTrade(tradeNo) {
     if (data.trade_state !== "SUCCESS") fail(400, "尚未支付完成");
     await settleByTradeNo(tradeNo, { transactionId: data.transaction_id });
   }
+  await reportSettledShipment(tradeNo);
   const next = db.prepare("SELECT * FROM payments WHERE trade_no=?").get(tradeNo);
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(next.user_id);
   const en = next.enrollment_id ? db.prepare("SELECT * FROM enrollments WHERE id=?").get(next.enrollment_id) : null;
@@ -693,6 +752,7 @@ module.exports = {
   settleByTradeNo,
   handleWechatNotify,
   confirmTrade,
+  orderByTradeNo,
   completeEnrollmentPay,
   applyEnrollmentCharge,
   refundEnrollmentToPayers,
