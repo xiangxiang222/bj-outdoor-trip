@@ -1,7 +1,7 @@
 <view class="mine-page" wx:if="{{user}}">
   <view class="mine-hero-card">
     <view class="mine-user" bindtap="goHome">
-      <view class="mine-avatar">
+      <view class="mine-avatar" catchtap="openAvatar">
         <image wx:if="{{user.avatar}}" src="{{user.avatar}}" mode="aspectFill" />
         <text wx:else>{{nickHead}}</text>
       </view>
@@ -11,6 +11,17 @@
       </view>
     </view>
     <view class="mine-gear" bindtap="go" data-url="/pages/settings/settings">设置</view>
+  </view>
+  <view class="avatar-mask" wx:if="{{picker}}" catchtap="closeAvatar">
+    <view class="avatar-sheet" catchtap="noop">
+      <view class="avatar-title">选择默认头像</view>
+      <view class="avatar-grid">
+        <image wx:for="{{defaults}}" wx:key="id" src="{{item.url}}" mode="aspectFill" data-url="{{item.url}}" catchtap="pickDefault" />
+      </view>
+      <view class="avatar-action" bindtap="shoot">拍照</view>
+      <view class="avatar-action" bindtap="album">从手机相册选择</view>
+      <view class="avatar-action cancel" bindtap="closeAvatar">取消</view>
+    </view>
   </view>
 
   <view class="mine-member" wx:if="{{user.isMember}}" bindtap="openMember">

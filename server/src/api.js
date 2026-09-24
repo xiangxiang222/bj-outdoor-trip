@@ -139,6 +139,29 @@ function resolveOrganizer(body, user, forceIndividual, allowOfficial) {
   return { type, name };
 }
 
+function acceptedAvatar(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  const pathOnly = s.replace(/^https?:\/\/[^/]+/i, "");
+  if (/^\/static\/avatars\/[a-z0-9-]+\.svg$/.test(pathOnly)) return pathOnly;
+  if (/^\/static\/uploads\/[\w.-]+\.(jpe?g|png|webp|gif)$/i.test(pathOnly)) return pathOnly;
+  if (/^https:\/\/(thirdwx\.qlogo\.cn|wx\.qlogo\.cn)\//i.test(s)) return s.slice(0, 300);
+  return null;
+}
+
+function defaultAvatars(req) {
+  const dir = path.join(config.publicDir, "static", "avatars");
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir)
+    .filter((name) => /^[a-z0-9-]+\.svg$/.test(name))
+    .sort()
+    .map((name) => ({
+      id: name.replace(/\.svg$/, ""),
+      url: attachAssetHost(req, `/static/avatars/${name}`),
+    }));
+}
+
 function uploadsDir() {
   const dir = path.join(config.publicDir, "static", "uploads");
   fs.mkdirSync(dir, { recursive: true });
@@ -926,8 +949,17 @@ router.delete("/me/photos/:id", authUser, (req, res) => {
   }
 });
 
+router.get("/avatars/defaults", (req, res) => {
+  res.json({ ok: true, data: defaultAvatars(req) });
+});
+
 router.put("/me", authUser, (req, res) => {
   const { nickname, gender, birthday, idCard, companyName, avatar } = req.body || {};
+  let nextAvatar;
+  if (avatar !== undefined) {
+    nextAvatar = acceptedAvatar(avatar);
+    if (nextAvatar == null) return res.status(400).json({ ok: false, message: "头像地址无效" });
+  }
   if (idCard && loginLive()) {
     return res.status(400).json({ ok: false, message: "请在小程序里通过微信实名核验" });
   }
@@ -946,7 +978,7 @@ router.put("/me", authUser, (req, res) => {
     parsed.idCard || idCard,
     parsed.hometown,
     companyName,
-    avatar,
+    nextAvatar,
     idCard ? 1 : 0,
     req.userId
   );

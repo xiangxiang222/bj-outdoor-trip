@@ -2,16 +2,16 @@
   <div class="mine-page">
     <template v-if="store.token && store.profile">
       <div class="mine-hero-card">
-        <button class="mine-user" type="button" @click="$router.push('/m/user/' + store.profile.id)">
-          <div class="mine-avatar">
+        <div class="mine-user">
+          <button class="mine-avatar" type="button" @click="openAvatar">
             <img v-if="store.profile.avatar" :src="store.profile.avatar" alt="" />
             <span v-else>{{ (store.profile.nickname || "友").slice(0, 1) }}</span>
-          </div>
-          <div class="mine-user-main">
+          </button>
+          <button class="mine-user-main" type="button" @click="$router.push('/m/user/' + store.profile.id)">
             <div class="mine-name">{{ store.profile.nickname }}</div>
             <div class="mine-phone">{{ maskPhone(store.profile.phone) }}</div>
-          </div>
-        </button>
+          </button>
+        </div>
         <button class="mine-gear" type="button" @click="goAuth('/m/settings')">设置</button>
       </div>
 
@@ -91,6 +91,26 @@
         <span>看线路</span><i>官方目的地 ›</i>
       </button>
     </div>
+
+    <div v-if="picker" class="avatar-mask" @click.self="picker = false">
+      <div class="avatar-sheet">
+        <p>选择默认头像</p>
+        <div class="avatar-grid">
+          <button v-for="item in defaults" :key="item.id" type="button" @click="saveAvatar(item.url)">
+            <img :src="item.url" alt="" />
+          </button>
+        </div>
+        <label class="avatar-action">
+          拍照
+          <input type="file" accept="image/*" capture="environment" hidden @change="onFile" />
+        </label>
+        <label class="avatar-action">
+          从相册选择
+          <input type="file" accept="image/*" hidden @change="onFile" />
+        </label>
+        <button class="avatar-action" type="button" @click="picker = false">取消</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -105,6 +125,8 @@ const store = useUserStore();
 const router = useRouter();
 const coupons = ref([]);
 const hub = ref({});
+const picker = ref(false);
+const defaults = ref([]);
 
 const campusShort = computed(() => {
   const u = store.profile;
@@ -157,6 +179,33 @@ function goAuth(path) {
 function goReferral() {
   if (!store.token) goLogin("/m/mine");
   else router.push(store.profile?.id ? "/m/user/" + store.profile.id : "/m/orders");
+}
+async function openAvatar() {
+  if (!store.token) {
+    goLogin("/m/mine");
+    return;
+  }
+  picker.value = true;
+  if (defaults.value.length) return;
+  try {
+    defaults.value = (await http.get("/avatars/defaults")).data || [];
+  } catch {
+    defaults.value = [];
+  }
+}
+async function saveAvatar(url) {
+  const res = await http.put("/me", { avatar: url });
+  store.setAuth(store.token, res.data);
+  picker.value = false;
+}
+async function onFile(e) {
+  const file = (e.target.files || [])[0];
+  e.target.value = "";
+  if (!file) return;
+  const body = new FormData();
+  body.append("file", file);
+  const up = await http.post("/upload", body);
+  await saveAvatar(up.data.url);
 }
 function openMember() {
   if (!store.token) {

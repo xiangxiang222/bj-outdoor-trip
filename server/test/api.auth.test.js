@@ -152,6 +152,17 @@ describe("auth and profile API", () => {
     assert.equal(updated.body.data.realNamed, true);
   });
 
+  it("lets a user pick a default avatar and rejects an outside image url", async () => {
+    const list = await agent.get("/api/avatars/defaults").expect(200);
+    assert.ok(list.body.data.length >= 8);
+    const token = await loginUser(agent);
+    const bad = await agent.put("/api/me").set(auth(token)).send({ avatar: "https://evil.example/a.png" });
+    assert.equal(bad.status, 400);
+    const picked = list.body.data[0].url;
+    const ok = await agent.put("/api/me").set(auth(token)).send({ avatar: picked }).expect(200);
+    assert.match(ok.body.data.avatar, /\/static\/avatars\/[a-z0-9-]+\.svg$/);
+  });
+
   it("marks real-name only after wechat pay identity matches", async () => {
     const token = await loginUser(agent);
     await agent.post("/api/auth/wechat").set(auth(token)).send({ code: "realname_user" }).expect(200);
