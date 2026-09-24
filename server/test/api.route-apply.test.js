@@ -148,7 +148,7 @@ describe("route apply and bounty", () => {
         meetupPoint: "东直门东方银座C口",
       })
       .expect(200);
-    await agent
+    const joined = await agent
       .post("/api/enroll")
       .set(auth(token))
       .send({
@@ -158,6 +158,15 @@ describe("route apply and bounty", () => {
         idCard: ID.maleBj,
         ...enrollPayload(),
       })
+      .expect(200);
+    const unpaid = getDb()
+      .prepare("SELECT * FROM payments WHERE scene='route_bounty' AND user_id=?")
+      .all(seed.userId);
+    assert.equal(unpaid.length, 0);
+    await agent
+      .post("/api/pay/for-enrollment")
+      .set(auth(token))
+      .send({ enrollmentId: joined.body.data.enrollmentId })
       .expect(200);
     const pays = getDb()
       .prepare("SELECT * FROM payments WHERE scene='route_bounty' AND user_id=?")
