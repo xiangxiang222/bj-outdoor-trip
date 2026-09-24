@@ -1,10 +1,17 @@
 const { request, setAuth, showError } = require("../../utils/request");
+const { maskPhone } = require("../../utils/labels");
 const app = getApp();
 
 Page({
-  data: { user: {} },
+  data: { user: {}, phone: "", nickHead: "友" },
   onShow() {
-    this.setData({ user: app.globalData.user || {} });
+    const cached = app.globalData.user || {};
+    const nick = cached.nickname || "";
+    this.setData({
+      user: cached,
+      phone: maskPhone(cached.phone),
+      nickHead: nick ? nick.slice(0, 1) : "友",
+    });
     if (!app.globalData.token) {
       wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/settings/settings") });
       return;
@@ -12,7 +19,13 @@ Page({
     request("/me")
       .then((res) => {
         setAuth(app.globalData.token, res.data);
-        this.setData({ user: res.data });
+        const user = res.data || {};
+        const nick = user.nickname || "";
+        this.setData({
+          user,
+          phone: maskPhone(user.phone),
+          nickHead: nick ? nick.slice(0, 1) : "友",
+        });
       })
       .catch(() => {});
   },

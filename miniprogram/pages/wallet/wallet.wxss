@@ -1,5 +1,28 @@
-.wallet-hero { background: linear-gradient(160deg, #fff7f2, #fff 55%); border-radius: 16rpx; margin: 16rpx; padding: 32rpx 24rpx; }
-.wallet-balance { font-size: 64rpx; font-weight: 800; }
-.rule-title { font-weight: 700; margin-top: 20rpx; }
-.rule-title:first-child { margin-top: 0; font-size: 32rpx; }
-.rule-foot { display: block; margin-top: 16rpx; }
+page { background: #f5f6f8; }
+.cash-card { margin: 24rpx; padding: 36rpx 32rpx 28rpx; background: #fff; border-radius: 24rpx; }
+.cash-safe { color: #8a8f99; font-size: 24rpx; }
+.cash-label { margin-top: 28rpx; color: #8a8f99; font-size: 26rpx; }
+.cash-num { font-size: 84rpx; font-weight: 700; line-height: 1.1; letter-spacing: -1rpx; }
+.cash-sub { margin-top: 12rpx; color: #8a8f99; font-size: 24rpx; line-height: 1.5; }
+.cash-actions { display: flex; gap: 20rpx; margin-top: 32rpx; }
+.cash-btn { flex: 1; text-align: center; background: #ff7d1a; color: #fff; border-radius: 999rpx; padding: 22rpx 0; font-weight: 600; }
+.cash-btn.ghost { background: #fff; color: #ff7d1a; border: 2rpx solid #ff7d1a; }
+.cash-btn.block { margin-top: 24rpx; }
+.sheet { margin: 0 24rpx 24rpx; padding: 28rpx; background: #fff; border-radius: 24rpx; }
+.sheet-label { color: #8a8f99; font-size: 24rpx; margin-bottom: 12rpx; }
+.sheet-input { background: #f5f6f8; border-radius: 16rpx; padding: 20rpx 24rpx; }
+.sheet-note { color: #8a8f99; font-size: 24rpx; line-height: 1.5; margin: 16rpx 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 16rpx; }
+.chip { padding: 10rpx 28rpx; border-radius: 999rpx; background: #f5f6f8; color: #333; }
+.chip.on { background: #fff3e8; color: #ff7d1a; }
+.list { margin: 0 24rpx; background: #fff; border-radius: 24rpx; overflow: hidden; }
+.row { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 32rpx; border-bottom: 1rpx solid #f0f1f3; }
+.row:last-child { border-bottom: 0; }
+.hint { color: #8a8f99; font-size: 24rpx; }
+.amt { font-weight: 600; }
+.amt.in { color: #ff7d1a; }
+.sec { margin: 28rpx 32rpx 12rpx; color: #8a8f99; font-size: 24rpx; }
+.empty { margin: 0 24rpx; padding: 40rpx; text-align: center; color: #8a8f99; background: #fff; border-radius: 24rpx; }
+.rules { margin: 0 24rpx 40rpx; padding: 8rpx 32rpx 28rpx; background: #fff; border-radius: 24rpx; }
+.rule-h { font-weight: 600; margin-top: 24rpx; }
+.rule-p { color: #8a8f99; font-size: 24rpx; line-height: 1.6; margin-top: 8rpx; }

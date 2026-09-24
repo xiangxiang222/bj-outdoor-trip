@@ -1,73 +1,73 @@
-<view class="wallet-hero">
-  <view class="muted">账户安全保障中</view>
-  <view class="wallet-balance">{{data.balance || 0}}<text class="muted"> 元</text></view>
-  <view class="muted">余额可付团费。充值走微信支付，提现到微信零钱。不支持银行卡。</view>
-  <view class="row" style="margin-top:24rpx">
-    <view class="btn" style="flex:1;margin:0 8rpx 0 0" bindtap="showTopup">微信支付充值</view>
-    <view class="btn ghost" style="flex:1;margin:0" bindtap="showWithdraw">提现到微信</view>
+<view class="cash-card">
+  <view class="cash-safe">账户安全保障中</view>
+  <view class="cash-label">余额（元）</view>
+  <view class="cash-num">{{data.balance || 0}}</view>
+  <view class="cash-sub">可付团费，充值走微信支付，提现到微信零钱。不支持银行卡。</view>
+  <view class="cash-actions">
+    <view class="cash-btn" bindtap="showTopup">充值</view>
+    <view class="cash-btn ghost" bindtap="showWithdraw">提现</view>
   </view>
 </view>
 
-<view class="card" wx:if="{{mode=='topup'}}" id="wallet-form">
-  <view class="pad muted">充值金额（元）</view>
-  <input class="input" type="number" value="{{topupAmount}}" bindinput="setTopup" />
+<view class="sheet" wx:if="{{mode=='topup'}}" id="wallet-form">
+  <view class="sheet-label">充值金额（元）</view>
+  <input class="sheet-input" type="number" value="{{topupAmount}}" bindinput="setTopup" />
   <view class="chips">
     <view class="chip {{topupAmount==item ? 'on' : ''}}" wx:for="{{quick}}" wx:key="*this" bindtap="pickTopup" data-n="{{item}}">{{item}}</view>
   </view>
-  <view class="pad muted">单笔 1～5000 元。支付成功后立即进入余额，用于支付团费。请确认金额后再支付。</view>
-  <view class="btn" bindtap="topup">确认微信支付</view>
+  <view class="sheet-note">单笔 1～5000 元。支付成功后立即进入余额。请确认金额后再支付。</view>
+  <view class="cash-btn block" bindtap="topup">确认微信支付</view>
 </view>
 
-<view class="card" wx:if="{{mode=='withdraw'}}" id="wallet-form">
-  <view class="pad muted" wx:if="{{!data.realNamed}}">微信支付转到零钱须先完成实名。请到下方「实名信息」完善后再提交。</view>
-  <view class="pad muted" wx:if="{{data.realNamed && !data.pinSet}}">请先到下方设置 6 位支付密码，再提交提现。</view>
-  <view class="pad muted">提现金额（元）</view>
-  <input class="input" type="number" value="{{withdrawAmount}}" bindinput="setWithdraw" />
+<view class="sheet" wx:if="{{mode=='withdraw'}}" id="wallet-form">
+  <view class="sheet-note" wx:if="{{!data.realNamed}}">提现前请先完成实名。</view>
+  <view class="sheet-note" wx:if="{{data.realNamed && !data.pinSet}}">提现前请先设置 6 位支付密码。</view>
+  <view class="sheet-label">提现金额（元）</view>
+  <input class="sheet-input" type="number" value="{{withdrawAmount}}" bindinput="setWithdraw" />
   <view class="chips" wx:if="{{rule.available > 0}}">
-    <view class="chip on" bindtap="fillAll">全部提现 {{rule.available}} 元</view>
+    <view class="chip on" bindtap="fillAll">全部 {{rule.available}} 元</view>
   </view>
-  <view class="pad muted">当前余额全部可提，不设最低金额。微信转账单笔上限 2000 元，超出可立即再提。提交后实时到账微信零钱，最迟 24 小时。</view>
-  <view class="pad muted">支付密码</view>
-  <input class="input" password value="{{pin}}" maxlength="6" bindinput="setPin" />
-  <view class="btn" bindtap="withdraw">确认提现到微信</view>
+  <view class="sheet-note">当前余额全部可提，不设最低金额。单笔上限 2000 元，超出可立即再提。提交后实时到账，最迟 24 小时。</view>
+  <view class="sheet-label">支付密码</view>
+  <input class="sheet-input" password value="{{pin}}" maxlength="6" bindinput="setPin" />
+  <view class="cash-btn block" bindtap="withdraw">确认提现</view>
 </view>
 
-<view class="card">
-  <view class="pad">
-    <view class="rule-title">提现规则</view>
-    <view class="rule-title">可提现额度</view>
-    <view class="muted">当前账户余额全部可提现，不设最低提现金额。微信零钱按整数元记账。因微信商家转账到零钱单笔上限 2000 元，超过 2000 元时可连续分笔，每笔提交后立即处理。当前可提现 {{rule.available}} 元。</view>
-    <view class="rule-title">每日提现次数</view>
-    <view class="muted">不限制次数，可随时申请。</view>
-    <view class="rule-title">提现时间</view>
-    <view class="muted">每天 00:00–23:59（北京时间），全天可申请。</view>
-    <view class="rule-title">到账时间</view>
-    <view class="muted">提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。</view>
-    <view class="muted rule-foot">微信支付转到零钱须完成实名并验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。</view>
-    <view class="rule-title">充值规则</view>
-    <view class="rule-title">单笔额度</view>
-    <view class="muted">1～5000 元，须为整数元。</view>
-    <view class="rule-title">到账时间</view>
-    <view class="muted">微信支付成功后立即进入余额。</view>
-    <view class="rule-title">用途</view>
-    <view class="muted">余额用于支付团费。不用时按上方提现规则转到微信零钱。不支持银行卡。</view>
+<view class="list">
+  <view class="row" bindtap="go" data-url="/pages/profile/profile">
+    <text>实名信息</text>
+    <text class="hint">{{data.realNamed ? '已实名' : '待完善'}} ›</text>
+  </view>
+  <view class="row" bindtap="go" data-url="/pages/wallet-pin/wallet-pin">
+    <text>支付密码</text>
+    <text class="hint">{{data.pinSet ? '已设置' : '未设置'}} ›</text>
   </view>
 </view>
 
-<view class="cell-group">
-  <view class="cell" bindtap="go" data-url="/pages/wallet-pin/wallet-pin"><text>支付密码</text><text class="muted">{{data.pinSet ? '已设置' : '未设置'}} ›</text></view>
-  <view class="cell" bindtap="go" data-url="/pages/profile/profile"><text>实名信息</text><text class="muted">{{data.realNamed ? '已实名' : '待完善'}} ›</text></view>
-</view>
-
-<view class="cell-label">账单</view>
-<view class="cell-group" wx:if="{{data.bills.length}}">
-  <view class="cell" wx:for="{{data.bills}}" wx:key="id">
+<view class="sec">零钱明细</view>
+<view class="list" wx:if="{{data.bills.length}}">
+  <view class="row" wx:for="{{data.bills}}" wx:key="id">
     <view>
       <view>{{item.reason}}</view>
-      <view class="muted">{{item.createdAt}}</view>
+      <view class="hint">{{item.createdAt}}</view>
     </view>
-    <text class="muted">{{item.delta > 0 ? '+' : ''}}{{item.delta}}</text>
+    <text class="amt {{item.delta > 0 ? 'in' : ''}}">{{item.delta > 0 ? '+' : ''}}{{item.delta}}</text>
   </view>
 </view>
-<view class="pad muted" wx:else>还没有钱包流水。</view>
-<view class="pad" wx:if="{{msg}}" style="color:#bc4749">{{msg}}</view>
+<view class="empty" wx:else>还没有零钱明细</view>
+
+<view class="sec">零钱规则</view>
+<view class="rules">
+  <view class="rule-h">可提现额度</view>
+  <view class="rule-p">当前账户余额全部可提现，不设最低提现金额。微信零钱按整数元记账。因微信商家转账到零钱单笔上限 2000 元，超过 2000 元时可连续分笔，每笔提交后立即处理。当前可提现 {{rule.available}} 元。</view>
+  <view class="rule-h">每日提现次数</view>
+  <view class="rule-p">不限制次数，可随时申请。</view>
+  <view class="rule-h">提现时间</view>
+  <view class="rule-p">每天 00:00–23:59（北京时间），全天可申请。</view>
+  <view class="rule-h">到账时间</view>
+  <view class="rule-p">提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。</view>
+  <view class="rule-p">微信支付转到零钱须完成实名并验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。</view>
+  <view class="rule-h">充值</view>
+  <view class="rule-p">单笔 1～5000 元，须为整数元。微信支付成功后立即进入余额，用于支付团费。</view>
+</view>
+<view class="pad" wx:if="{{msg}}" style="color:#e85d4c">{{msg}}</view>
