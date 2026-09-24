@@ -3,7 +3,7 @@ const { getDb } = require("../db");
 const config = require("../config");
 const { maskName, maskPhone } = require("./biz");
 const { maskIdCard } = require("./idcard");
-const { transferToBalance, yuanToFen } = require("./wechat");
+const { transferToBalance, queryTransferBill, yuanToFen } = require("./wechat");
 
 const CARD_CLOSED = "已改为提现到微信零钱，不再支持绑定银行卡";
 // 微信商家转账到零钱的通道单笔上限，不是产品最低门槛。
@@ -198,6 +198,21 @@ function withdrawRule(userId) {
   };
 }
 
+function recordWithdrawDebit(userId, amount, outBillNo) {
+  const row = debit(userId, amount, {
+    reason: "提现到微信零钱",
+    scene: "withdraw",
+    refType: "wechat",
+    refId: 0,
+  });
+  if (outBillNo) {
+    getDb()
+      .prepare("UPDATE payments SET status='success' WHERE trade_no=? AND user_id=? AND scene='withdraw'")
+      .run(outBillNo, userId);
+  }
+  return row;
+}
+
 async function withdraw(userId, body = {}) {
   const user = loadUser(userId);
   if (!user.id_card) fail(400, "提现前请先完成实名");
@@ -205,29 +220,72 @@ async function withdraw(userId, body = {}) {
   const bal = balanceOf(userId);
   if (bal <= 0) fail(400, "当前余额为 0，可先充值后再提现");
   const amount = parseWithdrawYuan(body.amount, bal);
-  if (!config.wechat.mock) {
-    if (!user.wechat_openid) fail(400, "请先用微信登录后再提现");
-    const outBatchNo = `WD${Date.now()}${userId}`.slice(0, 32);
-    await transferToBalance({
-      openid: user.wechat_openid,
-      amountFen: yuanToFen(amount),
-      outBatchNo,
-      outDetailNo: `D${outBatchNo}`.slice(0, 32),
-      remark: "提现到零钱",
-    });
+  if (config.wechat.mock) {
+    const row = recordWithdrawDebit(userId, amount, "");
+    return { amount, balance: row.balance, channel: "wechat", instant: true };
   }
-  const row = debit(userId, amount, {
-    reason: "提现到微信零钱",
-    scene: "withdraw",
-    refType: "wechat",
-    refId: 0,
+  if (!user.wechat_openid) fail(400, "请先用微信登录后再提现");
+  const outBillNo = `WD${Date.now()}${userId}`.replace(/\W/g, "").slice(0, 32);
+  const bill = await transferToBalance({
+    openid: user.wechat_openid,
+    amountFen: yuanToFen(amount),
+    outBillNo,
+    remark: "余额提现",
   });
+  getDb()
+    .prepare(
+      "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (?,?,?,?,?,?,?,?,?)"
+    )
+    .run(0, userId, 0, amount, "wechat", "pending", outBillNo, "提现到微信零钱", "withdraw");
+  if (bill.state === "SUCCESS") {
+    const row = recordWithdrawDebit(userId, amount, outBillNo);
+    return { amount, balance: row.balance, channel: "wechat", instant: true, outBillNo };
+  }
   return {
     amount,
-    balance: row.balance,
+    balance: bal,
     channel: "wechat",
-    instant: true,
+    instant: false,
+    needConfirm: true,
+    outBillNo,
+    packageInfo: bill.package_info || "",
+    mchId: config.wechat.mchId,
+    appId: config.wechat.appId,
+    state: bill.state || "",
   };
+}
+
+async function confirmWithdraw(userId, body = {}) {
+  const outBillNo = String(body.outBillNo || body.out_bill_no || "").trim();
+  if (!outBillNo) fail(400, "缺少提现单号");
+  const pay = getDb()
+    .prepare("SELECT * FROM payments WHERE trade_no=? AND user_id=? AND scene='withdraw'")
+    .get(outBillNo, userId);
+  if (!pay) fail(404, "找不到这笔提现");
+  if (pay.status === "success") {
+    return { amount: Number(pay.amount), balance: balanceOf(userId), channel: "wechat", instant: true, outBillNo };
+  }
+  const bill = await queryTransferBill(outBillNo);
+  const state = bill.state || "";
+  if (state === "FAIL" || state === "CANCELLED") {
+    getDb().prepare("UPDATE payments SET status='failed' WHERE id=?").run(pay.id);
+    fail(400, "微信未完成收款，余额未扣");
+  }
+  if (state !== "SUCCESS") {
+    return {
+      amount: Number(pay.amount),
+      balance: balanceOf(userId),
+      needConfirm: true,
+      pending: true,
+      state,
+      outBillNo,
+      packageInfo: bill.package_info || "",
+      mchId: config.wechat.mchId,
+      appId: config.wechat.appId,
+    };
+  }
+  const row = recordWithdrawDebit(userId, Number(pay.amount), outBillNo);
+  return { amount: Number(pay.amount), balance: row.balance, channel: "wechat", instant: true, outBillNo };
 }
 
 function tripCounts(userId) {
@@ -349,6 +407,7 @@ module.exports = {
   resetPin,
   verifyPin,
   withdraw,
+  confirmWithdraw,
   withdrawRule,
   snapshot,
   backfillHistoricCredits,

@@ -27,7 +27,7 @@
   <view class="chips" wx:if="{{rule.available > 0}}">
     <view class="chip on" bindtap="fillAll">全部 {{rule.available}} 元</view>
   </view>
-  <view class="sheet-note">当前余额全部可提，不设最低金额。单笔上限 2000 元，超出可立即再提。提交后实时到账，最迟 24 小时。</view>
+  <view class="sheet-note">当前余额全部可提，不设最低金额。单笔上限 2000 元，超出可立即再提。提交后请在微信里确认收款，确认后实时到账。</view>
   <view class="sheet-label">支付密码</view>
   <input class="sheet-input" password value="{{pin}}" maxlength="6" bindinput="setPin" />
   <view class="cash-btn block" bindtap="withdraw">确认提现</view>

@@ -51,4 +51,27 @@ async function invokeWechatPay(data) {
   return Object.assign({}, data, confirmed.data || {}, { needPay: false, mock: false });
 }
 
-module.exports = { invokeWechatPay, ensureWechatCode, payArgs };
+function requestMerchantTransfer(data) {
+  return new Promise((resolve, reject) => {
+    if (typeof wx.requestMerchantTransfer !== "function") {
+      reject(new Error("请更新微信后再确认收款"));
+      return;
+    }
+    wx.requestMerchantTransfer({
+      mchId: String(data.mchId || ""),
+      appId: data.appId || "",
+      package: data.packageInfo,
+      success: resolve,
+      fail(e) {
+        const msg = (e && (e.errMsg || e.message)) || "未确认收款";
+        if (String(msg).indexOf("cancel") >= 0) {
+          reject(new Error("已取消收款，余额未扣"));
+          return;
+        }
+        reject(new Error(String(msg).replace(/^requestMerchantTransfer:fail\s*/, "") || "未确认收款"));
+      },
+    });
+  });
+}
+
+module.exports = { invokeWechatPay, ensureWechatCode, payArgs, requestMerchantTransfer };

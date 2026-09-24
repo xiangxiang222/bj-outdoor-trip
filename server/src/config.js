@@ -24,6 +24,7 @@ module.exports = {
     mchCertPass: process.env.WX_MCH_CERT_PASS || "",
     subscribeMerge: process.env.WX_TPL_MERGE || "",
     mpState: process.env.WX_MP_STATE || "formal",
+    transferSceneId: process.env.WX_TRANSFER_SCENE_ID || "1000",
   },
   points: {
     earnRate: 1,

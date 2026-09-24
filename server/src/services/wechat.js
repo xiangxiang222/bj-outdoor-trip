@@ -222,40 +222,27 @@ function merchantSerial(certPem) {
   return new crypto.X509Certificate(certPem).serialNumber;
 }
 
-async function transferToBalance({ openid, amountFen, outBatchNo, outDetailNo, remark }) {
-  if (config.wechat.mock) return { mock: true, out_batch_no: outBatchNo };
+function transferFailMessage(data) {
+  const raw = String((data && data.message) || "");
+  if (data && (data.code === "NO_AUTH" || /产品权限未开通|升级前功能/.test(raw))) {
+    return "商户号还没开通新版「商家转账」。请到微信支付商户平台 → 产品中心 → 运营工具 → 商家转账 → 申请开通。旧版「转账到零钱」已停用。";
+  }
+  if (/尚未获取该转账场景/.test(raw)) {
+    return "转账场景未开通。请在商户平台「商家转账 → 产品设置」核对场景编号，并写到服务器 WX_TRANSFER_SCENE_ID。";
+  }
+  return raw || "提现到微信零钱失败";
+}
+
+async function wechatV3({ method, urlPath, body = "" }) {
   const cert = loadMchCert();
   if (!cert) {
     const err = new Error("未配置商户API证书，无法提现到微信零钱");
     err.status = 400;
     throw err;
   }
-  if (!openid) {
-    const err = new Error("请先用微信登录后再提现");
-    err.status = 400;
-    throw err;
-  }
-  const urlPath = "/v3/transfer/batches";
-  const payload = {
-    appid: config.wechat.appId,
-    out_batch_no: outBatchNo,
-    batch_name: "提现到零钱",
-    batch_remark: String(remark || "提现到零钱").slice(0, 32),
-    total_amount: amountFen,
-    total_num: 1,
-    transfer_detail_list: [
-      {
-        out_detail_no: outDetailNo,
-        transfer_amount: amountFen,
-        transfer_remark: String(remark || "提现").slice(0, 32),
-        openid,
-      },
-    ],
-  };
-  const body = JSON.stringify(payload);
   const serial = merchantSerial(cert.cert);
   const signed = signWechatV3({
-    method: "POST",
+    method,
     urlPath,
     body,
     privateKey: cert.key,
@@ -264,22 +251,64 @@ async function transferToBalance({ openid, amountFen, outBatchNo, outDetailNo, r
   const authorization =
     `WECHATPAY2-SHA256-RSA2048 mchid="${config.wechat.mchId}",nonce_str="${signed.nonce}",timestamp="${signed.timestamp}",serial_no="${serial}",signature="${signed.signature}"`;
   const res = await fetch("https://api.mch.weixin.qq.com" + urlPath, {
-    method: "POST",
+    method,
     headers: {
       Authorization: authorization,
       Accept: "application/json",
       "Content-Type": "application/json",
-      "Wechatpay-Serial": serial,
     },
-    body,
+    body: method === "GET" ? undefined : body,
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || data.code) {
-    const err = new Error(data.message || "提现到微信零钱失败");
+    const err = new Error(transferFailMessage(data));
     err.status = 400;
+    err.payload = data;
     throw err;
   }
   return data;
+}
+
+async function transferToBalance({ openid, amountFen, outBillNo, remark }) {
+  if (config.wechat.mock) return { mock: true, state: "SUCCESS", out_bill_no: outBillNo };
+  if (!openid) {
+    const err = new Error("请先用微信登录后再提现");
+    err.status = 400;
+    throw err;
+  }
+  const sceneId = String(config.wechat.transferSceneId || "1000");
+  const payload = {
+    appid: config.wechat.appId,
+    out_bill_no: outBillNo,
+    transfer_scene_id: sceneId,
+    openid,
+    transfer_amount: amountFen,
+    transfer_remark: String(remark || "余额提现").slice(0, 32),
+    user_recv_perception: "现金奖励",
+    transfer_scene_report_infos:
+      sceneId === "1006"
+        ? [
+            { info_type: "报销事由", info_content: "钱包余额提现" },
+            { info_type: "费用说明", info_content: "提现到微信零钱" },
+          ]
+        : [
+            { info_type: "活动名称", info_content: "余额提现" },
+            { info_type: "奖励说明", info_content: "钱包余额转出" },
+          ],
+  };
+  const body = JSON.stringify(payload);
+  const data = await wechatV3({ method: "POST", urlPath: "/v3/fund-app/mch-transfer/transfer-bills", body });
+  return data;
+}
+
+async function queryTransferBill(outBillNo) {
+  if (config.wechat.mock) return { mock: true, state: "SUCCESS", out_bill_no: outBillNo };
+  const bill = encodeURIComponent(String(outBillNo || ""));
+  return wechatV3({
+    method: "GET",
+    urlPath: `/v3/fund-app/mch-transfer/transfer-bills/out-bill-no/${bill}`,
+    body: "",
+  });
 }
 
 async function refundOrder({ tradeNo, transactionId, refundNo, totalFen, refundFen }) {
@@ -488,6 +517,7 @@ module.exports = {
   queryOrder,
   refundOrder,
   transferToBalance,
+  queryTransferBill,
   refundCertLive,
   loadMchCert,
   clientIp,
