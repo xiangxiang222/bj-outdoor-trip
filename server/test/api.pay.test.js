@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const { harness, loginUser, auth, ID, issueCaptcha } = require("./http");
 const config = require("../src/config");
 const { signMd5, objToXml, UNIFIED_ORDER_URL, ORDER_QUERY_URL } = require("../src/services/wechat");
+const { shipmentRetryDelays } = require("../src/services/payment");
 
 const LIVE_KEY = "a".repeat(32);
 
@@ -22,7 +23,7 @@ function useLivePay() {
   return () => Object.assign(config.wechat, prev);
 }
 
-function mockWechatPay(tradeState = "SUCCESS") {
+function mockWechatPay(tradeState = "SUCCESS", mockOpts = {}) {
   const orig = global.fetch;
   const calls = [];
   global.fetch = async (url, opts) => {
@@ -37,7 +38,8 @@ function mockWechatPay(tradeState = "SUCCESS") {
     if (href.includes("upload_shipping_info")) {
       const body = JSON.parse(String(opts && opts.body));
       calls.push(body);
-      return { json: async () => ({ errcode: 0, errmsg: "ok" }) };
+      const missing = mockOpts.missingShipOnce && calls.filter((item) => item && item.logistics_type === 3).length === 1;
+      return { json: async () => (missing ? { errcode: 10060001, errmsg: "支付单不存在" } : { errcode: 0, errmsg: "ok" }) };
     }
     if (href === UNIFIED_ORDER_URL) {
       return { text: async () => objToXml({ return_code: "SUCCESS", result_code: "SUCCESS", prepay_id: "wx_prepay_live" }) };
@@ -374,5 +376,31 @@ describe("wechat order detail", () => {
     assert.equal(res.body.data.amount, 199);
     assert.equal(res.body.data.status, "success");
     await agent.get("/api/pay/order/TN-ORDER-1").expect(401);
+  });
+
+  it("retries virtual shipping after WeChat says the ship order does not exist yet", async () => {
+    const restorePay = useLivePay();
+    const wechat = mockWechatPay("SUCCESS", { missingShipOnce: true });
+    const prev = shipmentRetryDelays.slice();
+    shipmentRetryDelays.splice(0, shipmentRetryDelays.length, 30, 30, 30);
+    try {
+      const token = await loginUser(agent);
+      seed.db.prepare("UPDATE users SET wechat_openid=? WHERE id=?").run("oLIVEPAYOPENID", seed.userId);
+      seed.db
+        .prepare(
+          "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene,wechat_transaction_id) VALUES (0,?,?,?,?,?,?,?,?,?)"
+        )
+        .run(seed.userId, 0, 1, "wechat", "success", "TN-SHIP", "钱包充值", "wallet_topup", "4200000001");
+      await agent.post("/api/pay/confirm").set(auth(token)).send({ tradeNo: "TN-SHIP" }).expect(200);
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      const bodies = wechat.calls.filter((item) => item && item.logistics_type === 3);
+      assert.equal(bodies.length, 2);
+      assert.equal(bodies[1].order_key.order_number_type, 1);
+      assert.equal(bodies[1].order_key.out_trade_no, "TN-SHIP");
+    } finally {
+      shipmentRetryDelays.splice(0, shipmentRetryDelays.length, ...prev);
+      wechat.restore();
+      restorePay();
+    }
   });
 });

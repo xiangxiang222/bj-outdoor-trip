@@ -664,20 +664,48 @@ function shipmentDesc(pay) {
   return "同行者众";
 }
 
-async function reportSettledShipment(tradeNo) {
+const shipmentRetries = new Map();
+const shipmentRetryDelays = [30000, 90000, 180000];
+
+async function reportSettledShipment(tradeNo, opts = {}) {
   const pay = chargeOf(tradeNo);
-  if (!pay || pay.status !== "success" || !loginLive()) return;
+  if (!pay || pay.status !== "success" || !loginLive()) return "skip";
   const user = getDb().prepare("SELECT wechat_openid FROM users WHERE id=?").get(pay.user_id);
   try {
     await uploadVirtualShipping({
       outTradeNo: pay.trade_no,
-      transactionId: pay.wechat_transaction_id,
+      transactionId: opts.merchantOrder ? "" : pay.wechat_transaction_id,
       openid: user && user.wechat_openid,
       itemDesc: shipmentDesc(pay),
     });
+    shipmentRetries.delete(String(tradeNo));
+    return "ok";
   } catch (err) {
+    const missing = /支付单不存在/.test(String(err && err.message));
+    if (missing) {
+      scheduleShipmentRetry(tradeNo);
+      return "missing";
+    }
     console.error("虚拟发货上报失败", pay.trade_no, err && err.message);
+    return "fail";
   }
+}
+
+function scheduleShipmentRetry(tradeNo) {
+  const key = String(tradeNo);
+  const state = shipmentRetries.get(key) || { n: 0 };
+  if (state.timer || state.n >= shipmentRetryDelays.length) return;
+  const wait = shipmentRetryDelays[state.n];
+  state.n += 1;
+  state.timer = setTimeout(() => {
+    state.timer = null;
+    shipmentRetries.set(key, state);
+    reportSettledShipment(key, { merchantOrder: true }).catch((err) => {
+      console.error("虚拟发货上报失败", key, err && err.message);
+    });
+  }, wait);
+  if (state.timer.unref) state.timer.unref();
+  shipmentRetries.set(key, state);
 }
 
 function orderByTradeNo(tradeNo, userId) {
@@ -753,6 +781,7 @@ module.exports = {
   handleWechatNotify,
   confirmTrade,
   orderByTradeNo,
+  shipmentRetryDelays,
   completeEnrollmentPay,
   applyEnrollmentCharge,
   refundEnrollmentToPayers,
