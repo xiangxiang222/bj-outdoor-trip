@@ -317,6 +317,24 @@ function mapBus(bus, sch, req) {
   };
 }
 
+function briefRouteView(route, brief) {
+  if (!route || !brief) return route;
+  return {
+    id: route.id,
+    code: route.code,
+    title: route.title,
+    subtitle: route.subtitle,
+    days: route.days,
+    difficulty: route.difficulty,
+    category: route.category,
+    region: route.region,
+    tags: route.tags || [],
+    cover: route.cover,
+    equipment: route.equipment,
+    packingList: route.packingList || [],
+  };
+}
+
 function compactRoute(row) {
   if (!row) return { id: 0, title: "", code: "", region: "", category: "", tags: [] };
   const r = toRoute(row);
@@ -325,6 +343,9 @@ function compactRoute(row) {
 
 function scheduleView(sch, req, opts = {}) {
   const compact = Boolean(opts.compact);
+  const card = Boolean(opts.card);
+  const briefRoute = Boolean(opts.briefRoute);
+  const light = compact || card;
   const route = db().prepare("SELECT * FROM routes WHERE id=?").get(sch.route_id);
   const bus = db().prepare("SELECT * FROM bus_types WHERE id=?").get(sch.bus_type_id);
   const guideRow = sch.guide_id ? db().prepare("SELECT * FROM guides WHERE id=?").get(sch.guide_id) : null;
@@ -337,7 +358,7 @@ function scheduleView(sch, req, opts = {}) {
     ? (req.adminId ? enrolledCount(sch.id, true) : realEnrolledCount(sch.id, true))
     : shown;
   const people = Math.max(shown || enrolled, 1);
-  const quote = compact ? null : quoteForSchedule(sch, realLive || sch.min_group_size, null);
+  const quote = light && !card ? null : quoteForSchedule(sch, realLive || sch.min_group_size, null);
   const offer = offerMeta(sch.offer_type);
   const cost =
     (sch.cost_transport || 0) +
@@ -347,7 +368,8 @@ function scheduleView(sch, req, opts = {}) {
     (sch.cost_guide || 0) +
     (sch.cost_other || 0);
     const revenue = db().prepare("SELECT IFNULL(SUM(pay_amount),0) AS s FROM enrollments WHERE schedule_id=? AND status='joined'").get(sch.id).s;
-  const mappedRoute = compact ? compactRoute(route) : mapRoute(route, req);
+  const fullRoute = light && !briefRoute ? null : mapRoute(route, req);
+  const mappedRoute = light && !briefRoute ? compactRoute(route) : briefRouteView(fullRoute, briefRoute);
   const meetup = meetupMap(sch.meetup_point);
   let lockedCount = 0;
   try {
@@ -356,7 +378,7 @@ function scheduleView(sch, req, opts = {}) {
   } catch {
     lockedCount = 0;
   }
-  const leaders = compact ? [] : leadersOf(sch.id, req);
+  const leaders = light ? [] : leadersOf(sch.id, req);
   const viewer = req.userId ? db().prepare("SELECT * FROM users WHERE id=?").get(req.userId) : null;
   const organizer = adoptOrganizer(sch);
   const kind = tripKindOf(sch.organizer_type, sch.channel === "activity" ? "activity" : "trip");
@@ -365,7 +387,7 @@ function scheduleView(sch, req, opts = {}) {
     id: sch.id,
     routeId: sch.route_id,
     route: mappedRoute,
-    gallery: compact ? [] : galleryOfSchedule(mappedRoute, req),
+    gallery: light ? (mappedRoute && mappedRoute.cover ? [mappedRoute.cover] : []) : galleryOfSchedule(fullRoute || mappedRoute, req),
     startDate: sch.start_date,
     endDate: sch.end_date,
     organizerType: official ? "official" : sch.organizer_type,
@@ -374,7 +396,7 @@ function scheduleView(sch, req, opts = {}) {
     kind: kind.key,
     kindLabel: kind.label,
     companyName: sch.company_name,
-    bus: compact
+    bus: light
       ? bus
         ? { id: bus.id, name: bus.name, seats: bus.seats, plateNo: sch.plate_no || "" }
         : null
@@ -383,7 +405,7 @@ function scheduleView(sch, req, opts = {}) {
     maxSeats: sch.max_seats,
     meetupPoint: sch.meetup_point,
     meetupTime: sch.meetup_time,
-    meetupMapUrl: compact ? "" : meetup.url,
+    meetupMapUrl: light ? "" : meetup.url,
     meetupLat: meetup.lat,
     meetupLng: meetup.lng,
     meetupPrecise: meetup.precise,
@@ -403,15 +425,15 @@ function scheduleView(sch, req, opts = {}) {
     people,
     guide,
     leaders,
-    photographer: compact ? null : photographerOf(sch.id, req),
-    leaderRecruitCopy: compact ? "" : leaderRecruitCopy,
+    photographer: light ? null : photographerOf(sch.id, req),
+    leaderRecruitCopy: light ? "" : leaderRecruitCopy,
     ...(req.adminId
       ? {
           realEnrolled: realLive,
           virtualEnrolled: virtualLive,
           heatMode: sch.heat_mode || "auto",
           heatLocked: Boolean(Number(sch.heat_locked)),
-          ...(compact ? {} : { heat: require("./services/virtual-heat").snapshotOf(sch) }),
+          ...(light ? {} : { heat: require("./services/virtual-heat").snapshotOf(sch) }),
         }
       : {}),
     canEnrollDirect: isOversubPending(sch) || Math.max(0, sch.max_seats - live - lockedCount) > 0 || virtualLive > 0,
@@ -434,14 +456,14 @@ function scheduleView(sch, req, opts = {}) {
     offerType: (quote && quote.offerType) || sch.offer_type || "full",
     offerLabel: (quote && quote.offerLabel) || offer.label,
     offerColor: (quote && quote.offerColor) || offer.color,
-    playTags: compact ? [] : resolvePlayTags(sch, mappedRoute, req),
+    playTags: light ? [] : resolvePlayTags(sch, mappedRoute, req),
     reviewStatus: sch.review_status || "approved",
-    combo: compact ? null : comboView(sch, viewer),
-    eligibility: eligibilityView(sch, viewer),
-    oversub: oversubView(sch),
-    refundPolicy: compact ? null : refundPolicyView(route, sch),
+    combo: light ? null : comboView(sch, viewer),
+    eligibility: light ? null : eligibilityView(sch, viewer),
+    oversub: light ? null : oversubView(sch),
+    refundPolicy: light ? null : refundPolicyView(route, sch),
     ...joinLockView(sch, req),
-    ...(compact ? {} : lotteryPublic(sch.id)),
+    ...(light ? {} : lotteryPublic(sch.id)),
     bountyAmount: Number(sch.bounty_amount || 0),
     bountyStatus: sch.bounty_status || "",
     mergedInto: Number(sch.merged_into || 0) || 0,
@@ -1329,7 +1351,7 @@ router.get("/routes/:id", optionalUser, (req, res) => {
   const schedules = db()
     .prepare("SELECT * FROM schedules WHERE route_id=? AND start_date>=date('now','-1 day') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved' ORDER BY start_date")
     .all(row.id)
-    .map((s) => scheduleView(s, req));
+    .map((s) => scheduleView(s, req, { card: true }));
   let favored = false;
   if (req.userId) {
     favored = !!db().prepare("SELECT 1 FROM favorites WHERE user_id=? AND route_id=?").get(req.userId, row.id);
@@ -1339,7 +1361,7 @@ router.get("/routes/:id", optionalUser, (req, res) => {
   const playTags = listPlayTags().filter((t) => names.has(t.name)).map((t) => mapPlayTag(t, req));
   res.json({
     ok: true,
-    data: mapRoute(row, req, {
+    data: Object.assign(mapped, {
       priceTiers: bundle.tiers.map((t) => ({ minPeople: t.min_people, maxPeople: t.max_people, price: t.price, memberPrice: liveMemberPrice(t.price), studentPrice: liveStudentPrice(t.price) })),
       buses: bundle.buses,
       schedules,
@@ -1428,7 +1450,7 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
   res.json({
     ok: true,
     data: {
-      ...scheduleView(sch, req),
+      ...scheduleView(sch, req, { briefRoute: true }),
       chain,
       isOrganizer: !!(req.userId && sch.organizer_id && Number(req.userId) === Number(sch.organizer_id)),
       consultGroupQr: await groupQrPayload(groupText),

@@ -140,10 +140,13 @@ Page({
         cancelSummary: (s.refundPolicy && s.refundPolicy.summary) || this.data.cancelSummary,
         cancelItems: (s.refundPolicy && s.refundPolicy.items) || this.data.cancelItems,
         refundHint: (s.refundPolicy && s.refundPolicy.current && s.refundPolicy.current.hint) || "",
+        routeDetail: (s.route && s.route.title) ? s.route : this.data.routeDetail,
+      }, () => {
+        this.loadRoute(s.routeId || (s.route && s.route.id));
+        this.loadExtras();
+        this.prepareShare(s);
       });
       wx.setNavigationBarTitle({ title: isActivity ? "局详情" : "行程详情" });
-      this.loadRoute(s.routeId || (s.route && s.route.id));
-      this.prepareShare(s);
       const region = s && s.route && [s.route.region, s.route.title].filter(Boolean).join(" ");
       const date = s && s.startDate;
       if (region && !isActivity) {
@@ -154,6 +157,8 @@ Page({
         }).catch(() => {});
       }
     });
+  },
+  loadExtras() {
     request("/schedules/" + this.data.id + "/seats").then((r) => {
       if (this.data.isActivity) {
         this.setData({ seatRows: [] });
@@ -194,6 +199,7 @@ Page({
     if (!routeId) return;
     request("/routes/" + routeId).then((r) => {
       const route = r.data || {};
+      delete route.schedules;
       const used = {};
       (route.story || []).forEach((b) => {
         if (b && b.type === "image" && b.url) used[b.url] = true;
