@@ -8,9 +8,8 @@ const { applyOfferQuote, liveMemberPrice } = require("./offer");
 
 function isMember(user) {
   if (!user) return false;
-  if (!user.is_member) return false;
-  if (!user.member_expire_at) return true;
-  return !dayjs(user.member_expire_at).isBefore(dayjs(), "day");
+  const { memberState } = require("./tiers");
+  return memberState(user).level >= 2;
 }
 
 function isStudent(user) {
@@ -110,22 +109,27 @@ function quoteForSchedule(schedule, people, user) {
     bundle.tiers.map((t) => ({ minPeople: t.min_people, price: t.price, memberPrice: t.member_price })),
     people
   );
-  const member = isMember(user);
+  const card = require("./tiers").memberState(user);
+  const member = card.level >= 2;
   const student = isStudent(user);
   const origin = Number(tier.price);
+  const memberPrice = Math.round(origin * (member ? card.rate : require("./tiers").levelFromGrowth(500).rate));
   return applyOfferQuote(
     {
       people,
       tierMin: tier.minPeople,
-      price: member ? liveMemberPrice(origin) : origin,
+      price: member ? Math.round(origin * card.rate) : origin,
       originPrice: origin,
-      memberPrice: liveMemberPrice(origin),
+      memberPrice,
       isMember: member,
       isStudent: student,
+      memberLevel: card.level,
+      memberCode: card.code,
     },
     schedule,
     member,
-    student
+    student,
+    member ? card.rate : require("./tiers").levelFromGrowth(500).rate
   );
 }
 

@@ -43,7 +43,8 @@ const { offerMeta, liveMemberPrice, liveStudentPrice, flagOn } = require("./serv
 const { publicUserProfile, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
 const { payEnrollment, buyWalletTopup, payCompanySchedule, confirmTrade, orderByTradeNo, applyWechatSession, applyEnrollmentCharge } = require("./services/payment");
 const { payShareView, collectedMapForSchedule, payProgress, ensurePayShareToken, contributorsOf } = require("./services/pay-ledger");
-const { grantMembership, refundMembership } = require("./services/member");
+const { refundMembership } = require("./services/member");
+const { memberState, setMemberLevel } = require("./services/tiers");
 const { addPhoto, removePhoto, ensureReferralCode, resolveLiveUser, adoptOrganizer } = require("./services/profile");
 const { leadersOf, applyLeader, settleLeaderRewards, recruitPayload } = require("./services/leaders");
 const { referralCard, groupQrPayload, settleEnrollReferrals } = require("./services/referral");
@@ -204,6 +205,7 @@ function userPublic(u, req) {
     birthday: u.birthday,
     hometown: u.hometown,
     isMember: isMember(u),
+    membership: memberState(u),
     memberExpireAt: u.member_expire_at,
     memberGiftLeft: Number(u.member_gift_left || 0),
     points: u.points,
@@ -2202,6 +2204,7 @@ function adminUserView(user) {
     gender: user.gender,
     is_member: user.is_member,
     isMember: isMember(user),
+    membership: memberState(user),
     isStudent: isStudent(user),
     isAlumni: isAlumni(user),
     studentStatus: user.student_status || "",
@@ -3028,7 +3031,7 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
   const q = String(req.query.q || "").trim();
   const pending = String(req.query.pending || "").trim();
   let sql =
-    "SELECT id,phone,nickname,gender,is_member,member_expire_at,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,college,major,student_no,student_card_url,campus_kind,group_status,group_name,role,leader_status,leader_name,leader_years,leader_intro FROM users WHERE deleted_at IS NULL";
+    "SELECT id,phone,nickname,gender,is_member,member_expire_at,member_level,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,college,major,student_no,student_card_url,campus_kind,group_status,group_name,role,leader_status,leader_name,leader_years,leader_intro FROM users WHERE deleted_at IS NULL";
   const args = [];
   if (q) {
     sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ? OR IFNULL(school,'') LIKE ? OR IFNULL(college,'') LIKE ? OR IFNULL(major,'') LIKE ? OR IFNULL(group_name,'') LIKE ? OR IFNULL(leader_name,'') LIKE ?)";
@@ -3047,6 +3050,7 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
     .map((u) => ({
       ...u,
       isMember: isMember(u),
+      membership: memberState(u),
       isStudent: isStudent(u),
       isAlumni: isAlumni(u),
       isLeader: isLeader(u),
@@ -3172,14 +3176,23 @@ router.post("/admin/users/:id/member", authAdmin, requireCap("ops"), (req, res) 
   const user = managedUser(req.params.id);
   if (!user) return res.status(404).json({ ok: false, message: "用户不存在" });
   const action = (req.body || {}).action || "grant";
-  if (action === "revoke") {
+  const level = (req.body || {}).level;
+  if (level != null && level !== "") {
+    try {
+      setMemberLevel(user.id, level);
+    } catch (e) {
+      return jsonError(res, e);
+    }
+  } else if (action === "revoke") {
+    setMemberLevel(user.id, 1);
     db().prepare("UPDATE users SET is_member=0, member_expire_at=NULL WHERE id=?").run(user.id);
   } else if (action === "refund") {
     return refundMembership(user.id)
       .then((next) => res.json({ ok: true, data: adminUserView(next) }))
       .catch((e) => jsonError(res, e));
   } else if (action === "grant") {
-    grantMembership(user.id);
+    setMemberLevel(user.id, 2);
+    db().prepare("UPDATE users SET is_member=1 WHERE id=?").run(user.id);
   } else {
     return res.status(400).json({ ok: false, message: "操作无效" });
   }

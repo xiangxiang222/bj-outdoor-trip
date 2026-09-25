@@ -1,1 +1,16 @@
-/* inherit */
+page { background: #f4f0fa; }
+.hero { margin: 24rpx; padding: 28rpx 28rpx 32rpx; border-radius: 28rpx; background: linear-gradient(180deg, #efe7ff, #f7f4fb); color: #3a1848; position: relative; overflow: hidden; }
+.codes { display: flex; justify-content: space-between; font-size: 24rpx; color: #9b8aaf; }
+.code.on { color: #6b2178; font-weight: 700; }
+.mark { position: absolute; right: 24rpx; top: 72rpx; font-size: 120rpx; font-weight: 800; color: rgba(107,33,120,.16); line-height: 1; }
+.title { margin-top: 28rpx; font-size: 48rpx; font-weight: 800; }
+.grow { margin-top: 16rpx; font-size: 28rpx; }
+.bar { margin-top: 12rpx; height: 12rpx; border-radius: 999rpx; background: #e4d8f2; overflow: hidden; }
+.bar-in { height: 12rpx; background: #6b2178; }
+.sub { margin-top: 8rpx; font-size: 22rpx; color: #6b2178; }
+.month { margin-top: 16rpx; font-size: 24rpx; color: #6b705c; }
+.perk-head { margin: 8rpx 32rpx; text-align: center; color: #6b2178; font-size: 26rpx; }
+.perk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16rpx; margin: 0 24rpx 24rpx; }
+.perk { background: #fff; border-radius: 20rpx; padding: 28rpx 20rpx; }
+.perk-name { font-size: 28rpx; font-weight: 650; color: #3a1848; }
+.note { margin: 0 32rpx 32rpx; color: #8a8f99; font-size: 22rpx; line-height: 1.5; }

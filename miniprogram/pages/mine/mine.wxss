@@ -17,7 +17,7 @@
 .avatar-action { text-align: center; padding: 28rpx 0; border-top: 1rpx solid #f0f1f3; font-size: 32rpx; }
 .avatar-action.cancel { color: #7a7d74; }
 .mine-gear { background: #f6f3ee; border-radius: 999rpx; padding: 12rpx 20rpx; font-size: 24rpx; }
-.mine-member { margin: 0 16rpx 16rpx; padding: 24rpx; border-radius: 16rpx; background: linear-gradient(118deg, #ece2ff, #d8c4f7); display: flex; justify-content: space-between; align-items: center; }
+.mine-member { margin: 0 16rpx 16rpx; padding: 24rpx; border-radius: 16rpx; background: linear-gradient(118deg, #efe7ff, #e4d4f7); display: flex; justify-content: space-between; align-items: center; }
 .mine-shortcuts { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; margin: 0 16rpx 16rpx; border-radius: 16rpx; padding: 24rpx 8rpx; text-align: center; }
 .mine-wallet { display: grid; grid-template-columns: 1fr 1fr 1fr auto; align-items: end; background: #fff; margin: 0 16rpx 8rpx; border-radius: 16rpx; padding: 24rpx; gap: 8rpx; }
 .mine-grid { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; margin: 0 16rpx 8rpx; border-radius: 16rpx; padding: 24rpx 8rpx 16rpx; text-align: center; font-size: 22rpx; }

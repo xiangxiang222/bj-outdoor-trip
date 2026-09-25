@@ -119,8 +119,12 @@ describe("admin staff and user ops", () => {
 
     const grant = await agent.post(`/api/admin/users/${userId}/member`).set(auth(adminToken)).send({ action: "grant" }).expect(200);
     assert.equal(grant.body.data.isMember, true);
+    assert.equal(grant.body.data.membership.level, 2);
+    const diamond = await agent.post(`/api/admin/users/${userId}/member`).set(auth(adminToken)).send({ level: 4 }).expect(200);
+    assert.equal(diamond.body.data.membership.code, "V4");
     const revoke = await agent.post(`/api/admin/users/${userId}/member`).set(auth(adminToken)).send({ action: "revoke" }).expect(200);
     assert.equal(revoke.body.data.isMember, false);
+    assert.equal(revoke.body.data.membership.level, 1);
 
     await agent.post(`/api/admin/users/${userId}/close`).set(auth(adminToken)).expect(200);
     const after = await agent.get("/api/admin/users?q=后台操作用户").set(auth(adminToken)).expect(200);

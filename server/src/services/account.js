@@ -62,6 +62,7 @@ async function deleteAccount(userId) {
       hometown=NULL,
       company_name=NULL,
       is_member=0,
+      member_level=1,
       member_expire_at=NULL,
       points=0,
       wallet_balance=0,
