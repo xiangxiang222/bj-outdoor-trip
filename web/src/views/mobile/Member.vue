@@ -99,23 +99,24 @@ onMounted(async () => {
   line-height: 1;
   padding: 8px;
 }
-.member-now { margin: 22px 0 0; font-size: 12px; color: #8d7a9e; }
-.member-hero h2 { margin: 2px 0 0; font-size: 32px; letter-spacing: 0.5px; }
+.member-now { margin: 22px 0 0; font-size: 12px; color: #8d7a9e; position: relative; z-index: 2; }
+.member-hero h2 { margin: 2px 0 0; font-size: 32px; letter-spacing: 0.5px; position: relative; z-index: 2; }
 .member-mark {
   position: absolute;
-  right: 4px;
-  top: 28px;
-  width: 132px;
-  height: 132px;
+  right: 0;
+  top: 16px;
+  z-index: 0;
+  width: 146px;
+  height: 118px;
   object-fit: contain;
   pointer-events: none;
 }
-.member-meter { display: flex; align-items: center; gap: 8px; margin-top: 14px; position: relative; z-index: 1; }
+.member-meter { display: flex; align-items: center; gap: 8px; margin-top: 14px; position: relative; z-index: 2; }
 .member-meter span { font-size: 13px; white-space: nowrap; }
 .member-meter b { font-size: 16px; }
 .member-track {
   position: relative;
-  width: 128px;
+  width: 108px;
   height: 8px;
   border-radius: 99px;
   background: #eadcf6;
