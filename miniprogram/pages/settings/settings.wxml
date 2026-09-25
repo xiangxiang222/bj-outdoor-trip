@@ -1,6 +1,9 @@
 <view class="sec">当前账号</view>
 <view class="account">
-  <view class="avatar">{{nickHead}}</view>
+  <view class="avatar">
+    <image wx:if="{{user.avatar}}" src="{{user.avatar}}" mode="aspectFill" />
+    <text wx:else>{{nickHead}}</text>
+  </view>
   <view>
     <view class="name">{{user.nickname || '未设置昵称'}}</view>
     <view class="phone">{{phone || '未绑定手机'}}</view>
