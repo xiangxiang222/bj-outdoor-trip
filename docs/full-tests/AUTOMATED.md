@@ -36,7 +36,7 @@
 2. rejects company tours and requires percent cap
 3. claims once per user and decrements stock
 4. applies coupon vs member as the lower price, never stacking
-5. skips coupon when member 95% is cheaper or equal
+5. skips coupon when V2 member price is cheaper or equal
 6. does not redeem coupon when gift trip applies
 7. holds coupon on waitlist and redeems after promote, releases on cancel
 8. rejects company enroll with coupon and pauses new claims

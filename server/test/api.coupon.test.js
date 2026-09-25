@@ -121,8 +121,8 @@ describe("coupons", () => {
     assert.equal(Number(uc.used_enrollment_id), enrolled.body.data.enrollmentId);
   });
 
-  it("skips coupon when member 95% is cheaper or equal", async () => {
-    const { campaign } = await issueAmount(5, 5);
+  it("skips coupon when V2 member price is cheaper or equal", async () => {
+    const { campaign } = await issueAmount(5, 4);
     const token = await loginUser(agent);
     const enrolled = await agent
       .post("/api/enroll")
@@ -134,7 +134,7 @@ describe("coupons", () => {
       })
       .expect(200);
     assert.equal(enrolled.body.data.quote.couponApplied, false);
-    assert.equal(enrolled.body.data.quote.payAmount, 189);
+    assert.equal(enrolled.body.data.quote.payAmount, 195);
     const uc = seed.db.prepare("SELECT * FROM user_coupons WHERE user_id=?").get(seed.userId);
     assert.equal(uc.status, "unused");
   });
@@ -370,7 +370,7 @@ describe("coupons", () => {
       insuranceCode: "none",
     }).expect(200);
     assert.equal(enrolled.body.data.quote.couponApplied, true);
-    assert.equal(enrolled.body.data.quote.payAmount, 179);
+    assert.equal(enrolled.body.data.quote.payAmount, 185);
   });
 
   it("filters claim by idle months and trip count", async () => {
