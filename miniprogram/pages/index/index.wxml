@@ -93,7 +93,7 @@
 
 <view class="feed-card" wx:for="{{groups}}" wx:key="id" bindtap="goGroup" data-id="{{item.id}}">
   <view class="feed-cover">
-    <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
+    <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" lazy-load />
     <view wx:else class="feed-ph">{{item.coverMark}}</view>
     <view class="feed-boarded">{{item.boarded}}</view>
   </view>

@@ -20,6 +20,7 @@ describe("feedCard", () => {
     expect(hostName({ organizerType: "campus", companyName: "北京大学", organizerName: "张三" })).toBe("北京大学");
     expect(hostName({ organizerType: "official", organizerName: "平台管理员" })).toBe("同行者众");
     expect(hostName({ organizerName: "李四" })).toBe("李四");
+    expect(coverOf({ coverThumb: "/static/thumbs/360/photos/a.jpg", gallery: ["/big.jpg"] })).toBe("/static/thumbs/360/photos/a.jpg");
     expect(coverOf({ route: { cover: "/a.jpg" } })).toBe("/a.jpg");
     expect(coverOf({ gallery: [{ thumb: "/t.jpg" }] })).toBe("/t.jpg");
     expect(taglineOf({ playTags: [{ name: "徒步" }, { name: "摄影" }] })).toBe("徒步 · 摄影");
