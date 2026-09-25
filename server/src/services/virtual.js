@@ -1,4 +1,6 @@
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 const bcrypt = require("bcryptjs");
 const dayjs = require("dayjs");
 const { getDb } = require("../db");
@@ -111,6 +113,25 @@ const NICK_POOL = [
   "出门晒晒",
   "走走就好",
   "想呼吸空气",
+  "山里见",
+  "晚风刚好",
+  "今日宜出门",
+  "背包客小周",
+  "不想宅",
+  "香山常客",
+  "云层上面",
+  "徒步新手",
+  "看完日落回",
+  "城市逃兵",
+  "风有点大",
+  "下次还去",
+  "胶片周末",
+  "只带水和外套",
+  "山路十八弯",
+  "早起看雾",
+  "朋友圈失踪",
+  "今天也出门",
+  "远一点就好",
 ];
 const PHONE_PREFIXES = [
   "130",
@@ -220,6 +241,21 @@ function pickInsurancePlan() {
   if (r <= 55) return config.insurance.plans.find((p) => p.code === "outdoor") || config.insurance.plans[0];
   if (r <= 68) return config.insurance.plans.find((p) => p.code === "plus") || config.insurance.plans[0];
   return config.insurance.plans[0];
+}
+
+function avatarFiles() {
+  const dir = path.join(config.publicDir, "static", "uploads", "virtual-avatars");
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir)
+    .filter((name) => /\.(png|jpe?g|webp)$/i.test(name))
+    .map((name) => `/static/uploads/virtual-avatars/${name}`);
+}
+
+function pickAvatar() {
+  const files = avatarFiles();
+  if (!files.length) return "";
+  return pick(files);
 }
 
 function recentStamp() {
@@ -339,10 +375,10 @@ function createVirtualUser() {
   const createdAt = recentStamp();
   const userInfo = db
     .prepare(
-      `INSERT INTO users (phone,password_hash,nickname,gender,birthday,id_card,hometown,role,is_virtual,created_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?)`
+      `INSERT INTO users (phone,password_hash,nickname,avatar,gender,birthday,id_card,hometown,role,is_virtual,created_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?)`
     )
-    .run(phone, SHARED_HASH, nick, parsed.gender, parsed.birthday, parsed.idCard, parsed.hometown, "user", 1, createdAt);
+    .run(phone, SHARED_HASH, nick, pickAvatar(), parsed.gender, parsed.birthday, parsed.idCard, parsed.hometown, "user", 1, createdAt);
   const userId = Number(userInfo.lastInsertRowid);
   db.prepare("UPDATE users SET referral_code=? WHERE id=?").run(`BX${userId}`, userId);
   return db.prepare("SELECT * FROM users WHERE id=?").get(userId);
