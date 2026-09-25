@@ -1,11 +1,9 @@
-/* inherit */
-.mine-hero { background: linear-gradient(135deg, #1b4332, #40916c); color: #fff; }
-.mine-hero .muted { color: rgba(255,255,255,.85); }
-.cell-label { margin: 24rpx 32rpx 8rpx; font-size: 24rpx; color: #6b705c; font-weight: 650; }
-.cell-group { background: #fffdf8; border-radius: 16rpx; margin: 0 16rpx 8rpx; overflow: hidden; }
-.cell { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 24rpx; border-bottom: 1rpx solid #e6dfd2; }
+page { background: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helvetica Neue", sans-serif; }
+.cell-label { margin: 24rpx 32rpx 8rpx; font-size: 24rpx; color: #9a9a9a; font-weight: 400; }
+.cell-group { background: #fff; border-radius: 24rpx; margin: 0 24rpx 8rpx; overflow: hidden; }
+.cell { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 24rpx; border-bottom: 1rpx solid #f0f1f3; }
 .cell:last-child { border-bottom: 0; }
-.mine-hero-card { background: #fff; border-radius: 16rpx; margin: 16rpx; padding: 24rpx; display: flex; align-items: center; gap: 16rpx; }
+.mine-hero-card { background: transparent; margin: 8rpx 24rpx 0; padding: 16rpx 8rpx 8rpx; display: flex; align-items: center; gap: 16rpx; }
 .mine-user { display: flex; align-items: center; gap: 16rpx; flex: 1; }
 .mine-avatar { width: 96rpx; height: 96rpx; border-radius: 50%; background: #f3e8ff; color: #6b2178; text-align: center; line-height: 96rpx; font-weight: 700; overflow: hidden; }
 .mine-avatar image { width: 96rpx; height: 96rpx; }
@@ -16,9 +14,9 @@
 .avatar-grid image { width: 120rpx; height: 120rpx; border-radius: 50%; margin: 0 auto; }
 .avatar-action { text-align: center; padding: 28rpx 0; border-top: 1rpx solid #f0f1f3; font-size: 32rpx; }
 .avatar-action.cancel { color: #7a7d74; }
-.mine-gear { background: #f6f3ee; border-radius: 999rpx; padding: 12rpx 20rpx; font-size: 24rpx; }
-.mine-member { margin: 0 16rpx 16rpx; padding: 24rpx; border-radius: 16rpx; background: linear-gradient(118deg, #efe7ff, #e4d4f7); display: flex; justify-content: space-between; align-items: center; }
-.mine-shortcuts { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; margin: 0 16rpx 16rpx; border-radius: 16rpx; padding: 24rpx 8rpx; text-align: center; }
-.mine-wallet { display: grid; grid-template-columns: 1fr 1fr 1fr auto; align-items: end; background: #fff; margin: 0 16rpx 8rpx; border-radius: 16rpx; padding: 24rpx; gap: 8rpx; }
-.mine-grid { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; margin: 0 16rpx 8rpx; border-radius: 16rpx; padding: 24rpx 8rpx 16rpx; text-align: center; font-size: 22rpx; }
-.mine-grid .ico { width: 64rpx; height: 64rpx; line-height: 64rpx; margin: 0 auto 8rpx; border-radius: 16rpx; background: #f6f3ee; color: #6b2178; font-weight: 700; }
+.mine-gear { background: transparent; padding: 12rpx 4rpx; font-size: 28rpx; color: #666; }
+.mine-member { margin: 8rpx 24rpx 16rpx; padding: 28rpx 32rpx; border-radius: 24rpx; background: linear-gradient(90deg, #f3e8ff, #fff); display: flex; justify-content: space-between; align-items: center; color: #1a1a1a; }
+.mine-shortcuts { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; margin: 0 24rpx 16rpx; border-radius: 24rpx; padding: 28rpx 8rpx; text-align: center; }
+.mine-wallet { display: grid; grid-template-columns: 1fr 1fr 1fr auto; align-items: end; background: #fff; margin: 0 24rpx 8rpx; border-radius: 24rpx; padding: 28rpx; gap: 8rpx; }
+.mine-grid { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; margin: 0 24rpx 8rpx; border-radius: 24rpx; padding: 28rpx 8rpx 20rpx; text-align: center; font-size: 22rpx; color: #333; }
+.mine-grid .ico { width: 64rpx; height: 64rpx; line-height: 64rpx; margin: 0 auto 8rpx; border-radius: 50%; background: #f4f5f7; color: #333; font-weight: 600; }
