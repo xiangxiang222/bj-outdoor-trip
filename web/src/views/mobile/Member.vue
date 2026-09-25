@@ -9,7 +9,7 @@
       <button v-if="nextLevel" class="member-next" type="button" @click="focus = nextLevel">›</button>
       <p class="member-now">{{ nowLine }}</p>
       <h2>同行者众会员</h2>
-      <img v-if="focus" class="member-mark" :src="'/member/v' + focus.level + '.png'" alt="" />
+      <img v-if="focus" class="member-mark" :src="'/static/member/v' + focus.level + '.png'" alt="" />
       <div class="member-meter">
         <span>成长值 <b>{{ into }}</b>/{{ span }}</span>
         <div class="member-track">

@@ -1,4 +1,5 @@
 const { request, setAuth } = require("../../utils/request");
+const { baseUrl } = require("../../config");
 
 Page({
   data: { card: null, focus: null, into: 0, span: 0, bar: 0, pill: "", nowLine: "", hasNext: false },
@@ -37,6 +38,16 @@ Page({
     else if (focus.level < card.level) pill = "已达到";
     else if (focus.level === card.level) pill = `升级${card.nextCode}`;
     const nowLine = focus.level === card.level ? `当前等级 · ${card.name}` : `${focus.code} · ${focus.name}`;
-    this.setData({ card, focus, into, span, bar, pill, nowLine, hasNext: !!next });
+    this.setData({
+      card,
+      focus,
+      into,
+      span,
+      bar,
+      pill,
+      nowLine,
+      hasNext: !!next,
+      mark: `${baseUrl}/static/member/v${focus.level}.png`,
+    });
   },
 });
