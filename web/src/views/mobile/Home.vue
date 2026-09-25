@@ -21,6 +21,8 @@
           :key="mediaSrc(brandSlide.url)"
           :src="mediaSrc(brandSlide.url)"
           :alt="brandSlide.title || '同行者众'"
+          fetchpriority="high"
+          decoding="async"
           @error="onSlideError($event, brandSlide)"
         />
       </div>
@@ -134,7 +136,7 @@
 
     <article class="feed-card" v-for="s in groups" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
       <div class="feed-cover">
-        <img v-if="coverOf(s)" :src="coverOf(s)" :alt="s.route?.title || ''" />
+        <img v-if="coverOf(s)" :src="coverOf(s)" :alt="s.route?.title || ''" loading="lazy" decoding="async" />
         <div v-else class="feed-ph">{{ coverMark(s) }}</div>
         <div class="feed-boarded">{{ boardedLine(s) }}</div>
       </div>

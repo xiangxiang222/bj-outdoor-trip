@@ -1,6 +1,7 @@
 const dayjs = require("dayjs");
 const { getDb } = require("../db");
 const { attachAssetHost, resolveStoredMedia } = require("./helpers");
+const { thumbPublicPath } = require("./thumbs");
 const { OFFER_TYPES } = require("./offer");
 
 const TAG_PALETTE = ["#2d6a4f", "#bc4749", "#1d6a9f", "#c77d3a", "#6b4c9a", "#3d6b4f", "#8b5a2b", "#1b3a5f", "#40916c"];
@@ -171,7 +172,8 @@ function buildHome(req) {
   const BEIJING_DISTRICTS = ["怀柔", "延庆", "昌平", "密云", "房山", "门头沟", "海淀", "朝阳", "通州", "大兴", "平谷"];
 
   function toSlide(r) {
-    const url = attachAssetHost(req, resolveStoredMedia(r.cover, { code: r.code }));
+    const stored = resolveStoredMedia(r.cover, { code: r.code });
+    const url = attachAssetHost(req, thumbPublicPath(stored, 960));
     return { routeId: r.id, title: r.title, region: cityOf(r.region), url, code: r.code || "" };
   }
 
@@ -206,7 +208,7 @@ function buildHome(req) {
       .map((s) => ({
         scheduleId: s.id,
         title: s.route_title,
-        cover: attachAssetHost(req, resolveStoredMedia(s.route_cover, { code: s.route_code })),
+        cover: attachAssetHost(req, thumbPublicPath(resolveStoredMedia(s.route_cover, { code: s.route_code }), 360)),
       }));
 
   const durations = [

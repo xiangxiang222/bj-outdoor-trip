@@ -41,6 +41,7 @@ const {
 } = require("./services/home");
 const { offerMeta, liveMemberPrice, liveStudentPrice, flagOn } = require("./services/offer");
 const { publicUserProfile, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
+const { thumbPublicPath } = require("./services/thumbs");
 const { payEnrollment, buyWalletTopup, payCompanySchedule, confirmTrade, orderByTradeNo, applyWechatSession, applyEnrollmentCharge } = require("./services/payment");
 const { payShareView, collectedMapForSchedule, payProgress, ensurePayShareToken, contributorsOf } = require("./services/pay-ledger");
 const { refundMembership } = require("./services/member");
@@ -361,11 +362,13 @@ function scheduleView(sch, req, opts = {}) {
   const organizer = adoptOrganizer(sch);
   const kind = tripKindOf(sch.organizer_type, sch.channel === "activity" ? "activity" : "trip");
   const official = sch.organizer_type === "official";
+  const gallery = compact ? [] : galleryOfSchedule(mappedRoute, req);
   return {
     id: sch.id,
     routeId: sch.route_id,
     route: mappedRoute,
-    gallery: compact ? [] : galleryOfSchedule(mappedRoute, req),
+    gallery,
+    coverThumb: thumbPublicPath(gallery[0] || mappedRoute.cover || "", 360),
     startDate: sch.start_date,
     endDate: sch.end_date,
     organizerType: official ? "official" : sch.organizer_type,

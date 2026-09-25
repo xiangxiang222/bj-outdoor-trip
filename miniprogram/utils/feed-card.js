@@ -36,6 +36,7 @@ function hostName(row) {
 
 function coverOf(row) {
   if (!row) return "";
+  if (row.coverThumb) return row.coverThumb;
   const route = row.route || {};
   const g = row.gallery || route.gallery || [];
   const first = g[0];

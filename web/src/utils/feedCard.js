@@ -32,6 +32,7 @@ export function hostName(row) {
 
 export function coverOf(row) {
   if (!row) return "";
+  if (row.coverThumb) return row.coverThumb;
   const g = row.gallery || row.route?.gallery || [];
   const first = g[0];
   if (typeof first === "string" && first) return first;
