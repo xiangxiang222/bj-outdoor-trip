@@ -17,10 +17,10 @@
 
       <button v-if="store.profile.membership" class="mine-member" type="button" @click="openMember">
         <div>
-          <strong>{{ store.profile.membership.code }} {{ store.profile.membership.name }}</strong>
+          <strong class="mine-level"><em>{{ store.profile.membership.code }}</em>会员</strong>
           <span>本月累计新增 {{ store.profile.membership.monthGrowth }} 成长值</span>
         </div>
-        <i>会员中心 ›</i>
+        <i class="mine-pill">会员中心 ›</i>
       </button>
 
       <div class="mine-shortcuts">
