@@ -40,7 +40,6 @@ button, input, textarea, select { font-family: inherit; }
   color: #111;
   font-weight: 400;
 }
-.mp-phone.is-account .mp-nav h1,
 .mp-phone.is-account .card h1,
 .mp-phone.is-account .card h2,
 .mp-phone.is-account .card h3,
@@ -52,10 +51,17 @@ button, input, textarea, select { font-family: inherit; }
 }
 .mp-phone.is-account .mine-level { color: #3b2a6e; font-weight: 700; }
 .mp-phone.is-account .muted,
-.mp-phone.is-account .cell i,
-.mp-phone.is-account .sub {
+.mp-phone.is-account .cell i {
   color: #8d8d8d;
   font-weight: 400;
+}
+.mp-phone.is-account .mp-nav,
+.mp-phone.is-account .mp-nav h1,
+.mp-phone.is-account .nav-back {
+  color: #fff;
+}
+.mp-phone.is-account .mp-nav .sub {
+  color: rgba(255, 255, 255, 0.75);
 }
 .mp-phone.is-account .card,
 .mp-phone.is-account .cell-group {
