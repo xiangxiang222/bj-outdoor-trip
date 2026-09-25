@@ -5,7 +5,7 @@ page { background: #f7f2fc; }
 .next { position: absolute; right: 8rpx; top: 150rpx; z-index: 2; color: #b9a8c8; font-size: 40rpx; line-height: 1; padding: 8rpx; }
 .now { margin-top: 36rpx; font-size: 22rpx; color: #8d7a9e; }
 .title { margin-top: 4rpx; font-size: 56rpx; font-weight: 800; }
-.mark { position: absolute; right: 48rpx; top: 96rpx; font-size: 120rpx; font-weight: 800; line-height: 0.85; color: #b07adf; }
+.mark { position: absolute; right: 0; top: 48rpx; width: 240rpx; height: 240rpx; }
 .meter { margin-top: 20rpx; display: flex; align-items: center; font-size: 26rpx; position: relative; z-index: 1; }
 .num { font-size: 32rpx; font-weight: 800; }
 .track { position: relative; width: 240rpx; height: 16rpx; margin-left: 12rpx; border-radius: 99rpx; background: #eadcf6; }

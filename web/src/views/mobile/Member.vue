@@ -9,7 +9,7 @@
       <button v-if="nextLevel" class="member-next" type="button" @click="focus = nextLevel">›</button>
       <p class="member-now">{{ nowLine }}</p>
       <h2>同行者众会员</h2>
-      <div class="member-mark">{{ focus?.code }}</div>
+      <img v-if="focus" class="member-mark" :src="'/member/v' + focus.level + '.png'" alt="" />
       <div class="member-meter">
         <span>成长值 <b>{{ into }}</b>/{{ span }}</span>
         <div class="member-track">
@@ -103,16 +103,12 @@ onMounted(async () => {
 .member-hero h2 { margin: 2px 0 0; font-size: 32px; letter-spacing: 0.5px; }
 .member-mark {
   position: absolute;
-  right: 28px;
-  top: 52px;
-  font-size: 78px;
-  font-weight: 800;
-  line-height: 0.85;
-  letter-spacing: -4px;
-  background: linear-gradient(160deg, #f7f1ff 0%, #d7b4f2 38%, #8d4bb5 72%, #5b2a86 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  right: 4px;
+  top: 28px;
+  width: 132px;
+  height: 132px;
+  object-fit: contain;
+  pointer-events: none;
 }
 .member-meter { display: flex; align-items: center; gap: 8px; margin-top: 14px; position: relative; z-index: 1; }
 .member-meter span { font-size: 13px; white-space: nowrap; }
