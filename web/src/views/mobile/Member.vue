@@ -75,22 +75,30 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.member-page {
+  margin: -12px -14px -16px;
+  padding: 12px 12px 20px;
+  min-height: 100%;
+  background: #f3f4f6;
+  color: #1a1a1a;
+  font-family: "PingFang SC", "Helvetica Neue", "Noto Sans SC", sans-serif;
+}
 .member-hero {
   position: relative;
-  padding: 18px 16px 16px;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #f3e9ff 0%, #f7f2fc 70%, #fbf9fe 100%);
-  color: #3a1848;
+  padding: 16px 16px 14px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f6edff 0%, #fbf8ff 62%, #fff 100%);
+  color: #1a1a1a;
   overflow: hidden;
-  min-height: 168px;
+  min-height: 188px;
 }
-.member-codes { display: flex; gap: 8px; padding-right: 28px; }
-.member-codes button { flex: 1; border: 0; background: transparent; color: #b7a8c6; font: inherit; font-size: 13px; padding: 0; }
-.member-codes .on { color: #5c2d82; font-weight: 800; }
+.member-codes { display: flex; gap: 8px; padding-right: 8px; }
+.member-codes button { flex: 1; border: 0; background: transparent; color: #c4bccb; font: inherit; font-size: 14px; font-weight: 500; padding: 0; }
+.member-codes .on { color: #1a1a1a; font-weight: 700; }
 .member-next {
   position: absolute;
-  right: 2px;
-  top: 86px;
+  right: 4px;
+  bottom: 46px;
   z-index: 2;
   border: 0;
   background: transparent;
@@ -99,31 +107,32 @@ onMounted(async () => {
   line-height: 1;
   padding: 8px;
 }
-.member-now { margin: 22px 0 0; font-size: 12px; color: #8d7a9e; position: relative; z-index: 2; }
-.member-hero h2 { margin: 2px 0 0; font-size: 32px; letter-spacing: 0.5px; position: relative; z-index: 2; }
+.member-now { margin: 18px 0 0; font-size: 12px; color: #9a9a9a; position: relative; z-index: 2; }
+.member-hero h2 { margin: 2px 0 0; font-size: 30px; font-weight: 700; letter-spacing: 0; color: #1c1228; position: relative; z-index: 2; }
 .member-mark {
   position: absolute;
-  right: 0;
-  top: 16px;
+  right: 36px;
+  bottom: 22px;
   z-index: 0;
-  width: 146px;
-  height: 118px;
+  width: 150px;
+  height: 124px;
   object-fit: contain;
+  object-position: right bottom;
   pointer-events: none;
 }
-.member-meter { display: flex; align-items: center; gap: 8px; margin-top: 14px; position: relative; z-index: 2; }
-.member-meter span { font-size: 13px; white-space: nowrap; }
-.member-meter b { font-size: 16px; }
+.member-meter { display: flex; align-items: center; gap: 8px; margin-top: 16px; position: relative; z-index: 2; }
+.member-meter span { font-size: 13px; color: #1a1a1a; white-space: nowrap; }
+.member-meter b { font-size: 16px; font-weight: 700; }
 .member-track {
   position: relative;
   width: 108px;
-  height: 8px;
+  height: 6px;
   border-radius: 99px;
   background: #eadcf6;
 }
 .member-track i {
   display: block;
-  height: 8px;
+  height: 6px;
   border-radius: 99px;
   background: linear-gradient(90deg, #c9a2e6, #7a3d9a);
 }
@@ -136,12 +145,14 @@ onMounted(async () => {
   color: #fff;
   font-style: normal;
   font-size: 11px;
+  font-weight: 500;
   line-height: 1;
   padding: 3px 6px;
   border-radius: 8px;
 }
-.member-month { margin: 12px 0 0; font-size: 13px; color: #6d6278; position: relative; z-index: 1; }
-.member-perk-head { text-align: center; color: #6b2178; }
+.member-month { margin: 12px 0 0; font-size: 13px; color: #666; position: relative; z-index: 1; }
+.member-perk-head { text-align: center; color: #6b2178; font-size: 14px; font-weight: 500; }
 .member-perks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.member-perks div { background: #fff; border-radius: 12px; padding: 14px; font-weight: 650; }
+.member-perks div { background: #fff; border-radius: 12px; padding: 16px 14px; font-weight: 600; font-size: 15px; color: #1a1a1a; }
+.member-page .muted { color: #9a9a9a; font-size: 12px; }
 </style>
