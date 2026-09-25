@@ -1,3 +1,4 @@
+@import "../../styles/account.wxss";
 page { background: #f5f6f8; }
 .cash-card { margin: 24rpx; padding: 36rpx 32rpx 28rpx; background: #fff; border-radius: 24rpx; }
 .cash-safe { color: #8a8f99; font-size: 24rpx; }

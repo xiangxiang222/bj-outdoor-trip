@@ -1,3 +1,4 @@
+@import "../../styles/account.wxss";
 page { background: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helvetica Neue", sans-serif; }
 .hero { margin: 24rpx; padding: 28rpx 28rpx 28rpx; border-radius: 32rpx; background: linear-gradient(180deg, #f6edff, #fff); color: #1a1a1a; position: relative; overflow: hidden; min-height: 340rpx; }
 .codes { display: flex; justify-content: space-between; font-size: 28rpx; color: #c4bccb; }

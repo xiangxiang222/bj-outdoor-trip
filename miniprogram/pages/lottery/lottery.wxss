@@ -1,3 +1,4 @@
+@import "../../styles/account.wxss";
 .lw-stage { position: relative; width: 560rpx; height: 560rpx; margin: 16rpx auto 24rpx; }
 .lw-pointer {
   position: absolute;

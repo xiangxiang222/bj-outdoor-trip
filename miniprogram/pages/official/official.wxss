@@ -1,3 +1,4 @@
+@import "../../styles/account.wxss";
 .svc-hero {
   margin: 16rpx;
   padding: 32rpx 24rpx;
