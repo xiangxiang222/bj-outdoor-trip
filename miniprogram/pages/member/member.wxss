@@ -1,14 +1,17 @@
-page { background: #f4f0fa; }
-.hero { margin: 24rpx; padding: 28rpx 28rpx 32rpx; border-radius: 28rpx; background: linear-gradient(180deg, #efe7ff, #f7f4fb); color: #3a1848; position: relative; overflow: hidden; }
-.codes { display: flex; justify-content: space-between; font-size: 24rpx; color: #9b8aaf; }
-.code.on { color: #6b2178; font-weight: 700; }
-.mark { position: absolute; right: 24rpx; top: 72rpx; font-size: 120rpx; font-weight: 800; color: rgba(107,33,120,.16); line-height: 1; }
-.title { margin-top: 28rpx; font-size: 48rpx; font-weight: 800; }
-.grow { margin-top: 16rpx; font-size: 28rpx; }
-.bar { margin-top: 12rpx; height: 12rpx; border-radius: 999rpx; background: #e4d8f2; overflow: hidden; }
-.bar-in { height: 12rpx; background: #6b2178; }
-.sub { margin-top: 8rpx; font-size: 22rpx; color: #6b2178; }
-.month { margin-top: 16rpx; font-size: 24rpx; color: #6b705c; }
+page { background: #f7f2fc; }
+.hero { margin: 24rpx; padding: 28rpx 28rpx 32rpx; border-radius: 28rpx; background: linear-gradient(180deg, #f3e9ff, #fbf9fe); color: #3a1848; position: relative; overflow: hidden; min-height: 300rpx; }
+.codes { display: flex; justify-content: space-between; font-size: 26rpx; color: #b7a8c6; padding-right: 36rpx; }
+.code.on { color: #5c2d82; font-weight: 800; }
+.next { position: absolute; right: 8rpx; top: 150rpx; z-index: 2; color: #b9a8c8; font-size: 40rpx; line-height: 1; padding: 8rpx; }
+.now { margin-top: 36rpx; font-size: 22rpx; color: #8d7a9e; }
+.title { margin-top: 4rpx; font-size: 56rpx; font-weight: 800; }
+.mark { position: absolute; right: 48rpx; top: 96rpx; font-size: 120rpx; font-weight: 800; line-height: 0.85; color: #b07adf; }
+.meter { margin-top: 20rpx; display: flex; align-items: center; font-size: 26rpx; position: relative; z-index: 1; }
+.num { font-size: 32rpx; font-weight: 800; }
+.track { position: relative; width: 240rpx; height: 16rpx; margin-left: 12rpx; border-radius: 99rpx; background: #eadcf6; }
+.track-in { height: 16rpx; border-radius: 99rpx; background: #7a3d9a; }
+.pill { position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: #7a3d9a; color: #fff; font-size: 20rpx; line-height: 1; padding: 6rpx 10rpx; border-radius: 12rpx; }
+.month { margin-top: 18rpx; font-size: 24rpx; color: #6d6278; position: relative; z-index: 1; }
 .perk-head { margin: 8rpx 32rpx; text-align: center; color: #6b2178; font-size: 26rpx; }
 .perk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16rpx; margin: 0 24rpx 24rpx; }
 .perk { background: #fff; border-radius: 20rpx; padding: 28rpx 20rpx; }

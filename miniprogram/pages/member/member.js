@@ -1,7 +1,7 @@
 const { request, setAuth } = require("../../utils/request");
 
 Page({
-  data: { card: null, focus: null, focusNext: 0, bar: 0 },
+  data: { card: null, focus: null, into: 0, span: 0, bar: 0, pill: "", nowLine: "", hasNext: false },
   onShow() {
     if (!getApp().globalData.token) {
       wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/member/member") });
@@ -19,20 +19,24 @@ Page({
       if (user && user.membership) this.showCard(user.membership, user.membership.level);
     }
   },
-  focus(e) {
+  focusLevel(e) {
     this.showCard(this.data.card, Number(e.currentTarget.dataset.level));
   },
   showCard(card, level) {
     if (!card) return;
     const focus = (card.levels || []).find((item) => item.level === Number(level)) || card.levels[0];
     const next = (card.levels || []).find((item) => item.level === focus.level + 1);
-    const same = focus.level === card.level;
-    const bar = same ? Math.round((card.progress || 0) * 100) : focus.level < card.level ? 100 : 0;
-    this.setData({
-      card,
-      focus,
-      focusNext: next ? next.growth : focus.growth,
-      bar,
-    });
+    const floor = Number(focus.growth || 0);
+    const span = next ? Math.max(1, next.growth - floor) : Math.max(1, floor);
+    let into = 0;
+    if (focus.level < card.level) into = span;
+    else if (focus.level === card.level) into = Math.max(0, Math.min(span, card.growth - floor));
+    const bar = Math.round((into / span) * 100);
+    let pill = `升级${focus.code}`;
+    if (!next && focus.level <= card.level) pill = "已满级";
+    else if (focus.level < card.level) pill = "已达到";
+    else if (focus.level === card.level) pill = `升级${card.nextCode}`;
+    const nowLine = focus.level === card.level ? `当前等级 · ${card.name}` : `${focus.code} · ${focus.name}`;
+    this.setData({ card, focus, into, span, bar, pill, nowLine, hasNext: !!next });
   },
 });
