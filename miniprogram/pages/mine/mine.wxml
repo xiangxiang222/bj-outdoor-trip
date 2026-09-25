@@ -24,12 +24,12 @@
     </view>
   </view>
 
-  <view class="mine-member" wx:if="{{user.isMember}}" bindtap="openMember">
+  <view class="mine-member" wx:if="{{user.membership}}" bindtap="openMember">
     <view>
-      <view class="title">会员</view>
-      <view class="muted">{{user.points}} 积分 · {{user.memberExpireAt}}</view>
+      <view class="title">{{user.membership.code}} {{user.membership.name}}</view>
+      <view class="muted">本月累计新增 {{user.membership.monthGrowth}} 成长值</view>
     </view>
-    <view class="muted">查看 ›</view>
+    <view class="muted">会员中心 ›</view>
   </view>
 
   <view class="mine-shortcuts">

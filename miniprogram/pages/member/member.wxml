@@ -1,15 +1,20 @@
-<view class="card" wx:if="{{user && user.isMember}}" style="background:#1b4332;color:#fff">
-  <view class="pad">
-    <view class="row">
-      <view class="title" style="color:#fff">{{user.nickname}}</view>
-      <view class="tag" style="background:#ffd166;color:#1b4332">会员</view>
-    </view>
-    <view>积分 {{user.points}} · 到期 {{user.memberExpireAt}}</view>
+<view class="hero" wx:if="{{card}}">
+  <view class="codes">
+    <text wx:for="{{card.levels}}" wx:key="level" class="code {{item.current ? 'on' : ''}}" data-level="{{item.level}}" bindtap="focus">{{item.code}}</text>
+  </view>
+  <view class="mark">{{focus.code}}</view>
+  <view class="title">{{focus.name}}</view>
+  <view class="grow">成长值 {{card.growth}}/{{focusNext}}</view>
+  <view class="bar"><view class="bar-in" style="width: {{bar}}%"></view></view>
+  <view class="sub" wx:if="{{card.nextCode && focus.level === card.level}}">升级{{card.nextCode}}</view>
+  <view class="sub" wx:elif="{{focus.level < card.level}}">已达到</view>
+  <view class="sub" wx:else>成长值满 {{focus.growth}} 升到{{focus.code}}</view>
+  <view class="month">本月累计新增 {{card.monthGrowth}} 成长值</view>
+</view>
+<view class="perk-head" wx:if="{{focus}}">可享 {{focus.perks.length}} 项权益</view>
+<view class="perk-grid" wx:if="{{focus}}">
+  <view class="perk" wx:for="{{focus.perks}}" wx:key="*this">
+    <view class="perk-name">{{item}}</view>
   </view>
 </view>
-<view class="card" wx:else>
-  <view class="pad">
-    <view class="title">会员</view>
-    <view class="muted">报名报价会按账号本身计算。小程序不提供单独开通或续费。</view>
-  </view>
-</view>
+<view class="note">等级按出行获得的成长值自动升级，不单独售卖。后台可调整当前等级。</view>

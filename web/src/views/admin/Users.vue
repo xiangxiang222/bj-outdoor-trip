@@ -22,10 +22,9 @@
       <el-table-column label="性别" width="80">
         <template #default="{ row }">{{ genderText(row.gender) }}</template>
       </el-table-column>
-      <el-table-column label="会员" width="90">
-        <template #default="{ row }">{{ row.isMember ? "有效" : row.is_member ? "已过期" : "否" }}</template>
+      <el-table-column label="会员" width="120">
+        <template #default="{ row }">{{ row.membership ? row.membership.code + " " + row.membership.name : "V1" }}</template>
       </el-table-column>
-      <el-table-column prop="member_expire_at" label="到期" width="120" />
       <el-table-column prop="points" label="积分" width="80" />
       <el-table-column prop="company_name" label="公司" min-width="140" />
       <el-table-column label="校园" min-width="160">
@@ -42,13 +41,27 @@
           <el-button v-if="row.studentStatus === 'pending'" size="small" @click="verify(row, 'student')">过校园</el-button>
           <el-button v-if="row.groupStatus === 'pending'" size="small" @click="verify(row, 'group')">过团体</el-button>
           <el-button v-if="row.leaderStatus === 'pending'" size="small" @click="verify(row, 'leader')">过领队</el-button>
-          <el-button size="small" type="success" @click="grant(row)">{{ row.isMember ? "续费" : "开通" }}</el-button>
-          <el-button v-if="row.isMember" size="small" @click="revoke(row)">取消会员</el-button>
+          <el-button size="small" type="success" @click="openLevel(row)">改等级</el-button>
           <el-button size="small" @click="openPoints(row)">积分</el-button>
           <el-button size="small" type="danger" @click="close(row)">注销</el-button>
         </template>
       </el-table-column>
     </el-table>
+
+    <el-dialog v-model="showLevel" title="修改会员等级" width="420px">
+      <p class="muted">{{ levelRow?.nickname }} 当前 {{ levelRow?.membership?.code }} {{ levelRow?.membership?.name }}，成长值 {{ levelRow?.membership?.growth || 0 }}</p>
+      <el-select v-model="levelForm" style="width:100%">
+        <el-option :value="1" label="V1 注册会员" />
+        <el-option :value="2" label="V2 银卡会员" />
+        <el-option :value="3" label="V3 金卡会员" />
+        <el-option :value="4" label="V4 钻石会员" />
+        <el-option :value="5" label="V5 至尊会员" />
+      </el-select>
+      <template #footer>
+        <el-button @click="showLevel = false">取消</el-button>
+        <el-button type="success" :loading="saving" @click="saveLevel">确定</el-button>
+      </template>
+    </el-dialog>
 
     <el-dialog v-model="showPoints" title="调整积分" width="420px">
       <p class="muted">{{ pointsRow?.nickname }} 当前 {{ pointsRow?.points }} 分</p>
@@ -82,6 +95,9 @@ const q = ref("");
 const focusId = ref("");
 const showPoints = ref(false);
 const saving = ref(false);
+const showLevel = ref(false);
+const levelRow = ref(null);
+const levelForm = ref(1);
 const pointsRow = ref(null);
 const pointsForm = ref({ delta: 10, reason: "" });
 const pool = ref({ total: 0, idle: 0, busy: 0 });
@@ -156,25 +172,23 @@ async function verify(row, kind) {
   }
 }
 
-async function grant(row) {
-  try {
-    await ElMessageBox.confirm(`为「${row.nickname}」开通或续费一年会员？`, "开通会员", { type: "warning" });
-    await http.post(`/admin/users/${row.id}/member`, { action: "grant" });
-    ElMessage.success("已开通/续费会员");
-    await load();
-  } catch (e) {
-    if (e !== "cancel") ElMessage.error(e.message || "已取消");
-  }
+function openLevel(row) {
+  levelRow.value = row;
+  levelForm.value = row.membership?.level || 1;
+  showLevel.value = true;
 }
 
-async function revoke(row) {
+async function saveLevel() {
+  saving.value = true;
   try {
-    await ElMessageBox.confirm(`取消「${row.nickname}」的会员资格？`, "取消会员", { type: "warning" });
-    await http.post(`/admin/users/${row.id}/member`, { action: "revoke" });
-    ElMessage.success("已取消会员");
+    await http.post(`/admin/users/${levelRow.value.id}/member`, { level: levelForm.value });
+    ElMessage.success("已修改会员等级");
+    showLevel.value = false;
     await load();
   } catch (e) {
-    if (e !== "cancel") ElMessage.error(e.message || "已取消");
+    ElMessage.error(e.message || "修改失败");
+  } finally {
+    saving.value = false;
   }
 }
 

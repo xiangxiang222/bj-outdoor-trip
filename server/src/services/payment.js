@@ -185,7 +185,8 @@ function applyEnrollmentCharge(en, payerId, amount, opts = {}) {
     db.prepare("UPDATE enrollments SET pay_status='paid', pay_channel=? WHERE id=?").run(channel, en.id);
   }
   const traveler = db.prepare("SELECT * FROM users WHERE id=?").get(en.user_id);
-  const earn = Math.floor(applied * (isMember(traveler) ? config.member.pointsBonus : 1));
+  const card = require("./tiers").memberState(traveler);
+  const earn = Math.floor(applied * (card.pointsBonus || 1));
   if (earn > 0 && en.user_id) addPoints(en.user_id, earn, "参加活动积分", "enrollment", en.id);
   maybeMatchGuide(en.schedule_id);
   const fresh = db.prepare("SELECT * FROM enrollments WHERE id=?").get(en.id);

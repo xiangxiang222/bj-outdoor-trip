@@ -27,7 +27,7 @@ function liveStudentPrice(origin) {
   return Math.round(Number(origin || 0) * config.student.discountRate);
 }
 
-function applyOfferQuote(base, schedule, userIsMember, userIsStudent) {
+function applyOfferQuote(base, schedule, userIsMember, userIsStudent, memberRate) {
   const origin = Number(base.originPrice || 0);
   const offerType = schedule && schedule.offer_type ? schedule.offer_type : "full";
   const meta = offerMeta(offerType);
@@ -42,7 +42,8 @@ function applyOfferQuote(base, schedule, userIsMember, userIsStudent) {
   }
   const memberOn = flagOn(schedule && schedule.member_price_on);
   const studentOn = flagOn(schedule && schedule.student_price_on);
-  const memberPrice = memberOn && tripPrice > 0 ? liveMemberPrice(tripPrice) : tripPrice;
+  const rate = memberRate != null ? Number(memberRate) : config.member.discountRate;
+  const memberPrice = memberOn && tripPrice > 0 ? Math.round(tripPrice * (rate < 1 ? rate : config.member.discountRate)) : tripPrice;
   const studentPrice = studentOn && tripPrice > 0 ? liveStudentPrice(tripPrice) : tripPrice;
   let price = tripPrice;
   if (userIsMember && memberOn && tripPrice > 0) price = memberPrice;

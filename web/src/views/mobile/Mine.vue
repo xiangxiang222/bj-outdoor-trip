@@ -15,12 +15,12 @@
         <button class="mine-gear" type="button" @click="goAuth('/m/settings')">设置</button>
       </div>
 
-      <button v-if="store.profile.isMember" class="mine-member" type="button" @click="openMember">
+      <button v-if="store.profile.membership" class="mine-member" type="button" @click="openMember">
         <div>
-          <strong>会员</strong>
-          <span>{{ store.profile.points || 0 }} 积分 · {{ store.profile.memberExpireAt }}</span>
+          <strong>{{ store.profile.membership.code }} {{ store.profile.membership.name }}</strong>
+          <span>本月累计新增 {{ store.profile.membership.monthGrowth }} 成长值</span>
         </div>
-        <i>查看 ›</i>
+        <i>会员中心 ›</i>
       </button>
 
       <div class="mine-shortcuts">
