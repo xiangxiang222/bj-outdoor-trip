@@ -5,7 +5,7 @@
   <view class="next" wx:if="{{hasNext}}" data-level="{{focus.level + 1}}" bindtap="focusLevel">›</view>
   <view class="now">{{nowLine}}</view>
   <view class="title">同行者众会员</view>
-  <view class="mark">{{focus.code}}</view>
+  <image class="mark" src="{{mark}}" mode="aspectFit" />
   <view class="meter">
     <text>成长值 </text><text class="num">{{into}}</text><text>/{{span}}</text>
     <view class="track">

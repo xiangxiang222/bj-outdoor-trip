@@ -18,7 +18,13 @@ function createApp() {
     res.type("text/xml").send(await handleWechatNotify(xml));
   });
   app.use(express.json({ limit: "4mb" }));
-  app.use("/static", express.static(path.join(config.publicDir, "static")));
+  const { sendThumb } = require("./services/thumbs");
+  app.get(/^\/static\/thumbs\/(360|960)\/(.+)$/, (req, res) => {
+    sendThumb(req, res).catch(() => {
+      if (!res.headersSent) res.status(404).end();
+    });
+  });
+  app.use("/static", express.static(path.join(config.publicDir, "static"), { maxAge: "7d" }));
   app.get("/c/:code", (req, res) => {
     const code = String(req.params.code || "").replace(/[^A-Za-z0-9_-]/g, "");
     if (!code) return res.status(404).end();

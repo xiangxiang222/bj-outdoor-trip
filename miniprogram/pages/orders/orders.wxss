@@ -1,2 +1,3 @@
+@import "../../styles/account.wxss";
 /* inherit */
 .cancel-link { padding: 0 24rpx 24rpx; color: #bc4749; font-size: 26rpx; }
