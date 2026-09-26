@@ -52,23 +52,38 @@
 
   <view class="mine-shortcuts">
     <view bindtap="goOrders" data-tab="unpaid">
-      <view class="title">{{tr.t(hub.unpaidCount, lang)}}</view>
+      <view class="mine-order-ico">
+        <image src="{{iconBase}}order-pay.png" mode="aspectFit" />
+        <text wx:if="{{hub.unpaidCount}}" class="mine-badge">{{hub.unpaidCount > 99 ? '99+' : hub.unpaidCount}}</text>
+      </view>
       <view class="muted">{{tr.t('待支付', lang)}}</view>
     </view>
     <view bindtap="goOrders" data-tab="waitlist">
-      <view class="title">{{tr.t(hub.waitlistCount, lang)}}</view>
+      <view class="mine-order-ico">
+        <image src="{{iconBase}}order-wait.png" mode="aspectFit" />
+        <text wx:if="{{hub.waitlistCount}}" class="mine-badge">{{hub.waitlistCount > 99 ? '99+' : hub.waitlistCount}}</text>
+      </view>
       <view class="muted">{{tr.t('候补', lang)}}</view>
     </view>
     <view bindtap="goOrders" data-tab="depart">
-      <view class="title">{{tr.t(hub.departCount, lang)}}</view>
+      <view class="mine-order-ico">
+        <image src="{{iconBase}}order-go.png" mode="aspectFit" />
+        <text wx:if="{{hub.departCount}}" class="mine-badge">{{hub.departCount > 99 ? '99+' : hub.departCount}}</text>
+      </view>
       <view class="muted">{{tr.t('待出发', lang)}}</view>
     </view>
     <view bindtap="goOrders" data-tab="review">
-      <view class="title">{{tr.t(hub.reviewCount, lang)}}</view>
+      <view class="mine-order-ico">
+        <image src="{{iconBase}}order-review.png" mode="aspectFit" />
+        <text wx:if="{{hub.reviewCount}}" class="mine-badge">{{hub.reviewCount > 99 ? '99+' : hub.reviewCount}}</text>
+      </view>
       <view class="muted">{{tr.t('待评价', lang)}}</view>
     </view>
     <view bindtap="goOrders" data-tab="refund">
-      <view class="title">{{tr.t(hub.refundCount, lang)}}</view>
+      <view class="mine-order-ico">
+        <image src="{{iconBase}}order-refund.png" mode="aspectFit" />
+        <text wx:if="{{hub.refundCount}}" class="mine-badge">{{hub.refundCount > 99 ? '99+' : hub.refundCount}}</text>
+      </view>
       <view class="muted">{{tr.t('退款', lang)}}</view>
     </view>
   </view>

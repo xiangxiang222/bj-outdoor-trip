@@ -41,23 +41,38 @@
 
       <div class="mine-shortcuts">
         <button type="button" @click="goOrders('unpaid')">
-          <b>{{ hub.unpaidCount || 0 }}</b>
+          <span class="mine-order-ico">
+            <img :src="'/static/mine/order-pay.png'" alt="" />
+            <em v-if="hub.unpaidCount" class="mine-badge">{{ hub.unpaidCount > 99 ? "99+" : hub.unpaidCount }}</em>
+          </span>
           <span>待支付</span>
         </button>
         <button type="button" @click="goOrders('waitlist')">
-          <b>{{ hub.waitlistCount || 0 }}</b>
+          <span class="mine-order-ico">
+            <img :src="'/static/mine/order-wait.png'" alt="" />
+            <em v-if="hub.waitlistCount" class="mine-badge">{{ hub.waitlistCount > 99 ? "99+" : hub.waitlistCount }}</em>
+          </span>
           <span>候补</span>
         </button>
         <button type="button" @click="goOrders('depart')">
-          <b>{{ hub.departCount || 0 }}</b>
+          <span class="mine-order-ico">
+            <img :src="'/static/mine/order-go.png'" alt="" />
+            <em v-if="hub.departCount" class="mine-badge">{{ hub.departCount > 99 ? "99+" : hub.departCount }}</em>
+          </span>
           <span>待出发</span>
         </button>
         <button type="button" @click="goOrders('review')">
-          <b>{{ hub.reviewCount || 0 }}</b>
+          <span class="mine-order-ico">
+            <img :src="'/static/mine/order-review.png'" alt="" />
+            <em v-if="hub.reviewCount" class="mine-badge">{{ hub.reviewCount > 99 ? "99+" : hub.reviewCount }}</em>
+          </span>
           <span>待评价</span>
         </button>
         <button type="button" @click="goOrders('refund')">
-          <b>{{ hub.refundCount || 0 }}</b>
+          <span class="mine-order-ico">
+            <img :src="'/static/mine/order-refund.png'" alt="" />
+            <em v-if="hub.refundCount" class="mine-badge">{{ hub.refundCount > 99 ? "99+" : hub.refundCount }}</em>
+          </span>
           <span>退款</span>
         </button>
       </div>
