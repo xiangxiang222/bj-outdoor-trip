@@ -148,9 +148,9 @@ function isDark(look) {
   return prefs.night === "dark" || (prefs.night === "system" && systemDark());
 }
 
-function pageStyle(look) {
+function pageStyle(look, freezeScale) {
   const dark = isDark(look);
-  const scale = SIZES[look.size] || 1;
+  const scale = freezeScale ? 1 : (SIZES[look.size] || 1);
   const vars = dark
     ? "--bg:#121214;--card:#1c1c1e;--ink:#f2f2f2;--muted:#9a9a9a;--line:#2c2c2e;"
     : "--bg:#f5f6f3;--card:#ffffff;--ink:#141414;--muted:#7a7d74;--line:#eceee8;";
@@ -164,9 +164,12 @@ function pageStyle(look) {
 function paint(page, look) {
   if (!page || typeof page.setData !== "function") return;
   const prefs = look || read();
+  const route = page.route || page.__route__ || "";
+  const freezeScale = route.indexOf("look-font") !== -1;
   page.setData({
     lookRoot: "16px",
-    lookStyle: pageStyle(prefs),
+    lookStyle: pageStyle(prefs, freezeScale),
+    previewScale: SIZES[prefs.size] || 1,
     lang: prefs.lang,
   });
   refreshTabBar(prefs);

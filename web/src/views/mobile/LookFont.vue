@@ -2,7 +2,7 @@
   <div class="look-font" :style="{ fontFamily: fontFamily }">
     <div class="cell-label">{{ copy.preview }}</div>
     <div class="look-preview">
-      <div class="look-sample">
+      <div class="look-sample" :style="{ '--ui-scale': previewScale }">
         <div class="look-pt">{{ copy.previewTitle }}</div>
         <div class="look-pb">{{ copy.previewBody }}</div>
         <div class="look-pn">{{ copy.previewNote }}</div>
@@ -27,11 +27,12 @@
 <script setup>
 import { computed, onMounted, reactive } from "vue";
 import { setChrome } from "@/utils/pageChrome";
-import { FONTS, readLook, writeLook, t } from "@/utils/appearance";
+import { FONTS, SIZES, readLook, writeLook, t } from "@/utils/appearance";
 
 const look = reactive(readLook());
 const copy = computed(() => t(look));
 const fontFamily = computed(() => FONTS[look.font]);
+const previewScale = computed(() => SIZES[look.size] || 1);
 const fonts = computed(() => [
   { id: "system", name: copy.value.system, family: FONTS.system },
   { id: "song", name: copy.value.song, family: FONTS.song },

@@ -1,7 +1,7 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
 <view class="sec">{{tr.t(copy.preview, lang)}}</view>
-<view class="preview" style="font-family:{{fontFamily}}">
+<view class="preview" style="font-family:{{fontFamily}};--ui-scale:{{previewScale}}">
   <view class="sample">
     <view class="pt">{{tr.t(copy.previewTitle, lang)}}</view>
     <view class="pb">{{tr.t(copy.previewBody, lang)}}</view>
