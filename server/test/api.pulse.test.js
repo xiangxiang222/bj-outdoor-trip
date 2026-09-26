@@ -47,6 +47,26 @@ describe("live pulse API", () => {
     });
   }
 
+  it("includes a virtual enrollment on the home ticker", async () => {
+    const userId = Number(
+      seed.db
+        .prepare(
+          "INSERT INTO users (phone,nickname,hometown,is_virtual,role) VALUES (?,?,?,?,?)"
+        )
+        .run("13700008821", "周晓禾", "北京市", 1, "user").lastInsertRowid
+    );
+    seed.db
+      .prepare(
+        "INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,status,hometown) VALUES (?,?,?,?,?,?)"
+      )
+      .run(seed.individualScheduleId, userId, "周晓禾", "13700008821", "joined", "北京市");
+    const pulse = await agent.get("/api/live/pulse?scope=home").set({ "X-Visitor-Id": "guest-virt-01" }).expect(200);
+    const hit = pulse.body.data.items.find((it) => it.kind === "enroll" && it.who === "周**");
+    assert.ok(hit);
+    assert.match(hit.text, /报名了 慕田峪/);
+    assert.doesNotMatch(JSON.stringify(pulse.body.data), /周晓禾/);
+  });
+
   it("lists a recent enrollment on home and hides full names", async () => {
     const token = await loginUser(agent);
     await enroll(token).expect(200);

@@ -8,7 +8,7 @@ const VIEW_KEEP_DAYS = 14;
 const FEED_DAYS = 14;
 const VIEW_FEED_DAYS = 2;
 const WATCHING_MIN = 8;
-const FEED_LIMIT = 18;
+const FEED_LIMIT = 24;
 
 function fail(status, message) {
   const err = new Error(message);
@@ -156,9 +156,7 @@ function collectEvents({ scope, routeId, scheduleId }) {
   }
 
   const rows = [];
-  const enrolls = db
-    .prepare(
-      `SELECT e.id, e.created_at, e.user_id, e.schedule_id, s.route_id, s.channel,
+  const enrollSql = `SELECT e.id, e.created_at, e.user_id, e.schedule_id, s.route_id, s.channel,
               COALESCE(NULLIF(u.nickname,''), e.traveler_name) AS nickname,
               e.traveler_name, COALESCE(NULLIF(u.hometown,''), e.hometown) AS hometown,
               r.title
@@ -167,13 +165,12 @@ function collectEvents({ scope, routeId, scheduleId }) {
        JOIN routes r ON r.id=s.route_id
        LEFT JOIN users u ON u.id=e.user_id
        WHERE e.status='joined' AND e.created_at>=?
-         AND IFNULL(u.is_virtual,0)=0
+         AND IFNULL(u.is_virtual,0)=?
          AND IFNULL(s.review_status,'approved')='approved' AND s.status!='cancelled' AND r.status='on'
          AND (u.id IS NULL OR u.deleted_at IS NULL)
          ${channelSql} ${routeSql}
-       ORDER BY e.id DESC LIMIT 40`
-    )
-    .all(since, ...routeParams);
+       ORDER BY e.id DESC LIMIT 30`;
+  const enrolls = [0, 1].flatMap((virtual) => db.prepare(enrollSql).all(since, virtual, ...routeParams));
   enrolls.forEach((row) => pushRow(rows, { ...row, kind: "enroll", sourceId: row.id }));
 
   const favRouteSql = scope === "route" && rid ? " AND r.id=? " : scope === "schedule" && rid ? " AND r.id=? " : "";

@@ -406,6 +406,15 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
+.live-pulse.is-rows {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 8px 10px;
+}
+.live-pulse.is-rows .live-pulse-main {
+  width: 100%;
+}
 .home-page .live-pulse {
   margin: 0 12px 8px;
 }
