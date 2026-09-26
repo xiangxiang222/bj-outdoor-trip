@@ -2014,20 +2014,52 @@ html.admin-theme .el-dialog__footer {
   background: #fff;
   border-radius: 12px;
   box-shadow: none;
-  padding: 16px 14px;
+  padding: 14px 6px 12px;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr auto;
-  align-items: end;
-  gap: 8px;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: start;
+  gap: 4px;
   font: inherit;
   color: inherit;
-  text-align: left;
+  text-align: center;
   cursor: pointer;
 }
-.mine-wallet-item strong { display: block; font-size: calc(20px * var(--ui-scale)); font-weight: 650; color: #111; letter-spacing: -0.3px; }
-.mine-wallet-item span { font-size: calc(12px * var(--ui-scale)); color: #8d8d8d; }
-.mine-wallet-item em { display: block; margin-top: 2px; font-style: normal; font-size: calc(11px * var(--ui-scale)); color: #c45c26; }
-.mine-wallet i { font-style: normal; color: #8d8d8d; font-size: calc(12px * var(--ui-scale)); }
+.mine-wallet-item { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.mine-wallet-item img { width: 40px; height: 40px; object-fit: contain; display: block; }
+.mine-wallet-item strong {
+  display: block;
+  margin-top: 4px;
+  font-size: calc(16px * var(--ui-scale));
+  font-weight: 650;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+.mine-wallet-item > span { margin-top: 2px; font-size: calc(12px * var(--ui-scale)); color: #8d8d8d; line-height: 1.2; }
+.mine-wallet-item em {
+  display: block;
+  margin-top: 2px;
+  font-style: normal;
+  font-size: calc(10px * var(--ui-scale));
+  color: #c45c26;
+  line-height: 1.2;
+}
+.mine-wallet-item.is-entry b {
+  display: block;
+  margin-top: 8px;
+  font-size: calc(18px * var(--ui-scale));
+  font-weight: 650;
+  color: #1a1a1a;
+  line-height: 1.1;
+}
+.mine-wallet-item.is-entry b::after {
+  content: "";
+  display: block;
+  width: 22px;
+  height: 4px;
+  margin: 5px auto 0;
+  border-radius: 4px;
+  background: #8e64d8;
+}
 .mine-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -2152,7 +2184,9 @@ html[data-night="dark"] .mine-grid { background: #1c1c1e; }
 html[data-night="dark"] .mine-order-ico img { filter: invert(1); }
 html[data-night="dark"] .mine-order-ico .mine-badge { box-shadow: 0 0 0 1.5px #1c1c1e; }
 html[data-night="dark"] .mine-shortcuts button > span:last-child { color: #c7c7c7; }
-html[data-night="dark"] .mine-wallet-item strong { color: #f2f2f2; }
+html[data-night="dark"] .mine-wallet-item strong,
+html[data-night="dark"] .mine-wallet-item.is-entry b { color: #f2f2f2; }
+html[data-night="dark"] .mine-wallet-item > span { color: #c7c7c7; }
 html[data-night="dark"] .role-open {
   background: #1a2e24;
   border-color: #40916c;
@@ -2174,7 +2208,8 @@ html[data-text="1"] .album-grid,
 html[data-text="1"] .moments-grid {
   display: none !important;
 }
-html[data-text="1"] .mine-order-ico img { display: block !important; }
+html[data-text="1"] .mine-order-ico img,
+html[data-text="1"] .mine-wallet-item img { display: block !important; }
 .trip-detail {
   margin: -12px -14px 0;
 }

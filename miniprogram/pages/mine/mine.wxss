@@ -32,6 +32,12 @@ page { background: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helveti
 .mine-order-ico { position: relative; width: 56rpx; height: 56rpx; }
 .mine-order-ico image { width: 56rpx; height: 56rpx; display: block; }
 .mine-order-ico .mine-badge { top: -8rpx; right: -18rpx; box-shadow: 0 0 0 2rpx #fff; }
-.mine-wallet { display: grid; grid-template-columns: 1fr 1fr 1fr auto; align-items: end; background: #fff; margin: 0 24rpx 8rpx; border-radius: 24rpx; padding: 28rpx; gap: 8rpx; }
+.mine-wallet { display: grid; grid-template-columns: repeat(4, 1fr); align-items: start; background: #fff; margin: 0 24rpx 8rpx; border-radius: 24rpx; padding: 24rpx 8rpx 20rpx; text-align: center; }
+.mine-wallet-item { display: flex; flex-direction: column; align-items: center; }
+.wal-ico { width: 80rpx; height: 80rpx; }
+.wal-num { margin-top: 6rpx; font-size: calc(32rpx * var(--ui-scale)); font-weight: 650; color: #1a1a1a; line-height: 1.2; }
+.wal-name { margin-top: 2rpx; font-size: calc(22rpx * var(--ui-scale)); color: #8d8d8d; line-height: 1.2; }
+.wal-entry { margin-top: 12rpx; font-size: calc(36rpx * var(--ui-scale)); font-weight: 650; color: #1a1a1a; line-height: 1.1; }
+.wal-bar { width: 44rpx; height: 8rpx; margin-top: 8rpx; border-radius: 8rpx; background: #8e64d8; }
 .mine-grid { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; margin: 0 24rpx 8rpx; border-radius: 24rpx; padding: 20rpx 8rpx 16rpx; text-align: center; font-size: calc(22rpx * var(--ui-scale)); color: #333; }
 .mine-grid .ico { width: 64rpx; height: 64rpx; margin: 8rpx auto 8rpx; display: block; background: transparent; }

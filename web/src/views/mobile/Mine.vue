@@ -78,20 +78,26 @@
       </div>
 
       <button class="mine-wallet" type="button" @click="goAuth('/m/wallet')">
-        <div class="mine-wallet-item">
+        <span class="mine-wallet-item">
+          <img :src="'/static/mine/wal-coin.png'" alt="" />
           <strong>{{ hub.balance ?? store.profile.walletBalance ?? 0 }}</strong>
-          <span>余额（元）</span>
-        </div>
-        <div class="mine-wallet-item">
+          <span>余额</span>
+        </span>
+        <span class="mine-wallet-item">
+          <img :src="'/static/mine/wal-coupon.png'" alt="" />
           <strong>{{ hub.couponCount || coupons.length || 0 }}</strong>
           <span>优惠券</span>
           <em v-if="hub.couponExpireHint">{{ hub.couponExpireHint }}</em>
-        </div>
-        <div class="mine-wallet-item">
+        </span>
+        <span class="mine-wallet-item">
+          <img :src="'/static/mine/wal-point.png'" alt="" />
           <strong>{{ store.profile.points || 0 }}</strong>
           <span>积分</span>
-        </div>
-        <i>我的钱包 ›</i>
+        </span>
+        <span class="mine-wallet-item is-entry">
+          <img :src="'/static/mine/wal-purse.png'" alt="" />
+          <b>钱包</b>
+        </span>
       </button>
     </template>
 
