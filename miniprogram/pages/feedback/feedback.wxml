@@ -1,7 +1,41 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<picker range="{{kinds}}" range-key="label" bindchange="onKind">
-  <view class="pad">{{tr.t('类型：', lang)}}{{tr.t(kinds[kindIndex].label, lang)}}</view>
-</picker>
-<textarea class="input" placeholder="{{tr.t('写清页面和问题', lang)}}" value="{{content}}" bindinput="onInput" />
-<button bindtap="submit">{{tr.t('提交', lang)}}</button>
+<view class="fb">
+  <view class="fb-tabs">
+    <view class="fb-tab {{channel=='experience'?'on':''}}" data-channel="experience" bindtap="setChannel">{{tr.t('体验问题', lang)}}</view>
+    <view class="fb-tab {{channel=='complaint'?'on':''}}" data-channel="complaint" bindtap="setChannel">{{tr.t('活动、领队投诉', lang)}}</view>
+  </view>
+  <view class="fb-card">
+    <view class="fb-hint">{{tr.t('请选择您要反馈的问题类型', lang)}}</view>
+    <view class="fb-kinds">
+      <view
+        wx:for="{{shownKinds}}"
+        wx:key="key"
+        class="fb-kind {{kind==item.key?'on':''}}"
+        data-key="{{item.key}}"
+        bindtap="pickKind"
+      >{{tr.t(item.label, lang)}}</view>
+    </view>
+    <textarea
+      class="fb-text"
+      maxlength="200"
+      placeholder="{{tr.t('请描述一下您的问题', lang)}}"
+      placeholder-class="fb-ph"
+      value="{{content}}"
+      bindinput="onInput"
+    />
+    <view class="fb-tools">
+      <view class="fb-photos">
+        <view class="fb-photo" wx:for="{{images}}" wx:key="*this">
+          <image src="{{item}}" mode="aspectFill" data-url="{{item}}" bindtap="preview" />
+          <view class="fb-x" catchtap="removeImage" data-index="{{index}}">×</view>
+        </view>
+        <view class="fb-add" wx:if="{{images.length < 3}}" bindtap="addImage">+</view>
+      </view>
+      <text class="fb-count">{{remain}}</text>
+    </view>
+    <view class="fb-submit-row">
+      <button class="fb-submit {{canSubmit ? 'on' : ''}}" disabled="{{!canSubmit}}" bindtap="submit">{{tr.t('提交', lang)}}</button>
+    </view>
+  </view>
+</view>

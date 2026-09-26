@@ -91,7 +91,7 @@ const title = computed(() => {
     student: "校园认证",
     group: "团体认证",
     leader: "领队申请",
-    feedback: "建议与 BUG",
+    feedback: "意见反馈",
     lottery: "抽奖",
     after: "完成活动",
     routes: "线路列表",
@@ -137,6 +137,7 @@ const subtitle = computed(() => {
     orders: "下一趟，以及走过的局",
     publish: "提交后需管理员审核",
     "route-apply": "通过后出现在线路目录",
+    feedback: "体验问题、活动与领队",
   };
   return chromeSubtitle.value || map[route.name] || "在山野，遇见爱";
 });
