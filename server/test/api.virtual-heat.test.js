@@ -6,6 +6,7 @@ const { getDb } = require("../src/db");
 const { mockOpenid } = require("../src/services/wechat");
 const { mergeDueTrips } = require("../src/services/official-trip");
 const { virtualEnrolledCount, realEnrolledCount } = require("../src/services/helpers");
+const { maskName } = require("../src/services/biz");
 const config = require("../src/config");
 
 describe("virtual auto heat API", () => {
@@ -146,7 +147,7 @@ describe("virtual auto heat API", () => {
     assert.equal(enrolled.body.data.quote.originPrice, 199);
   });
 
-  it("keeps virtual enrollments off the live pulse", async () => {
+  it("shows virtual enrollments on the live pulse with masked names", async () => {
     const admin = await loginAdmin(agent);
     await agent
       .post(`/api/admin/schedules/${seed.individualScheduleId}/virtual-users`)
@@ -159,11 +160,23 @@ describe("virtual auto heat API", () => {
          WHERE schedule_id=? AND status='joined'`
       )
       .run(seed.individualScheduleId);
+    const names = getDb()
+      .prepare(
+        `SELECT u.nickname, e.traveler_name FROM enrollments e
+         JOIN users u ON u.id=e.user_id
+         WHERE e.schedule_id=? AND IFNULL(u.is_virtual,0)=1`
+      )
+      .all(seed.individualScheduleId);
     const pulse = await agent.get("/api/live/pulse").set({ "X-Visitor-Id": "heat-pulse-01" }).expect(200);
-    assert.equal(
-      pulse.body.data.items.filter((it) => it.kind === "enroll").length,
-      0
-    );
+    const enrolls = pulse.body.data.items.filter((it) => it.kind === "enroll");
+    assert.equal(enrolls.length, 4);
+    const blob = JSON.stringify(pulse.body.data);
+    const masked = new Set(names.map((row) => maskName(String(row.nickname || row.traveler_name || "").trim())));
+    assert.ok(enrolls.every((it) => masked.has(it.who) && /\*$/.test(String(it.who))));
+    names.forEach((row) => {
+      if (row.nickname && row.nickname.length > 1) assert.equal(blob.includes(row.nickname), false);
+      if (row.traveler_name && row.traveler_name.length > 1) assert.equal(blob.includes(row.traveler_name), false);
+    });
   });
 
   it("cancels virtuals on merge instead of moving them into the official trip", async () => {
