@@ -1,0 +1,14 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="row pad" wx:if="{{list.length}}">
+  <view class="muted">{{tr.t(unread ? unread + ' 条未读' : '都读过了', lang)}}</view>
+  <view wx:if="{{unread}}" class="btn ghost" bindtap="readAll">{{tr.t('全部已读', lang)}}</view>
+</view>
+<view class="card" wx:for="{{list}}" wx:key="id" data-index="{{index}}" bindtap="open">
+  <view class="pad">
+    <view class="title">{{tr.t(item.title, lang)}}</view>
+    <view class="muted">{{tr.t(item.body, lang)}}</view>
+    <view class="muted">{{tr.t(item.createdAt, lang)}}</view>
+  </view>
+</view>
+<view class="pad muted" wx:if="{{!list.length}}">{{tr.t('成团、集合点变更、审核结果和退款到账会出现在这里。', lang)}}</view>

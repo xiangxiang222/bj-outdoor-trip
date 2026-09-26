@@ -65,10 +65,10 @@ watch(() => route.path, () => clearChrome());
 const tabNames = new Set(["home", "activities", "orders", "mine"]);
 const isHome = computed(() => route.name === "home");
 const showBack = computed(() => !tabNames.has(route.name));
-const accountPaths = ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/settings", "/m/profile", "/m/orders", "/m/lottery", "/m/publish", "/m/coupons", "/m/user"];
+const accountPaths = ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/settings", "/m/profile", "/m/orders", "/m/lottery", "/m/publish", "/m/coupons", "/m/user"];
 const accountTone = computed(() => accountPaths.some((p) => route.path === p || route.path.startsWith(p + "/")));
 const mineActive = computed(() =>
-  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/settings", "/m/profile"].some(
+  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/settings", "/m/profile"].some(
     (p) => route.path === p || route.path.startsWith(p + "/")
   )
 );
@@ -112,6 +112,10 @@ const title = computed(() => {
     member: "会员中心",
     orders: "行程",
     favorites: "我的收藏",
+    notices: "消息",
+    views: "最近看过",
+    companions: "常用报名人",
+    follows: "关注领队",
     stats: "本团画像",
     guides: "领队导游",
     guide: "导游详情",

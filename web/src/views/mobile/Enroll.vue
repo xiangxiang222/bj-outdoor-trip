@@ -28,6 +28,9 @@
       <input class="input" v-model="form.joinCode" maxlength="16" placeholder="向发起人要 4～16 个字的口令" />
     </template>
 
+    <div v-if="companions.length" class="chips">
+      <button v-for="c in companions" :key="c.id" class="chip" type="button" @click="applyCompanion(c)">{{ c.name }}</button>
+    </div>
     <label>{{ isActivity ? "怎么称呼" : "出行人姓名" }}</label>
     <input class="input" v-model="form.travelerName" :placeholder="isActivity ? '群里好认就行' : '与身份证一致'" />
     <label>手机号</label>
@@ -90,6 +93,8 @@
     <input class="input" v-model="form.emergencyName" placeholder="家人或同伴姓名" />
     <label>紧急联系人手机</label>
     <input class="input" v-model="form.emergencyPhone" maxlength="11" placeholder="不能与出行人同一号码" />
+    <button class="btn ghost block" type="button" style="margin-top:8px" @click="saveCompanion">存为常用报名人</button>
+    <p v-if="companionMsg" class="muted">{{ companionMsg }}</p>
     <div v-if="supplyItems.length" class="card"><div class="pad">
       <div class="h2" style="margin-top:0">车上加购</div>
       <p class="muted">上车再买也行。先加上方便领队清点。费用计入应付。</p>
@@ -225,6 +230,8 @@ const enrollBtn = computed(() => {
   return isActivity.value ? "报名本局" : "加入报名（暂不付款）";
 });
 const seatChart = ref(null);
+const companions = ref([]);
+const companionMsg = ref("");
 const seatRows = computed(() => {
   const list = seatChart.value?.seats || [];
   const groups = [];
@@ -283,7 +290,35 @@ onMounted(async () => {
       seatChart.value = null;
     }
   }
+  try {
+    companions.value = (await http.get("/me/companions")).data || [];
+  } catch {
+    companions.value = [];
+  }
 });
+
+function applyCompanion(c) {
+  form.value.travelerName = c.name || "";
+  form.value.travelerPhone = c.phone || "";
+  form.value.emergencyName = c.emergencyName || "";
+  form.value.emergencyPhone = c.emergencyPhone || "";
+  companionMsg.value = "已带入 " + (c.name || "");
+}
+
+async function saveCompanion() {
+  companionMsg.value = "";
+  try {
+    companions.value = (await http.post("/me/companions", {
+      name: form.value.travelerName,
+      phone: form.value.travelerPhone,
+      emergencyName: form.value.emergencyName,
+      emergencyPhone: form.value.emergencyPhone,
+    })).data || companions.value;
+    companionMsg.value = "已存为常用报名人";
+  } catch (e) {
+    companionMsg.value = e.message || "保存失败";
+  }
+}
 
 function checkId() {
   const parsed = parseIdCard(form.value.idCard);

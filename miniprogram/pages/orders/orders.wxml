@@ -10,12 +10,15 @@
 
 <block wx:else>
   <view class="chips">
-    <view class="chip {{tab=='upcoming'?'on':''}}" bindtap="setTab" data-tab="upcoming">{{tr.t('待出行', lang)}} {{tr.t(upcoming.length, lang)}}</view>
+    <view class="chip {{tab=='unpaid'?'on':''}}" bindtap="setTab" data-tab="unpaid">{{tr.t('待支付', lang)}} {{tr.t(unpaid.length, lang)}}</view>
     <view class="chip {{tab=='waitlist'?'on':''}}" bindtap="setTab" data-tab="waitlist">{{tr.t('候补', lang)}} {{tr.t(waitlist.length, lang)}}</view>
+    <view class="chip {{tab=='depart'?'on':''}}" bindtap="setTab" data-tab="depart">{{tr.t('待出发', lang)}} {{tr.t(upcoming.length, lang)}}</view>
+    <view class="chip {{tab=='review'?'on':''}}" bindtap="setTab" data-tab="review">{{tr.t('待评价', lang)}} {{tr.t(review.length, lang)}}</view>
+    <view class="chip {{tab=='refund'?'on':''}}" bindtap="setTab" data-tab="refund">{{tr.t('退款', lang)}} {{tr.t(refund.length, lang)}}</view>
     <view class="chip {{tab=='past'?'on':''}}" bindtap="setTab" data-tab="past">{{tr.t('历史', lang)}} {{tr.t(past.length, lang)}}</view>
   </view>
 
-  <block wx:if="{{tab=='upcoming'}}">
+  <block wx:if="{{tab=='depart'}}">
     <view class="card" wx:if="{{nextTrip}}" bindtap="goSchedule" data-id="{{nextTrip.schedule_id}}">
       <view class="pad">
         <view class="muted">{{tr.t('下一趟 ·', lang)}} {{tr.t(nextTrip.kindLabel, lang)}}</view>
@@ -64,6 +67,45 @@
     <view class="pad muted" wx:if="{{!waitlist.length}}">{{tr.t('还没有候补。满员团仍可报名进候补。', lang)}}</view>
   </block>
 
+  <block wx:elif="{{tab=='unpaid'}}">
+    <view class="card" wx:for="{{unpaid}}" wx:key="id">
+      <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
+        <view class="title">{{tr.t(item.title, lang)}}</view>
+        <view class="muted">{{tr.t(item.start_date, lang)}} · {{tr.t(item.moneyText, lang)}}</view>
+      </view>
+      <view wx:if="{{item.canPay}}" class="cancel-link" catchtap="goPay" data-token="{{item.payShareToken}}" data-sid="{{item.schedule_id}}">{{tr.t('去支付', lang)}}</view>
+    </view>
+    <view class="pad muted" wx:if="{{!unpaid.length}}">{{tr.t('没有待支付的报名。', lang)}}</view>
+  </block>
+
+  <block wx:elif="{{tab=='review'}}">
+    <view class="card" wx:for="{{review}}" wx:key="id">
+      <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
+        <view class="title">{{tr.t(item.title, lang)}}</view>
+        <view class="muted">{{tr.t(item.start_date, lang)}} · {{tr.t('待评价', lang)}}</view>
+      </view>
+      <view wx:if="{{reviewingId != item.id}}" class="btn ghost" catchtap="openReview" data-id="{{item.id}}">{{tr.t('去评价', lang)}}</view>
+      <view wx:else class="pad">
+        <view class="star-pick">
+          <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="star {{rating >= n ? 'on' : ''}}" catchtap="pickStar" data-n="{{n}}">★</text>
+        </view>
+        <textarea class="input" placeholder="{{tr.t('这次出行怎么样（选填）', lang)}}" value="{{content}}" bindinput="setContent" />
+        <view class="btn" catchtap="submitReview" data-id="{{item.id}}">{{tr.t('提交评价', lang)}}</view>
+      </view>
+    </view>
+    <view class="pad muted" wx:if="{{!review.length}}">{{tr.t('回来的行程都评过了。', lang)}}</view>
+  </block>
+
+  <block wx:elif="{{tab=='refund'}}">
+    <view class="card" wx:for="{{refund}}" wx:key="id">
+      <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
+        <view class="title">{{tr.t(item.title, lang)}}</view>
+        <view class="muted">{{tr.t(item.refundProgress.text, lang)}}</view>
+      </view>
+    </view>
+    <view class="pad muted" wx:if="{{!refund.length}}">{{tr.t('还没有退款记录。', lang)}}</view>
+  </block>
+
   <block wx:else>
     <view class="card" wx:for="{{past}}" wx:key="id">
       <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
@@ -72,6 +114,7 @@
           <view class="tag">{{tr.t(item.status=='cancelled'?'已取消':item.kindLabel, lang)}}</view>
         </view>
         <view class="muted">{{tr.t(item.start_date, lang)}} · {{tr.t(item.statusText, lang)}} · {{tr.t(item.moneyText, lang)}}</view>
+        <view class="muted" wx:if="{{item.refundProgress}}">{{tr.t(item.refundProgress.text, lang)}}</view>
       </view>
       <view wx:if="{{item.canComplete || item.completed}}" class="btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{tr.t(item.completed ? '评价 / 评选' : '完成活动', lang)}}</view>
       <view wx:if="{{item.canReview}}">

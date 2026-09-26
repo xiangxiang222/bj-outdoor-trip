@@ -49,6 +49,12 @@ function wholeCount(s) {
   if (m) return s.replace(core, `${m[1]} hr ago`);
   m = core.match(/^(\d+)\s*天前$/);
   if (m) return s.replace(core, `${m[1]} days ago`);
+  m = core.match(/^(\d+)\s*张明天到期$/);
+  if (m) return s.replace(core, `${m[1]} expire tomorrow`);
+  m = core.match(/^(\d+)\s*张即将到期$/);
+  if (m) return s.replace(core, `${m[1]} expiring soon`);
+  m = core.match(/^(\d+)\s*条未读$/);
+  if (m) return s.replace(core, `${m[1]} unread`);
   return null;
 }
 

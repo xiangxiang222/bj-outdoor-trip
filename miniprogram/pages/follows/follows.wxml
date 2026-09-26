@@ -1,0 +1,13 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="card" wx:for="{{list}}" wx:key="id">
+  <view class="pad">
+    <view class="row">
+      <view class="title" data-id="{{item.id}}" bindtap="open">{{tr.t(item.nickname, lang)}}</view>
+      <view class="btn ghost" data-id="{{item.id}}" catchtap="unfollow">{{tr.t('取消关注', lang)}}</view>
+    </view>
+    <view class="muted" wx:if="{{item.nextTitle}}">{{tr.t('下一团', lang)}} {{tr.t(item.nextTitle, lang)}} · {{tr.t(item.nextDate, lang)}}</view>
+    <view class="muted" wx:else>{{tr.t('还没有即将出发的团', lang)}}</view>
+  </view>
+</view>
+<view class="pad muted" wx:if="{{!list.length}}">{{tr.t('在别人的主页点「关注」。对方再发团时，消息里会提醒你。', lang)}}</view>

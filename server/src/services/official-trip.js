@@ -234,6 +234,19 @@ function notifyMerged(en, dest, routeTitle) {
     refType: "schedule",
     refId: dest.id,
   });
+  try {
+    require("./mine-desk").pushUserNotice({
+      userId: en.user_id,
+      kind: "merge",
+      title: "集合点已变更",
+      body: `原团未成团，已并入「${routeTitle}」。${when} ${point} 集合。`,
+      href: `/m/schedule/${dest.id}`,
+      refType: "schedule",
+      refId: dest.id,
+    });
+  } catch {
+    /* 并团短信不依赖站内信 */
+  }
 }
 
 function mergeScheduleInto(source, dest) {

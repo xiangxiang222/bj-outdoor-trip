@@ -1,0 +1,10 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
+  <image wx:if="{{item.cover}}" class="cover" src="{{item.cover}}" mode="aspectFill" />
+  <view class="pad">
+    <view class="title">{{tr.t(item.title, lang)}}</view>
+    <view class="muted">{{tr.t(item.region, lang)}} · {{tr.t(item.seenAt, lang)}}</view>
+  </view>
+</view>
+<view class="pad muted" wx:if="{{!list.length}}">{{tr.t('还没有看过的线路。打开一条线路后会出现在这里。', lang)}}</view>

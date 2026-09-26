@@ -229,6 +229,20 @@ function recordRefundSlice(en, slice, refundNo, remark) {
     "enrollment",
     slice.paymentId || 0
   );
+  try {
+    const route = db.prepare("SELECT r.title FROM schedules s JOIN routes r ON r.id=s.route_id WHERE s.id=?").get(en.schedule_id);
+    require("./mine-desk").pushUserNotice({
+      userId: slice.userId,
+      kind: "refund",
+      title: "退款到账",
+      body: `${route?.title ? "「" + route.title + "」" : ""}${channel === "wallet" ? "已退回余额" : "已原路退回微信"} ¥${slice.amount}`,
+      href: "/m/orders?tab=refund",
+      refType: "enrollment",
+      refId: en.id,
+    });
+  } catch {
+    /* 退款入账不依赖消息 */
+  }
 }
 
 async function refundEnrollmentToPayers(en, { amount, remark } = {}) {

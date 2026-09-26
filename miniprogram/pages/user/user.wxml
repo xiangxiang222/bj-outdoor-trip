@@ -8,6 +8,7 @@
       <view class="guide-body">
         <view class="row"><text class="title">{{tr.t(u.nickname, lang)}}</text><text class="tag" wx:if="{{u.lifeStage}}">{{tr.t(u.lifeStage, lang)}}</text></view>
         <view class="muted">{{tr.t(u.genderText, lang)}}<text wx:if="{{u.hometown}}"> · {{tr.t(u.hometown, lang)}}</text> {{tr.t('· 已出行', lang)}} {{tr.t(u.tripCount, lang)}} {{tr.t('次', lang)}}</view>
+        <view wx:if="{{!isSelf}}" class="btn ghost" bindtap="toggleFollow">{{tr.t(u.followed ? '已关注' : '关注', lang)}}</view>
       </view>
     </view>
   </view>

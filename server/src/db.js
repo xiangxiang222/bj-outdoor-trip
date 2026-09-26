@@ -756,6 +756,37 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "routes", "bounty_paid_at", "TEXT");
   addColumnIfMissing(db, "routes", "bounty_schedule_id", "INTEGER");
   addColumnIfMissing(db, "routes", "i18n_json", "TEXT");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_notices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      kind TEXT,
+      title TEXT,
+      body TEXT,
+      href TEXT,
+      ref_type TEXT,
+      ref_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      read_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_user_notices_user ON user_notices(user_id, id DESC);
+    CREATE TABLE IF NOT EXISTS companions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      name TEXT,
+      phone TEXT,
+      emergency_name TEXT,
+      emergency_phone TEXT,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_companions_user ON companions(user_id, id DESC);
+    CREATE TABLE IF NOT EXISTS follows (
+      user_id INTEGER NOT NULL,
+      target_user_id INTEGER NOT NULL,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      PRIMARY KEY (user_id, target_user_id)
+    );
+  `);
   db.exec(
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_enrollments_pay_share ON enrollments(pay_share_token) WHERE pay_share_token IS NOT NULL AND pay_share_token != ''"
   );

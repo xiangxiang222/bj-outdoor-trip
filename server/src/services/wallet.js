@@ -314,10 +314,19 @@ function tripCounts(userId) {
          AND IFNULL(e.pay_amount,0)>0`
     )
     .get(userId).c;
+  const depart = db
+    .prepare(
+      `SELECT COUNT(*) AS c FROM enrollments e
+       JOIN schedules s ON s.id=e.schedule_id
+       WHERE e.user_id=? AND e.status='joined' AND s.status!='cancelled'
+         AND s.start_date>=date('now','localtime')
+         AND NOT (e.pay_status='unpaid' AND IFNULL(e.pay_amount,0)>0)`
+    )
+    .get(userId).c;
   const couponCount = db
     .prepare("SELECT COUNT(*) AS c FROM user_coupons WHERE user_id=? AND status='unused'")
     .get(userId).c;
-  return { upcoming, waitlist, unpaid, couponCount };
+  return { upcoming, waitlist, unpaid, depart, couponCount };
 }
 
 function snapshot(userId) {
@@ -337,9 +346,11 @@ function snapshot(userId) {
     withdrawRule: withdrawRule(userId),
     bills: listBills(userId),
     upcomingCount: counts.upcoming,
+    departCount: counts.depart,
     waitlistCount: counts.waitlist,
     unpaidCount: counts.unpaid,
     couponCount: counts.couponCount,
+    ...require("./mine-desk").deskCounts(userId),
   };
 }
 
