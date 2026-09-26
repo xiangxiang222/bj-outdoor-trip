@@ -755,6 +755,7 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "routes", "bounty_amount", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "routes", "bounty_paid_at", "TEXT");
   addColumnIfMissing(db, "routes", "bounty_schedule_id", "INTEGER");
+  addColumnIfMissing(db, "routes", "i18n_json", "TEXT");
   db.exec(
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_enrollments_pay_share ON enrollments(pay_share_token) WHERE pay_share_token IS NOT NULL AND pay_share_token != ''"
   );

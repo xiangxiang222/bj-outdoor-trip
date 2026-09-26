@@ -12,3 +12,4 @@ process.env.MMC_PUBLIC_DIR = path.join(dir, "public");
 process.env.MMC_WEB_DIST_DIR = webDist;
 process.env.MMC_SKIP_WEB = "0";
 process.env.PORT = "0";
+process.env.ROUTE_I18N_AUTO = "0";

@@ -1,4 +1,5 @@
 const { visitorId } = require("./pulse");
+const { read } = require("./appearance");
 
 function failMessage(err, baseUrl) {
   const raw = String((err && (err.errMsg || err.message)) || "");
@@ -30,6 +31,7 @@ function request(path, method, data) {
         "content-type": "application/json",
         Authorization: app.globalData.token ? "Bearer " + app.globalData.token : "",
         "X-Visitor-Id": visitorId(),
+        "X-Lang": read().lang || "zh",
       },
       success(res) {
         if (res.statusCode >= 200 && res.statusCode < 300 && res.data && res.data.ok) {

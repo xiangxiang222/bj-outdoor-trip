@@ -66,6 +66,7 @@ const { oversubView, isOversubPending, drawOversub } = require("./services/overs
 const { parseVideoInput, videoViews } = require("./services/video");
 const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
 const { draftRoute } = require("./services/route-draft");
+const { scheduleRouteI18n } = require("./services/route-i18n");
 const { submitApply, listMine: listRouteApps, reviewApply, adminFields, bountyYuan, applicationView, reviewOf, isListed } = require("./services/route-apply");
 const { noticeCampus, noticeGroup, noticeLeader, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
 const { createCaptcha, codesMatch } = require("./services/captcha");
@@ -1757,6 +1758,7 @@ router.post("/trips", authUser, (req, res) => {
       "pending"
     );
   const routeId = Number(routeInfo.lastInsertRowid);
+  scheduleRouteI18n(routeId);
   saveRouteVideos(routeId, { videos: b.videos ?? b.videoUrls ?? b.videoUrl ?? b.videoLinks ?? [] });
   db()
     .prepare("INSERT INTO route_price_tiers (route_id,min_people,max_people,price,member_price) VALUES (?,?,?,?,?)")
@@ -2498,6 +2500,7 @@ router.post("/admin/routes", authAdmin, requireCap("ops"), (req, res) => {
       b.status || "on"
     );
   const id = Number(info.lastInsertRowid);
+  scheduleRouteI18n(id);
   saveRouteVideos(id, b);
   (b.priceTiers || []).forEach((t) => {
     db().prepare("INSERT INTO route_price_tiers (route_id,min_people,max_people,price,member_price) VALUES (?,?,?,?,?)").run(id, t.minPeople, t.maxPeople || null, t.price, t.memberPrice || t.price);
@@ -2545,6 +2548,7 @@ router.put("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
     status,
     id
   );
+  scheduleRouteI18n(id);
   saveRouteVideos(id, b);
   if (b.priceTiers) {
     db().prepare("DELETE FROM route_price_tiers WHERE route_id=?").run(id);
