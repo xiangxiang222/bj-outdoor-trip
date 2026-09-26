@@ -20,6 +20,7 @@ function failMessage(err, baseUrl) {
 
 function request(path, method, data) {
   const app = getApp();
+  if (!app || !app.globalData) return Promise.reject(new Error("应用还没准备好"));
   const baseUrl = app.globalData.baseUrl;
   return new Promise((resolve, reject) => {
     wx.request({

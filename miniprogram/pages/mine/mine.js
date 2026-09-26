@@ -39,10 +39,11 @@ Page({
     hub: { balance: 0, departCount: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, reviewCount: 0, refundCount: 0, unreadCount: 0, couponCount: 0, couponExpireHint: "" },
     picker: false,
     defaults: [],
-    iconBase: app.globalData.baseUrl + "/static/mine/",
+    iconBase: (app && app.globalData && app.globalData.baseUrl ? app.globalData.baseUrl : "") + "/static/mine/",
     dark: false,
   },
   onShow() {
+    if (!app || !app.globalData) return;
     const user = app.globalData.user;
     this.setData({
       user,
