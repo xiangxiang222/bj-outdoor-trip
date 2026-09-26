@@ -43,8 +43,22 @@ Page({
     routeTags: [],
     routeList: [],
     routeErr: "",
+    loading: true,
   },
   onLoad() {
+    const cached = wx.getStorageSync("bj_home_cache");
+    if (cached && cached.home) {
+      const allSchedules = asList(cached.schedules);
+      this.setData({
+        loading: false,
+        home: cached.home,
+        monthKey: (cached.home.months && cached.home.months[0] && cached.home.months[0].key) || "",
+        monthDays: cached.home.monthDays || [],
+        allSchedules,
+        calendar: buildCalendar(allSchedules),
+      });
+      this.applyGroups();
+    }
     this.load();
   },
   onShow() {
@@ -106,15 +120,18 @@ Page({
       const home = homeRes.data || {};
       const allSchedules = asList(schRes.data);
       this.setData({
+        loading: false,
         home,
         monthKey: (home.months && home.months[0] && home.months[0].key) || "",
         monthDays: home.monthDays || [],
         allSchedules,
         calendar: buildCalendar(allSchedules),
       });
+      wx.setStorageSync("bj_home_cache", { home, schedules: allSchedules });
       this.applyGroups();
       this.loadUpcoming();
     } catch (err) {
+      this.setData({ loading: false });
       wx.showToast({ title: (err && err.message) || "加载失败", icon: "none" });
     }
   },

@@ -154,7 +154,8 @@
         </p>
       </div>
     </article>
-    <div v-if="!groups.length" class="card">
+    <div v-if="loading && !groups.length" class="card"><div class="pad muted">正在加载近期的团…</div></div>
+    <div v-else-if="!groups.length" class="card">
       <div class="pad">
         <strong>还没有符合条件的团</strong>
         <p class="muted">过审的团会出现在这里。也可以先看官方线路。</p>
@@ -193,6 +194,7 @@ const router = useRouter();
 const store = useUserStore();
 const schedules = ref([]);
 const home = ref({ brand: {}, cities: [], tags: [], festivals: [], months: [] });
+const loading = ref(true);
 const city = ref("");
 const date = ref("");
 const tag = ref("");
@@ -284,6 +286,16 @@ const picked = computed(() => {
 let heroTimer;
 
 onMounted(async () => {
+  try {
+    const cached = JSON.parse(sessionStorage.getItem("bj_home_cache") || "null");
+    if (cached && cached.home) {
+      home.value = cached.home;
+      schedules.value = cached.schedules || [];
+      loading.value = false;
+    }
+  } catch {
+    /* ignore stale cache */
+  }
   const [homeRes, schRes] = await Promise.all([
     http.get("/home").catch(() => ({ data: {} })),
     http.get("/schedules", { params: { channel: "trip" } }).catch(() => ({ data: [] })),
@@ -292,6 +304,12 @@ onMounted(async () => {
   monthKey.value = home.value.months?.[0]?.key || "";
   monthDays.value = home.value.monthDays || [];
   schedules.value = schRes.data || [];
+  loading.value = false;
+  try {
+    sessionStorage.setItem("bj_home_cache", JSON.stringify({ home: home.value, schedules: schedules.value }));
+  } catch {
+    /* storage full */
+  }
   if (store.token) {
     store.fetchMe().catch(() => {});
     try {

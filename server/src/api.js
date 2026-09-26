@@ -342,11 +342,32 @@ function compactRoute(row) {
   return { id: r.id, title: r.title, code: r.code, region: r.region, category: r.category, tags: r.tags || [] };
 }
 
+function feedRoute(row, req) {
+  if (!row) return { id: 0, title: "", cover: "" };
+  let tags = [];
+  try {
+    tags = JSON.parse(row.tags_json || "[]");
+  } catch {
+    tags = [];
+  }
+  return {
+    id: row.id,
+    code: row.code,
+    title: row.title,
+    subtitle: row.subtitle,
+    region: row.region,
+    category: row.category,
+    tags,
+    cover: attachAssetHost(req, resolveStoredMedia(row.cover, { code: row.code })),
+  };
+}
+
 function scheduleView(sch, req, opts = {}) {
   const compact = Boolean(opts.compact);
   const card = Boolean(opts.card);
   const briefRoute = Boolean(opts.briefRoute);
-  const light = compact || card;
+  const feed = Boolean(opts.feed);
+  const light = compact || card || feed;
   const route = db().prepare("SELECT * FROM routes WHERE id=?").get(sch.route_id);
   const bus = db().prepare("SELECT * FROM bus_types WHERE id=?").get(sch.bus_type_id);
   const guideRow = sch.guide_id ? db().prepare("SELECT * FROM guides WHERE id=?").get(sch.guide_id) : null;
@@ -359,7 +380,7 @@ function scheduleView(sch, req, opts = {}) {
     ? (req.adminId ? enrolledCount(sch.id, true) : realEnrolledCount(sch.id, true))
     : shown;
   const people = Math.max(shown || enrolled, 1);
-  const quote = light && !card ? null : quoteForSchedule(sch, realLive || sch.min_group_size, null);
+  const quote = light && !card && !feed ? null : quoteForSchedule(sch, realLive || sch.min_group_size, null);
   const offer = offerMeta(sch.offer_type);
   const cost =
     (sch.cost_transport || 0) +
@@ -370,7 +391,11 @@ function scheduleView(sch, req, opts = {}) {
     (sch.cost_other || 0);
     const revenue = db().prepare("SELECT IFNULL(SUM(pay_amount),0) AS s FROM enrollments WHERE schedule_id=? AND status='joined'").get(sch.id).s;
   const fullRoute = light && !briefRoute ? null : mapRoute(route, req);
-  const mappedRoute = light && !briefRoute ? compactRoute(route) : briefRouteView(fullRoute, briefRoute);
+  const mappedRoute = feed
+    ? feedRoute(route, req)
+    : light && !briefRoute
+      ? compactRoute(route)
+      : briefRouteView(fullRoute, briefRoute);
   const meetup = meetupMap(sch.meetup_point);
   let lockedCount = 0;
   try {
@@ -384,7 +409,11 @@ function scheduleView(sch, req, opts = {}) {
   const organizer = adoptOrganizer(sch);
   const kind = tripKindOf(sch.organizer_type, sch.channel === "activity" ? "activity" : "trip");
   const official = sch.organizer_type === "official";
-  const gallery = light ? [] : galleryOfSchedule(fullRoute || mappedRoute, req);
+  const gallery = feed
+    ? (mappedRoute && mappedRoute.cover ? [mappedRoute.cover] : [])
+    : light
+      ? []
+      : galleryOfSchedule(fullRoute || mappedRoute, req);
   return {
     id: sch.id,
     routeId: sch.route_id,
@@ -459,11 +488,11 @@ function scheduleView(sch, req, opts = {}) {
     offerType: (quote && quote.offerType) || sch.offer_type || "full",
     offerLabel: (quote && quote.offerLabel) || offer.label,
     offerColor: (quote && quote.offerColor) || offer.color,
-    playTags: light ? [] : resolvePlayTags(sch, mappedRoute, req),
+    playTags: light && !feed ? [] : resolvePlayTags(sch, mappedRoute, req),
     reviewStatus: sch.review_status || "approved",
     combo: light ? null : comboView(sch, viewer),
-    eligibility: light ? null : eligibilityView(sch, viewer),
-    oversub: light ? null : oversubView(sch),
+    eligibility: light && !feed ? null : eligibilityView(sch, viewer),
+    oversub: light && !feed ? null : oversubView(sch),
     refundPolicy: light ? null : refundPolicyView(route, sch),
     ...joinLockView(sch, req),
     ...(light ? {} : lotteryPublic(sch.id)),
@@ -1404,7 +1433,7 @@ router.get("/schedules", (req, res) => {
     args.push(channel);
   }
   sql += " ORDER BY start_date";
-  let rows = db().prepare(sql).all(...args).map((s) => scheduleView(s, req));
+  let rows = db().prepare(sql).all(...args).map((s) => scheduleView(s, req, { feed: true }));
   if (city) rows = rows.filter((s) => s.city === city);
   if (tag) rows = rows.filter((s) => (s.playTags || []).some((t) => t.name === tag || String(t.id) === String(tag)));
   res.json({ ok: true, data: rows });

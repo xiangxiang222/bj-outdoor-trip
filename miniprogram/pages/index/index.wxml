@@ -110,7 +110,10 @@
     </view>
   </view>
 </view>
-<view wx:if="{{!groups.length}}" class="card">
+<view wx:if="{{loading && !groups.length}}" class="card">
+  <view class="pad muted">正在加载近期的团…</view>
+</view>
+<view wx:elif="{{!groups.length}}" class="card">
   <view class="pad">
     <view class="title">还没有符合条件的团</view>
     <view class="muted">过审的团会出现在这里。也可以先看官方线路。</view>
