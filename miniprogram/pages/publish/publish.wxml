@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="pad muted">{{form.channel=='activity' ? '提交后需审核，通过后出现在活动 Tab。' : '填写线路与出发信息，提交后需管理员审核才会出现在首页。'}}</view>
 
 <view class="label">类型</view>

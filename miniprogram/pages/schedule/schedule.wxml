@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <swiper wx:if="{{gallery.length}}" class="hero-swipe" autoplay circular interval="4000">
   <swiper-item wx:for="{{gallery}}" wx:key="*this">
     <image class="cover" src="{{item}}" mode="aspectFill" bindtap="previewHero" data-src="{{item}}" />

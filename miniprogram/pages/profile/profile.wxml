@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="notice">将跳到微信授权页，核对姓名和身份证是否与这张微信的支付实名一致。证件号仅本人可见，展示时脱敏。</view>
 <view class="list">
   <view class="row"><text>昵称</text><text class="val">{{user.nickname || '未填'}}</text></view>

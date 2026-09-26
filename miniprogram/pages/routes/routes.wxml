@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="muted pad" style="padding-bottom:0">官方线路。点进去看介绍，有排期就能报，没有可以自己开一团。</view>
 <input class="input" placeholder="搜索长城 / 十渡 / 坝上" value="{{q}}" bindconfirm="onSearch" />
 <view class="chips">

@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="card" wx:if="{{order}}">
   <view class="pad title">{{order.title}}</view>
   <view class="pad muted" wx:if="{{order.startDate}}">{{order.startDate}} 出发</view>

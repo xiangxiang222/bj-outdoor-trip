@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="card">
   <view class="pad">
     <view class="rule-title">可提现额度</view>

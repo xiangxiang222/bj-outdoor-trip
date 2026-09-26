@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="chips">
   <view class="offer-chip publish" bindtap="goPublish">发团</view>
 </view>

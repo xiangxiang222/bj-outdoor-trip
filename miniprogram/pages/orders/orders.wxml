@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="card" wx:if="{{!loggedIn}}">
   <view class="pad">
     <view class="title">登录后看出行计划</view>

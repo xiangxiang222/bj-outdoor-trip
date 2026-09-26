@@ -1,3 +1,23 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<view class="sec">{{copy.look}}</view>
+<view class="list">
+  <view class="row">
+    <text>{{copy.textMode}}</text>
+    <switch checked="{{look.textMode}}" color="#34c759" bindchange="toggleText" />
+  </view>
+  <view class="row" bindtap="go" data-url="/pages/look-font/look-font">
+    <text>{{copy.font}}</text>
+    <text class="hint">›</text>
+  </view>
+  <view class="row" bindtap="go" data-url="/pages/look-night/look-night">
+    <text>{{copy.night}}</text>
+    <text class="hint">{{nightText}} ›</text>
+  </view>
+  <view class="row" bindtap="go" data-url="/pages/look-lang/look-lang">
+    <text>{{copy.lang}}</text>
+    <text class="hint">{{langText}} ›</text>
+  </view>
+</view>
 <view class="sec">当前账号</view>
 <view class="account">
   <view class="avatar">

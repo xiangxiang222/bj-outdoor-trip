@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="act-hero">
   <view class="act-hero-text">
     <view class="title">同城也能约</view>

@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="card" wx:if="{{!list.length}}"><view class="pad muted">还没有优惠券</view></view>
 <view class="card" wx:for="{{list}}" wx:key="id" bindtap="open" data-code="{{item.campaignCode}}" data-status="{{item.status}}" data-schedule="{{item.scheduleId}}">
   <view class="pad">

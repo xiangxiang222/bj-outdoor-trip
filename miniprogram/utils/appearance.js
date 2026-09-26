@@ -1,0 +1,221 @@
+const KEY = "bj_look";
+
+const SIZES = [14, 16, 18, 20, 22];
+
+const FONTS = {
+  system: '"PingFang SC","Hiragino Sans GB","Noto Sans SC",sans-serif',
+  song: '"Songti SC","STSong","Noto Serif SC","Source Han Serif SC",serif',
+  kai: '"Kaiti SC","STKaiti","KaiTi",serif',
+};
+
+const COPY = {
+  zh: {
+    settingsTitle: "设置",
+    settingsSub: "实名、支付与账号",
+    look: "外观设置",
+    textMode: "文字模式",
+    font: "字号设置",
+    night: "夜间模式",
+    lang: "语言",
+    langTitle: "多语言与翻译",
+    pickLang: "选择语言",
+    zh: "简体中文",
+    en: "English",
+    tw: "繁体中文",
+    fontTitle: "字体字号设置",
+    preview: "效果预览",
+    previewTitle: "山里信号不好时，文字模式只留行程信息。",
+    previewBody: "集合时间、地点和还缺几人会更大，封面图先收起来。",
+    previewNote: "同行者众",
+    fontPick: "字体选择",
+    system: "系统字体",
+    song: "宋体",
+    kai: "楷体",
+    using: "使用中",
+    use: "使用",
+    size: "字号调整",
+    standard: "标准",
+    sizeHint: "拖动上方滑块，调整字号大小",
+    nightTitle: "夜间模式",
+    systemNight: "跟随系统",
+    systemNightSub: "与手机设置保持一致的浅色或深色模式",
+    day: "日间模式",
+    dark: "夜间模式",
+  },
+  tw: {
+    settingsTitle: "設定",
+    settingsSub: "實名、支付與帳號",
+    look: "外觀設定",
+    textMode: "文字模式",
+    font: "字號設定",
+    night: "夜間模式",
+    lang: "語言",
+    langTitle: "多語言與翻譯",
+    pickLang: "選擇語言",
+    zh: "簡體中文",
+    en: "English",
+    tw: "繁體中文",
+    fontTitle: "字體字號設定",
+    preview: "效果預覽",
+    previewTitle: "山裡訊號不好時，文字模式只留行程資訊。",
+    previewBody: "集合時間、地點和還缺幾人會更大，封面圖先收起來。",
+    previewNote: "同行者眾",
+    fontPick: "字體選擇",
+    system: "系統字體",
+    song: "宋體",
+    kai: "楷體",
+    using: "使用中",
+    use: "使用",
+    size: "字號調整",
+    standard: "標準",
+    sizeHint: "拖動上方滑塊，調整字號大小",
+    nightTitle: "夜間模式",
+    systemNight: "跟隨系統",
+    systemNightSub: "與手機設定保持一致的淺色或深色模式",
+    day: "日間模式",
+    dark: "夜間模式",
+  },
+  en: {
+    settingsTitle: "Settings",
+    settingsSub: "Identity, pay, and account",
+    look: "Appearance",
+    textMode: "Text mode",
+    font: "Text size",
+    night: "Night mode",
+    lang: "Language",
+    langTitle: "Language",
+    pickLang: "Choose language",
+    zh: "简体中文",
+    en: "English",
+    tw: "繁體中文",
+    fontTitle: "Font and size",
+    preview: "Preview",
+    previewTitle: "Text mode keeps the trip facts when the signal is weak.",
+    previewBody: "Time, meeting point, and open seats get larger. Covers stay hidden.",
+    previewNote: "Together",
+    fontPick: "Font",
+    system: "System",
+    song: "Song",
+    kai: "Kai",
+    using: "In use",
+    use: "Use",
+    size: "Size",
+    standard: "Standard",
+    sizeHint: "Drag the slider to change text size",
+    nightTitle: "Night mode",
+    systemNight: "Match system",
+    systemNightSub: "Use the same light or dark mode as your phone",
+    day: "Day",
+    dark: "Night",
+  },
+};
+
+function defaults() {
+  return { textMode: false, font: "system", size: 1, night: "system", lang: "zh" };
+}
+
+function read() {
+  const saved = wx.getStorageSync(KEY) || {};
+  const look = Object.assign(defaults(), saved);
+  if (!FONTS[look.font]) look.font = "system";
+  look.size = Math.max(0, Math.min(SIZES.length - 1, Number(look.size) || 0));
+  if (!["system", "day", "dark"].includes(look.night)) look.night = "system";
+  if (!COPY[look.lang]) look.lang = "zh";
+  look.textMode = !!look.textMode;
+  return look;
+}
+
+function write(patch) {
+  const next = Object.assign(read(), patch);
+  wx.setStorageSync(KEY, next);
+  applyChrome(next);
+  const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+  pages.forEach((page) => paint(page, next));
+  return next;
+}
+
+function systemDark() {
+  try {
+    const info = wx.getAppBaseInfo ? wx.getAppBaseInfo() : wx.getSystemInfoSync();
+    return info && info.theme === "dark";
+  } catch (e) {
+    return false;
+  }
+}
+
+function isDark(look) {
+  const prefs = look || read();
+  return prefs.night === "dark" || (prefs.night === "system" && systemDark());
+}
+
+function pageStyle(look) {
+  const dark = isDark(look);
+  const vars = dark
+    ? "--bg:#121214;--card:#1c1c1e;--ink:#f2f2f2;--muted:#9a9a9a;--line:#2c2c2e;"
+    : "--bg:#f5f6f3;--card:#ffffff;--ink:#141414;--muted:#7a7d74;--line:#eceee8;";
+  const media = look.textMode ? "none" : "block";
+  const grid = look.textMode ? "none" : "grid";
+  const hero = look.textMode ? "0px" : "360rpx";
+  return vars + "--media:" + media + ";--media-grid:" + grid + ";--hero-h:" + hero + ";background:var(--bg);color:var(--ink);font-family:" + FONTS[look.font] + ";";
+}
+
+function paint(page, look) {
+  if (!page || typeof page.setData !== "function") return;
+  const prefs = look || read();
+  page.setData({
+    lookRoot: SIZES[prefs.size] + "px",
+    lookStyle: pageStyle(prefs),
+  });
+}
+
+function applyChrome(look) {
+  const dark = isDark(look);
+  wx.setNavigationBarColor({
+    frontColor: "#ffffff",
+    backgroundColor: dark ? "#1a1020" : "#3a1848",
+    fail() {},
+  });
+  wx.setTabBarStyle({
+    color: dark ? "#9a9a9a" : "#7a7d74",
+    selectedColor: "#6b2178",
+    backgroundColor: dark ? "#1c1c1e" : "#ffffff",
+    fail() {},
+  });
+  wx.setBackgroundColor({
+    backgroundColor: dark ? "#121214" : "#f5f6f3",
+    fail() {},
+  });
+}
+
+function t(look) {
+  return COPY[(look || read()).lang] || COPY.zh;
+}
+
+function nightLabel(look) {
+  const copy = t(look);
+  if (look.night === "day") return copy.day;
+  if (look.night === "dark") return copy.dark;
+  return copy.systemNight;
+}
+
+function langLabel(look) {
+  const copy = t(look);
+  if (look.lang === "en") return copy.en;
+  if (look.lang === "tw") return copy.tw;
+  return copy.zh;
+}
+
+module.exports = {
+  SIZES,
+  FONTS,
+  COPY,
+  read,
+  write,
+  paint,
+  applyChrome,
+  isDark,
+  t,
+  nightLabel,
+  langLabel,
+  systemDark,
+};

@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="card" wx:if="{{data}}">
   <view class="pad muted">{{data.isOwner ? '你的团费' : '帮 ' + data.travelerName + ' 付团费'}}</view>
   <view class="pad title">{{data.title}}</view>

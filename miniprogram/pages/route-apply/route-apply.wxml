@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="pad muted">把想收录的线路交给平台审。通过后会出现在「线路」里。这和首页「发团」不是同一件事。</view>
 
 <view class="card" wx:if="{{done}}">

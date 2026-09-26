@@ -49,11 +49,17 @@ import { computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import { chromeTitle, chromeSubtitle, clearChrome } from "@/utils/pageChrome";
+import { applyLook, readLook } from "@/utils/appearance";
 
 const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
-onMounted(() => store.fetchMeta());
+onMounted(() => {
+  store.fetchMeta();
+  applyLook(readLook());
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  media.addEventListener?.("change", () => applyLook(readLook()));
+});
 watch(() => route.path, () => clearChrome());
 
 const tabNames = new Set(["home", "activities", "orders", "mine"]);
