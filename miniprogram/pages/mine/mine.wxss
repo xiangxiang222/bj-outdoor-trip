@@ -35,6 +35,8 @@ page { background: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helveti
 .mine-wallet { display: grid; grid-template-columns: repeat(4, 1fr); align-items: start; background: #fff; margin: 0 24rpx 8rpx; border-radius: 24rpx; padding: 24rpx 8rpx 20rpx; text-align: center; }
 .mine-wallet-item { display: flex; flex-direction: column; align-items: center; }
 .wal-ico { width: 80rpx; height: 80rpx; }
+.wal-ico-wrap { position: relative; width: 80rpx; height: 80rpx; }
+.wal-dot { position: absolute; top: -4rpx; right: -4rpx; width: 16rpx; height: 16rpx; border-radius: 50%; background: #e1251b; box-shadow: 0 0 0 4rpx #fff; }
 .wal-num { margin-top: 6rpx; font-size: calc(32rpx * var(--ui-scale)); font-weight: 650; color: #1a1a1a; line-height: 1.2; }
 .wal-name { margin-top: 2rpx; font-size: calc(22rpx * var(--ui-scale)); color: #8d8d8d; line-height: 1.2; }
 .wal-entry { margin-top: 12rpx; font-size: calc(36rpx * var(--ui-scale)); font-weight: 650; color: #1a1a1a; line-height: 1.1; }
