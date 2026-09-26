@@ -132,9 +132,6 @@
       <button class="cell" type="button" @click="goAuth('/m/group')">
         <span>{{ groupLabel }}</span><i>›</i>
       </button>
-      <button class="cell" type="button" @click="$router.push('/m/official')">
-        <span>客服与规则</span><i>加微信、FAQ ›</i>
-      </button>
       <button class="cell" type="button" @click="$router.push({ path: '/m', query: { view: 'routes' } })">
         <span>看线路</span><i>官方目的地 ›</i>
       </button>
