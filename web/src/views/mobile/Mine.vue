@@ -115,12 +115,12 @@
     <p class="cell-label">常用</p>
     <div class="mine-grid">
       <button type="button" @click="goAuth('/m/favorites')"><img :src="'/static/mine/fav.png'" alt="" />我的收藏</button>
-      <button type="button" @click="goAuth('/m/views')"><img :src="'/static/mine/views.png'" alt="" />最近看过</button>
+      <button type="button" @click="goAuth('/m/views')"><img :src="'/static/mine/views.png?v=2'" alt="" />最近看过</button>
       <button type="button" @click="goAuth('/m/companions')"><img :src="'/static/mine/people.png'" alt="" />常用报名人</button>
       <button type="button" @click="goAuth('/m/follows')"><img :src="'/static/mine/follow.png'" alt="" />关注领队</button>
       <button type="button" @click="goAuth('/m/student')"><img :src="'/static/mine/campus.png'" alt="" />{{ campusShort }}</button>
-      <button type="button" @click="goAuth('/m/leader')"><img :src="'/static/mine/leader.png'" alt="" />{{ leaderShort }}</button>
-      <button type="button" @click="goAuth('/m/publish')"><img :src="'/static/mine/publish.png'" alt="" />去发团</button>
+      <button type="button" @click="goAuth('/m/leader')"><img :src="'/static/mine/leader.png?v=2'" alt="" />{{ leaderShort }}</button>
+      <button type="button" @click="goAuth('/m/publish')"><img :src="'/static/mine/publish.png?v=2'" alt="" />去发团</button>
       <button type="button" @click="goReferral"><img :src="'/static/mine/referral.png'" alt="" />推荐报名</button>
       <button type="button" @click="goAuth('/m/lottery')"><img :src="'/static/mine/lottery.png'" alt="" />抽奖</button>
       <button type="button" @click="goAuth('/m/route-apply')"><img :src="'/static/mine/route.png'" alt="" />收录线路</button>
