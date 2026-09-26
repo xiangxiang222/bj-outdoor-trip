@@ -15,9 +15,13 @@ page { background: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helveti
 .avatar-grid image { width: 120rpx; height: 120rpx; border-radius: 50%; margin: 0 auto; }
 .avatar-action { text-align: center; padding: 28rpx 0; border-top: 1rpx solid #f0f1f3; font-size: calc(32rpx * var(--ui-scale)); }
 .avatar-action.cancel { color: #7a7d74; }
-.mine-tools { display: flex; align-items: center; gap: 8rpx; }
-.mine-gear { position: relative; background: transparent; padding: 12rpx 4rpx; font-size: calc(28rpx * var(--ui-scale)); color: #666; }
-.mine-badge { position: absolute; top: 0; right: -8rpx; min-width: 28rpx; height: 28rpx; line-height: 28rpx; padding: 0 6rpx; border-radius: 99rpx; background: #e23d3d; color: #fff; font-size: 18rpx; text-align: center; }
+.mine-tools { display: flex; align-items: flex-start; gap: 4rpx; flex: none; }
+.mine-tool { display: flex; flex-direction: column; align-items: center; gap: 2rpx; min-width: 72rpx; color: #333; font-size: calc(20rpx * var(--ui-scale)); line-height: 1.15; }
+.mine-tool-ico { position: relative; width: 44rpx; height: 44rpx; }
+.mine-tool-ico image { width: 44rpx; height: 44rpx; }
+.mine-tools.is-dark .mine-tool { color: #f2f2f2; }
+.mine-tools.is-dark .mine-tool-ico image { filter: invert(1); }
+.mine-badge { position: absolute; top: -8rpx; right: -16rpx; min-width: 28rpx; height: 28rpx; line-height: 28rpx; padding: 0 6rpx; border-radius: 99rpx; background: #e23d3d; color: #fff; font-size: 18rpx; text-align: center; }
 .mine-expire { color: #c45c26; font-size: calc(20rpx * var(--ui-scale)); }
 .mine-member { margin: 8rpx 24rpx 16rpx; padding: 28rpx 32rpx; border-radius: 24rpx; background: linear-gradient(90deg, #f3e8ff, #fff); display: flex; justify-content: space-between; align-items: center; color: #3b2a6e; }
 .mine-level { font-size: calc(34rpx * var(--ui-scale)); font-weight: 700; text-decoration: underline; text-underline-offset: 8rpx; }
@@ -26,5 +30,5 @@ page { background: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helveti
 .mine-shortcuts { display: flex; overflow: auto; background: #fff; margin: 0 24rpx 16rpx; border-radius: 24rpx; padding: 28rpx 8rpx; text-align: center; }
 .mine-shortcuts > view { flex: 1 0 110rpx; }
 .mine-wallet { display: grid; grid-template-columns: 1fr 1fr 1fr auto; align-items: end; background: #fff; margin: 0 24rpx 8rpx; border-radius: 24rpx; padding: 28rpx; gap: 8rpx; }
-.mine-grid { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; margin: 0 24rpx 8rpx; border-radius: 24rpx; padding: 28rpx 8rpx 20rpx; text-align: center; font-size: calc(22rpx * var(--ui-scale)); color: #333; }
-.mine-grid .ico { width: 64rpx; height: 64rpx; line-height: 64rpx; margin: 0 auto 8rpx; border-radius: 50%; background: #f4f5f7; color: #333; font-weight: 600; }
+.mine-grid { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; margin: 0 24rpx 8rpx; border-radius: 24rpx; padding: 20rpx 8rpx 16rpx; text-align: center; font-size: calc(22rpx * var(--ui-scale)); color: #333; }
+.mine-grid .ico { width: 104rpx; height: 104rpx; margin: 0 auto 4rpx; display: block; background: transparent; }

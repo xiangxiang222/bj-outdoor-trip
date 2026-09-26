@@ -13,11 +13,21 @@
           </button>
         </div>
         <div class="mine-tools">
-          <button class="mine-gear" type="button" @click="goAuth('/m/notices')">
-            消息
-            <em v-if="hub.unreadCount" class="mine-badge">{{ hub.unreadCount > 9 ? "9+" : hub.unreadCount }}</em>
+          <button class="mine-tool" type="button" @click="$router.push('/m/official')">
+            <span class="mine-tool-ico"><img :src="'/static/mine/tool-help.png'" alt="" /></span>
+            <span>客服</span>
           </button>
-          <button class="mine-gear" type="button" @click="goAuth('/m/settings')">设置</button>
+          <button class="mine-tool" type="button" @click="goAuth('/m/settings')">
+            <span class="mine-tool-ico"><img :src="'/static/mine/tool-set.png'" alt="" /></span>
+            <span>设置</span>
+          </button>
+          <button class="mine-tool" type="button" @click="goAuth('/m/notices')">
+            <span class="mine-tool-ico">
+              <img :src="'/static/mine/tool-msg.png'" alt="" />
+              <em v-if="hub.unreadCount" class="mine-badge">{{ hub.unreadCount > 9 ? "9+" : hub.unreadCount }}</em>
+            </span>
+            <span>消息</span>
+          </button>
         </div>
       </div>
 
@@ -80,17 +90,17 @@
 
     <p class="cell-label">常用</p>
     <div class="mine-grid">
-      <button type="button" @click="goAuth('/m/favorites')"><span>★</span>我的收藏</button>
-      <button type="button" @click="goAuth('/m/views')"><span>看</span>最近看过</button>
-      <button type="button" @click="goAuth('/m/companions')"><span>人</span>常用报名人</button>
-      <button type="button" @click="goAuth('/m/follows')"><span>注</span>关注领队</button>
-      <button type="button" @click="goAuth('/m/student')"><span>学</span>{{ campusShort }}</button>
-      <button type="button" @click="goAuth('/m/leader')"><span>队</span>{{ leaderShort }}</button>
-      <button type="button" @click="goAuth('/m/publish')"><span>团</span>去发团</button>
-      <button type="button" @click="goReferral"><span>荐</span>推荐报名</button>
-      <button type="button" @click="goAuth('/m/lottery')"><span>奖</span>抽奖</button>
-      <button type="button" @click="goAuth('/m/route-apply')"><span>线</span>收录线路</button>
-      <button type="button" @click="goAuth('/m/feedback')"><span>问</span>建议反馈</button>
+      <button type="button" @click="goAuth('/m/favorites')"><img :src="'/static/mine/fav.png'" alt="" />我的收藏</button>
+      <button type="button" @click="goAuth('/m/views')"><img :src="'/static/mine/views.png'" alt="" />最近看过</button>
+      <button type="button" @click="goAuth('/m/companions')"><img :src="'/static/mine/people.png'" alt="" />常用报名人</button>
+      <button type="button" @click="goAuth('/m/follows')"><img :src="'/static/mine/follow.png'" alt="" />关注领队</button>
+      <button type="button" @click="goAuth('/m/student')"><img :src="'/static/mine/campus.png'" alt="" />{{ campusShort }}</button>
+      <button type="button" @click="goAuth('/m/leader')"><img :src="'/static/mine/leader.png'" alt="" />{{ leaderShort }}</button>
+      <button type="button" @click="goAuth('/m/publish')"><img :src="'/static/mine/publish.png'" alt="" />去发团</button>
+      <button type="button" @click="goReferral"><img :src="'/static/mine/referral.png'" alt="" />推荐报名</button>
+      <button type="button" @click="goAuth('/m/lottery')"><img :src="'/static/mine/lottery.png'" alt="" />抽奖</button>
+      <button type="button" @click="goAuth('/m/route-apply')"><img :src="'/static/mine/route.png'" alt="" />收录线路</button>
+      <button type="button" @click="goAuth('/m/feedback')"><img :src="'/static/mine/feedback.png'" alt="" />建议反馈</button>
     </div>
 
     <p class="cell-label">服务</p>

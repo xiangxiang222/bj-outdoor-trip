@@ -1853,7 +1853,7 @@ html.admin-theme .el-dialog__footer {
 .home-foot { text-align: center; margin: 8px 0 4px; }
 .home-foot a { color: var(--leaf); }
 .mine-hero { background: linear-gradient(118deg,#3a1848,#161218 48%,#4a1420); color: #fff; }
-.mine-name { font-size: calc(22px * var(--ui-scale)); font-weight: 700; letter-spacing: -0.4px; color: #111; line-height: 1.2; }
+.mine-name { font-size: calc(22px * var(--ui-scale)); font-weight: 700; letter-spacing: -0.4px; color: #111; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 9em; }
 .mine-page {
   margin: -12px -14px -16px;
   padding: 8px 12px 16px;
@@ -1938,7 +1938,25 @@ html.admin-theme .el-dialog__footer {
 .mine-member span { display: block; margin-top: 6px; font-size: calc(12px * var(--ui-scale)); font-weight: 400; color: #6b6280; text-decoration: none; }
 .mine-member i { font-style: normal; font-size: calc(13px * var(--ui-scale)); color: #8d8d8d; }
 .mine-pill { background: #6d4bd2; color: #fff !important; border-radius: 999px; padding: 6px 12px; font-size: calc(13px * var(--ui-scale)); font-weight: 600; }
-.mine-tools { display: flex; align-items: center; gap: 4px; flex: none; }
+.mine-tools { display: flex; align-items: flex-start; gap: 2px; flex: none; }
+.mine-tool {
+  position: relative;
+  border: 0;
+  background: transparent;
+  color: #333;
+  font: inherit;
+  font-size: calc(11px * var(--ui-scale));
+  line-height: 1.15;
+  padding: 0 5px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.mine-tool > span:last-child { white-space: nowrap; }
+.mine-tool-ico { position: relative; width: 24px; height: 24px; display: grid; place-items: center; }
+.mine-tool-ico img { width: 22px; height: 22px; display: block; object-fit: contain; }
 .mine-shortcuts {
   display: flex;
   gap: 4px;
@@ -1960,8 +1978,8 @@ html.admin-theme .el-dialog__footer {
 }
 .mine-badge {
   position: absolute;
-  top: -2px;
-  right: -8px;
+  top: -6px;
+  right: -10px;
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
@@ -2010,20 +2028,20 @@ html.admin-theme .el-dialog__footer {
   background: transparent;
   font: inherit;
   font-size: calc(12px * var(--ui-scale));
+  line-height: 1.25;
   color: inherit;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 2px;
 }
-.mine-grid span {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  margin: 0 auto 6px;
-  border-radius: 50%;
-  background: #f4f5f7;
-  font-weight: 600;
-  font-size: calc(14px * var(--ui-scale));
-  color: #333;
+.mine-grid img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  display: block;
 }
 .mine-page .cell-label { font-weight: 400; color: #9a9a9a; }
 .mine-page .cell-group { box-shadow: none; border-radius: 12px; background: #fff; }
@@ -2109,6 +2127,14 @@ html[data-night="dark"] .card,
 html[data-night="dark"] .cell-group {
   background: #1c1c1e;
 }
+html[data-night="dark"] .mine-tool { color: #f2f2f2; }
+html[data-night="dark"] .mine-tool-ico img { filter: invert(1); }
+html[data-night="dark"] .mine-name { color: #f2f2f2; }
+html[data-night="dark"] .mine-shortcuts,
+html[data-night="dark"] .mine-wallet,
+html[data-night="dark"] .mine-grid { background: #1c1c1e; }
+html[data-night="dark"] .mine-shortcuts b,
+html[data-night="dark"] .mine-wallet-item strong { color: #f2f2f2; }
 html[data-night="dark"] .role-open {
   background: #1a2e24;
   border-color: #40916c;
