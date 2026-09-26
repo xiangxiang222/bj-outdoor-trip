@@ -2047,8 +2047,8 @@ html.admin-theme .el-dialog__footer {
   padding: 4px 2px;
 }
 .mine-grid img {
-  width: 52px;
-  height: 52px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
   display: block;
 }
@@ -2137,7 +2137,8 @@ html[data-night="dark"] .cell-group {
   background: #1c1c1e;
 }
 html[data-night="dark"] .mine-tool { color: #f2f2f2; }
-html[data-night="dark"] .mine-tool-ico img { filter: invert(1); }
+html[data-night="dark"] .mine-tool-ico img,
+html[data-night="dark"] .mine-grid img { filter: invert(1); }
 html[data-night="dark"] .mine-name { color: #f2f2f2; }
 html[data-night="dark"] .mine-shortcuts,
 html[data-night="dark"] .mine-wallet,
