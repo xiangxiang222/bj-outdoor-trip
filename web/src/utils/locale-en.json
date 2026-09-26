@@ -1462,5 +1462,11 @@
   "团体认证已通过": "Group verification approved",
   "团体认证未通过": "Group verification not approved",
   "领队申请已通过": "Guide application approved",
-  "领队申请未通过": "Guide application not approved"
+  "领队申请未通过": "Guide application not approved",
+  "这一天的看点": "Highlights",
+  "这一天": "The day",
+  "费用": "Fees",
+  "包含": "Included",
+  "不含": "Not included",
+  "/人": "/ person"
 }

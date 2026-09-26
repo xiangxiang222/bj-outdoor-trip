@@ -1,7 +1,7 @@
 <template>
   <div v-if="s" class="trip-detail">
-    <div class="card" style="border-radius:0;margin:0">
-      <div class="hero-swipe" v-if="gallery.length" @click="previewHero">
+    <div class="card offer-card" style="border-radius:0;margin:0">
+      <div class="offer-hero" v-if="gallery.length" @click="previewHero">
         <img :src="gallery[heroIndex]" :alt="s.route.title" />
         <div class="hero-dots" v-if="gallery.length > 1">
           <i v-for="(g, i) in gallery" :key="g" :class="{ on: i === heroIndex }" />
@@ -13,60 +13,101 @@
         :schedule-id="s.id"
         :route-id="s.routeId || s.route?.id"
       />
-      <div class="pad trip-head">
-        <div class="row">
-          <strong>
-            <TripKind :kind="s.kind" :type="s.organizerType" :channel="s.channel" />
-            <span v-if="s.offerLabel" class="offer-chip inline" :style="{ background: s.offerColor }">{{ s.offerLabel }}</span>
-            <span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">{{ s.privateLabel || "加密团" }}</span>
-            {{ s.route.title }}
-          </strong>
+      <div class="offer-sheet">
+        <div class="offer-price-row">
+          <div v-if="isActivity && isFree" class="offer-price">免费</div>
+          <div v-else>
+            <b class="offer-price">¥{{ payPrice }}</b><small>/人</small>
+          </div>
           <span class="tag">{{ statusTag }}</span>
         </div>
+        <p v-if="tierHint" class="offer-tiers">{{ tierHint }}</p>
+        <h1 class="offer-title">{{ s.route.title }}</h1>
+        <p v-if="sellLine" class="offer-sell">{{ sellLine }}</p>
         <div class="tag-row">
+          <TripKind :kind="s.kind" :type="s.organizerType" :channel="s.channel" />
+          <span v-if="s.offerLabel" class="offer-chip inline" :style="{ background: s.offerColor }">{{ s.offerLabel }}</span>
+          <span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">{{ s.privateLabel || "加密团" }}</span>
           <span class="play-tag sm" v-for="t in s.playTags || s.route.tags || []" :key="t.id || t" :style="{ background: t.color || '#2d6a4f' }">{{ t.name || t }}</span>
         </div>
-        <div class="row" style="margin-top:10px">
-          <span v-if="isActivity && isFree" class="tag">免费</span>
-          <span v-else-if="isActivity" class="price">¥{{ s.quote?.price }}</span>
-          <TripPrices v-else :quote="s.quote" compact />
-          <span class="muted">{{ whenText }}</span>
+        <div class="trust-row" v-if="trusts.length">
+          <span class="trust-chip" v-for="c in trusts" :key="c">{{ c }}</span>
         </div>
+        <button v-if="reviewQuote" class="offer-quote" type="button" @click="jumpReviews">
+          <b>{{ reviews.avg }}分</b>
+          <span>“{{ reviewQuote }}”</span>
+          <i>{{ reviews.count }}条</i>
+        </button>
+        <div class="fact-list">
+          <div class="fact-row">
+            <span class="fact-k">时间</span>
+            <span class="fact-v">{{ whenText }}</span>
+          </div>
+          <div class="fact-row">
+            <span class="fact-k">{{ isActivity ? "地点" : "集合" }}</span>
+            <span class="fact-v">{{ placeText }}</span>
+            <a v-if="s.meetupMapUrl" class="nav-link" :href="s.meetupMapUrl" target="_blank" rel="noreferrer">地图</a>
+          </div>
+          <div class="fact-row">
+            <span class="fact-k">人数</span>
+            <span class="fact-v">{{ peopleText }}</span>
+          </div>
+          <div class="fact-row">
+            <span class="fact-k">发起</span>
+            <span class="fact-v">
+              <a v-if="s.organizerId" class="nav-link" href="#" @click.prevent="goUser(s.organizerId)">{{ s.organizerName }}</a>
+              <span v-else>{{ s.organizerName }}</span>
+              <span v-if="s.companyName">（{{ s.companyName }}）</span>
+            </span>
+          </div>
+        </div>
+        <p v-if="s.guaranteed && !isActivity" class="ok offer-guaranteed">已成团 · 铁定出发</p>
       </div>
     </div>
 
     <GoodsTabs v-model="tab" :tabs="tabItems" :label="isActivity ? '局详情分段' : '团详情分段'" />
 
     <div v-show="tab === 'trip'" class="trip-pane">
+      <template v-if="highlights.length">
+        <div class="h2">这一天的看点</div>
+        <div class="card">
+          <div class="pad offer-points">
+            <p v-for="(line, i) in highlights" :key="i"><b>{{ i + 1 }}</b>{{ line }}</p>
+          </div>
+        </div>
+      </template>
+
+      <template v-if="itinerary.length">
+        <div class="h2">这一天</div>
+        <div class="card">
+          <div class="pad day-line">
+            <div class="day-stop" v-for="(it, i) in itinerary" :key="i">
+              <b>{{ it.time || "—" }}</b>
+              <div>
+                <strong>{{ it.title }}</strong>
+                <p v-if="it.detail" class="muted">{{ it.detail }}</p>
+                <img v-if="it.photo" class="day-photo" :src="it.photo" alt="" @click="dayPhoto = it.photo" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template v-if="feeInclude || feeExclude || equipment">
+        <div class="h2">费用</div>
+        <div class="fee-split">
+          <div class="card" v-if="feeInclude">
+            <div class="pad"><strong>包含</strong><p>{{ feeInclude }}</p></div>
+          </div>
+          <div class="card" v-if="feeExclude">
+            <div class="pad"><strong>不含</strong><p>{{ feeExclude }}</p></div>
+          </div>
+        </div>
+        <p v-if="equipment" class="muted fee-gear">装备：{{ equipment }}</p>
+      </template>
+
       <div class="card">
         <div class="pad">
-          <div class="fact-list">
-            <div class="fact-row">
-              <span class="fact-k">时间</span>
-              <span class="fact-v">{{ whenText }}</span>
-            </div>
-            <div class="fact-row">
-              <span class="fact-k">{{ isActivity ? "地点" : "集合" }}</span>
-              <span class="fact-v">{{ placeText }}</span>
-              <a v-if="s.meetupMapUrl" class="nav-link" :href="s.meetupMapUrl" target="_blank" rel="noreferrer">地图</a>
-            </div>
-            <div class="fact-row">
-              <span class="fact-k">人数</span>
-              <span class="fact-v">{{ peopleText }}</span>
-            </div>
-            <div class="fact-row">
-              <span class="fact-k">发起</span>
-              <span class="fact-v">
-                <a v-if="s.organizerId" class="nav-link" href="#" @click.prevent="goUser(s.organizerId)">{{ s.organizerName }}</a>
-                <span v-else>{{ s.organizerName }}</span>
-                <span v-if="s.companyName">（{{ s.companyName }}）</span>
-              </span>
-            </div>
-          </div>
-          <p v-if="s.guaranteed && !isActivity" class="muted" style="color:var(--leaf)">已成团 · 铁定出发（人数已达最低成团线）</p>
-          <div class="trust-row">
-            <span class="trust-chip" v-for="c in trusts" :key="c">{{ c }}</span>
-          </div>
           <div v-if="s.joinCode" class="ticket-card posted">
             <strong>入团口令 {{ s.joinCode }}</strong>
             <p class="muted" style="margin:6px 0 0">把这串口令发给要来的人。列表上会显示「加密团」，没有口令不能报名。</p>
@@ -294,7 +335,7 @@
         </div>
       </div>
 
-      <div class="h2">本团评价 <span v-if="reviews.count" class="muted">{{ reviews.avg }} 分 · {{ reviews.count }} 条</span></div>
+      <div id="trip-reviews" class="h2">本团评价 <span v-if="reviews.count" class="muted">{{ reviews.avg }} 分 · {{ reviews.count }} 条</span></div>
       <div class="card" v-if="reviews.list?.length">
         <div class="pad review-item" v-for="rv in reviews.list" :key="rv.id">
           <div class="row">
@@ -425,6 +466,13 @@
       </div>
     </div>
 
+    <div v-if="dayPhoto" class="lightbox" @click.self="dayPhoto = ''">
+      <img :src="dayPhoto" alt="行程照片" />
+      <div class="lb-nav">
+        <button class="lb-btn" type="button" @click.stop="dayPhoto = ''">关闭</button>
+      </div>
+    </div>
+
     <div v-if="showBus" class="lightbox" @click.self="showBus = false">
       <img :src="busPhotos[busPhotoIndex]" alt="用车照片" @click.stop="busPhotoIndex = (busPhotoIndex + 1) % busPhotos.length" />
       <div class="lb-nav">
@@ -447,7 +495,6 @@ import { nativeShareSupported, scheduleShareText, scheduleShareUrl } from "@/uti
 import { drawTripPoster, downloadPosterPng, posterDataUrl } from "@/utils/sharePoster";
 import { setChrome } from "@/utils/pageChrome";
 import WeatherChart from "@/components/WeatherChart.vue";
-import TripPrices from "@/components/TripPrices.vue";
 import GoodsTabs from "@/components/GoodsTabs.vue";
 import RouteProfile from "@/components/RouteProfile.vue";
 import LivePulse from "@/components/LivePulse.vue";
@@ -494,6 +541,42 @@ const tabItems = computed(() => [
   { id: "route", label: "线路" },
   { id: "rules", label: "须知" },
 ]);
+const storyRoute = computed(() => routeDetail.value || s.value?.route || {});
+const sellLine = computed(() => {
+  const route = storyRoute.value;
+  return route.subtitle || (route.highlights || [])[0] || "";
+});
+const highlights = computed(() => {
+  const all = (storyRoute.value.highlights || []).filter((line) => typeof line === "string" && line.trim());
+  const sell = sellLine.value;
+  return all.filter((line) => line !== sell).slice(0, 3);
+});
+const itinerary = computed(() => storyRoute.value.itinerary || []);
+const feeInclude = computed(() => storyRoute.value.feeInclude || "");
+const feeExclude = computed(() => storyRoute.value.feeExclude || "");
+const equipment = computed(() => storyRoute.value.equipment || "");
+const payPrice = computed(() => {
+  const q = s.value?.quote || {};
+  return Number(q.price ?? q.tripPrice ?? q.originPrice ?? 0);
+});
+const tierHint = computed(() => {
+  if (!s.value || isActivity.value || isFree.value) return "";
+  const q = s.value.quote || {};
+  const pay = payPrice.value;
+  const bits = [];
+  const origin = Number(q.originPrice ?? 0);
+  if (origin > pay) bits.push("原价 ¥" + origin);
+  const member = Number(q.memberPrice ?? pay);
+  const student = Number(q.studentPrice ?? pay);
+  if (member < pay) bits.push("会员 ¥" + member);
+  if (student < pay && student !== member) bits.push("学生 ¥" + student);
+  return bits.join(" · ");
+});
+const reviewQuote = computed(() => {
+  const text = String(reviews.value.list?.[0]?.content || "").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  return text.length > 18 ? text.slice(0, 18) + "…" : text;
+});
 const msg = ref("");
 const leaderNeedApply = ref(false);
 const leaderNeedApplyText = ref("报名领队需先填写领队申请并通过审核");
@@ -501,6 +584,7 @@ const leaderNeedApplyCta = computed(() => (store.profile?.leaderStatus === "pend
 const showDissolve = ref(false);
 const showShare = ref(false);
 const showBus = ref(false);
+const dayPhoto = ref("");
 const shareUrl = ref("");
 const shareQr = ref("");
 const shareText = ref("");
@@ -608,8 +692,14 @@ const statusTag = computed(() => {
   if (!s.value) return "";
   if (s.value.status === "cancelled") return scheduleStatusText("cancelled");
   if (isActivity.value) return isFree.value ? "免费局" : kindTag.value || "同城局";
-  return s.value.organizerType === "company" ? "公司统一支付" : "先报名后付款";
+  if (s.value.guaranteed || s.value.status === "confirmed") return "已成团";
+  return scheduleStatusText(s.value.status) || "招募中";
 });
+
+function jumpReviews() {
+  tab.value = "trip";
+  nextTick(() => document.getElementById("trip-reviews")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+}
 
 watch(tab, (id) => {
   const next = { ...route.query };

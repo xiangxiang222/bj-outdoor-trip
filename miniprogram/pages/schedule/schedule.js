@@ -20,6 +20,26 @@ function busLine(s) {
   return bits.join(" · ");
 }
 
+function storyBits(route) {
+  route = route || {};
+  const highlights = (route.highlights || []).filter((line) => typeof line === "string" && line.trim());
+  const sellLine = route.subtitle || highlights[0] || "";
+  return {
+    sellLine,
+    highlights: highlights.filter((line) => line !== sellLine).slice(0, 3).map((line, i) => ({ n: i + 1, line })),
+    itinerary: route.itinerary || [],
+    feeInclude: route.feeInclude || "",
+    feeExclude: route.feeExclude || "",
+    equipment: route.equipment || "",
+  };
+}
+
+function quoteSnippet(list) {
+  const raw = String((list && list[0] && list[0].content) || "").replace(/\s+/g, " ").trim();
+  if (!raw) return "";
+  return raw.length > 18 ? raw.slice(0, 18) + "…" : raw;
+}
+
 Page({
   data: {
     s: null,
@@ -60,6 +80,13 @@ Page({
     showEnroll: false,
     ctaText: "立即报名",
     statusTag: "",
+    sellLine: "",
+    highlights: [],
+    itinerary: [],
+    feeInclude: "",
+    feeExclude: "",
+    equipment: "",
+    reviewQuote: "",
     posted: "",
     joinedHint: "",
     inboundJoinCode: "",
@@ -109,10 +136,12 @@ Page({
       const whenText = isActivity
         ? (whenLabel + " " + (s.meetupTime || "")).trim()
         : [s.startDate + (s.endDate && s.endDate !== s.startDate ? " 至 " + s.endDate : ""), s.meetupTime].filter(Boolean).join(" ");
-      let statusTag = "先报名后付款";
+      let statusTag = "招募中";
       if (s.status === "cancelled") statusTag = "已解散";
       else if (isActivity) statusTag = isFree ? "免费局" : "同城局";
-      else if (s.organizerType === "company") statusTag = "公司统一支付";
+      else if (s.guaranteed || s.status === "confirmed") statusTag = "已成团";
+      else if (s.status === "full") statusTag = "已满员";
+      else if (s.status === "finished") statusTag = "已结束";
       const ticket = ticketState(s, { posted: this.data.posted, joined: this.data.joinedHint });
       this.setData({
         s,
@@ -141,6 +170,7 @@ Page({
         cancelItems: (s.refundPolicy && s.refundPolicy.items) || this.data.cancelItems,
         refundHint: (s.refundPolicy && s.refundPolicy.current && s.refundPolicy.current.hint) || "",
         routeDetail: (s.route && s.route.title) ? s.route : this.data.routeDetail,
+        ...storyBits(s.route),
       }, () => {
         this.loadRoute(s.routeId || (s.route && s.route.id));
         this.loadExtras();
@@ -176,7 +206,10 @@ Page({
     request("/schedules/" + this.data.id + "/reviews").then((r) => {
       const data = (r && r.data) || {};
       const list = (data.list || []).map((row) => Object.assign({}, row, { stars: starText(row.rating) }));
-      this.setData({ reviews: { list, count: data.count || 0, avg: data.avg || 0 } });
+      this.setData({
+        reviews: { list, count: data.count || 0, avg: data.avg || 0 },
+        reviewQuote: quoteSnippet(list),
+      });
     }).catch(() => {});
     request("/meta").then((r) => {
       const data = (r && r.data) || {};
@@ -205,7 +238,7 @@ Page({
         if (b && b.type === "image" && b.url) used[b.url] = true;
       });
       const album = (route.gallery || []).filter((url) => url && !used[url]);
-      this.setData({ routeDetail: route, routeAlbum: album });
+      this.setData(Object.assign({ routeDetail: route, routeAlbum: album }, storyBits(route)));
     }).catch(() => {
       this.setData({ routeDetail: (this.data.s && this.data.s.route) || {}, routeAlbum: [] });
     });
@@ -251,6 +284,16 @@ Page({
     const urls = this.data.gallery || [];
     if (!urls.length) return;
     wx.previewImage({ urls, current: e.currentTarget.dataset.src || urls[0] });
+  },
+  previewDay(e) {
+    const src = e.currentTarget.dataset.src;
+    if (!src) return;
+    wx.previewImage({ urls: [src], current: src });
+  },
+  jumpReviews() {
+    this.setData({ tab: "trip" }, () => {
+      wx.pageScrollTo({ selector: "#trip-reviews", duration: 200 });
+    });
   },
   previewBus() {
     const urls = this.data.busPhotos || [];
