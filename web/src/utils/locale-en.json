@@ -1419,5 +1419,9 @@
   "早报名早选座。报名前点座位图会提示先报名；报名后可在座位图改座。": "Earlier sign-ups pick seats first. Tapping the seat map before you sign up asks you to sign up. After that you can change seats.",
   "候补未递补前取消，不影响在团人数。已付款按当时比例、按各付款人原路退回（演示立即记账；真收款需商户退款证书）。": "Cancelling while still on the waitlist doesn't change the headcount. Payments are refunded at the rate then in effect, back the way each person paid.",
   "早报名早选座。报名前点空位会提示先报名；占用位可看个人主页。": "Earlier sign-ups pick seats first. Tapping an empty seat before you join asks you to sign up. Occupied seats open that person's profile.",
-  "团详情分段": "Trip sections"
+  "团详情分段": "Trip sections",
+  "本团还有空位": "Open roles on this trip",
+  "空位，点此带这团": "Open spot. Tap to lead this trip.",
+  "报名摄影师": "Join as photographer",
+  "空位，免个人团费": "Open spot. No personal trip fee."
 }
