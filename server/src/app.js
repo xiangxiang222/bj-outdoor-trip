@@ -5,6 +5,7 @@ const cors = require("cors");
 const config = require("./config");
 const { getDb, ensureDirs } = require("./db");
 const api = require("./api");
+const { localizeEnglishResponse } = require("./services/route-i18n");
 
 function createApp() {
   ensureDirs();
@@ -30,6 +31,7 @@ function createApp() {
     if (!code) return res.status(404).end();
     res.redirect(302, `/m/coupon/${encodeURIComponent(code)}`);
   });
+  app.use(localizeEnglishResponse);
   app.use("/api", api);
 
   const webDist = config.webDistDir;

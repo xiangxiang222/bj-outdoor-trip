@@ -5,6 +5,7 @@ const { liveMemberPrice } = require("./offer");
 const { paidJoinedCount } = require("./helpers");
 const { sendSms } = require("./sms");
 const { noticeRouteApply, resolveNotices } = require("./notices");
+const { scheduleRouteI18n } = require("./route-i18n");
 
 function fail(status, message) {
   const err = new Error(message);
@@ -131,6 +132,7 @@ function submitApply(user, body) {
       bounty
     );
   const routeId = Number(info.lastInsertRowid);
+  scheduleRouteI18n(routeId);
   db.prepare("INSERT INTO route_price_tiers (route_id,min_people,max_people,price,member_price) VALUES (?,?,?,?,?)").run(
     routeId,
     10,

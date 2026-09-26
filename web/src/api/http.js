@@ -1,5 +1,6 @@
 import axios from "axios";
 import { visitorId } from "@/utils/pulse";
+import { readLook } from "@/utils/appearance";
 
 const http = axios.create({ baseURL: "/api", timeout: 20000 });
 
@@ -8,6 +9,7 @@ http.interceptors.request.use((config) => {
   const guide = localStorage.getItem("bj_guide_token");
   const user = localStorage.getItem("bj_token");
   config.headers["X-Visitor-Id"] = visitorId();
+  config.headers["X-Lang"] = readLook().lang || "zh";
   if (config.url.startsWith("/admin") && !config.url.includes("/admin/login")) {
     if (admin) config.headers.Authorization = `Bearer ${admin}`;
   } else if (config.url.startsWith("/guide") && !config.url.includes("/guide/login")) {

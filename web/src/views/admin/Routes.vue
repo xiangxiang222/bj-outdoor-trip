@@ -102,7 +102,7 @@
           </el-form-item>
           <el-form-item label="起草">
             <el-button type="success" :loading="drafting" @click="generateDraft">生成文案和图片</el-button>
-            <span class="inline-hint">未配置 AI_API_KEY 时用模板写文案。图片先用已有景点库，再搜百度 / 360。</span>
+            <span class="inline-hint">未配置 AI_API_KEY 时用模板写文案，保存后也不会译成英文。图片先用已有景点库，再搜百度 / 360。</span>
           </el-form-item>
         </template>
         <el-form-item label="难度">
