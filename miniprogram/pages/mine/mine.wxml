@@ -121,14 +121,14 @@
 
 <view class="cell-label">{{tr.t('常用', lang)}}</view>
 <view class="mine-grid">
-  <view bindtap="go" data-url="/pages/favorites/favorites"><image class="ico" src="{{iconBase}}fav.png" mode="aspectFit" />{{tr.t('收藏', lang)}}</view>
-  <view bindtap="go" data-url="/pages/views/views"><image class="ico" src="{{iconBase}}views.png?v=2" mode="aspectFit" />{{tr.t('最近看过', lang)}}</view>
-  <view bindtap="go" data-url="/pages/companions/companions"><image class="ico" src="{{iconBase}}people.png" mode="aspectFit" />{{tr.t('报名人', lang)}}</view>
-  <view bindtap="go" data-url="/pages/follows/follows"><image class="ico" src="{{iconBase}}follow.png" mode="aspectFit" />{{tr.t('关注领队', lang)}}</view>
-  <view bindtap="go" data-url="/pages/student/student"><image class="ico" src="{{iconBase}}campus.png" mode="aspectFit" />{{tr.t(campusLabel, lang)}}</view>
-  <view bindtap="go" data-url="/pages/leader/leader"><image class="ico" src="{{iconBase}}leader.png?v=2" mode="aspectFit" />{{tr.t(leaderLabel, lang)}}</view>
-  <view bindtap="go" data-url="/pages/publish/publish"><image class="ico" src="{{iconBase}}publish.png?v=2" mode="aspectFit" />{{tr.t('发团', lang)}}</view>
-  <view bindtap="go" data-url="/pages/route-apply/route-apply"><image class="ico" src="{{iconBase}}route.png" mode="aspectFit" />{{tr.t('收录线路', lang)}}</view>
-  <view bindtap="go" data-url="/pages/feedback/feedback"><image class="ico" src="{{iconBase}}feedback.png" mode="aspectFit" />{{tr.t('建议', lang)}}</view>
-  <view bindtap="goRoutes"><image class="ico" src="{{iconBase}}trails.png?v=2" mode="aspectFit" />{{tr.t('看线路', lang)}}</view>
+  <view bindtap="go" data-url="/pages/favorites/favorites"><image class="ico" src="{{iconBase}}fav.png?v=3" mode="aspectFit" />{{tr.t('收藏', lang)}}</view>
+  <view bindtap="go" data-url="/pages/views/views"><image class="ico" src="{{iconBase}}views.png?v=3" mode="aspectFit" />{{tr.t('最近看过', lang)}}</view>
+  <view bindtap="go" data-url="/pages/companions/companions"><image class="ico" src="{{iconBase}}people.png?v=3" mode="aspectFit" />{{tr.t('报名人', lang)}}</view>
+  <view bindtap="go" data-url="/pages/follows/follows"><image class="ico" src="{{iconBase}}follow.png?v=3" mode="aspectFit" />{{tr.t('关注领队', lang)}}</view>
+  <view bindtap="go" data-url="/pages/student/student"><image class="ico" src="{{iconBase}}campus.png?v=3" mode="aspectFit" />{{tr.t(campusLabel, lang)}}</view>
+  <view bindtap="go" data-url="/pages/leader/leader"><image class="ico" src="{{iconBase}}leader.png?v=3" mode="aspectFit" />{{tr.t(leaderLabel, lang)}}</view>
+  <view bindtap="go" data-url="/pages/publish/publish"><image class="ico" src="{{iconBase}}publish.png?v=3" mode="aspectFit" />{{tr.t('发团', lang)}}</view>
+  <view bindtap="go" data-url="/pages/route-apply/route-apply"><image class="ico" src="{{iconBase}}route.png?v=3" mode="aspectFit" />{{tr.t('收录线路', lang)}}</view>
+  <view bindtap="go" data-url="/pages/feedback/feedback"><image class="ico" src="{{iconBase}}feedback.png?v=3" mode="aspectFit" />{{tr.t('建议', lang)}}</view>
+  <view bindtap="goRoutes"><image class="ico" src="{{iconBase}}trails.png?v=3" mode="aspectFit" />{{tr.t('看线路', lang)}}</view>
 </view>
