@@ -1,89 +1,90 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <view class="mine-page" wx:if="{{user}}">
   <view class="mine-hero-card">
     <view class="mine-user" bindtap="goHome">
       <view class="mine-avatar" catchtap="openAvatar">
         <image wx:if="{{user.avatar}}" src="{{user.avatar}}" mode="aspectFill" />
-        <text wx:else>{{nickHead}}</text>
+        <text wx:else>{{tr.t(nickHead, lang)}}</text>
       </view>
       <view>
-        <view class="title">{{user.nickname}}</view>
-        <view class="muted">{{phone}}</view>
+        <view class="title">{{tr.t(user.nickname, lang)}}</view>
+        <view class="muted">{{tr.t(phone, lang)}}</view>
       </view>
     </view>
-    <view class="mine-gear" bindtap="go" data-url="/pages/settings/settings">设置</view>
+    <view class="mine-gear" bindtap="go" data-url="/pages/settings/settings">{{tr.t('设置', lang)}}</view>
   </view>
   <view class="avatar-mask" wx:if="{{picker}}" catchtap="closeAvatar">
     <view class="avatar-sheet" catchtap="noop">
-      <view class="avatar-title">选择默认头像</view>
+      <view class="avatar-title">{{tr.t('选择默认头像', lang)}}</view>
       <view class="avatar-grid">
         <image wx:for="{{defaults}}" wx:key="id" src="{{item.url}}" mode="aspectFill" data-url="{{item.url}}" catchtap="pickDefault" />
       </view>
-      <view class="avatar-action" bindtap="shoot">拍照</view>
-      <view class="avatar-action" bindtap="album">从手机相册选择</view>
-      <view class="avatar-action cancel" bindtap="closeAvatar">取消</view>
+      <view class="avatar-action" bindtap="shoot">{{tr.t('拍照', lang)}}</view>
+      <view class="avatar-action" bindtap="album">{{tr.t('从手机相册选择', lang)}}</view>
+      <view class="avatar-action cancel" bindtap="closeAvatar">{{tr.t('取消', lang)}}</view>
     </view>
   </view>
 
   <view class="mine-member" wx:if="{{user.membership}}" bindtap="openMember">
     <view>
-      <view class="mine-level"><text class="mine-em">{{user.membership.code}}</text>会员</view>
-      <view class="muted">本月累计新增 {{user.membership.monthGrowth}} 成长值</view>
+      <view class="mine-level"><text class="mine-em">{{tr.t(user.membership.code, lang)}}</text>{{tr.t('会员', lang)}}</view>
+      <view class="muted">{{tr.t('本月累计新增', lang)}} {{tr.t(user.membership.monthGrowth, lang)}} {{tr.t('成长值', lang)}}</view>
     </view>
-    <view class="mine-pill">会员中心 ›</view>
+    <view class="mine-pill">{{tr.t('会员中心 ›', lang)}}</view>
   </view>
 
   <view class="mine-shortcuts">
     <view bindtap="goOrders">
-      <view class="title">{{hub.upcomingCount + hub.waitlistCount}}</view>
-      <view class="muted">全部行程</view>
+      <view class="title">{{tr.t(hub.upcomingCount + hub.waitlistCount, lang)}}</view>
+      <view class="muted">{{tr.t('全部行程', lang)}}</view>
     </view>
     <view bindtap="goOrders">
-      <view class="title">{{hub.upcomingCount}}</view>
-      <view class="muted">待出发</view>
+      <view class="title">{{tr.t(hub.upcomingCount, lang)}}</view>
+      <view class="muted">{{tr.t('待出发', lang)}}</view>
     </view>
     <view bindtap="goOrders">
-      <view class="title">{{hub.unpaidCount}}</view>
-      <view class="muted">待支付</view>
+      <view class="title">{{tr.t(hub.unpaidCount, lang)}}</view>
+      <view class="muted">{{tr.t('待支付', lang)}}</view>
     </view>
     <view bindtap="goOfficial">
-      <view class="title">客服</view>
-      <view class="muted">加微信</view>
+      <view class="title">{{tr.t('客服', lang)}}</view>
+      <view class="muted">{{tr.t('加微信', lang)}}</view>
     </view>
   </view>
 
   <view class="mine-wallet" bindtap="go" data-url="/pages/wallet/wallet">
     <view>
-      <view class="title">{{hub.balance}}</view>
-      <view class="muted">余额（元）</view>
+      <view class="title">{{tr.t(hub.balance, lang)}}</view>
+      <view class="muted">{{tr.t('余额（元）', lang)}}</view>
     </view>
     <view>
-      <view class="title">{{hub.couponCount}}</view>
-      <view class="muted">优惠券</view>
+      <view class="title">{{tr.t(hub.couponCount, lang)}}</view>
+      <view class="muted">{{tr.t('优惠券', lang)}}</view>
     </view>
     <view>
-      <view class="title">{{user.points}}</view>
-      <view class="muted">积分</view>
+      <view class="title">{{tr.t(user.points, lang)}}</view>
+      <view class="muted">{{tr.t('积分', lang)}}</view>
     </view>
-    <view class="muted">钱包 ›</view>
+    <view class="muted">{{tr.t('钱包 ›', lang)}}</view>
   </view>
 </view>
 
-<view class="btn" wx:if="{{!user}}" bindtap="login">登录</view>
-<view class="btn ghost" wx:if="{{!user}}" bindtap="register">注册</view>
+<view class="btn" wx:if="{{!user}}" bindtap="login">{{tr.t('登录', lang)}}</view>
+<view class="btn ghost" wx:if="{{!user}}" bindtap="register">{{tr.t('注册', lang)}}</view>
 
-<view class="cell-label">常用</view>
+<view class="cell-label">{{tr.t('常用', lang)}}</view>
 <view class="mine-grid">
-  <view bindtap="go" data-url="/pages/favorites/favorites"><view class="ico">★</view>收藏</view>
-  <view bindtap="go" data-url="/pages/student/student"><view class="ico">学</view>{{campusLabel}}</view>
-  <view bindtap="go" data-url="/pages/leader/leader"><view class="ico">队</view>{{leaderLabel}}</view>
-  <view bindtap="go" data-url="/pages/publish/publish"><view class="ico">团</view>发团</view>
-  <view bindtap="go" data-url="/pages/route-apply/route-apply"><view class="ico">线</view>收录线路</view>
-  <view bindtap="go" data-url="/pages/feedback/feedback"><view class="ico">问</view>建议</view>
-  <view bindtap="goRoutes"><view class="ico">目</view>看线路</view>
+  <view bindtap="go" data-url="/pages/favorites/favorites"><view class="ico">★</view>{{tr.t('收藏', lang)}}</view>
+  <view bindtap="go" data-url="/pages/student/student"><view class="ico">学</view>{{tr.t(campusLabel, lang)}}</view>
+  <view bindtap="go" data-url="/pages/leader/leader"><view class="ico">队</view>{{tr.t(leaderLabel, lang)}}</view>
+  <view bindtap="go" data-url="/pages/publish/publish"><view class="ico">团</view>{{tr.t('发团', lang)}}</view>
+  <view bindtap="go" data-url="/pages/route-apply/route-apply"><view class="ico">线</view>{{tr.t('收录线路', lang)}}</view>
+  <view bindtap="go" data-url="/pages/feedback/feedback"><view class="ico">问</view>{{tr.t('建议', lang)}}</view>
+  <view bindtap="goRoutes"><view class="ico">目</view>{{tr.t('看线路', lang)}}</view>
 </view>
 
-<view class="cell-label">服务</view>
+<view class="cell-label">{{tr.t('服务', lang)}}</view>
 <view class="cell-group">
-  <view class="cell" bindtap="goOfficial"><text>客服与规则</text><text class="muted">加微信、FAQ ›</text></view>
+  <view class="cell" bindtap="goOfficial"><text>{{tr.t('客服与规则', lang)}}</text><text class="muted">{{tr.t('加微信、FAQ ›', lang)}}</text></view>
 </view>

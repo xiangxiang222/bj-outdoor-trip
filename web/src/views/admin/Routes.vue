@@ -810,7 +810,7 @@ async function saveReview() {
 }
 .tier-lab {
   color: #606266;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-scale));
 }
 .tier-lab.dim {
   color: #909399;
@@ -818,7 +818,7 @@ async function saveReview() {
 .inline-hint {
   margin-left: 10px;
   color: #909399;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-scale));
 }
 .meetup-grid {
   display: grid;
@@ -842,7 +842,7 @@ async function saveReview() {
 }
 .muted {
   color: #909399;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-scale));
   line-height: 1.5;
   margin-top: 6px;
 }

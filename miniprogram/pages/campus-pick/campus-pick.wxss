@@ -3,7 +3,7 @@
   padding: 24rpx 24rpx;
   border-bottom: 1rpx dashed #eceee8;
   background: #fff;
-  font-size: 30rpx;
+  font-size: calc(30rpx * var(--ui-scale));
 }
 .campus-pick-row.on { font-weight: 700; color: #1b4332; background: #eef8c8; }
 .campus-pick-row.custom { color: #2d6a4f; }

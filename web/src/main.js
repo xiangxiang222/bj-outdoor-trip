@@ -7,6 +7,7 @@ import App from "./App.vue";
 import router from "./router";
 import "./styles/app.css";
 import { applyLook } from "./utils/appearance";
+import { startLocale } from "./utils/apply-locale";
 
 applyLook();
 
@@ -15,3 +16,4 @@ app.use(createPinia());
 app.use(router);
 app.use(ElementPlus, { locale: zhCn });
 app.mount("#app");
+startLocale();

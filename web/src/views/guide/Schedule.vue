@@ -352,7 +352,7 @@ async function uncheckin(row) {
 .trip-kv strong { text-align: right; word-break: break-all; }
 .trip-ok {
   color: var(--leaf);
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-scale));
   margin: 10px 0;
 }
 .trip-actions { display: flex; flex-direction: column; gap: 8px; }

@@ -1,30 +1,31 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view class="sec">{{copy.preview}}</view>
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="sec">{{tr.t(copy.preview, lang)}}</view>
 <view class="preview" style="font-family:{{fontFamily}}">
   <view class="sample">
-    <view class="pt">{{copy.previewTitle}}</view>
-    <view class="pb">{{copy.previewBody}}</view>
-    <view class="pn">{{copy.previewNote}}</view>
+    <view class="pt">{{tr.t(copy.previewTitle, lang)}}</view>
+    <view class="pb">{{tr.t(copy.previewBody, lang)}}</view>
+    <view class="pn">{{tr.t(copy.previewNote, lang)}}</view>
   </view>
 </view>
-<view class="sec">{{copy.fontPick}}</view>
+<view class="sec">{{tr.t(copy.fontPick, lang)}}</view>
 <view class="fonts">
   <view class="font {{look.font==='system'?'on':''}}" data-font="system" bindtap="pickFont" style="font-family:{{fonts.system}}">
-    <view class="fn">{{copy.system}}</view>
-    <view class="fs">{{look.font==='system'?copy.using:copy.use}}</view>
+    <view class="fn">{{tr.t(copy.system, lang)}}</view>
+    <view class="fs">{{tr.t(look.font==='system'?copy.using:copy.use, lang)}}</view>
   </view>
   <view class="font {{look.font==='song'?'on':''}}" data-font="song" bindtap="pickFont" style="font-family:{{fonts.song}}">
-    <view class="fn">{{copy.song}}</view>
-    <view class="fs">{{look.font==='song'?copy.using:copy.use}}</view>
+    <view class="fn">{{tr.t(copy.song, lang)}}</view>
+    <view class="fs">{{tr.t(look.font==='song'?copy.using:copy.use, lang)}}</view>
   </view>
   <view class="font {{look.font==='kai'?'on':''}}" data-font="kai" bindtap="pickFont" style="font-family:{{fonts.kai}}">
-    <view class="fn">{{copy.kai}}</view>
-    <view class="fs">{{look.font==='kai'?copy.using:copy.use}}</view>
+    <view class="fn">{{tr.t(copy.kai, lang)}}</view>
+    <view class="fs">{{tr.t(look.font==='kai'?copy.using:copy.use, lang)}}</view>
   </view>
 </view>
-<view class="sec">{{copy.size}}</view>
+<view class="sec">{{tr.t(copy.size, lang)}}</view>
 <view class="size">
-  <view class="scale"><text>A</text><text class="mid">{{copy.standard}}</text><text class="big">A</text></view>
-  <slider min="0" max="4" step="1" value="{{look.size}}" activeColor="#3a1848" block-size="22" bindchange="setSize" />
-  <view class="hint">{{copy.sizeHint}}</view>
+  <view class="scale"><text>A</text><text class="mid">{{tr.t(copy.standard, lang)}}</text><text class="big">A</text></view>
+  <slider min="0" max="4" step="1" value="{{look.size}}" activeColor="#3a1848" block-size="22" bindchange="setSize" bindchanging="setSize" />
+  <view class="hint">{{tr.t(copy.sizeHint, lang)}}</view>
 </view>

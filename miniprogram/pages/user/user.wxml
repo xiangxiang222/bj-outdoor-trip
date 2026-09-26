@@ -1,16 +1,17 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view wx:if="{{err}}" class="muted pad">{{err}}</view>
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view wx:if="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>
 <view wx:elif="{{u}}">
   <view class="card">
     <view class="pad guide-row">
-      <view class="guide-face">{{u.initial}}</view>
+      <view class="guide-face">{{tr.t(u.initial, lang)}}</view>
       <view class="guide-body">
-        <view class="row"><text class="title">{{u.nickname}}</text><text class="tag" wx:if="{{u.lifeStage}}">{{u.lifeStage}}</text></view>
-        <view class="muted">{{u.genderText}}<text wx:if="{{u.hometown}}"> · {{u.hometown}}</text> · 已出行 {{u.tripCount}} 次</view>
+        <view class="row"><text class="title">{{tr.t(u.nickname, lang)}}</text><text class="tag" wx:if="{{u.lifeStage}}">{{tr.t(u.lifeStage, lang)}}</text></view>
+        <view class="muted">{{tr.t(u.genderText, lang)}}<text wx:if="{{u.hometown}}"> · {{tr.t(u.hometown, lang)}}</text> {{tr.t('· 已出行', lang)}} {{tr.t(u.tripCount, lang)}} {{tr.t('次', lang)}}</view>
       </view>
     </view>
   </view>
-  <view class="pad title">个人相册</view>
+  <view class="pad title">{{tr.t('个人相册', lang)}}</view>
   <view class="moments-grid" wx:if="{{u.album.length || isSelf}}">
     <view class="moments-cell" wx:for="{{u.album}}" wx:key="id">
       <image src="{{item.url}}" mode="aspectFill" bindtap="preview" data-index="{{index}}" />
@@ -20,20 +21,20 @@
       <view class="moments-plus">+</view>
     </view>
   </view>
-  <view class="pad muted" wx:elif="{{!u.album.length}}">还没有相册。</view>
-  <view class="muted moments-hint" wx:if="{{isSelf}}">一次最多选 9 张，相册最多 24 张。点图放大，点角标删除。</view>
-  <view class="pad title">拟出行</view>
+  <view class="pad muted" wx:elif="{{!u.album.length}}">{{tr.t('还没有相册。', lang)}}</view>
+  <view class="muted moments-hint" wx:if="{{isSelf}}">{{tr.t('一次最多选 9 张，相册最多 24 张。点图放大，点角标删除。', lang)}}</view>
+  <view class="pad title">{{tr.t('拟出行', lang)}}</view>
   <view class="card" wx:for="{{u.trips.upcoming}}" wx:key="id" bindtap="goSch" data-id="{{item.scheduleId}}">
-    <view class="pad"><view>{{item.title}}</view><view class="muted">{{item.startDate}} · {{item.region}}</view></view>
+    <view class="pad"><view>{{tr.t(item.title, lang)}}</view><view class="muted">{{tr.t(item.startDate, lang)}} · {{tr.t(item.region, lang)}}</view></view>
   </view>
-  <view class="pad muted" wx:if="{{!u.trips.upcoming.length}}">暂无即将出发的行程。</view>
-  <view class="pad title">已参与</view>
+  <view class="pad muted" wx:if="{{!u.trips.upcoming.length}}">{{tr.t('暂无即将出发的行程。', lang)}}</view>
+  <view class="pad title">{{tr.t('已参与', lang)}}</view>
   <view class="card" wx:for="{{u.trips.past}}" wx:key="id" bindtap="goSch" data-id="{{item.scheduleId}}">
-    <view class="pad">{{item.title}} · {{item.startDate}}</view>
+    <view class="pad">{{tr.t(item.title, lang)}} · {{tr.t(item.startDate, lang)}}</view>
   </view>
-  <view class="pad title">关注的</view>
+  <view class="pad title">{{tr.t('关注的', lang)}}</view>
   <view class="card" wx:for="{{u.trips.following}}" wx:key="id" bindtap="goRoute" data-id="{{item.routeId}}">
-    <view class="pad">{{item.title}}</view>
+    <view class="pad">{{tr.t(item.title, lang)}}</view>
   </view>
-  <view class="pad muted">公开资料不含手机号与精确年龄，仅展示年龄段。</view>
+  <view class="pad muted">{{tr.t('公开资料不含手机号与精确年龄，仅展示年龄段。', lang)}}</view>
 </view>

@@ -1,25 +1,26 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view class="pad title">性别</view>
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="pad title">{{tr.t('性别', lang)}}</view>
 <canvas type="2d" id="genderPie" class="pie"></canvas>
 <view class="legend">
   <view class="legend-item" wx:for="{{gender}}" wx:key="name">
     <view class="dot" style="background:{{item.color}}"></view>
-    <text>{{item.name}} {{item.value}}</text>
+    <text>{{tr.t(item.name, lang)}} {{tr.t(item.value, lang)}}</text>
   </view>
 </view>
 
-<view class="pad title">年龄段</view>
+<view class="pad title">{{tr.t('年龄段', lang)}}</view>
 <canvas type="2d" id="agePie" class="pie"></canvas>
 <view class="legend">
   <view class="legend-item" wx:for="{{age}}" wx:key="name">
     <view class="dot" style="background:{{item.color}}"></view>
-    <text>{{item.name}} {{item.value}}</text>
+    <text>{{tr.t(item.name, lang)}} {{tr.t(item.value, lang)}}</text>
   </view>
 </view>
 
-<view class="pad title">籍贯</view>
+<view class="pad title">{{tr.t('籍贯', lang)}}</view>
 <view class="pad" wx:for="{{hometown}}" wx:key="name">
-  <view class="row"><text>{{item.name}}</text><text>{{item.value}}</text></view>
+  <view class="row"><text>{{tr.t(item.name, lang)}}</text><text>{{tr.t(item.value, lang)}}</text></view>
   <view class="progress"><view class="bar" style="width:{{item.pct}}%"></view></view>
 </view>
-<view class="pad muted" wx:if="{{!hometown.length}}">暂无报名数据</view>
+<view class="pad muted" wx:if="{{!hometown.length}}">{{tr.t('暂无报名数据', lang)}}</view>

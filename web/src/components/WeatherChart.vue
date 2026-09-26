@@ -52,6 +52,6 @@ function barH(p) {
 <style scoped>
 .wx-chart { width: 100%; height: 148px; margin-top: 4px; }
 .wx-chart svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.wx-t { font-size: 10px; fill: #1b4332; font-weight: 650; }
-.wx-h { font-size: 10px; fill: #6b705c; }
+.wx-t { font-size: calc(10px * var(--ui-scale)); fill: #1b4332; font-weight: 650; }
+.wx-h { font-size: calc(10px * var(--ui-scale)); fill: #6b705c; }
 </style>

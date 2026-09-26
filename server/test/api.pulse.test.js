@@ -19,7 +19,7 @@ describe("live pulse helpers", () => {
     assert.equal(who.place, "北京");
     assert.match(
       formatItem({ kind: "enroll", who: "林**", place: "北京", timeAgo: "3 分钟前", title: "慕田峪长城缆车一日游" }),
-      /林\*\*（北京）3 分钟前报名了慕田峪/
+      /林\*\*（北京） 3 分钟前 报名了 慕田峪/
     );
     assert.match(formatItem({ kind: "view", who: "一位同行", timeAgo: "刚刚", title: "慕田峪长城缆车一日游" }), /浏览了/);
     assert.match(formatItem({ kind: "review", who: "林**", timeAgo: "昨天", title: "慕田峪", rating: 5 }), /评了 5 分/);
@@ -54,7 +54,7 @@ describe("live pulse API", () => {
     const hit = pulse.body.data.items.find((it) => it.kind === "enroll");
     assert.ok(hit);
     assert.equal(hit.who, "林**");
-    assert.match(hit.text, /报名了慕田峪/);
+    assert.match(hit.text, /报名了 慕田峪/);
     assert.equal(hit.scheduleId, seed.individualScheduleId);
     assert.doesNotMatch(JSON.stringify(pulse.body.data), /林北野/);
     assert.equal(hit.href, `/m/schedule/${seed.individualScheduleId}`);

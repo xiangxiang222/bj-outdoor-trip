@@ -3,7 +3,7 @@
     <div class="card" style="background:linear-gradient(135deg,#1b4332,#40916c);color:#fff">
       <div class="pad">
         <div class="muted" style="opacity:.85">{{ data.universal ? "通用优惠券" : "本团优惠券" }}</div>
-        <div style="font-size:28px;font-weight:700;margin:8px 0">{{ data.label }}</div>
+        <div style="font-size: calc(28px * var(--ui-scale));font-weight:700;margin:8px 0">{{ data.label }}</div>
         <div>{{ data.name }}</div>
         <p style="opacity:.9;margin:12px 0 0">余 {{ data.remain }}/{{ data.total }} · {{ statusText }}</p>
       </div>

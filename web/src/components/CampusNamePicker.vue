@@ -217,7 +217,7 @@ function confirm() {
   color: #6b705c;
   cursor: pointer;
 }
-.campus-sheet-hint { margin: 0 0 8px; font-size: 12px; }
+.campus-sheet-hint { margin: 0 0 8px; font-size: calc(12px * var(--ui-scale)); }
 .campus-sheet-list {
   overflow: auto;
   min-height: 180px;
@@ -232,7 +232,7 @@ function confirm() {
   padding: 12px 4px;
   border-bottom: 1px dashed #eceee8;
   cursor: pointer;
-  font-size: 15px;
+  font-size: calc(15px * var(--ui-scale));
 }
 .campus-sheet-row.on { font-weight: 700; color: #1b4332; }
 .campus-sheet-row.custom { color: #2d6a4f; }

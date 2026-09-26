@@ -1,47 +1,48 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view class="pad muted">把想收录的线路交给平台审。通过后会出现在「线路」里。这和首页「发团」不是同一件事。</view>
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="pad muted">{{tr.t('把想收录的线路交给平台审。通过后会出现在「线路」里。这和首页「发团」不是同一件事。', lang)}}</view>
 
 <view class="card" wx:if="{{done}}">
   <view class="pad">
-    <view style="color:#2d6a4f">{{done}}</view>
-    <view class="muted">客服微信 {{contacts.officialWechat}} · {{contacts.officialWechatName}}</view>
+    <view style="color:#2d6a4f">{{tr.t(done, lang)}}</view>
+    <view class="muted">{{tr.t('客服微信', lang)}} {{tr.t(contacts.officialWechat, lang)}} · {{tr.t(contacts.officialWechatName, lang)}}</view>
   </view>
 </view>
-<view class="btn" wx:if="{{done}}" bindtap="copyWechat">{{copied ? '已复制微信号' : '复制客服微信'}}</view>
+<view class="btn" wx:if="{{done}}" bindtap="copyWechat">{{tr.t(copied ? '已复制微信号' : '复制客服微信', lang)}}</view>
 
-<view class="pad">线路标题</view>
-<input class="input" value="{{form.title}}" placeholder="例如：慕田峪长城缆车一日" bindinput="onField" data-key="title" />
-<view class="pad">副标题</view>
-<input class="input" value="{{form.subtitle}}" placeholder="一句话卖点，可空" bindinput="onField" data-key="subtitle" />
-<view class="pad">地区</view>
-<input class="input" value="{{form.region}}" placeholder="例如：北京市 / 怀柔区" bindinput="onField" data-key="region" />
-<view class="pad">天数</view>
+<view class="pad">{{tr.t('线路标题', lang)}}</view>
+<input class="input" value="{{form.title}}" placeholder="{{tr.t('例如：慕田峪长城缆车一日', lang)}}" bindinput="onField" data-key="title" />
+<view class="pad">{{tr.t('副标题', lang)}}</view>
+<input class="input" value="{{form.subtitle}}" placeholder="{{tr.t('一句话卖点，可空', lang)}}" bindinput="onField" data-key="subtitle" />
+<view class="pad">{{tr.t('地区', lang)}}</view>
+<input class="input" value="{{form.region}}" placeholder="{{tr.t('例如：北京市 / 怀柔区', lang)}}" bindinput="onField" data-key="region" />
+<view class="pad">{{tr.t('天数', lang)}}</view>
 <picker range="{{dayLabels}}" value="{{dayIndex}}" bindchange="onDays">
-  <view class="input">{{dayLabels[dayIndex]}}</view>
+  <view class="input">{{tr.t(dayLabels[dayIndex], lang)}}</view>
 </picker>
-<view class="pad">建议成团人数</view>
+<view class="pad">{{tr.t('建议成团人数', lang)}}</view>
 <input class="input" type="number" value="{{form.minGroupSize}}" bindinput="onNumber" data-key="minGroupSize" />
-<view class="pad">参考价（元 / 人）</view>
+<view class="pad">{{tr.t('参考价（元 / 人）', lang)}}</view>
 <input class="input" type="number" value="{{form.originPrice}}" bindinput="onNumber" data-key="originPrice" />
-<view class="pad">封面</view>
-<view class="btn ghost" bindtap="pickCover">{{form.cover ? '更换封面' : '选择封面照片'}}</view>
+<view class="pad">{{tr.t('封面', lang)}}</view>
+<view class="btn ghost" bindtap="pickCover">{{tr.t(form.cover ? '更换封面' : '选择封面照片', lang)}}</view>
 <image wx:if="{{form.cover}}" class="cover" src="{{form.cover}}" mode="aspectFill" />
-<view class="pad">介绍</view>
-<textarea class="input" value="{{form.description}}" placeholder="走哪、看什么、适合谁" bindinput="onField" data-key="description" />
-<view class="pad">手机号</view>
-<input class="input" type="number" maxlength="11" value="{{form.contactPhone}}" placeholder="11 位手机，方便通过后联系你" bindinput="onField" data-key="contactPhone" />
-<view class="pad">微信号</view>
-<input class="input" value="{{form.contactWechat}}" maxlength="32" placeholder="通过后客服加你" bindinput="onField" data-key="contactWechat" />
-<button class="btn" bindtap="submit" disabled="{{loading}}">{{loading ? '提交中…' : '提交申请'}}</button>
+<view class="pad">{{tr.t('介绍', lang)}}</view>
+<textarea class="input" value="{{form.description}}" placeholder="{{tr.t('走哪、看什么、适合谁', lang)}}" bindinput="onField" data-key="description" />
+<view class="pad">{{tr.t('手机号', lang)}}</view>
+<input class="input" type="number" maxlength="11" value="{{form.contactPhone}}" placeholder="{{tr.t('11 位手机，方便通过后联系你', lang)}}" bindinput="onField" data-key="contactPhone" />
+<view class="pad">{{tr.t('微信号', lang)}}</view>
+<input class="input" value="{{form.contactWechat}}" maxlength="32" placeholder="{{tr.t('通过后客服加你', lang)}}" bindinput="onField" data-key="contactWechat" />
+<button class="btn" bindtap="submit" disabled="{{loading}}">{{tr.t(loading ? '提交中…' : '提交申请', lang)}}</button>
 
-<view class="pad title" wx:if="{{apps.length}}">我的申请</view>
+<view class="pad title" wx:if="{{apps.length}}">{{tr.t('我的申请', lang)}}</view>
 <view class="card" wx:for="{{apps}}" wx:key="id">
   <view class="pad">
     <view class="row">
-      <view class="title">{{item.title}}</view>
-      <view class="tag">{{item.statusText}}</view>
+      <view class="title">{{tr.t(item.title, lang)}}</view>
+      <view class="tag">{{tr.t(item.statusText, lang)}}</view>
     </view>
-    <view class="muted">{{item.region}} · {{item.bountyHint}}</view>
-    <view class="muted" wx:if="{{item.reviewNote}}">{{item.reviewNote}}</view>
+    <view class="muted">{{tr.t(item.region, lang)}} · {{tr.t(item.bountyHint, lang)}}</view>
+    <view class="muted" wx:if="{{item.reviewNote}}">{{tr.t(item.reviewNote, lang)}}</view>
   </view>
 </view>

@@ -19,11 +19,11 @@
   border-radius: 20rpx;
   padding: 16rpx 8rpx;
   text-align: center;
-  font-size: 24rpx;
+  font-size: calc(24rpx * var(--ui-scale));
 }
 .act-kind.on { border-color: #c6f24a; background: #c6f24a; }
-.act-kind .emoji { font-size: 36rpx; }
-.tiny { font-size: 20rpx; }
+.act-kind .emoji { font-size: calc(36rpx * var(--ui-scale)); }
+.tiny { font-size: calc(20rpx * var(--ui-scale)); }
 .act-card {
   margin: 0 16rpx 16rpx;
   padding: 20rpx;
@@ -41,7 +41,7 @@
   padding: 12rpx 0;
   color: #1b4332;
 }
-.act-date .day { font-size: 40rpx; font-weight: 700; }
+.act-date .day { font-size: calc(40rpx * var(--ui-scale)); font-weight: 700; }
 .act-main { flex: 1; }
-.meta { margin-top: 8rpx; color: #1b4332; font-size: 24rpx; font-weight: 650; }
+.meta { margin-top: 8rpx; color: #1b4332; font-size: calc(24rpx * var(--ui-scale)); font-weight: 650; }
 .meta text { margin-right: 16rpx; }

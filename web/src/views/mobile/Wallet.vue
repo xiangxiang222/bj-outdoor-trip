@@ -86,7 +86,7 @@
 
 <style scoped>
 .rule-title { font-weight: 700; margin: 16px 0 4px; }
-.rule-title:first-child { margin-top: 0; font-size: 16px; }
+.rule-title:first-child { margin-top: 0; font-size: calc(16px * var(--ui-scale)); }
 </style>
 
 <script setup>

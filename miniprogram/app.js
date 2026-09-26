@@ -60,9 +60,93 @@ App({
 });
 
 const appearance = require("./utils/appearance");
+const locale = require("./utils/locale");
+const NAV_TITLES = {
+  "pages/index/index": "同行者众",
+  "pages/activities/activities": "同城局",
+  "pages/orders/orders": "行程",
+  "pages/mine/mine": "我的",
+  "pages/official/official": "客服与规则",
+  "pages/settings/settings": "设置",
+  "pages/look-font/look-font": "字体字号设置",
+  "pages/look-night/look-night": "夜间模式",
+  "pages/look-lang/look-lang": "多语言与翻译",
+  "pages/profile/profile": "实名信息",
+  "pages/wallet/wallet": "我的钱包",
+  "pages/wallet-cards/wallet-cards": "提现说明",
+  "pages/wallet-pin/wallet-pin": "支付密码",
+  "pages/rules/rules": "规则",
+  "pages/feedback/feedback": "建议与 BUG",
+  "pages/lottery/lottery": "活动",
+  "pages/after/after": "完成活动",
+  "pages/routes/routes": "线路",
+  "pages/chain/chain": "拼团",
+  "pages/schedule/schedule": "活动报名",
+  "pages/enroll/enroll": "报名",
+  "pages/pay/pay": "付团费",
+  "pages/order-detail/order-detail": "订单详情",
+  "pages/coupon/coupon": "优惠券",
+  "pages/coupons/coupons": "我的优惠券",
+  "pages/open/open": "发布排期",
+  "pages/login/login": "登录",
+  "pages/member/member": "会员中心",
+  "pages/favorites/favorites": "我的收藏",
+  "pages/stats/stats": "本团画像",
+  "pages/guides/guides": "领队导游",
+  "pages/guide/guide": "导游详情",
+  "pages/user/user": "个人主页",
+  "pages/publish/publish": "发团",
+  "pages/leader/leader": "领队申请",
+  "pages/route-apply/route-apply": "申请收录线路",
+  "pages/student/student": "校园认证",
+  "pages/campus-pick/campus-pick": "选择",
+  "pkg-detail/detail/detail": "线路详情",
+};
+
+function speak(text) {
+  return locale.translate(text, appearance.read().lang);
+}
+
+function shortButton(text) {
+  const next = speak(text);
+  return Array.from(next).length <= 4 ? next : text;
+}
+
+let navSet = false;
+const rawTitle = wx.setNavigationBarTitle;
+wx.setNavigationBarTitle = function (opt) {
+  navSet = true;
+  const next = Object.assign({}, opt || {});
+  if (next.title) next.title = speak(next.title);
+  return rawTitle.call(wx, next);
+};
+const rawToast = wx.showToast;
+wx.showToast = function (opt) {
+  const next = Object.assign({}, opt || {});
+  if (next.title) next.title = speak(next.title);
+  return rawToast.call(wx, next);
+};
+const rawModal = wx.showModal;
+wx.showModal = function (opt) {
+  const next = Object.assign({}, opt || {});
+  if (next.title) next.title = speak(next.title);
+  if (next.content) next.content = speak(next.content);
+  if (next.confirmText) next.confirmText = shortButton(next.confirmText);
+  if (next.cancelText) next.cancelText = shortButton(next.cancelText);
+  return rawModal.call(wx, next);
+};
+const rawSheet = wx.showActionSheet;
+wx.showActionSheet = function (opt) {
+  const next = Object.assign({}, opt || {});
+  if (next.alertText) next.alertText = speak(next.alertText);
+  if (next.itemList) next.itemList = next.itemList.map((item) => speak(item));
+  return rawSheet.call(wx, next);
+};
+
 const originPage = Page;
 Page = function (config) {
-  config.data = Object.assign({ lookRoot: "16px", lookStyle: "" }, config.data || {});
+  const look = appearance.read();
+  config.data = Object.assign({ lookRoot: "16px", lookStyle: "", lang: look.lang }, config.data || {});
   const originLoad = config.onLoad;
   const originShow = config.onShow;
   config.onLoad = function (query) {
@@ -70,8 +154,10 @@ Page = function (config) {
     if (originLoad) originLoad.call(this, query);
   };
   config.onShow = function () {
+    navSet = false;
     appearance.paint(this);
     if (originShow) originShow.call(this);
+    if (!navSet && NAV_TITLES[this.route]) wx.setNavigationBarTitle({ title: NAV_TITLES[this.route] });
   };
   return originPage(config);
 };

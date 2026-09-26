@@ -2,13 +2,13 @@
   <div v-if="g">
     <div class="card">
       <div class="pad guide-row">
-        <div class="guide-face" style="width:64px;height:64px;font-size:22px">
+        <div class="guide-face" style="width:64px;height:64px;font-size: calc(22px * var(--ui-scale))">
           <img v-if="g.avatar" :src="g.avatar" :alt="g.name" />
           <span v-else>{{ (g.name || "导").slice(0, 1) }}</span>
         </div>
         <div>
           <div class="row">
-            <strong style="font-size:18px">{{ g.name }}</strong>
+            <strong style="font-size: calc(18px * var(--ui-scale))">{{ g.name }}</strong>
             <span class="tag">{{ g.rating }} 分</span>
           </div>
           <p class="muted" style="margin:6px 0 0">

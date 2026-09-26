@@ -1,21 +1,22 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <view class="card">
-  <view class="pad muted">{{pinSet ? '修改支付密码需验证原密码。' : '设置 6 位数字支付密码后才能提现。'}}</view>
+  <view class="pad muted">{{tr.t(pinSet ? '修改支付密码需验证原密码。' : '设置 6 位数字支付密码后才能提现。', lang)}}</view>
   <block wx:if="{{pinSet}}">
-    <view class="pad muted">原支付密码</view>
+    <view class="pad muted">{{tr.t('原支付密码', lang)}}</view>
     <input class="input" password maxlength="6" value="{{oldPin}}" bindinput="setOld" />
   </block>
-  <view class="pad muted">{{pinSet ? '新支付密码' : '支付密码'}}</view>
+  <view class="pad muted">{{tr.t(pinSet ? '新支付密码' : '支付密码', lang)}}</view>
   <input class="input" password maxlength="6" value="{{pin}}" bindinput="setPin" />
-  <view class="pad muted">再输入一次</view>
+  <view class="pad muted">{{tr.t('再输入一次', lang)}}</view>
   <input class="input" password maxlength="6" value="{{pin2}}" bindinput="setPin2" />
-  <view class="btn" bindtap="save">{{pinSet ? '修改密码' : '设置密码'}}</view>
+  <view class="btn" bindtap="save">{{tr.t(pinSet ? '修改密码' : '设置密码', lang)}}</view>
 </view>
 <view class="card" wx:if="{{pinSet && realNamed}}">
-  <view class="pad title">找回密码</view>
-  <view class="pad muted">身份证号</view>
+  <view class="pad title">{{tr.t('找回密码', lang)}}</view>
+  <view class="pad muted">{{tr.t('身份证号', lang)}}</view>
   <input class="input" value="{{idCard}}" maxlength="18" bindinput="setId" />
-  <view class="pad muted">新支付密码</view>
+  <view class="pad muted">{{tr.t('新支付密码', lang)}}</view>
   <input class="input" password maxlength="6" value="{{resetPin}}" bindinput="setReset" />
-  <view class="btn ghost" bindtap="reset">重置密码</view>
+  <view class="btn ghost" bindtap="reset">{{tr.t('重置密码', lang)}}</view>
 </view>

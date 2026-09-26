@@ -1,11 +1,11 @@
 const KEY = "bj_look";
 
-const SIZES = [14, 16, 18, 20, 22];
+const SIZES = [0.9, 1, 1.12, 1.24, 1.36];
 
 const FONTS = {
-  system: '"PingFang SC","Hiragino Sans GB","Noto Sans SC",sans-serif',
-  song: '"Songti SC","STSong","Noto Serif SC","Source Han Serif SC",serif',
-  kai: '"Kaiti SC","STKaiti","KaiTi",serif',
+  system: "'PingFang SC','Hiragino Sans GB','Noto Sans SC',sans-serif",
+  song: "'Songti SC','STSong','Noto Serif SC','Source Han Serif SC',serif",
+  kai: "'Kaiti SC','STKaiti','KaiTi',serif",
 };
 
 const COPY = {
@@ -150,22 +150,34 @@ function isDark(look) {
 
 function pageStyle(look) {
   const dark = isDark(look);
+  const scale = SIZES[look.size] || 1;
   const vars = dark
     ? "--bg:#121214;--card:#1c1c1e;--ink:#f2f2f2;--muted:#9a9a9a;--line:#2c2c2e;"
     : "--bg:#f5f6f3;--card:#ffffff;--ink:#141414;--muted:#7a7d74;--line:#eceee8;";
   const media = look.textMode ? "none" : "block";
   const grid = look.textMode ? "none" : "grid";
   const hero = look.textMode ? "0px" : "360rpx";
-  return vars + "--media:" + media + ";--media-grid:" + grid + ";--hero-h:" + hero + ";background:var(--bg);color:var(--ink);font-family:" + FONTS[look.font] + ";";
+  const font = FONTS[look.font] || FONTS.system;
+  return vars + "--ui-scale:" + scale + ";--media:" + media + ";--media-grid:" + grid + ";--hero-h:" + hero + ";background:var(--bg);color:var(--ink);font-family:" + font + ";";
 }
 
 function paint(page, look) {
   if (!page || typeof page.setData !== "function") return;
   const prefs = look || read();
   page.setData({
-    lookRoot: SIZES[prefs.size] + "px",
+    lookRoot: "16px",
     lookStyle: pageStyle(prefs),
+    lang: prefs.lang,
   });
+  refreshTabBar(prefs);
+}
+
+function refreshTabBar(look) {
+  const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+  const page = pages.length ? pages[pages.length - 1] : null;
+  if (!page || typeof page.getTabBar !== "function") return;
+  const bar = page.getTabBar();
+  if (bar && typeof bar.refresh === "function") bar.refresh(look || read());
 }
 
 function applyChrome(look) {

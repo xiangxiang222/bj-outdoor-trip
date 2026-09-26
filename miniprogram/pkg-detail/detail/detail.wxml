@@ -1,99 +1,100 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view wx:if="{{err}}" class="muted pad">{{err}}</view>
+<wxs src="../utils/locale.wxs" module="tr" />
+<view wx:if="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>
 <view class="card" wx:if="{{r.reviewStatus=='pending'}}">
   <view class="pad">
-    <view style="color:#2d6a4f">已提交审核，通过后会出现在线路目录。</view>
-    <view class="muted">通过后会出现在线路目录。可先加客服微信。</view>
+    <view style="color:#2d6a4f">{{tr.t('已提交审核，通过后会出现在线路目录。', lang)}}</view>
+    <view class="muted">{{tr.t('通过后会出现在线路目录。可先加客服微信。', lang)}}</view>
   </view>
 </view>
 <view class="card" wx:elif="{{r.reviewStatus=='rejected'}}">
   <view class="pad">
-    <view style="color:#bc4749">未通过{{r.reviewNote ? '：' + r.reviewNote : ''}}</view>
-    <view class="btn ghost" bindtap="goApply">改完再申请</view>
+    <view style="color:#bc4749">{{tr.t('未通过', lang)}}{{tr.t(r.reviewNote ? '：' + r.reviewNote : '', lang)}}</view>
+    <view class="btn ghost" bindtap="goApply">{{tr.t('改完再申请', lang)}}</view>
   </view>
 </view>
 <image class="cover" src="{{r.cover}}" mode="aspectFill" style="height:400rpx;margin:0" bindtap="preview" data-index="0" />
 <live-pulse wx:if="{{id}}" flush scope="route" routeId="{{id}}"></live-pulse>
 <view class="pad">
-  <view class="title">{{r.title}}</view>
-  <view class="muted">{{r.subtitle}}</view>
+  <view class="title">{{tr.t(r.title, lang)}}</view>
+  <view class="muted">{{tr.t(r.subtitle, lang)}}</view>
   <view class="row" style="align-items:center;margin-top:8rpx">
-    <view class="price">¥{{fromPrice}} 起</view>
-    <view class="chip {{r.favored ? 'on' : ''}}" bindtap="fav">{{r.favored ? '已收藏' : '收藏'}}</view>
+    <view class="price">¥{{tr.t(fromPrice, lang)}} {{tr.t('起', lang)}}</view>
+    <view class="chip {{r.favored ? 'on' : ''}}" bindtap="fav">{{tr.t(r.favored ? '已收藏' : '收藏', lang)}}</view>
   </view>
 </view>
 <view class="pad" wx:if="{{r.story && r.story.length}}">
-  <view class="title">线路介绍</view>
+  <view class="title">{{tr.t('线路介绍', lang)}}</view>
   <block wx:for="{{r.story}}" wx:key="index">
-    <view wx:if="{{item.type==='text'}}" class="story-text">{{item.body}}</view>
+    <view wx:if="{{item.type==='text'}}" class="story-text">{{tr.t(item.body, lang)}}</view>
     <block wx:elif="{{item.type==='image' && item.url}}">
       <image class="story-img" src="{{item.url}}" mode="widthFix" bindtap="previewStory" data-url="{{item.url}}" show-menu-by-longpress="{{true}}" />
-      <view wx:if="{{item.caption}}" class="muted">{{item.caption}}</view>
+      <view wx:if="{{item.caption}}" class="muted">{{tr.t(item.caption, lang)}}</view>
     </block>
   </block>
 </view>
 <view class="pad" wx:if="{{r.videos && r.videos.length}}">
-  <view class="title">线路视频</view>
+  <view class="title">{{tr.t('线路视频', lang)}}</view>
   <block wx:for="{{r.videos}}" wx:key="url">
     <video wx:if="{{item.kind==='video'}}" src="{{item.embedUrl}}" controls style="width:100%;margin:12rpx 0;border-radius:16rpx;background:#000" />
-    <view wx:else class="video-link" bindtap="copyVideo" data-url="{{item.url}}">{{item.label}} · 复制链接去浏览器播放</view>
+    <view wx:else class="video-link" bindtap="copyVideo" data-url="{{item.url}}">{{tr.t(item.label, lang)}} {{tr.t('· 复制链接去浏览器播放', lang)}}</view>
   </block>
 </view>
-<view class="pad" wx:if="{{r.gallery && r.gallery.length}}"><view class="title">线路相册</view></view>
+<view class="pad" wx:if="{{r.gallery && r.gallery.length}}"><view class="title">{{tr.t('线路相册', lang)}}</view></view>
 <view class="gallery" style="display:flex;flex-wrap:wrap;padding:0 16rpx" wx:if="{{r.gallery && r.gallery.length}}">
   <image wx:for="{{r.gallery}}" wx:key="thumb" src="{{item.thumb}}" mode="aspectFill" style="width:48%;height:200rpx;margin:1%;border-radius:12rpx" bindtap="preview" data-index="{{index}}" show-menu-by-longpress="{{true}}" />
 </view>
-<view class="pad"><view class="title">亮点</view>
-  <view wx:for="{{r.highlights}}" wx:key="*this" class="muted">· {{item}}</view>
+<view class="pad"><view class="title">{{tr.t('亮点', lang)}}</view>
+  <view wx:for="{{r.highlights}}" wx:key="*this" class="muted">· {{tr.t(item, lang)}}</view>
 </view>
-<view class="pad"><view class="title">行程</view>
+<view class="pad"><view class="title">{{tr.t('行程', lang)}}</view>
   <view wx:for="{{r.itinerary}}" wx:key="time">
-    <view>{{item.time}} {{item.title}}</view>
-    <view class="muted">{{item.detail}}</view>
+    <view>{{tr.t(item.time, lang)}} {{tr.t(item.title, lang)}}</view>
+    <view class="muted">{{tr.t(item.detail, lang)}}</view>
     <image wx:if="{{item.photo}}" class="story-img" src="{{item.photo}}" mode="widthFix" bindtap="previewStory" data-url="{{item.photo}}" />
   </view>
 </view>
-<view class="pad"><view class="title">阶梯价</view>
+<view class="pad"><view class="title">{{tr.t('阶梯价', lang)}}</view>
   <view wx:for="{{r.priceTiers}}" wx:key="minPeople" class="row">
-    <text>{{item.minPeople}}人起</text>
-    <text>¥{{item.price}} / 会员¥{{item.memberPrice}}</text>
+    <text>{{tr.t(item.minPeople, lang)}}{{tr.t('人起', lang)}}</text>
+    <text>¥{{tr.t(item.price, lang)}} {{tr.t('/ 会员¥', lang)}}{{tr.t(item.memberPrice, lang)}}</text>
   </view>
 </view>
 <view class="pad" wx:if="{{r.refundPolicy && r.refundPolicy.lines && r.refundPolicy.lines.length}}">
-  <view class="title">退费规则</view>
-  <view class="muted">{{r.refundPolicy.summary}}</view>
-  <view class="muted" wx:for="{{r.refundPolicy.lines}}" wx:key="text">{{item.text}}</view>
+  <view class="title">{{tr.t('退费规则', lang)}}</view>
+  <view class="muted">{{tr.t(r.refundPolicy.summary, lang)}}</view>
+  <view class="muted" wx:for="{{r.refundPolicy.lines}}" wx:key="text">{{tr.t(item.text, lang)}}</view>
 </view>
-<view class="pad"><view class="title">排期</view>
-  <view wx:if="{{!r.schedules || !r.schedules.length}}" class="muted">暂无排期，发布后会显示在这里。</view>
+<view class="pad"><view class="title">{{tr.t('排期', lang)}}</view>
+  <view wx:if="{{!r.schedules || !r.schedules.length}}" class="muted">{{tr.t('暂无排期，发布后会显示在这里。', lang)}}</view>
   <view class="card" wx:for="{{r.schedules}}" wx:key="id" bindtap="goSch" data-id="{{item.id}}">
     <view class="pad">
-      <view class="row"><text>{{item.startDate}}</text><view class="trip-kind {{item.kind || item.organizerType || 'individual'}}"><view class="trip-kind-ico"></view>{{item.kindLabel || '个人'}}</view></view>
-      <view class="muted">{{item.enrolled}}/{{item.maxSeats}} · {{item.bus.name}}</view>
-      <view wx:if="{{item.guide}}" class="guide-hit" catchtap="goGuide" data-id="{{item.guide.id}}">导游 {{item.guide.name}} · 查看详情</view>
-      <view wx:else class="muted guide-hit" catchtap="goGuides">成团后匹配导游 · 先看看领队</view>
+      <view class="row"><text>{{tr.t(item.startDate, lang)}}</text><view class="trip-kind {{item.kind || item.organizerType || 'individual'}}"><view class="trip-kind-ico"></view>{{tr.t(item.kindLabel || '个人', lang)}}</view></view>
+      <view class="muted">{{tr.t(item.enrolled, lang)}}/{{tr.t(item.maxSeats, lang)}} · {{tr.t(item.bus.name, lang)}}</view>
+      <view wx:if="{{item.guide}}" class="guide-hit" catchtap="goGuide" data-id="{{item.guide.id}}">{{tr.t('导游', lang)}} {{tr.t(item.guide.name, lang)}} {{tr.t('· 查看详情', lang)}}</view>
+      <view wx:else class="muted guide-hit" catchtap="goGuides">{{tr.t('成团后匹配导游 · 先看看领队', lang)}}</view>
     </view>
   </view>
 </view>
-<button class="btn" open-type="share">分享到微信</button>
-<view class="btn ghost" wx:if="{{r.reviewStatus!='pending' && r.reviewStatus!='rejected'}}" bindtap="open">发布排期</view>
-<view class="pad"><view class="title">装备清单</view>
-  <view wx:for="{{r.packingList}}" wx:key="*this" class="muted">· {{item}}</view>
-  <view wx:if="{{!r.packingList || !r.packingList.length}}" class="muted">{{r.equipment}}</view>
+<button class="btn" open-type="share">{{tr.t('分享到微信', lang)}}</button>
+<view class="btn ghost" wx:if="{{r.reviewStatus!='pending' && r.reviewStatus!='rejected'}}" bindtap="open">{{tr.t('发布排期', lang)}}</view>
+<view class="pad"><view class="title">{{tr.t('装备清单', lang)}}</view>
+  <view wx:for="{{r.packingList}}" wx:key="*this" class="muted">· {{tr.t(item, lang)}}</view>
+  <view wx:if="{{!r.packingList || !r.packingList.length}}" class="muted">{{tr.t(r.equipment, lang)}}</view>
 </view>
-<view class="pad"><view class="title">常见问题</view>
+<view class="pad"><view class="title">{{tr.t('常见问题', lang)}}</view>
   <view wx:for="{{faqs}}" wx:key="q" class="faq-item">
-    <view>{{item.q}}</view>
-    <view class="muted">{{item.a}}</view>
+    <view>{{tr.t(item.q, lang)}}</view>
+    <view class="muted">{{tr.t(item.a, lang)}}</view>
   </view>
 </view>
-<view class="pad"><view class="title">出行评价 <text class="muted" wx:if="{{reviews.count}}">{{reviews.avg}}分 · {{reviews.count}}条</text></view>
-  <view wx:if="{{!reviews.list.length}}" class="muted">还没有评价。报名后可在「我的报名」写下体验。</view>
+<view class="pad"><view class="title">{{tr.t('出行评价', lang)}} <text class="muted" wx:if="{{reviews.count}}">{{tr.t(reviews.avg, lang)}}{{tr.t('分 ·', lang)}} {{tr.t(reviews.count, lang)}}{{tr.t('条', lang)}}</text></view>
+  <view wx:if="{{!reviews.list.length}}" class="muted">{{tr.t('还没有评价。报名后可在「我的报名」写下体验。', lang)}}</view>
   <view class="card" wx:for="{{reviews.list}}" wx:key="id">
     <view class="pad">
-      <view class="row"><text>{{item.name}}</text><text class="stars">{{item.stars}}</text></view>
-      <view wx:if="{{item.content}}">{{item.content}}</view>
-      <view class="muted">{{item.createdAt}}</view>
+      <view class="row"><text>{{tr.t(item.name, lang)}}</text><text class="stars">{{tr.t(item.stars, lang)}}</text></view>
+      <view wx:if="{{item.content}}">{{tr.t(item.content, lang)}}</view>
+      <view class="muted">{{tr.t(item.createdAt, lang)}}</view>
     </view>
   </view>
 </view>

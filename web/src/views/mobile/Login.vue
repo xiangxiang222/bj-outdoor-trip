@@ -184,7 +184,7 @@ async function wx() {
   margin: 6px 0 8px;
   overflow: hidden;
   color: var(--muted);
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-scale));
 }
 .captcha-box img {
   height: 44px;

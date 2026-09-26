@@ -29,6 +29,6 @@
   border-radius: 20rpx;
   padding: 20rpx;
 }
-.tiny { font-size: 20rpx; }
+.tiny { font-size: calc(20rpx * var(--ui-scale)); }
 .acc { padding: 20rpx 24rpx; border-bottom: 1rpx dashed #e6dfd2; }
 .acc:last-child { border-bottom: 0; }

@@ -1,10 +1,11 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <view class="card" wx:if="{{order}}">
-  <view class="pad title">{{order.title}}</view>
-  <view class="pad muted" wx:if="{{order.startDate}}">{{order.startDate}} 出发</view>
-  <view class="pad price">¥{{order.amount}}</view>
-  <view class="pad muted">{{statusText}}</view>
+  <view class="pad title">{{tr.t(order.title, lang)}}</view>
+  <view class="pad muted" wx:if="{{order.startDate}}">{{tr.t(order.startDate, lang)}} {{tr.t('出发', lang)}}</view>
+  <view class="pad price">¥{{tr.t(order.amount, lang)}}</view>
+  <view class="pad muted">{{tr.t(statusText, lang)}}</view>
 </view>
-<view class="btn" wx:if="{{order && order.scheduleId}}" bindtap="goTrip">查看行程</view>
-<view class="btn ghost" wx:if="{{order && order.scene=='wallet_topup'}}" bindtap="goWallet">查看钱包</view>
-<view class="pad" wx:if="{{err}}" style="color:#bc4749">{{err}}</view>
+<view class="btn" wx:if="{{order && order.scheduleId}}" bindtap="goTrip">{{tr.t('查看行程', lang)}}</view>
+<view class="btn ghost" wx:if="{{order && order.scene=='wallet_topup'}}" bindtap="goWallet">{{tr.t('查看钱包', lang)}}</view>
+<view class="pad" wx:if="{{err}}" style="color:#bc4749">{{tr.t(err, lang)}}</view>

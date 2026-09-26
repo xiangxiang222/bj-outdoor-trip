@@ -168,7 +168,15 @@ export function applyLook(look, systemDark) {
   root.dataset.night = dark ? "dark" : "day";
   root.dataset.text = prefs.textMode ? "1" : "0";
   root.dataset.lang = prefs.lang;
-  root.style.setProperty("--ui-scale", String(SIZES[prefs.size]));
+  const scale = SIZES[prefs.size] || 1;
+  root.style.setProperty("--ui-scale", String(scale));
   root.style.setProperty("--ui-font", FONTS[prefs.font]);
+  root.style.setProperty("--el-font-size-extra-large", `${20 * scale}px`);
+  root.style.setProperty("--el-font-size-large", `${18 * scale}px`);
+  root.style.setProperty("--el-font-size-medium", `${16 * scale}px`);
+  root.style.setProperty("--el-font-size-base", `${14 * scale}px`);
+  root.style.setProperty("--el-font-size-small", `${13 * scale}px`);
+  root.style.setProperty("--el-font-size-extra-small", `${12 * scale}px`);
   document.body.style.fontFamily = FONTS[prefs.font];
+  window.dispatchEvent(new CustomEvent("bj-look"));
 }

@@ -56,10 +56,10 @@ function displayWho({ nickname, travelerName, hometown, fallback }) {
 function formatItem({ kind, who, place, timeAgo, title, rating }) {
   const person = place ? `${who}（${place}）` : who;
   const name = title || "这条线路";
-  if (kind === "review") return `${person}${timeAgo}给${name}评了 ${rating || 5} 分`;
-  if (kind === "open") return `${person}${timeAgo}开了一场${name}`;
+  if (kind === "review") return `${person} ${timeAgo} 给 ${name} 评了 ${rating || 5} 分`;
+  if (kind === "open") return `${person} ${timeAgo} 开了一场 ${name}`;
   const verb = { view: "浏览了", enroll: "报名了", favorite: "收藏了" }[kind] || "关注了";
-  return `${person}${timeAgo}${verb}${name}`;
+  return `${person} ${timeAgo} ${verb} ${name}`;
 }
 
 function itemHref(kind, routeId, scheduleId) {

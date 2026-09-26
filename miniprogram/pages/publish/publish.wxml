@@ -1,86 +1,87 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view class="pad muted">{{form.channel=='activity' ? '提交后需审核，通过后出现在活动 Tab。' : '填写线路与出发信息，提交后需管理员审核才会出现在首页。'}}</view>
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="pad muted">{{tr.t(form.channel=='activity' ? '提交后需审核，通过后出现在活动 Tab。' : '填写线路与出发信息，提交后需管理员审核才会出现在首页。', lang)}}</view>
 
-<view class="label">类型</view>
+<view class="label">{{tr.t('类型', lang)}}</view>
 <picker mode="selector" range="{{channelLabels}}" value="{{channelIndex}}" bindchange="setChannel">
-  <view class="input">{{channelLabels[channelIndex]}}</view>
+  <view class="input">{{tr.t(channelLabels[channelIndex], lang)}}</view>
 </picker>
 
 <block wx:if="{{form.channel=='activity'}}">
-  <view class="label">玩法</view>
+  <view class="label">{{tr.t('玩法', lang)}}</view>
   <view class="kind-grid">
     <view class="act-kind {{form.activityKind==item.key?'on':''}}" wx:for="{{kinds}}" wx:key="key" bindtap="pickKind" data-key="{{item.key}}">
-      <view class="emoji">{{item.emoji}}</view>
-      <view>{{item.label}}</view>
+      <view class="emoji">{{tr.t(item.emoji, lang)}}</view>
+      <view>{{tr.t(item.label, lang)}}</view>
     </view>
   </view>
-  <input class="input" placeholder="标题，例如周五夜掼蛋" value="{{form.title}}" bindinput="setField" data-k="title" />
-  <input class="input" placeholder="地点，例如三里屯太古里" value="{{form.meetupPoint}}" bindinput="setField" data-k="meetupPoint" />
-  <input class="input" placeholder="城区，如朝阳" value="{{form.city}}" bindinput="setField" data-k="city" />
-  <view class="label">日期</view>
+  <input class="input" placeholder="{{tr.t('标题，例如周五夜掼蛋', lang)}}" value="{{form.title}}" bindinput="setField" data-k="title" />
+  <input class="input" placeholder="{{tr.t('地点，例如三里屯太古里', lang)}}" value="{{form.meetupPoint}}" bindinput="setField" data-k="meetupPoint" />
+  <input class="input" placeholder="{{tr.t('城区，如朝阳', lang)}}" value="{{form.city}}" bindinput="setField" data-k="city" />
+  <view class="label">{{tr.t('日期', lang)}}</view>
   <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
-    <view class="input">{{dateLabels[dateIndex]}}</view>
+    <view class="input">{{tr.t(dateLabels[dateIndex], lang)}}</view>
   </picker>
-  <input class="input" placeholder="时间 19:30" value="{{form.meetupTime}}" bindinput="setField" data-k="meetupTime" />
-  <input class="input" type="number" placeholder="最少几人成局" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
-  <input class="input" type="number" placeholder="人数上限" value="{{form.maxSeats}}" bindinput="setField" data-k="maxSeats" />
-  <input class="input" type="number" placeholder="费用（元，0 为免费）" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
-  <textarea class="input" placeholder="介绍：带什么、几点开始、怎么找人" value="{{form.description}}" bindinput="setField" data-k="description" />
+  <input class="input" placeholder="{{tr.t('时间 19:30', lang)}}" value="{{form.meetupTime}}" bindinput="setField" data-k="meetupTime" />
+  <input class="input" type="number" placeholder="{{tr.t('最少几人成局', lang)}}" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
+  <input class="input" type="number" placeholder="{{tr.t('人数上限', lang)}}" value="{{form.maxSeats}}" bindinput="setField" data-k="maxSeats" />
+  <input class="input" type="number" placeholder="{{tr.t('费用（元，0 为免费）', lang)}}" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
+  <textarea class="input" placeholder="{{tr.t('介绍：带什么、几点开始、怎么找人', lang)}}" value="{{form.description}}" bindinput="setField" data-k="description" />
 </block>
 
 <block wx:else>
-  <input class="input" placeholder="线路标题" value="{{form.title}}" bindinput="setField" data-k="title" />
-  <input class="input" placeholder="城市，如怀柔" value="{{form.city}}" bindinput="setField" data-k="city" />
-  <view class="label">天数</view>
+  <input class="input" placeholder="{{tr.t('线路标题', lang)}}" value="{{form.title}}" bindinput="setField" data-k="title" />
+  <input class="input" placeholder="{{tr.t('城市，如怀柔', lang)}}" value="{{form.city}}" bindinput="setField" data-k="city" />
+  <view class="label">{{tr.t('天数', lang)}}</view>
   <picker mode="selector" range="{{dayLabels}}" value="{{dayIndex}}" bindchange="setDay">
-    <view class="input">{{dayLabels[dayIndex]}}</view>
+    <view class="input">{{tr.t(dayLabels[dayIndex], lang)}}</view>
   </picker>
-  <view class="label">想怎么玩</view>
+  <view class="label">{{tr.t('想怎么玩', lang)}}</view>
   <view class="chips">
-    <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}};opacity:{{item.on?1:0.4}}" bindtap="toggleTag" data-id="{{item.id}}">{{item.name}}</view>
+    <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}};opacity:{{item.on?1:0.4}}" bindtap="toggleTag" data-id="{{item.id}}">{{tr.t(item.name, lang)}}</view>
   </view>
-  <view class="label">团型</view>
+  <view class="label">{{tr.t('团型', lang)}}</view>
   <picker mode="selector" range="{{offerLabels}}" value="{{offerIndex}}" bindchange="setOffer">
-    <view class="input">{{offerLabels[offerIndex]}}</view>
+    <view class="input">{{tr.t(offerLabels[offerIndex], lang)}}</view>
   </picker>
   <view class="card" wx:if="{{form.offerType=='combo'}}">
-    <view class="pad muted">组合团只对学生或已认证学生组织开放。</view>
+    <view class="pad muted">{{tr.t('组合团只对学生或已认证学生组织开放。', lang)}}</view>
     <picker range="{{comboRequireLabels}}" value="{{comboRequireIndex}}" bindchange="setComboRequire">
-      <view class="input">另一半身份：{{comboRequireLabels[comboRequireIndex]}}</view>
+      <view class="input">{{tr.t('另一半身份：', lang)}}{{tr.t(comboRequireLabels[comboRequireIndex], lang)}}</view>
     </picker>
-    <view class="input" bindtap="pickComboSchool">{{form.comboRule.school || '另一半学校（可空）'}}</view>
+    <view class="input" bindtap="pickComboSchool">{{tr.t(form.comboRule.school || '另一半学校（可空）', lang)}}</view>
   </view>
-  <input class="input" type="number" placeholder="原价（元）" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
-  <view class="pad" bindtap="toggleAlumniOk">{{form.alumniOk ? '☑' : '☐'}} 允许已认证校友</view>
-  <view class="pad" bindtap="toggleOversub">{{form.oversub ? '☑' : '☐'}} 报超会抽（车位不够才抽）</view>
-  <view class="label">校园范围</view>
+  <input class="input" type="number" placeholder="{{tr.t('原价（元）', lang)}}" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
+  <view class="pad" bindtap="toggleAlumniOk">{{tr.t(form.alumniOk ? '☑' : '☐', lang)}} {{tr.t('允许已认证校友', lang)}}</view>
+  <view class="pad" bindtap="toggleOversub">{{tr.t(form.oversub ? '☑' : '☐', lang)}} {{tr.t('报超会抽（车位不够才抽）', lang)}}</view>
+  <view class="label">{{tr.t('校园范围', lang)}}</view>
   <picker mode="selector" range="{{scopeLabels}}" value="{{scopeIndex}}" bindchange="setScope">
-    <view class="input">{{scopeLabels[scopeIndex]}}</view>
+    <view class="input">{{tr.t(scopeLabels[scopeIndex], lang)}}</view>
   </picker>
-  <view wx:if="{{form.campusScope=='college' || form.campusScope=='school' || form.campusScope=='colleges'}}" class="input" bindtap="pickCampusSchool">{{form.campusSchool || '学校全称'}}</view>
-  <view wx:if="{{form.campusScope=='college'}}" class="input" bindtap="pickCampusCollege">{{form.campusCollege || (form.campusSchool ? '可选，搜索该校学院' : '请先选择学校')}}</view>
-  <view wx:if="{{form.campusScope=='colleges'}}" class="input" bindtap="pickColleges">{{form.colleges || (form.campusSchool ? '开放学院，可多选该校学院' : '请先选择学校')}}</view>
+  <view wx:if="{{form.campusScope=='college' || form.campusScope=='school' || form.campusScope=='colleges'}}" class="input" bindtap="pickCampusSchool">{{tr.t(form.campusSchool || '学校全称', lang)}}</view>
+  <view wx:if="{{form.campusScope=='college'}}" class="input" bindtap="pickCampusCollege">{{tr.t(form.campusCollege || (form.campusSchool ? '可选，搜索该校学院' : '请先选择学校'), lang)}}</view>
+  <view wx:if="{{form.campusScope=='colleges'}}" class="input" bindtap="pickColleges">{{tr.t(form.colleges || (form.campusSchool ? '开放学院，可多选该校学院' : '请先选择学校'), lang)}}</view>
   <block wx:if="{{form.campusScope=='schools'}}">
     <view class="card" wx:for="{{form.campusTargets}}" wx:key="index">
-      <view class="input" bindtap="pickTargetSchool" data-i="{{index}}">{{item.school || '选学校'}}</view>
-      <view class="input" bindtap="pickTargetCollege" data-i="{{index}}">{{item.college || (item.school ? '学院可空' : '请先选学校')}}</view>
-      <view class="input" bindtap="pickTargetMajor" data-i="{{index}}">{{item.major || (item.college ? '专业可空' : '请先选学院')}}</view>
-      <view class="btn ghost" bindtap="removeCampusTarget" data-i="{{index}}">删除这组</view>
+      <view class="input" bindtap="pickTargetSchool" data-i="{{index}}">{{tr.t(item.school || '选学校', lang)}}</view>
+      <view class="input" bindtap="pickTargetCollege" data-i="{{index}}">{{tr.t(item.college || (item.school ? '学院可空' : '请先选学校'), lang)}}</view>
+      <view class="input" bindtap="pickTargetMajor" data-i="{{index}}">{{tr.t(item.major || (item.college ? '专业可空' : '请先选学院'), lang)}}</view>
+      <view class="btn ghost" bindtap="removeCampusTarget" data-i="{{index}}">{{tr.t('删除这组', lang)}}</view>
     </view>
-    <view class="btn ghost" bindtap="addCampusTarget">添加学校-学院-专业</view>
+    <view class="btn ghost" bindtap="addCampusTarget">{{tr.t('添加学校-学院-专业', lang)}}</view>
   </block>
-  <view class="label">出发日期</view>
+  <view class="label">{{tr.t('出发日期', lang)}}</view>
   <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
-    <view class="input">{{dateLabels[dateIndex]}}</view>
+    <view class="input">{{tr.t(dateLabels[dateIndex], lang)}}</view>
   </picker>
-  <view class="label">组织类型</view>
+  <view class="label">{{tr.t('组织类型', lang)}}</view>
   <picker mode="selector" range="{{organizerLabels}}" value="{{organizerIndex}}" bindchange="setOrganizer">
-    <view class="input">{{organizerLabels[organizerIndex]}}</view>
+    <view class="input">{{tr.t(organizerLabels[organizerIndex], lang)}}</view>
   </picker>
   <input
     wx:if="{{form.organizerType === 'company'}}"
     class="input"
-    placeholder="公司名称（公司开团必填）"
+    placeholder="{{tr.t('公司名称（公司开团必填）', lang)}}"
     value="{{form.companyName}}"
     bindinput="setCompanyName"
   />
@@ -88,21 +89,21 @@
     wx:if="{{form.organizerType === 'campus'}}"
     class="input"
     bindtap="pickCompanySchool"
-  >{{form.companyName || '学校名称（高校开团必填）'}}</view>
-  <view class="label">车型</view>
+  >{{tr.t(form.companyName || '学校名称（高校开团必填）', lang)}}</view>
+  <view class="label">{{tr.t('车型', lang)}}</view>
   <picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">
-    <view class="input">{{busNames[busIndex]}}</view>
+    <view class="input">{{tr.t(busNames[busIndex], lang)}}</view>
   </picker>
-  <input class="input" type="number" placeholder="最低成团人数" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
-  <view class="label">集合点</view>
+  <input class="input" type="number" placeholder="{{tr.t('最低成团人数', lang)}}" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
+  <view class="label">{{tr.t('集合点', lang)}}</view>
   <picker mode="selector" range="{{meetupNames}}" value="{{meetupIndex}}" bindchange="setMeetup">
-    <view class="input">{{meetupNames[meetupIndex]}}</view>
+    <view class="input">{{tr.t(meetupNames[meetupIndex], lang)}}</view>
   </picker>
-  <textarea class="input" placeholder="介绍" value="{{form.description}}" bindinput="setField" data-k="description" />
-  <view class="label">视频链接</view>
-  <textarea class="input" placeholder="一行一条 B 站链接，如 https://www.bilibili.com/video/BVxxxx" value="{{form.videoUrls}}" bindinput="setField" data-k="videoUrls" />
-  <view class="muted pad" style="padding-top:0">线路页会嵌播放器。请粘贴含 BV 号的完整链接。</view>
+  <textarea class="input" placeholder="{{tr.t('介绍', lang)}}" value="{{form.description}}" bindinput="setField" data-k="description" />
+  <view class="label">{{tr.t('视频链接', lang)}}</view>
+  <textarea class="input" placeholder="{{tr.t('一行一条 B 站链接，如 https://www.bilibili.com/video/BVxxxx', lang)}}" value="{{form.videoUrls}}" bindinput="setField" data-k="videoUrls" />
+  <view class="muted pad" style="padding-top:0">{{tr.t('线路页会嵌播放器。请粘贴含 BV 号的完整链接。', lang)}}</view>
 </block>
-<view class="pad" bindtap="togglePrivateJoin">{{form.privateJoin ? '☑' : '☐'}} 加密团（报名要口令）</view>
-<input wx:if="{{form.privateJoin}}" class="input" placeholder="入团口令 4～16 字，可空则自动生成" value="{{form.joinCode}}" bindinput="setField" data-k="joinCode" maxlength="16" />
-<view class="btn" bindtap="submit">提交审核</view>
+<view class="pad" bindtap="togglePrivateJoin">{{tr.t(form.privateJoin ? '☑' : '☐', lang)}} {{tr.t('加密团（报名要口令）', lang)}}</view>
+<input wx:if="{{form.privateJoin}}" class="input" placeholder="{{tr.t('入团口令 4～16 字，可空则自动生成', lang)}}" value="{{form.joinCode}}" bindinput="setField" data-k="joinCode" maxlength="16" />
+<view class="btn" bindtap="submit">{{tr.t('提交审核', lang)}}</view>

@@ -186,7 +186,7 @@ defineExpose({ play });
   margin-left: -36px;
   margin-top: -10px;
   text-align: center;
-  font-size: 11px;
+  font-size: calc(11px * var(--ui-scale));
   line-height: 1.25;
   font-weight: 700;
   color: #fff;
@@ -218,7 +218,7 @@ defineExpose({ play });
   background: #e1251b;
   color: #fff;
   font-weight: 800;
-  font-size: 16px;
+  font-size: calc(16px * var(--ui-scale));
   box-shadow: 0 6px 16px rgba(225,37,27,.35);
 }
 .lw-go:disabled { opacity: .55; }
@@ -233,7 +233,7 @@ defineExpose({ play });
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-scale));
   color: #5c5f56;
 }
 .lw-chip i {
@@ -280,12 +280,12 @@ defineExpose({ play });
 .lw-card em {
   display: block;
   font-style: normal;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-scale));
   color: #c77d3a;
   margin-bottom: 6px;
 }
 .lw-card.lv1 em { color: #e1251b; font-weight: 800; }
-.lw-card strong { display: block; font-size: 22px; margin-bottom: 8px; }
+.lw-card strong { display: block; font-size: calc(22px * var(--ui-scale)); margin-bottom: 8px; }
 @keyframes lw-pop {
   from { transform: scale(.4); opacity: 0; }
   to { transform: scale(1); opacity: 1; }

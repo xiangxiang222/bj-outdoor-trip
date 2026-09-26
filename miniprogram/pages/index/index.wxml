@@ -1,4 +1,5 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <view class="brand-box">
   <swiper class="brand-hero" style="height:360rpx" autoplay circular interval="4000" bindchange="onHeroChange">
     <swiper-item wx:for="{{home.brand.slides}}" wx:key="title" style="height:360rpx" bindtap="goSlide" data-id="{{item.routeId}}">
@@ -6,156 +7,156 @@
     </swiper-item>
   </swiper>
   <view class="brand-cap" bindtap="goCurrentSlide">
-    <view class="home-kicker">{{home.brand.lead || '在山野，遇见爱'}}</view>
+    <view class="home-kicker">{{tr.t(home.brand.lead || '在山野，遇见爱', lang)}}</view>
   </view>
 </view>
 <live-pulse scope="home"></live-pulse>
 <view class="campus-card">
   <view>
-    <view class="campus-title">学生认证后走学生价</view>
-    <view class="muted">部分团仅限高校，周末进山先看好集合点。</view>
+    <view class="campus-title">{{tr.t('学生认证后走学生价', lang)}}</view>
+    <view class="muted">{{tr.t('部分团仅限高校，周末进山先看好集合点。', lang)}}</view>
   </view>
-  <view class="campus-cta" bindtap="goStudent">去认证</view>
+  <view class="campus-cta" bindtap="goStudent">{{tr.t('去认证', lang)}}</view>
 </view>
 <view class="trip-hint" wx:if="{{upcoming}}" bindtap="goUpcoming">
   <view>
-    <text class="muted">即将出行</text>
-    <text class="trip-hint-title"> {{upcoming.startDate}} · {{upcoming.title}}</text>
+    <text class="muted">{{tr.t('即将出行', lang)}}</text>
+    <text class="trip-hint-title"> {{tr.t(upcoming.startDate, lang)}} · {{tr.t(upcoming.title, lang)}}</text>
   </view>
-  <text class="muted">行程 ›</text>
+  <text class="muted">{{tr.t('行程 ›', lang)}}</text>
 </view>
 
-<input class="feed-search" placeholder="{{searchHint}}" value="{{query}}" bindinput="onQuery" confirm-type="search" />
+<input class="feed-search" placeholder="{{tr.t(searchHint, lang)}}" value="{{query}}" bindinput="onQuery" confirm-type="search" />
 
 <view class="home-seg">
-  <view class="home-seg-btn {{view=='trips'?'on':''}}" bindtap="setView" data-view="trips">团</view>
-  <view class="home-seg-btn {{view=='routes'?'on':''}}" bindtap="setView" data-view="routes">线路</view>
+  <view class="home-seg-btn {{view=='trips'?'on':''}}" bindtap="setView" data-view="trips">{{tr.t('团', lang)}}</view>
+  <view class="home-seg-btn {{view=='routes'?'on':''}}" bindtap="setView" data-view="routes">{{tr.t('线路', lang)}}</view>
 </view>
 
 <block wx:if="{{view=='trips'}}">
 <scroll-view scroll-x class="city-bar">
-  <view class="chip {{!city?'on':''}}" bindtap="clearCity">热门</view>
-  <view class="chip {{city==item.name?'on':''}}" wx:for="{{home.cities}}" wx:key="name" bindtap="setCity" data-name="{{item.name}}">{{item.name}}</view>
+  <view class="chip {{!city?'on':''}}" bindtap="clearCity">{{tr.t('热门', lang)}}</view>
+  <view class="chip {{city==item.name?'on':''}}" wx:for="{{home.cities}}" wx:key="name" bindtap="setCity" data-name="{{item.name}}">{{tr.t(item.name, lang)}}</view>
 </scroll-view>
 <scroll-view scroll-x class="city-bar">
-  <view class="chip {{!tag?'on':''}}" bindtap="clearTag">全部玩法</view>
-  <view class="chip {{tag==item.name?'on':''}}" wx:for="{{home.tags}}" wx:key="id" bindtap="setTag" data-name="{{item.name}}">{{item.name}}</view>
+  <view class="chip {{!tag?'on':''}}" bindtap="clearTag">{{tr.t('全部玩法', lang)}}</view>
+  <view class="chip {{tag==item.name?'on':''}}" wx:for="{{home.tags}}" wx:key="id" bindtap="setTag" data-name="{{item.name}}">{{tr.t(item.name, lang)}}</view>
 </scroll-view>
 <scroll-view scroll-x class="city-bar">
-  <view class="chip {{!hostKind?'on':''}}" bindtap="clearHost">全部团</view>
-  <view class="chip {{hostKind=='official'?'on':''}}" bindtap="setHost" data-kind="official">官方</view>
-  <view class="chip {{hostKind=='company'?'on':''}}" bindtap="setHost" data-kind="company">公司</view>
-  <view class="chip {{hostKind=='campus'?'on':''}}" bindtap="setHost" data-kind="campus">高校</view>
-  <view class="chip {{hostKind=='individual'?'on':''}}" bindtap="setHost" data-kind="individual">个人</view>
+  <view class="chip {{!hostKind?'on':''}}" bindtap="clearHost">{{tr.t('全部团', lang)}}</view>
+  <view class="chip {{hostKind=='official'?'on':''}}" bindtap="setHost" data-kind="official">{{tr.t('官方', lang)}}</view>
+  <view class="chip {{hostKind=='company'?'on':''}}" bindtap="setHost" data-kind="company">{{tr.t('公司', lang)}}</view>
+  <view class="chip {{hostKind=='campus'?'on':''}}" bindtap="setHost" data-kind="campus">{{tr.t('高校', lang)}}</view>
+  <view class="chip {{hostKind=='individual'?'on':''}}" bindtap="setHost" data-kind="individual">{{tr.t('个人', lang)}}</view>
 </scroll-view>
 <scroll-view scroll-x class="city-bar" wx:if="{{hostKind=='company' && hostCompanies.length}}">
-  <view class="chip {{!companyName?'on':''}}" bindtap="clearCompany">全部公司</view>
-  <view class="chip {{companyName==item?'on':''}}" wx:for="{{hostCompanies}}" wx:key="*this" bindtap="setCompany" data-name="{{item}}">{{item}}</view>
+  <view class="chip {{!companyName?'on':''}}" bindtap="clearCompany">{{tr.t('全部公司', lang)}}</view>
+  <view class="chip {{companyName==item?'on':''}}" wx:for="{{hostCompanies}}" wx:key="*this" bindtap="setCompany" data-name="{{item}}">{{tr.t(item, lang)}}</view>
 </scroll-view>
 <scroll-view scroll-x class="city-bar" wx:if="{{hostKind=='campus' && hostSchools.length}}">
-  <view class="chip {{!school?'on':''}}" bindtap="clearSchool">全部高校</view>
-  <view class="chip {{school==item?'on':''}}" wx:for="{{hostSchools}}" wx:key="*this" bindtap="setSchool" data-name="{{item}}">{{item}}</view>
+  <view class="chip {{!school?'on':''}}" bindtap="clearSchool">{{tr.t('全部高校', lang)}}</view>
+  <view class="chip {{school==item?'on':''}}" wx:for="{{hostSchools}}" wx:key="*this" bindtap="setSchool" data-name="{{item}}">{{tr.t(item, lang)}}</view>
 </scroll-view>
 
 <view class="feed-toolbar">
-  <view class="hint">看看最近都在忙什么</view>
+  <view class="hint">{{tr.t('看看最近都在忙什么', lang)}}</view>
   <view class="tools">
-    <view class="tool-btn" bindtap="cycleSort">{{sortText}}</view>
-    <view class="tool-btn" bindtap="toggleFold" data-key="extra">{{fold.extra ? '收起' : '筛选'}}</view>
-    <view class="tool-btn play" bindtap="goPublish">发团</view>
+    <view class="tool-btn" bindtap="cycleSort">{{tr.t(sortText, lang)}}</view>
+    <view class="tool-btn" bindtap="toggleFold" data-key="extra">{{tr.t(fold.extra ? '收起' : '筛选', lang)}}</view>
+    <view class="tool-btn play" bindtap="goPublish">{{tr.t('发团', lang)}}</view>
   </view>
 </view>
 
 <block wx:if="{{fold.extra}}">
   <scroll-view scroll-x class="cal">
     <view class="cal-day {{date==item.date?'on':''}}" wx:for="{{calendar}}" wx:key="date" bindtap="setDate" data-date="{{item.date}}">
-      <view class="muted tiny">{{item.w}}</view>
-      <view class="cal-n">{{item.n}}</view>
-      <view class="muted tiny">{{item.count ? item.count + '团' : '—'}}</view>
+      <view class="muted tiny">{{tr.t(item.w, lang)}}</view>
+      <view class="cal-n">{{tr.t(item.n, lang)}}</view>
+      <view class="muted tiny">{{tr.t(item.count ? item.count + '团' : '—', lang)}}</view>
     </view>
   </scroll-view>
   <view class="chips">
-    <view class="chip {{monthKey==item.key && monthPicked?'on':''}}" wx:for="{{home.months}}" wx:key="key" bindtap="pickMonth" data-key="{{item.key}}">{{item.label}}</view>
+    <view class="chip {{monthKey==item.key && monthPicked?'on':''}}" wx:for="{{home.months}}" wx:key="key" bindtap="pickMonth" data-key="{{item.key}}">{{tr.t(item.label, lang)}}</view>
   </view>
   <view class="month-grid" wx:if="{{monthPicked}}">
-    <view class="month-cell {{date==item.date?'on':''}}" wx:for="{{monthDays}}" wx:key="date" bindtap="setDate" data-date="{{item.date}}">{{item.label}}</view>
+    <view class="month-cell {{date==item.date?'on':''}}" wx:for="{{monthDays}}" wx:key="date" bindtap="setDate" data-date="{{item.date}}">{{tr.t(item.label, lang)}}</view>
   </view>
   <view class="chips">
-    <view class="chip {{festivalKey==item.key?'on':''}}" wx:for="{{home.festivals}}" wx:key="key" bindtap="setFestival" data-key="{{item.key}}">{{item.name}}</view>
+    <view class="chip {{festivalKey==item.key?'on':''}}" wx:for="{{home.festivals}}" wx:key="key" bindtap="setFestival" data-key="{{item.key}}">{{tr.t(item.name, lang)}}</view>
   </view>
   <view class="chips">
-    <view class="offer-chip" wx:for="{{offers}}" wx:key="key" style="background:{{item.color}}" bindtap="setOffer" data-key="{{item.key}}">{{item.label}}</view>
+    <view class="offer-chip" wx:for="{{offers}}" wx:key="key" style="background:{{item.color}}" bindtap="setOffer" data-key="{{item.key}}">{{tr.t(item.label, lang)}}</view>
   </view>
 </block>
 
 <view class="picked" wx:if="{{picked.length}}">
-  <view class="picked-chip" wx:for="{{picked}}" wx:key="key" bindtap="clearPick" data-key="{{item.key}}">{{item.label}} ×</view>
+  <view class="picked-chip" wx:for="{{picked}}" wx:key="key" bindtap="clearPick" data-key="{{item.key}}">{{tr.t(item.label, lang)}} ×</view>
 </view>
 
 <view class="feed-card" wx:for="{{groups}}" wx:key="id" bindtap="goGroup" data-id="{{item.id}}">
   <view class="feed-cover">
     <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" lazy-load />
-    <view wx:else class="feed-ph">{{item.coverMark}}</view>
-    <view class="feed-boarded">{{item.boarded}}</view>
+    <view wx:else class="feed-ph">{{tr.t(item.coverMark, lang)}}</view>
+    <view class="feed-boarded">{{tr.t(item.boarded, lang)}}</view>
   </view>
   <view class="feed-body">
-    <view class="feed-when">{{item.feedWhen}} · {{item.city}}</view>
-    <view class="feed-title"><view class="trip-kind {{item.kind || 'individual'}}"><view class="trip-kind-ico"></view>{{item.kindLabel || '个人'}}</view> <text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{item.privateLabel || '加密团'}}</text> {{item.route.title}}</view>
-    <view class="feed-host">{{item.host}}</view>
-    <view class="feed-tagline" wx:if="{{item.tagline}}">{{item.tagline}}</view>
-    <view class="feed-price" wx:if="{{item.free}}">免费</view>
+    <view class="feed-when">{{tr.t(item.feedWhen, lang)}} · {{tr.t(item.city, lang)}}</view>
+    <view class="feed-title"><view class="trip-kind {{item.kind || 'individual'}}"><view class="trip-kind-ico"></view>{{tr.t(item.kindLabel || '个人', lang)}}</view> <text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{tr.t(item.privateLabel || '加密团', lang)}}</text> {{tr.t(item.route.title, lang)}}</view>
+    <view class="feed-host">{{tr.t(item.host, lang)}}</view>
+    <view class="feed-tagline" wx:if="{{item.tagline}}">{{tr.t(item.tagline, lang)}}</view>
+    <view class="feed-price" wx:if="{{item.free}}">{{tr.t('免费', lang)}}</view>
     <view class="feed-price" wx:else>
-      <text class="strong">¥{{item.quote.originPrice}}</text>
-      <text> 会员 ¥{{item.quote.memberPrice}}</text>
+      <text class="strong">¥{{tr.t(item.quote.originPrice, lang)}}</text>
+      <text> {{tr.t('会员 ¥', lang)}}{{tr.t(item.quote.memberPrice, lang)}}</text>
     </view>
   </view>
 </view>
 <view wx:if="{{loading && !groups.length}}" class="card">
-  <view class="pad muted">正在加载近期的团…</view>
+  <view class="pad muted">{{tr.t('正在加载近期的团…', lang)}}</view>
 </view>
 <view wx:elif="{{!groups.length}}" class="card">
   <view class="pad">
-    <view class="title">还没有符合条件的团</view>
-    <view class="muted">过审的团会出现在这里。也可以先看官方线路。</view>
+    <view class="title">{{tr.t('还没有符合条件的团', lang)}}</view>
+    <view class="muted">{{tr.t('过审的团会出现在这里。也可以先看官方线路。', lang)}}</view>
     <view class="catalog-row" style="margin-top:16rpx">
-      <view class="tool-btn ghost-line" catchtap="setView" data-view="routes">先看线路</view>
-      <view class="tool-btn play" catchtap="goPublish">去发团</view>
+      <view class="tool-btn ghost-line" catchtap="setView" data-view="routes">{{tr.t('先看线路', lang)}}</view>
+      <view class="tool-btn play" catchtap="goPublish">{{tr.t('去发团', lang)}}</view>
     </view>
   </view>
 </view>
 </block>
 
 <block wx:else>
-  <view class="muted catalog-lead">官方线路。点进去看介绍，有排期就能报，没有可以自己开一团。</view>
+  <view class="muted catalog-lead">{{tr.t('官方线路。点进去看介绍，有排期就能报，没有可以自己开一团。', lang)}}</view>
   <scroll-view scroll-x class="city-bar">
-    <view class="chip {{routeDays==0?'on':''}}" bindtap="setRouteDays" data-d="0">全部天数</view>
-    <view class="chip {{routeDays==1?'on':''}}" bindtap="setRouteDays" data-d="1">1日</view>
-    <view class="chip {{routeDays==2?'on':''}}" bindtap="setRouteDays" data-d="2">2日</view>
-    <view class="chip {{routeDays==3?'on':''}}" bindtap="setRouteDays" data-d="3">3日</view>
-    <view class="chip {{routeDays=='multi'?'on':''}}" bindtap="setRouteDays" data-d="multi">多日</view>
+    <view class="chip {{routeDays==0?'on':''}}" bindtap="setRouteDays" data-d="0">{{tr.t('全部天数', lang)}}</view>
+    <view class="chip {{routeDays==1?'on':''}}" bindtap="setRouteDays" data-d="1">{{tr.t('1日', lang)}}</view>
+    <view class="chip {{routeDays==2?'on':''}}" bindtap="setRouteDays" data-d="2">{{tr.t('2日', lang)}}</view>
+    <view class="chip {{routeDays==3?'on':''}}" bindtap="setRouteDays" data-d="3">{{tr.t('3日', lang)}}</view>
+    <view class="chip {{routeDays=='multi'?'on':''}}" bindtap="setRouteDays" data-d="multi">{{tr.t('多日', lang)}}</view>
   </scroll-view>
   <scroll-view scroll-x class="city-bar">
-    <view class="chip {{routeTag==''?'on':''}}" bindtap="setRouteTag" data-c="">全部玩法</view>
-    <view class="play-tag" wx:for="{{routeTags}}" wx:key="id" style="background:{{item.color}};opacity:{{routeTag==item.name || routeTag=='' ? 1 : 0.45}}" bindtap="setRouteTag" data-c="{{item.name}}">{{item.name}}</view>
+    <view class="chip {{routeTag==''?'on':''}}" bindtap="setRouteTag" data-c="">{{tr.t('全部玩法', lang)}}</view>
+    <view class="play-tag" wx:for="{{routeTags}}" wx:key="id" style="background:{{item.color}};opacity:{{routeTag==item.name || routeTag=='' ? 1 : 0.45}}" bindtap="setRouteTag" data-c="{{item.name}}">{{tr.t(item.name, lang)}}</view>
   </scroll-view>
-  <view wx:if="{{routeErr}}" class="muted pad">{{routeErr}}</view>
+  <view wx:if="{{routeErr}}" class="muted pad">{{tr.t(routeErr, lang)}}</view>
   <view class="card" wx:for="{{routeList}}" wx:key="id" bindtap="goRoute" data-id="{{item.id}}">
     <image class="cover" src="{{item.cover}}" mode="aspectFill" />
     <view class="pad">
-      <view class="title">{{item.title}}</view>
-      <view class="muted">{{item.region}} · {{item.days}}日 · {{item.difficulty}}</view>
+      <view class="title">{{tr.t(item.title, lang)}}</view>
+      <view class="muted">{{tr.t(item.region, lang)}} · {{tr.t(item.days, lang)}}{{tr.t('日 ·', lang)}} {{tr.t(item.difficulty, lang)}}</view>
       <view class="price">
-        <text wx:if="{{item.fromPrice > item.memberFromPrice}}" class="price-origin">¥{{item.fromPrice}}</text>
-        ¥{{item.memberFromPrice || item.fromPrice}} 起
+        <text wx:if="{{item.fromPrice > item.memberFromPrice}}" class="price-origin">¥{{tr.t(item.fromPrice, lang)}}</text>
+        ¥{{tr.t(item.memberFromPrice || item.fromPrice, lang)}} {{tr.t('起', lang)}}
       </view>
     </view>
   </view>
-  <view wx:if="{{!routeList.length}}" class="muted pad">没有匹配的线路</view>
+  <view wx:if="{{!routeList.length}}" class="muted pad">{{tr.t('没有匹配的线路', lang)}}</view>
   <view class="card" bindtap="goRouteApply">
     <view class="pad">
-      <view class="title">申请收录线路</view>
-      <view class="muted">留下联系方式，通过后会出现在线路目录</view>
+      <view class="title">{{tr.t('申请收录线路', lang)}}</view>
+      <view class="muted">{{tr.t('留下联系方式，通过后会出现在线路目录', lang)}}</view>
     </view>
   </view>
 </block>
-<view class="home-foot muted" bindtap="goOfficial">客服与规则</view>
+<view class="home-foot muted" bindtap="goOfficial">{{tr.t('客服与规则', lang)}}</view>
