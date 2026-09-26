@@ -12,6 +12,9 @@ import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import * as echarts from "echarts";
 import http from "@/api/http";
+import { readLook, SIZES } from "@/utils/appearance";
+
+const px = (n) => Math.round(n * (SIZES[readLook().size] || 1));
 
 const route = useRoute();
 const g1 = ref();
@@ -21,19 +24,19 @@ const g3 = ref();
 onMounted(async () => {
   const d = (await http.get(`/schedules/${route.params.id}/demographics`)).data;
   echarts.init(g1.value).setOption({
-    title: { text: "男女比例", left: "center", textStyle: { fontSize: 14 } },
+    title: { text: "男女比例", left: "center", textStyle: { fontSize: px(14) } },
     tooltip: { trigger: "item" },
     series: [{ type: "pie", radius: ["36%", "62%"], data: d.gender }],
   });
   echarts.init(g2.value).setOption({
-    title: { text: "年龄段", left: "center", textStyle: { fontSize: 14 } },
+    title: { text: "年龄段", left: "center", textStyle: { fontSize: px(14) } },
     tooltip: { trigger: "item" },
     series: [{ type: "pie", radius: "62%", data: d.age.filter((x) => x.value) }],
   });
   echarts.init(g3.value).setOption({
-    title: { text: "籍贯（身份证前缀）", left: "center", textStyle: { fontSize: 14 } },
+    title: { text: "籍贯（身份证前缀）", left: "center", textStyle: { fontSize: px(14) } },
     tooltip: {},
-    xAxis: { type: "category", data: d.hometown.map((x) => x.name), axisLabel: { rotate: 30, fontSize: 10 } },
+    xAxis: { type: "category", data: d.hometown.map((x) => x.name), axisLabel: { rotate: 30, fontSize: px(10) } },
     yAxis: { type: "value" },
     series: [{ type: "bar", data: d.hometown.map((x) => x.value), itemStyle: { color: "#2d6a4f" } }],
   });

@@ -1,5 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <view class="card"><view class="pad">
-  <view class="title">活动已结束</view>
-  <view class="muted">这个入口不再开放。</view>
+  <view class="title">{{tr.t('活动已结束', lang)}}</view>
+  <view class="muted">{{tr.t('这个入口不再开放。', lang)}}</view>
 </view></view>

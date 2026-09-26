@@ -1,6 +1,7 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <picker range="{{kinds}}" range-key="label" bindchange="onKind">
-  <view class="pad">类型：{{kinds[kindIndex].label}}</view>
+  <view class="pad">{{tr.t('类型：', lang)}}{{tr.t(kinds[kindIndex].label, lang)}}</view>
 </picker>
-<textarea class="input" placeholder="写清页面和问题" value="{{content}}" bindinput="onInput" />
-<button bindtap="submit">提交</button>
+<textarea class="input" placeholder="{{tr.t('写清页面和问题', lang)}}" value="{{content}}" bindinput="onInput" />
+<button bindtap="submit">{{tr.t('提交', lang)}}</button>

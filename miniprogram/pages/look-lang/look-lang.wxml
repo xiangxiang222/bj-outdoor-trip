@@ -1,8 +1,9 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view class="sec">{{copy.pickLang}}</view>
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="sec">{{tr.t(copy.pickLang, lang)}}</view>
 <view class="list">
   <view class="row" data-lang="zh" bindtap="pick">
-    <text>{{copy.zh}}</text>
+    <text>{{tr.t(copy.zh, lang)}}</text>
     <text class="mark" wx:if="{{look.lang==='zh'}}">✓</text>
   </view>
   <view class="row" data-lang="en" bindtap="pick">
@@ -10,7 +11,7 @@
     <text class="mark" wx:if="{{look.lang==='en'}}">✓</text>
   </view>
   <view class="row" data-lang="tw" bindtap="pick">
-    <text>{{copy.tw}}</text>
+    <text>{{tr.t(copy.tw, lang)}}</text>
     <text class="mark" wx:if="{{look.lang==='tw'}}">✓</text>
   </view>
 </view>

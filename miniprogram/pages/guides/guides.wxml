@@ -1,13 +1,14 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view class="pad muted">成团后系统会按线路类型匹配导游。也可以先了解领队风格再报名。</view>
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="pad muted">{{tr.t('成团后系统会按线路类型匹配导游。也可以先了解领队风格再报名。', lang)}}</view>
 <view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
   <view class="pad guide-row">
-    <view class="guide-face">{{item.initial}}</view>
+    <view class="guide-face">{{tr.t(item.initial, lang)}}</view>
     <view class="guide-body">
-      <view class="row"><text class="title">{{item.name}}</text><text class="muted">{{item.rating}} 分</text></view>
-      <view class="muted">{{item.years}}年 · {{item.specialties}}</view>
-      <view style="margin-top:8rpx">{{item.bio}}</view>
+      <view class="row"><text class="title">{{tr.t(item.name, lang)}}</text><text class="muted">{{tr.t(item.rating, lang)}} {{tr.t('分', lang)}}</text></view>
+      <view class="muted">{{tr.t(item.years, lang)}}{{tr.t('年 ·', lang)}} {{tr.t(item.specialties, lang)}}</view>
+      <view style="margin-top:8rpx">{{tr.t(item.bio, lang)}}</view>
     </view>
   </view>
 </view>
-<view wx:if="{{err}}" class="muted pad">{{err}}</view>
+<view wx:if="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>

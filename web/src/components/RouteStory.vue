@@ -31,7 +31,7 @@ defineEmits(["preview"]);
 }
 .story-fig figcaption {
   margin-top: 6px;
-  font-size: 12px;
+  font-size: calc(12px * var(--ui-scale));
   color: var(--muted);
 }
 </style>

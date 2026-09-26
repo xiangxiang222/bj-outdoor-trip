@@ -1,25 +1,26 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <view class="auth-page" wx:if="{{!account}}">
   <view class="auth-dialog">
-    <view class="auth-title">提示</view>
-    <view class="auth-text">您还未登录，登录授权后使用</view>
+    <view class="auth-title">{{tr.t('提示', lang)}}</view>
+    <view class="auth-text">{{tr.t('您还未登录，登录授权后使用', lang)}}</view>
     <view class="auth-actions">
-      <view class="auth-cancel" bindtap="cancel">取消</view>
-      <button class="auth-go" open-type="getPhoneNumber" bindgetphonenumber="onGetPhone">去登录</button>
+      <view class="auth-cancel" bindtap="cancel">{{tr.t('取消', lang)}}</view>
+      <button class="auth-go" open-type="getPhoneNumber" bindgetphonenumber="onGetPhone">{{tr.t('去登录', lang)}}</button>
     </view>
   </view>
-  <view class="auth-alt" bindtap="showAccount">手机号密码登录</view>
+  <view class="auth-alt" bindtap="showAccount">{{tr.t('手机号密码登录', lang)}}</view>
 </view>
 
 <block wx:else>
   <view class="chips pad">
-    <view class="chip {{tab==='login'?'on':''}}" bindtap="setTab" data-tab="login">登录</view>
-    <view class="chip {{tab==='register'?'on':''}}" bindtap="setTab" data-tab="register">注册</view>
+    <view class="chip {{tab==='login'?'on':''}}" bindtap="setTab" data-tab="login">{{tr.t('登录', lang)}}</view>
+    <view class="chip {{tab==='register'?'on':''}}" bindtap="setTab" data-tab="register">{{tr.t('注册', lang)}}</view>
   </view>
 
   <block wx:if="{{tab==='login'}}">
-    <input class="input" placeholder="手机号" bindinput="setPhone" value="{{phone}}" maxlength="11" />
-    <input class="input" placeholder="密码" password bindinput="setPwd" value="{{password}}" />
+    <input class="input" placeholder="{{tr.t('手机号', lang)}}" bindinput="setPhone" value="{{phone}}" maxlength="11" />
+    <input class="input" placeholder="{{tr.t('密码', lang)}}" password bindinput="setPwd" value="{{password}}" />
     <view class="captcha-box" bindtap="loadCaptcha">
       <image
         wx:if="{{captchaImage}}"
@@ -29,16 +30,16 @@
         style="width: 100%; height: 120rpx;"
         binderror="onCaptchaError"
       />
-      <view wx:else class="muted">{{captchaLoading ? '加载中…' : '点击获取验证码'}}</view>
+      <view wx:else class="muted">{{tr.t(captchaLoading ? '加载中…' : '点击获取验证码', lang)}}</view>
     </view>
-    <input class="input" placeholder="请输入上图字符" bindinput="setCaptcha" value="{{captcha}}" maxlength="4" />
-    <view class="muted pad">看不清请点击图片刷新</view>
-    <view class="btn" bindtap="pwdLogin">登录</view>
+    <input class="input" placeholder="{{tr.t('请输入上图字符', lang)}}" bindinput="setCaptcha" value="{{captcha}}" maxlength="4" />
+    <view class="muted pad">{{tr.t('看不清请点击图片刷新', lang)}}</view>
+    <view class="btn" bindtap="pwdLogin">{{tr.t('登录', lang)}}</view>
   </block>
 
   <block wx:else>
-    <input class="input" placeholder="昵称" bindinput="setNickname" value="{{nickname}}" />
-    <input class="input" placeholder="11位手机号" bindinput="setPhone" value="{{phone}}" maxlength="11" />
+    <input class="input" placeholder="{{tr.t('昵称', lang)}}" bindinput="setNickname" value="{{nickname}}" />
+    <input class="input" placeholder="{{tr.t('11位手机号', lang)}}" bindinput="setPhone" value="{{phone}}" maxlength="11" />
     <view class="captcha-box" bindtap="loadCaptcha">
       <image
         wx:if="{{captchaImage}}"
@@ -48,12 +49,12 @@
         style="width: 100%; height: 120rpx;"
         binderror="onCaptchaError"
       />
-      <view wx:else class="muted">{{captchaLoading ? '加载中…' : '点击获取验证码'}}</view>
+      <view wx:else class="muted">{{tr.t(captchaLoading ? '加载中…' : '点击获取验证码', lang)}}</view>
     </view>
-    <input class="input" placeholder="请输入上图字符" bindinput="setCaptcha" value="{{captcha}}" maxlength="4" />
-    <input class="input" placeholder="设置密码（至少6位）" password bindinput="setPwd" value="{{password}}" />
-    <input class="input" placeholder="确认密码" password bindinput="setPwd2" value="{{password2}}" />
-    <view class="muted pad">看不清请点击图片刷新</view>
-    <view class="btn" bindtap="register">注册</view>
+    <input class="input" placeholder="{{tr.t('请输入上图字符', lang)}}" bindinput="setCaptcha" value="{{captcha}}" maxlength="4" />
+    <input class="input" placeholder="{{tr.t('设置密码（至少6位）', lang)}}" password bindinput="setPwd" value="{{password}}" />
+    <input class="input" placeholder="{{tr.t('确认密码', lang)}}" password bindinput="setPwd2" value="{{password2}}" />
+    <view class="muted pad">{{tr.t('看不清请点击图片刷新', lang)}}</view>
+    <view class="btn" bindtap="register">{{tr.t('注册', lang)}}</view>
   </block>
 </block>

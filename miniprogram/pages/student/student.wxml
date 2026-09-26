@@ -1,25 +1,26 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view class="pad muted">认证时请上传学生证或校友证。学校、学院、专业可从北京高校名单里选，也可以不填。通过后可走学生价；部分团只对本院、本校或指定学校学院开放。校友不享受学生价。</view>
-<view class="pad" wx:if="{{certified}}" style="color:#2d6a4f">已认证{{kindLabel}}{{placeText}}</view>
-<view class="pad muted" wx:elif="{{pending}}">审核中{{placeText}}</view>
-<view class="pad muted" wx:elif="{{rejected}}">上次未通过，可修改后再次提交。</view>
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="pad muted">{{tr.t('认证时请上传学生证或校友证。学校、学院、专业可从北京高校名单里选，也可以不填。通过后可走学生价；部分团只对本院、本校或指定学校学院开放。校友不享受学生价。', lang)}}</view>
+<view class="pad" wx:if="{{certified}}" style="color:#2d6a4f">{{tr.t('已认证', lang)}}{{tr.t(kindLabel, lang)}}{{tr.t(placeText, lang)}}</view>
+<view class="pad muted" wx:elif="{{pending}}">{{tr.t('审核中', lang)}}{{tr.t(placeText, lang)}}</view>
+<view class="pad muted" wx:elif="{{rejected}}">{{tr.t('上次未通过，可修改后再次提交。', lang)}}</view>
 
-<view class="pad">身份</view>
+<view class="pad">{{tr.t('身份', lang)}}</view>
 <picker mode="selector" range="{{kindLabels}}" value="{{kindIndex}}" disabled="{{certified}}" bindchange="setKind">
-  <view class="input">{{kindLabels[kindIndex]}}</view>
+  <view class="input">{{tr.t(kindLabels[kindIndex], lang)}}</view>
 </picker>
-<view class="pad">学校（可空）</view>
-<view class="input" bindtap="pickSchool">{{school || '可选，搜索北京高校'}}</view>
-<view class="pad">学院（可空）</view>
-<view class="input" bindtap="pickCollege">{{college || (school ? '可选，搜索该校学院' : '请先选择学校')}}</view>
-<view class="pad">专业（可空）</view>
-<view class="input" bindtap="pickMajor">{{major || (college ? '可选，搜索该院专业' : '请先选择学院')}}</view>
+<view class="pad">{{tr.t('学校（可空）', lang)}}</view>
+<view class="input" bindtap="pickSchool">{{tr.t(school || '可选，搜索北京高校', lang)}}</view>
+<view class="pad">{{tr.t('学院（可空）', lang)}}</view>
+<view class="input" bindtap="pickCollege">{{tr.t(college || (school ? '可选，搜索该校学院' : '请先选择学校'), lang)}}</view>
+<view class="pad">{{tr.t('专业（可空）', lang)}}</view>
+<view class="input" bindtap="pickMajor">{{tr.t(major || (college ? '可选，搜索该院专业' : '请先选择学院'), lang)}}</view>
 <block wx:if="{{campusKind=='student'}}">
-  <view class="pad">学号</view>
-  <input class="input" value="{{studentNo}}" placeholder="学生证上的学号" disabled="{{certified}}" bindinput="onNo" />
+  <view class="pad">{{tr.t('学号', lang)}}</view>
+  <input class="input" value="{{studentNo}}" placeholder="{{tr.t('学生证上的学号', lang)}}" disabled="{{certified}}" bindinput="onNo" />
 </block>
-<view class="pad">学生证 / 校友证</view>
+<view class="pad">{{tr.t('学生证 / 校友证', lang)}}</view>
 <image wx:if="{{studentCardUrl}}" src="{{studentCardUrl}}" mode="aspectFit" style="width:100%;height:280rpx;background:#eee" bindtap="pickCard" />
-<button wx:else class="ghost" disabled="{{certified}}" bindtap="pickCard">上传照片</button>
-<button bindtap="submit" disabled="{{loading || certified}}">{{loading ? '提交中…' : '提交认证'}}</button>
-<button class="ghost" wx:if="{{redirect}}" bindtap="goBack">返回</button>
+<button wx:else class="ghost" disabled="{{certified}}" bindtap="pickCard">{{tr.t('上传照片', lang)}}</button>
+<button bindtap="submit" disabled="{{loading || certified}}">{{tr.t(loading ? '提交中…' : '提交认证', lang)}}</button>
+<button class="ghost" wx:if="{{redirect}}" bindtap="goBack">{{tr.t('返回', lang)}}</button>

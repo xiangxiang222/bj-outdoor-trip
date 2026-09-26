@@ -2,13 +2,13 @@
   <div v-if="u">
     <div class="card">
       <div class="pad guide-row">
-        <div class="guide-face" style="width:64px;height:64px;font-size:22px">
+        <div class="guide-face" style="width:64px;height:64px;font-size: calc(22px * var(--ui-scale))">
           <img v-if="u.avatar" :src="u.avatar" :alt="u.nickname" />
           <span v-else>{{ (u.nickname || "友").slice(0, 1) }}</span>
         </div>
         <div>
           <div class="row">
-            <strong style="font-size:18px">{{ u.nickname }}</strong>
+            <strong style="font-size: calc(18px * var(--ui-scale))">{{ u.nickname }}</strong>
             <span class="tag" v-if="u.isLeader">领队</span>
             <span class="tag" v-if="u.lifeStage">{{ u.lifeStage }}</span>
           </div>

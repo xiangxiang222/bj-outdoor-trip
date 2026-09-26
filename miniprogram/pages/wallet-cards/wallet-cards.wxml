@@ -1,17 +1,18 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <view class="card">
   <view class="pad">
-    <view class="rule-title">可提现额度</view>
-    <view class="muted">当前账户余额全部可提现，不设最低提现金额。微信零钱按整数元记账。因微信商家转账到零钱单笔上限 2000 元，超过 2000 元时可连续分笔，每笔提交后立即处理。</view>
-    <view class="muted" wx:if="{{loaded}}">当前可提现 {{available}} 元。</view>
-    <view class="rule-title">每日提现次数</view>
-    <view class="muted">不限制次数，可随时申请。</view>
-    <view class="rule-title">提现时间</view>
-    <view class="muted">每天 00:00–23:59（北京时间），全天可申请。</view>
-    <view class="rule-title">到账时间</view>
-    <view class="muted">提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。</view>
-    <view class="rule-title">其他说明</view>
-    <view class="muted">微信支付转到零钱须完成实名并验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。</view>
+    <view class="rule-title">{{tr.t('可提现额度', lang)}}</view>
+    <view class="muted">{{tr.t('当前账户余额全部可提现，不设最低提现金额。微信零钱按整数元记账。因微信商家转账到零钱单笔上限 2000 元，超过 2000 元时可连续分笔，每笔提交后立即处理。', lang)}}</view>
+    <view class="muted" wx:if="{{loaded}}">{{tr.t('当前可提现', lang)}} {{tr.t(available, lang)}} {{tr.t('元。', lang)}}</view>
+    <view class="rule-title">{{tr.t('每日提现次数', lang)}}</view>
+    <view class="muted">{{tr.t('不限制次数，可随时申请。', lang)}}</view>
+    <view class="rule-title">{{tr.t('提现时间', lang)}}</view>
+    <view class="muted">{{tr.t('每天 00:00–23:59（北京时间），全天可申请。', lang)}}</view>
+    <view class="rule-title">{{tr.t('到账时间', lang)}}</view>
+    <view class="muted">{{tr.t('提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。', lang)}}</view>
+    <view class="rule-title">{{tr.t('其他说明', lang)}}</view>
+    <view class="muted">{{tr.t('微信支付转到零钱须完成实名并验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。', lang)}}</view>
   </view>
 </view>
-<view class="btn" bindtap="goWallet">去我的钱包</view>
+<view class="btn" bindtap="goWallet">{{tr.t('去我的钱包', lang)}}</view>

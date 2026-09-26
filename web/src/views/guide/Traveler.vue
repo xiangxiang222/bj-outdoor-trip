@@ -2,12 +2,12 @@
   <div v-if="t">
     <div class="card">
       <div class="pad guide-row">
-        <div class="guide-face" style="width:64px;height:64px;font-size:22px">
+        <div class="guide-face" style="width:64px;height:64px;font-size: calc(22px * var(--ui-scale))">
           <img v-if="t.avatar" :src="t.avatar" :alt="t.name" />
           <span v-else>{{ (t.name || "客").slice(0, 1) }}</span>
         </div>
         <div>
-          <strong style="font-size:18px">{{ t.name }}</strong>
+          <strong style="font-size: calc(18px * var(--ui-scale))">{{ t.name }}</strong>
           <p class="muted" style="margin:6px 0 0">
             {{ genderText(t.gender) }}
             <template v-if="t.lifeStage"> · {{ t.lifeStage }}</template>

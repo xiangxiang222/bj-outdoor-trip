@@ -1,33 +1,34 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view class="muted pad" style="padding-bottom:0">官方线路。点进去看介绍，有排期就能报，没有可以自己开一团。</view>
-<input class="input" placeholder="搜索长城 / 十渡 / 坝上" value="{{q}}" bindconfirm="onSearch" />
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="muted pad" style="padding-bottom:0">{{tr.t('官方线路。点进去看介绍，有排期就能报，没有可以自己开一团。', lang)}}</view>
+<input class="input" placeholder="{{tr.t('搜索长城 / 十渡 / 坝上', lang)}}" value="{{q}}" bindconfirm="onSearch" />
 <view class="chips">
-  <view class="chip {{days==0?'on':''}}" bindtap="setDays" data-d="0">全部天数</view>
-  <view class="chip {{days==1?'on':''}}" bindtap="setDays" data-d="1">1日</view>
-  <view class="chip {{days==2?'on':''}}" bindtap="setDays" data-d="2">2日</view>
-  <view class="chip {{days==3?'on':''}}" bindtap="setDays" data-d="3">3日</view>
-  <view class="chip {{days=='multi'?'on':''}}" bindtap="setDays" data-d="multi">多日</view>
+  <view class="chip {{days==0?'on':''}}" bindtap="setDays" data-d="0">{{tr.t('全部天数', lang)}}</view>
+  <view class="chip {{days==1?'on':''}}" bindtap="setDays" data-d="1">{{tr.t('1日', lang)}}</view>
+  <view class="chip {{days==2?'on':''}}" bindtap="setDays" data-d="2">{{tr.t('2日', lang)}}</view>
+  <view class="chip {{days==3?'on':''}}" bindtap="setDays" data-d="3">{{tr.t('3日', lang)}}</view>
+  <view class="chip {{days=='multi'?'on':''}}" bindtap="setDays" data-d="multi">{{tr.t('多日', lang)}}</view>
 </view>
 <view class="chips">
-  <view class="chip {{tag==''?'on':''}}" bindtap="setTag" data-c="">全部玩法</view>
-  <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}}" bindtap="setTag" data-c="{{item.name}}">{{item.name}}</view>
+  <view class="chip {{tag==''?'on':''}}" bindtap="setTag" data-c="">{{tr.t('全部玩法', lang)}}</view>
+  <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}}" bindtap="setTag" data-c="{{item.name}}">{{tr.t(item.name, lang)}}</view>
 </view>
-<view wx:if="{{err}}" class="muted pad">{{err}}</view>
-<view wx:if="{{!list.length}}" class="muted pad">没有匹配的线路</view>
+<view wx:if="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>
+<view wx:if="{{!list.length}}" class="muted pad">{{tr.t('没有匹配的线路', lang)}}</view>
 <view class="card" bindtap="goApply">
   <view class="pad">
-    <view class="title">申请收录线路</view>
-    <view class="muted">留下联系方式，通过后会出现在线路目录</view>
+    <view class="title">{{tr.t('申请收录线路', lang)}}</view>
+    <view class="muted">{{tr.t('留下联系方式，通过后会出现在线路目录', lang)}}</view>
   </view>
 </view>
 <view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
   <image class="cover" src="{{item.cover}}" mode="aspectFill" />
   <view class="pad">
-    <view class="title">{{item.title}}</view>
-    <view class="muted">{{item.region}} · {{item.days}}日 · {{item.difficulty}}</view>
+    <view class="title">{{tr.t(item.title, lang)}}</view>
+    <view class="muted">{{tr.t(item.region, lang)}} · {{tr.t(item.days, lang)}}{{tr.t('日 ·', lang)}} {{tr.t(item.difficulty, lang)}}</view>
     <view class="price">
-      <text wx:if="{{item.fromPrice > item.memberFromPrice}}" class="price-origin">¥{{item.fromPrice}}</text>
-      ¥{{item.memberFromPrice || item.fromPrice}} 起
+      <text wx:if="{{item.fromPrice > item.memberFromPrice}}" class="price-origin">¥{{tr.t(item.fromPrice, lang)}}</text>
+      ¥{{tr.t(item.memberFromPrice || item.fromPrice, lang)}} {{tr.t('起', lang)}}
     </view>
   </view>
 </view>

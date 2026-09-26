@@ -1,48 +1,49 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <view class="act-hero">
   <view class="act-hero-text">
-    <view class="title">同城也能约</view>
-    <view class="muted light">掼蛋、跑步、看电影。山野线路请回首页。</view>
+    <view class="title">{{tr.t('同城也能约', lang)}}</view>
+    <view class="muted light">{{tr.t('掼蛋、跑步、看电影。山野线路请回首页。', lang)}}</view>
   </view>
-  <view class="btn gold" bindtap="goPublish">发起一局</view>
+  <view class="btn gold" bindtap="goPublish">{{tr.t('发起一局', lang)}}</view>
 </view>
-<input class="feed-search" placeholder="搜局、城区、主理人" value="{{query}}" bindinput="onQuery" confirm-type="search" />
+<input class="feed-search" placeholder="{{tr.t('搜局、城区、主理人', lang)}}" value="{{query}}" bindinput="onQuery" confirm-type="search" />
 <view class="kind-grid">
   <view class="act-kind {{kind==item.key?'on':''}}" wx:for="{{kinds}}" wx:key="key" bindtap="setKind" data-key="{{item.key}}">
-    <view class="emoji">{{item.emoji}}</view>
-    <view>{{item.label}}</view>
-    <view class="muted tiny">{{item.hint}}</view>
+    <view class="emoji">{{tr.t(item.emoji, lang)}}</view>
+    <view>{{tr.t(item.label, lang)}}</view>
+    <view class="muted tiny">{{tr.t(item.hint, lang)}}</view>
   </view>
 </view>
 <view class="feed-toolbar">
-  <view class="hint">本周 {{weekCount}} 场 · 共 {{list.length}} 场</view>
+  <view class="hint">{{tr.t('本周', lang)}} {{tr.t(weekCount, lang)}} {{tr.t('场 · 共', lang)}} {{tr.t(list.length, lang)}} {{tr.t('场', lang)}}</view>
   <view class="tools">
-    <view class="tool-btn" bindtap="cycleSort">{{sortText}}</view>
-    <view class="tool-btn play" bindtap="goPublish">发起</view>
+    <view class="tool-btn" bindtap="cycleSort">{{tr.t(sortText, lang)}}</view>
+    <view class="tool-btn play" bindtap="goPublish">{{tr.t('发起', lang)}}</view>
   </view>
 </view>
 <view class="picked" wx:if="{{picked.length}}">
-  <view class="picked-chip" wx:for="{{picked}}" wx:key="key" bindtap="clearPick" data-key="{{item.key}}">{{item.label}} ×</view>
+  <view class="picked-chip" wx:for="{{picked}}" wx:key="key" bindtap="clearPick" data-key="{{item.key}}">{{tr.t(item.label, lang)}} ×</view>
 </view>
 <view class="feed-card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
   <view class="feed-cover">
     <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
-    <view wx:else class="feed-ph">{{item.coverMark}}</view>
-    <view class="feed-boarded">{{item.boarded}}</view>
+    <view wx:else class="feed-ph">{{tr.t(item.coverMark, lang)}}</view>
+    <view class="feed-boarded">{{tr.t(item.boarded, lang)}}</view>
   </view>
   <view class="feed-body">
-    <view class="feed-when">{{item.feedWhen}} · {{item.city}}</view>
-    <view class="feed-title"><text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{item.privateLabel || '加密团'}}</text> {{item.route.title}}</view>
-    <view class="feed-host">{{item.host}}<text wx:if="{{item.kindLabel}}"> · {{item.kindLabel}}</text></view>
-    <view class="feed-tagline" wx:if="{{item.tagline}}">{{item.tagline}}</view>
-    <view class="feed-price" wx:if="{{item.free}}">免费</view>
-    <view class="feed-price" wx:else><text class="strong">¥{{item.price}}</text> 起</view>
+    <view class="feed-when">{{tr.t(item.feedWhen, lang)}} · {{tr.t(item.city, lang)}}</view>
+    <view class="feed-title"><text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{tr.t(item.privateLabel || '加密团', lang)}}</text> {{tr.t(item.route.title, lang)}}</view>
+    <view class="feed-host">{{tr.t(item.host, lang)}}<text wx:if="{{item.kindLabel}}"> · {{tr.t(item.kindLabel, lang)}}</text></view>
+    <view class="feed-tagline" wx:if="{{item.tagline}}">{{tr.t(item.tagline, lang)}}</view>
+    <view class="feed-price" wx:if="{{item.free}}">{{tr.t('免费', lang)}}</view>
+    <view class="feed-price" wx:else><text class="strong">¥{{tr.t(item.price, lang)}}</text> {{tr.t('起', lang)}}</view>
   </view>
 </view>
 <view class="card" wx:if="{{!list.length}}">
   <view class="pad">
-    <view class="title">{{kind ? '还没有这类局' : '还没有同城局'}}</view>
-    <view class="muted">发起一局，审核通过后出现在这里。</view>
-    <view class="btn ghost" bindtap="goPublish">去发起</view>
+    <view class="title">{{tr.t(kind ? '还没有这类局' : '还没有同城局', lang)}}</view>
+    <view class="muted">{{tr.t('发起一局，审核通过后出现在这里。', lang)}}</view>
+    <view class="btn ghost" bindtap="goPublish">{{tr.t('去发起', lang)}}</view>
   </view>
 </view>

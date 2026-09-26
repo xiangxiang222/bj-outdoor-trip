@@ -13,7 +13,7 @@
             <span class="muted">{{ g.rating }} 分 · {{ g.years }}年</span>
           </div>
           <p class="muted" style="margin:4px 0 0">{{ g.specialties }}</p>
-          <p style="margin:8px 0 0;font-size:13px">{{ g.bio }}</p>
+          <p style="margin:8px 0 0;font-size: calc(13px * var(--ui-scale))">{{ g.bio }}</p>
         </div>
       </div>
     </div>

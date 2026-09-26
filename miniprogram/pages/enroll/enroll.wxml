@@ -1,75 +1,76 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view class="pad" wx:if="{{s}}">{{s.route.title}} {{s.startDate}}</view>
-<view class="pad muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">本团已解散，无法报名。理由：{{s.cancelReason}}</view>
-<view class="pad muted" wx:elif="{{s.oversub.pending}}">{{s.oversub.copy}}</view>
-<view class="pad muted" wx:elif="{{isActivity && s.remain<=0}}">本局已满，仍可加入候补，有人取消后按顺序递补。</view>
-<view class="pad muted" wx:elif="{{s.remain<=0}}">本车已满，仍可加入候补，有人取消后按顺序递补。</view>
-<view class="pad muted" wx:elif="{{isActivity && isFree}}">免费局，填姓名和手机即可。</view>
-<view class="pad muted" wx:elif="{{s.organizerType=='company'}}">公司团：先报名，公司统一支付</view>
-<view class="pad muted" wx:else>{{isActivity ? '报名后按报价，出行前付款' : '个人拼团：先报名占座，出行前付款'}}</view>
-<view class="pad muted" wx:if="{{s.eligibility.enabled}}">{{s.eligibility.label}}</view>
-<view class="pad" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" style="color:#bc4749">{{s.eligibility.reason}}</view>
-<view class="btn ghost" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" bindtap="goStudent">去校园认证</view>
-<view class="pad muted" wx:if="{{s.private}}">这是加密团，报名需要发起人给的口令。</view>
-<input wx:if="{{s.joinCodeRequired && !s.joinCode}}" class="input" placeholder="入团口令" value="{{form.joinCode}}" bindinput="setJoinCode" maxlength="16" />
-<input class="input" placeholder="{{isActivity ? '怎么称呼' : '姓名（与身份证一致）'}}" value="{{form.travelerName}}" bindinput="setName" />
-<input class="input" placeholder="手机号" type="number" maxlength="11" value="{{form.travelerPhone}}" bindinput="setPhone" />
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="pad" wx:if="{{s}}">{{tr.t(s.route.title, lang)}} {{tr.t(s.startDate, lang)}}</view>
+<view class="pad muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">{{tr.t('本团已解散，无法报名。理由：', lang)}}{{tr.t(s.cancelReason, lang)}}</view>
+<view class="pad muted" wx:elif="{{s.oversub.pending}}">{{tr.t(s.oversub.copy, lang)}}</view>
+<view class="pad muted" wx:elif="{{isActivity && s.remain<=0}}">{{tr.t('本局已满，仍可加入候补，有人取消后按顺序递补。', lang)}}</view>
+<view class="pad muted" wx:elif="{{s.remain<=0}}">{{tr.t('本车已满，仍可加入候补，有人取消后按顺序递补。', lang)}}</view>
+<view class="pad muted" wx:elif="{{isActivity && isFree}}">{{tr.t('免费局，填姓名和手机即可。', lang)}}</view>
+<view class="pad muted" wx:elif="{{s.organizerType=='company'}}">{{tr.t('公司团：先报名，公司统一支付', lang)}}</view>
+<view class="pad muted" wx:else>{{tr.t(isActivity ? '报名后按报价，出行前付款' : '个人拼团：先报名占座，出行前付款', lang)}}</view>
+<view class="pad muted" wx:if="{{s.eligibility.enabled}}">{{tr.t(s.eligibility.label, lang)}}</view>
+<view class="pad" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" style="color:#bc4749">{{tr.t(s.eligibility.reason, lang)}}</view>
+<view class="btn ghost" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" bindtap="goStudent">{{tr.t('去校园认证', lang)}}</view>
+<view class="pad muted" wx:if="{{s.private}}">{{tr.t('这是加密团，报名需要发起人给的口令。', lang)}}</view>
+<input wx:if="{{s.joinCodeRequired && !s.joinCode}}" class="input" placeholder="{{tr.t('入团口令', lang)}}" value="{{form.joinCode}}" bindinput="setJoinCode" maxlength="16" />
+<input class="input" placeholder="{{tr.t(isActivity ? '怎么称呼' : '姓名（与身份证一致）', lang)}}" value="{{form.travelerName}}" bindinput="setName" />
+<input class="input" placeholder="{{tr.t('手机号', lang)}}" type="number" maxlength="11" value="{{form.travelerPhone}}" bindinput="setPhone" />
 <block wx:if="{{!isActivity}}">
-<input class="input" placeholder="18位身份证号" maxlength="18" value="{{form.idCard}}" bindinput="setId" />
-<view class="pad" style="color:{{idOk ? '#6b705c' : '#bc4749'}};font-size:24rpx" wx:if="{{idHint}}">{{idHint}}</view>
-<input class="input" placeholder="紧急联系人姓名" value="{{form.emergencyName}}" bindinput="setEmergencyName" />
-<input class="input" placeholder="紧急联系人手机（不能与出行人相同）" type="number" maxlength="11" value="{{form.emergencyPhone}}" bindinput="setEmergencyPhone" />
-<view class="pad muted" wx:if="{{form.joinMode=='photographer'}}" style="color:#2d6a4f">本团摄影师，免个人团费，保险另计。本团只设一位。</view>
+<input class="input" placeholder="{{tr.t('18位身份证号', lang)}}" maxlength="18" value="{{form.idCard}}" bindinput="setId" />
+<view class="pad" style="color:{{idOk ? '#6b705c' : '#bc4749'}};font-size: calc(24rpx * var(--ui-scale))" wx:if="{{idHint}}">{{tr.t(idHint, lang)}}</view>
+<input class="input" placeholder="{{tr.t('紧急联系人姓名', lang)}}" value="{{form.emergencyName}}" bindinput="setEmergencyName" />
+<input class="input" placeholder="{{tr.t('紧急联系人手机（不能与出行人相同）', lang)}}" type="number" maxlength="11" value="{{form.emergencyPhone}}" bindinput="setEmergencyPhone" />
+<view class="pad muted" wx:if="{{form.joinMode=='photographer'}}" style="color:#2d6a4f">{{tr.t('本团摄影师，免个人团费，保险另计。本团只设一位。', lang)}}</view>
 <view class="card" wx:if="{{s.combo.enabled}}">
-  <view class="pad title">组合团 · 另一半条件</view>
-  <view class="pad muted">只对学生或已认证学生组织开放。</view>
-  <view class="pad muted" wx:if="{{!s.combo.canJoin}}" style="color:#bc4749">请先完成学生或学生组织认证。</view>
+  <view class="pad title">{{tr.t('组合团 · 另一半条件', lang)}}</view>
+  <view class="pad muted">{{tr.t('只对学生或已认证学生组织开放。', lang)}}</view>
+  <view class="pad muted" wx:if="{{!s.combo.canJoin}}" style="color:#bc4749">{{tr.t('请先完成学生或学生组织认证。', lang)}}</view>
   <picker range="{{genderLabels}}" value="{{genderIndex}}" bindchange="setWantGender">
-    <view class="input">希望另一半：{{genderLabels[genderIndex]}}</view>
+    <view class="input">{{tr.t('希望另一半：', lang)}}{{tr.t(genderLabels[genderIndex], lang)}}</view>
   </picker>
-  <input class="input" placeholder="希望学校（可空）" value="{{form.wantSchool}}" bindinput="setWantSchool" />
-  <input class="input" placeholder="一句话，例如想找同校" value="{{form.comboNote}}" bindinput="setComboNote" />
+  <input class="input" placeholder="{{tr.t('希望学校（可空）', lang)}}" value="{{form.wantSchool}}" bindinput="setWantSchool" />
+  <input class="input" placeholder="{{tr.t('一句话，例如想找同校', lang)}}" value="{{form.comboNote}}" bindinput="setComboNote" />
 </view>
 <view class="card" wx:if="{{!s.oversub.pending && s.remain>0 && seatRows.length}}">
-  <view class="pad">选座位（不选则自动分配）</view>
+  <view class="pad">{{tr.t('选座位（不选则自动分配）', lang)}}</view>
   <view class="seat-map">
-    <view class="seat-front">车头</view>
+    <view class="seat-front">{{tr.t('车头', lang)}}</view>
     <view class="seat-row" wx:for="{{seatRows}}" wx:key="row">
       <block wx:for="{{item.seats}}" wx:for-item="seat" wx:key="no">
-        <view class="seat {{seat.taken ? 'taken' : ''}} {{seat.locked ? 'locked' : ''}} {{form.seatNo==seat.no ? 'on' : ''}}" bindtap="pickSeat" data-no="{{seat.no}}" data-taken="{{seat.taken}}">{{seat.locked ? '锁' : seat.col}}</view>
+        <view class="seat {{seat.taken ? 'taken' : ''}} {{seat.locked ? 'locked' : ''}} {{form.seatNo==seat.no ? 'on' : ''}}" bindtap="pickSeat" data-no="{{seat.no}}" data-taken="{{seat.taken}}">{{tr.t(seat.locked ? '锁' : seat.col, lang)}}</view>
         <view wx:if="{{seat.aisleAfter}}" class="seat-aisle"></view>
       </block>
     </view>
   </view>
 </view>
 <view class="card" wx:if="{{supplies.length}}">
-  <view class="pad">车上加购（费用计入应付）</view>
+  <view class="pad">{{tr.t('车上加购（费用计入应付）', lang)}}</view>
   <view class="pad row" wx:for="{{supplies}}" wx:key="code">
     <view>
-      <view>{{item.name}} ¥{{item.fee}}</view>
-      <view class="muted">{{item.hint}}</view>
+      <view>{{tr.t(item.name, lang)}} ¥{{tr.t(item.fee, lang)}}</view>
+      <view class="muted">{{tr.t(item.hint, lang)}}</view>
     </view>
     <view>
       <text class="btn ghost" catchtap="decSupply" data-code="{{item.code}}">−</text>
-      {{item.qty}}
+      {{tr.t(item.qty, lang)}}
       <text class="btn ghost" catchtap="incSupply" data-code="{{item.code}}">+</text>
     </view>
   </view>
 </view>
 <view class="card" wx:if="{{plans.length}}">
-  <view class="pad">出行保险</view>
+  <view class="pad">{{tr.t('出行保险', lang)}}</view>
   <view class="pad" wx:for="{{plans}}" wx:key="code" bindtap="pickIns" data-code="{{item.code}}">
-    <view>{{form.insuranceCode==item.code ? '●' : '○'}} {{item.name}}{{item.fee ? ' +¥' + item.fee : ''}}</view>
-    <view class="muted">{{item.cover}}</view>
+    <view>{{tr.t(form.insuranceCode==item.code ? '●' : '○', lang)}} {{tr.t(item.name, lang)}}{{tr.t(item.fee ? ' +¥' + item.fee : '', lang)}}</view>
+    <view class="muted">{{tr.t(item.cover, lang)}}</view>
   </view>
 </view>
 <view class="card">
-  <view class="pad">行前确认</view>
-  <view class="pad muted" style="white-space:pre-wrap">{{waiver}}</view>
-  <view class="pad" bindtap="toggleHealth">{{form.healthOk ? '☑' : '☐'}} 本人健康状况适合本次活动</view>
-  <view class="pad" bindtap="toggleWaiver">{{form.waiverAccepted ? '☑' : '☐'}} 已阅读风险告知与退改说明，自愿参加</view>
-  <view class="pad muted">{{cancelSummary}}</view>
+  <view class="pad">{{tr.t('行前确认', lang)}}</view>
+  <view class="pad muted" style="white-space:pre-wrap">{{tr.t(waiver, lang)}}</view>
+  <view class="pad" bindtap="toggleHealth">{{tr.t(form.healthOk ? '☑' : '☐', lang)}} {{tr.t('本人健康状况适合本次活动', lang)}}</view>
+  <view class="pad" bindtap="toggleWaiver">{{tr.t(form.waiverAccepted ? '☑' : '☐', lang)}} {{tr.t('已阅读风险告知与退改说明，自愿参加', lang)}}</view>
+  <view class="pad muted">{{tr.t(cancelSummary, lang)}}</view>
 </view>
 </block>
-<view class="pad muted" wx:else>出发日前可取消；到场找发起人。</view>
-<view class="btn" wx:if="{{s.status!='cancelled' && !(s.eligibility.enabled && !s.eligibility.canEnroll)}}" bindtap="submit">{{s.oversub.pending?'报名参加':(s.remain<=0?'加入候补':(isActivity?'报名本局':'确认报名'))}}</view>
+<view class="pad muted" wx:else>{{tr.t('出发日前可取消；到场找发起人。', lang)}}</view>
+<view class="btn" wx:if="{{s.status!='cancelled' && !(s.eligibility.enabled && !s.eligibility.canEnroll)}}" bindtap="submit">{{tr.t(s.oversub.pending?'报名参加':(s.remain<=0?'加入候补':(isActivity?'报名本局':'确认报名')), lang)}}</view>

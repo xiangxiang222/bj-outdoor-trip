@@ -1,14 +1,14 @@
 @import "../../styles/account.wxss";
 page { background: var(--bg, #f5f6f8); }
-.sec { margin: 28rpx 32rpx 12rpx; color: var(--muted, #8a8f99); font-size: 24rpx; }
+.sec { margin: 28rpx 32rpx 12rpx; color: var(--muted, #8a8f99); font-size: calc(24rpx * var(--ui-scale)); }
 .account { margin: 0 24rpx 24rpx; padding: 28rpx 32rpx; background: var(--card, #fff); border-radius: 24rpx; display: flex; align-items: center; gap: 24rpx; }
-.avatar { width: 88rpx; height: 88rpx; border-radius: 50%; background: #ff7d1a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 36rpx; font-weight: 700; overflow: hidden; }
+.avatar { width: 88rpx; height: 88rpx; border-radius: 50%; background: #ff7d1a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: calc(36rpx * var(--ui-scale)); font-weight: 700; overflow: hidden; }
 .avatar image { width: 88rpx; height: 88rpx; }
-.name { font-size: 32rpx; font-weight: 600; }
-.phone { margin-top: 6rpx; color: #8a8f99; font-size: 24rpx; }
+.name { font-size: calc(32rpx * var(--ui-scale)); font-weight: 600; }
+.phone { margin-top: 6rpx; color: #8a8f99; font-size: calc(24rpx * var(--ui-scale)); }
 .list { margin: 0 24rpx 24rpx; background: var(--card, #fff); border-radius: 24rpx; overflow: hidden; }
-.row { display: flex; justify-content: space-between; align-items: center; padding: 32rpx; border-bottom: 1rpx solid var(--line, #f0f1f3); font-size: 30rpx; }
+.row { display: flex; justify-content: space-between; align-items: center; padding: 32rpx; border-bottom: 1rpx solid var(--line, #f0f1f3); font-size: calc(30rpx * var(--ui-scale)); }
 .row:last-child { border-bottom: 0; }
-.hint { color: #8a8f99; font-size: 26rpx; }
+.hint { color: #8a8f99; font-size: calc(26rpx * var(--ui-scale)); }
 .center { justify-content: center; }
 .danger { color: #e85d4c; }

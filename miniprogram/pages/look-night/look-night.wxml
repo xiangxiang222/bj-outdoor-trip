@@ -1,18 +1,19 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <view class="list">
   <view class="row" data-night="system" bindtap="pick">
     <view>
-      <view>{{copy.systemNight}}</view>
-      <view class="sub">{{copy.systemNightSub}}</view>
+      <view>{{tr.t(copy.systemNight, lang)}}</view>
+      <view class="sub">{{tr.t(copy.systemNightSub, lang)}}</view>
     </view>
     <text class="mark" wx:if="{{look.night==='system'}}">✓</text>
   </view>
   <view class="row" data-night="day" bindtap="pick">
-    <text>{{copy.day}}</text>
+    <text>{{tr.t(copy.day, lang)}}</text>
     <text class="mark" wx:if="{{look.night==='day'}}">✓</text>
   </view>
   <view class="row" data-night="dark" bindtap="pick">
-    <text>{{copy.dark}}</text>
+    <text>{{tr.t(copy.dark, lang)}}</text>
     <text class="mark" wx:if="{{look.night==='dark'}}">✓</text>
   </view>
 </view>

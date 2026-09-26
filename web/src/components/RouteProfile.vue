@@ -9,7 +9,7 @@
     />
     <LivePulse v-if="!embedded && route.id" scope="route" :route-id="route.id" />
     <div class="row">
-      <h2 style="margin:0;font-size:20px">{{ route.title }}</h2>
+      <h2 style="margin:0;font-size: calc(20px * var(--ui-scale))">{{ route.title }}</h2>
       <span class="tag" v-if="route.days || route.difficulty">{{ [route.days ? route.days + "日" : "", route.difficulty].filter(Boolean).join(" · ") }}</span>
     </div>
     <p class="muted">{{ route.subtitle }}</p>

@@ -72,7 +72,7 @@
       <el-table-column label="库存" width="110">
         <template #default="{ row }">
           <el-input-number v-model="row.stock" :min="-1" :controls="false" />
-          <div class="muted" style="font-size:12px">-1 不限</div>
+          <div class="muted" style="font-size: calc(12px * var(--ui-scale))">-1 不限</div>
         </template>
       </el-table-column>
       <el-table-column label="颜色" width="88">

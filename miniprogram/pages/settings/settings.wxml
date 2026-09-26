@@ -1,49 +1,50 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view class="sec">{{copy.look}}</view>
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="sec">{{tr.t(copy.look, lang)}}</view>
 <view class="list">
   <view class="row">
-    <text>{{copy.textMode}}</text>
+    <text>{{tr.t(copy.textMode, lang)}}</text>
     <switch checked="{{look.textMode}}" color="#34c759" bindchange="toggleText" />
   </view>
   <view class="row" bindtap="go" data-url="/pages/look-font/look-font">
-    <text>{{copy.font}}</text>
+    <text>{{tr.t(copy.font, lang)}}</text>
     <text class="hint">›</text>
   </view>
   <view class="row" bindtap="go" data-url="/pages/look-night/look-night">
-    <text>{{copy.night}}</text>
-    <text class="hint">{{nightText}} ›</text>
+    <text>{{tr.t(copy.night, lang)}}</text>
+    <text class="hint">{{tr.t(nightText, lang)}} ›</text>
   </view>
   <view class="row" bindtap="go" data-url="/pages/look-lang/look-lang">
-    <text>{{copy.lang}}</text>
-    <text class="hint">{{langText}} ›</text>
+    <text>{{tr.t(copy.lang, lang)}}</text>
+    <text class="hint">{{tr.t(langText, lang)}} ›</text>
   </view>
 </view>
-<view class="sec">当前账号</view>
+<view class="sec">{{tr.t('当前账号', lang)}}</view>
 <view class="account">
   <view class="avatar">
     <image wx:if="{{user.avatar}}" src="{{user.avatar}}" mode="aspectFill" />
-    <text wx:else>{{nickHead}}</text>
+    <text wx:else>{{tr.t(nickHead, lang)}}</text>
   </view>
   <view>
-    <view class="name">{{user.nickname || '未设置昵称'}}</view>
-    <view class="phone">{{phone || '未绑定手机'}}</view>
+    <view class="name">{{tr.t(user.nickname || '未设置昵称', lang)}}</view>
+    <view class="phone">{{tr.t(phone || '未绑定手机', lang)}}</view>
   </view>
 </view>
 <view class="list">
   <view class="row" bindtap="go" data-url="/pages/profile/profile">
-    <text>实名信息</text>
-    <text class="hint">{{user.realNamed ? '已实名' : '待完善'}} ›</text>
+    <text>{{tr.t('实名信息', lang)}}</text>
+    <text class="hint">{{tr.t(user.realNamed ? '已实名' : '待完善', lang)}} ›</text>
   </view>
   <view class="row" bindtap="go" data-url="/pages/wallet-pin/wallet-pin">
-    <text>支付密码</text>
-    <text class="hint">{{user.walletPinSet ? '已设置' : '未设置'}} ›</text>
+    <text>{{tr.t('支付密码', lang)}}</text>
+    <text class="hint">{{tr.t(user.walletPinSet ? '已设置' : '未设置', lang)}} ›</text>
   </view>
   <view class="row" bindtap="go" data-url="/pages/wallet/wallet">
-    <text>我的钱包</text>
-    <text class="hint">余额 ¥{{user.walletBalance || 0}} ›</text>
+    <text>{{tr.t('我的钱包', lang)}}</text>
+    <text class="hint">{{tr.t('余额 ¥', lang)}}{{tr.t(user.walletBalance || 0, lang)}} ›</text>
   </view>
 </view>
 <view class="list actions">
-  <view class="row center" bindtap="out">退出登录</view>
-  <view class="row center danger" bindtap="closeAccount">注销账号</view>
+  <view class="row center" bindtap="out">{{tr.t('退出登录', lang)}}</view>
+  <view class="row center danger" bindtap="closeAccount">{{tr.t('注销账号', lang)}}</view>
 </view>

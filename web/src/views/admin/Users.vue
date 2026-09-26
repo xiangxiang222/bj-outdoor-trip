@@ -235,7 +235,7 @@ async function close(row) {
   background: #f6f8fb;
   border-radius: 8px;
   color: #606266;
-  font-size: 13px;
+  font-size: calc(13px * var(--ui-scale));
 }
 .virtual-pool span { flex: 1; min-width: 240px; line-height: 1.5; }
 </style>

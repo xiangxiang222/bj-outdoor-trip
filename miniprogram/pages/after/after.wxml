@@ -1,43 +1,44 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <view class="card" wx:if="{{s}}"><view class="pad">
-  <view class="title">{{s.title}}</view>
-  <view class="muted">{{s.startDate}} · 回来的大巴上点完成后再评价、评选。</view>
-  <view wx:if="{{s.completed}}" style="color:#2d6a4f">已完成活动</view>
-  <view wx:elif="{{!s.joined}}" class="muted">报名参加后才能完成活动。</view>
+  <view class="title">{{tr.t(s.title, lang)}}</view>
+  <view class="muted">{{tr.t(s.startDate, lang)}} {{tr.t('· 回来的大巴上点完成后再评价、评选。', lang)}}</view>
+  <view wx:if="{{s.completed}}" style="color:#2d6a4f">{{tr.t('已完成活动', lang)}}</view>
+  <view wx:elif="{{!s.joined}}" class="muted">{{tr.t('报名参加后才能完成活动。', lang)}}</view>
 </view></view>
-<view class="pad" wx:if="{{msg}}">{{msg}}</view>
-<view class="btn" wx:if="{{s.canComplete}}" bindtap="complete">完成活动</view>
+<view class="pad" wx:if="{{msg}}">{{tr.t(msg, lang)}}</view>
+<view class="btn" wx:if="{{s.canComplete}}" bindtap="complete">{{tr.t('完成活动', lang)}}</view>
 
 <block wx:if="{{s.completed}}">
-  <view class="pad title">评价领队和路线</view>
+  <view class="pad title">{{tr.t('评价领队和路线', lang)}}</view>
   <view class="card"><view class="pad">
-    <view wx:if="{{s.reviewedByMe}}" class="muted">你已评价。</view>
+    <view wx:if="{{s.reviewedByMe}}" class="muted">{{tr.t('你已评价。', lang)}}</view>
     <block wx:else>
       <view class="star-pick">
         <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="star {{rating >= n ? 'on' : ''}}" bindtap="pickStar" data-n="{{n}}">★</text>
       </view>
-      <textarea class="input" placeholder="这次出行怎么样（选填）" value="{{reviewText}}" bindinput="setReview" />
-      <view class="btn" bindtap="submitReview">提交评价</view>
+      <textarea class="input" placeholder="{{tr.t('这次出行怎么样（选填）', lang)}}" value="{{reviewText}}" bindinput="setReview" />
+      <view class="btn" bindtap="submitReview">{{tr.t('提交评价', lang)}}</view>
     </block>
   </view></view>
 
-  <view class="pad title">评选 · 分享投票</view>
+  <view class="pad title">{{tr.t('评选 · 分享投票', lang)}}</view>
   <view class="card"><view class="pad">
-    <view class="muted">把朋友圈 / 小红书 / 视频号分享链接贴上来，团友投票。</view>
+    <view class="muted">{{tr.t('把朋友圈 / 小红书 / 视频号分享链接贴上来，团友投票。', lang)}}</view>
     <input class="input" placeholder="https://" value="{{shareUrl}}" bindinput="setUrl" />
-    <input class="input" placeholder="今天这团最想安利的一点" value="{{caption}}" bindinput="setCaption" />
-    <view class="btn ghost" bindtap="submitPost">提交评选</view>
+    <input class="input" placeholder="{{tr.t('今天这团最想安利的一点', lang)}}" value="{{caption}}" bindinput="setCaption" />
+    <view class="btn ghost" bindtap="submitPost">{{tr.t('提交评选', lang)}}</view>
   </view></view>
   <view class="card" wx:for="{{posts}}" wx:key="id">
     <view class="pad">
       <view class="row">
-        <view class="title">{{item.name}}</view>
-        <view class="muted">{{item.votes}} 票</view>
+        <view class="title">{{tr.t(item.name, lang)}}</view>
+        <view class="muted">{{tr.t(item.votes, lang)}} {{tr.t('票', lang)}}</view>
       </view>
-      <view class="muted">{{item.caption}}</view>
-      <view class="nav-link" bindtap="openUrl" data-url="{{item.url}}">打开分享</view>
-      <view class="btn ghost" wx:if="{{!item.mine && !item.voted}}" bindtap="vote" data-id="{{item.id}}">投票</view>
-      <view class="muted" wx:elif="{{item.voted}}">已投</view>
+      <view class="muted">{{tr.t(item.caption, lang)}}</view>
+      <view class="nav-link" bindtap="openUrl" data-url="{{item.url}}">{{tr.t('打开分享', lang)}}</view>
+      <view class="btn ghost" wx:if="{{!item.mine && !item.voted}}" bindtap="vote" data-id="{{item.id}}">{{tr.t('投票', lang)}}</view>
+      <view class="muted" wx:elif="{{item.voted}}">{{tr.t('已投', lang)}}</view>
     </view>
   </view>
 </block>

@@ -13,7 +13,7 @@
   height: 88rpx;
   line-height: 88rpx;
   text-align: center;
-  font-size: 30rpx;
+  font-size: calc(30rpx * var(--ui-scale));
   color: #8c8c8c;
   position: relative;
 }
@@ -54,7 +54,7 @@
 }
 .poster-cover { width: 100%; height: 280rpx; display: block; }
 .poster-body { padding: 24rpx; }
-.poster-title { font-size: 32rpx; font-weight: 700; margin-bottom: 16rpx; }
+.poster-title { font-size: calc(32rpx * var(--ui-scale)); font-weight: 700; margin-bottom: 16rpx; }
 .poster-split { display: flex; gap: 16rpx; align-items: flex-start; margin-bottom: 16rpx; }
 .poster-facts { flex: 1; }
 .poster-qr { width: 180rpx; height: 180rpx; background: #fff; flex-shrink: 0; }

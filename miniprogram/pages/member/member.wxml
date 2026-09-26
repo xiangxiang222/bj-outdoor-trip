@@ -1,25 +1,26 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <view class="hero" wx:if="{{card}}">
   <view class="codes">
-    <text wx:for="{{card.levels}}" wx:key="level" class="code {{focus.level === item.level ? 'on' : ''}}" data-level="{{item.level}}" bindtap="focusLevel">{{item.code}}</text>
+    <text wx:for="{{card.levels}}" wx:key="level" class="code {{focus.level === item.level ? 'on' : ''}}" data-level="{{item.level}}" bindtap="focusLevel">{{tr.t(item.code, lang)}}</text>
   </view>
   <view class="next" wx:if="{{hasNext}}" data-level="{{focus.level + 1}}" bindtap="focusLevel">›</view>
-  <view class="now">{{nowLine}}</view>
-  <view class="title">同行者众会员</view>
+  <view class="now">{{tr.t(nowLine, lang)}}</view>
+  <view class="title">{{tr.t('同行者众会员', lang)}}</view>
   <image class="mark" src="{{mark}}" mode="aspectFit" />
   <view class="meter">
-    <text>成长值 </text><text class="num">{{into}}</text><text>/{{span}}</text>
+    <text>{{tr.t('成长值', lang)}} </text><text class="num">{{tr.t(into, lang)}}</text><text>/{{tr.t(span, lang)}}</text>
     <view class="track">
       <view class="track-in" style="width: {{bar}}%"></view>
-      <text class="pill">{{pill}}</text>
+      <text class="pill">{{tr.t(pill, lang)}}</text>
     </view>
   </view>
-  <view class="month">本月累计新增 {{card.monthGrowth}} 成长值 ›</view>
+  <view class="month">{{tr.t('本月累计新增', lang)}} {{tr.t(card.monthGrowth, lang)}} {{tr.t('成长值 ›', lang)}}</view>
 </view>
-<view class="perk-head" wx:if="{{focus}}">可享 {{focus.perks.length}} 项权益</view>
+<view class="perk-head" wx:if="{{focus}}">{{tr.t('可享', lang)}} {{tr.t(focus.perks.length, lang)}} {{tr.t('项权益', lang)}}</view>
 <view class="perk-grid" wx:if="{{focus}}">
   <view class="perk" wx:for="{{focus.perks}}" wx:key="*this">
-    <view class="perk-name">{{item}}</view>
+    <view class="perk-name">{{tr.t(item, lang)}}</view>
   </view>
 </view>
-<view class="note">等级按出行获得的成长值自动升级，不单独售卖。后台可调整当前等级。</view>
+<view class="note">{{tr.t('等级按出行获得的成长值自动升级，不单独售卖。后台可调整当前等级。', lang)}}</view>

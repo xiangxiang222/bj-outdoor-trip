@@ -1,26 +1,27 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
 <view class="chips">
-  <view class="offer-chip publish" bindtap="goPublish">发团</view>
+  <view class="offer-chip publish" bindtap="goPublish">{{tr.t('发团', lang)}}</view>
 </view>
 <view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
   <view class="pad">
     <view class="row">
       <view>
-        <text class="offer-chip inline" style="background:{{item.offerColor}}">{{item.offerLabel}}</text>
-        <text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{item.privateLabel || '加密团'}}</text>
-        <text class="title">{{item.route.title}}</text>
+        <text class="offer-chip inline" style="background:{{item.offerColor}}">{{tr.t(item.offerLabel, lang)}}</text>
+        <text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{tr.t(item.privateLabel || '加密团', lang)}}</text>
+        <text class="title">{{tr.t(item.route.title, lang)}}</text>
       </view>
-      <text class="tag">{{item.startDate}}</text>
+      <text class="tag">{{tr.t(item.startDate, lang)}}</text>
     </view>
-    <view class="muted">{{item.host}} · {{item.bus.name}}<text wx:if="{{item.guaranteed}}"> · 铁定出发</text></view>
-    <view wx:if="{{item.guide}}" class="guide-hit" catchtap="goGuide" data-id="{{item.guide.id}}">导游 {{item.guide.name}} · 查看详情</view>
-    <view wx:else class="muted guide-hit" catchtap="goGuides">成团后匹配导游 · 先看看领队</view>
+    <view class="muted">{{tr.t(item.host, lang)}} · {{tr.t(item.bus.name, lang)}}<text wx:if="{{item.guaranteed}}"> {{tr.t('· 铁定出发', lang)}}</text></view>
+    <view wx:if="{{item.guide}}" class="guide-hit" catchtap="goGuide" data-id="{{item.guide.id}}">{{tr.t('导游', lang)}} {{tr.t(item.guide.name, lang)}} {{tr.t('· 查看详情', lang)}}</view>
+    <view wx:else class="muted guide-hit" catchtap="goGuides">{{tr.t('成团后匹配导游 · 先看看领队', lang)}}</view>
     <view class="progress"><view class="bar" style="width:{{item.enrolled/item.maxSeats*100}}%"></view></view>
     <view class="row muted">
-      <text>{{item.enrolled}}/{{item.maxSeats}}</text>
+      <text>{{tr.t(item.enrolled, lang)}}/{{tr.t(item.maxSeats, lang)}}</text>
       <view>
-        <text wx:if="{{item.quote.originPrice > item.quote.price}}" class="price-origin">¥{{item.quote.originPrice}}</text>
-        <text>¥{{item.quote.price}}</text>
+        <text wx:if="{{item.quote.originPrice > item.quote.price}}" class="price-origin">¥{{tr.t(item.quote.originPrice, lang)}}</text>
+        <text>¥{{tr.t(item.quote.price, lang)}}</text>
       </view>
     </view>
   </view>

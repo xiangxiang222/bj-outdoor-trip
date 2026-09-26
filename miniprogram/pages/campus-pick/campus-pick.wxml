@@ -1,15 +1,16 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
-<view class="pad muted">可留空。搜不到时点「使用该名称」即可自己填。</view>
-<input class="input" value="{{q}}" placeholder="{{searchPlaceholder}}" bindinput="onSearch" />
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="pad muted">{{tr.t('可留空。搜不到时点「使用该名称」即可自己填。', lang)}}</view>
+<input class="input" value="{{q}}" placeholder="{{tr.t(searchPlaceholder, lang)}}" bindinput="onSearch" />
 <view class="campus-pick-list">
-  <view class="campus-pick-row custom" wx:if="{{custom}}" bindtap="useCustom">使用「{{custom}}」</view>
-  <view class="campus-pick-row {{item.on ? 'on' : ''}}" wx:for="{{list}}" wx:key="name" data-name="{{item.name}}" bindtap="toggle">{{item.name}}</view>
-  <view class="pad muted" wx:if="{{!loading && !list.length && !custom}}">{{emptyHint}}</view>
+  <view class="campus-pick-row custom" wx:if="{{custom}}" bindtap="useCustom">{{tr.t('使用「', lang)}}{{tr.t(custom, lang)}}」</view>
+  <view class="campus-pick-row {{item.on ? 'on' : ''}}" wx:for="{{list}}" wx:key="name" data-name="{{item.name}}" bindtap="toggle">{{tr.t(item.name, lang)}}</view>
+  <view class="pad muted" wx:if="{{!loading && !list.length && !custom}}">{{tr.t(emptyHint, lang)}}</view>
 </view>
 <view class="campus-pick-foot">
-  <view class="btn ghost campus-pick-btn" bindtap="prev" wx:if="{{page > 1}}">上一页</view>
-  <view class="muted campus-pick-page">{{page}}/{{pages}}</view>
-  <view class="btn ghost campus-pick-btn" bindtap="next" wx:if="{{page < pages}}">下一页</view>
+  <view class="btn ghost campus-pick-btn" bindtap="prev" wx:if="{{page > 1}}">{{tr.t('上一页', lang)}}</view>
+  <view class="muted campus-pick-page">{{tr.t(page, lang)}}/{{tr.t(pages, lang)}}</view>
+  <view class="btn ghost campus-pick-btn" bindtap="next" wx:if="{{page < pages}}">{{tr.t('下一页', lang)}}</view>
 </view>
-<view class="btn ghost" bindtap="clear">不选</view>
-<button wx:if="{{multiple}}" bindtap="confirm">确定（已选 {{picked.length}}）</button>
+<view class="btn ghost" bindtap="clear">{{tr.t('不选', lang)}}</view>
+<button wx:if="{{multiple}}" bindtap="confirm">{{tr.t('确定（已选', lang)}} {{tr.t(picked.length, lang)}}）</button>

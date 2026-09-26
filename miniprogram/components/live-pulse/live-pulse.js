@@ -1,5 +1,6 @@
 const { request } = require("../../utils/request");
 const { visitorId, pulsePath, pulseFace } = require("../../utils/pulse");
+const appearance = require("../../utils/appearance");
 
 Component({
   properties: {
@@ -15,9 +16,16 @@ Component({
     line: "",
     face: "同",
     visible: false,
+    lang: "zh",
+  },
+  pageLifetimes: {
+    show() {
+      this.setData({ lang: appearance.read().lang });
+    },
   },
   lifetimes: {
     attached() {
+      this.setData({ lang: appearance.read().lang });
       this.ready = true;
       this.viewed = false;
       this.load();
