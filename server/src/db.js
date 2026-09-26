@@ -514,10 +514,14 @@ function migrateSchema(db) {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER,
       kind TEXT,
+      channel TEXT,
       content TEXT,
+      images_json TEXT,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
   `);
+  addColumnIfMissing(db, "feedbacks", "channel", "TEXT");
+  addColumnIfMissing(db, "feedbacks", "images_json", "TEXT");
   addColumnIfMissing(db, "users", "member_gift_left", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "users", "is_virtual", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "users", "referral_code", "TEXT");
