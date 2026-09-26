@@ -95,7 +95,10 @@
       <view class="wal-name">{{tr.t('余额', lang)}}</view>
     </view>
     <view class="mine-wallet-item">
-      <image class="wal-ico" src="{{iconBase}}wal-coupon.png" mode="aspectFit" />
+      <view class="wal-ico-wrap">
+        <image class="wal-ico" src="{{iconBase}}wal-coupon.png" mode="aspectFit" />
+        <view wx:if="{{hub.couponCount}}" class="wal-dot"></view>
+      </view>
       <view class="wal-num">{{tr.t(hub.couponCount, lang)}}</view>
       <view class="wal-name">{{tr.t('优惠券', lang)}}</view>
       <view class="mine-expire" wx:if="{{hub.couponExpireHint}}">{{tr.t(hub.couponExpireHint, lang)}}</view>

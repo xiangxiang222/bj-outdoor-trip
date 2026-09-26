@@ -84,7 +84,10 @@
           <span>余额</span>
         </span>
         <span class="mine-wallet-item">
-          <img :src="'/static/mine/wal-coupon.png'" alt="" />
+          <span class="wal-ico">
+            <img :src="'/static/mine/wal-coupon.png'" alt="" />
+            <i v-if="hub.couponCount || coupons.length" class="wal-dot"></i>
+          </span>
           <strong>{{ hub.couponCount || coupons.length || 0 }}</strong>
           <span>优惠券</span>
           <em v-if="hub.couponExpireHint">{{ hub.couponExpireHint }}</em>
