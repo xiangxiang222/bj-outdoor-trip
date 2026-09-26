@@ -27,8 +27,11 @@ page { background: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helveti
 .mine-level { font-size: calc(34rpx * var(--ui-scale)); font-weight: 700; text-decoration: underline; text-underline-offset: 8rpx; }
 .mine-em { font-style: italic; font-weight: 800; }
 .mine-pill { background: #6d4bd2; color: #fff; border-radius: 999rpx; padding: 10rpx 20rpx; font-size: calc(24rpx * var(--ui-scale)); font-weight: 600; }
-.mine-shortcuts { display: flex; overflow: auto; background: #fff; margin: 0 24rpx 16rpx; border-radius: 24rpx; padding: 28rpx 8rpx; text-align: center; }
-.mine-shortcuts > view { flex: 1 0 110rpx; }
+.mine-shortcuts { display: flex; overflow: auto; background: #fff; margin: 0 24rpx 16rpx; border-radius: 24rpx; padding: 28rpx 8rpx 20rpx; text-align: center; }
+.mine-shortcuts > view { flex: 1 0 110rpx; display: flex; flex-direction: column; align-items: center; gap: 8rpx; }
+.mine-order-ico { position: relative; width: 56rpx; height: 56rpx; }
+.mine-order-ico image { width: 56rpx; height: 56rpx; display: block; }
+.mine-order-ico .mine-badge { top: -8rpx; right: -18rpx; box-shadow: 0 0 0 2rpx #fff; }
 .mine-wallet { display: grid; grid-template-columns: 1fr 1fr 1fr auto; align-items: end; background: #fff; margin: 0 24rpx 8rpx; border-radius: 24rpx; padding: 28rpx; gap: 8rpx; }
 .mine-grid { display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; margin: 0 24rpx 8rpx; border-radius: 24rpx; padding: 20rpx 8rpx 16rpx; text-align: center; font-size: calc(22rpx * var(--ui-scale)); color: #333; }
 .mine-grid .ico { width: 64rpx; height: 64rpx; margin: 8rpx auto 8rpx; display: block; background: transparent; }

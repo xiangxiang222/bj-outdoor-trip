@@ -1984,7 +1984,14 @@ html.admin-theme .el-dialog__footer {
   cursor: pointer;
   color: inherit;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
+.mine-order-ico { position: relative; width: 28px; height: 28px; }
+.mine-order-ico img { width: 28px; height: 28px; display: block; object-fit: contain; }
+.mine-order-ico .mine-badge { top: -7px; right: -10px; box-shadow: 0 0 0 1.5px #fff; }
 .mine-badge {
   position: absolute;
   top: -6px;
@@ -2000,7 +2007,6 @@ html.admin-theme .el-dialog__footer {
   line-height: 16px;
   text-align: center;
 }
-.mine-shortcuts b { display: block; font-size: calc(18px * var(--ui-scale)); font-weight: 650; color: #111; }
 .mine-shortcuts span { font-size: calc(12px * var(--ui-scale)); color: #666; }
 .mine-wallet {
   width: 100%;
@@ -2143,7 +2149,9 @@ html[data-night="dark"] .mine-name { color: #f2f2f2; }
 html[data-night="dark"] .mine-shortcuts,
 html[data-night="dark"] .mine-wallet,
 html[data-night="dark"] .mine-grid { background: #1c1c1e; }
-html[data-night="dark"] .mine-shortcuts b,
+html[data-night="dark"] .mine-order-ico img { filter: invert(1); }
+html[data-night="dark"] .mine-order-ico .mine-badge { box-shadow: 0 0 0 1.5px #1c1c1e; }
+html[data-night="dark"] .mine-shortcuts button > span:last-child { color: #c7c7c7; }
 html[data-night="dark"] .mine-wallet-item strong { color: #f2f2f2; }
 html[data-night="dark"] .role-open {
   background: #1a2e24;
@@ -2166,6 +2174,7 @@ html[data-text="1"] .album-grid,
 html[data-text="1"] .moments-grid {
   display: none !important;
 }
+html[data-text="1"] .mine-order-ico img { display: block !important; }
 .trip-detail {
   margin: -12px -14px 0;
 }
