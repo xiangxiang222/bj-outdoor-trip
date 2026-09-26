@@ -2028,8 +2028,12 @@ html.admin-theme .el-dialog__footer {
 .cell:last-child { border-bottom: 0; }
 .cell i { font-style: normal; color: var(--muted); font-size: calc(13px * var(--ui-scale)); flex: none; }
 .look-switch { width: 46px; height: 28px; accent-color: #34c759; }
+.mp-phone.is-look-font {
+  --ui-scale: 1;
+  font-size: calc(16px * var(--ui-scale));
+}
 .look-preview { background: #8e8e93; border-radius: 16px; padding: 16px; }
-.look-sample { background: var(--paper); color: var(--ink); border-radius: 12px; padding: 16px; }
+.look-sample { background: var(--paper); color: var(--ink); border-radius: 12px; padding: 16px; font-size: calc(16px * var(--ui-scale)); }
 .look-pt { font-size: calc(18px * var(--ui-scale)); font-weight: 650; line-height: 1.45; }
 .look-pb { margin-top: 8px; color: var(--muted); line-height: 1.5; }
 .look-pn { margin-top: 10px; color: #8a8f99; font-size: calc(12px * var(--ui-scale)); }

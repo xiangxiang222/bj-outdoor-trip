@@ -1,7 +1,7 @@
 const appearance = require("../../utils/appearance");
 
 Page({
-  data: { look: {}, copy: {}, fonts: appearance.FONTS, fontFamily: appearance.FONTS.system },
+  data: { look: {}, copy: {}, fonts: appearance.FONTS, fontFamily: appearance.FONTS.system, previewScale: 1 },
   onShow() {
     const look = appearance.read();
     wx.setNavigationBarTitle({ title: appearance.t(look).fontTitle });

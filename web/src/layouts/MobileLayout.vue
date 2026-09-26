@@ -1,5 +1,5 @@
 <template>
-  <div class="mp-phone" :class="{ 'is-account': accountTone }">
+  <div class="mp-phone" :class="{ 'is-account': accountTone, 'is-look-font': route.name === 'look-font' }">
     <div class="mp-status" :class="{ 'is-home': isHome }">
       <router-link to="/m" class="brand-lockup" aria-label="同行者众 首页">
         <span class="brand-mark-frame" aria-hidden="true">
