@@ -33,6 +33,42 @@ function splitTrips(rows, today) {
   return { upcoming, waitlist, past };
 }
 
+function isUnpaidTrip(row) {
+  if (!row || row.status !== "joined") return false;
+  if (row.schedule_status === "cancelled") return false;
+  return row.pay_status === "unpaid" && Number(row.pay_amount || row.payAmount || 0) > 0;
+}
+
+function isReviewTrip(row, today) {
+  today = today || todayYmd();
+  if (!row || !row.canReview) return false;
+  if (row.schedule_status === "cancelled") return false;
+  return String(row.start_date || row.startDate || "").slice(0, 10) < today;
+}
+
+function isRefundTrip(row) {
+  return Boolean(row && row.refundProgress);
+}
+
+function deskTrips(rows, today) {
+  today = today || todayYmd();
+  const split = splitTrips(rows, today);
+  const unpaid = [];
+  const review = [];
+  const refund = [];
+  (Array.isArray(rows) ? rows : []).forEach((row) => {
+    if (isUnpaidTrip(row)) unpaid.push(row);
+    if (isReviewTrip(row, today)) review.push(row);
+    if (isRefundTrip(row)) refund.push(row);
+  });
+  return Object.assign({}, split, {
+    unpaid,
+    review,
+    refund,
+    depart: split.upcoming.filter((row) => !isUnpaidTrip(row)),
+  });
+}
+
 function tripKindLabel(row) {
   if (row && row.channel === "activity") return "同城局";
   const type = (row && (row.kind || row.organizerType || row.organizer_type)) || "";
@@ -42,4 +78,4 @@ function tripKindLabel(row) {
   return "个人拼团";
 }
 
-module.exports = { todayYmd, isUpcomingTrip, isWaitlistTrip, splitTrips, tripKindLabel };
+module.exports = { todayYmd, isUpcomingTrip, isWaitlistTrip, splitTrips, deskTrips, isUnpaidTrip, isReviewTrip, isRefundTrip, tripKindLabel };

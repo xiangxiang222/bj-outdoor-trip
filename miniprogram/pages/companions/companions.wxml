@@ -1,0 +1,23 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="card" wx:for="{{list}}" wx:key="id">
+  <view class="pad">
+    <view class="row">
+      <view class="title">{{tr.t(item.name, lang)}}</view>
+      <view class="btn ghost" data-id="{{item.id}}" catchtap="remove">{{tr.t('删除', lang)}}</view>
+    </view>
+    <view class="muted">{{item.phone}}</view>
+    <view class="muted" wx:if="{{item.emergencyName || item.emergencyPhone}}">{{tr.t('紧急联系人', lang)}} {{tr.t(item.emergencyName, lang)}} {{item.emergencyPhone}}</view>
+  </view>
+</view>
+<view class="pad muted" wx:if="{{!list.length}}">{{tr.t('报名时点「存为常用」，下次可以点一下带入。', lang)}}</view>
+<view class="card">
+  <view class="pad">
+    <input class="input" placeholder="{{tr.t('称呼', lang)}}" value="{{name}}" bindinput="setName" />
+    <input class="input" placeholder="{{tr.t('手机号', lang)}}" type="number" maxlength="11" value="{{phone}}" bindinput="setPhone" />
+    <input class="input" placeholder="{{tr.t('紧急联系人（选填）', lang)}}" value="{{emergencyName}}" bindinput="setEmergencyName" />
+    <input class="input" placeholder="{{tr.t('紧急联系人手机（选填）', lang)}}" type="number" maxlength="11" value="{{emergencyPhone}}" bindinput="setEmergencyPhone" />
+    <view class="btn" bindtap="save">{{tr.t('保存', lang)}}</view>
+    <view class="muted" wx:if="{{msg}}">{{tr.t(msg, lang)}}</view>
+  </view>
+</view>

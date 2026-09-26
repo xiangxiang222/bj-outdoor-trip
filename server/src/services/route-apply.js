@@ -5,6 +5,7 @@ const { liveMemberPrice } = require("./offer");
 const { paidJoinedCount } = require("./helpers");
 const { sendSms } = require("./sms");
 const { noticeRouteApply, resolveNotices } = require("./notices");
+const { pushUserNotice } = require("./mine-desk");
 const { scheduleRouteI18n } = require("./route-i18n");
 
 function fail(status, message) {
@@ -187,6 +188,17 @@ function reviewApply(routeId, { action, note, adminId } = {}) {
     });
   }
   resolveNotices("route", "route", row.id, adminId);
+  if (row.submitted_by) {
+    pushUserNotice({
+      userId: row.submitted_by,
+      kind: "route_review",
+      title: act === "approve" ? "线路已通过" : "线路未通过",
+      body: act === "approve" ? `「${row.title}」已出现在线路目录` : `「${row.title}」未通过${trimmed ? "：" + trimmed : ""}`,
+      href: "/m/route-apply",
+      refType: "route",
+      refId: row.id,
+    });
+  }
   const next = db
     .prepare(
       `SELECT r.*, u.nickname AS applicant_name FROM routes r

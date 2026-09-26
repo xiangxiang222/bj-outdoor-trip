@@ -12,6 +12,8 @@ Page({
     idOk: false,
     isActivity: false,
     isFree: false,
+    companions: [],
+    companionMsg: "",
     form: { travelerName: "", travelerPhone: "", idCard: "", travelerType: "adult", joinMode: "chain", seatNo: "", insuranceCode: "outdoor", emergencyName: "", emergencyPhone: "", waiverAccepted: false, healthOk: false, wantGender: "any", wantSchool: "", comboNote: "", joinCode: "" },
     genderLabels: ["不限", "女生", "男生"],
     genderKeys: ["any", "female", "male"],
@@ -41,6 +43,7 @@ Page({
       "form.joinMode": q.joinMode === "photographer" || q.joinMode === "assistant" ? q.joinMode : "chain",
       "form.joinCode": q.code || q.joinCode || "",
     });
+    this.loadCompanions();
     request("/schedules/" + q.id).then((r) => {
       const s = r.data;
       const isActivity = s && s.channel === "activity";
@@ -100,6 +103,33 @@ Page({
     const taken = e.currentTarget.dataset.taken;
     if (taken) return;
     this.setData({ "form.seatNo": this.data.form.seatNo === no ? "" : no });
+  },
+  loadCompanions() {
+    request("/me/companions").then((r) => this.setData({ companions: r.data || [] })).catch(() => {});
+  },
+  applyCompanion(e) {
+    const c = this.data.companions[e.currentTarget.dataset.index];
+    if (!c) return;
+    this.setData({
+      "form.travelerName": c.name || "",
+      "form.travelerPhone": c.phone || "",
+      "form.emergencyName": c.emergencyName || "",
+      "form.emergencyPhone": c.emergencyPhone || "",
+      companionMsg: "已带入 " + (c.name || ""),
+    });
+  },
+  saveCompanion() {
+    const f = this.data.form;
+    request("/me/companions", "POST", {
+      name: f.travelerName,
+      phone: f.travelerPhone,
+      emergencyName: f.emergencyName,
+      emergencyPhone: f.emergencyPhone,
+    }).then((r) => {
+      this.setData({ companions: r.data || [], companionMsg: "已存为常用报名人" });
+    }).catch((err) => {
+      this.setData({ companionMsg: (err && err.message) || "保存失败" });
+    });
   },
   setName(e) { this.setData({ "form.travelerName": e.detail.value }); },
   setPhone(e) { this.setData({ "form.travelerPhone": e.detail.value }); },

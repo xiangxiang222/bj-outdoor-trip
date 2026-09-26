@@ -1,6 +1,6 @@
 const { request, showError } = require("../../utils/request");
 const { enrollStatusText } = require("../../utils/labels");
-const { splitTrips, tripKindLabel } = require("../../utils/trips");
+const { deskTrips, tripKindLabel } = require("../../utils/trips");
 const app = getApp();
 
 function decorate(item) {
@@ -19,10 +19,16 @@ function decorate(item) {
 }
 
 Page({
-  data: { loggedIn: false, tab: "upcoming", upcoming: [], restUpcoming: [], nextTrip: null, waitlist: [], past: [], reviewingId: 0, rating: 5, content: "" },
+  data: { loggedIn: false, tab: "depart", holdTab: false, upcoming: [], restUpcoming: [], nextTrip: null, waitlist: [], past: [], unpaid: [], review: [], refund: [], reviewingId: 0, rating: 5, content: "" },
   onShow() {
+    const preset = app.globalData.ordersTab || "";
+    if (preset) {
+      app.globalData.ordersTab = "";
+      this.data.tab = preset === "upcoming" ? "depart" : preset;
+      this.data.holdTab = true;
+    }
     if (!app.globalData.token) {
-      this.setData({ loggedIn: false, upcoming: [], waitlist: [], past: [] });
+      this.setData({ loggedIn: false, upcoming: [], waitlist: [], past: [], unpaid: [], review: [], refund: [] });
       return;
     }
     this.setData({ loggedIn: true });
@@ -32,20 +38,24 @@ Page({
     request("/orders")
       .then((r) => {
         const list = (r.data || []).map(decorate);
-        const split = splitTrips(list);
-        const upcoming = split.upcoming;
+        const split = deskTrips(list);
+        const upcoming = split.depart;
         const waitlist = split.waitlist;
         const past = split.past;
-        let tab = this.data.tab;
-        if (tab === "upcoming" && !upcoming.length && waitlist.length) tab = "waitlist";
-        else if (tab === "upcoming" && !upcoming.length && !waitlist.length && past.length) tab = "past";
+        let tab = this.data.tab === "upcoming" ? "depart" : this.data.tab;
+        if (!this.data.holdTab && tab === "depart" && !upcoming.length && waitlist.length) tab = "waitlist";
+        else if (!this.data.holdTab && tab === "depart" && !upcoming.length && !waitlist.length && past.length) tab = "past";
         this.setData({
           upcoming,
           restUpcoming: upcoming.slice(1),
           nextTrip: upcoming[0] || null,
           waitlist,
           past,
+          unpaid: split.unpaid,
+          review: split.review,
+          refund: split.refund,
           tab,
+          holdTab: false,
           reviewingId: 0,
           content: "",
         });

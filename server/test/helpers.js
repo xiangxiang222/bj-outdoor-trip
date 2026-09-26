@@ -25,6 +25,9 @@ function wipe(db) {
     DELETE FROM page_views;
     DELETE FROM reviews;
     DELETE FROM payment_splits;
+    DELETE FROM user_notices;
+    DELETE FROM companions;
+    DELETE FROM follows;
     DELETE FROM favorites;
     DELETE FROM points_ledger;
     DELETE FROM wallet_ledger;

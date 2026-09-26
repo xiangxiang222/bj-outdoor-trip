@@ -30,6 +30,41 @@ export function splitTrips(rows, today = todayYmd()) {
   return { upcoming, waitlist, past };
 }
 
+export function isUnpaidTrip(row) {
+  if (!row || row.status !== "joined") return false;
+  if (row.schedule_status === "cancelled") return false;
+  return row.pay_status === "unpaid" && Number(row.pay_amount || row.payAmount || 0) > 0;
+}
+
+export function isReviewTrip(row, today = todayYmd()) {
+  if (!row || !row.canReview) return false;
+  if (row.schedule_status === "cancelled") return false;
+  return String(row.start_date || row.startDate || "").slice(0, 10) < today;
+}
+
+export function isRefundTrip(row) {
+  return Boolean(row && row.refundProgress);
+}
+
+export function deskTrips(rows, today = todayYmd()) {
+  const split = splitTrips(rows, today);
+  const unpaid = [];
+  const review = [];
+  const refund = [];
+  for (const row of Array.isArray(rows) ? rows : []) {
+    if (isUnpaidTrip(row)) unpaid.push(row);
+    if (isReviewTrip(row, today)) review.push(row);
+    if (isRefundTrip(row)) refund.push(row);
+  }
+  return {
+    ...split,
+    unpaid,
+    review,
+    refund,
+    depart: split.upcoming.filter((row) => !isUnpaidTrip(row)),
+  };
+}
+
 export function tripKindLabel(row) {
   if (row?.channel === "activity") return "同城局";
   const type = row?.kind || row?.organizerType || row?.organizer_type || "";

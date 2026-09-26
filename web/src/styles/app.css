@@ -1906,6 +1906,7 @@ html.admin-theme .el-dialog__footer {
 .avatar-action { display: block; width: 100%; border: 0; border-top: 1px solid #f0f1f3; background: #fff; padding: 14px 0; font: inherit; text-align: center; cursor: pointer; }
 .mine-phone { color: #9a9a9a; font-size: calc(13px * var(--ui-scale)); margin-top: 2px; }
 .mine-gear {
+  position: relative;
   border: 0;
   background: transparent;
   border-radius: 0;
@@ -1937,22 +1938,40 @@ html.admin-theme .el-dialog__footer {
 .mine-member span { display: block; margin-top: 6px; font-size: calc(12px * var(--ui-scale)); font-weight: 400; color: #6b6280; text-decoration: none; }
 .mine-member i { font-style: normal; font-size: calc(13px * var(--ui-scale)); color: #8d8d8d; }
 .mine-pill { background: #6d4bd2; color: #fff !important; border-radius: 999px; padding: 6px 12px; font-size: calc(13px * var(--ui-scale)); font-weight: 600; }
+.mine-tools { display: flex; align-items: center; gap: 4px; flex: none; }
 .mine-shortcuts {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  display: flex;
+  gap: 4px;
   margin: 10px 0;
   background: #fff;
   border-radius: 12px;
   box-shadow: none;
-  padding: 14px 8px;
+  padding: 14px 4px;
+  overflow: auto;
 }
 .mine-shortcuts button {
+  flex: 1 0 58px;
   border: 0;
   background: transparent;
   font: inherit;
   cursor: pointer;
   color: inherit;
+  padding: 0;
+}
+.mine-badge {
+  position: absolute;
+  top: -2px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 99px;
+  background: #e23d3d;
+  color: #fff;
+  font-style: normal;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
 }
 .mine-shortcuts b { display: block; font-size: calc(18px * var(--ui-scale)); font-weight: 650; color: #111; }
 .mine-shortcuts span { font-size: calc(12px * var(--ui-scale)); color: #666; }
@@ -1974,6 +1993,7 @@ html.admin-theme .el-dialog__footer {
 }
 .mine-wallet-item strong { display: block; font-size: calc(20px * var(--ui-scale)); font-weight: 650; color: #111; letter-spacing: -0.3px; }
 .mine-wallet-item span { font-size: calc(12px * var(--ui-scale)); color: #8d8d8d; }
+.mine-wallet-item em { display: block; margin-top: 2px; font-style: normal; font-size: calc(11px * var(--ui-scale)); color: #c45c26; }
 .mine-wallet i { font-style: normal; color: #8d8d8d; font-size: calc(12px * var(--ui-scale)); }
 .mine-grid {
   display: grid;

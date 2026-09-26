@@ -12,7 +12,13 @@
             <div class="mine-phone">{{ maskPhone(store.profile.phone) }}</div>
           </button>
         </div>
-        <button class="mine-gear" type="button" @click="goAuth('/m/settings')">设置</button>
+        <div class="mine-tools">
+          <button class="mine-gear" type="button" @click="goAuth('/m/notices')">
+            消息
+            <em v-if="hub.unreadCount" class="mine-badge">{{ hub.unreadCount > 9 ? "9+" : hub.unreadCount }}</em>
+          </button>
+          <button class="mine-gear" type="button" @click="goAuth('/m/settings')">设置</button>
+        </div>
       </div>
 
       <button v-if="store.profile.membership" class="mine-member" type="button" @click="openMember">
@@ -24,21 +30,25 @@
       </button>
 
       <div class="mine-shortcuts">
-        <button type="button" @click="$router.push('/m/orders')">
-          <b>{{ (hub.upcomingCount || 0) + (hub.waitlistCount || 0) }}</b>
-          <span>全部行程</span>
-        </button>
-        <button type="button" @click="$router.push('/m/orders')">
-          <b>{{ hub.upcomingCount || 0 }}</b>
-          <span>待出发</span>
-        </button>
-        <button type="button" @click="$router.push('/m/orders')">
+        <button type="button" @click="goOrders('unpaid')">
           <b>{{ hub.unpaidCount || 0 }}</b>
           <span>待支付</span>
         </button>
-        <button type="button" @click="$router.push('/m/official')">
-          <b>客服</b>
-          <span>加微信</span>
+        <button type="button" @click="goOrders('waitlist')">
+          <b>{{ hub.waitlistCount || 0 }}</b>
+          <span>候补</span>
+        </button>
+        <button type="button" @click="goOrders('depart')">
+          <b>{{ hub.departCount || 0 }}</b>
+          <span>待出发</span>
+        </button>
+        <button type="button" @click="goOrders('review')">
+          <b>{{ hub.reviewCount || 0 }}</b>
+          <span>待评价</span>
+        </button>
+        <button type="button" @click="goOrders('refund')">
+          <b>{{ hub.refundCount || 0 }}</b>
+          <span>退款</span>
         </button>
       </div>
 
@@ -50,6 +60,7 @@
         <div class="mine-wallet-item">
           <strong>{{ hub.couponCount || coupons.length || 0 }}</strong>
           <span>优惠券</span>
+          <em v-if="hub.couponExpireHint">{{ hub.couponExpireHint }}</em>
         </div>
         <div class="mine-wallet-item">
           <strong>{{ store.profile.points || 0 }}</strong>
@@ -70,6 +81,9 @@
     <p class="cell-label">常用</p>
     <div class="mine-grid">
       <button type="button" @click="goAuth('/m/favorites')"><span>★</span>我的收藏</button>
+      <button type="button" @click="goAuth('/m/views')"><span>看</span>最近看过</button>
+      <button type="button" @click="goAuth('/m/companions')"><span>人</span>常用报名人</button>
+      <button type="button" @click="goAuth('/m/follows')"><span>注</span>关注领队</button>
       <button type="button" @click="goAuth('/m/student')"><span>学</span>{{ campusShort }}</button>
       <button type="button" @click="goAuth('/m/leader')"><span>队</span>{{ leaderShort }}</button>
       <button type="button" @click="goAuth('/m/publish')"><span>团</span>去发团</button>
@@ -175,6 +189,10 @@ function goLogin(redirect, tab) {
 function goAuth(path) {
   if (!store.token) goLogin(path);
   else router.push(path);
+}
+function goOrders(tab) {
+  if (!store.token) goLogin("/m/orders?tab=" + tab);
+  else router.push({ path: "/m/orders", query: { tab } });
 }
 function goReferral() {
   if (!store.token) goLogin("/m/mine");

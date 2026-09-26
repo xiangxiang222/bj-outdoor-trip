@@ -35,7 +35,7 @@ Page({
     coupon: null,
     leaderLabel: "领队申请",
     campusLabel: "校园认证",
-    hub: { balance: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, couponCount: 0 },
+    hub: { balance: 0, departCount: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, reviewCount: 0, refundCount: 0, unreadCount: 0, couponCount: 0, couponExpireHint: "" },
     picker: false,
     defaults: [],
   },
@@ -52,14 +52,14 @@ Page({
   },
   async loadHub() {
     if (!app.globalData.token) {
-      this.setData({ coupon: null, hub: { balance: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, couponCount: 0 } });
+      this.setData({ coupon: null, hub: { balance: 0, departCount: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, reviewCount: 0, refundCount: 0, unreadCount: 0, couponCount: 0, couponExpireHint: "" } });
       return;
     }
     try {
       const res = await request("/me/wallet");
       this.setData({ hub: res.data || {} });
     } catch {
-      this.setData({ hub: { balance: (app.globalData.user && app.globalData.user.walletBalance) || 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, couponCount: 0 } });
+      this.setData({ hub: { balance: (app.globalData.user && app.globalData.user.walletBalance) || 0, departCount: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, reviewCount: 0, refundCount: 0, unreadCount: 0, couponCount: 0, couponExpireHint: "" } });
     }
     try {
       const me = await request("/me");
@@ -147,7 +147,9 @@ Page({
     getApp().globalData.homeView = "routes";
     wx.switchTab({ url: "/pages/index/index" });
   },
-  goOrders() {
+  goOrders(e) {
+    const tab = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.tab) || "depart";
+    app.globalData.ordersTab = tab;
     wx.switchTab({ url: "/pages/orders/orders" });
   },
   login() {

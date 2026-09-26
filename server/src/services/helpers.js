@@ -165,6 +165,20 @@ function maybeMatchGuide(scheduleId) {
     guides.find((g) => (g.specialties || "").includes(route.category)) ||
     guides.find((g) => g.status === "idle") ||
     guides[0];
+  if (sch.status !== "confirmed") {
+    try {
+      require("./mine-desk").noticeJoined(scheduleId, {
+        kind: "group",
+        title: "已成团",
+        body: `「${route?.title || "本团"}」已达到成团人数`,
+        href: `/m/schedule/${scheduleId}`,
+        refType: "schedule",
+        refId: scheduleId,
+      });
+    } catch {
+      /* 成团消息不影响匹配导游 */
+    }
+  }
   if (hit) {
     db.prepare("UPDATE schedules SET guide_id=?, status=? WHERE id=?").run(hit.id, "confirmed", scheduleId);
     db.prepare("UPDATE guides SET status='assigned' WHERE id=?").run(hit.id);

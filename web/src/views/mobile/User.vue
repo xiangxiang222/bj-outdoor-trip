@@ -16,6 +16,9 @@
             {{ genderText(u.gender) }}<template v-if="u.hometown"> · {{ u.hometown }}</template>
             · 已出行 {{ u.tripCount }} 次
           </p>
+          <button v-if="store.token && !isSelf" class="btn ghost" type="button" style="margin-top:8px" @click="toggleFollow">
+            {{ u.followed ? "已关注" : "关注" }}
+          </button>
         </div>
       </div>
     </div>
@@ -93,6 +96,21 @@ const uploading = ref(false);
 const previewIndex = ref(null);
 const isSelf = computed(() => store.profile && u.value && Number(store.profile.id) === Number(u.value.id));
 const remain = computed(() => ALBUM_MAX - (u.value?.album?.length || 0));
+
+async function toggleFollow() {
+  if (!u.value || isSelf.value) return;
+  try {
+    if (u.value.followed) {
+      await http.delete("/me/follows/" + u.value.id);
+      u.value.followed = false;
+    } else {
+      await http.post("/me/follows/" + u.value.id);
+      u.value.followed = true;
+    }
+  } catch (e) {
+    msg.value = e.message || "关注失败";
+  }
+}
 
 async function load() {
   try {

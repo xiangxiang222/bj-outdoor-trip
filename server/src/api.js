@@ -66,6 +66,23 @@ const { oversubView, isOversubPending, drawOversub } = require("./services/overs
 const { parseVideoInput, videoViews } = require("./services/video");
 const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
 const { draftRoute } = require("./services/route-draft");
+const {
+  listNotices: listUserNotices,
+  unreadCount,
+  markNoticeRead,
+  markAllNoticesRead,
+  recentViews,
+  listCompanions,
+  saveCompanion,
+  removeCompanion,
+  isFollowing,
+  followUser,
+  unfollowUser,
+  listFollows,
+  refundByEnrollment,
+  noticeFollowers,
+  pushUserNotice,
+} = require("./services/mine-desk");
 const { scheduleRouteI18n } = require("./services/route-i18n");
 const { submitApply, listMine: listRouteApps, reviewApply, adminFields, bountyYuan, applicationView, reviewOf, isListed } = require("./services/route-apply");
 const { noticeCampus, noticeGroup, noticeLeader, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
@@ -910,6 +927,54 @@ router.get("/me/coupons", authUser, (req, res) => {
   res.json({ ok: true, data: listMine(req.userId) });
 });
 
+router.get("/me/notices", authUser, (req, res) => {
+  res.json({ ok: true, data: listUserNotices(req.userId), unread: unreadCount(req.userId) });
+});
+
+router.post("/me/notices/read-all", authUser, (req, res) => {
+  res.json({ ok: true, data: markAllNoticesRead(req.userId) });
+});
+
+router.post("/me/notices/:id/read", authUser, (req, res) => {
+  res.json({ ok: true, data: markNoticeRead(req.userId, req.params.id) });
+});
+
+router.get("/me/views", authUser, (req, res) => {
+  res.json({ ok: true, data: recentViews(req.userId, req) });
+});
+
+router.get("/me/companions", authUser, (req, res) => {
+  res.json({ ok: true, data: listCompanions(req.userId) });
+});
+
+router.post("/me/companions", authUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: saveCompanion(req.userId, req.body || {}) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.delete("/me/companions/:id", authUser, (req, res) => {
+  res.json({ ok: true, data: removeCompanion(req.userId, req.params.id) });
+});
+
+router.get("/me/follows", authUser, (req, res) => {
+  res.json({ ok: true, data: listFollows(req.userId, req) });
+});
+
+router.post("/me/follows/:id", authUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: followUser(req.userId, req.params.id) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.delete("/me/follows/:id", authUser, (req, res) => {
+  res.json({ ok: true, data: unfollowUser(req.userId, req.params.id) });
+});
+
 router.get("/coupons/:code", optionalUser, (req, res) => {
   try {
     const user = req.userId ? db().prepare("SELECT * FROM users WHERE id=?").get(req.userId) : null;
@@ -1233,10 +1298,11 @@ router.get("/weather", async (req, res) => {
   }
 });
 
-router.get("/users/:id", (req, res) => {
+router.get("/users/:id", optionalUser, (req, res) => {
   const user = resolveLiveUser(req.params.id);
   const data = publicUserProfile(user, req);
   if (!data) return res.status(404).json({ ok: false, message: "用户不存在" });
+  data.followed = isFollowing(req.userId, user.id);
   res.json({ ok: true, data });
 });
 
@@ -1955,6 +2021,7 @@ router.post("/pay/company-settle", authUser, async (req, res) => {
 
 router.get("/orders", authUser, (req, res) => {
   const reviewed = reviewedScheduleIds(req.userId);
+  const refunds = refundByEnrollment(req.userId);
   const rows = db()
     .prepare(
       `SELECT e.*, s.start_date, s.end_date, s.organizer_type, s.status AS schedule_status, s.route_id,
@@ -1989,6 +2056,7 @@ router.get("/orders", authUser, (req, res) => {
         payShareToken: e.pay_status === "unpaid" ? ensurePayShareToken(e.id) : e.pay_share_token || "",
         reviewed: reviewed.has(e.schedule_id),
         canReview: e.status === "joined" && !reviewed.has(e.schedule_id),
+        refundProgress: refunds.get(e.id) || null,
         completed: !!e.completed_at,
         canComplete: e.status === "joined" && !e.completed_at && !dayjs(e.start_date).isAfter(dayjs(), "day"),
         organizerType: e.organizer_type,
@@ -2707,6 +2775,27 @@ router.post("/admin/schedules/:id/review", authAdmin, requireCap("ops"), (req, r
   db().prepare("UPDATE schedules SET review_status=? WHERE id=?").run(status, sch.id);
   if (status === "approved") {
     db().prepare("UPDATE routes SET status='on' WHERE id=? AND status='pending'").run(sch.route_id);
+    const route = db().prepare("SELECT title FROM routes WHERE id=?").get(sch.route_id);
+    const title = route?.title || "新团";
+    if (sch.organizer_id) {
+      noticeFollowers(sch.organizer_id, {
+        kind: "follow",
+        title: "关注的人发团了",
+        body: `「${title}」${sch.start_date} 出发`,
+        href: `/m/schedule/${sch.id}`,
+        refType: "schedule",
+        refId: sch.id,
+      });
+      pushUserNotice({
+        userId: sch.organizer_id,
+        kind: "trip_review",
+        title: "发团已通过",
+        body: `「${title}」已通过审核`,
+        href: `/m/schedule/${sch.id}`,
+        refType: "schedule",
+        refId: sch.id,
+      });
+    }
   }
   res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id), req) });
 });
@@ -3226,6 +3315,16 @@ router.post("/admin/users/:id/verify", authAdmin, requireCap("ops"), (req, res) 
     return res.status(400).json({ ok: false, message: "请选择学生、团体或领队认证" });
   }
   resolveNotices(kind === "student" ? "campus" : kind === "group" ? "group" : "leader", "user", user.id, req.adminId);
+  const label = kind === "student" ? "校园认证" : kind === "group" ? "团体认证" : "领队申请";
+  pushUserNotice({
+    userId: user.id,
+    kind: "verify",
+    title: action === "approve" ? `${label}已通过` : `${label}未通过`,
+    body: action === "approve" ? "可以在「我的」里看到新的资格。" : "如需补充材料，可再次提交。",
+    href: kind === "leader" ? "/m/leader" : kind === "group" ? "/m/group" : "/m/student",
+    refType: "verify",
+    refId: user.id,
+  });
   const next = db().prepare("SELECT * FROM users WHERE id=?").get(user.id);
   res.json({ ok: true, data: adminUserView(next) });
 });

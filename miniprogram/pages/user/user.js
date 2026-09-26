@@ -40,6 +40,18 @@ Page({
   onShow() {
     if (this.userId && this.data.u) this.syncSelf(this.data.u);
   },
+  toggleFollow() {
+    const u = this.data.u;
+    if (!u || this.data.isSelf) return;
+    if (!getApp().globalData.token) {
+      wx.navigateTo({ url: "/pages/login/login" });
+      return;
+    }
+    const method = u.followed ? "DELETE" : "POST";
+    request("/me/follows/" + u.id, method)
+      .then(() => this.setData({ "u.followed": !u.followed }))
+      .catch((e) => showError("关注失败", e));
+  },
   syncSelf(u) {
     const me = getApp().globalData.user || {};
     const isSelf = !!(me.id && u && Number(me.id) === Number(u.id));

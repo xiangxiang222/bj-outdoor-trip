@@ -13,6 +13,9 @@
 <view class="btn ghost" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" bindtap="goStudent">{{tr.t('去校园认证', lang)}}</view>
 <view class="pad muted" wx:if="{{s.private}}">{{tr.t('这是加密团，报名需要发起人给的口令。', lang)}}</view>
 <input wx:if="{{s.joinCodeRequired && !s.joinCode}}" class="input" placeholder="{{tr.t('入团口令', lang)}}" value="{{form.joinCode}}" bindinput="setJoinCode" maxlength="16" />
+<view class="chips" wx:if="{{companions.length}}">
+  <view class="chip" wx:for="{{companions}}" wx:key="id" data-index="{{index}}" bindtap="applyCompanion">{{tr.t(item.name, lang)}}</view>
+</view>
 <input class="input" placeholder="{{tr.t(isActivity ? '怎么称呼' : '姓名（与身份证一致）', lang)}}" value="{{form.travelerName}}" bindinput="setName" />
 <input class="input" placeholder="{{tr.t('手机号', lang)}}" type="number" maxlength="11" value="{{form.travelerPhone}}" bindinput="setPhone" />
 <block wx:if="{{!isActivity}}">
@@ -20,6 +23,8 @@
 <view class="pad" style="color:{{idOk ? '#6b705c' : '#bc4749'}};font-size: calc(24rpx * var(--ui-scale))" wx:if="{{idHint}}">{{tr.t(idHint, lang)}}</view>
 <input class="input" placeholder="{{tr.t('紧急联系人姓名', lang)}}" value="{{form.emergencyName}}" bindinput="setEmergencyName" />
 <input class="input" placeholder="{{tr.t('紧急联系人手机（不能与出行人相同）', lang)}}" type="number" maxlength="11" value="{{form.emergencyPhone}}" bindinput="setEmergencyPhone" />
+<view class="btn ghost" bindtap="saveCompanion">{{tr.t('存为常用报名人', lang)}}</view>
+<view class="pad muted" wx:if="{{companionMsg}}">{{tr.t(companionMsg, lang)}}</view>
 <view class="pad muted" wx:if="{{form.joinMode=='photographer'}}" style="color:#2d6a4f">{{tr.t('本团摄影师，免个人团费，保险另计。本团只设一位。', lang)}}</view>
 <view class="card" wx:if="{{s.combo.enabled}}">
   <view class="pad title">{{tr.t('组合团 · 另一半条件', lang)}}</view>

@@ -45,6 +45,9 @@ async function deleteAccount(userId) {
   }
 
   db.prepare("DELETE FROM favorites WHERE user_id=?").run(userId);
+  db.prepare("DELETE FROM companions WHERE user_id=?").run(userId);
+  db.prepare("DELETE FROM follows WHERE user_id=? OR target_user_id=?").run(userId, userId);
+  db.prepare("DELETE FROM user_notices WHERE user_id=?").run(userId);
   db.prepare("DELETE FROM bank_cards WHERE user_id=?").run(userId);
   db.prepare(
     `UPDATE users SET

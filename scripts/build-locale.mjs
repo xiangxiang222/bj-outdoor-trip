@@ -93,6 +93,12 @@ function wholeCount(s) {
   if (ago) return swapCore(s, core, ago + " hr ago");
   ago = endsNum(packed, "天前");
   if (ago) return swapCore(s, core, ago + " days ago");
+  ago = endsNum(packed, "张明天到期");
+  if (ago) return swapCore(s, core, ago + " expire tomorrow");
+  ago = endsNum(packed, "张即将到期");
+  if (ago) return swapCore(s, core, ago + " expiring soon");
+  ago = endsNum(packed, "条未读");
+  if (ago) return swapCore(s, core, ago + " unread");
   return "";
 }
 
