@@ -114,17 +114,17 @@
 
     <p class="cell-label">常用</p>
     <div class="mine-grid">
-      <button type="button" @click="goAuth('/m/favorites')"><img :src="'/static/mine/fav.png'" alt="" />我的收藏</button>
-      <button type="button" @click="goAuth('/m/views')"><img :src="'/static/mine/views.png?v=2'" alt="" />最近看过</button>
-      <button type="button" @click="goAuth('/m/companions')"><img :src="'/static/mine/people.png'" alt="" />常用报名人</button>
-      <button type="button" @click="goAuth('/m/follows')"><img :src="'/static/mine/follow.png'" alt="" />关注领队</button>
-      <button type="button" @click="goAuth('/m/student')"><img :src="'/static/mine/campus.png'" alt="" />{{ campusShort }}</button>
-      <button type="button" @click="goAuth('/m/leader')"><img :src="'/static/mine/leader.png?v=2'" alt="" />{{ leaderShort }}</button>
-      <button type="button" @click="goAuth('/m/publish')"><img :src="'/static/mine/publish.png?v=2'" alt="" />去发团</button>
-      <button type="button" @click="goReferral"><img :src="'/static/mine/referral.png'" alt="" />推荐报名</button>
-      <button type="button" @click="goAuth('/m/lottery')"><img :src="'/static/mine/lottery.png'" alt="" />抽奖</button>
-      <button type="button" @click="goAuth('/m/route-apply')"><img :src="'/static/mine/route.png'" alt="" />收录线路</button>
-      <button type="button" @click="goAuth('/m/feedback')"><img :src="'/static/mine/feedback.png'" alt="" />建议反馈</button>
+      <button type="button" @click="goAuth('/m/favorites')"><img :src="'/static/mine/fav.png?v=3'" alt="" />我的收藏</button>
+      <button type="button" @click="goAuth('/m/views')"><img :src="'/static/mine/views.png?v=3'" alt="" />最近看过</button>
+      <button type="button" @click="goAuth('/m/companions')"><img :src="'/static/mine/people.png?v=3'" alt="" />常用报名人</button>
+      <button type="button" @click="goAuth('/m/follows')"><img :src="'/static/mine/follow.png?v=3'" alt="" />关注领队</button>
+      <button type="button" @click="goAuth('/m/student')"><img :src="'/static/mine/campus.png?v=3'" alt="" />{{ campusShort }}</button>
+      <button type="button" @click="goAuth('/m/leader')"><img :src="'/static/mine/leader.png?v=3'" alt="" />{{ leaderShort }}</button>
+      <button type="button" @click="goAuth('/m/publish')"><img :src="'/static/mine/publish.png?v=3'" alt="" />去发团</button>
+      <button type="button" @click="goReferral"><img :src="'/static/mine/referral.png?v=3'" alt="" />推荐报名</button>
+      <button type="button" @click="goAuth('/m/lottery')"><img :src="'/static/mine/lottery.png?v=3'" alt="" />抽奖</button>
+      <button type="button" @click="goAuth('/m/route-apply')"><img :src="'/static/mine/route.png?v=3'" alt="" />收录线路</button>
+      <button type="button" @click="goAuth('/m/feedback')"><img :src="'/static/mine/feedback.png?v=3'" alt="" />建议反馈</button>
     </div>
 
     <p class="cell-label">服务</p>
