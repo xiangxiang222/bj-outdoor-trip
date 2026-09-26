@@ -139,18 +139,18 @@ function toEn(s) {
   var j;
   for (j = 0; j < s.length; j++) {
     var cj = s.charCodeAt(j);
-    if (cj >= 0x4e00 && cj <= 0x9fff) hanCount++;
+    if (cj >= 19968 && cj <= 40959) hanCount++;
   }
   var out = "";
   var i = 0;
   while (i < s.length) {
     var code = s.charCodeAt(i);
-    if (code >= 0x4e00 && code <= 0x9fff) {
+    if (code >= 19968 && code <= 40959) {
       var start = i;
       var run = "";
       while (i < s.length) {
         var code2 = s.charCodeAt(i);
-        if (code2 < 0x4e00 || code2 > 0x9fff) break;
+        if (code2 < 19968 || code2 > 40959) break;
         run += s.charAt(i);
         i++;
       }
@@ -178,7 +178,7 @@ function t(text, lang) {
   var i;
   for (i = 0; i < s.length; i++) {
     var code = s.charCodeAt(i);
-    if (code >= 0x4e00 && code <= 0x9fff) has = true;
+    if (code >= 19968 && code <= 40959) has = true;
   }
   if (!has) return s;
   if (lang === "tw") return toTw(s);
