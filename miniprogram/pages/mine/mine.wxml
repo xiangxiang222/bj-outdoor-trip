@@ -132,8 +132,3 @@
   <view bindtap="go" data-url="/pages/feedback/feedback"><image class="ico" src="{{iconBase}}feedback.png" mode="aspectFit" />{{tr.t('建议', lang)}}</view>
   <view bindtap="goRoutes"><image class="ico" src="{{iconBase}}trails.png" mode="aspectFit" />{{tr.t('看线路', lang)}}</view>
 </view>
-
-<view class="cell-label">{{tr.t('服务', lang)}}</view>
-<view class="cell-group">
-  <view class="cell" bindtap="goOfficial"><text>{{tr.t('客服与规则', lang)}}</text><text class="muted">{{tr.t('加微信、FAQ ›', lang)}}</text></view>
-</view>

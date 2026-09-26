@@ -1,6 +1,6 @@
 <template>
   <div>
-    <p class="muted">{{ isActivity ? "提交后需管理员审核，通过后出现在活动 Tab。" : "提交后需管理员审核。规则在「我的 → 客服与规则」。可按关键词先匹配已有线路。" }}</p>
+    <p class="muted">{{ isActivity ? "提交后需管理员审核，通过后出现在活动 Tab。" : "提交后需管理员审核。规则在「我的」右上角「客服」。可按关键词先匹配已有线路。" }}</p>
     <label>类型</label>
     <select class="select" v-model="form.channel">
       <option value="trip">户外线路（上首页）</option>
