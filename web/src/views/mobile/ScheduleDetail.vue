@@ -130,26 +130,37 @@
             </div>
           </div>
           <div class="leader-board" v-if="!isActivity">
-            <div class="leader-slot" v-for="slot in leaderSlots" :key="slot.slot">
-              <template v-if="slot.leader">
+            <p class="role-kicker" v-if="hasOpenRole">本团还有空位</p>
+            <template v-for="slot in leaderSlots" :key="slot.slot">
+              <div class="leader-slot" v-if="slot.leader">
                 <a class="nav-link" href="#" @click.prevent="openLeader(slot.leader)">
                   <img v-if="slot.leader.avatar" class="leader-face" :src="slot.leader.avatar" alt="" />
                   <span v-else class="leader-face">{{ (slot.leader.name || "领").slice(0, 1) }}</span>
                   {{ slot.label }} {{ slot.leader.name }}
                 </a>
-              </template>
-              <a v-else class="nav-link" href="#" @click.prevent="applyLeader(slot.slot)">{{ slot.label }} · 报名领队</a>
+              </div>
+              <button v-else class="role-open" type="button" @click="applyLeader(slot.slot)">
+                <span class="role-open-copy">
+                  <b>{{ slot.label }} · 报名领队</b>
+                  <small>空位，点此带这团</small>
+                </span>
+                <i>›</i>
+              </button>
+            </template>
+            <div class="leader-slot" v-if="s.photographer">
+              <a class="nav-link" href="#" @click.prevent="openLeader(s.photographer)">
+                <img v-if="s.photographer.avatar" class="leader-face" :src="s.photographer.avatar" alt="" />
+                <span v-else class="leader-face">{{ (s.photographer.name || "摄").slice(0, 1) }}</span>
+                摄影师 {{ s.photographer.name }}
+              </a>
             </div>
-            <div class="leader-slot">
-              <template v-if="s.photographer">
-                <a class="nav-link" href="#" @click.prevent="openLeader(s.photographer)">
-                  <img v-if="s.photographer.avatar" class="leader-face" :src="s.photographer.avatar" alt="" />
-                  <span v-else class="leader-face">{{ (s.photographer.name || "摄").slice(0, 1) }}</span>
-                  摄影师 {{ s.photographer.name }}
-                </a>
-              </template>
-              <a v-else class="nav-link" href="#" @click.prevent="applyPhotographer">摄影师 · 报名摄影师</a>
-            </div>
+            <button v-else class="role-open" type="button" @click="applyPhotographer">
+              <span class="role-open-copy">
+                <b>报名摄影师</b>
+                <small>空位，免个人团费</small>
+              </span>
+              <i>›</i>
+            </button>
             <div v-if="leaderNeedApply" class="card" style="margin-top:8px">
               <div class="pad">
                 <p style="margin:0 0 10px">{{ leaderNeedApplyText }}</p>
@@ -582,6 +593,7 @@ const leaderSlots = computed(() => {
     leader: list.find((l) => Number(l.slot) === slot) || null,
   }));
 });
+const hasOpenRole = computed(() => leaderSlots.value.some((slot) => !slot.leader) || !s.value?.photographer);
 const candidateOptions = computed(() => {
   const opts = s.value?.fallbackOptions || {};
   return [...(opts.sameRoute || []), ...(opts.otherRecruiting || [])];

@@ -1,4 +1,19 @@
 .trip-head { margin-top: 0; border-radius: 0; }
+.role-kicker { margin-top: 16rpx; color: #8c8c8c; font-size: calc(24rpx * var(--ui-scale)); }
+.role-open {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12rpx;
+  padding: 20rpx 24rpx;
+  border: 1px solid #2d6a4f;
+  border-radius: 16rpx;
+  background: #eef6f1;
+  color: #1b4332;
+}
+.role-open-name { font-size: calc(30rpx * var(--ui-scale)); font-weight: 650; }
+.role-open-sub { margin-top: 4rpx; color: #52796f; font-size: calc(24rpx * var(--ui-scale)); }
+.role-open-go { color: #2d6a4f; font-size: calc(40rpx * var(--ui-scale)); line-height: 1; }
 .hero-swipe { margin: 0; }
 .goods-tabs {
   position: sticky;

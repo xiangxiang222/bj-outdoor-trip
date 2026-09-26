@@ -95,17 +95,28 @@
     </view>
     <view class="muted" wx:elif="{{s.guide}}" bindtap="goGuide">{{tr.t('已匹配导游：', lang)}}{{tr.t(s.guide.name, lang)}} <text class="nav-link">{{tr.t('查看详情', lang)}}</text></view>
     <block wx:if="{{!isActivity}}">
-      <view class="leader-slot" wx:for="{{leaderSlots}}" wx:key="slot">
-        <view wx:if="{{item.leader}}" bindtap="openLeader" data-kind="{{item.leader.kind}}" data-id="{{item.leader.id}}" data-userid="{{item.leader.userId}}">
+      <view class="role-kicker" wx:if="{{!(leaderSlots[0].leader && leaderSlots[1].leader && s.photographer)}}">{{tr.t('本团还有空位', lang)}}</view>
+      <block wx:for="{{leaderSlots}}" wx:key="slot">
+        <view class="leader-slot" wx:if="{{item.leader}}" bindtap="openLeader" data-kind="{{item.leader.kind}}" data-id="{{item.leader.id}}" data-userid="{{item.leader.userId}}">
           <text class="nav-link">{{tr.t(item.label, lang)}} {{tr.t(item.leader.name, lang)}}</text>
         </view>
-        <view wx:else bindtap="applyLeader">{{tr.t(item.label, lang)}} {{tr.t('· 报名领队', lang)}}</view>
-      </view>
-      <view class="leader-slot">
-        <view wx:if="{{s.photographer}}" bindtap="openLeader" data-kind="user" data-id="{{s.photographer.id}}" data-userid="{{s.photographer.userId}}">
-          <text class="nav-link">{{tr.t('摄影师', lang)}} {{tr.t(s.photographer.name, lang)}}</text>
+        <view wx:else class="role-open" bindtap="applyLeader">
+          <view>
+            <view class="role-open-name">{{tr.t(item.label, lang)}} · {{tr.t('报名领队', lang)}}</view>
+            <view class="role-open-sub">{{tr.t('空位，点此带这团', lang)}}</view>
+          </view>
+          <view class="role-open-go">›</view>
         </view>
-        <view wx:else bindtap="applyPhotographer">{{tr.t('摄影师 · 报名摄影师', lang)}}</view>
+      </block>
+      <view class="leader-slot" wx:if="{{s.photographer}}" bindtap="openLeader" data-kind="user" data-id="{{s.photographer.id}}" data-userid="{{s.photographer.userId}}">
+        <text class="nav-link">{{tr.t('摄影师', lang)}} {{tr.t(s.photographer.name, lang)}}</text>
+      </view>
+      <view wx:else class="role-open" bindtap="applyPhotographer">
+        <view>
+          <view class="role-open-name">{{tr.t('报名摄影师', lang)}}</view>
+          <view class="role-open-sub">{{tr.t('空位，免个人团费', lang)}}</view>
+        </view>
+        <view class="role-open-go">›</view>
       </view>
     </block>
   </view>

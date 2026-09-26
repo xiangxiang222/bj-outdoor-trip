@@ -771,6 +771,27 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 .leader-board { margin-top: 10px; }
 .leader-slot { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: calc(14px * var(--ui-scale)); }
 .leader-face { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--mint); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+.role-kicker { margin: 12px 0 0; color: var(--muted); font-size: calc(13px * var(--ui-scale)); }
+.role-open {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid #2d6a4f;
+  border-radius: 12px;
+  background: #eef6f1;
+  color: #1b4332;
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.role-open-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.role-open b { font-size: calc(15px * var(--ui-scale)); font-weight: 650; }
+.role-open small { color: #52796f; font-size: calc(12px * var(--ui-scale)); }
+.role-open i { font-style: normal; font-size: calc(20px * var(--ui-scale)); color: #2d6a4f; line-height: 1; }
 .ins-opt {
   display: flex;
   gap: 8px;
@@ -2068,6 +2089,13 @@ html[data-night="dark"] .card,
 html[data-night="dark"] .cell-group {
   background: #1c1c1e;
 }
+html[data-night="dark"] .role-open {
+  background: #1a2e24;
+  border-color: #40916c;
+  color: #d8f3dc;
+}
+html[data-night="dark"] .role-open small,
+html[data-night="dark"] .role-open i { color: #95d5b2; }
 html[data-night="dark"] .mp-phone.is-account .title,
 html[data-night="dark"] .mp-phone.is-account strong,
 html[data-night="dark"] .mp-tab {
