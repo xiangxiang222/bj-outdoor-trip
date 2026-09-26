@@ -63,6 +63,7 @@ Page({
   },
   onShow() {
     const app = getApp();
+    if (!app || !app.globalData) return;
     if (app.globalData.homeView === "routes") {
       app.globalData.homeView = "";
       this.setView({ currentTarget: { dataset: { view: "routes" } } });
