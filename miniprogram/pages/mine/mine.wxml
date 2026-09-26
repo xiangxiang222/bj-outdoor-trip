@@ -12,9 +12,22 @@
         <view class="muted">{{tr.t(phone, lang)}}</view>
       </view>
     </view>
-    <view class="mine-tools">
-      <view class="mine-gear" bindtap="go" data-url="/pages/notices/notices">{{tr.t('消息', lang)}}<text wx:if="{{hub.unreadCount}}" class="mine-badge">{{hub.unreadCount > 9 ? '9+' : hub.unreadCount}}</text></view>
-      <view class="mine-gear" bindtap="go" data-url="/pages/settings/settings">{{tr.t('设置', lang)}}</view>
+    <view class="mine-tools {{dark ? 'is-dark' : ''}}">
+      <view class="mine-tool" bindtap="goOfficial">
+        <view class="mine-tool-ico"><image src="{{iconBase}}tool-help.png" mode="aspectFit" /></view>
+        <text>{{tr.t('客服', lang)}}</text>
+      </view>
+      <view class="mine-tool" bindtap="go" data-url="/pages/settings/settings">
+        <view class="mine-tool-ico"><image src="{{iconBase}}tool-set.png" mode="aspectFit" /></view>
+        <text>{{tr.t('设置', lang)}}</text>
+      </view>
+      <view class="mine-tool" bindtap="go" data-url="/pages/notices/notices">
+        <view class="mine-tool-ico">
+          <image src="{{iconBase}}tool-msg.png" mode="aspectFit" />
+          <text wx:if="{{hub.unreadCount}}" class="mine-badge">{{hub.unreadCount > 9 ? '9+' : hub.unreadCount}}</text>
+        </view>
+        <text>{{tr.t('消息', lang)}}</text>
+      </view>
     </view>
   </view>
   <view class="avatar-mask" wx:if="{{picker}}" catchtap="closeAvatar">
@@ -83,16 +96,16 @@
 
 <view class="cell-label">{{tr.t('常用', lang)}}</view>
 <view class="mine-grid">
-  <view bindtap="go" data-url="/pages/favorites/favorites"><view class="ico">★</view>{{tr.t('收藏', lang)}}</view>
-  <view bindtap="go" data-url="/pages/views/views"><view class="ico">看</view>{{tr.t('最近看过', lang)}}</view>
-  <view bindtap="go" data-url="/pages/companions/companions"><view class="ico">人</view>{{tr.t('报名人', lang)}}</view>
-  <view bindtap="go" data-url="/pages/follows/follows"><view class="ico">注</view>{{tr.t('关注领队', lang)}}</view>
-  <view bindtap="go" data-url="/pages/student/student"><view class="ico">学</view>{{tr.t(campusLabel, lang)}}</view>
-  <view bindtap="go" data-url="/pages/leader/leader"><view class="ico">队</view>{{tr.t(leaderLabel, lang)}}</view>
-  <view bindtap="go" data-url="/pages/publish/publish"><view class="ico">团</view>{{tr.t('发团', lang)}}</view>
-  <view bindtap="go" data-url="/pages/route-apply/route-apply"><view class="ico">线</view>{{tr.t('收录线路', lang)}}</view>
-  <view bindtap="go" data-url="/pages/feedback/feedback"><view class="ico">问</view>{{tr.t('建议', lang)}}</view>
-  <view bindtap="goRoutes"><view class="ico">目</view>{{tr.t('看线路', lang)}}</view>
+  <view bindtap="go" data-url="/pages/favorites/favorites"><image class="ico" src="{{iconBase}}fav.png" mode="aspectFit" />{{tr.t('收藏', lang)}}</view>
+  <view bindtap="go" data-url="/pages/views/views"><image class="ico" src="{{iconBase}}views.png" mode="aspectFit" />{{tr.t('最近看过', lang)}}</view>
+  <view bindtap="go" data-url="/pages/companions/companions"><image class="ico" src="{{iconBase}}people.png" mode="aspectFit" />{{tr.t('报名人', lang)}}</view>
+  <view bindtap="go" data-url="/pages/follows/follows"><image class="ico" src="{{iconBase}}follow.png" mode="aspectFit" />{{tr.t('关注领队', lang)}}</view>
+  <view bindtap="go" data-url="/pages/student/student"><image class="ico" src="{{iconBase}}campus.png" mode="aspectFit" />{{tr.t(campusLabel, lang)}}</view>
+  <view bindtap="go" data-url="/pages/leader/leader"><image class="ico" src="{{iconBase}}leader.png" mode="aspectFit" />{{tr.t(leaderLabel, lang)}}</view>
+  <view bindtap="go" data-url="/pages/publish/publish"><image class="ico" src="{{iconBase}}publish.png" mode="aspectFit" />{{tr.t('发团', lang)}}</view>
+  <view bindtap="go" data-url="/pages/route-apply/route-apply"><image class="ico" src="{{iconBase}}route.png" mode="aspectFit" />{{tr.t('收录线路', lang)}}</view>
+  <view bindtap="go" data-url="/pages/feedback/feedback"><image class="ico" src="{{iconBase}}feedback.png" mode="aspectFit" />{{tr.t('建议', lang)}}</view>
+  <view bindtap="goRoutes"><image class="ico" src="{{iconBase}}trails.png" mode="aspectFit" />{{tr.t('看线路', lang)}}</view>
 </view>
 
 <view class="cell-label">{{tr.t('服务', lang)}}</view>

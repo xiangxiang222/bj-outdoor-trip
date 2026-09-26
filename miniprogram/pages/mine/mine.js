@@ -1,5 +1,6 @@
 const { request, setAuth, showError } = require("../../utils/request");
 const { maskPhone } = require("../../utils/labels");
+const appearance = require("../../utils/appearance");
 const app = getApp();
 
 function uploadAvatar(filePath) {
@@ -38,6 +39,8 @@ Page({
     hub: { balance: 0, departCount: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, reviewCount: 0, refundCount: 0, unreadCount: 0, couponCount: 0, couponExpireHint: "" },
     picker: false,
     defaults: [],
+    iconBase: app.globalData.baseUrl + "/static/mine/",
+    dark: false,
   },
   onShow() {
     const user = app.globalData.user;
@@ -47,6 +50,8 @@ Page({
       nickHead: user && user.nickname ? user.nickname.slice(0, 1) : "友",
       leaderLabel: user && user.isLeader ? "领队已认证" : user && user.leaderStatus === "pending" ? "领队申请审核中" : "领队申请",
       campusLabel: user && user.isAlumni ? "校友已认证" : user && user.isStudent ? "学生已认证" : user && user.studentStatus === "pending" ? "校园认证审核中" : "校园认证",
+      dark: appearance.isDark(),
+      iconBase: app.globalData.baseUrl + "/static/mine/",
     });
     this.loadHub();
   },
