@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="card" wx:if="{{data}}" style="background:#1b4332;color:#fff">
   <view class="pad">
     <view class="muted" style="color:#fff;opacity:.85">{{data.universal ? '通用优惠券' : '本团优惠券'}}</view>

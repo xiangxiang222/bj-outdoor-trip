@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="pad muted">可留空。搜不到时点「使用该名称」即可自己填。</view>
 <input class="input" value="{{q}}" placeholder="{{searchPlaceholder}}" bindinput="onSearch" />
 <view class="campus-pick-list">

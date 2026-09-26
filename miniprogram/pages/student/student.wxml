@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="pad muted">认证时请上传学生证或校友证。学校、学院、专业可从北京高校名单里选，也可以不填。通过后可走学生价；部分团只对本院、本校或指定学校学院开放。校友不享受学生价。</view>
 <view class="pad" wx:if="{{certified}}" style="color:#2d6a4f">已认证{{kindLabel}}{{placeText}}</view>
 <view class="pad muted" wx:elif="{{pending}}">审核中{{placeText}}</view>

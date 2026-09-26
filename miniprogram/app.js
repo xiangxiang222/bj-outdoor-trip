@@ -13,6 +13,11 @@ App({
     this.globalData.token = wx.getStorageSync("bj_token") || "";
     this.globalData.user = wx.getStorageSync("bj_user") || null;
     this.globalData.couponPrompted = false;
+    const appearance = require("./utils/appearance");
+    appearance.applyChrome(appearance.read());
+    if (wx.onThemeChange) {
+      wx.onThemeChange(() => appearance.applyChrome(appearance.read()));
+    }
   },
   onShow(options) {
     const extra = options && options.referrerInfo && options.referrerInfo.extraData;
@@ -53,3 +58,20 @@ App({
       .catch(() => {});
   },
 });
+
+const appearance = require("./utils/appearance");
+const originPage = Page;
+Page = function (config) {
+  config.data = Object.assign({ lookRoot: "16px", lookStyle: "" }, config.data || {});
+  const originLoad = config.onLoad;
+  const originShow = config.onShow;
+  config.onLoad = function (query) {
+    appearance.paint(this);
+    if (originLoad) originLoad.call(this, query);
+  };
+  config.onShow = function () {
+    appearance.paint(this);
+    if (originShow) originShow.call(this);
+  };
+  return originPage(config);
+};

@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="mine-page" wx:if="{{user}}">
   <view class="mine-hero-card">
     <view class="mine-user" bindtap="goHome">

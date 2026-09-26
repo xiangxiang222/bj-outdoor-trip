@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
   <image class="cover" src="{{item.cover}}" mode="aspectFill" />
   <view class="pad">

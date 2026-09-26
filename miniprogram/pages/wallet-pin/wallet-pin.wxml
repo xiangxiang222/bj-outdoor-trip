@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="card">
   <view class="pad muted">{{pinSet ? '修改支付密码需验证原密码。' : '设置 6 位数字支付密码后才能提现。'}}</view>
   <block wx:if="{{pinSet}}">

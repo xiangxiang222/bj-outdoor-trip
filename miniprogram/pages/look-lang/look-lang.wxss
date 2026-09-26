@@ -1,0 +1,2 @@
+@import "../settings/settings.wxss";
+.mark { color: #34c759; font-size: 36rpx; }

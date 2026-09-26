@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <picker range="{{kinds}}" range-key="label" bindchange="onKind">
   <view class="pad">类型：{{kinds[kindIndex].label}}</view>
 </picker>

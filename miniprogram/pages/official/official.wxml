@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="svc-hero">
   <image class="logo" src="/images/logo.jpg" mode="aspectFit" />
   <view class="title">需要人时，先加官方微信</view>

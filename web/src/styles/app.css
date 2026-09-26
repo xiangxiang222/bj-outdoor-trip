@@ -2025,6 +2025,58 @@ html.admin-theme .el-dialog__footer {
 }
 .cell:last-child { border-bottom: 0; }
 .cell i { font-style: normal; color: var(--muted); font-size: 13px; flex: none; }
+.look-switch { width: 46px; height: 28px; accent-color: #34c759; }
+.look-preview { background: #8e8e93; border-radius: 16px; padding: 16px; }
+.look-sample { background: var(--paper); color: var(--ink); border-radius: 12px; padding: 16px; }
+.look-pt { font-size: 18px; font-weight: 650; line-height: 1.45; }
+.look-pb { margin-top: 8px; color: var(--muted); line-height: 1.5; }
+.look-pn { margin-top: 10px; color: #8a8f99; font-size: 12px; }
+.look-fonts { display: flex; gap: 8px; }
+.look-font-card { flex: 1; border: 0; background: var(--paper); border-radius: 12px; padding: 16px 6px; text-align: center; color: inherit; }
+.look-font-card.on { background: #f2f2f4; }
+.look-font-card span { display: block; margin-top: 8px; color: #8a8f99; font-size: 12px; font-family: "PingFang SC", sans-serif; }
+.look-size { background: var(--paper); border-radius: 16px; padding: 16px; }
+.look-scale { display: flex; justify-content: space-between; align-items: flex-end; }
+.look-scale .big { font-size: 28px; }
+.look-size input { width: 100%; margin: 12px 0; }
+.look-hint { text-align: center; color: #8a8f99; font-size: 12px; background: #f3f4f6; border-radius: 6px; padding: 6px; }
+.look-choice .cell i { color: #34c759; font-size: 18px; }
+.look-choice small { display: block; margin-top: 4px; color: var(--muted); font-weight: 400; }
+html[data-night="dark"] {
+  --cream: #121214;
+  --paper: #1c1c1e;
+  --ink: #f2f2f2;
+  --muted: #9a9a9a;
+  --line: #2c2c2e;
+}
+html[data-night="dark"] .mp-phone,
+html[data-night="dark"] .mp-phone.is-account,
+html[data-night="dark"] .mp-phone.is-account .mp-body,
+html[data-night="dark"] .mp-body {
+  background: #121214;
+  color: #f2f2f2;
+}
+html[data-night="dark"] .mp-phone.is-account .card,
+html[data-night="dark"] .mp-phone.is-account .cell-group,
+html[data-night="dark"] .card,
+html[data-night="dark"] .cell-group {
+  background: #1c1c1e;
+}
+html[data-night="dark"] .mp-phone.is-account .title,
+html[data-night="dark"] .mp-phone.is-account strong,
+html[data-night="dark"] .mp-tab {
+  color: #f2f2f2;
+  background: #1c1c1e;
+}
+html[data-night="dark"] .mp-tab a.active { color: #d7b4e4; }
+.mp-body { zoom: var(--ui-scale, 1); }
+html[data-text="1"] .mp-body img,
+html[data-text="1"] .hero-swipe,
+html[data-text="1"] .cover,
+html[data-text="1"] .album-grid,
+html[data-text="1"] .moments-grid {
+  display: none !important;
+}
 .trip-detail {
   margin: -12px -14px 0;
 }

@@ -1,0 +1,4 @@
+@import "../settings/settings.wxss";
+.sub { margin-top: 8rpx; color: var(--muted, #8a8f99); font-size: 24rpx; }
+.mark { color: #34c759; font-size: 36rpx; }
+.list { margin-top: 24rpx; }

@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view wx:if="{{err}}" class="muted pad">{{err}}</view>
 <view class="card" wx:if="{{r.reviewStatus=='pending'}}">
   <view class="pad">

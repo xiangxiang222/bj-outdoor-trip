@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="pad muted">个人通过领队申请后，才能在团详情页报名领队。</view>
 <view class="pad" wx:if="{{certified}}" style="color:#2d6a4f">已是领队{{name ? ' · ' + name : ''}}</view>
 <view class="pad muted" wx:elif="{{pending}}">审核中{{name ? ' · ' + name : ''}}</view>

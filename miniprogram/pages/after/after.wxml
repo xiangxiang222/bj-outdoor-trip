@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="card" wx:if="{{s}}"><view class="pad">
   <view class="title">{{s.title}}</view>
   <view class="muted">{{s.startDate}} · 回来的大巴上点完成后再评价、评选。</view>

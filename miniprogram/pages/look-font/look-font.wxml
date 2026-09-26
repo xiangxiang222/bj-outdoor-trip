@@ -1,0 +1,30 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<view class="sec">{{copy.preview}}</view>
+<view class="preview" style="font-family:{{fontFamily}}">
+  <view class="sample">
+    <view class="pt">{{copy.previewTitle}}</view>
+    <view class="pb">{{copy.previewBody}}</view>
+    <view class="pn">{{copy.previewNote}}</view>
+  </view>
+</view>
+<view class="sec">{{copy.fontPick}}</view>
+<view class="fonts">
+  <view class="font {{look.font==='system'?'on':''}}" data-font="system" bindtap="pickFont" style="font-family:{{fonts.system}}">
+    <view class="fn">{{copy.system}}</view>
+    <view class="fs">{{look.font==='system'?copy.using:copy.use}}</view>
+  </view>
+  <view class="font {{look.font==='song'?'on':''}}" data-font="song" bindtap="pickFont" style="font-family:{{fonts.song}}">
+    <view class="fn">{{copy.song}}</view>
+    <view class="fs">{{look.font==='song'?copy.using:copy.use}}</view>
+  </view>
+  <view class="font {{look.font==='kai'?'on':''}}" data-font="kai" bindtap="pickFont" style="font-family:{{fonts.kai}}">
+    <view class="fn">{{copy.kai}}</view>
+    <view class="fs">{{look.font==='kai'?copy.using:copy.use}}</view>
+  </view>
+</view>
+<view class="sec">{{copy.size}}</view>
+<view class="size">
+  <view class="scale"><text>A</text><text class="mid">{{copy.standard}}</text><text class="big">A</text></view>
+  <slider min="0" max="4" step="1" value="{{look.size}}" activeColor="#3a1848" block-size="22" bindchange="setSize" />
+  <view class="hint">{{copy.sizeHint}}</view>
+</view>

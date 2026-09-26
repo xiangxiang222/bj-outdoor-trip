@@ -1,5 +1,21 @@
 <template>
   <div>
+    <div class="cell-label">{{ copy.look }}</div>
+    <div class="cell-group">
+      <label class="cell">
+        <span>{{ copy.textMode }}</span>
+        <input class="look-switch" type="checkbox" :checked="look.textMode" @change="toggleText" />
+      </label>
+      <button class="cell" type="button" @click="$router.push('/m/settings/font')">
+        <span>{{ copy.font }}</span><i>›</i>
+      </button>
+      <button class="cell" type="button" @click="$router.push('/m/settings/night')">
+        <span>{{ copy.night }}</span><i>{{ nightText }} ›</i>
+      </button>
+      <button class="cell" type="button" @click="$router.push('/m/settings/lang')">
+        <span>{{ copy.lang }}</span><i>{{ langText }} ›</i>
+      </button>
+    </div>
     <div class="cell-group">
       <button class="cell" type="button" @click="$router.push('/m/profile')">
         <span>实名信息</span><i>{{ store.profile?.realNamed ? "已实名 ›" : "待完善 ›" }}</i>
@@ -23,13 +39,23 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import { setChrome } from "@/utils/pageChrome";
+import { readLook, writeLook, t, nightLabel, langLabel } from "@/utils/appearance";
 
 const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
+const look = readLook();
+const copy = t(look);
+const nightText = nightLabel(look);
+const langText = langLabel(look);
+
+function toggleText(e) {
+  const next = writeLook({ textMode: e.target.checked });
+  Object.assign(look, next);
+}
 
 onMounted(async () => {
-  setChrome("设置", "实名、支付与账号");
+  setChrome(copy.settingsTitle, copy.settingsSub);
   if (!requireLogin(store, router, route)) return;
   await store.fetchMe().catch(() => {});
 });

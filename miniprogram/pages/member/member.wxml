@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="hero" wx:if="{{card}}">
   <view class="codes">
     <text wx:for="{{card.levels}}" wx:key="level" class="code {{focus.level === item.level ? 'on' : ''}}" data-level="{{item.level}}" bindtap="focusLevel">{{item.code}}</text>

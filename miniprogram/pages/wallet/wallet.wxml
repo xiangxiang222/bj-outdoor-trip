@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="cash-card">
   <view class="cash-safe">账户安全保障中</view>
   <view class="cash-label">余额（元）</view>

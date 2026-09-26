@@ -1,14 +1,18 @@
-page { background: #f5f6f3; color: #141414; }
-.card { background: #fff; border-radius: 16px; margin: 16rpx; overflow: hidden; }
+page {
+  background: var(--bg, #f5f6f3);
+  color: var(--ink, #141414);
+  font-family: var(--font, "PingFang SC", "Noto Sans SC", sans-serif);
+}
+.card { background: var(--card, #fff); border-radius: 16px; margin: 16rpx; overflow: hidden; }
 .pad { padding: 24rpx; }
 .cover { width: 100%; height: 320rpx; background: #d8f3dc; }
-.title { font-size: 32rpx; font-weight: 650; }
-.muted { color: #7a7d74; font-size: 24rpx; }
+.title { font-size: 1rem; font-weight: 650; }
+.muted { color: var(--muted, #7a7d74); font-size: 0.75rem; }
 .label { margin: 12rpx 32rpx 0; color: #6b705c; font-size: 24rpx; }
 .price { color: #bc4749; font-weight: 700; }
 .tag { display: inline-block; background: #eef8c8; color: #3d5a1f; border-radius: 999rpx; padding: 4rpx 14rpx; font-size: 22rpx; margin-right: 8rpx; }
 .btn { background: #c6f24a; color: #141414; text-align: center; border-radius: 999rpx; padding: 20rpx; margin: 16rpx; }
-.btn.ghost { background: #fff; color: #141414; border: 1px solid #eceee8; }
+.btn.ghost { background: var(--card, #fff); color: var(--ink, #141414); border: 1px solid var(--line, #eceee8); }
 .btn.clay { background: #bc4749; }
 button.btn {
   font-size: 28rpx;
@@ -48,7 +52,8 @@ button.btn::after { border: none; }
 .seat.locked { background: #ece8df; color: #8a8578; }
 .pay-paid { color: #2d6a4f; }
 .pay-unpaid { color: #bc4749; }
-.hero-swipe { height: 360rpx; }
+.hero-swipe { height: var(--hero-h, 360rpx); }
+.cover, .hero-swipe, .story-img { display: var(--media, block); }
 .hourly { white-space: nowrap; margin-top: 12rpx; }
 .hour { display: inline-block; width: 140rpx; margin-right: 12rpx; background: #fff; border-radius: 12rpx; padding: 8rpx; font-size: 22rpx; text-align: center; white-space: pre-wrap; }
 .chain-line { font-size: 26rpx; }
@@ -72,7 +77,7 @@ button.btn::after { border: none; }
 }
 .album-grid,
 .moments-grid {
-  display: grid;
+  display: var(--media-grid, grid);
   grid-template-columns: repeat(3, 1fr);
   gap: 8rpx;
   padding: 0 24rpx;

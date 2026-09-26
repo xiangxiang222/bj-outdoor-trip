@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="pad title">性别</view>
 <canvas type="2d" id="genderPie" class="pie"></canvas>
 <view class="legend">

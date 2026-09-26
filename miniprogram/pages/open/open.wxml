@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view class="pad muted" wx:if="{{title}}">为「{{title}}」发布一个可报名日期，可分享到微信群召集报名。</view>
 
 <view class="label">出发日期</view>

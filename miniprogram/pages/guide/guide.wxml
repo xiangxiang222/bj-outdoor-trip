@@ -1,3 +1,4 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <view wx:if="{{err}}" class="muted pad">{{err}}</view>
 <view wx:elif="{{g}}">
   <view class="card">
