@@ -11,10 +11,29 @@
         <el-button v-if="canOps" type="success" @click="open">发布拼团</el-button>
       </div>
     </div>
-    <p class="admin-scroll-hint">表格较宽时可左右滑动。线路、出发会钉在左侧，操作在最右侧。上架线路会自动滚动开官方团；出行前一天，同集合点未成团的会并入官方团。</p>
-    <el-table :data="visibleList" stripe :fit="false" class="admin-schedules-table" :empty-text="emptyText">
+    <p class="admin-scroll-hint">表格较宽时可左右滑动。线路、出发和审批钉在左侧，其余操作在最右侧。上架线路会自动滚动开官方团；出行前一天，同集合点未成团的会并入官方团。</p>
+    <el-table
+      v-loading="listLoading"
+      element-loading-text="加载中…"
+      :data="visibleList"
+      stripe
+      :fit="false"
+      class="admin-schedules-table"
+      :empty-text="listLoading ? '加载中…' : emptyText"
+    >
       <el-table-column prop="route.title" label="线路" width="168" fixed="left" />
       <el-table-column prop="startDate" label="出发" width="112" fixed="left" />
+      <el-table-column label="审批" width="156" fixed="left">
+        <template #default="{ row }">
+          <div v-if="canOps && row.reviewStatus === 'pending'" class="admin-review-ops">
+            <el-button size="small" type="success" :loading="reviewing.id === row.id && reviewing.status === 'approved'" :disabled="reviewing.id === row.id" @click="review(row, 'approved')">通过</el-button>
+            <el-button size="small" type="warning" :loading="reviewing.id === row.id && reviewing.status === 'rejected'" :disabled="reviewing.id === row.id" @click="review(row, 'rejected')">驳回</el-button>
+          </div>
+          <span v-else-if="row.reviewStatus === 'pending'">待审</span>
+          <span v-else-if="row.reviewStatus === 'rejected'" style="color:#bc4749">已驳回</span>
+          <span v-else class="muted">—</span>
+        </template>
+      </el-table-column>
       <el-table-column label="组织" width="90">
         <template #default="{ row }">{{ organizerTypeText(row.organizerType, true) }}</template>
       </el-table-column>
@@ -55,8 +74,6 @@
       <el-table-column label="操作" min-width="760">
         <template #default="{ row }">
           <div class="admin-table-ops">
-            <el-button v-if="canOps && row.reviewStatus === 'pending'" size="small" type="success" @click="review(row, 'approved')">通过</el-button>
-            <el-button v-if="canOps && row.reviewStatus === 'pending'" size="small" type="warning" @click="review(row, 'rejected')">驳回</el-button>
             <el-button v-if="canOps" size="small" @click="cost(row)">成本</el-button>
             <el-button v-if="canField" size="small" @click="openTrip(row)">车辆座位</el-button>
             <el-button v-if="canField" size="small" :disabled="row.status === 'cancelled'" @click="openCheckinDlg(row)">开团签到</el-button>
@@ -364,6 +381,8 @@ const canField = computed(() => hasCap(me.value, "field"));
 
 const meetupPoints = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
 const list = ref([]);
+const listLoading = ref(true);
+const reviewing = ref({ id: 0, status: "" });
 const showCancelled = ref(false);
 const routes = ref([]);
 const buses = ref([]);
@@ -484,22 +503,27 @@ async function openGuide(row) {
   }
 }
 async function load() {
+  if (!list.value.length) listLoading.value = true;
   try {
-    me.value = (await http.get("/admin/me")).data;
-  } catch {
-    me.value = { caps: [] };
-  }
-  try {
-    list.value = (await http.get("/admin/schedules")).data || [];
-  } catch (e) {
-    list.value = [];
-    ElMessage.error(e.message || "拼团列表加载失败");
-  }
-  try {
-    routes.value = (await http.get("/admin/routes")).data;
-    buses.value = (await http.get("/buses")).data;
-  } catch (e) {
-    ElMessage.error(e.message || "线路加载失败");
+    try {
+      me.value = (await http.get("/admin/me")).data;
+    } catch {
+      me.value = { caps: [] };
+    }
+    try {
+      list.value = (await http.get("/admin/schedules")).data || [];
+    } catch (e) {
+      list.value = [];
+      ElMessage.error(e.message || "拼团列表加载失败");
+    }
+    try {
+      routes.value = (await http.get("/admin/routes")).data;
+      buses.value = (await http.get("/buses")).data;
+    } catch (e) {
+      ElMessage.error(e.message || "线路加载失败");
+    }
+  } finally {
+    listLoading.value = false;
   }
 }
 onMounted(load);
@@ -521,11 +545,11 @@ const visibleList = computed(() => {
   });
   return pending.concat(rest);
 });
-const emptyText = computed(() => (
-  !showCancelled.value && cancelledCount.value
-    ? "已解散的团已隐藏，打开「显示已解散」可查看"
-    : "暂无数据"
-));
+const emptyText = computed(() => {
+  if (listLoading.value) return "加载中…";
+  if (!showCancelled.value && cancelledCount.value) return "已解散的团已隐藏，打开「显示已解散」可查看";
+  return "暂无数据";
+});
 function open() { showNew.value = true; }
 async function syncOfficial() {
   try {
@@ -820,9 +844,16 @@ async function confirmDraw(row) {
   }
 }
 async function review(row, status) {
-  await http.post(`/admin/schedules/${row.id}/review`, { status });
-  ElMessage.success(status === "approved" ? "已通过" : "已驳回");
-  load();
+  reviewing.value = { id: row.id, status };
+  try {
+    await http.post(`/admin/schedules/${row.id}/review`, { status });
+    ElMessage.success(status === "approved" ? "已通过" : "已驳回");
+    await load();
+  } catch (e) {
+    ElMessage.error(e.message || "审核失败");
+  } finally {
+    reviewing.value = { id: 0, status: "" };
+  }
 }
 async function create() {
   const payload = { ...neu.value, campusTargets: normalizeCampusTargets(neu.value.campusTargets) };
