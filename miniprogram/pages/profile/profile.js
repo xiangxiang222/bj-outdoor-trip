@@ -7,7 +7,7 @@ const AUTH_APPID = "wx308bd2aeb83d3345";
 const AUTH_PATH = "subPages/city/wxpay-auth/main";
 
 Page({
-  data: { user: {}, idCard: "", realName: "", gender: "", phone: "", verifying: false },
+  data: { user: {}, idCard: "", realName: "", gender: "", phone: "", verifying: false, errors: {} },
   onShow() {
     this.fill(app.globalData.user || {});
     if (!app.globalData.token) {
@@ -30,10 +30,10 @@ Page({
     });
   },
   setName(e) {
-    this.setData({ realName: e.detail.value });
+    this.setData({ realName: e.detail.value, "errors.name": "" });
   },
   setId(e) {
-    this.setData({ idCard: e.detail.value });
+    this.setData({ idCard: e.detail.value, "errors.idCard": "" });
   },
   consumeAuthCode() {
     const code = app.globalData.realnameCode || "";
@@ -47,13 +47,14 @@ Page({
     const realName = String(this.data.realName || "").trim();
     const idCard = String(this.data.idCard || "").trim().toUpperCase();
     if (!realName) {
-      wx.showToast({ title: "请填写真实姓名", icon: "none" });
+      this.setData({ "errors.name": "请填写真实姓名" });
       return;
     }
     if (!/^\d{17}[\dX]$/.test(idCard)) {
-      wx.showToast({ title: "请填写 18 位身份证号", icon: "none" });
+      this.setData({ "errors.idCard": "请填写 18 位身份证号" });
       return;
     }
+    this.setData({ errors: {} });
     wx.setStorageSync(PENDING_KEY, { realName, idCard });
     try {
       const login = await wx.login();
@@ -69,7 +70,7 @@ Page({
       appId: AUTH_APPID,
       path: AUTH_PATH,
       fail: (err) => {
-        wx.showToast({ title: (err && err.errMsg) || "无法打开微信授权页", icon: "none" });
+        wx.showModal({ title: "无法打开微信授权页", content: (err && err.errMsg) || "请稍后重试", showCancel: false });
       },
     });
   },

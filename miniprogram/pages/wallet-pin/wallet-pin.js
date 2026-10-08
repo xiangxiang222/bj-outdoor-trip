@@ -1,7 +1,7 @@
 const { request, showError } = require("../../utils/request");
 
 Page({
-  data: { pinSet: false, realNamed: false, pin: "", pin2: "", oldPin: "", idCard: "", resetPin: "" },
+  data: { pinSet: false, realNamed: false, pin: "", pin2: "", oldPin: "", idCard: "", resetPin: "", errors: {} },
   onShow() {
     this.load();
   },
@@ -20,7 +20,7 @@ Page({
     this.setData({ pin: e.detail.value });
   },
   setPin2(e) {
-    this.setData({ pin2: e.detail.value });
+    this.setData({ pin2: e.detail.value, "errors.pin2": "" });
   },
   setId(e) {
     this.setData({ idCard: e.detail.value });
@@ -29,10 +29,15 @@ Page({
     this.setData({ resetPin: e.detail.value });
   },
   async save() {
-    if (this.data.pin !== this.data.pin2) {
-      wx.showToast({ title: "两次密码不一致", icon: "none" });
+    if (!/^\d{6}$/.test(String(this.data.pin || ""))) {
+      this.setData({ "errors.pin2": "请设置 6 位数字支付密码" });
       return;
     }
+    if (this.data.pin !== this.data.pin2) {
+      this.setData({ "errors.pin2": "两次密码不一致" });
+      return;
+    }
+    this.setData({ errors: {} });
     try {
       await request("/me/wallet/pin", "POST", { pin: this.data.pin, oldPin: this.data.oldPin });
       wx.showToast({ title: "已保存", icon: "none" });

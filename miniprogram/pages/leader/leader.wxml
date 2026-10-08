@@ -6,6 +6,7 @@
 <view class="pad muted" wx:elif="{{rejected}}">{{tr.t('上次未通过，可修改后再次提交。', lang)}}</view>
 <view class="pad">{{tr.t('真实姓名', lang)}}</view>
 <input class="input" value="{{name}}" placeholder="{{tr.t('带队时展示给团友', lang)}}" disabled="{{certified}}" bindinput="onName" />
+<view class="field-error" wx:if="{{errors.name}}">{{tr.t(errors.name, lang)}}</view>
 <view class="pad">{{tr.t('带队年限', lang)}}</view>
 <input class="input" type="number" value="{{years}}" placeholder="{{tr.t('没有带过可填 0', lang)}}" disabled="{{certified}}" bindinput="onYears" />
 <view class="pad">{{tr.t('带队经历', lang)}}</view>

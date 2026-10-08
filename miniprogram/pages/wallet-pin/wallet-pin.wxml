@@ -10,6 +10,7 @@
   <input class="input" password maxlength="6" value="{{pin}}" bindinput="setPin" />
   <view class="pad muted">{{tr.t('再输入一次', lang)}}</view>
   <input class="input" password maxlength="6" value="{{pin2}}" bindinput="setPin2" />
+  <view class="field-error" wx:if="{{errors.pin2}}">{{tr.t(errors.pin2, lang)}}</view>
   <view class="btn" bindtap="save">{{tr.t(pinSet ? '修改密码' : '设置密码', lang)}}</view>
 </view>
 <view class="card" wx:if="{{pinSet && realNamed}}">

@@ -11,6 +11,7 @@ Page({
     rejected: false,
     loading: false,
     redirect: "",
+    errors: {},
   },
   onLoad(q) {
     this.setData({ redirect: q.redirect || "" });
@@ -27,7 +28,7 @@ Page({
     });
   },
   onName(e) {
-    this.setData({ name: e.detail.value });
+    this.setData({ name: e.detail.value, "errors.name": "" });
   },
   onYears(e) {
     this.setData({ years: Number(e.detail.value || 0) });
@@ -40,7 +41,11 @@ Page({
       wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/leader/leader") });
       return;
     }
-    this.setData({ loading: true });
+    if (!String(this.data.name || "").trim()) {
+      this.setData({ "errors.name": "请填写真实姓名" });
+      return;
+    }
+    this.setData({ loading: true, errors: {} });
     try {
       const res = await request("/me/leader", "POST", {
         name: this.data.name,
@@ -55,7 +60,7 @@ Page({
       });
       wx.showToast({ title: res.message || "已提交", icon: "none" });
     } catch (e) {
-      wx.showToast({ title: (e && e.message) || "提交失败", icon: "none" });
+      wx.showModal({ title: "提交失败", content: (e && e.message) || "请稍后重试", showCancel: false });
     } finally {
       this.setData({ loading: false });
     }

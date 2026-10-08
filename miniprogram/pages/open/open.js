@@ -69,6 +69,7 @@ Page({
     scopeLabels: ["不限制学校学院", "仅已认证师生", "仅本学院", "仅本校", "本校跨学院", "跨学校"],
     scopeKeys: ["open", "certified", "college", "school", "colleges", "schools"],
     scopeIndex: 0,
+    errors: {},
     form: {
       startDate: "",
       organizerType: "individual",
@@ -134,7 +135,7 @@ Page({
         });
       })
       .catch(() => {
-        wx.showToast({ title: "线路信息未拉到，已用默认车型和集合点", icon: "none" });
+        wx.showModal({ title: "线路信息未拉到", content: "已用默认车型和集合点", showCancel: false });
       });
   },
   setDate(e) {
@@ -217,7 +218,7 @@ Page({
   },
   pickCampusCollege() {
     if (!this.data.form.campusSchool) {
-      wx.showToast({ title: "请先选择学校", icon: "none" });
+      this.setData({ "errors.campus": "请先选择学校" });
       return;
     }
     openCampusPick({
@@ -230,7 +231,7 @@ Page({
   },
   pickColleges() {
     if (!this.data.form.campusSchool) {
-      wx.showToast({ title: "请先选择学校", icon: "none" });
+      this.setData({ "errors.campus": "请先选择学校" });
       return;
     }
     openCampusPick({
@@ -265,7 +266,7 @@ Page({
     const i = Number(e.currentTarget.dataset.i);
     const row = (this.data.form.campusTargets || [])[i] || {};
     if (!row.school) {
-      wx.showToast({ title: "请先选择学校", icon: "none" });
+      this.setData({ "errors.campus": "请先选择学校" });
       return;
     }
     openCampusPick({
@@ -280,7 +281,7 @@ Page({
     const i = Number(e.currentTarget.dataset.i);
     const row = (this.data.form.campusTargets || [])[i] || {};
     if (!row.college) {
-      wx.showToast({ title: "请先选择学院", icon: "none" });
+      this.setData({ "errors.campus": "请先选择学院" });
       return;
     }
     openCampusPick({
@@ -304,26 +305,27 @@ Page({
   async submit() {
     const form = this.data.form;
     if (!form.startDate) {
-      wx.showToast({ title: "请选择出发日期", icon: "none" });
+      this.setData({ "errors.form": "请选择出发日期" });
       return;
     }
     if (!form.busTypeId) {
-      wx.showToast({ title: "请选择车型", icon: "none" });
+      this.setData({ "errors.form": "请选择车型" });
       return;
     }
     if (form.organizerType === "company" && !form.companyName) {
-      wx.showToast({ title: "公司开团请填写公司名称", icon: "none" });
+      this.setData({ "errors.form": "公司开团请填写公司名称" });
       return;
     }
     if (form.organizerType === "campus" && !form.companyName) {
-      wx.showToast({ title: "高校开团请填写学校", icon: "none" });
+      this.setData({ "errors.form": "高校开团请填写学校" });
       return;
     }
     const minGroupSize = parseInt(String(form.minGroupSize), 10);
     if (!minGroupSize || minGroupSize < 1) {
-      wx.showToast({ title: "请填写最低成团人数", icon: "none" });
+      this.setData({ "errors.form": "请填写最低成团人数" });
       return;
     }
+    this.setData({ errors: {} });
     try {
       wx.showLoading({ title: "发布中", mask: true });
       const res = await request("/schedules", "POST", {

@@ -42,22 +42,6 @@
   <view class="chip {{!tag?'on':''}}" bindtap="clearTag">{{tr.t('全部玩法', lang)}}</view>
   <view class="chip {{tag==item.name?'on':''}}" wx:for="{{home.tags}}" wx:key="id" bindtap="setTag" data-name="{{item.name}}">{{tr.t(item.name, lang)}}</view>
 </scroll-view>
-<scroll-view scroll-x class="city-bar">
-  <view class="chip {{!hostKind?'on':''}}" bindtap="clearHost">{{tr.t('全部团', lang)}}</view>
-  <view class="chip {{hostKind=='official'?'on':''}}" bindtap="setHost" data-kind="official">{{tr.t('官方', lang)}}</view>
-  <view class="chip {{hostKind=='company'?'on':''}}" bindtap="setHost" data-kind="company">{{tr.t('公司', lang)}}</view>
-  <view class="chip {{hostKind=='campus'?'on':''}}" bindtap="setHost" data-kind="campus">{{tr.t('高校', lang)}}</view>
-  <view class="chip {{hostKind=='individual'?'on':''}}" bindtap="setHost" data-kind="individual">{{tr.t('个人', lang)}}</view>
-</scroll-view>
-<scroll-view scroll-x class="city-bar" wx:if="{{hostKind=='company' && hostCompanies.length}}">
-  <view class="chip {{!companyName?'on':''}}" bindtap="clearCompany">{{tr.t('全部公司', lang)}}</view>
-  <view class="chip {{companyName==item?'on':''}}" wx:for="{{hostCompanies}}" wx:key="*this" bindtap="setCompany" data-name="{{item}}">{{tr.t(item, lang)}}</view>
-</scroll-view>
-<scroll-view scroll-x class="city-bar" wx:if="{{hostKind=='campus' && hostSchools.length}}">
-  <view class="chip {{!school?'on':''}}" bindtap="clearSchool">{{tr.t('全部高校', lang)}}</view>
-  <view class="chip {{school==item?'on':''}}" wx:for="{{hostSchools}}" wx:key="*this" bindtap="setSchool" data-name="{{item}}">{{tr.t(item, lang)}}</view>
-</scroll-view>
-
 <view class="feed-toolbar">
   <view class="hint">{{tr.t('看看最近都在忙什么', lang)}}</view>
   <view class="tools">
@@ -68,6 +52,21 @@
 </view>
 
 <block wx:if="{{fold.extra}}">
+  <scroll-view scroll-x class="city-bar">
+    <view class="chip {{!hostKind?'on':''}}" bindtap="clearHost">{{tr.t('全部团', lang)}}</view>
+    <view class="chip {{hostKind=='official'?'on':''}}" bindtap="setHost" data-kind="official">{{tr.t('官方', lang)}}</view>
+    <view class="chip {{hostKind=='company'?'on':''}}" bindtap="setHost" data-kind="company">{{tr.t('公司', lang)}}</view>
+    <view class="chip {{hostKind=='campus'?'on':''}}" bindtap="setHost" data-kind="campus">{{tr.t('高校', lang)}}</view>
+    <view class="chip {{hostKind=='individual'?'on':''}}" bindtap="setHost" data-kind="individual">{{tr.t('个人', lang)}}</view>
+  </scroll-view>
+  <scroll-view scroll-x class="city-bar" wx:if="{{hostKind=='company' && hostCompanies.length}}">
+    <view class="chip {{!companyName?'on':''}}" bindtap="clearCompany">{{tr.t('全部公司', lang)}}</view>
+    <view class="chip {{companyName==item?'on':''}}" wx:for="{{hostCompanies}}" wx:key="*this" bindtap="setCompany" data-name="{{item}}">{{tr.t(item, lang)}}</view>
+  </scroll-view>
+  <scroll-view scroll-x class="city-bar" wx:if="{{hostKind=='campus' && hostSchools.length}}">
+    <view class="chip {{!school?'on':''}}" bindtap="clearSchool">{{tr.t('全部高校', lang)}}</view>
+    <view class="chip {{school==item?'on':''}}" wx:for="{{hostSchools}}" wx:key="*this" bindtap="setSchool" data-name="{{item}}">{{tr.t(item, lang)}}</view>
+  </scroll-view>
   <scroll-view scroll-x class="cal">
     <view class="cal-day {{date==item.date?'on':''}}" wx:for="{{calendar}}" wx:key="date" bindtap="setDate" data-date="{{item.date}}">
       <view class="muted tiny">{{tr.t(item.w, lang)}}</view>
@@ -112,7 +111,7 @@
   </view>
 </view>
 <view wx:if="{{loading && !groups.length}}" class="card">
-  <view class="pad muted">{{tr.t('正在加载近期的团…', lang)}}</view>
+  <view class="pad load-row"><view class="spinner"></view><text class="muted">{{tr.t('正在加载近期的团…', lang)}}</text></view>
 </view>
 <view wx:elif="{{!groups.length}}" class="card">
   <view class="pad">

@@ -28,11 +28,14 @@
       <label>地点</label>
       <input class="input" v-model="form.meetupPoint" placeholder="例如：三里屯太古里南区" />
       <label>城区</label>
-      <input class="input" v-model="form.city" placeholder="朝阳 / 海淀 / 通州" />
+      <select class="select" v-model="form.city">
+        <option value="">选择城区</option>
+        <option v-for="name in districts" :key="name" :value="name">{{ name }}</option>
+      </select>
       <label>日期</label>
       <input class="input" type="date" v-model="form.startDate" />
       <label>时间</label>
-      <input class="input" v-model="form.meetupTime" placeholder="19:30" />
+      <input class="input" type="time" v-model="form.meetupTime" />
       <label>最少几人成局</label>
       <input class="input" type="number" v-model.number="form.minGroupSize" />
       <label>人数上限</label>
@@ -64,7 +67,10 @@
         <option value="multi">多日</option>
       </select>
       <label>城市</label>
-      <input class="input" v-model="form.city" placeholder="随发团自动出现在首页" />
+      <select class="select" v-model="form.city">
+        <option value="">选择城区</option>
+        <option v-for="name in districts" :key="name" :value="name">{{ name }}</option>
+      </select>
       <label>想怎么玩</label>
       <div class="chips">
         <div
@@ -135,7 +141,7 @@
         <option v-for="m in meetups" :key="m" :value="m">{{ m }}</option>
       </select>
       <label>集合时间</label>
-      <input class="input" v-model="form.meetupTime" />
+      <input class="input" type="time" v-model="form.meetupTime" />
       <label>介绍</label>
       <textarea class="input" v-model="form.description" rows="4" />
       <label>视频链接</label>
@@ -184,6 +190,7 @@ const err = ref("");
 const loading = ref(false);
 const offers = OFFER_TYPES;
 const meetups = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
+const districts = ["东城", "西城", "朝阳", "海淀", "丰台", "石景山", "通州", "顺义", "昌平", "大兴", "房山", "门头沟", "怀柔", "平谷", "密云", "延庆"];
 const kinds = ACTIVITY_KINDS;
 const keyword = ref("");
 const hits = ref([]);

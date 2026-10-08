@@ -24,7 +24,7 @@ button.btn {
 }
 button.btn::after { border: none; }
 .row { display: flex; justify-content: space-between; align-items: center; }
-.chip { display: inline-block; padding: 10rpx 22rpx; border: 1px solid #eceee8; border-radius: 999rpx; margin: 8rpx; background: #fff; font-size: calc(24rpx * var(--ui-scale)); }
+.chip { display: inline-flex; align-items: center; box-sizing: border-box; min-height: 88rpx; padding: 0 28rpx; border: 1px solid #eceee8; border-radius: 999rpx; margin: 8rpx; background: #fff; font-size: calc(24rpx * var(--ui-scale)); line-height: 1.2; }
 .chip.on { background: #c6f24a; color: #141414; border-color: #c6f24a; font-weight: 700; }
 .chips { padding: 8rpx 8rpx 0; }
 .progress { height: 12rpx; background: #eee; border-radius: 99rpx; overflow: hidden; margin: 12rpx 0; }
@@ -33,7 +33,7 @@ button.btn::after { border: none; }
 .seat-map { display: flex; flex-direction: column; align-items: center; gap: 12rpx; padding: 12rpx 0; }
 .seat-front { font-size: calc(22rpx * var(--ui-scale)); color: #6b705c; }
 .seat-row { display: flex; align-items: center; gap: 10rpx; }
-.seat { width: 64rpx; height: 64rpx; border-radius: 12rpx; border: 1px solid #e6dfd2; background: #fff; text-align: center; line-height: 64rpx; font-size: calc(22rpx * var(--ui-scale)); }
+.seat { width: 88rpx; height: 88rpx; border-radius: 12rpx; border: 1px solid #e6dfd2; background: #fff; text-align: center; line-height: 88rpx; font-size: calc(22rpx * var(--ui-scale)); }
 .seat.taken { background: #d8f3dc; color: #6b705c; }
 .seat.on { background: #2d6a4f; color: #fff; }
 .weather { margin: 16rpx 0 0; padding: 16rpx 16rpx 8rpx; background: #eef6ff; border-radius: 12rpx; font-size: calc(24rpx * var(--ui-scale)); }
@@ -51,6 +51,10 @@ button.btn::after { border: none; }
 .radio-row { display: flex; gap: 36rpx; padding: 16rpx 24rpx; }
 .radio-item { display: flex; align-items: center; gap: 8rpx; font-size: calc(28rpx * var(--ui-scale)); }
 .nav-link { color: #2d6a4f; font-size: calc(24rpx * var(--ui-scale)); }
+.field-error { margin: 0 32rpx 12rpx; color: #bc4749; font-size: calc(24rpx * var(--ui-scale)); line-height: 1.4; }
+.load-row { display: flex; align-items: center; justify-content: center; gap: 16rpx; }
+.spinner { width: 36rpx; height: 36rpx; border: 4rpx solid #eceee8; border-top-color: #2d6a4f; border-radius: 50%; animation: spin 0.8s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .guide-hit { margin-top: 8rpx; color: #2d6a4f; font-size: calc(24rpx * var(--ui-scale)); }
 .seat.locked { background: #ece8df; color: #8a8578; }
 .pay-paid { color: #2d6a4f; }

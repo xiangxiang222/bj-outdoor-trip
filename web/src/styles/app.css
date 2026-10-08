@@ -296,10 +296,17 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .muted { color: var(--muted); font-size: calc(13px * var(--ui-scale)); }
 .h2 { font-size: calc(16px * var(--ui-scale)); margin: 16px 0 8px; }
+.load-row { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.spinner { width: 18px; height: 18px; border: 2px solid var(--line); border-top-color: #2d6a4f; border-radius: 50%; animation: load-spin 0.8s linear infinite; flex: none; }
+@keyframes load-spin { to { transform: rotate(360deg); } }
 .chips { display: flex; gap: 8px; overflow: auto; padding: 4px 0 10px; }
 .chip {
   flex: none;
-  padding: 6px 12px;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 0 14px;
   border-radius: 999px;
   background: #fff;
   border: 1px solid var(--line);
@@ -600,7 +607,7 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 .city-swipe-cap { position: absolute; left: 12px; bottom: 10px; color: #fff; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,.5); }
 .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
 .month-cell {
-  border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 6px 0; font-size: calc(12px * var(--ui-scale)); cursor: pointer;
+  border: 1px solid var(--line); background: #fff; border-radius: 8px; min-height: 44px; padding: 6px 0; font-size: calc(12px * var(--ui-scale)); cursor: pointer;
 }
 .month-cell small { display: block; color: var(--muted); font-size: calc(10px * var(--ui-scale)); }
 .month-cell.on { border-color: var(--leaf); background: var(--mint); }
@@ -669,8 +676,8 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 }
 .seat-row { display: flex; align-items: center; gap: 6px; }
 .seat {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   border: 1px solid var(--line);
   background: #fff;
@@ -1956,11 +1963,15 @@ html.admin-theme .el-dialog__footer {
   font: inherit;
   font-size: calc(11px * var(--ui-scale));
   line-height: 1.15;
-  padding: 0 5px;
+  padding: 4px 6px;
+  min-width: 44px;
+  min-height: 44px;
+  box-sizing: border-box;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
 }
 .mine-tool > span:last-child { white-space: nowrap; }

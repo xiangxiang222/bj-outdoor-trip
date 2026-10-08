@@ -24,6 +24,7 @@ Page({
     waiver: "",
     cancelSummary: "出发日前可取消；出发当天不可取消。",
     mergeTpl: "",
+    errors: {},
   },
   onLoad(q) {
     if (!app.globalData.token) {
@@ -116,6 +117,10 @@ Page({
       "form.emergencyName": c.emergencyName || "",
       "form.emergencyPhone": c.emergencyPhone || "",
       companionMsg: "已带入 " + (c.name || ""),
+      "errors.name": "",
+      "errors.phone": "",
+      "errors.emergencyName": "",
+      "errors.emergencyPhone": "",
     });
   },
   saveCompanion() {
@@ -131,13 +136,13 @@ Page({
       this.setData({ companionMsg: (err && err.message) || "保存失败" });
     });
   },
-  setName(e) { this.setData({ "form.travelerName": e.detail.value }); },
-  setPhone(e) { this.setData({ "form.travelerPhone": e.detail.value }); },
-  setJoinCode(e) { this.setData({ "form.joinCode": e.detail.value }); },
-  setEmergencyName(e) { this.setData({ "form.emergencyName": e.detail.value }); },
-  setEmergencyPhone(e) { this.setData({ "form.emergencyPhone": e.detail.value }); },
-  toggleHealth() { this.setData({ "form.healthOk": !this.data.form.healthOk }); },
-  toggleWaiver() { this.setData({ "form.waiverAccepted": !this.data.form.waiverAccepted }); },
+  setName(e) { this.setData({ "form.travelerName": e.detail.value, "errors.name": "" }); },
+  setPhone(e) { this.setData({ "form.travelerPhone": e.detail.value, "errors.phone": "" }); },
+  setJoinCode(e) { this.setData({ "form.joinCode": e.detail.value, "errors.joinCode": "" }); },
+  setEmergencyName(e) { this.setData({ "form.emergencyName": e.detail.value, "errors.emergencyName": "" }); },
+  setEmergencyPhone(e) { this.setData({ "form.emergencyPhone": e.detail.value, "errors.emergencyPhone": "" }); },
+  toggleHealth() { this.setData({ "form.healthOk": !this.data.form.healthOk, "errors.health": "" }); },
+  toggleWaiver() { this.setData({ "form.waiverAccepted": !this.data.form.waiverAccepted, "errors.waiver": "" }); },
   setWantGender(e) {
     const i = Number(e.detail.value);
     this.setData({ genderIndex: i, "form.wantGender": this.data.genderKeys[i] });
@@ -169,50 +174,34 @@ Page({
     wx.navigateTo({ url: "/pages/student/student?redirect=" + encodeURIComponent("/pages/enroll/enroll?id=" + this.data.id) });
   },
   async submit() {
-    if (this.data.s && this.data.s.status === "cancelled") {
-      wx.showToast({ title: "该拼团已解散", icon: "none" });
-      return;
-    }
+    if (this.data.s && this.data.s.status === "cancelled") return;
     if (this.data.s && this.data.s.eligibility && this.data.s.eligibility.enabled && !this.data.s.eligibility.canEnroll) {
       wx.showModal({ title: "暂不能报名", content: this.data.s.eligibility.reason || "请先完成校园认证", showCancel: false });
       return;
     }
-    if (!this.data.form.travelerName || !this.data.form.travelerPhone) {
-      wx.showToast({ title: "请填写姓名和手机", icon: "none" });
+    const form = this.data.form;
+    const errors = {};
+    const phone = String(form.travelerPhone || "").trim();
+    if (!String(form.travelerName || "").trim()) errors.name = "请填写姓名";
+    if (!phone) errors.phone = "请填写手机号";
+    else if (!/^1\d{10}$/.test(phone)) errors.phone = "手机号不正确";
+    if (this.data.s && this.data.s.joinCodeRequired && !this.data.s.joinCode && !String(form.joinCode || "").trim()) {
+      errors.joinCode = "请填写入团口令";
+    }
+    if (!this.data.isActivity) {
+      const parsed = this.checkId();
+      if (!parsed.valid) errors.idCard = parsed.error || "请填写 18 位身份证号";
+      if (!String(form.emergencyName || "").trim()) errors.emergencyName = "请填写紧急联系人";
+      if (!String(form.emergencyPhone || "").trim()) errors.emergencyPhone = "请填写紧急联系人手机";
+      else if (form.emergencyPhone === form.travelerPhone) errors.emergencyPhone = "紧急联系人手机不能相同";
+      if (!form.healthOk) errors.health = "请确认健康状况";
+      if (!form.waiverAccepted) errors.waiver = "请确认风险告知";
+    }
+    if (Object.keys(errors).length) {
+      this.setData({ errors });
       return;
     }
-    if (this.data.s && this.data.s.joinCodeRequired && !this.data.s.joinCode && !String(this.data.form.joinCode || "").trim()) {
-      wx.showToast({ title: "请填写入团口令", icon: "none" });
-      return;
-    }
-    if (this.data.isActivity) {
-      if (!/^1\d{10}$/.test(String(this.data.form.travelerPhone))) {
-        wx.showToast({ title: "手机号不正确", icon: "none" });
-        return;
-      }
-    } else {
-    const parsed = this.checkId();
-    if (!parsed.valid) {
-      wx.showModal({ title: "身份证号不正确", content: parsed.error, showCancel: false });
-      return;
-    }
-    if (!this.data.form.emergencyName || !this.data.form.emergencyPhone) {
-      wx.showToast({ title: "请填紧急联系人", icon: "none" });
-      return;
-    }
-    if (this.data.form.emergencyPhone === this.data.form.travelerPhone) {
-      wx.showToast({ title: "紧急联系人手机不能相同", icon: "none" });
-      return;
-    }
-    if (!this.data.form.healthOk) {
-      wx.showToast({ title: "请确认健康状况", icon: "none" });
-      return;
-    }
-    if (!this.data.form.waiverAccepted) {
-      wx.showToast({ title: "请确认风险告知", icon: "none" });
-      return;
-    }
-    }
+    this.setData({ errors: {} });
     try {
       const payload = this.data.isActivity
         ? {
