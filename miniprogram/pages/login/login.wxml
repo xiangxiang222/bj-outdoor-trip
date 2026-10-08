@@ -13,14 +13,23 @@
 </view>
 
 <block wx:else>
+  <view class="login-nav" style="padding-top: {{statusBarHeight}}px">
+    <view class="login-back" bindtap="backAuth">{{tr.t('返回', lang)}}</view>
+    <view class="login-nav-title">{{tr.t(tab==='login' ? '登录' : '注册', lang)}}</view>
+  </view>
   <view class="chips pad">
     <view class="chip {{tab==='login'?'on':''}}" bindtap="setTab" data-tab="login">{{tr.t('登录', lang)}}</view>
     <view class="chip {{tab==='register'?'on':''}}" bindtap="setTab" data-tab="register">{{tr.t('注册', lang)}}</view>
   </view>
 
   <block wx:if="{{tab==='login'}}">
-    <input class="input" placeholder="{{tr.t('手机号', lang)}}" bindinput="setPhone" value="{{phone}}" maxlength="11" />
+    <view class="label">{{tr.t('手机号', lang)}}</view>
+    <input class="input" placeholder="{{tr.t('11位手机号', lang)}}" bindinput="setPhone" value="{{phone}}" maxlength="11" />
+    <view class="field-error" wx:if="{{errors.phone}}">{{tr.t(errors.phone, lang)}}</view>
+    <view class="label">{{tr.t('密码', lang)}}</view>
     <input class="input" placeholder="{{tr.t('密码', lang)}}" password bindinput="setPwd" value="{{password}}" />
+    <view class="field-error" wx:if="{{errors.password}}">{{tr.t(errors.password, lang)}}</view>
+    <view class="label">{{tr.t('图片验证码', lang)}}</view>
     <view class="captcha-box" bindtap="loadCaptcha">
       <image
         wx:if="{{captchaImage}}"
@@ -33,13 +42,19 @@
       <view wx:else class="muted">{{tr.t(captchaLoading ? '加载中…' : '点击获取验证码', lang)}}</view>
     </view>
     <input class="input" placeholder="{{tr.t('请输入上图字符', lang)}}" bindinput="setCaptcha" value="{{captcha}}" maxlength="4" />
+    <view class="field-error" wx:if="{{errors.captcha}}">{{tr.t(errors.captcha, lang)}}</view>
     <view class="muted pad">{{tr.t('看不清请点击图片刷新', lang)}}</view>
     <view class="btn" bindtap="pwdLogin">{{tr.t('登录', lang)}}</view>
   </block>
 
   <block wx:else>
+    <view class="label">{{tr.t('昵称', lang)}}</view>
     <input class="input" placeholder="{{tr.t('昵称', lang)}}" bindinput="setNickname" value="{{nickname}}" />
+    <view class="field-error" wx:if="{{errors.nickname}}">{{tr.t(errors.nickname, lang)}}</view>
+    <view class="label">{{tr.t('手机号', lang)}}</view>
     <input class="input" placeholder="{{tr.t('11位手机号', lang)}}" bindinput="setPhone" value="{{phone}}" maxlength="11" />
+    <view class="field-error" wx:if="{{errors.phone}}">{{tr.t(errors.phone, lang)}}</view>
+    <view class="label">{{tr.t('图片验证码', lang)}}</view>
     <view class="captcha-box" bindtap="loadCaptcha">
       <image
         wx:if="{{captchaImage}}"
@@ -52,8 +67,13 @@
       <view wx:else class="muted">{{tr.t(captchaLoading ? '加载中…' : '点击获取验证码', lang)}}</view>
     </view>
     <input class="input" placeholder="{{tr.t('请输入上图字符', lang)}}" bindinput="setCaptcha" value="{{captcha}}" maxlength="4" />
+    <view class="field-error" wx:if="{{errors.captcha}}">{{tr.t(errors.captcha, lang)}}</view>
+    <view class="label">{{tr.t('密码', lang)}}</view>
     <input class="input" placeholder="{{tr.t('设置密码（至少6位）', lang)}}" password bindinput="setPwd" value="{{password}}" />
+    <view class="field-error" wx:if="{{errors.password}}">{{tr.t(errors.password, lang)}}</view>
+    <view class="label">{{tr.t('确认密码', lang)}}</view>
     <input class="input" placeholder="{{tr.t('确认密码', lang)}}" password bindinput="setPwd2" value="{{password2}}" />
+    <view class="field-error" wx:if="{{errors.password2}}">{{tr.t(errors.password2, lang)}}</view>
     <view class="muted pad">{{tr.t('看不清请点击图片刷新', lang)}}</view>
     <view class="btn" bindtap="register">{{tr.t('注册', lang)}}</view>
   </block>

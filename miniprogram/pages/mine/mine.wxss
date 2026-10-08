@@ -16,7 +16,7 @@ page { background: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helveti
 .avatar-action { text-align: center; padding: 28rpx 0; border-top: 1rpx solid #f0f1f3; font-size: calc(32rpx * var(--ui-scale)); }
 .avatar-action.cancel { color: #7a7d74; }
 .mine-tools { display: flex; align-items: flex-start; gap: 4rpx; flex: none; }
-.mine-tool { display: flex; flex-direction: column; align-items: center; gap: 2rpx; min-width: 72rpx; color: #333; font-size: calc(20rpx * var(--ui-scale)); line-height: 1.15; }
+.mine-tool { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4rpx; min-width: 88rpx; min-height: 88rpx; padding: 8rpx 4rpx; box-sizing: border-box; color: #333; font-size: calc(20rpx * var(--ui-scale)); line-height: 1.15; }
 .mine-tool-ico { position: relative; width: 44rpx; height: 44rpx; }
 .mine-tool-ico image { width: 44rpx; height: 44rpx; }
 .mine-tools.is-dark .mine-tool { color: #f2f2f2; }

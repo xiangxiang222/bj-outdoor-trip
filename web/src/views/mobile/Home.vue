@@ -74,22 +74,6 @@
       <div class="chip" :class="{ on: tag === t.name }" v-for="t in home.tags || []" :key="t.id" @click="toggleTag(t.name)">{{ t.name }}</div>
     </div>
 
-    <div class="chips">
-      <div class="chip" :class="{ on: !hostKind }" @click="clearHost()">全部团</div>
-      <div class="chip" :class="{ on: hostKind === 'official' }" @click="toggleHost('official')">官方</div>
-      <div class="chip" :class="{ on: hostKind === 'company' }" @click="toggleHost('company')">公司</div>
-      <div class="chip" :class="{ on: hostKind === 'campus' }" @click="toggleHost('campus')">高校</div>
-      <div class="chip" :class="{ on: hostKind === 'individual' }" @click="toggleHost('individual')">个人</div>
-    </div>
-    <div class="chips" v-if="hostKind === 'company' && hostFacets.companies.length">
-      <div class="chip" :class="{ on: !companyName }" @click="companyName = ''">全部公司</div>
-      <div class="chip" :class="{ on: companyName === n }" v-for="n in hostFacets.companies" :key="n" @click="toggleCompany(n)">{{ n }}</div>
-    </div>
-    <div class="chips" v-if="hostKind === 'campus' && hostFacets.schools.length">
-      <div class="chip" :class="{ on: !school }" @click="school = ''">全部高校</div>
-      <div class="chip" :class="{ on: school === n }" v-for="n in hostFacets.schools" :key="n" @click="toggleSchool(n)">{{ n }}</div>
-    </div>
-
     <div class="feed-toolbar">
       <div class="hint">看看最近都在忙什么</div>
       <div class="tools">
@@ -100,6 +84,21 @@
     </div>
 
     <div v-if="fold.extra">
+      <div class="chips">
+        <div class="chip" :class="{ on: !hostKind }" @click="clearHost()">全部团</div>
+        <div class="chip" :class="{ on: hostKind === 'official' }" @click="toggleHost('official')">官方</div>
+        <div class="chip" :class="{ on: hostKind === 'company' }" @click="toggleHost('company')">公司</div>
+        <div class="chip" :class="{ on: hostKind === 'campus' }" @click="toggleHost('campus')">高校</div>
+        <div class="chip" :class="{ on: hostKind === 'individual' }" @click="toggleHost('individual')">个人</div>
+      </div>
+      <div class="chips" v-if="hostKind === 'company' && hostFacets.companies.length">
+        <div class="chip" :class="{ on: !companyName }" @click="companyName = ''">全部公司</div>
+        <div class="chip" :class="{ on: companyName === n }" v-for="n in hostFacets.companies" :key="n" @click="toggleCompany(n)">{{ n }}</div>
+      </div>
+      <div class="chips" v-if="hostKind === 'campus' && hostFacets.schools.length">
+        <div class="chip" :class="{ on: !school }" @click="school = ''">全部高校</div>
+        <div class="chip" :class="{ on: school === n }" v-for="n in hostFacets.schools" :key="n" @click="toggleSchool(n)">{{ n }}</div>
+      </div>
       <div class="cal">
         <div class="cal-day" :class="{ on: date === d.date }" v-for="d in calendar" :key="d.date" @click="toggleDate(d.date)">
           <span class="muted">{{ d.w }}</span>
@@ -154,7 +153,7 @@
         </p>
       </div>
     </article>
-    <div v-if="loading && !groups.length" class="card"><div class="pad muted">正在加载近期的团…</div></div>
+    <div v-if="loading && !groups.length" class="card"><div class="pad load-row"><span class="spinner"></span><span class="muted">正在加载近期的团…</span></div></div>
     <div v-else-if="!groups.length" class="card">
       <div class="pad">
         <strong>还没有符合条件的团</strong>

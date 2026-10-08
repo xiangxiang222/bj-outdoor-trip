@@ -13,8 +13,10 @@
 <view class="input" bindtap="pickSchool">{{tr.t(school || '可选，搜索北京高校', lang)}}</view>
 <view class="pad">{{tr.t('学院（可空）', lang)}}</view>
 <view class="input" bindtap="pickCollege">{{tr.t(college || (school ? '可选，搜索该校学院' : '请先选择学校'), lang)}}</view>
+<view class="field-error" wx:if="{{errors.college}}">{{tr.t(errors.college, lang)}}</view>
 <view class="pad">{{tr.t('专业（可空）', lang)}}</view>
 <view class="input" bindtap="pickMajor">{{tr.t(major || (college ? '可选，搜索该院专业' : '请先选择学院'), lang)}}</view>
+<view class="field-error" wx:if="{{errors.major}}">{{tr.t(errors.major, lang)}}</view>
 <block wx:if="{{campusKind=='student'}}">
   <view class="pad">{{tr.t('学号', lang)}}</view>
   <input class="input" value="{{studentNo}}" placeholder="{{tr.t('学生证上的学号', lang)}}" disabled="{{certified}}" bindinput="onNo" />

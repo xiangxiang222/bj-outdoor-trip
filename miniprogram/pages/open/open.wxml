@@ -12,6 +12,7 @@
   <view class="input">{{tr.t(types[typeIndex], lang)}}</view>
 </picker>
 
+<view class="label" wx:if="{{form.organizerType === 'company'}}">{{tr.t('公司名称', lang)}}</view>
 <input
   wx:if="{{form.organizerType === 'company'}}"
   class="input"
@@ -19,13 +20,7 @@
   value="{{form.companyName}}"
   bindinput="setCo"
 />
-<input
-  wx:if="{{form.organizerType === 'company'}}"
-  class="input"
-  placeholder="{{tr.t('公司名称（公司开团必填）', lang)}}"
-  value="{{form.companyName}}"
-  bindinput="setCo"
-/>
+<view class="label" wx:if="{{form.organizerType === 'campus'}}">{{tr.t('学校', lang)}}</view>
 <view
   wx:if="{{form.organizerType === 'campus'}}"
   class="input"
@@ -48,6 +43,7 @@
   </view>
   <view class="btn ghost" bindtap="addCampusTarget">{{tr.t('添加学校-学院-专业', lang)}}</view>
 </block>
+<view class="field-error" wx:if="{{errors.campus}}">{{tr.t(errors.campus, lang)}}</view>
 <view class="pad" bindtap="toggleAlumniOk">{{tr.t(form.alumniOk ? '☑' : '☐', lang)}} {{tr.t('允许已认证校友', lang)}}</view>
 <view class="pad" bindtap="togglePrivateJoin">{{tr.t(form.privateJoin ? '☑' : '☐', lang)}} {{tr.t('加密团（报名要口令）', lang)}}</view>
 <input wx:if="{{form.privateJoin}}" class="input" placeholder="{{tr.t('入团口令 4～16 字，可空则自动生成', lang)}}" value="{{form.joinCode}}" bindinput="setJoinCode" maxlength="16" />
@@ -70,4 +66,5 @@
   <view class="input">{{tr.t(form.meetupTime, lang)}}</view>
 </picker>
 
+<view class="field-error" wx:if="{{errors.form}}">{{tr.t(errors.form, lang)}}</view>
 <view class="btn" bindtap="submit">{{tr.t('发布', lang)}}</view>

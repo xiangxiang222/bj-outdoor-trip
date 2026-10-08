@@ -7,6 +7,7 @@ const MEETUPS = ["东直门东方银座C口", "西直门凯德mall北门外", "�
 const DAYS = [1, 2, 3, "multi"];
 const DAY_LABELS = ["1 日", "2 日", "3 日", "多日"];
 const WEEKDAY = "日一二三四五六";
+const DISTRICTS = ["东城", "西城", "朝阳", "海淀", "丰台", "石景山", "通州", "顺义", "昌平", "大兴", "房山", "门头沟", "怀柔", "平谷", "密云", "延庆"];
 const CHANNELS = ["trip", "activity"];
 const CHANNEL_LABELS = ["户外线路（上首页）", "同城局（上活动 Tab）"];
 
@@ -53,6 +54,9 @@ Page({
     organizerLabels: ["个人开团（先报名，出行前付款）", "公司开团（先报名，最后统一支付）", "高校开团（先报名，出行前付款）"],
     organizerKeys: ["individual", "company", "campus"],
     organizerIndex: 0,
+    cityNames: DISTRICTS,
+    cityIndex: 2,
+    errors: {},
     scopeLabels: ["不限制学校学院", "仅已认证师生", "仅本学院", "仅本校", "本校跨学院", "跨学校"],
     scopeKeys: ["open", "certified", "college", "school", "colleges", "schools"],
     scopeIndex: 0,
@@ -144,7 +148,17 @@ Page({
     }
   },
   setField(e) {
-    this.setData({ ["form." + e.currentTarget.dataset.k]: e.detail.value });
+    const key = e.currentTarget.dataset.k;
+    const patch = { ["form." + key]: e.detail.value };
+    if (this.data.errors && this.data.errors[key]) patch["errors." + key] = "";
+    this.setData(patch);
+  },
+  setCityPick(e) {
+    const i = Number(e.detail.value);
+    this.setData({ cityIndex: i, "form.city": this.data.cityNames[i] || "", "errors.city": "" });
+  },
+  setMeetupTime(e) {
+    this.setData({ "form.meetupTime": e.detail.value, "errors.meetupTime": "" });
   },
   setChannel(e) {
     const i = Number(e.detail.value);
@@ -208,9 +222,10 @@ Page({
   },
   pickCampusCollege() {
     if (!this.data.form.campusSchool) {
-      wx.showToast({ title: "请先选择学校", icon: "none" });
+      this.setData({ "errors.campus": "请先选择学校" });
       return;
     }
+    this.setData({ "errors.campus": "" });
     openCampusPick({
       kind: "college",
       school: this.data.form.campusSchool,
@@ -221,9 +236,10 @@ Page({
   },
   pickColleges() {
     if (!this.data.form.campusSchool) {
-      wx.showToast({ title: "请先选择学校", icon: "none" });
+      this.setData({ "errors.campus": "请先选择学校" });
       return;
     }
+    this.setData({ "errors.campus": "" });
     openCampusPick({
       kind: "college",
       school: this.data.form.campusSchool,
@@ -256,9 +272,10 @@ Page({
     const i = Number(e.currentTarget.dataset.i);
     const row = (this.data.form.campusTargets || [])[i] || {};
     if (!row.school) {
-      wx.showToast({ title: "请先选择学校", icon: "none" });
+      this.setData({ "errors.campus": "请先选择学校" });
       return;
     }
+    this.setData({ "errors.campus": "" });
     openCampusPick({
       kind: "college",
       school: row.school,
@@ -271,9 +288,10 @@ Page({
     const i = Number(e.currentTarget.dataset.i);
     const row = (this.data.form.campusTargets || [])[i] || {};
     if (!row.college) {
-      wx.showToast({ title: "请先选择学院", icon: "none" });
+      this.setData({ "errors.campus": "请先选择学院" });
       return;
     }
+    this.setData({ "errors.campus": "" });
     openCampusPick({
       kind: "major",
       school: row.school,
@@ -339,7 +357,7 @@ Page({
     this.setData(patch);
   },
   setCompanyName(e) {
-    this.setData({ "form.companyName": e.detail.value });
+    this.setData({ "form.companyName": e.detail.value, "errors.companyName": "" });
   },
   setBus(e) {
     const i = Number(e.detail.value);
@@ -356,8 +374,8 @@ Page({
   },
   async submit() {
     const form = Object.assign({}, this.data.form);
-    if (!form.title) {
-      wx.showToast({ title: "请填写标题", icon: "none" });
+    if (!String(form.title || "").trim()) {
+      this.setData({ "errors.title": "请填写标题" });
       return;
     }
     if (form.channel === "activity") {
@@ -365,16 +383,17 @@ Page({
       form.organizerType = "individual";
       form.offerType = Number(form.originPrice) > 0 ? form.offerType || "full" : "free";
       if (!String(form.meetupPoint || "").trim()) {
-        wx.showToast({ title: "请填写地点", icon: "none" });
+        this.setData({ "errors.meetupPoint": "请填写地点" });
         return;
       }
     } else if (form.organizerType === "company" && !String(form.companyName || "").trim()) {
-      wx.showToast({ title: "公司开团请填写公司名称", icon: "none" });
+      this.setData({ "errors.companyName": "公司开团请填写公司名称" });
       return;
     } else if (form.organizerType === "campus" && !String(form.companyName || "").trim()) {
-      wx.showToast({ title: "高校开团请填写学校", icon: "none" });
+      this.setData({ "errors.companyName": "高校开团请填写学校" });
       return;
     }
+    this.setData({ errors: {} });
     if (form.organizerType === "campus" && form.offerType === "free") {
       form.oversub = true;
       if (form.campusScope === "open") form.campusScope = "school";

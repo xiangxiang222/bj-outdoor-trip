@@ -45,6 +45,7 @@ Page({
     rejected: false,
     loading: false,
     redirect: "",
+    errors: {},
   },
   onLoad(q) {
     this.setData({ redirect: q.redirect || "" });
@@ -90,9 +91,10 @@ Page({
   pickCollege() {
     if (this.data.certified) return;
     if (!this.data.school) {
-      wx.showToast({ title: "请先选择学校", icon: "none" });
+      this.setData({ "errors.college": "请先选择学校" });
       return;
     }
+    this.setData({ "errors.college": "" });
     openCampusPick({
       kind: "college",
       school: this.data.school,
@@ -104,9 +106,10 @@ Page({
   pickMajor() {
     if (this.data.certified) return;
     if (!this.data.college) {
-      wx.showToast({ title: "请先选择学院", icon: "none" });
+      this.setData({ "errors.major": "请先选择学院" });
       return;
     }
+    this.setData({ "errors.major": "" });
     openCampusPick({
       kind: "major",
       school: this.data.school,
@@ -132,7 +135,7 @@ Page({
           const url = await uploadFile(file.tempFilePath);
           this.setData({ studentCardUrl: url });
         } catch (e) {
-          wx.showToast({ title: (e && e.message) || "上传失败", icon: "none" });
+          wx.showModal({ title: "上传失败", content: (e && e.message) || "请稍后重试", showCancel: false });
         } finally {
           wx.hideLoading();
         }
@@ -158,7 +161,7 @@ Page({
       this.syncUser(res.data);
       wx.showToast({ title: res.message || "已提交", icon: "none" });
     } catch (e) {
-      wx.showToast({ title: (e && e.message) || "提交失败", icon: "none" });
+      wx.showModal({ title: "提交失败", content: (e && e.message) || "请稍后重试", showCancel: false });
     } finally {
       this.setData({ loading: false });
     }

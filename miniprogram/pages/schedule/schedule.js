@@ -176,7 +176,8 @@ Page({
         this.loadExtras();
         this.prepareShare(s);
       });
-      wx.setNavigationBarTitle({ title: isActivity ? "局详情" : "行程详情" });
+      const navTitle = (s.route && s.route.title) || (isActivity ? "局详情" : "团期");
+      wx.setNavigationBarTitle({ title: String(navTitle).slice(0, 12) });
       const region = s && s.route && [s.route.region, s.route.title].filter(Boolean).join(" ");
       const date = s && s.startDate;
       if (region && !isActivity) {

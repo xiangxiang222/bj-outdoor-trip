@@ -70,7 +70,7 @@
   <view class="goods-tab {{tab=='rules'?'on':''}}" bindtap="setTab" data-tab="rules">{{tr.t('须知', lang)}}</view>
 </view>
 
-<view class="pad muted" wx:if="{{!s}}">{{tr.t('正在打开…', lang)}}</view>
+<view class="pad load-row" wx:if="{{!s}}"><view class="spinner"></view><text class="muted">{{tr.t('正在打开…', lang)}}</text></view>
 <block wx:elif="{{tab=='trip'}}">
 <view class="pad title" wx:if="{{highlights.length}}">{{tr.t('这一天的看点', lang)}}</view>
 <view class="card" wx:if="{{highlights.length}}">

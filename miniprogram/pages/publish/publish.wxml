@@ -15,23 +15,42 @@
       <view>{{tr.t(item.label, lang)}}</view>
     </view>
   </view>
+  <view class="label">{{tr.t('标题', lang)}}</view>
   <input class="input" placeholder="{{tr.t('标题，例如周五夜掼蛋', lang)}}" value="{{form.title}}" bindinput="setField" data-k="title" />
+  <view class="field-error" wx:if="{{errors.title}}">{{tr.t(errors.title, lang)}}</view>
+  <view class="label">{{tr.t('地点', lang)}}</view>
   <input class="input" placeholder="{{tr.t('地点，例如三里屯太古里', lang)}}" value="{{form.meetupPoint}}" bindinput="setField" data-k="meetupPoint" />
-  <input class="input" placeholder="{{tr.t('城区，如朝阳', lang)}}" value="{{form.city}}" bindinput="setField" data-k="city" />
+  <view class="field-error" wx:if="{{errors.meetupPoint}}">{{tr.t(errors.meetupPoint, lang)}}</view>
+  <view class="label">{{tr.t('城区', lang)}}</view>
+  <picker mode="selector" range="{{cityNames}}" value="{{cityIndex}}" bindchange="setCityPick">
+    <view class="input">{{tr.t(form.city || '选择城区', lang)}}</view>
+  </picker>
   <view class="label">{{tr.t('日期', lang)}}</view>
   <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
     <view class="input">{{tr.t(dateLabels[dateIndex], lang)}}</view>
   </picker>
-  <input class="input" placeholder="{{tr.t('时间 19:30', lang)}}" value="{{form.meetupTime}}" bindinput="setField" data-k="meetupTime" />
+  <view class="label">{{tr.t('时间', lang)}}</view>
+  <picker mode="time" value="{{form.meetupTime}}" bindchange="setMeetupTime">
+    <view class="input">{{form.meetupTime}}</view>
+  </picker>
+  <view class="label">{{tr.t('最少几人成局', lang)}}</view>
   <input class="input" type="number" placeholder="{{tr.t('最少几人成局', lang)}}" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
+  <view class="label">{{tr.t('人数上限', lang)}}</view>
   <input class="input" type="number" placeholder="{{tr.t('人数上限', lang)}}" value="{{form.maxSeats}}" bindinput="setField" data-k="maxSeats" />
+  <view class="label">{{tr.t('费用（元，0 为免费）', lang)}}</view>
   <input class="input" type="number" placeholder="{{tr.t('费用（元，0 为免费）', lang)}}" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
+  <view class="label">{{tr.t('介绍', lang)}}</view>
   <textarea class="input" placeholder="{{tr.t('介绍：带什么、几点开始、怎么找人', lang)}}" value="{{form.description}}" bindinput="setField" data-k="description" />
 </block>
 
 <block wx:else>
+  <view class="label">{{tr.t('线路标题', lang)}}</view>
   <input class="input" placeholder="{{tr.t('线路标题', lang)}}" value="{{form.title}}" bindinput="setField" data-k="title" />
-  <input class="input" placeholder="{{tr.t('城市，如怀柔', lang)}}" value="{{form.city}}" bindinput="setField" data-k="city" />
+  <view class="field-error" wx:if="{{errors.title}}">{{tr.t(errors.title, lang)}}</view>
+  <view class="label">{{tr.t('城市', lang)}}</view>
+  <picker mode="selector" range="{{cityNames}}" value="{{cityIndex}}" bindchange="setCityPick">
+    <view class="input">{{tr.t(form.city || '选择城区', lang)}}</view>
+  </picker>
   <view class="label">{{tr.t('天数', lang)}}</view>
   <picker mode="selector" range="{{dayLabels}}" value="{{dayIndex}}" bindchange="setDay">
     <view class="input">{{tr.t(dayLabels[dayIndex], lang)}}</view>
@@ -51,6 +70,7 @@
     </picker>
     <view class="input" bindtap="pickComboSchool">{{tr.t(form.comboRule.school || '另一半学校（可空）', lang)}}</view>
   </view>
+  <view class="label">{{tr.t('原价（元）', lang)}}</view>
   <input class="input" type="number" placeholder="{{tr.t('原价（元）', lang)}}" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
   <view class="pad" bindtap="toggleAlumniOk">{{tr.t(form.alumniOk ? '☑' : '☐', lang)}} {{tr.t('允许已认证校友', lang)}}</view>
   <view class="pad" bindtap="toggleOversub">{{tr.t(form.oversub ? '☑' : '☐', lang)}} {{tr.t('报超会抽（车位不够才抽）', lang)}}</view>
@@ -70,6 +90,7 @@
     </view>
     <view class="btn ghost" bindtap="addCampusTarget">{{tr.t('添加学校-学院-专业', lang)}}</view>
   </block>
+  <view class="field-error" wx:if="{{errors.campus}}">{{tr.t(errors.campus, lang)}}</view>
   <view class="label">{{tr.t('出发日期', lang)}}</view>
   <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
     <view class="input">{{tr.t(dateLabels[dateIndex], lang)}}</view>
@@ -78,6 +99,7 @@
   <picker mode="selector" range="{{organizerLabels}}" value="{{organizerIndex}}" bindchange="setOrganizer">
     <view class="input">{{tr.t(organizerLabels[organizerIndex], lang)}}</view>
   </picker>
+  <view class="label" wx:if="{{form.organizerType === 'company'}}">{{tr.t('公司名称', lang)}}</view>
   <input
     wx:if="{{form.organizerType === 'company'}}"
     class="input"
@@ -85,6 +107,8 @@
     value="{{form.companyName}}"
     bindinput="setCompanyName"
   />
+  <view class="field-error" wx:if="{{errors.companyName}}">{{tr.t(errors.companyName, lang)}}</view>
+  <view class="label" wx:if="{{form.organizerType === 'campus'}}">{{tr.t('学校', lang)}}</view>
   <view
     wx:if="{{form.organizerType === 'campus'}}"
     class="input"
@@ -94,11 +118,17 @@
   <picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">
     <view class="input">{{tr.t(busNames[busIndex], lang)}}</view>
   </picker>
+  <view class="label">{{tr.t('最低成团人数', lang)}}</view>
   <input class="input" type="number" placeholder="{{tr.t('最低成团人数', lang)}}" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
   <view class="label">{{tr.t('集合点', lang)}}</view>
   <picker mode="selector" range="{{meetupNames}}" value="{{meetupIndex}}" bindchange="setMeetup">
     <view class="input">{{tr.t(meetupNames[meetupIndex], lang)}}</view>
   </picker>
+  <view class="label">{{tr.t('集合时间', lang)}}</view>
+  <picker mode="time" value="{{form.meetupTime}}" bindchange="setMeetupTime">
+    <view class="input">{{form.meetupTime}}</view>
+  </picker>
+  <view class="label">{{tr.t('介绍', lang)}}</view>
   <textarea class="input" placeholder="{{tr.t('介绍', lang)}}" value="{{form.description}}" bindinput="setField" data-k="description" />
   <view class="label">{{tr.t('视频链接', lang)}}</view>
   <textarea class="input" placeholder="{{tr.t('一行一条 B 站链接，如 https://www.bilibili.com/video/BVxxxx', lang)}}" value="{{form.videoUrls}}" bindinput="setField" data-k="videoUrls" />
