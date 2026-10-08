@@ -347,7 +347,7 @@
 
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import * as echarts from "echarts";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { organizerTypeText, scheduleStatusText } from "@/utils/labels";
@@ -356,6 +356,7 @@ import { hasCap } from "@/utils/staff";
 import CampusCatalogSelect from "@/components/admin/CampusCatalogSelect.vue";
 import AdminCampusTargetList from "@/components/admin/CampusTargetList.vue";
 import { emptyCampusTarget, normalizeCampusTargets } from "@/utils/campusTargets";
+const route = useRoute();
 const $router = useRouter();
 const me = ref({ caps: [] });
 const canOps = computed(() => hasCap(me.value, "ops"));
@@ -504,7 +505,22 @@ async function load() {
 onMounted(load);
 const activeCount = computed(() => list.value.filter((s) => s.status !== "cancelled").length);
 const cancelledCount = computed(() => list.value.filter((s) => s.status === "cancelled").length);
-const visibleList = computed(() => (showCancelled.value ? list.value : list.value.filter((s) => s.status !== "cancelled")));
+const visibleList = computed(() => {
+  const rows = showCancelled.value ? list.value : list.value.filter((s) => s.status !== "cancelled");
+  const focus = Number(route.query.id || 0);
+  const pending = [];
+  const rest = [];
+  rows.forEach((row) => {
+    if ((focus && Number(row.id) === focus) || row.reviewStatus === "pending") pending.push(row);
+    else rest.push(row);
+  });
+  pending.sort((a, b) => {
+    const af = focus && Number(a.id) === focus ? 0 : 1;
+    const bf = focus && Number(b.id) === focus ? 0 : 1;
+    return af - bf || Number(b.id) - Number(a.id);
+  });
+  return pending.concat(rest);
+});
 const emptyText = computed(() => (
   !showCancelled.value && cancelledCount.value
     ? "已解散的团已隐藏，打开「显示已解散」可查看"

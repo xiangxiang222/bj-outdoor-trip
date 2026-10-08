@@ -136,4 +136,5 @@
 </block>
 <view class="pad" bindtap="togglePrivateJoin">{{tr.t(form.privateJoin ? '☑' : '☐', lang)}} {{tr.t('加密团（报名要口令）', lang)}}</view>
 <input wx:if="{{form.privateJoin}}" class="input" placeholder="{{tr.t('入团口令 4～16 字，可空则自动生成', lang)}}" value="{{form.joinCode}}" bindinput="setField" data-k="joinCode" maxlength="16" />
+<view id="submit-error" class="field-error" wx:if="{{errors.form}}">{{tr.t(errors.form, lang)}}</view>
 <view class="btn" bindtap="submit">{{tr.t('提交审核', lang)}}</view>

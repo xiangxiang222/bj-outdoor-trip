@@ -246,7 +246,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 | GET | `/admin/enrollments` | Query：`scheduleId` `q` `payStatus` `status` |
 | POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款按付款人原路退回） |
 | GET | `/admin/feedbacks` | 运营。意见反馈列表。Query：`channel=experience\|complaint` |
-| GET | `/admin/notices` | 运营。后台待办消息。`{ list, unread }`。校园/团体/领队认证和意见反馈都会写入 |
+| GET | `/admin/notices` | 运营。后台待办消息。`{ list, unread }`。校园/团体/领队认证、用户发团（含同城局）和意见反馈都会写入 |
 | POST | `/admin/notices/read-all` | 运营。全部标已读 |
 | POST | `/admin/notices/:id/read` | 运营。单条标已读 |
 | GET | `/admin/users` | Query：`q`、`pending=campus\|group\|any`。不含已注销、不含证件；带 `isMember` `isVirtual` `isStudent` `isAlumni` `campusKind` `school` `studentStatus` `groupStatus`。待审排在前面 |

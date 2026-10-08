@@ -126,6 +126,8 @@ describe("homepage and publish review", () => {
       healthOk: true,
     }).expect(400);
     const admin = await loginAdmin(agent);
+    const box = await agent.get("/api/admin/notices").set(auth(admin)).expect(200);
+    assert.equal(box.body.data.list.find((n) => n.kind === "trip").title, "发团待审");
     await agent.post(`/api/admin/schedules/${created.body.data.id}/review`).set(auth(admin)).send({ status: "approved" }).expect(200);
     const after = await agent.get("/api/schedules").expect(200);
     assert.ok(after.body.data.some((s) => s.id === created.body.data.id));
@@ -153,7 +155,16 @@ describe("homepage and publish review", () => {
     assert.equal(created.body.data.maxSeats, 12);
     assert.equal(created.body.data.meetupPoint, "奥林匹克森林公园南门");
     const admin = await loginAdmin(agent);
+    const box = await agent.get("/api/admin/notices").set(auth(admin)).expect(200);
+    const note = box.body.data.list.find((n) => n.kind === "trip");
+    assert.ok(note);
+    assert.equal(note.title, "同城局待审");
+    assert.match(note.body, /朝阳夜跑局/);
+    assert.equal(note.href, `/admin/schedules?id=${created.body.data.id}`);
+    assert.equal(note.unread, true);
     await agent.post(`/api/admin/schedules/${created.body.data.id}/review`).set(auth(admin)).send({ status: "approved" }).expect(200);
+    const cleared = await agent.get("/api/admin/notices").set(auth(admin)).expect(200);
+    assert.equal(cleared.body.data.list.find((n) => n.kind === "trip" && n.unread), undefined);
     const trips = await agent.get("/api/schedules?channel=trip").expect(200);
     assert.equal(trips.body.data.some((s) => s.id === created.body.data.id), false);
     const acts = await agent.get("/api/schedules?channel=activity").expect(200);

@@ -1514,5 +1514,7 @@
   "向发起人索取": "Ask the organizer",
   "不能与出行人相同": "Must differ from the traveler",
   "怎么称呼": "What should we call you",
-  "请点击图片重试": "Tap the picture to try again"
+  "请点击图片重试": "Tap the picture to try again",
+  "已提交，等待审核": "Submitted. Waiting for review.",
+  "结果会显示在本页，不用重复提交。": "The result stays on this page. No need to submit again."
 }

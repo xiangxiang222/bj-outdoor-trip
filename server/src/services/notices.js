@@ -116,6 +116,22 @@ function noticeFeedback(row, user) {
   });
 }
 
+function noticeTrip(schedule, user, routeTitle) {
+  if (!schedule) return null;
+  const who = (user && (user.nickname || user.phone)) || "用户";
+  const title = String(routeTitle || "新团").trim() || "新团";
+  const activity = (schedule.channel || "trip") === "activity";
+  const when = schedule.start_date ? ` ${schedule.start_date}` : "";
+  return pushNotice({
+    kind: "trip",
+    title: activity ? "同城局待审" : "发团待审",
+    body: `${who} 提交「${title}」${when}`.trim(),
+    href: `/admin/schedules?id=${schedule.id}`,
+    refType: "schedule",
+    refId: schedule.id,
+  });
+}
+
 function noticeLeader(user) {
   if (!user) return null;
   const who = user.nickname || user.phone || "用户";
@@ -170,6 +186,7 @@ module.exports = {
   noticeCampus,
   noticeGroup,
   noticeRouteApply,
+  noticeTrip,
   noticeLeader,
   noticeFeedback,
   listNotices,
