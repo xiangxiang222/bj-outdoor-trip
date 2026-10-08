@@ -372,10 +372,15 @@ Page({
     const tags = this.data.tags.map((t) => (t.id === id ? Object.assign({}, t, { on: !t.on }) : t));
     this.setData({ tags, "form.playTagIds": tags.filter((t) => t.on).map((t) => t.id) });
   },
+  blockSubmit(key, message) {
+    const patch = { "errors.form": message };
+    if (key) patch["errors." + key] = message;
+    this.setData(patch, () => wx.pageScrollTo({ selector: "#submit-error", duration: 200 }));
+  },
   async submit() {
     const form = Object.assign({}, this.data.form);
     if (!String(form.title || "").trim()) {
-      this.setData({ "errors.title": "请填写标题" });
+      this.blockSubmit("title", "请填写标题");
       return;
     }
     if (form.channel === "activity") {
@@ -383,14 +388,14 @@ Page({
       form.organizerType = "individual";
       form.offerType = Number(form.originPrice) > 0 ? form.offerType || "full" : "free";
       if (!String(form.meetupPoint || "").trim()) {
-        this.setData({ "errors.meetupPoint": "请填写地点" });
+        this.blockSubmit("meetupPoint", "请填写地点");
         return;
       }
     } else if (form.organizerType === "company" && !String(form.companyName || "").trim()) {
-      this.setData({ "errors.companyName": "公司开团请填写公司名称" });
+      this.blockSubmit("companyName", "公司开团请填写公司名称");
       return;
     } else if (form.organizerType === "campus" && !String(form.companyName || "").trim()) {
-      this.setData({ "errors.companyName": "高校开团请填写学校" });
+      this.blockSubmit("companyName", "高校开团请填写学校");
       return;
     }
     this.setData({ errors: {} });
@@ -411,8 +416,7 @@ Page({
       wx.hideLoading();
       wx.redirectTo({ url: "/pages/schedule/schedule?id=" + res.data.id + "&posted=1" });
     } catch (e) {
-      wx.hideLoading();
-      showError("提交失败", e);
+      wx.hideLoading({ complete: () => showError("提交失败", e) });
     }
   },
 });

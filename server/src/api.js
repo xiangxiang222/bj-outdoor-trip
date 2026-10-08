@@ -85,7 +85,7 @@ const {
 } = require("./services/mine-desk");
 const { scheduleRouteI18n } = require("./services/route-i18n");
 const { submitApply, listMine: listRouteApps, reviewApply, adminFields, bountyYuan, applicationView, reviewOf, isListed } = require("./services/route-apply");
-const { noticeCampus, noticeGroup, noticeLeader, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
+const { noticeCampus, noticeGroup, noticeLeader, noticeTrip, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
 const { submitFeedback, listFeedbacks } = require("./services/feedback");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -1884,6 +1884,7 @@ router.post("/trips", authUser, (req, res) => {
   attachLotteryOnCreate(schInfo.lastInsertRowid, b);
   markPersonalBounty(schInfo.lastInsertRowid);
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(schInfo.lastInsertRowid);
+  noticeTrip(sch, user, title);
   res.json({
     ok: true,
     data: {
@@ -2775,6 +2776,7 @@ router.post("/admin/schedules/:id/review", authAdmin, requireCap("ops"), (req, r
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
   const status = (req.body || {}).status === "rejected" ? "rejected" : "approved";
   db().prepare("UPDATE schedules SET review_status=? WHERE id=?").run(status, sch.id);
+  resolveNotices("trip", "schedule", sch.id, req.adminId);
   if (status === "approved") {
     db().prepare("UPDATE routes SET status='on' WHERE id=? AND status='pending'").run(sch.route_id);
     const route = db().prepare("SELECT title FROM routes WHERE id=?").get(sch.route_id);

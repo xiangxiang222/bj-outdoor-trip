@@ -40,6 +40,7 @@ Page({
     studentNo: "",
     studentCardUrl: "",
     placeText: "",
+    placeLine: "",
     certified: false,
     pending: false,
     rejected: false,
@@ -61,6 +62,7 @@ Page({
     const campusKind = u.campusKind === "alumni" ? "alumni" : "student";
     const bits = [school, college, major].filter(Boolean);
     this.setData({
+      placeLine: bits.join(" "),
       school,
       college,
       major,
@@ -80,7 +82,7 @@ Page({
     this.setData({ campusKind: i === 1 ? "alumni" : "student", kindIndex: i, kindLabel: i === 1 ? "校友" : "师生" });
   },
   pickSchool() {
-    if (this.data.certified) return;
+    if (this.data.certified || this.data.pending) return;
     openCampusPick({
       kind: "school",
       title: "选择学校",
@@ -89,7 +91,7 @@ Page({
     });
   },
   pickCollege() {
-    if (this.data.certified) return;
+    if (this.data.certified || this.data.pending) return;
     if (!this.data.school) {
       this.setData({ "errors.college": "请先选择学校" });
       return;
@@ -104,7 +106,7 @@ Page({
     });
   },
   pickMajor() {
-    if (this.data.certified) return;
+    if (this.data.certified || this.data.pending) return;
     if (!this.data.college) {
       this.setData({ "errors.major": "请先选择学院" });
       return;
@@ -123,7 +125,7 @@ Page({
     this.setData({ studentNo: e.detail.value });
   },
   pickCard() {
-    if (this.data.certified) return;
+    if (this.data.certified || this.data.pending) return;
     wx.chooseMedia({
       count: 1,
       mediaType: ["image"],
@@ -159,7 +161,7 @@ Page({
       });
       setAuth(app.globalData.token, res.data);
       this.syncUser(res.data);
-      wx.showToast({ title: res.message || "已提交", icon: "none" });
+      wx.pageScrollTo({ selector: "#cert-result", duration: 200 });
     } catch (e) {
       wx.showModal({ title: "提交失败", content: (e && e.message) || "请稍后重试", showCancel: false });
     } finally {

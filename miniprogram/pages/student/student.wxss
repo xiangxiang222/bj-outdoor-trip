@@ -1,1 +1,32 @@
 @import "../../styles/account.wxss";
+
+.cert-photo {
+  display: block;
+  width: auto;
+  height: 280rpx;
+  margin: 0 32rpx 8rpx;
+  background: #eee;
+}
+.cert-actions {
+  padding: 8rpx 32rpx calc(48rpx + env(safe-area-inset-bottom));
+}
+.cert-btn {
+  display: block;
+  width: 100%;
+  margin: 0 0 28rpx !important;
+  box-sizing: border-box;
+}
+.cert-btn::after { border: none; }
+.cert-result {
+  margin-top: 8rpx;
+  padding: 28rpx 28rpx 8rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  border: 1px solid #c6f24a;
+}
+.cert-result-title {
+  font-weight: 650;
+  font-size: calc(34rpx * var(--ui-scale));
+  margin-bottom: 8rpx;
+}
+.cert-result .btn { margin: 20rpx 0 16rpx; }

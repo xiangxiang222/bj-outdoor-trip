@@ -2,11 +2,10 @@
 <wxs src="../../utils/locale.wxs" module="tr" />
 <view class="pad muted">{{tr.t('认证时请上传学生证或校友证。学校、学院、专业可从北京高校名单里选，也可以不填。通过后可走学生价；部分团只对本院、本校或指定学校学院开放。校友不享受学生价。', lang)}}</view>
 <view class="pad" wx:if="{{certified}}" style="color:#2d6a4f">{{tr.t('已认证', lang)}}{{tr.t(kindLabel, lang)}}{{tr.t(placeText, lang)}}</view>
-<view class="pad muted" wx:elif="{{pending}}">{{tr.t('审核中', lang)}}{{tr.t(placeText, lang)}}</view>
 <view class="pad muted" wx:elif="{{rejected}}">{{tr.t('上次未通过，可修改后再次提交。', lang)}}</view>
 
 <view class="pad">{{tr.t('身份', lang)}}</view>
-<picker mode="selector" range="{{kindLabels}}" value="{{kindIndex}}" disabled="{{certified}}" bindchange="setKind">
+<picker mode="selector" range="{{kindLabels}}" value="{{kindIndex}}" disabled="{{certified || pending}}" bindchange="setKind">
   <view class="input">{{tr.t(kindLabels[kindIndex], lang)}}</view>
 </picker>
 <view class="pad">{{tr.t('学校（可空）', lang)}}</view>
@@ -19,10 +18,20 @@
 <view class="field-error" wx:if="{{errors.major}}">{{tr.t(errors.major, lang)}}</view>
 <block wx:if="{{campusKind=='student'}}">
   <view class="pad">{{tr.t('学号', lang)}}</view>
-  <input class="input" value="{{studentNo}}" placeholder="{{tr.t('学生证上的学号', lang)}}" disabled="{{certified}}" bindinput="onNo" />
+  <input class="input" value="{{studentNo}}" placeholder="{{tr.t('学生证上的学号', lang)}}" disabled="{{certified || pending}}" bindinput="onNo" />
 </block>
 <view class="pad">{{tr.t('学生证 / 校友证', lang)}}</view>
-<image wx:if="{{studentCardUrl}}" src="{{studentCardUrl}}" mode="aspectFit" style="width:100%;height:280rpx;background:#eee" bindtap="pickCard" />
-<button wx:else class="ghost" disabled="{{certified}}" bindtap="pickCard">{{tr.t('上传照片', lang)}}</button>
-<button bindtap="submit" disabled="{{loading || certified}}">{{tr.t(loading ? '提交中…' : '提交认证', lang)}}</button>
-<button class="ghost" wx:if="{{redirect}}" bindtap="goBack">{{tr.t('返回', lang)}}</button>
+<image wx:if="{{studentCardUrl}}" class="cert-photo" src="{{studentCardUrl}}" mode="aspectFit" bindtap="pickCard" />
+<view class="cert-actions">
+  <view wx:if="{{pending && !certified}}" id="cert-result" class="cert-result">
+    <view class="cert-result-title">{{tr.t('已提交，等待审核', lang)}}</view>
+    <view class="muted" wx:if="{{placeLine}}">{{tr.t(placeLine, lang)}}</view>
+    <view class="muted">{{tr.t('结果会显示在本页，不用重复提交。', lang)}}</view>
+    <view class="btn ghost" bindtap="goBack">{{tr.t('返回', lang)}}</view>
+  </view>
+  <block wx:else>
+    <button wx:if="{{!studentCardUrl}}" class="btn ghost cert-btn" disabled="{{certified}}" bindtap="pickCard">{{tr.t('上传照片', lang)}}</button>
+    <button class="btn cert-btn" bindtap="submit" disabled="{{loading || certified}}">{{tr.t(loading ? '提交中…' : '提交认证', lang)}}</button>
+    <button wx:if="{{redirect}}" class="btn ghost cert-btn" bindtap="goBack">{{tr.t('返回', lang)}}</button>
+  </block>
+</view>
