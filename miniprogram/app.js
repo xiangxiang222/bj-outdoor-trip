@@ -93,7 +93,7 @@ const NAV_TITLES = {
   "pages/wallet-cards/wallet-cards": "提现说明",
   "pages/wallet-pin/wallet-pin": "支付密码",
   "pages/rules/rules": "规则",
-  "pages/feedback/feedback": "建议与 BUG",
+  "pages/feedback/feedback": "意见反馈",
   "pages/lottery/lottery": "活动",
   "pages/after/after": "完成活动",
   "pages/routes/routes": "线路",

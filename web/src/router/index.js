@@ -73,6 +73,7 @@ const routes = [
       { path: "lottery", component: () => import("@/views/admin/Lottery.vue") },
       { path: "users", component: () => import("@/views/admin/Users.vue") },
       { path: "verify", component: () => import("@/views/admin/Verify.vue") },
+      { path: "feedback", component: () => import("@/views/admin/Feedback.vue") },
       { path: "tags", component: () => import("@/views/admin/Tags.vue") },
       { path: "refund", component: () => import("@/views/admin/Refund.vue") },
       { path: "staff", component: () => import("@/views/admin/Staff.vue") },

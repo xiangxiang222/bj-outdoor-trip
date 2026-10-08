@@ -86,6 +86,7 @@ const {
 const { scheduleRouteI18n } = require("./services/route-i18n");
 const { submitApply, listMine: listRouteApps, reviewApply, adminFields, bountyYuan, applicationView, reviewOf, isListed } = require("./services/route-apply");
 const { noticeCampus, noticeGroup, noticeLeader, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
+const { submitFeedback, listFeedbacks } = require("./services/feedback");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
   createCampaign,
@@ -1220,11 +1221,12 @@ router.post("/me/leader", authUser, (req, res) => {
 });
 
 router.post("/feedback", authUser, (req, res) => {
-  const kind = (req.body || {}).kind === "bug" ? "bug" : "suggest";
-  const content = String((req.body || {}).content || "").trim();
-  if (content.length < 4) return res.status(400).json({ ok: false, message: "请写清楚建议或问题" });
-  db().prepare("INSERT INTO feedbacks (user_id,kind,content) VALUES (?,?,?)").run(req.userId, kind, content);
-  res.json({ ok: true, message: "已收到，谢谢反馈" });
+  try {
+    const data = submitFeedback(req.userId, req.body || {});
+    res.json({ ok: true, data, message: "已收到，谢谢反馈" });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 router.get("/lottery", optionalUser, (req, res) => {
@@ -3156,6 +3158,11 @@ router.post("/admin/enrollments/:id/cancel", authAdmin, requireCap("ops"), async
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }
+});
+
+router.get("/admin/feedbacks", authAdmin, requireCap("ops"), (req, res) => {
+  const channel = String(req.query.channel || "").trim();
+  res.json({ ok: true, data: listFeedbacks(channel) });
 });
 
 router.get("/admin/notices", authAdmin, requireCap("ops"), (req, res) => {

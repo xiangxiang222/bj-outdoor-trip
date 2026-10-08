@@ -100,6 +100,22 @@ function noticeRouteApply(row) {
   });
 }
 
+function noticeFeedback(row, user) {
+  if (!row) return null;
+  const who = (user && (user.nickname || user.phone)) || "用户";
+  const label = String(row.label || "反馈").trim();
+  const brief = String(row.content || "").replace(/\s+/g, " ").trim().slice(0, 36);
+  const complaint = row.channel === "complaint";
+  return pushNotice({
+    kind: "feedback",
+    title: complaint ? "活动投诉" : "意见反馈",
+    body: brief ? `${who} · ${label}：${brief}` : `${who} · ${label}`,
+    href: `/admin/feedback?id=${row.id}`,
+    refType: "feedback",
+    refId: row.id,
+  });
+}
+
 function noticeLeader(user) {
   if (!user) return null;
   const who = user.nickname || user.phone || "用户";
@@ -155,6 +171,7 @@ module.exports = {
   noticeGroup,
   noticeRouteApply,
   noticeLeader,
+  noticeFeedback,
   listNotices,
   markRead,
   markAllRead,

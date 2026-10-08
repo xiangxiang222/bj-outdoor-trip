@@ -68,6 +68,7 @@
           <div class="admin-nav-label">用户</div>
           <router-link to="/admin/users">用户与会员</router-link>
           <router-link to="/admin/verify">认证审批</router-link>
+          <router-link to="/admin/feedback">意见反馈</router-link>
         </nav>
         <nav v-if="can('ops') || can('staff')" class="admin-nav-group">
           <div class="admin-nav-label">设置</div>

@@ -79,7 +79,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | POST | `/me/leader` | 用户 | `{ name, years, intro }` 个人领队申请，pending。已通过则 400 |
 | GET | `/routes/apps` | 用户 | 我提交的线路申请、`bounty`、客服 `contacts` |
 | POST | `/routes/apply` | 用户 | 申请收录线路（不是发团）。`title` `region` `contactPhone` `contactWechat` 必填，可选 `subtitle` `days` `minGroupSize` `originPrice` `cover` `description`。写入 `review_status=pending`，后台通过并首次成团后奖励 300 元入账钱包（`route_bounty`）。返回文案含客服微信 |
-| POST | `/feedback` | 用户 | `{ kind: suggest\|bug, content }`，内容至少 4 字 |
+| POST | `/feedback` | 用户 | `{ kind, content, images? }`。`kind`：体验 `suggest` `enroll` `perf` `other`（旧客户端 `bug`），投诉 `trip` `guide` `refund` `safety`。内容 4～200 字，图片最多 3 张。写入后给后台一条待办 |
 | GET | `/lottery` | 可选用户 | 抽奖状态与圆盘奖品（不含权重）。Query：`scheduleId`。返回 `drawMode` `canPre` `canPost` `canClaim`。有本团配置则用本团奖池。不带 `scheduleId` 时另给 `trips[]`（已抽或已报名的本团抽奖）和平台默认转盘 |
 | POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }`。服务端先出结果再让圆盘转到 `sectorIndex`，返回 `rate` `prizeInfo` `deferred` `claimHint`。指定中奖不会返回给用户。本团奖池中奖先记账，跟团结束后领取。平台默认行后抽：交费（或已占座）且行程结束即可，不必签到或点完成活动 |
 | POST | `/lottery/claim` | 用户 | `{ scheduleId }`。须已交费或已占座，且行程结束日（或出发日）不晚于今天。文案：「跟团结束后才能领奖」 |
@@ -245,7 +245,8 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 | POST | `/admin/coupons/:id/grant` | 定向发放。`phones`/`phonesText`/`userIds`/`allMembers`，或 `school`+`allCampus` 发给该校已认证师生/校友，或 `byRule` 按发行条件发放（人多随机）。可选 `sms`（默认 true）。一人一码，写入 `sms_logs` 场景 `coupon`，每手机每天最多 1 条 |
 | GET | `/admin/enrollments` | Query：`scheduleId` `q` `payStatus` `status` |
 | POST | `/admin/enrollments/:id/cancel` | 后台取消报名（已付款按付款人原路退回） |
-| GET | `/admin/notices` | 运营。后台待办消息。`{ list, unread }`。用户提交校园/团体认证时写入 |
+| GET | `/admin/feedbacks` | 运营。意见反馈列表。Query：`channel=experience\|complaint` |
+| GET | `/admin/notices` | 运营。后台待办消息。`{ list, unread }`。校园/团体/领队认证和意见反馈都会写入 |
 | POST | `/admin/notices/read-all` | 运营。全部标已读 |
 | POST | `/admin/notices/:id/read` | 运营。单条标已读 |
 | GET | `/admin/users` | Query：`q`、`pending=campus\|group\|any`。不含已注销、不含证件；带 `isMember` `isVirtual` `isStudent` `isAlumni` `campusKind` `school` `studentStatus` `groupStatus`。待审排在前面 |
