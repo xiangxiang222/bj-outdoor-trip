@@ -1335,6 +1335,12 @@ html.admin-theme .el-dialog__footer {
 .admin-schedules-table.is-scrolling-right th.el-table-fixed-column--left.is-last-column {
   box-shadow: 8px 0 10px -6px rgba(20, 20, 20, 0.18);
 }
+.admin-review-ops {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.admin-review-ops .el-button + .el-button { margin-left: 0; }
 .admin-table-ops {
   display: flex;
   flex-wrap: wrap;
