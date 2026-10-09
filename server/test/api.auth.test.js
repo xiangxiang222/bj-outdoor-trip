@@ -102,6 +102,19 @@ describe("auth and profile API", () => {
     assert.equal(wrongPwd.status, 400);
   });
 
+  it("registers with an sms code and waits a minute before another code", async () => {
+    const sent = await agent.post("/api/auth/sms").send({ phone: "13500135111", scene: "register" }).expect(200);
+    assert.equal(sent.body.data.demoCode, "888888");
+    assert.equal(sent.body.message, "演示环境验证码为 888888");
+    const again = await agent.post("/api/auth/sms").send({ phone: "13500135111", scene: "register" });
+    assert.equal(again.status, 400);
+    const created = await agent
+      .post("/api/auth/register")
+      .send({ phone: "13500135111", password: "123456", nickname: "短信用户", smsCode: "888888" })
+      .expect(200);
+    assert.equal(created.body.data.user.nickname, "短信用户");
+  });
+
   it("logs in by sms and auto-creates user", async () => {
     await agent.post("/api/auth/sms").send({ phone: "13500135000", scene: "login" }).expect(200);
     const res = await agent.post("/api/auth/login-sms").send({ phone: "13500135000", code: "888888" }).expect(200);

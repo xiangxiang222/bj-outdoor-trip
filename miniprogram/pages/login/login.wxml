@@ -23,9 +23,24 @@
   </view>
 
   <block wx:if="{{tab==='login'}}">
+    <view class="chips pad">
+      <view class="chip {{smsMode?'':'on'}}" bindtap="setSmsMode" data-on="0">{{tr.t('密码登录', lang)}}</view>
+      <view class="chip {{smsMode?'on':''}}" bindtap="setSmsMode" data-on="1">{{tr.t('短信登录', lang)}}</view>
+    </view>
     <view class="label">{{tr.t('手机号', lang)}}</view>
     <input class="input" placeholder="{{tr.t('11位手机号', lang)}}" bindinput="setPhone" value="{{phone}}" maxlength="11" />
     <view class="field-error" wx:if="{{errors.phone}}">{{tr.t(errors.phone, lang)}}</view>
+    <block wx:if="{{smsMode}}">
+      <view class="label">{{tr.t('短信验证码', lang)}}</view>
+      <view class="sms-row">
+        <input class="input sms-input" placeholder="{{tr.t('6 位短信验证码', lang)}}" bindinput="setSmsCode" value="{{smsCode}}" maxlength="6" />
+        <view class="sms-btn {{smsWait?'off':''}}" bindtap="sendSms" data-scene="login">{{smsWait ? smsWait + '秒' : tr.t('获取验证码', lang)}}</view>
+      </view>
+      <view class="field-error" wx:if="{{errors.smsCode}}">{{tr.t(errors.smsCode, lang)}}</view>
+      <view class="muted pad" wx:if="{{smsNote}}">{{tr.t(smsNote, lang)}}</view>
+      <view class="btn" bindtap="smsLogin">{{tr.t('登录', lang)}}</view>
+    </block>
+    <block wx:else>
     <view class="label">{{tr.t('密码', lang)}}</view>
     <input class="input" placeholder="{{tr.t('密码', lang)}}" password bindinput="setPwd" value="{{password}}" />
     <view class="field-error" wx:if="{{errors.password}}">{{tr.t(errors.password, lang)}}</view>
@@ -45,6 +60,7 @@
     <view class="field-error" wx:if="{{errors.captcha}}">{{tr.t(errors.captcha, lang)}}</view>
     <view class="muted pad">{{tr.t('看不清请点击图片刷新', lang)}}</view>
     <view class="btn" bindtap="pwdLogin">{{tr.t('登录', lang)}}</view>
+    </block>
   </block>
 
   <block wx:else>
@@ -54,27 +70,19 @@
     <view class="label">{{tr.t('手机号', lang)}}</view>
     <input class="input" placeholder="{{tr.t('11位手机号', lang)}}" bindinput="setPhone" value="{{phone}}" maxlength="11" />
     <view class="field-error" wx:if="{{errors.phone}}">{{tr.t(errors.phone, lang)}}</view>
-    <view class="label">{{tr.t('图片验证码', lang)}}</view>
-    <view class="captcha-box" bindtap="loadCaptcha">
-      <image
-        wx:if="{{captchaImage}}"
-        class="captcha-full"
-        src="{{captchaImage}}"
-        mode="aspectFit"
-        style="width: 100%; height: 120rpx;"
-        binderror="onCaptchaError"
-      />
-      <view wx:else class="muted">{{tr.t(captchaLoading ? '加载中…' : '点击获取验证码', lang)}}</view>
+    <view class="label">{{tr.t('短信验证码', lang)}}</view>
+    <view class="sms-row">
+      <input class="input sms-input" placeholder="{{tr.t('6 位短信验证码', lang)}}" bindinput="setSmsCode" value="{{smsCode}}" maxlength="6" />
+      <view class="sms-btn {{smsWait?'off':''}}" bindtap="sendSms" data-scene="register">{{smsWait ? smsWait + '秒' : tr.t('获取验证码', lang)}}</view>
     </view>
-    <input class="input" placeholder="{{tr.t('请输入上图字符', lang)}}" bindinput="setCaptcha" value="{{captcha}}" maxlength="4" />
-    <view class="field-error" wx:if="{{errors.captcha}}">{{tr.t(errors.captcha, lang)}}</view>
+    <view class="field-error" wx:if="{{errors.smsCode}}">{{tr.t(errors.smsCode, lang)}}</view>
+    <view class="muted pad" wx:if="{{smsNote}}">{{tr.t(smsNote, lang)}}</view>
     <view class="label">{{tr.t('密码', lang)}}</view>
     <input class="input" placeholder="{{tr.t('设置密码（至少6位）', lang)}}" password bindinput="setPwd" value="{{password}}" />
     <view class="field-error" wx:if="{{errors.password}}">{{tr.t(errors.password, lang)}}</view>
     <view class="label">{{tr.t('确认密码', lang)}}</view>
     <input class="input" placeholder="{{tr.t('确认密码', lang)}}" password bindinput="setPwd2" value="{{password2}}" />
     <view class="field-error" wx:if="{{errors.password2}}">{{tr.t(errors.password2, lang)}}</view>
-    <view class="muted pad">{{tr.t('看不清请点击图片刷新', lang)}}</view>
     <view class="btn" bindtap="register">{{tr.t('注册', lang)}}</view>
   </block>
 </block>
