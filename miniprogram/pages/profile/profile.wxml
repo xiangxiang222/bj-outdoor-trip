@@ -1,6 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="notice">{{tr.t('将跳到微信授权页，核对姓名和身份证是否与这张微信的支付实名一致。证件号仅本人可见，展示时脱敏。', lang)}}</view>
+<view class="notice">{{tr.t('核对姓名和身份证号是否为同一人。证件号仅本人可见，展示时脱敏。', lang)}}</view>
 <view class="list">
   <view class="row"><text>{{tr.t('昵称', lang)}}</text><text class="val">{{tr.t(user.nickname || '未填', lang)}}</text></view>
   <view class="row"><text>{{tr.t('真实姓名', lang)}}</text><text class="val">{{tr.t(user.realName || '待核验', lang)}}</text></view>
@@ -8,7 +8,7 @@
   <view class="row"><text>{{tr.t('手机', lang)}}</text><text class="val">{{tr.t(phone || '未绑定', lang)}}</text></view>
   <view class="row"><text>{{tr.t('证件类型', lang)}}</text><text class="val">{{tr.t('身份证', lang)}}</text></view>
   <view class="row"><text>{{tr.t('证件号码', lang)}}</text><text class="val {{user.idCardMasked ? '' : 'todo'}}">{{tr.t(user.idCardMasked || '待补充', lang)}}</text></view>
-  <view class="row"><text>{{tr.t('核验状态', lang)}}</text><text class="val {{user.realNamed ? '' : 'todo'}}">{{tr.t(user.realNamed ? '已通过微信实名' : '待核验', lang)}}</text></view>
+  <view class="row"><text>{{tr.t('核验状态', lang)}}</text><text class="val {{user.realNamed ? '' : 'todo'}}">{{tr.t(user.realNamed ? '已实名' : '待核验', lang)}}</text></view>
 </view>
 <view class="list form">
   <view class="row input-row">
@@ -22,4 +22,4 @@
 </view>
 <view class="field-error" wx:if="{{errors.name}}">{{tr.t(errors.name, lang)}}</view>
 <view class="field-error" wx:if="{{errors.idCard}}">{{tr.t(errors.idCard, lang)}}</view>
-<view class="save" bindtap="save">{{tr.t('去微信核验', lang)}}</view>
+<view class="save" bindtap="save">{{tr.t(verifying ? '正在核验…' : '提交核验', lang)}}</view>

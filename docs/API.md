@@ -73,7 +73,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | GET | `/me/referral` | 用户 | 推荐码、专属二维码、5% 按人结算明细。Query：`scheduleId`。访问时会把已成团报名的 pending 结算进钱包 |
 | POST | `/me/photos` | 用户 | `{ url }` 写入个人相册 |
 | DELETE | `/me/photos/:id` | 用户 | 删除自己的相册照片 |
-| PUT | `/me` | 用户 | `nickname` `gender` `birthday` `idCard` `companyName` `avatar` |
+| PUT | `/me` | 用户 | `nickname` `gender` `birthday` `idCard` `companyName` `avatar`。正式环境不能靠这里把证件标成已实名 |
+| POST | `/me/realname` | 用户 | `{ realName, idCard }`。身份证二要素，走阿里云实人认证。未配置 `ALIYUN_ACCESS_KEY_ID` / `ALIYUN_ACCESS_KEY_SECRET` 时正式环境返回「实名核验尚未开通」。演示环境不调阿里云 |
 | POST | `/me/student` | 用户 | `{ school, college, major, studentCardUrl }`，学校/学院/专业均可空；若填写须 ≥2 字。在读师生须 `studentNo`，可选 `campusKind=student\|alumni`。`studentCardUrl` 为 `/upload` 返回的地址。写入 pending，待后台审核。学号与证件只出现在 `/me` 与后台 |
 | POST | `/me/group` | 用户 | `{ name, kind }` 团体认证，pending |
 | POST | `/me/leader` | 用户 | `{ name, years, intro }` 个人领队申请，pending。已通过则 400 |

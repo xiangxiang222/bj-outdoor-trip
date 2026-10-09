@@ -19,13 +19,9 @@ App({
       wx.onThemeChange(() => appearance.applyChrome(appearance.read()));
     }
   },
-  onShow(options) {
+  onShow() {
     const app = liveApp(this);
     if (!app) return;
-    const extra = options && options.referrerInfo && options.referrerInfo.extraData;
-    if (options && options.scene === 1038 && extra && extra.code) {
-      app.globalData.realnameCode = String(extra.code);
-    }
     promptUnusedCoupons();
   },
 });

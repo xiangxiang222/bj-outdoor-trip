@@ -47,6 +47,10 @@ module.exports = {
     baseUrl: process.env.AI_BASE_URL || "https://api.openai.com/v1",
     model: process.env.AI_MODEL || "gpt-4o-mini",
   },
+  aliyun: {
+    accessKeyId: process.env.ALIYUN_ACCESS_KEY_ID || "",
+    accessKeySecret: process.env.ALIYUN_ACCESS_KEY_SECRET || "",
+  },
   insurance: {
     plans: [
       { code: "none", name: "暂不购买", fee: 0, cover: "出行风险自担" },
