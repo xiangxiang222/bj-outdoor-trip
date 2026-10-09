@@ -84,7 +84,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `pulse.js` | 首页/线路/团实时动态：汇报名、浏览、收藏、评价、开团；浏览写入 `page_views` |
 | `dissolve.js` | 解散拼团 |
 | `account.js` | 注销 |
-| `wechat.js` / `payment.js` / `pay-ledger.js` / `member.js` / `sms.js` / `captcha.js` | 微信登录与 JSAPI；订阅消息/小程序码；团费自己付/代付/众筹分摊；按付款人退款；会员开通、短信 888888、图片验证码 |
+| `wechat.js` / `payment.js` / `pay-ledger.js` / `member.js` / `sms.js` / `captcha.js` | 微信登录与 JSAPI；订阅消息/小程序码；团费自己付/代付/众筹分摊；按付款人退款；会员开通、腾讯云短信验证码（未配置时 888888）、图片验证码 |
 | `notify.js` | 短信 + 小程序通知（并团等） |
 | `staff.js` | 后台角色与权限 |
 | `profile.js` | 公开主页 |

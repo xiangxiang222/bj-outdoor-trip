@@ -1,7 +1,6 @@
 const crypto = require("crypto");
 const { getDb } = require("../db");
 const config = require("../config");
-const { rpcBody, signRpc } = require("./id-verify");
 
 function buildCancelSms({ title, date, reason, refunded }) {
   const refundBit = refunded ? "已支付费用将原路退回。" : "报名已取消，无需退款。";
@@ -18,12 +17,41 @@ function sendSms({ phone, scene, content, refType, refId }) {
   return { mock: true, phone, content, status };
 }
 
+function smsSettings(opts = {}) {
+  return {
+    secretId: opts.secretId != null ? opts.secretId : config.sms.secretId,
+    secretKey: opts.secretKey != null ? opts.secretKey : config.sms.secretKey,
+    sdkAppId: opts.sdkAppId != null ? opts.sdkAppId : config.sms.sdkAppId,
+    signName: opts.signName != null ? opts.signName : config.sms.signName,
+    templateId: opts.templateId != null ? opts.templateId : config.sms.templateId,
+    region: opts.region || config.sms.region || "ap-guangzhou",
+  };
+}
+
 function smsLive(opts = {}) {
-  const accessKeyId = opts.accessKeyId != null ? opts.accessKeyId : config.aliyun.accessKeyId;
-  const accessKeySecret = opts.accessKeySecret != null ? opts.accessKeySecret : config.aliyun.accessKeySecret;
-  const signName = opts.signName != null ? opts.signName : config.sms.signName;
-  const templateCode = opts.templateCode != null ? opts.templateCode : config.sms.templateCode;
-  return Boolean(accessKeyId && accessKeySecret && signName && templateCode);
+  const sms = smsSettings(opts);
+  return Boolean(sms.secretId && sms.secretKey && sms.sdkAppId && sms.signName && sms.templateId);
+}
+
+function sha256hex(data) {
+  return crypto.createHash("sha256").update(data).digest("hex");
+}
+
+function hmac(key, data) {
+  return crypto.createHmac("sha256", key).update(data).digest();
+}
+
+function tc3Authorization({ secretId, secretKey, service, host, action, payload, timestamp }) {
+  const date = new Date(timestamp * 1000).toISOString().slice(0, 10);
+  const contentType = "application/json; charset=utf-8";
+  const canonicalHeaders = `content-type:${contentType}\nhost:${host}\nx-tc-action:${String(action).toLowerCase()}\n`;
+  const signedHeaders = "content-type;host;x-tc-action";
+  const canonicalRequest = ["POST", "/", "", canonicalHeaders, signedHeaders, sha256hex(payload)].join("\n");
+  const credentialScope = `${date}/${service}/tc3_request`;
+  const stringToSign = ["TC3-HMAC-SHA256", String(timestamp), credentialScope, sha256hex(canonicalRequest)].join("\n");
+  const signing = hmac(hmac(hmac(`TC3${secretKey}`, date), service), "tc3_request");
+  const signature = crypto.createHmac("sha256", signing).update(stringToSign).digest("hex");
+  return `TC3-HMAC-SHA256 Credential=${secretId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
 }
 
 function randomSmsCode() {
@@ -36,31 +64,43 @@ function fail(status, message) {
   throw err;
 }
 
-async function sendVerifySms({ phone, code, accessKeyId, accessKeySecret, signName, templateCode, fetchImpl }) {
-  const params = {
-    Action: "SendSms",
-    Format: "JSON",
-    Version: "2017-05-25",
-    AccessKeyId: accessKeyId,
-    SignatureMethod: "HMAC-SHA1",
-    SignatureVersion: "1.0",
-    SignatureNonce: crypto.randomUUID(),
-    Timestamp: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
-    RegionId: "cn-hangzhou",
-    PhoneNumbers: phone,
+async function sendVerifySms({ phone, code, secretId, secretKey, sdkAppId, signName, templateId, region, timestamp, fetchImpl }) {
+  const host = "sms.tencentcloudapi.com";
+  const payload = JSON.stringify({
+    PhoneNumberSet: [`+86${phone}`],
+    SmsSdkAppId: String(sdkAppId),
     SignName: signName,
-    TemplateCode: templateCode,
-    TemplateParam: JSON.stringify({ code }),
-  };
-  params.Signature = signRpc(params, accessKeySecret);
-  const res = await (fetchImpl || fetch)("https://dysmsapi.aliyuncs.com/", {
+    TemplateId: String(templateId),
+    TemplateParamSet: [String(code)],
+  });
+  const now = timestamp || Math.floor(Date.now() / 1000);
+  const authorization = tc3Authorization({
+    secretId,
+    secretKey,
+    service: "sms",
+    host,
+    action: "SendSms",
+    payload,
+    timestamp: now,
+  });
+  const res = await (fetchImpl || fetch)(`https://${host}/`, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: rpcBody(params),
+    headers: {
+      Authorization: authorization,
+      "Content-Type": "application/json; charset=utf-8",
+      Host: host,
+      "X-TC-Action": "SendSms",
+      "X-TC-Timestamp": String(now),
+      "X-TC-Version": "2021-01-11",
+      "X-TC-Region": region || "ap-guangzhou",
+    },
+    body: payload,
     signal: AbortSignal.timeout(8000),
   });
   const data = await res.json().catch(() => ({}));
-  if (data.Code !== "OK") fail(400, "短信发送失败");
+  const status = data.Response && data.Response.SendStatusSet && data.Response.SendStatusSet[0];
+  if (data.Response && data.Response.Error) fail(400, "短信发送失败");
+  if (!status || status.Code !== "Ok") fail(400, "短信发送失败");
   return data;
 }
 
@@ -75,7 +115,8 @@ async function issueSmsCode(phone, scene, opts = {}) {
     )
     .get(mobile, use);
   if (recent) fail(400, "请稍后再获取验证码");
-  const live = smsLive(opts);
+  const sms = smsSettings(opts);
+  const live = smsLive(sms);
   const code = live ? randomSmsCode() : config.demoSmsCode;
   const expire = new Date(Date.now() + 10 * 60 * 1000);
   const pad = (n) => String(n).padStart(2, "0");
@@ -86,10 +127,8 @@ async function issueSmsCode(phone, scene, opts = {}) {
       await sendVerifySms({
         phone: mobile,
         code,
-        accessKeyId: opts.accessKeyId != null ? opts.accessKeyId : config.aliyun.accessKeyId,
-        accessKeySecret: opts.accessKeySecret != null ? opts.accessKeySecret : config.aliyun.accessKeySecret,
-        signName: opts.signName != null ? opts.signName : config.sms.signName,
-        templateCode: opts.templateCode != null ? opts.templateCode : config.sms.templateCode,
+        ...sms,
+        timestamp: opts.timestamp,
         fetchImpl: opts.fetchImpl,
       });
     } catch (err) {
@@ -100,4 +139,4 @@ async function issueSmsCode(phone, scene, opts = {}) {
   return live ? { sent: true } : { sent: false, demoCode: code };
 }
 
-module.exports = { buildCancelSms, sendSms, smsLive, sendVerifySms, issueSmsCode };
+module.exports = { buildCancelSms, sendSms, smsLive, sendVerifySms, issueSmsCode, tc3Authorization };

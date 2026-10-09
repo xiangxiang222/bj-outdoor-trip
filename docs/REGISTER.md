@@ -109,17 +109,19 @@ https://pay.weixin.qq.com/  右上角「接入微信支付」
 
 不要去营业厅办端口。用云厂商短信，由他们向移动/联通/电信报备。
 
-腾讯云（建议，和服务器同一家）：https://console.cloud.tencent.com/smsv2
+腾讯云（验证码已接这一家）：https://console.cloud.tencent.com/smsv2
 报备说明：https://cloud.tencent.com/document/product/382/117410
-
-或阿里云：https://dysms.console.aliyun.com/
+云 API 密钥：https://console.cloud.tencent.com/cam/capi
 
 要做
 企业实名开通短信服务
 交执照、法人和短信管理员身份证
-申请签名：同行者众（来源选企事业单位名）
-等三网报备通过，大约 7–10 个工作日
-模板交给技术写（验证码、解散、优惠券）
+申请签名：同行者众（来源选企事业单位名，填签名内容，不要填签名 ID）
+正文模板只留一个变量，用来填 6 位验证码，例如：您的验证码是{1}，10分钟内有效。如非本人操作，请忽略本短信。
+等签名和模板审核通过
+把 SecretId、SecretKey、SdkAppId、签名内容、模板 ID 交给技术，写入服务器，不要发到群里
+
+解散、发券通知仍只记在后台，这次不发出。
 
 
 八、申请完了怎么处理

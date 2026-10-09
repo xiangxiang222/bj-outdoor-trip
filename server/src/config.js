@@ -52,8 +52,12 @@ module.exports = {
     accessKeySecret: process.env.ALIYUN_ACCESS_KEY_SECRET || "",
   },
   sms: {
-    signName: process.env.ALIYUN_SMS_SIGN || "",
-    templateCode: process.env.ALIYUN_SMS_TEMPLATE || "",
+    secretId: process.env.TENCENT_SECRET_ID || "",
+    secretKey: process.env.TENCENT_SECRET_KEY || "",
+    sdkAppId: process.env.TENCENT_SMS_SDK_APP_ID || "",
+    signName: process.env.TENCENT_SMS_SIGN || "",
+    templateId: process.env.TENCENT_SMS_TEMPLATE_ID || "",
+    region: process.env.TENCENT_SMS_REGION || "ap-guangzhou",
   },
   insurance: {
     plans: [
