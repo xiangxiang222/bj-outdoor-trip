@@ -163,7 +163,7 @@ describe("auth and profile API", () => {
     assert.match(ok.body.data.avatar, /\/static\/avatars\/[a-z0-9-]+\.svg$/);
   });
 
-  it("marks real-name only after wechat pay identity matches", async () => {
+  it("marks real-name only after the identity check matches", async () => {
     const token = await loginUser(agent);
     await agent.post("/api/auth/wechat").set(auth(token)).send({ code: "realname_user" }).expect(200);
     const mismatch = await agent

@@ -10,7 +10,8 @@ const config = require("./config");
 const { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide } = require("./middleware/auth");
 const { parseIdCard, maskIdCard, lifeStageFromPerson } = require("./services/idcard");
 const { buildDemographics, maskPhone } = require("./services/biz");
-const { code2session, payLive, clientIp, loginLive, getUserPhoneNumber, checkRealNameInfo } = require("./services/wechat");
+const { code2session, payLive, clientIp, loginLive, getUserPhoneNumber } = require("./services/wechat");
+const { verifyIdentity } = require("./services/id-verify");
 const { buildSchedulePoster } = require("./services/share-poster");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
@@ -1098,7 +1099,7 @@ router.put("/me", authUser, (req, res) => {
     if (nextAvatar == null) return res.status(400).json({ ok: false, message: "头像地址无效" });
   }
   if (idCard && loginLive()) {
-    return res.status(400).json({ ok: false, message: "请在小程序里通过微信实名核验" });
+    return res.status(400).json({ ok: false, message: "请通过实名核验提交身份证" });
   }
   const parsed = idCard ? parseIdCard(idCard) : {};
   if (idCard && parsed.valid === false) {
@@ -1128,17 +1129,9 @@ router.post("/me/realname", authUser, async (req, res) => {
     const realName = String((req.body || {}).realName || (req.body || {}).real_name || "").trim();
     const code = String((req.body || {}).code || "").trim();
     if (!realName) return res.status(400).json({ ok: false, message: "请填写真实姓名" });
-    if (!code) return res.status(400).json({ ok: false, message: "请先完成微信授权" });
     const parsed = parseIdCard((req.body || {}).idCard || (req.body || {}).id_card);
     if (parsed.valid === false) return res.status(400).json({ ok: false, message: parsed.error || "身份证号无效" });
-    const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
-    if (!user.wechat_openid) return res.status(400).json({ ok: false, message: "请先用微信登录后再核验" });
-    await checkRealNameInfo({
-      openid: user.wechat_openid,
-      realName,
-      credId: parsed.idCard,
-      code,
-    });
+    await verifyIdentity({ realName, idCard: parsed.idCard, code });
     db().prepare(
       `UPDATE users SET real_name=?, id_card=?, gender=?, birthday=?, hometown=?, id_verified=1 WHERE id=?`
     ).run(realName, parsed.idCard, parsed.gender, parsed.birthday, parsed.hometown, req.userId);
