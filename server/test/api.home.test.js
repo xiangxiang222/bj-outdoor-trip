@@ -171,6 +171,7 @@ describe("homepage and publish review", () => {
     const hit = acts.body.data.find((s) => s.id === created.body.data.id);
     assert.ok(hit);
     assert.equal(hit.channel, "activity");
+    assert.match(String(hit.coverThumb || hit.route.cover), /\/static\/activities\/run\.png/);
     const routes = await agent.get("/api/routes").expect(200);
     assert.equal(routes.body.data.some((r) => r.title === "朝阳夜跑局"), false);
     const home = await agent.get("/api/home").expect(200);

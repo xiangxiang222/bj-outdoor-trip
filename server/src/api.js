@@ -41,6 +41,7 @@ const {
 } = require("./services/home");
 const { offerMeta, liveMemberPrice, liveStudentPrice, flagOn } = require("./services/offer");
 const { publicUserProfile, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
+const { activityCoverPath, activityCoverBlob } = require("./services/activity-cover");
 const { thumbPublicPath } = require("./services/thumbs");
 const { payEnrollment, buyWalletTopup, payCompanySchedule, confirmTrade, orderByTradeNo, applyWechatSession, applyEnrollmentCharge } = require("./services/payment");
 const { payShareView, collectedMapForSchedule, payProgress, ensurePayShareToken, contributorsOf } = require("./services/pay-ledger");
@@ -410,6 +411,11 @@ function scheduleView(sch, req, opts = {}) {
     (sch.cost_other || 0);
     const revenue = db().prepare("SELECT IFNULL(SUM(pay_amount),0) AS s FROM enrollments WHERE schedule_id=? AND status='joined'").get(sch.id).s;
   const fullRoute = light && !briefRoute ? null : mapRoute(route, req);
+  if ((sch.channel || "trip") === "activity" && fullRoute && !String(fullRoute.cover || "").trim()) {
+    const fallback = attachAssetHost(req, activityCoverPath(activityCoverBlob(route, sch)));
+    fullRoute.cover = fallback;
+    if (!Array.isArray(fullRoute.gallery) || !fullRoute.gallery.length) fullRoute.gallery = [fallback];
+  }
   const mappedRoute = feed
     ? feedRoute(route, req)
     : light && !briefRoute
@@ -428,6 +434,9 @@ function scheduleView(sch, req, opts = {}) {
   const organizer = adoptOrganizer(sch);
   const kind = tripKindOf(sch.organizer_type, sch.channel === "activity" ? "activity" : "trip");
   const official = sch.organizer_type === "official";
+  if ((sch.channel || "trip") === "activity" && mappedRoute && !String(mappedRoute.cover || "").trim()) {
+    mappedRoute.cover = attachAssetHost(req, activityCoverPath(activityCoverBlob(route, sch)));
+  }
   const gallery = feed
     ? (mappedRoute && mappedRoute.cover ? [mappedRoute.cover] : [])
     : light
@@ -1795,7 +1804,7 @@ router.post("/trips", authUser, (req, res) => {
     ? String(b.activityKind).trim()
     : kinds.find((k) => title.includes(k)) || "";
   const category = isActivity ? activityKind || b.category || "同城" : tagNames[0] || b.category || "山水";
-  const cover = b.cover || "";
+  const cover = b.cover || (isActivity ? activityCoverPath([title, activityKind, category].filter(Boolean).join(" ")) : "");
   const routeInfo = db()
     .prepare(
       `INSERT INTO routes (code,title,subtitle,days,distance_km,difficulty,category,region,season,tags_json,cover,gallery_json,min_group_size,description,highlights_json,itinerary_json,fee_include,fee_exclude,equipment,notices,meetup_json,status)
