@@ -53,10 +53,10 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | --- | --- | --- | --- |
 | GET | `/auth/captcha` | 否 | 图片验证码。返回 `{ token, image }`（data URL），5 分钟有效、一次性 |
 | GET | `/auth/captcha-image/:token` | 否 | 同一验证码的 PNG 二进制（进程内存，重启失效） |
-| POST | `/auth/sms` | 否 | body：`phone` `scene`（`login` 或 `register`）。60 秒内同一手机同一场景只能发一次。配置了阿里云短信签名和模板才真正发送，响应不含验证码；未配置时 `data.demoCode` 为 `888888` |
+| POST | `/auth/sms` | 否 | body：`phone` `scene`（`login` 或 `register`）。60 秒内同一手机同一场景只能发一次。配齐腾讯云密钥、短信应用、签名和模板才真正发送，响应不含验证码；未配置时 `data.demoCode` 为 `888888` |
 | POST | `/auth/register` | 否 | `phone` `password`(≥6) `nickname`，再加 `smsCode`（场景 `register`）或图片验证码 `captchaToken` `captcha` |
 | POST | `/auth/login` | 否 | `phone` `password` `captchaToken` `captcha` |
-| POST | `/auth/login-sms` | 否 | `phone` `code`；无用户则创建。当前 UI 未使用 |
+| POST | `/auth/login-sms` | 否 | `phone` `code`；无用户则创建。短信登录使用 |
 | POST | `/auth/wechat` | 否（登录后可选） | `code` `nickname` `avatar`。未登录则按 openid 登录或建号；已登录则绑定当前账号的 openid，返回 `bound: true`。`user.wechatBound` 表示是否已绑微信 |
 | POST | `/auth/wechat-phone` | 否 | 小程序手机号授权登录。`loginCode` 为 `wx.login`，`phoneCode` 为 `getPhoneNumber` 返回的 code。已配置 AppSecret 时向微信换手机号；演示环境用 `phone`。按手机号登录或建号，并绑定 openid |
 | GET | `/me` | 用户 | 当前用户（证件掩码；含 `walletBalance` `walletPinSet` `realNamed`、学生/团体/领队状态、`isAlumni`/`campusKind`/`isLeader`、`college` `major` `studentNo` `studentCardUrl`） |
