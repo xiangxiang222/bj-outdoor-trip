@@ -12,6 +12,7 @@ const { parseIdCard, maskIdCard, lifeStageFromPerson } = require("./services/idc
 const { buildDemographics, maskPhone } = require("./services/biz");
 const { code2session, payLive, clientIp, loginLive, getUserPhoneNumber } = require("./services/wechat");
 const { verifyIdentity } = require("./services/id-verify");
+const { issueSmsCode, smsLive } = require("./services/sms");
 const { buildSchedulePoster } = require("./services/share-poster");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
@@ -595,7 +596,8 @@ router.get("/meta", (req, res) => {
       name: "同行者众",
       slogan: "在山野，遇见爱",
       studentDiscountRate: config.student.discountRate,
-      smsDemoCode: config.demoSmsCode,
+      smsDemoCode: smsLive() ? "" : config.demoSmsCode,
+      smsLive: smsLive(),
       wechatPayMock: config.wechat.mock,
       wechatPayLive: payLive(),
       wechatAppId: config.wechat.appId,
@@ -689,13 +691,18 @@ router.get("/play-tags", (req, res) => {
   res.json({ ok: true, data: listPlayTags().map((t) => mapPlayTag(t, req)) });
 });
 
-router.post("/auth/sms", (req, res) => {
-  const { phone, scene } = req.body || {};
-  if (!/^1\d{10}$/.test(phone || "")) return res.status(400).json({ ok: false, message: "手机号不正确" });
-  const code = config.demoSmsCode;
-  const expire = dayjs().add(10, "minute").format("YYYY-MM-DD HH:mm:ss");
-  db().prepare("INSERT INTO sms_codes (phone,code,scene,expire_at) VALUES (?,?,?,?)").run(phone, code, scene || "login", expire);
-  res.json({ ok: true, message: "验证码已发送（演示环境固定验证码）", data: { demoCode: code } });
+router.post("/auth/sms", async (req, res) => {
+  try {
+    const { phone, scene } = req.body || {};
+    const data = await issueSmsCode(phone, scene || "login");
+    res.json({
+      ok: true,
+      message: data.demoCode ? "演示环境验证码为 888888" : "验证码已发送",
+      data,
+    });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 function consumeSms(phone, code, scene) {
@@ -744,7 +751,12 @@ router.post("/auth/register", (req, res) => {
   if (!password || password.length < 6) return res.status(400).json({ ok: false, message: "密码至少 6 位" });
   const exists = db().prepare("SELECT id FROM users WHERE phone=? AND deleted_at IS NULL").get(phone);
   if (exists) return res.status(400).json({ ok: false, message: "手机号已注册" });
-  if (!consumeCaptcha(captchaToken, captcha)) return res.status(400).json({ ok: false, message: "验证码错误或已过期" });
+  const smsCode = String((req.body || {}).smsCode || "").trim();
+  if (smsCode) {
+    if (!consumeSms(phone, smsCode, "register")) return res.status(400).json({ ok: false, message: "验证码错误或已过期" });
+  } else if (!consumeCaptcha(captchaToken, captcha)) {
+    return res.status(400).json({ ok: false, message: "验证码错误或已过期" });
+  }
   const info = db()
     .prepare("INSERT INTO users (phone,password_hash,nickname) VALUES (?,?,?)")
     .run(phone, bcrypt.hashSync(password, 10), nickname || `同行者众${phone.slice(-4)}`);

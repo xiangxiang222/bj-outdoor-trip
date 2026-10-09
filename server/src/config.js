@@ -51,6 +51,10 @@ module.exports = {
     accessKeyId: process.env.ALIYUN_ACCESS_KEY_ID || "",
     accessKeySecret: process.env.ALIYUN_ACCESS_KEY_SECRET || "",
   },
+  sms: {
+    signName: process.env.ALIYUN_SMS_SIGN || "",
+    templateCode: process.env.ALIYUN_SMS_TEMPLATE || "",
+  },
   insurance: {
     plans: [
       { code: "none", name: "暂不购买", fee: 0, cover: "出行风险自担" },
