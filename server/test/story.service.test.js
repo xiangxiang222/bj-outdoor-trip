@@ -3,6 +3,11 @@ const assert = require("node:assert/strict");
 const { normalizeStory, composeStory, storyOf, normalizeItinerary } = require("../src/services/story");
 
 describe("route story blocks", () => {
+  it("keeps at most six story photos", () => {
+    const blocks = Array.from({ length: 8 }, (_, i) => ({ type: "image", url: `/p${i}.jpg` }));
+    assert.equal(normalizeStory(blocks).length, 6);
+  });
+
   it("drops empty blocks and keeps text then image", () => {
     assert.deepEqual(
       normalizeStory([

@@ -1,6 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="muted pad" style="padding-bottom:0">{{tr.t('官方线路。点进去看介绍，有排期就能报，没有可以自己开一团。', lang)}}</view>
+<view class="muted pad" style="padding-bottom:0">{{tr.t('官方线路看实拍、行程和费用。有排期就能报，没有可以自己开一团。', lang)}}</view>
 <input class="input" placeholder="{{tr.t('搜索长城 / 十渡 / 坝上', lang)}}" value="{{q}}" bindconfirm="onSearch" />
 <view class="chips">
   <view class="chip {{days==0?'on':''}}" bindtap="setDays" data-d="0">{{tr.t('全部天数', lang)}}</view>
@@ -14,7 +14,7 @@
   <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}}" bindtap="setTag" data-c="{{item.name}}">{{tr.t(item.name, lang)}}</view>
 </view>
 <view wx:if="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>
-<view wx:if="{{!list.length}}" class="muted pad">{{tr.t('没有匹配的线路', lang)}}</view>
+<view wx:if="{{!list.length && !err}}" class="muted pad">{{tr.t(q || days || tag ? '没有匹配的线路' : '正式线路正在整理，发布后会出现在这里。', lang)}}</view>
 <view class="card" bindtap="goApply">
   <view class="pad">
     <view class="title">{{tr.t('申请收录线路', lang)}}</view>

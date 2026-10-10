@@ -10,7 +10,7 @@
       </el-radio-group>
       <el-button type="success" @click="openCreate">新增线路</el-button>
     </div>
-    <p class="admin-scroll-hint">用户申请收录会出现在待审。通过后上架，该线首次成团奖励 300 元。消息点进来会高亮对应申请。</p>
+    <p class="admin-scroll-hint">测试线路已下架，数据还在，编辑后打开「上架」才会出现在目录。新的正式线路用「新增线路」。用户申请仍在待审，通过后上架。</p>
     <el-table :data="list" stripe row-key="id" :row-class-name="rowClass">
       <el-table-column label="封面" width="88">
         <template #default="{ row }">
@@ -54,6 +54,7 @@
 
     <el-dialog v-model="show" :title="form.id ? '编辑线路' : '新增线路'" width="880px" top="4vh" align-center :close-on-click-modal="false">
       <el-form label-width="100px">
+        <p class="muted" style="margin-top:0">按详情页的顺序填：实拍封面、天数和价格、几条亮点、行程文字、费用含与不含。这些字留在页面上，不要做进图片。</p>
         <div class="sec">基本信息</div>
         <el-form-item label="填写方式">
           <el-radio-group v-model="composeMode">
@@ -126,7 +127,7 @@
           </el-select>
         </el-form-item>
 
-        <div class="sec">照片</div>
+        <div class="sec">实拍照片</div>
         <el-form-item label="封面">
           <div class="cover-row">
             <el-upload :show-file-list="false" accept="image/jpeg,image/png,image/webp,image/gif" :http-request="uploadCover">
@@ -135,7 +136,7 @@
             </el-upload>
             <el-button v-if="form.cover" link type="danger" @click="form.cover = ''">移除</el-button>
           </div>
-          <div class="muted">支持 jpg / png / webp / gif，单张不超过 5MB。点预览图可更换。</div>
+          <div class="muted">用干净的风景或活动照片，上面不要写价格、日期、集合点。jpg / png / webp / gif，单张不超过 5MB。</div>
         </el-form-item>
         <el-form-item label="相册">
           <el-upload
@@ -148,7 +149,7 @@
           >
             <span>上传</span>
           </el-upload>
-          <div class="muted">可多选。未单独设封面时，会用相册第一张当封面。</div>
+          <div class="muted">最多 8 张实拍。未单独设封面时，用相册第一张。不要上传把说明做成一长条的设计图。</div>
         </el-form-item>
         <el-form-item label="视频">
           <div class="list-edit">
@@ -161,8 +162,7 @@
           <div class="muted">一行一条。支持 B 站完整分享链接（含 BV 号）、YouTube、mp4 直链。线路页会嵌播放器。请不要只用 b23 短链。</div>
         </el-form-item>
 
-        <div class="sec">介绍</div>
-        <el-form-item label="介绍"><el-input type="textarea" :rows="4" v-model="form.description" placeholder="给用户看的线路说明，可分段" /></el-form-item>
+        <div class="sec">亮点与介绍</div>
         <el-form-item label="亮点">
           <div class="list-edit">
             <div v-for="(h, i) in form.highlights" :key="'h' + i" class="line-row">
@@ -171,8 +171,10 @@
             </div>
             <el-button @click="addHighlight">加一条亮点</el-button>
           </div>
+          <div class="muted">最多 6 条短句，例如「缆车上下，不用爬台阶」。</div>
         </el-form-item>
-        <el-form-item label="图文介绍">
+        <el-form-item label="介绍"><el-input type="textarea" :rows="4" v-model="form.description" placeholder="给用户看的线路说明，可分段。价格和集合点不要写在这里堆成长图。" /></el-form-item>
+        <el-form-item label="图文">
           <div class="story-list">
             <div v-for="(block, i) in form.story || []" :key="block._key" class="story-block">
               <div class="story-tools">
@@ -196,7 +198,7 @@
             <el-button @click="addStory('image')">加一张图</el-button>
             <el-button link @click="fillStory">按介绍和相册生成</el-button>
           </div>
-          <div class="muted">按顺序图文交错。留空时用户端会自动用介绍分段，夹相册前几张。</div>
+          <div class="muted">一张实拍配一句说明，图最多 6 张。留空时用介绍分段，夹相册前几张。</div>
         </el-form-item>
 
         <div class="sec">行程</div>
@@ -208,7 +210,7 @@
               <el-button link :disabled="i === 0" @click="moveItin(i, -1)">上移</el-button>
               <el-button link type="danger" @click="removeItin(i)">删除</el-button>
             </div>
-            <el-input type="textarea" :rows="2" v-model="it.detail" placeholder="怎么走、停多久" />
+            <el-input type="textarea" :rows="2" v-model="it.detail" placeholder="怎么走、停多久。字写在这里，配图只放这一站的实拍。" />
             <div class="cover-row" style="margin-top:8px">
               <el-upload :show-file-list="false" accept="image/jpeg,image/png,image/webp,image/gif" :http-request="(opt) => uploadItin(i, opt)">
                 <el-image v-if="it.photo" :src="it.photo" fit="cover" class="itin-preview" />
@@ -563,6 +565,11 @@ async function uploadCover(opt) {
 }
 
 async function uploadGallery(opt) {
+  if ((form.value.gallery || []).length >= 8) {
+    ElMessage.warning("相册最多 8 张实拍");
+    opt.onError?.(new Error("相册最多 8 张"));
+    return;
+  }
   try {
     const url = await postImage(opt.file);
     form.value.gallery = [...(form.value.gallery || []), url];
@@ -578,6 +585,11 @@ function removeGallery(file) {
 }
 
 function addStory(type) {
+  const images = (form.value.story || []).filter((block) => block.type === "image").length;
+  if (type === "image" && images >= 6) {
+    ElMessage.warning("图文里最多 6 张实拍");
+    return;
+  }
   const block = type === "image" ? { type: "image", url: "", caption: "", _key: nextKey() } : { type: "text", body: "", _key: nextKey() };
   form.value.story = [...(form.value.story || []), block];
 }
@@ -633,6 +645,10 @@ async function uploadItin(i, opt) {
 }
 
 function addHighlight() {
+  if ((form.value.highlights || []).length >= 6) {
+    ElMessage.warning("亮点最多 6 条");
+    return;
+  }
   form.value.highlights = [...(form.value.highlights || []), ""];
 }
 function removeHighlight(i) {

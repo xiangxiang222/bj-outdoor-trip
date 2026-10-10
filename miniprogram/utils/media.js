@@ -13,8 +13,14 @@ function isPackedPhoto(item) {
   return thumb.startsWith("/images/covers/") || thumb.startsWith("/pkg-detail/");
 }
 
+function isUploadedPhoto(url) {
+  const u = String(url || "");
+  return /^https?:\/\//.test(u) || u.indexOf("/static/uploads/") === 0 || u.indexOf("/static/photos/") === 0 || u.indexOf("/static/activities/") === 0;
+}
+
 function withLocalMedia(row) {
   if (!row || !row.code) return row;
+  if (isUploadedPhoto(row.cover)) return row;
   const cover = localCover(row.code);
   const packed = (row.gallery || []).filter(isPackedPhoto);
   return Object.assign({}, row, {

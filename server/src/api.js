@@ -678,7 +678,9 @@ router.get("/home", (req, res) => {
   if (req.query.month) {
     const dates = db()
       .prepare(
-        "SELECT start_date FROM schedules WHERE IFNULL(review_status,'approved')='approved' AND status!='cancelled' AND IFNULL(channel,'trip')!='activity'"
+        `SELECT s.start_date FROM schedules s JOIN routes r ON r.id=s.route_id
+         WHERE IFNULL(s.review_status,'approved')='approved' AND s.status!='cancelled' AND IFNULL(s.channel,'trip')!='activity'
+         AND IFNULL(r.status,'on')='on' AND IFNULL(r.review_status,'approved')='approved'`
       )
       .all()
       .map((r) => r.start_date);
@@ -1489,7 +1491,11 @@ router.get("/routes/:id", optionalUser, (req, res) => {
 
 router.get("/schedules", (req, res) => {
   const { routeId, organizerType, city, tag, offerType, month, date, channel } = req.query;
-  let sql = "SELECT * FROM schedules WHERE start_date>=date('now','-1 day') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved'";
+  let sql = `SELECT * FROM schedules WHERE start_date>=date('now','-1 day') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved'
+    AND (
+      IFNULL(channel,'trip')='activity'
+      OR route_id IN (SELECT id FROM routes WHERE IFNULL(status,'on')='on' AND IFNULL(review_status,'approved')='approved')
+    )`;
   const args = [];
   if (routeId) {
     sql += " AND route_id=?";
@@ -1830,7 +1836,7 @@ router.post("/trips", authUser, (req, res) => {
       JSON.stringify(cover ? [cover] : []),
       Number(b.minGroupSize) || (isActivity ? 4 : 10),
       b.description || "",
-      JSON.stringify(b.highlights || []),
+      JSON.stringify((b.highlights || []).slice(0, 6)),
       JSON.stringify(b.itinerary || []),
       b.feeInclude || "",
       b.feeExclude || "",
@@ -2571,11 +2577,11 @@ router.post("/admin/routes", authAdmin, requireCap("ops"), (req, res) => {
       b.season || "四季",
       JSON.stringify(b.tags || []),
       b.cover || "",
-      JSON.stringify(b.gallery || []),
+      JSON.stringify((b.gallery || []).slice(0, 8)),
       b.minGroupSize || 10,
       b.description || "",
       JSON.stringify(normalizeStory(b.story)),
-      JSON.stringify(b.highlights || []),
+      JSON.stringify((b.highlights || []).slice(0, 6)),
       JSON.stringify(normalizeItinerary(b.itinerary)),
       b.feeInclude || "",
       b.feeExclude || "",
@@ -2619,11 +2625,11 @@ router.put("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
     b.season,
     JSON.stringify(b.tags || []),
     b.cover,
-    JSON.stringify(b.gallery || []),
+    JSON.stringify((b.gallery || []).slice(0, 8)),
     b.minGroupSize,
     b.description,
     JSON.stringify(normalizeStory(b.story)),
-    JSON.stringify(b.highlights || []),
+    JSON.stringify((b.highlights || []).slice(0, 6)),
     JSON.stringify(normalizeItinerary(b.itinerary)),
     b.feeInclude,
     b.feeExclude,

@@ -163,6 +163,7 @@ function buildHome(req) {
       `SELECT s.*, r.title AS route_title, r.cover AS route_cover, r.days AS route_days, r.region AS route_region, r.gallery_json, r.code AS route_code
        FROM schedules s JOIN routes r ON r.id=s.route_id
        WHERE ${approvedScheduleSql()} AND s.start_date>=date('now','-1 day') AND IFNULL(s.channel,'trip')!='activity'
+         AND IFNULL(r.status,'on')='on' AND IFNULL(r.review_status,'approved')='approved'
        ORDER BY s.start_date`
     )
     .all();

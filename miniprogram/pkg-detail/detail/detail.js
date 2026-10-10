@@ -1,12 +1,7 @@
 const { request } = require("../../utils/request");
-const details = require("../../data/routes-detail");
 const { withLocalMedia, detailUrl, shareCover } = require("../../utils/media");
 const { resolvePreviewUrls } = require("../../utils/preview");
 const { starText } = require("../../utils/labels");
-
-function localDetail(id) {
-  return (Array.isArray(details) ? details : []).find((row) => String(row.id) === String(id)) || null;
-}
 
 function composeLocalStory(r) {
   if (Array.isArray(r.story) && r.story.length) return r.story;
@@ -26,43 +21,65 @@ function composeLocalStory(r) {
   return blocks;
 }
 
+function photoUrl(item) {
+  if (!item) return "";
+  if (typeof item === "string") return item;
+  return item.src || item.origin || item.url || item.thumb || "";
+}
+
+function shapeRoute(raw) {
+  const r = withLocalMedia(raw || {}) || {};
+  const story = [];
+  let images = 0;
+  const saved = Array.isArray(r.story) && r.story.length ? r.story : composeLocalStory(r);
+  saved.forEach((block) => {
+    if (block && block.type === "image") {
+      if (images >= 6 || !block.url) return;
+      images += 1;
+    }
+    story.push(block);
+  });
+  const used = {};
+  story.forEach((block) => {
+    if (block.type === "image" && block.url) used[block.url] = true;
+  });
+  const extraPhotos = [];
+  (r.gallery || []).forEach((item) => {
+    const url = photoUrl(item);
+    if (!url || used[url] || extraPhotos.length >= 6) return;
+    used[url] = true;
+    extraPhotos.push(typeof item === "string" ? { thumb: url } : item);
+  });
+  const next = (r.schedules && r.schedules[0]) || null;
+  r.story = story;
+  r.extraPhotos = extraPhotos;
+  r.nextTrip = next;
+  r.factDays = r.days ? String(r.days) + "日" : "";
+  r.factDifficulty = r.difficulty || "";
+  r.factRegion = r.region || "";
+  return r;
+}
+
 Page({
   data: { r: {}, fromPrice: 0, id: "", err: "", reviews: { list: [], count: 0, avg: 0 }, faqs: [] },
   onLoad(q) {
-    const id = q.id;
-    const local = withLocalMedia(localDetail(id) || { id });
-    local.story = composeLocalStory(local);
-    this.setData({
-      id,
-      r: local,
-      fromPrice: local.fromPrice || ((local.priceTiers && local.priceTiers[0]) || {}).price || 0,
-    });
+    this.setData({ id: q.id, r: {}, err: "" });
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
     this.load();
   },
   async load() {
     try {
       const res = await request("/routes/" + this.data.id);
-      const remote = res.data || {};
-      const local = withLocalMedia(localDetail(this.data.id) || {});
-      const r = withLocalMedia(
-        Object.assign({}, local, remote, {
-          cover: local.cover,
-          gallery: local.gallery,
-        })
-      );
-      r.story = composeLocalStory(r);
+      const r = shapeRoute(res.data || {});
       this.setData({
         r,
-        fromPrice: ((r.priceTiers && r.priceTiers[0]) || {}).price || this.data.fromPrice,
+        fromPrice: ((r.priceTiers && r.priceTiers[0]) || {}).price || 0,
         err: "",
       });
       this.loadReviews();
       this.loadFaqs();
     } catch (err) {
-      if (!this.data.r.title) {
-        this.setData({ err: (err && err.message) || "详情加载失败" });
-      }
+      this.setData({ r: {}, err: (err && err.message) || "线路不存在" });
     }
   },
   async loadFaqs() {
@@ -130,10 +147,22 @@ Page({
       success: () => wx.showToast({ title: "链接已复制", icon: "none" }),
     });
   },
-  preview(e) {
+  previewExtra(e) {
     const index = Number(e.currentTarget.dataset.index) || 0;
-    const gallery = this.data.r.gallery || [];
+    const gallery = this.data.r.extraPhotos || [];
     if (!gallery.length) return;
+    this.previewUrls(gallery, index);
+  },
+  preview(e) {
+    const gallery = this.data.r.gallery || [];
+    if (gallery.length) {
+      this.previewUrls(gallery, Number(e.currentTarget.dataset.index) || 0);
+      return;
+    }
+    const cover = this.data.r.cover;
+    if (cover) wx.previewImage({ urls: [cover], current: cover });
+  },
+  previewUrls(gallery, index) {
     wx.showLoading({ title: "加载原图", mask: true });
     resolvePreviewUrls(gallery)
       .then((urls) => {

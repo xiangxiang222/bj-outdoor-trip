@@ -13,11 +13,14 @@ function paragraphsOf(description) {
 
 function normalizeStory(blocks) {
   const out = [];
+  let images = 0;
   for (const raw of Array.isArray(blocks) ? blocks : []) {
     if (!raw || typeof raw !== "object") continue;
     if (raw.type === "image") {
+      if (images >= 6) continue;
       const url = photoOf(raw);
       if (!url) continue;
+      images += 1;
       out.push({ type: "image", url, caption: String(raw.caption || "").trim() });
       continue;
     }

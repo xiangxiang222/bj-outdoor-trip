@@ -13,6 +13,12 @@
       <span class="tag" v-if="route.days || route.difficulty">{{ [route.days ? route.days + "日" : "", route.difficulty].filter(Boolean).join(" · ") }}</span>
     </div>
     <p class="muted">{{ route.subtitle }}</p>
+    <div class="fact-row">
+      <span v-if="route.days">{{ route.days }}日</span>
+      <span v-if="route.difficulty">{{ route.difficulty }}</span>
+      <span v-if="route.region">{{ route.region }}</span>
+    </div>
+    <p v-if="nextTrip" class="muted">最近出发 {{ nextTrip.startDate }} · {{ nextTrip.meetupPoint }} {{ nextTrip.meetupTime }}</p>
     <div>
       <span
         class="play-tag sm"
@@ -35,24 +41,17 @@
       <button class="btn ghost" type="button" @click="$emit('fav')">{{ route.favored ? "已收藏" : "收藏" }}</button>
     </div>
 
+    <div class="h2" v-if="route.highlights?.length">亮点</div>
+    <div class="card" v-if="route.highlights?.length"><div class="pad">
+      <p v-for="(h, i) in route.highlights" :key="i">{{ i + 1 }}. {{ h }}</p>
+    </div></div>
+
     <div class="h2" v-if="story.length">线路介绍</div>
     <div class="card" v-if="story.length"><div class="pad">
       <RouteStory :blocks="story" @preview="previewUrl" />
     </div></div>
     <div class="card" v-else-if="route.description"><div class="pad">
       <p style="margin-top:0;white-space:pre-wrap">{{ route.description }}</p>
-    </div></div>
-
-    <RouteVideos :videos="route.videos || []" />
-
-    <div class="h2" v-if="album.length">更多照片</div>
-    <div class="gallery" v-if="album.length">
-      <img v-for="g in album" :key="g" :src="g" @click="previewUrl(g)" />
-    </div>
-
-    <div class="h2" v-if="route.highlights?.length">亮点</div>
-    <div class="card" v-if="route.highlights?.length"><div class="pad">
-      <p v-for="(h, i) in route.highlights" :key="i">{{ i + 1 }}. {{ h }}</p>
     </div></div>
 
     <div class="h2" v-if="route.itinerary?.length">行程安排</div>
@@ -87,6 +86,13 @@
       <p v-if="route.equipment"><strong>装备：</strong>{{ route.equipment }}</p>
       <p v-if="route.notices"><strong>注意：</strong>{{ route.notices }}</p>
     </div></div>
+
+    <RouteVideos :videos="route.videos || []" />
+
+    <div class="h2" v-if="album.length">更多照片</div>
+    <div class="gallery" v-if="album.length">
+      <img v-for="g in album" :key="g" :src="g" @click="previewUrl(g)" />
+    </div>
 
     <div class="h2" v-if="refundPolicy">退费规则</div>
     <div class="card" v-if="refundPolicy"><div class="pad">
@@ -179,8 +185,22 @@ const props = defineProps({
 defineEmits(["fav", "share", "open-schedule", "open-guide", "open-guides", "open-schedule-create"]);
 
 const previewIndex = ref(null);
-const story = computed(() => props.route?.story || []);
-const album = computed(() => storyAlbum(props.route?.gallery || [], story.value));
+const story = computed(() => capStoryImages(props.route?.story || []));
+const album = computed(() => storyAlbum(props.route?.gallery || [], story.value).slice(0, 6));
+const nextTrip = computed(() => (props.route?.schedules || [])[0] || null);
+
+function capStoryImages(blocks) {
+  let images = 0;
+  const out = [];
+  for (const block of blocks) {
+    if (block?.type === "image") {
+      if (images >= 6) continue;
+      images += 1;
+    }
+    out.push(block);
+  }
+  return out;
+}
 const refundPolicy = computed(() => props.route?.refundPolicy || null);
 const previewList = computed(() => {
   if (!props.route) return [];
@@ -213,3 +233,13 @@ function next() {
   previewIndex.value = (previewIndex.value + 1) % n;
 }
 </script>
+
+<style scoped>
+.fact-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+.fact-row span {
+  font-size: calc(13px * var(--ui-scale));
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(45, 106, 79, 0.1);
+}
+</style>
