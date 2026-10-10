@@ -37,7 +37,7 @@
       <el-button v-if="filtersOn" link type="primary" @click="resetFilters">清空</el-button>
       <span class="muted route-filter-count">{{ list.length }} / {{ rows.length }}</span>
     </div>
-    <p class="admin-scroll-hint">测试线路已下架，数据还在，编辑后打开「上架」才会出现在目录。新的正式线路用「新增线路」。用户申请仍在待审，通过后上架。</p>
+    <p class="admin-scroll-hint">已下架的线路点「上架」会回到目录，也可以编辑后打开「上架」。用户申请仍在待审，通过后上架。</p>
     <el-table :data="list" stripe row-key="id" :row-class-name="rowClass">
       <el-table-column label="封面" width="88">
         <template #default="{ row }">
@@ -77,6 +77,7 @@
           <el-button size="small" @click="edit(row)">编辑</el-button>
           <el-button size="small" @click="openReview(row)">虚拟评价</el-button>
           <el-button v-if="row.status === 'on'" size="small" type="danger" @click="off(row)">下架</el-button>
+          <el-button v-else-if="row.reviewStatus !== 'pending' && row.reviewStatus !== 'rejected'" size="small" type="success" @click="publish(row)">上架</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -797,6 +798,20 @@ async function off(row) {
   await http.delete("/admin/routes/" + row.id);
   ElMessage.success("已下架");
   load();
+}
+async function publish(row) {
+  try {
+    await ElMessageBox.confirm(`上架「${row.title}」？上架后会出现在线路目录。`, "上架", {
+      type: "success",
+      confirmButtonText: "上架",
+      cancelButtonText: "取消",
+    });
+    await http.post(`/admin/routes/${row.id}/publish`);
+    ElMessage.success("已上架");
+    load();
+  } catch (e) {
+    if (e !== "cancel") ElMessage.error(e.message || "上架失败");
+  }
 }
 async function decide(row, action) {
   try {

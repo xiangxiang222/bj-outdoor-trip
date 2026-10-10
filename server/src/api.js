@@ -2678,6 +2678,20 @@ router.delete("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
   res.json({ ok: true });
 });
 
+router.post("/admin/routes/:id/publish", authAdmin, requireCap("ops"), (req, res) => {
+  const cur = db().prepare("SELECT * FROM routes WHERE id=?").get(req.params.id);
+  if (!cur) return res.status(404).json({ ok: false, message: "线路不存在" });
+  const review = reviewOf(cur);
+  if (review === "pending" && Number(cur.submitted_by || 0)) {
+    return res.status(400).json({ ok: false, message: "用户申请待审，请用通过上架" });
+  }
+  if (review === "rejected") {
+    return res.status(400).json({ ok: false, message: "已驳回的申请不能直接上架，请重新通过" });
+  }
+  db().prepare("UPDATE routes SET status='on' WHERE id=?").run(cur.id);
+  res.json({ ok: true });
+});
+
 router.post("/admin/schedules", authAdmin, requireCap("ops"), (req, res) => {
   const admin = db().prepare("SELECT * FROM admin_users WHERE id=?").get(req.adminId);
   const { routeId, startDate, busTypeId, minGroupSize, meetupPoint, meetupTime, notes } = req.body || {};
