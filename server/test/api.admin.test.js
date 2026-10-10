@@ -119,6 +119,19 @@ describe("admin API", () => {
     await agent.delete(`/api/admin/routes/${id}`).set(auth(adminToken)).expect(200);
     const publicList = await agent.get("/api/routes").expect(200);
     assert.equal(publicList.body.data.some((r) => r.code === "R99"), false);
+
+    await agent.post(`/api/admin/routes/${id}/publish`).set(auth(adminToken)).expect(200);
+    const relisted = await agent.get("/api/routes").expect(200);
+    assert.equal(relisted.body.data.some((r) => r.code === "R99"), true);
+  });
+
+  it("does not shelf a pending or rejected application with the publish button", async () => {
+    seed.db.prepare("UPDATE routes SET status='off', review_status='pending', submitted_by=1 WHERE id=?").run(seed.routeId);
+    const pending = await agent.post(`/api/admin/routes/${seed.routeId}/publish`).set(auth(adminToken)).expect(400);
+    assert.match(pending.body.message, /通过/);
+    seed.db.prepare("UPDATE routes SET review_status='rejected' WHERE id=?").run(seed.routeId);
+    const rejected = await agent.post(`/api/admin/routes/${seed.routeId}/publish`).set(auth(adminToken)).expect(400);
+    assert.match(rejected.body.message, /驳回/);
   });
 
   it("admin publishes schedule, updates cost, settles company group", async () => {
