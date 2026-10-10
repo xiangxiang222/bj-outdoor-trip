@@ -53,10 +53,11 @@ function displayWho({ nickname, travelerName, hometown, fallback }) {
   return { who, place, person: place ? `${who}（${place}）` : who };
 }
 
-function formatItem({ kind, who, place, timeAgo, title, rating }) {
+function formatItem({ kind, who, place, timeAgo, title, rating, virtual }) {
   const person = place ? `${who}（${place}）` : who;
+  const speaker = virtual ? `虚拟用户 ${person}` : person;
   const name = title || "这条线路";
-  if (kind === "review") return `${person} ${timeAgo} 给 ${name} 评了 ${rating || 5} 分`;
+  if (kind === "review") return `${speaker} ${timeAgo} 给 ${name} 评了 ${rating || 5} 分`;
   if (kind === "open") return `${person} ${timeAgo} 开了一场 ${name}`;
   const verb = { view: "浏览了", enroll: "报名了", favorite: "收藏了" }[kind] || "关注了";
   return `${person} ${timeAgo} ${verb} ${name}`;
@@ -196,7 +197,7 @@ function collectEvents({ scope, routeId, scheduleId }) {
   const reviews = db
     .prepare(
       `SELECT rv.id, rv.created_at, rv.user_id, rv.schedule_id, rv.rating, s.route_id, s.channel,
-              u.nickname, u.hometown, r.title
+              u.nickname, u.hometown, IFNULL(u.is_virtual,0) AS is_virtual, r.title
        FROM reviews rv
        JOIN schedules s ON s.id=rv.schedule_id
        JOIN routes r ON r.id=s.route_id
@@ -285,7 +286,7 @@ function listPulse({ scope, routeId, scheduleId, excludeUserId, excludeVisitorId
       verb: kind === "review" ? "评价了" : kind === "open" ? "开了一场" : kind === "enroll" ? "报名了" : kind === "favorite" ? "收藏了" : "浏览了",
       title,
       timeAgo,
-      text: formatItem({ kind, who, place, timeAgo, title, rating: row.rating }),
+      text: formatItem({ kind, who, place, timeAgo, title, rating: row.rating, virtual: kind === "review" && Number(row.is_virtual) === 1 }),
       href: itemHref(kind, row.route_id, row.schedule_id),
       routeId: row.route_id || null,
       scheduleId: row.schedule_id || null,

@@ -35,6 +35,7 @@
         </div>
         <button v-if="reviewQuote" class="offer-quote" type="button" @click="jumpReviews">
           <b>{{ reviews.avg }}分</b>
+          <span v-if="reviewQuoteVirtual" class="review-virtual">虚拟用户</span>
           <span>“{{ reviewQuote }}”</span>
           <i>{{ reviews.count }}条</i>
         </button>
@@ -340,6 +341,7 @@
         <div class="pad review-item" v-for="rv in reviews.list" :key="rv.id">
           <div class="row">
             <strong>{{ rv.name }}</strong>
+            <span v-if="rv.virtual" class="review-virtual">虚拟用户</span>
             <span class="stars">{{ starText(rv.rating) }}</span>
           </div>
           <p v-if="rv.content">{{ rv.content }}</p>
@@ -577,6 +579,7 @@ const reviewQuote = computed(() => {
   if (!text) return "";
   return text.length > 18 ? text.slice(0, 18) + "…" : text;
 });
+const reviewQuoteVirtual = computed(() => !!reviews.value.list?.[0]?.virtual);
 const msg = ref("");
 const leaderNeedApply = ref(false);
 const leaderNeedApplyText = ref("报名领队需先填写领队申请并通过审核");

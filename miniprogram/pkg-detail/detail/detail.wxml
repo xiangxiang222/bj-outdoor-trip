@@ -172,7 +172,7 @@
   <view wx:if="{{!reviews.list.length}}" class="muted">{{tr.t('还没有评价。报名后可在「我的报名」写下体验。', lang)}}</view>
   <view class="card" wx:for="{{reviews.list}}" wx:key="id">
     <view class="pad">
-      <view class="row"><text>{{tr.t(item.name, lang)}}</text><text class="stars">{{tr.t(item.stars, lang)}}</text></view>
+      <view class="row"><text>{{tr.t(item.name, lang)}}</text><text wx:if="{{item.virtual}}" class="review-virtual">{{tr.t('虚拟用户', lang)}}</text><text class="stars">{{tr.t(item.stars, lang)}}</text></view>
       <view wx:if="{{item.content}}">{{tr.t(item.content, lang)}}</view>
       <view class="muted">{{tr.t(item.createdAt, lang)}}</view>
     </view>

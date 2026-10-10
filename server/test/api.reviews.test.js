@@ -77,6 +77,7 @@ describe("reviews", () => {
     assert.equal(routeList.body.data.count, 1);
     assert.equal(routeList.body.data.avg, 5);
     assert.equal(routeList.body.data.list[0].content, "很好");
+    assert.equal(routeList.body.data.list[0].virtual, false);
 
     const schList = await agent.get(`/api/schedules/${seed.individualScheduleId}/reviews`).expect(200);
     assert.equal(schList.body.data.count, 1);
@@ -142,5 +143,9 @@ describe("reviews", () => {
     assert.equal(routeList.body.data.count, 2);
     assert.equal(routeList.body.data.avg, 5);
     assert.equal(routeList.body.data.list[0].content, "风景很好");
+    assert.equal(routeList.body.data.list[0].virtual, true);
+    const pulse = await agent.get(`/api/live/pulse?scope=route&routeId=${seed.routeId}`).expect(200);
+    const item = pulse.body.data.items.find((it) => it.kind === "review");
+    assert.match(item.text, /虚拟用户/);
   });
 });

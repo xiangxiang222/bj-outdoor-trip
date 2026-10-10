@@ -3295,7 +3295,7 @@ router.post("/admin/routes/:id/reviews", authAdmin, requireCap("ops"), (req, res
       rating: b.rating,
       content: b.content,
     });
-    res.json({ ok: true, data, message: `已用虚拟用户写下 ${data.count} 条评价` });
+    res.json({ ok: true, data, message: `已用虚拟用户写下 ${data.count} 条评价，页面会标明虚拟用户` });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }
@@ -3310,7 +3310,7 @@ router.post("/admin/schedules/:id/reviews", authAdmin, requireCap("ops"), (req, 
       rating: b.rating,
       content: b.content,
     });
-    res.json({ ok: true, data, message: `已用虚拟用户写下 ${data.count} 条评价` });
+    res.json({ ok: true, data, message: `已用虚拟用户写下 ${data.count} 条评价，页面会标明虚拟用户` });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }

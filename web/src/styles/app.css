@@ -876,6 +876,16 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 .review-item:last-child { border-bottom: 0; }
 .review-item p { margin: 6px 0 0; }
 .stars { color: #c9a227; letter-spacing: 1px; font-size: calc(13px * var(--ui-scale)); }
+.review-virtual {
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #fff3e0;
+  color: #b86e00;
+  font-size: calc(11px * var(--ui-scale));
+  font-weight: 600;
+  line-height: 1.6;
+}
 .star-pick { display: flex; gap: 4px; margin: 0 0 8px; }
 .star-pick button {
   border: 0;

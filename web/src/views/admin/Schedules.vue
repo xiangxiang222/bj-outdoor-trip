@@ -78,7 +78,7 @@
             <el-button v-if="canField" size="small" @click="openTrip(row)">车辆座位</el-button>
             <el-button v-if="canField" size="small" :disabled="row.status === 'cancelled'" @click="openCheckinDlg(row)">开团签到</el-button>
             <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openVirtual(row)">虚拟</el-button>
-            <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openReview(row)">评价</el-button>
+            <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openReview(row)">虚拟评价</el-button>
             <el-button v-if="canOps" size="small" @click="openLimit(row)">限制</el-button>
             <el-button
               v-if="canOps && row.oversub?.enabled && !row.oversub?.drawn"
@@ -332,7 +332,7 @@
       </template>
     </el-dialog>
     <el-dialog v-model="showReview" :title="cur ? `虚拟评价 · ${cur.route?.title || ''} ${cur.startDate || ''}` : '虚拟评价'" width="480px">
-      <p class="muted">用虚拟用户给本团所属线路写评价。优先用本团已占座的虚拟报名。</p>
+      <p class="muted">这些评论由虚拟用户撰写，线路页和团详情会标明「虚拟用户」。优先用本团已占座的虚拟报名。</p>
       <el-form label-width="90px">
         <el-form-item label="条数">
           <el-input-number v-model="reviewForm.count" :min="1" :max="30" />
@@ -346,7 +346,7 @@
       </el-form>
       <template #footer>
         <el-button @click="showReview = false">取消</el-button>
-        <el-button type="success" :loading="savingReview" @click="saveReview">发布评价</el-button>
+        <el-button type="success" :loading="savingReview" @click="saveReview">发布虚拟评价</el-button>
       </template>
     </el-dialog>
 
