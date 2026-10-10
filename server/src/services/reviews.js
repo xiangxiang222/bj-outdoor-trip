@@ -26,12 +26,13 @@ function publicReview(row) {
     content: row.content || "",
     createdAt: row.created_at,
     name: maskName(row.traveler_name || row.nickname),
+    virtual: Number(row.is_virtual) === 1,
   };
 }
 
 function listReviews({ routeId, scheduleId } = {}) {
   const db = getDb();
-  let sql = `SELECT rv.*, u.nickname,
+  let sql = `SELECT rv.*, u.nickname, IFNULL(u.is_virtual,0) AS is_virtual,
     (SELECT traveler_name FROM enrollments
      WHERE user_id=rv.user_id AND schedule_id=rv.schedule_id
      ORDER BY CASE status WHEN 'joined' THEN 0 ELSE 1 END, id DESC LIMIT 1) AS traveler_name
@@ -90,7 +91,7 @@ function createReview(userId, { scheduleId, rating, content } = {}) {
       .prepare("INSERT INTO reviews (schedule_id,user_id,rating,content) VALUES (?,?,?,?)")
       .run(sid, userId, n, text);
     const row = db
-      .prepare("SELECT rv.*, u.nickname FROM reviews rv LEFT JOIN users u ON u.id=rv.user_id WHERE rv.id=?")
+      .prepare("SELECT rv.*, u.nickname, IFNULL(u.is_virtual,0) AS is_virtual FROM reviews rv LEFT JOIN users u ON u.id=rv.user_id WHERE rv.id=?")
       .get(info.lastInsertRowid);
     return publicReview({ ...row, traveler_name: en && en.traveler_name });
   } catch (e) {
@@ -154,7 +155,7 @@ function createVirtualReviews({ routeId, scheduleId, count, rating, content } = 
         .prepare("INSERT INTO reviews (schedule_id,user_id,rating,content) VALUES (?,?,?,?)")
         .run(sch.id, user.id, star, text);
       const row = db
-        .prepare("SELECT rv.*, u.nickname FROM reviews rv LEFT JOIN users u ON u.id=rv.user_id WHERE rv.id=?")
+        .prepare("SELECT rv.*, u.nickname, IFNULL(u.is_virtual,0) AS is_virtual FROM reviews rv LEFT JOIN users u ON u.id=rv.user_id WHERE rv.id=?")
         .get(info.lastInsertRowid);
       const en = db
         .prepare("SELECT traveler_name FROM enrollments WHERE user_id=? AND schedule_id=? ORDER BY id DESC LIMIT 1")

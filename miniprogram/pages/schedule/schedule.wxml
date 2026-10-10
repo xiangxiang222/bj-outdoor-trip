@@ -35,6 +35,7 @@
     </view>
     <view class="offer-quote" wx:if="{{reviewQuote}}" bindtap="jumpReviews">
       <text class="offer-quote-score">{{reviews.avg}}分</text>
+      <text wx:if="{{reviewQuoteVirtual}}" class="review-virtual">{{tr.t('虚拟用户', lang)}}</text>
       <text class="offer-quote-text">“{{tr.t(reviewQuote, lang)}}”</text>
       <text class="offer-quote-n">{{reviews.count}}条</text>
     </view>
@@ -238,7 +239,7 @@
 <view class="pad muted" wx:if="{{!reviews.list.length}}">{{tr.t('还没有评价。', lang)}}</view>
 <view class="card" wx:for="{{reviews.list}}" wx:key="id">
   <view class="pad">
-    <view class="row"><text>{{tr.t(item.name, lang)}}</text><text class="stars">{{tr.t(item.stars, lang)}}</text></view>
+    <view class="row"><text>{{tr.t(item.name, lang)}}</text><text wx:if="{{item.virtual}}" class="review-virtual">{{tr.t('虚拟用户', lang)}}</text><text class="stars">{{tr.t(item.stars, lang)}}</text></view>
     <view wx:if="{{item.content}}">{{tr.t(item.content, lang)}}</view>
     <view class="muted">{{tr.t(item.createdAt, lang)}}</view>
   </view>
@@ -336,7 +337,7 @@
   <view class="pad muted" wx:if="{{!routeReviews.list.length}}">{{tr.t('还没有评价。', lang)}}</view>
   <view class="card" wx:for="{{routeReviews.list}}" wx:key="id">
     <view class="pad">
-      <view class="row"><text>{{tr.t(item.name, lang)}}</text><text class="stars">{{tr.t(item.stars, lang)}}</text></view>
+      <view class="row"><text>{{tr.t(item.name, lang)}}</text><text wx:if="{{item.virtual}}" class="review-virtual">{{tr.t('虚拟用户', lang)}}</text><text class="stars">{{tr.t(item.stars, lang)}}</text></view>
       <view wx:if="{{item.content}}">{{tr.t(item.content, lang)}}</view>
       <view class="muted">{{tr.t(item.createdAt, lang)}}</view>
     </view>

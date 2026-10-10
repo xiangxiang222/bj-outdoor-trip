@@ -167,6 +167,7 @@
       <div class="pad review-item" v-for="rv in reviews.list" :key="rv.id">
         <div class="row">
           <strong>{{ rv.name }}</strong>
+          <span v-if="rv.virtual" class="review-virtual">虚拟用户</span>
           <span class="stars">{{ starText(rv.rating) }}</span>
         </div>
         <p v-if="rv.content">{{ rv.content }}</p>

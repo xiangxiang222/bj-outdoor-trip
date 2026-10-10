@@ -35,9 +35,13 @@ function storyBits(route) {
 }
 
 function quoteSnippet(list) {
-  const raw = String((list && list[0] && list[0].content) || "").replace(/\s+/g, " ").trim();
-  if (!raw) return "";
-  return raw.length > 18 ? raw.slice(0, 18) + "…" : raw;
+  const row = list && list[0];
+  const raw = String((row && row.content) || "").replace(/\s+/g, " ").trim();
+  if (!raw) return { text: "", virtual: false };
+  return {
+    text: raw.length > 18 ? raw.slice(0, 18) + "…" : raw,
+    virtual: !!row.virtual,
+  };
 }
 
 Page({
@@ -87,6 +91,7 @@ Page({
     feeExclude: "",
     equipment: "",
     reviewQuote: "",
+    reviewQuoteVirtual: false,
     posted: "",
     joinedHint: "",
     inboundJoinCode: "",
@@ -207,9 +212,11 @@ Page({
     request("/schedules/" + this.data.id + "/reviews").then((r) => {
       const data = (r && r.data) || {};
       const list = (data.list || []).map((row) => Object.assign({}, row, { stars: starText(row.rating) }));
+      const quote = quoteSnippet(list);
       this.setData({
         reviews: { list, count: data.count || 0, avg: data.avg || 0 },
-        reviewQuote: quoteSnippet(list),
+        reviewQuote: quote.text,
+        reviewQuoteVirtual: quote.virtual,
       });
     }).catch(() => {});
     request("/meta").then((r) => {

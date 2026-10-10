@@ -10,6 +10,33 @@
       </el-radio-group>
       <el-button type="success" @click="openCreate">新增线路</el-button>
     </div>
+    <div class="route-filters">
+      <el-input v-model="filters.q" clearable placeholder="搜标题、编号、地区、标签" class="route-filter-q" />
+      <el-select v-model="filters.status" clearable placeholder="上架状态" class="route-filter">
+        <el-option label="上架" value="on" />
+        <el-option label="下架" value="off" />
+      </el-select>
+      <el-select v-model="filters.days" clearable placeholder="天数" class="route-filter">
+        <el-option v-for="d in dayOptions" :key="d" :label="dayLabel(d)" :value="d" />
+      </el-select>
+      <el-select v-model="filters.category" clearable filterable placeholder="类型" class="route-filter">
+        <el-option v-for="item in categoryOptions" :key="item" :label="item" :value="item" />
+      </el-select>
+      <el-select v-model="filters.difficulty" clearable filterable placeholder="难度" class="route-filter">
+        <el-option v-for="item in difficultyOptions" :key="item" :label="item" :value="item" />
+      </el-select>
+      <el-select v-model="filters.season" clearable filterable placeholder="季节" class="route-filter">
+        <el-option v-for="item in seasonOptions" :key="item" :label="item" :value="item" />
+      </el-select>
+      <el-select v-model="filters.region" clearable filterable placeholder="地区" class="route-filter-wide">
+        <el-option v-for="item in regionOptions" :key="item" :label="item" :value="item" />
+      </el-select>
+      <el-select v-model="filters.tag" clearable filterable placeholder="标签" class="route-filter">
+        <el-option v-for="item in tagOptions" :key="item" :label="item" :value="item" />
+      </el-select>
+      <el-button v-if="filtersOn" link type="primary" @click="resetFilters">清空</el-button>
+      <span class="muted route-filter-count">{{ list.length }} / {{ rows.length }}</span>
+    </div>
     <p class="admin-scroll-hint">测试线路已下架，数据还在，编辑后打开「上架」才会出现在目录。新的正式线路用「新增线路」。用户申请仍在待审，通过后上架。</p>
     <el-table :data="list" stripe row-key="id" :row-class-name="rowClass">
       <el-table-column label="封面" width="88">
@@ -26,6 +53,9 @@
       <el-table-column label="审批" width="90">
         <template #default="{ row }">{{ reviewLabel(row) }}</template>
       </el-table-column>
+      <el-table-column label="状态" width="80">
+        <template #default="{ row }">{{ row.status === "on" ? "上架" : "下架" }}</template>
+      </el-table-column>
       <el-table-column label="申请人" min-width="160">
         <template #default="{ row }">
           <span v-if="row.submittedBy">{{ row.applicantName || "用户" }} · {{ row.contactPhone }} / {{ row.contactWechat }}</span>
@@ -40,12 +70,12 @@
           <span v-else class="muted">—</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="280" fixed="right">
+      <el-table-column label="操作" width="320" fixed="right">
         <template #default="{ row }">
           <el-button v-if="row.submittedBy && row.reviewStatus === 'pending'" size="small" type="success" @click="decide(row, 'approve')">通过</el-button>
           <el-button v-if="row.submittedBy && row.reviewStatus === 'pending'" size="small" type="danger" @click="decide(row, 'reject')">驳回</el-button>
           <el-button size="small" @click="edit(row)">编辑</el-button>
-          <el-button size="small" @click="openReview(row)">评价</el-button>
+          <el-button size="small" @click="openReview(row)">虚拟评价</el-button>
           <el-button v-if="row.status === 'on'" size="small" type="danger" @click="off(row)">下架</el-button>
         </template>
       </el-table-column>
@@ -288,7 +318,7 @@
     </el-dialog>
 
     <el-dialog v-model="showReview" :title="reviewRow ? `虚拟评价 · ${reviewRow.title}` : '虚拟评价'" width="480px">
-      <p class="muted">用虚拟用户给这条线路写评价，会出现在线路页。优先用本线路已占座的虚拟报名；不够会从用户池里取。</p>
+      <p class="muted">这些评论由虚拟用户撰写，线路页和团详情会标明「虚拟用户」。优先用本线路已占座的虚拟报名；不够会从用户池里取。</p>
       <el-form label-width="90px">
         <el-form-item label="条数">
           <el-input-number v-model="reviewForm.count" :min="1" :max="30" />
@@ -302,14 +332,14 @@
       </el-form>
       <template #footer>
         <el-button @click="showReview = false">取消</el-button>
-        <el-button type="success" :loading="savingReview" @click="saveReview">发布评价</el-button>
+        <el-button type="success" :loading="savingReview" @click="saveReview">发布虚拟评价</el-button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import http from "@/api/http";
@@ -328,6 +358,7 @@ import {
 } from "@/utils/routeMeta";
 import { chinaAreaOptions, findRegionPath, formatRegion } from "@/utils/chinaAreas";
 import { composeStory } from "@/utils/story";
+import { filterRoutes } from "@/utils/routeFilters";
 import RefundRulesEditor from "@/components/RefundRulesEditor.vue";
 
 let blockSeed = 1;
@@ -338,11 +369,54 @@ function nextKey() {
 
 const route = useRoute();
 const router = useRouter();
-const list = ref([]);
+const rows = ref([]);
 const buses = ref([]);
 const show = ref(false);
 const form = ref({});
 const reviewFilter = ref("");
+const filters = reactive({
+  q: "",
+  status: "",
+  days: "",
+  category: "",
+  difficulty: "",
+  season: "",
+  region: "",
+  tag: "",
+});
+const list = computed(() => filterRoutes(rows.value, { ...filters, review: reviewFilter.value }));
+const filtersOn = computed(() =>
+  ["q", "status", "days", "category", "difficulty", "season", "region", "tag"].some((key) => filters[key] !== "" && filters[key] != null)
+);
+const dayOptions = computed(() => {
+  const seen = new Set([1, 2, 3, 5]);
+  for (const row of rows.value) {
+    const days = Number(row.days);
+    if (days > 0) seen.add(days);
+  }
+  return [...seen].sort((a, b) => a - b);
+});
+const regionOptions = computed(() => {
+  const seen = new Set();
+  for (const row of rows.value) {
+    const region = String(row.region || "").trim();
+    if (region) seen.add(region);
+  }
+  return [...seen].sort((a, b) => a.localeCompare(b, "zh"));
+});
+function dayLabel(days) {
+  return Number(days) === 5 ? "多日" : `${days}日`;
+}
+function resetFilters() {
+  filters.q = "";
+  filters.status = "";
+  filters.days = "";
+  filters.category = "";
+  filters.difficulty = "";
+  filters.season = "";
+  filters.region = "";
+  filters.tag = "";
+}
 const focusId = ref("");
 const pendingApply = computed(() => form.value.reviewStatus === "pending" && Number(form.value.submittedBy || 0));
 const globalRefund = ref({ tiers: [], summary: "" });
@@ -359,10 +433,10 @@ const regionProps = { checkStrictly: true, expandTrigger: "click" };
 const galleryList = computed(() =>
   (form.value.gallery || []).map((url, i) => ({ name: `photo-${i + 1}`, url, uid: `${i}-${url}` }))
 );
-const categoryOptions = computed(() => mergeOptions(ROUTE_CATEGORIES, list.value.map((r) => r.category), form.value.category));
-const difficultyOptions = computed(() => mergeOptions(ROUTE_DIFFICULTIES, list.value.map((r) => r.difficulty), form.value.difficulty));
-const seasonOptions = computed(() => mergeOptions(ROUTE_SEASONS, list.value.map((r) => r.season), form.value.season));
-const tagOptions = computed(() => mergeOptions(COMMON_ROUTE_TAGS, ...list.value.map((r) => r.tags || []), form.value.tags || []));
+const categoryOptions = computed(() => mergeOptions(ROUTE_CATEGORIES, rows.value.map((r) => r.category), form.value.category));
+const difficultyOptions = computed(() => mergeOptions(ROUTE_DIFFICULTIES, rows.value.map((r) => r.difficulty), form.value.difficulty));
+const seasonOptions = computed(() => mergeOptions(ROUTE_SEASONS, rows.value.map((r) => r.season), form.value.season));
+const tagOptions = computed(() => mergeOptions(COMMON_ROUTE_TAGS, ...rows.value.map((r) => r.tags || []), form.value.tags || []));
 
 function applyRegion(text) {
   const path = findRegionPath(text);
@@ -386,8 +460,7 @@ function cloneTiers(list) {
 }
 
 async function load() {
-  const params = reviewFilter.value ? { review: reviewFilter.value } : {};
-  list.value = (await http.get("/admin/routes", { params })).data;
+  rows.value = (await http.get("/admin/routes")).data;
   try {
     globalRefund.value = (await http.get("/admin/refund-rules")).data || { tiers: [], summary: "" };
   } catch {
@@ -861,5 +934,24 @@ async function saveReview() {
   font-size: calc(12px * var(--ui-scale));
   line-height: 1.5;
   margin-top: 6px;
+}
+.route-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+.route-filter {
+  width: 120px;
+}
+.route-filter-wide {
+  width: 180px;
+}
+.route-filter-q {
+  width: 240px;
+}
+.route-filter-count {
+  margin-top: 0;
 }
 </style>
