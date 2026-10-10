@@ -26,6 +26,16 @@ describe("routes and schedules API", () => {
     await agent.get("/api/guides/99999").expect(404);
   });
 
+  it("hides an off route from the catalog and from public trip dates", async () => {
+    const { getDb } = require("../src/db");
+    getDb().prepare("UPDATE routes SET status='off' WHERE id=?").run(seed.routeId);
+    const listed = await agent.get("/api/routes").expect(200);
+    assert.equal(listed.body.data.length, 0);
+    await agent.get(`/api/routes/${seed.routeId}`).expect(404);
+    const trips = await agent.get("/api/schedules?channel=trip").expect(200);
+    assert.equal(trips.body.data.some((row) => Number(row.routeId) === Number(seed.routeId)), false);
+  });
+
   it("filters routes by days and keyword", async () => {
     const all = await agent.get("/api/routes").expect(200);
     assert.equal(all.body.data.length, 1);

@@ -107,7 +107,7 @@ User 1──n Favorite / PointsLedger / Review
 - `review_status`：用户申请 `pending` → 后台 `approved` / `rejected`。官方线路默认 `approved`
 - `bounty_status` / `bounty_amount`：申请时 `pending` + 300 元；该线首次真实成团后记 `payments.scene=route_bounty` 并标 `paid`。发团（`POST /trips`）不走这条奖励
 - 图文：封面、相册、**视频链接**（B 站 BV / YouTube / mp4，线路页嵌播放器）、亮点、行程、费用含/不含、装备、须知、集合点
-- `GET /routes` 会排除「只被同城局排期引用」的线路，避免掼蛋局出现在山野目录；也排除未过审申请
+- `GET /routes` 会排除「只被同城局排期引用」的线路，避免掼蛋局出现在山野目录；也排除未过审申请和下架线路。已有测试线路在服务启动时下架一次（`settings.demo_routes_hidden`），数据保留，后台可再上架。详情页用实拍和文字：亮点、行程、费用含与不含，图文最多 6 张，不把价格和集合点做进图片。
 
 ### 3.2 排期 Schedule
 

@@ -896,6 +896,26 @@ function migrateSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_page_views_route ON page_views(route_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_page_views_visitor ON page_views(visitor_id, created_at);
   `);
+  hideStashedRoutes(db);
+}
+
+function hideStashedRoutes(db) {
+  const done = db.prepare("SELECT value FROM settings WHERE key='demo_routes_hidden'").get();
+  if (done && done.value === "1") return;
+  db.prepare(
+    `UPDATE routes SET status='off'
+     WHERE IFNULL(status,'on')='on'
+     AND id NOT IN (
+       SELECT route_id FROM schedules
+       WHERE IFNULL(channel,'trip')='activity'
+       AND route_id NOT IN (
+         SELECT route_id FROM schedules WHERE IFNULL(channel,'trip')!='activity'
+       )
+     )`
+  ).run();
+  db.prepare(
+    "INSERT INTO settings (key, value) VALUES ('demo_routes_hidden','1') ON CONFLICT(key) DO UPDATE SET value='1'"
+  ).run();
 }
 
 let _db;
@@ -960,4 +980,4 @@ function resetDb() {
   }
 }
 
-module.exports = { getDb, toRoute, ensureDirs, resetDb, createSchema };
+module.exports = { getDb, toRoute, ensureDirs, resetDb, createSchema, hideStashedRoutes };

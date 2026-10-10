@@ -1,6 +1,6 @@
 <template>
   <div class="route-catalog">
-    <p class="muted catalog-lead">官方线路。点进去看介绍，有排期就能报，没有可以自己开一团。</p>
+    <p class="muted catalog-lead">官方线路看实拍、行程和费用。有排期就能报，没有可以自己开一团。</p>
     <div class="chips">
       <div class="chip" :class="{ on: days === 0 }" @click="setDays(0)">全部天数</div>
       <div class="chip" :class="{ on: days === n }" v-for="n in [1, 2, 3]" :key="n" @click="setDays(n)">{{ n }}日</div>
@@ -31,7 +31,7 @@
         </div>
       </div>
     </div>
-    <p class="muted" v-if="ready && !list.length">没有匹配的线路</p>
+    <p class="muted" v-if="ready && !list.length">{{ q || days || tag ? "没有匹配的线路" : "正式线路正在整理，发布后会出现在这里。" }}</p>
     <button class="btn ghost block" type="button" style="margin-top:12px" @click="$router.push('/m/route-apply')">没有想走的线？申请收录</button>
   </div>
 </template>

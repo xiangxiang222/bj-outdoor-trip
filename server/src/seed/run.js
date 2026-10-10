@@ -110,7 +110,7 @@ async function run() {
   GUIDES.forEach((g) => insertGuide.run(g.name, g.phone, g.gender, g.years, g.languages, g.specialties, g.rating, g.bio, "idle"));
 
   const insertRoute = db.prepare(`INSERT INTO routes (code,title,subtitle,days,distance_km,difficulty,category,region,season,tags_json,cover,gallery_json,min_group_size,description,highlights_json,itinerary_json,fee_include,fee_exclude,equipment,notices,meetup_json,status)
-    VALUES (@code,@title,@subtitle,@days,@distance_km,@difficulty,@category,@region,@season,@tags_json,@cover,@gallery_json,@min_group_size,@description,@highlights_json,@itinerary_json,@fee_include,@fee_exclude,@equipment,@notices,@meetup_json,'on')`);
+    VALUES (@code,@title,@subtitle,@days,@distance_km,@difficulty,@category,@region,@season,@tags_json,@cover,@gallery_json,@min_group_size,@description,@highlights_json,@itinerary_json,@fee_include,@fee_exclude,@equipment,@notices,@meetup_json,@status)`);
   const insertTier = db.prepare("INSERT INTO route_price_tiers (route_id,min_people,max_people,price,member_price) VALUES (?,?,?,?,?)");
   const insertRb = db.prepare("INSERT INTO route_buses (route_id, bus_type_id) VALUES (?,?)");
 
@@ -138,6 +138,7 @@ async function run() {
       equipment: r.equipment,
       notices: r.notices,
       meetup_json: JSON.stringify(r.meetupPoints),
+      status: "off",
     });
     const rid = Number(info.lastInsertRowid);
     routeIds[r.code] = rid;
@@ -290,6 +291,7 @@ async function run() {
       equipment: "",
       notices: a.notes,
       meetup_json: JSON.stringify([{ id: "custom", name: a.meetup_point }]),
+      status: "on",
     });
     const rid = Number(info.lastInsertRowid);
     insertTier.run(rid, 4, null, 0, 0);
