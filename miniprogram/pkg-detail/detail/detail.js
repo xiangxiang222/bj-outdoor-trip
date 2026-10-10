@@ -27,6 +27,22 @@ function photoUrl(item) {
   return item.src || item.origin || item.url || item.thumb || "";
 }
 
+function storyGroupsOf(blocks) {
+  const groups = [];
+  (blocks || []).forEach((block) => {
+    if (block && block.type === "image" && block.url) {
+      const last = groups[groups.length - 1];
+      if (last && last.type === "images") last.items.push(block);
+      else groups.push({ type: "images", items: [block] });
+      return;
+    }
+    if (block && block.type === "text" && String(block.body || "").trim()) {
+      groups.push({ type: "text", body: block.body });
+    }
+  });
+  return groups;
+}
+
 function shapeRoute(raw) {
   const r = withLocalMedia(raw || {}) || {};
   const story = [];
@@ -52,11 +68,22 @@ function shapeRoute(raw) {
   });
   const next = (r.schedules && r.schedules[0]) || null;
   r.story = story;
+  r.storyGroups = storyGroupsOf(story);
   r.extraPhotos = extraPhotos;
   r.nextTrip = next;
-  r.factDays = r.days ? String(r.days) + "日" : "";
-  r.factDifficulty = r.difficulty || "";
-  r.factRegion = r.region || "";
+  const stats = [];
+  if (r.days) stats.push({ label: "天数", value: String(r.days) + "日" });
+  if (r.difficulty) stats.push({ label: "难度", value: r.difficulty });
+  if (Number(r.distanceKm) > 0) stats.push({ label: "里程", value: String(r.distanceKm) + " 公里" });
+  if (r.season) stats.push({ label: "季节", value: r.season });
+  r.stats = stats;
+  const jumps = [];
+  if (story.length || r.description) jumps.push({ id: "sec-intro", label: "介绍" });
+  if ((r.itinerary || []).length) jumps.push({ id: "sec-itin", label: "行程" });
+  if (r.feeInclude || r.feeExclude || r.notices) jumps.push({ id: "sec-fee", label: "费用" });
+  if (extraPhotos.length) jumps.push({ id: "sec-photos", label: "相册" });
+  if (r.title) jumps.push({ id: "sec-go", label: "排期" });
+  r.jumps = jumps.length > 1 ? jumps : [];
   return r;
 }
 
@@ -99,6 +126,10 @@ Page({
     } catch (err) {
       this.setData({ reviews: { list: [], count: 0, avg: 0 } });
     }
+  },
+  jump(e) {
+    const id = e.currentTarget.dataset.id;
+    if (id) wx.pageScrollTo({ selector: "#" + id, duration: 220 });
   },
   goSch(e) {
     wx.navigateTo({ url: "/pages/schedule/schedule?id=" + e.currentTarget.dataset.id });

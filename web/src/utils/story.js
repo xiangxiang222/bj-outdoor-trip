@@ -19,6 +19,21 @@ export function composeStory(description, gallery) {
   return blocks;
 }
 
+export function groupStoryBlocks(blocks) {
+  const groups = [];
+  for (const block of blocks || []) {
+    if (block?.type === "image" && block.url) {
+      const last = groups[groups.length - 1];
+      if (last?.type === "images") last.items.push(block);
+      else groups.push({ type: "images", items: [block] });
+      continue;
+    }
+    const body = String(block?.body || "").trim();
+    if (block?.type === "text" && body) groups.push({ type: "text", body: block.body });
+  }
+  return groups;
+}
+
 export function storyAlbum(gallery, story) {
   const used = new Set(
     (story || []).filter((b) => b.type === "image").map((b) => b.url).filter(Boolean)
