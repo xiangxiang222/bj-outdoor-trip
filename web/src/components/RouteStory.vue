@@ -1,20 +1,31 @@
 <template>
-  <div v-if="blocks.length" class="route-story">
-    <template v-for="(block, i) in blocks" :key="i">
-      <p v-if="block.type === 'text'" class="story-text">{{ block.body }}</p>
-      <figure v-else-if="block.type === 'image' && block.url" class="story-fig">
-        <img :src="block.url" :alt="block.caption || ''" @click="$emit('preview', block.url)" />
-        <figcaption v-if="block.caption">{{ block.caption }}</figcaption>
+  <div v-if="groups.length" class="route-story">
+    <template v-for="(group, i) in groups" :key="i">
+      <p v-if="group.type === 'text'" class="story-text">{{ group.body }}</p>
+      <div v-else-if="group.items.length > 1" class="story-film">
+        <figure v-for="(block, j) in group.items" :key="block.url + j" class="story-fig">
+          <img :src="block.url" :alt="block.caption || ''" @click="$emit('preview', block.url)" />
+          <figcaption v-if="block.caption">{{ block.caption }}</figcaption>
+        </figure>
+      </div>
+      <figure v-else class="story-fig">
+        <img :src="group.items[0].url" :alt="group.items[0].caption || ''" @click="$emit('preview', group.items[0].url)" />
+        <figcaption v-if="group.items[0].caption">{{ group.items[0].caption }}</figcaption>
       </figure>
     </template>
   </div>
 </template>
 
 <script setup>
-defineProps({
+import { computed } from "vue";
+import { groupStoryBlocks } from "@/utils/story";
+
+const props = defineProps({
   blocks: { type: Array, default: () => [] },
 });
 defineEmits(["preview"]);
+
+const groups = computed(() => groupStoryBlocks(props.blocks));
 </script>
 
 <style scoped>
@@ -23,7 +34,7 @@ defineEmits(["preview"]);
 .story-fig { margin: 0; }
 .story-fig img {
   width: 100%;
-  max-height: 280px;
+  height: 200px;
   object-fit: cover;
   border-radius: 12px;
   display: block;
@@ -34,4 +45,18 @@ defineEmits(["preview"]);
   font-size: calc(12px * var(--ui-scale));
   color: var(--muted);
 }
+.story-film {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.story-film::-webkit-scrollbar { display: none; }
+.story-film .story-fig {
+  flex: 0 0 78%;
+  scroll-snap-align: start;
+}
+.story-film .story-fig img { height: 168px; }
 </style>
