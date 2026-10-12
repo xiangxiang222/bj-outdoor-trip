@@ -53,14 +53,14 @@ onMounted(async () => {
     xAxis: { type: "category", data: d.byRoute.map((x) => x.title), axisLabel: { rotate: 28, fontSize: px(10) } },
     yAxis: [{ type: "value" }, { type: "value" }],
     series: [
-      { name: "人数", type: "bar", data: d.byRoute.map((x) => x.people), itemStyle: { color: "#e1251b" } },
+      { name: "人数", type: "bar", data: d.byRoute.map((x) => x.people), itemStyle: { color: "#8c3038" } },
       { name: "收入", type: "line", yAxisIndex: 1, data: d.byRoute.map((x) => x.revenue), itemStyle: { color: "#ff8f1f" } },
     ],
   });
   echarts.init(pie.value).setOption({
     title: { text: "按天数分布", textStyle: { fontSize: px(16) } },
     tooltip: { trigger: "item" },
-    color: ["#e1251b", "#ff8f1f", "#f5a623", "#00a870", "#4a90e2"],
+    color: ["#8c3038", "#c9a24a", "#642470", "#6e6e76", "#b56b73"],
     series: [{ type: "pie", radius: "65%", data: d.byDay.map((x) => ({ name: x.days + "日", value: x.people })) }],
   });
 });
