@@ -178,6 +178,27 @@ Page({
       success: () => wx.showToast({ title: "链接已复制", icon: "none" }),
     });
   },
+  playBilibili(e) {
+    const appId = e.currentTarget.dataset.appid;
+    const path = e.currentTarget.dataset.path;
+    const url = e.currentTarget.dataset.url;
+    if (!appId || !path) {
+      this.copyVideo(e);
+      return;
+    }
+    wx.navigateToMiniProgram({
+      appId,
+      path,
+      fail: (err) => {
+        if (/cancel/i.test(String((err && err.errMsg) || ""))) return;
+        if (!url) return;
+        wx.setClipboardData({
+          data: url,
+          success: () => wx.showToast({ title: "链接已复制", icon: "none" }),
+        });
+      },
+    });
+  },
   previewExtra(e) {
     const index = Number(e.currentTarget.dataset.index) || 0;
     const gallery = this.data.r.extraPhotos || [];

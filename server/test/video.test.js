@@ -17,12 +17,15 @@ describe("route video links", () => {
     assert.match(v.embedUrl, /bvid=BV1GJ411x7h7/);
     assert.match(v.embedUrl, /page=2/);
     assert.match(v.embedUrl, /player\.bilibili\.com/);
+    assert.equal(v.miniAppId, "wx7564fd5313d24844");
+    assert.equal(v.miniPath, "pages/video/video?bvid=BV1GJ411x7h7&page=1");
   });
 
   it("embeds a Bilibili av link", () => {
     const v = videoPlayerOf("https://www.bilibili.com/video/av170001");
     assert.equal(v.kind, "iframe");
     assert.match(v.embedUrl, /aid=170001/);
+    assert.equal(v.miniPath, "pages/video/video?avid=170001");
   });
 
   it("falls back to an open link for b23 short urls", () => {
@@ -30,6 +33,7 @@ describe("route video links", () => {
     assert.equal(v.provider, "bilibili");
     assert.equal(v.kind, "link");
     assert.equal(v.embedUrl, "");
+    assert.equal(v.miniPath, undefined);
   });
 
   it("embeds youtube and plays a direct mp4", () => {

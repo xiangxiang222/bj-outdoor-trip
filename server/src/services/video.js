@@ -1,5 +1,6 @@
 const MAX_VIDEOS = 6;
 const MAX_LEN = 400;
+const BILIBILI_APP_ID = "wx7564fd5313d24844";
 
 function parseVideoInput(input) {
   let list = [];
@@ -71,6 +72,15 @@ function isDirectFile(href) {
   return /\.(mp4|webm|m4v|ogg)(\?|#|$)/i.test(href);
 }
 
+function bilibiliMiniPath({ bvid, aid, page }) {
+  if (!bvid && !aid) return "";
+  const qs = new URLSearchParams();
+  if (bvid) qs.set("bvid", bvid);
+  else qs.set("avid", aid);
+  if (page > 1) qs.set("page", String(page - 1));
+  return `pages/video/video?${qs.toString()}`;
+}
+
 function videoPlayerOf(url) {
   const href = normalizeHref(url);
   if (!href) return null;
@@ -92,6 +102,8 @@ function videoPlayerOf(url) {
       kind: "iframe",
       embedUrl: `https://player.bilibili.com/player.html?${qs.toString()}`,
       label: "B站",
+      miniAppId: BILIBILI_APP_ID,
+      miniPath: bilibiliMiniPath({ bvid, aid, page: parsePage(href) }),
     };
   }
   if (/b23\.tv|bilibili\.com/i.test(href)) {
