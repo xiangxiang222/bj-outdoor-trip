@@ -233,7 +233,7 @@ defineEmits(["fav", "share", "open-schedule", "open-guide", "open-guides", "open
 
 const previewIndex = ref(null);
 const story = computed(() => capStoryImages(props.route?.story || []));
-const album = computed(() => storyAlbum(props.route?.gallery || [], story.value).slice(0, 6));
+const album = computed(() => storyAlbum(props.route?.gallery || [], story.value).slice(0, 12));
 const nextTrip = computed(() => (props.route?.schedules || [])[0] || null);
 const stats = computed(() => {
   const route = props.route;

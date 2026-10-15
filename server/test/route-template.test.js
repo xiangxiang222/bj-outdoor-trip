@@ -84,7 +84,7 @@ describe("route docx template", () => {
       "封面",
       ...img(2),
       "相册",
-      ...img(9),
+      ...img(13),
       "视频",
       "https://www.bilibili.com/video/BV1xx",
       "不是链接",
@@ -140,7 +140,7 @@ describe("route docx template", () => {
     assert.deepEqual(parsed.tags, ["长城", "一日", "纯玩"]);
     assert.match(parsed.cover, /^\/static\/uploads\/.+\.png$/);
     assert.equal(fs.existsSync(path.join(dir, path.basename(parsed.cover))), true);
-    assert.equal(parsed.gallery.length, 8);
+    assert.equal(parsed.gallery.length, 12);
     assert.deepEqual(parsed.videos, ["https://www.bilibili.com/video/BV1xx"]);
     assert.equal(parsed.highlights.length, 6);
     assert.equal(parsed.highlights[0], "看山");
@@ -170,7 +170,7 @@ describe("route docx template", () => {
     assert.equal(parsed.equipment, "登山鞋");
     assert.equal(parsed.notices, "注意天气");
     assert.ok(parsed.warnings.includes("封面只导入第 1 张"));
-    assert.ok(parsed.warnings.includes("相册只导入前 8 张"));
+    assert.ok(parsed.warnings.includes("相册只导入前 12 张"));
     assert.ok(parsed.warnings.includes("图文只导入前 6 张"));
     assert.ok(parsed.warnings.includes("亮点只导入前 6 条"));
     assert.ok(parsed.warnings.includes("有一条视频不是链接，已跳过"));

@@ -4,7 +4,7 @@ const { nanoid } = require("nanoid");
 const { zipStore, unzip } = require("./docx-zip");
 
 const IMAGE_LIMIT = 5 * 1024 * 1024;
-const GALLERY_MAX = 8;
+const GALLERY_MAX = 12;
 const STORY_IMAGE_MAX = 6;
 const HIGHLIGHT_MAX = 6;
 
@@ -58,7 +58,7 @@ const TEMPLATE_SECTIONS = [
   ["成团人数", "数字，例如 10"],
   ["标签", "用顿号分隔，例如 长城、一日、纯玩"],
   ["封面", "在下面贴 1 张实拍。单张不超过 5MB，不要写价格、日期或集合点"],
-  ["相册", "在下面贴图，最多 8 张，单张不超过 5MB"],
+  ["相册", "在下面贴图，最多 12 张，单张不超过 5MB"],
   ["视频", "一行一条链接，不把视频嵌进文档"],
   ["亮点", "每行一条，最多 6 条"],
   ["介绍", "给用户看的说明，可分段"],
@@ -451,7 +451,7 @@ function parseRouteTemplate(buffer, { destDir } = {}) {
       if (url) gallery.push(url);
     }
   }
-  if (galleryExtra) warn("相册只导入前 8 张");
+  if (galleryExtra) warn("相册只导入前 12 张");
 
   const story = [];
   let storyImages = 0;
