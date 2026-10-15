@@ -21,6 +21,17 @@ function img(n = 1) {
 }
 
 describe("route docx template", () => {
+  it("embeds a photo with the drawing markup Word displays", () => {
+    const buf = buildDocx(["封面", { image: PNG, ext: ".png" }]);
+    const xml = unzip(buf)["word/document.xml"].toString("utf8");
+    assert.match(xml, /<wp:extent cx="9525" cy="9525"\/>/);
+    assert.match(xml, /<a:blip r:embed="rIdImg1"\/>/);
+    const dir = tmpDir();
+    const parsed = parseRouteTemplate(buf, { destDir: dir });
+    assert.match(parsed.cover, /^\/static\/uploads\/.+\.png$/);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
   it("writes a blank template whose hints are not imported", () => {
     const buf = buildRouteTemplate();
     const files = unzip(buf);

@@ -124,24 +124,64 @@ function documentRelsXml(images) {
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rows}</Relationships>`;
 }
 
-function paragraphXml(block, rid) {
+function imagePixels(buf) {
+  if (buf.length >= 24 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) {
+    return { width: buf.readUInt32BE(16) || 1, height: buf.readUInt32BE(20) || 1 };
+  }
+  if (buf.length >= 4 && buf[0] === 0xff && buf[1] === 0xd8) {
+    let i = 2;
+    while (i + 9 < buf.length) {
+      if (buf[i] !== 0xff) {
+        i += 1;
+        continue;
+      }
+      const marker = buf[i + 1];
+      if (marker === 0xd8 || marker === 0xd9 || marker === 0x01) {
+        i += 2;
+        continue;
+      }
+      const size = buf.readUInt16BE(i + 2);
+      if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+        return { width: buf.readUInt16BE(i + 7) || 1, height: buf.readUInt16BE(i + 5) || 1 };
+      }
+      if (!size) break;
+      i += 2 + size;
+    }
+  }
+  return { width: 800, height: 600 };
+}
+
+function imageExtent(buf) {
+  const { width, height } = imagePixels(buf);
+  const maxCx = 5400000;
+  let cx = width * 9525;
+  let cy = height * 9525;
+  if (cx > maxCx) {
+    cy = Math.max(1, Math.round((cy * maxCx) / cx));
+    cx = maxCx;
+  }
+  return { cx: Math.max(1, cx), cy: Math.max(1, cy) };
+}
+
+function drawingXml(rid, buf, id) {
+  const { cx, cy } = imageExtent(buf);
+  return `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="${id}" name="Picture ${id}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${id}" name="Picture ${id}"/><pic:cNvPicPr><a:picLocks noChangeAspect="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+}
+
+function paragraphXml(block, image) {
   const runs = [];
   if (block.text) {
     const rPr = block.bold ? "<w:rPr><w:b/></w:rPr>" : "";
     runs.push(`<w:r>${rPr}<w:t xml:space="preserve">${escapeXml(block.text)}</w:t></w:r>`);
   }
-  if (rid) {
-    runs.push(
-      `<w:r><w:drawing><a:blip r:embed="${rid}"/></w:drawing><w:pict><v:imagedata r:id="${rid}"/></w:pict></w:r>`
-    );
-  }
+  if (image) runs.push(drawingXml(image.rid, image.data, image.id));
   return `<w:p>${runs.join("")}</w:p>`;
 }
 
 function documentXml(inner) {
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
-<w:body>${inner}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/></w:sectPr></w:body></w:document>`;
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+<w:body>${inner}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr></w:body></w:document>`;
 }
 
 function buildDocx(blocks, { method = 0 } = {}) {
@@ -149,12 +189,13 @@ function buildDocx(blocks, { method = 0 } = {}) {
   const paras = [];
   for (const raw of blocks) {
     const block = typeof raw === "string" ? { text: raw } : raw;
-    let rid = "";
+    let image = null;
     if (block.image) {
-      images.push({ name: `image${images.length + 1}${block.ext || ".png"}`, data: block.image });
-      rid = `rIdImg${images.length}`;
+      const data = Buffer.isBuffer(block.image) ? block.image : Buffer.from(block.image);
+      images.push({ name: `image${images.length + 1}${block.ext || ".png"}`, data });
+      image = { rid: `rIdImg${images.length}`, data, id: images.length };
     }
-    paras.push(paragraphXml(block, rid));
+    paras.push(paragraphXml(block, image));
   }
   const entries = [
     { name: "[Content_Types].xml", data: contentTypesXml() },
