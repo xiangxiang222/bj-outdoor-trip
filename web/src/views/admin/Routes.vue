@@ -91,8 +91,10 @@
           <el-radio-group v-model="composeMode">
             <el-radio-button label="manual">手动</el-radio-button>
             <el-radio-button label="ai">AI 起草</el-radio-button>
+            <el-radio-button label="template">模板</el-radio-button>
           </el-radio-group>
           <div v-if="composeMode === 'ai'" class="muted">先填标题和地区，点生成。文案和照片会填进下面，可再改。</div>
+          <div v-else-if="composeMode === 'template'" class="muted">下载模板，按标题写好并贴上照片，再上传。字段会填进下面，核对后保存。</div>
         </el-form-item>
         <el-form-item label="标题"><el-input v-model="form.title" placeholder="例如：慕田峪长城缆车一日游" /></el-form-item>
         <el-form-item label="副标题"><el-input v-model="form.subtitle" placeholder="一句话卖点，可空" /></el-form-item>
@@ -135,6 +137,19 @@
           <el-form-item label="起草">
             <el-button type="success" :loading="drafting" @click="generateDraft">生成文案和图片</el-button>
             <span class="inline-hint">未配置 AI_API_KEY 时用模板写文案，保存后也不会译成英文。图片先用已有景点库，再搜百度 / 360。</span>
+          </el-form-item>
+        </template>
+        <template v-if="composeMode === 'template'">
+          <el-form-item label="模板">
+            <div>
+              <div class="cover-row">
+                <el-button @click="downloadTemplate">下载空白模板</el-button>
+                <el-upload :show-file-list="false" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" :http-request="importTemplate">
+                  <el-button type="success" :loading="importing">上传填好的模板</el-button>
+                </el-upload>
+              </div>
+              <div class="muted">用 Word 按标题填写，照片贴在封面、相册、图文、行程下面，单张不超过 5MB。上传后填进这张表，核对后再保存。退款仍用全站规则。</div>
+            </div>
           </el-form-item>
         </template>
         <el-form-item label="难度">
@@ -429,6 +444,7 @@ const meetupPreset = ref("");
 const composeMode = ref("manual");
 const draftNotes = ref("");
 const drafting = ref(false);
+const importing = ref(false);
 const regionPath = ref([]);
 const regionProps = { checkStrictly: true, expandTrigger: "click" };
 const galleryList = computed(() =>
@@ -617,6 +633,90 @@ async function generateDraft() {
     ElMessage.error(e.message || "起草失败");
   } finally {
     drafting.value = false;
+  }
+}
+
+function applyTemplate(d) {
+  const text = (value) => (typeof value === "string" && value.trim() ? value : "");
+  if (text(d.title)) form.value.title = d.title;
+  if (text(d.subtitle)) form.value.subtitle = d.subtitle;
+  if (d.days) form.value.days = d.days;
+  if (text(d.category)) form.value.category = d.category;
+  if (text(d.region)) applyRegion(d.region);
+  if (text(d.difficulty)) form.value.difficulty = d.difficulty;
+  if (text(d.season)) form.value.season = d.season;
+  if (d.distanceKm != null && d.distanceKm !== "") form.value.distanceKm = d.distanceKm;
+  if (d.minGroupSize) form.value.minGroupSize = d.minGroupSize;
+  if (d.tags?.length) form.value.tags = d.tags;
+  if (text(d.cover)) form.value.cover = d.cover;
+  if (d.gallery?.length) form.value.gallery = d.gallery;
+  if (d.videos?.length) form.value.videos = d.videos;
+  if (d.highlights?.length) form.value.highlights = d.highlights;
+  if (text(d.description)) form.value.description = d.description;
+  if (d.story?.length) form.value.story = d.story.map((block) => ({ ...block, _key: nextKey() }));
+  if (d.itinerary?.length) form.value.itinerary = d.itinerary.map((it) => ({ photo: "", ...it, _key: nextKey() }));
+  if (d.priceTiers?.length) {
+    form.value.priceTiers = d.priceTiers.map((tier) => ({
+      minPeople: tier.minPeople,
+      maxPeople: null,
+      price: tier.price,
+      memberPrice: tier.memberPrice == null ? memberPriceOf(tier.price) : tier.memberPrice,
+    }));
+  }
+  if (d.buses?.length) form.value.buses = d.buses;
+  if (d.meetupPoints?.length) form.value.meetupPoints = d.meetupPoints.map((point) => ({ ...point, _key: nextKey() }));
+  if (text(d.feeInclude)) form.value.feeInclude = d.feeInclude;
+  if (text(d.feeExclude)) form.value.feeExclude = d.feeExclude;
+  if (text(d.equipment)) form.value.equipment = d.equipment;
+  if (text(d.notices)) form.value.notices = d.notices;
+}
+
+async function downloadTemplate() {
+  try {
+    const token = localStorage.getItem("bj_admin_token") || "";
+    const res = await fetch("/api/admin/routes/template", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) {
+      let message = "下载失败";
+      try {
+        const body = await res.json();
+        if (body.message) message = body.message;
+      } catch {
+        /* 失败响应不是 JSON 时用上面的默认提示 */
+      }
+      throw new Error(message);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "线路发布模板.docx";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    ElMessage.error(e.message || "下载失败");
+  }
+}
+
+async function importTemplate(opt) {
+  importing.value = true;
+  try {
+    const data = new FormData();
+    data.append("file", opt.file);
+    const res = await http.post("/admin/routes/import", data, { timeout: 60000 });
+    applyTemplate(res.data || {});
+    const warnings = res.data?.warnings || [];
+    if (warnings.length) ElMessage.warning(warnings.join("；"));
+    else ElMessage.success("已按模板填入，请核对后保存");
+    opt.onSuccess?.({});
+  } catch (e) {
+    ElMessage.error(e.message || "模板无法识别");
+    opt.onError?.(e);
+  } finally {
+    importing.value = false;
   }
 }
 
