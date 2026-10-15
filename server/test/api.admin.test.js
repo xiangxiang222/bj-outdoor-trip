@@ -222,6 +222,22 @@ describe("admin API", () => {
     assert.ok(row.cover.includes("/static/uploads/"));
     assert.equal(row.gallery.length, 1);
 
+    const many = Array.from({ length: 13 }, (_, i) => `/static/uploads/g${i}.png`);
+    await agent
+      .put(`/api/admin/routes/${created.body.data.id}`)
+      .set(auth(adminToken))
+      .send({
+        title: "带图线路",
+        cover: res.body.data.url,
+        gallery: many,
+        priceTiers: [{ minPeople: 10, price: 199, memberPrice: 183 }],
+        buses: ["bus30"],
+      })
+      .expect(200);
+    const again = await agent.get("/api/admin/routes").set(auth(adminToken)).expect(200);
+    const updated = again.body.data.find((r) => r.id === created.body.data.id);
+    assert.equal(updated.gallery.length, 13);
+
     await agent.post("/api/admin/upload").set(auth(adminToken)).attach("file", Buffer.from("not-an-image"), "notes.txt").expect(400);
   });
 

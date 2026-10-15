@@ -195,7 +195,7 @@
           >
             <span>上传</span>
           </el-upload>
-          <div class="muted">最多 12 张实拍。未单独设封面时，用相册第一张。不要上传把说明做成一长条的设计图。</div>
+          <div class="muted">张数不限。未单独设封面时，用相册第一张。不要上传把说明做成一长条的设计图。</div>
         </el-form-item>
         <el-form-item label="视频">
           <div class="list-edit">
@@ -746,11 +746,6 @@ async function uploadCover(opt) {
 }
 
 async function uploadGallery(opt) {
-  if ((form.value.gallery || []).length >= 12) {
-    ElMessage.warning("相册最多 12 张实拍");
-    opt.onError?.(new Error("相册最多 12 张"));
-    return;
-  }
   try {
     const url = await postImage(opt.file);
     form.value.gallery = [...(form.value.gallery || []), url];
