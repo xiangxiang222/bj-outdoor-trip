@@ -62,7 +62,7 @@ function shapeRoute(raw) {
   const extraPhotos = [];
   (r.gallery || []).forEach((item) => {
     const url = photoUrl(item);
-    if (!url || used[url] || extraPhotos.length >= 6) return;
+    if (!url || used[url]) return;
     used[url] = true;
     extraPhotos.push(typeof item === "string" ? { thumb: url } : item);
   });
