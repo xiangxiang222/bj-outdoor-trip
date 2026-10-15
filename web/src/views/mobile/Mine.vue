@@ -49,7 +49,7 @@
         </button>
         <button type="button" @click="goOrders('waitlist')">
           <span class="mine-order-ico">
-            <img :src="'/static/mine/order-wait.png'" alt="" />
+            <img :src="'/static/mine/order-wait.png?v=4'" alt="" />
             <em v-if="hub.waitlistCount" class="mine-badge">{{ hub.waitlistCount > 99 ? "99+" : hub.waitlistCount }}</em>
           </span>
           <span>候补</span>
@@ -70,7 +70,7 @@
         </button>
         <button type="button" @click="goOrders('refund')">
           <span class="mine-order-ico">
-            <img :src="'/static/mine/order-refund.png'" alt="" />
+            <img :src="'/static/mine/order-refund.png?v=5'" alt="" />
             <em v-if="hub.refundCount" class="mine-badge">{{ hub.refundCount > 99 ? "99+" : hub.refundCount }}</em>
           </span>
           <span>退款</span>
@@ -79,13 +79,13 @@
 
       <button class="mine-wallet" type="button" @click="goAuth('/m/wallet')">
         <span class="mine-wallet-item">
-          <img :src="'/static/mine/wal-coin.png'" alt="" />
+          <img :src="'/static/mine/wal-coin.png?v=8'" alt="" />
           <strong>{{ hub.balance ?? store.profile.walletBalance ?? 0 }}</strong>
           <span>余额</span>
         </span>
         <span class="mine-wallet-item">
           <span class="wal-ico">
-            <img :src="'/static/mine/wal-coupon.png'" alt="" />
+            <img :src="'/static/mine/wal-coupon.png?v=8'" alt="" />
             <i v-if="hub.couponCount || coupons.length" class="wal-dot"></i>
           </span>
           <strong>{{ hub.couponCount || coupons.length || 0 }}</strong>
@@ -93,13 +93,13 @@
           <em v-if="hub.couponExpireHint">{{ hub.couponExpireHint }}</em>
         </span>
         <span class="mine-wallet-item">
-          <img :src="'/static/mine/wal-point.png'" alt="" />
+          <img :src="'/static/mine/wal-point.png?v=9'" alt="" />
           <strong>{{ store.profile.points || 0 }}</strong>
           <span>积分</span>
         </span>
         <span class="mine-wallet-item is-entry">
-          <img :src="'/static/mine/wal-purse.png'" alt="" />
-          <b>钱包</b>
+          <img :src="'/static/mine/wal-purse.png?v=9'" alt="" />
+          <span>钱包 ›</span>
         </span>
       </button>
     </template>
@@ -122,7 +122,7 @@
       <button type="button" @click="goAuth('/m/leader')"><img :src="'/static/mine/leader.png?v=3'" alt="" />{{ leaderShort }}</button>
       <button type="button" @click="goAuth('/m/publish')"><img :src="'/static/mine/publish.png?v=3'" alt="" />去发团</button>
       <button type="button" @click="goReferral"><img :src="'/static/mine/referral.png?v=3'" alt="" />推荐报名</button>
-      <button type="button" @click="goAuth('/m/lottery')"><img :src="'/static/mine/lottery.png?v=3'" alt="" />抽奖</button>
+      <button type="button" @click="goAuth('/m/lottery')"><img :src="'/static/mine/lottery.png?v=4'" alt="" />抽奖</button>
       <button type="button" @click="goAuth('/m/route-apply')"><img :src="'/static/mine/route.png?v=3'" alt="" />收录线路</button>
       <button type="button" @click="goAuth('/m/feedback')"><img :src="'/static/mine/feedback.png?v=3'" alt="" />建议反馈</button>
     </div>

@@ -60,7 +60,7 @@
     </view>
     <view bindtap="goOrders" data-tab="waitlist">
       <view class="mine-order-ico">
-        <image src="{{iconBase}}order-wait.png" mode="aspectFit" />
+        <image src="{{iconBase}}order-wait.png?v=4" mode="aspectFit" />
         <text wx:if="{{hub.waitlistCount}}" class="mine-badge">{{hub.waitlistCount > 99 ? '99+' : hub.waitlistCount}}</text>
       </view>
       <view class="muted">{{tr.t('候补', lang)}}</view>
@@ -81,7 +81,7 @@
     </view>
     <view bindtap="goOrders" data-tab="refund">
       <view class="mine-order-ico">
-        <image src="{{iconBase}}order-refund.png" mode="aspectFit" />
+        <image src="{{iconBase}}order-refund.png?v=5" mode="aspectFit" />
         <text wx:if="{{hub.refundCount}}" class="mine-badge">{{hub.refundCount > 99 ? '99+' : hub.refundCount}}</text>
       </view>
       <view class="muted">{{tr.t('退款', lang)}}</view>
@@ -90,13 +90,13 @@
 
   <view class="mine-wallet" bindtap="go" data-url="/pages/wallet/wallet">
     <view class="mine-wallet-item">
-      <image class="wal-ico" src="{{iconBase}}wal-coin.png" mode="aspectFit" />
+      <image class="wal-ico" src="{{iconBase}}wal-coin.png?v=8" mode="aspectFit" />
       <view class="wal-num">{{tr.t(hub.balance, lang)}}</view>
       <view class="wal-name">{{tr.t('余额', lang)}}</view>
     </view>
     <view class="mine-wallet-item">
       <view class="wal-ico-wrap">
-        <image class="wal-ico" src="{{iconBase}}wal-coupon.png" mode="aspectFit" />
+        <image class="wal-ico" src="{{iconBase}}wal-coupon.png?v=8" mode="aspectFit" />
         <view wx:if="{{hub.couponCount}}" class="wal-dot"></view>
       </view>
       <view class="wal-num">{{tr.t(hub.couponCount, lang)}}</view>
@@ -104,14 +104,13 @@
       <view class="mine-expire" wx:if="{{hub.couponExpireHint}}">{{tr.t(hub.couponExpireHint, lang)}}</view>
     </view>
     <view class="mine-wallet-item">
-      <image class="wal-ico" src="{{iconBase}}wal-point.png" mode="aspectFit" />
+      <image class="wal-ico" src="{{iconBase}}wal-point.png?v=9" mode="aspectFit" />
       <view class="wal-num">{{tr.t(user.points, lang)}}</view>
       <view class="wal-name">{{tr.t('积分', lang)}}</view>
     </view>
     <view class="mine-wallet-item">
-      <image class="wal-ico" src="{{iconBase}}wal-purse.png" mode="aspectFit" />
-      <view class="wal-entry">{{tr.t('钱包', lang)}}</view>
-      <view class="wal-bar"></view>
+      <image class="wal-ico" src="{{iconBase}}wal-purse.png?v=9" mode="aspectFit" />
+      <view class="wal-entry">{{tr.t('钱包', lang)}} ›</view>
     </view>
   </view>
 </view>
