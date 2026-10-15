@@ -120,6 +120,7 @@
   <view class="title">{{tr.t('线路视频', lang)}}</view>
   <block wx:for="{{r.videos}}" wx:key="url">
     <video wx:if="{{item.kind==='video'}}" src="{{item.embedUrl}}" controls style="width:100%;margin:12rpx 0;border-radius:16rpx;background:#000" />
+    <view wx:elif="{{item.miniPath}}" class="video-link" bindtap="playBilibili" data-appid="{{item.miniAppId}}" data-path="{{item.miniPath}}" data-url="{{item.url}}">{{tr.t(item.label, lang)}} {{tr.t('· 点击播放', lang)}}</view>
     <view wx:else class="video-link" bindtap="copyVideo" data-url="{{item.url}}">{{tr.t(item.label, lang)}} {{tr.t('· 复制链接去浏览器播放', lang)}}</view>
   </block>
 </view>
