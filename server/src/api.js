@@ -69,6 +69,7 @@ const { oversubView, isOversubPending, drawOversub } = require("./services/overs
 const { parseVideoInput, videoViews } = require("./services/video");
 const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
 const { draftRoute } = require("./services/route-draft");
+const { buildRouteTemplate, parseRouteTemplate } = require("./services/route-template");
 const {
   listNotices: listUserNotices,
   unreadCount,
@@ -196,6 +197,16 @@ function uploadsDir() {
   fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
+
+const uploadDocx = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 40 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    const ok = ext === ".docx" || file.mimetype === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    cb(ok ? null : new Error("请上传 .docx 模板"), ok);
+  },
+});
 
 const uploadImage = multer({
   storage: multer.diskStorage({
@@ -2530,6 +2541,32 @@ router.post("/admin/routes/draft", authAdmin, requireCap("ops"), async (req, res
   } catch (e) {
     res.status(e.status || 400).json({ ok: false, message: e.message || "起草失败" });
   }
+});
+
+router.get("/admin/routes/template", authAdmin, requireCap("ops"), (_req, res) => {
+  const buf = buildRouteTemplate();
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="route-template.docx"; filename*=UTF-8''${encodeURIComponent("线路发布模板.docx")}`
+  );
+  res.send(buf);
+});
+
+router.post("/admin/routes/import", authAdmin, requireCap("ops"), (req, res) => {
+  uploadDocx.single("file")(req, res, (err) => {
+    if (err) {
+      const message = err.code === "LIMIT_FILE_SIZE" ? "模板不能超过 40MB" : err.message || "上传失败";
+      return res.status(400).json({ ok: false, message });
+    }
+    if (!req.file) return res.status(400).json({ ok: false, message: "请上传 .docx 模板" });
+    try {
+      const data = parseRouteTemplate(req.file.buffer, { destDir: uploadsDir() });
+      res.json({ ok: true, data });
+    } catch (e) {
+      res.status(400).json({ ok: false, message: e.message || "模板无法识别" });
+    }
+  });
 });
 
 router.get("/admin/routes", authAdmin, requireCap("roster"), (req, res) => {
