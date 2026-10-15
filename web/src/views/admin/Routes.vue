@@ -85,8 +85,8 @@
 
     <el-dialog v-model="show" :title="form.id ? '编辑线路' : '新增线路'" width="880px" top="4vh" align-center :close-on-click-modal="false">
       <el-form label-width="100px">
-        <p class="muted" style="margin-top:0">按详情页的顺序填：实拍封面、天数和价格、几条亮点、行程文字、费用含与不含。这些字留在页面上，不要做进图片。</p>
-        <div class="sec">基本信息</div>
+        <p v-if="composeMode !== 'template'" class="muted" style="margin-top:0">按详情页的顺序填：实拍封面、天数和价格、几条亮点、行程文字、费用含与不含。这些字留在页面上，不要做进图片。</p>
+        <div v-if="composeMode !== 'template'" class="sec">基本信息</div>
         <el-form-item label="填写方式">
           <el-radio-group v-model="composeMode">
             <el-radio-button label="manual">手动</el-radio-button>
@@ -94,8 +94,21 @@
             <el-radio-button label="template">模板</el-radio-button>
           </el-radio-group>
           <div v-if="composeMode === 'ai'" class="muted">先填标题和地区，点生成。文案和照片会填进下面，可再改。</div>
-          <div v-else-if="composeMode === 'template'" class="muted">下载模板，按标题写好并贴上照片，再上传。字段会填进下面，核对后保存。</div>
         </el-form-item>
+        <template v-if="composeMode === 'template'">
+          <el-form-item label="模板">
+            <div>
+              <div class="cover-row">
+                <el-button @click="downloadTemplate">下载空白模板</el-button>
+                <el-upload :show-file-list="false" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" :http-request="importTemplate">
+                  <el-button type="success" :loading="importing">上传填好的模板</el-button>
+                </el-upload>
+              </div>
+              <div class="muted">用 Word 按标题写好，照片贴在封面、相册、图文、行程下面，单张不超过 5MB。上传后直接发布。退款仍用全站规则。</div>
+            </div>
+          </el-form-item>
+        </template>
+        <template v-else>
         <el-form-item label="标题"><el-input v-model="form.title" placeholder="例如：慕田峪长城缆车一日游" /></el-form-item>
         <el-form-item label="副标题"><el-input v-model="form.subtitle" placeholder="一句话卖点，可空" /></el-form-item>
         <el-form-item label="上架">
@@ -137,19 +150,6 @@
           <el-form-item label="起草">
             <el-button type="success" :loading="drafting" @click="generateDraft">生成文案和图片</el-button>
             <span class="inline-hint">未配置 AI_API_KEY 时用模板写文案，保存后也不会译成英文。图片先用已有景点库，再搜百度 / 360。</span>
-          </el-form-item>
-        </template>
-        <template v-if="composeMode === 'template'">
-          <el-form-item label="模板">
-            <div>
-              <div class="cover-row">
-                <el-button @click="downloadTemplate">下载空白模板</el-button>
-                <el-upload :show-file-list="false" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" :http-request="importTemplate">
-                  <el-button type="success" :loading="importing">上传填好的模板</el-button>
-                </el-upload>
-              </div>
-              <div class="muted">用 Word 按标题填写，照片贴在封面、相册、图文、行程下面，单张不超过 5MB。上传后填进这张表，核对后再保存。退款仍用全站规则。</div>
-            </div>
           </el-form-item>
         </template>
         <el-form-item label="难度">
@@ -326,10 +326,11 @@
           <p class="muted" style="margin:6px 0 8px">{{ form.refundUseGlobal ? (globalRefund.summary || "所有线路默认：10 天前 100%，3 天前 80%，不足 3 天 50%，开团后不退。") : "仅这条线路使用下面的比例。" }}</p>
           <RefundRulesEditor v-model="form.refundTiers" :disabled="form.refundUseGlobal" />
         </el-form-item>
+        </template>
       </el-form>
       <template #footer>
         <el-button @click="show=false">取消</el-button>
-        <el-button type="success" @click="save">保存</el-button>
+        <el-button v-if="composeMode !== 'template'" type="success" @click="save">保存</el-button>
       </template>
     </el-dialog>
 
@@ -707,10 +708,16 @@ async function importTemplate(opt) {
     const data = new FormData();
     data.append("file", opt.file);
     const res = await http.post("/admin/routes/import", data, { timeout: 60000 });
-    applyTemplate(res.data || {});
-    const warnings = res.data?.warnings || [];
-    if (warnings.length) ElMessage.warning(warnings.join("；"));
-    else ElMessage.success("已按模板填入，请核对后保存");
+    const parsed = res.data || {};
+    if (!String(parsed.title || "").trim()) {
+      throw new Error("模板里要写标题");
+    }
+    if (!(parsed.priceTiers || []).length) {
+      throw new Error("模板里要写阶梯价");
+    }
+    applyTemplate(parsed);
+    if (parsed.warnings?.length) ElMessage.warning(parsed.warnings.join("；"));
+    await save();
     opt.onSuccess?.({});
   } catch (e) {
     ElMessage.error(e.message || "模板无法识别");
