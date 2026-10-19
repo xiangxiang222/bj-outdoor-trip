@@ -2060,6 +2060,10 @@ router.get("/orders", authUser, (req, res) => {
     .prepare(
       `SELECT e.*, s.start_date, s.end_date, s.organizer_type, s.status AS schedule_status, s.route_id,
               s.meetup_point, s.meetup_time, s.city, s.started_at, IFNULL(s.channel,'trip') AS channel,
+              s.min_group_size,
+              (SELECT COUNT(*) FROM enrollments e2
+               LEFT JOIN users u ON u.id=e2.user_id
+               WHERE e2.schedule_id=s.id AND e2.status='joined' AND IFNULL(u.is_virtual,0)=0) AS real_enrolled,
               r.title, r.cover, r.days, r.refund_rules_json
        FROM enrollments e JOIN schedules s ON s.id=e.schedule_id JOIN routes r ON r.id=s.route_id
        WHERE e.user_id=? ORDER BY e.id DESC`
@@ -2094,6 +2098,13 @@ router.get("/orders", authUser, (req, res) => {
         completed: !!e.completed_at,
         canComplete: e.status === "joined" && !e.completed_at && !dayjs(e.start_date).isAfter(dayjs(), "day"),
         organizerType: e.organizer_type,
+        minGroupSize: Number(e.min_group_size || 0),
+        joinedCount: Number(e.real_enrolled || 0),
+        shortfall: Math.max(0, Number(e.min_group_size || 0) - Number(e.real_enrolled || 0)),
+        guaranteed:
+          e.schedule_status !== "cancelled" &&
+          Number(e.min_group_size || 0) > 0 &&
+          Number(e.real_enrolled || 0) >= Number(e.min_group_size || 0),
         kind: tripKindOf(e.organizer_type, e.channel).key,
         kindLabel: tripKindOf(e.organizer_type, e.channel).label,
       };

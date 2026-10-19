@@ -1,74 +1,150 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="cash-card">
-  <view class="cash-safe">{{tr.t('账户安全保障中', lang)}}</view>
-  <view class="cash-label">{{tr.t('余额（元）', lang)}}</view>
-  <view class="cash-num">{{tr.t(data.balance || 0, lang)}}</view>
-  <view class="cash-sub">{{tr.t('可付团费，充值走微信支付，提现到微信零钱。不支持银行卡。', lang)}}</view>
-  <view class="cash-actions">
-    <view class="cash-btn" bindtap="showTopup">{{tr.t('充值', lang)}}</view>
-    <view class="cash-btn ghost" bindtap="showWithdraw">{{tr.t('提现', lang)}}</view>
-  </view>
-</view>
 
-<view class="sheet" wx:if="{{mode=='topup'}}" id="wallet-form">
-  <view class="sheet-label">{{tr.t('充值金额（元）', lang)}}</view>
-  <input class="sheet-input" type="number" value="{{topupAmount}}" bindinput="setTopup" />
-  <view class="chips">
-    <view class="chip {{topupAmount==item ? 'on' : ''}}" wx:for="{{quick}}" wx:key="*this" bindtap="pickTopup" data-n="{{item}}">{{tr.t(item, lang)}}</view>
-  </view>
-  <view class="sheet-note">{{tr.t('单笔 1～5000 元。支付成功后立即进入余额。请确认金额后再支付。', lang)}}</view>
-  <view class="cash-btn block" bindtap="topup">{{tr.t('确认微信支付', lang)}}</view>
-</view>
-
-<view class="sheet" wx:if="{{mode=='withdraw'}}" id="wallet-form">
-  <view class="sheet-note" wx:if="{{!data.pinSet}}">{{tr.t('提现前请先设置 6 位支付密码。', lang)}}</view>
-  <view class="sheet-label">{{tr.t('提现金额（元）', lang)}}</view>
-  <input class="sheet-input" type="number" value="{{withdrawAmount}}" bindinput="setWithdraw" />
-  <view class="chips" wx:if="{{rule.available > 0}}">
-    <view class="chip on" bindtap="fillAll">{{tr.t('全部', lang)}} {{tr.t(rule.available, lang)}} {{tr.t('元', lang)}}</view>
-  </view>
-  <view class="sheet-note">{{tr.t('当前余额全部可提，不设最低金额。单笔上限 2000 元，超出可立即再提。提交后请在微信里确认收款，确认后实时到账。', lang)}}</view>
-  <view class="sheet-label">{{tr.t('支付密码', lang)}}</view>
-  <input class="sheet-input" password value="{{pin}}" maxlength="6" bindinput="setPin" />
-  <view class="cash-btn block" bindtap="withdraw">{{tr.t('确认提现', lang)}}</view>
-</view>
-
-<view class="list">
-  <view class="row" bindtap="go" data-url="/pages/profile/profile">
-    <text>{{tr.t('实名信息', lang)}}</text>
-    <text class="hint">{{tr.t(data.realNamed ? '已实名' : '待完善', lang)}} ›</text>
-  </view>
-  <view class="row" bindtap="go" data-url="/pages/wallet-pin/wallet-pin">
-    <text>{{tr.t('支付密码', lang)}}</text>
-    <text class="hint">{{tr.t(data.pinSet ? '已设置' : '未设置', lang)}} ›</text>
-  </view>
-</view>
-
-<view class="sec">{{tr.t('零钱明细', lang)}}</view>
-<view class="list" wx:if="{{data.bills.length}}">
-  <view class="row" wx:for="{{data.bills}}" wx:key="id">
-    <view>
-      <view>{{tr.t(item.reason, lang)}}</view>
-      <view class="hint">{{tr.t(item.createdAt, lang)}}</view>
+<block wx:if="{{mode=='done'}}">
+  <view class="done">
+    <view class="check">✓</view>
+    <view class="done-title">{{tr.t(receipt.title, lang)}}</view>
+    <view class="hint">{{tr.t(receipt.hint, lang)}}</view>
+    <view class="panel">
+      <view class="line"><text>金额</text><text>¥{{tr.t(receipt.amount, lang)}}</text></view>
+      <view class="line"><text>方式</text><text>{{tr.t(receipt.method, lang)}}</text></view>
     </view>
-    <text class="amt {{item.delta > 0 ? 'in' : ''}}">{{tr.t(item.delta > 0 ? '+' : '', lang)}}{{tr.t(item.delta, lang)}}</text>
+    <view class="cash-btn" bindtap="backHome">{{tr.t('完成', lang)}}</view>
+    <view class="cash-btn ghost" bindtap="openRecords">{{tr.t('查看提现记录', lang)}}</view>
+  </view>
+</block>
+
+<block wx:elif="{{mode=='topup'}}">
+  <view class="banner">{{tr.t('使用微信支付充值，成功后立即进入余额。', lang)}}</view>
+  <view class="panel">
+    <view class="hint">{{tr.t('充值金额', lang)}}</view>
+    <view class="amount"><text class="yen">¥</text><input type="number" value="{{topupAmount}}" bindinput="setTopup" /></view>
+    <view class="hint">{{tr.t('1～5000 元，须为整数元。', lang)}}</view>
+    <view class="chips">
+      <view class="chip {{topupAmount==item ? 'on' : ''}}" wx:for="{{quick}}" wx:key="*this" bindtap="pickTopup" data-n="{{item}}">{{tr.t(item, lang)}}</view>
+    </view>
+  </view>
+  <view class="cash-btn" bindtap="topup">{{tr.t('确认充值', lang)}}</view>
+  <view class="cash-btn ghost" bindtap="backHome">{{tr.t('返回', lang)}}</view>
+</block>
+
+<block wx:elif="{{mode=='withdraw'}}">
+  <view class="banner">{{tr.t('提到本人微信零钱。提交后在微信里确认收款，确认后到账。不支持银行卡。', lang)}}</view>
+  <view class="panel">
+    <view class="line"><text>{{tr.t('到账方式', lang)}}</text><text>{{tr.t('微信零钱', lang)}}</text></view>
+    <view class="hint">{{tr.t('提现金额', lang)}}</view>
+    <view class="amount">
+      <text class="yen">¥</text>
+      <input type="number" value="{{withdrawAmount}}" bindinput="setWithdraw" />
+      <text class="all" bindtap="fillAll">{{tr.t('全部提现', lang)}}</text>
+    </view>
+    <view class="hint">{{tr.t('可提现', lang)}} {{tr.t(rule.available, lang)}} {{tr.t('元。单笔上限 2000 元，不限次数。', lang)}}</view>
+    <view class="hint" wx:if="{{!data.pinSet}}" bindtap="go" data-url="/pages/wallet-pin/wallet-pin">{{tr.t('请先设置 6 位支付密码。', lang)}}</view>
+  </view>
+  <view class="cash-btn" bindtap="askPin">{{tr.t('提现', lang)}}</view>
+  <view class="cash-btn ghost" bindtap="backHome">{{tr.t('返回', lang)}}</view>
+</block>
+
+<block wx:elif="{{mode=='records'}}">
+  <view class="tabs">
+    <view class="tab {{recordTab=='success'?'on':''}}" bindtap="setRecord" data-tab="success">{{tr.t('提现成功', lang)}}</view>
+    <view class="tab {{recordTab=='processing'?'on':''}}" bindtap="setRecord" data-tab="processing">{{tr.t('处理中', lang)}}</view>
+    <view class="tab {{recordTab=='failed'?'on':''}}" bindtap="setRecord" data-tab="failed">{{tr.t('提现失败', lang)}}</view>
+  </view>
+  <block wx:if="{{recordGroups.length}}">
+    <view wx:for="{{recordGroups}}" wx:key="key">
+      <view class="sec">{{tr.t(item.label, lang)}}</view>
+      <view class="list">
+        <view class="row" wx:for="{{item.items}}" wx:for-item="bill" wx:key="id">
+          <view>
+            <view>{{tr.t(bill.title, lang)}}</view>
+            <view class="hint">{{tr.t(bill.createdAt, lang)}}</view>
+          </view>
+          <text class="amt">-{{tr.t(bill.amount, lang)}}</text>
+        </view>
+      </view>
+    </view>
+  </block>
+  <view class="empty" wx:else>
+    <view class="done-title">{{tr.t('没有相关记录', lang)}}</view>
+    <view class="hint">{{tr.t('更多进出账在余额明细里。', lang)}}</view>
+  </view>
+  <view class="cash-btn ghost" bindtap="backHome">{{tr.t('返回', lang)}}</view>
+</block>
+
+<block wx:else>
+  <view class="cash-card">
+    <view class="cash-label">{{tr.t('可用余额（元）', lang)}}</view>
+    <view class="cash-num">{{tr.t(data.balance || 0, lang)}}</view>
+    <view class="cash-actions">
+      <view class="cash-btn ghost" bindtap="openWithdraw">{{tr.t('提现', lang)}}</view>
+      <view class="cash-btn" bindtap="openTopup">{{tr.t('充值', lang)}}</view>
+    </view>
+  </view>
+
+  <view class="sec">{{tr.t('余额明细', lang)}}</view>
+  <view class="list" wx:if="{{shownBills.length}}">
+    <view class="row" wx:for="{{shownBills}}" wx:key="id">
+      <view>
+        <view>{{tr.t(item.reason, lang)}}</view>
+        <view class="hint">{{tr.t(item.createdAt, lang)}}</view>
+      </view>
+      <text class="amt {{item.delta > 0 ? 'in' : ''}}">{{item.delta > 0 ? '+' : ''}}{{tr.t(item.delta, lang)}}</text>
+    </view>
+  </view>
+  <view class="empty" wx:else>{{tr.t('还没有余额明细', lang)}}</view>
+  <view class="more" wx:if="{{data.bills.length > shownBills.length}}" bindtap="showBills">{{tr.t('查看更多', lang)}}</view>
+
+  <view class="list gap">
+    <view class="row" bindtap="go" data-url="/pages/wallet-pin/wallet-pin">
+      <text>{{tr.t('支付密码', lang)}}</text>
+      <text class="hint">{{tr.t(data.pinSet ? '已设置' : '未设置', lang)}} ›</text>
+    </view>
+    <view class="row" bindtap="openRecords">
+      <text>{{tr.t('提现记录', lang)}}</text>
+      <text class="hint">›</text>
+    </view>
+    <view class="row" bindtap="go" data-url="/pages/profile/profile">
+      <text>{{tr.t('实名信息', lang)}}</text>
+      <text class="hint">{{tr.t(data.realNamed ? '已实名' : '选填', lang)}} ›</text>
+    </view>
+  </view>
+
+  <view class="sec">{{tr.t('常见问题', lang)}}</view>
+  <view wx:for="{{faqs}}" wx:key="title">
+    <view class="faq-label">{{tr.t(item.title, lang)}}</view>
+    <view class="list">
+      <view class="row faq" wx:for="{{item.items}}" wx:for-item="qa" wx:key="q" bindtap="toggleFaq" data-q="{{qa.q}}">
+        <view>
+          <view>{{tr.t(qa.q, lang)}}</view>
+          <view class="hint" wx:if="{{openFaq==qa.q}}">{{tr.t(qa.a, lang)}}</view>
+        </view>
+        <text class="hint">{{openFaq==qa.q ? '⌃' : '›'}}</text>
+      </view>
+    </view>
+  </view>
+</block>
+
+<view class="msg" wx:if="{{msg}}">{{tr.t(msg, lang)}}</view>
+
+<view class="mask" wx:if="{{pinOpen}}" catchtap="closePin">
+  <view class="pad-sheet" catchtap="noop">
+    <view class="pad-head">
+      <text>{{tr.t('请输入支付密码', lang)}}</text>
+      <text bindtap="closePin">×</text>
+    </view>
+    <view class="dots">
+      <view class="dot {{pin.length>=1?'on':''}}"></view>
+      <view class="dot {{pin.length>=2?'on':''}}"></view>
+      <view class="dot {{pin.length>=3?'on':''}}"></view>
+      <view class="dot {{pin.length>=4?'on':''}}"></view>
+      <view class="dot {{pin.length>=5?'on':''}}"></view>
+      <view class="dot {{pin.length>=6?'on':''}}"></view>
+    </view>
+    <view class="more" bindtap="go" data-url="/pages/wallet-pin/wallet-pin">{{tr.t('忘记密码', lang)}}</view>
+    <view class="keys">
+      <view class="key {{item.label ? '' : 'blank'}}" wx:for="{{keys}}" wx:key="id" data-key="{{item.label}}" bindtap="pressKey">{{item.label}}</view>
+    </view>
   </view>
 </view>
-<view class="empty" wx:else>{{tr.t('还没有零钱明细', lang)}}</view>
-
-<view class="sec">{{tr.t('零钱规则', lang)}}</view>
-<view class="rules">
-  <view class="rule-h">{{tr.t('可提现额度', lang)}}</view>
-  <view class="rule-p">{{tr.t('当前账户余额全部可提现，不设最低提现金额。微信零钱按整数元记账。因微信商家转账到零钱单笔上限 2000 元，超过 2000 元时可连续分笔，每笔提交后立即处理。当前可提现', lang)}} {{tr.t(rule.available, lang)}} {{tr.t('元。', lang)}}</view>
-  <view class="rule-h">{{tr.t('每日提现次数', lang)}}</view>
-  <view class="rule-p">{{tr.t('不限制次数，可随时申请。', lang)}}</view>
-  <view class="rule-h">{{tr.t('提现时间', lang)}}</view>
-  <view class="rule-p">{{tr.t('每天 00:00–23:59（北京时间），全天可申请。', lang)}}</view>
-  <view class="rule-h">{{tr.t('到账时间', lang)}}</view>
-  <view class="rule-p">{{tr.t('提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。', lang)}}</view>
-  <view class="rule-p">{{tr.t('提现须验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。', lang)}}</view>
-  <view class="rule-h">{{tr.t('充值', lang)}}</view>
-  <view class="rule-p">{{tr.t('单笔 1～5000 元，须为整数元。微信支付成功后立即进入余额，用于支付团费。', lang)}}</view>
-</view>
-<view class="pad" wx:if="{{msg}}" style="color:#e85d4c">{{tr.t(msg, lang)}}</view>

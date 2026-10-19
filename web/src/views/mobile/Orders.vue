@@ -12,6 +12,7 @@
       <div class="chips">
         <div class="chip" :class="{ on: tab === 'unpaid' }" @click="tab = 'unpaid'">待支付 {{ unpaid.length }}</div>
         <div class="chip" :class="{ on: tab === 'waitlist' }" @click="tab = 'waitlist'">候补 {{ waitlist.length }}</div>
+        <div class="chip" :class="{ on: tab === 'recruiting' }" @click="tab = 'recruiting'">招募中 {{ recruiting.length }}</div>
         <div class="chip" :class="{ on: tab === 'depart' }" @click="tab = 'depart'">待出发 {{ depart.length }}</div>
         <div class="chip" :class="{ on: tab === 'review' }" @click="tab = 'review'">待评价 {{ review.length }}</div>
         <div class="chip" :class="{ on: tab === 'refund' }" @click="tab = 'refund'">退款 {{ refund.length }}</div>
@@ -84,6 +85,21 @@
         <div v-if="!waitlist.length" class="card">
           <div class="pad muted">还没有候补。满员团仍可报名进候补，有人取消后按顺序递补。</div>
         </div>
+      </template>
+
+      <template v-else-if="tab === 'recruiting'">
+        <article class="card" v-for="o in recruiting" :key="o.id">
+          <div class="pad tap" @click="goSchedule(o)">
+            <div class="row">
+              <strong>{{ o.title }}</strong>
+              <span class="tag">{{ recruitOf(o).overdue ? "待处理" : "招募中" }}</span>
+            </div>
+            <p class="muted" style="margin:6px 0 0">{{ o.start_date }} · {{ recruitOf(o).line }}</p>
+            <p v-if="recruitOf(o).overdue" class="muted" style="margin:6px 0 0">出发日已过，等并团或解散退款。</p>
+          </div>
+          <button v-if="o.canCancel" class="cancel-link" type="button" :disabled="cancelling === o.id" @click.stop="cancel(o)">取消报名</button>
+        </article>
+        <div v-if="!recruiting.length" class="card"><div class="pad muted">没有还在招人的报名。付完款、团还没齐时会出现在这里。</div></div>
       </template>
 
       <template v-else-if="tab === 'unpaid'">
@@ -186,7 +202,7 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { enrollStatusText } from "@/utils/labels";
 import { formatActivityDate } from "@/utils/activityKind";
-import { deskTrips, tripKindLabel } from "@/utils/trips";
+import { deskTrips, recruitFacts, tripKindLabel } from "@/utils/trips";
 
 const store = useUserStore();
 const router = useRouter();
@@ -197,7 +213,7 @@ const cancelling = ref(0);
 const reviewing = ref(0);
 const submitting = ref(false);
 const form = ref({ rating: 5, content: "" });
-const tabs = new Set(["unpaid", "waitlist", "depart", "review", "refund", "past"]);
+const tabs = new Set(["unpaid", "waitlist", "recruiting", "depart", "review", "refund", "past"]);
 function initialTab() {
   const q = String(pageRoute.query.tab || "");
   if (q === "upcoming") return "depart";
@@ -209,6 +225,7 @@ const holdTab = ref(Boolean(pageRoute.query.tab));
 const split = computed(() => deskTrips(list.value));
 const depart = computed(() => split.value.depart);
 const unpaid = computed(() => split.value.unpaid);
+const recruiting = computed(() => split.value.recruiting);
 const review = computed(() => split.value.review);
 const refund = computed(() => split.value.refund);
 const waitlist = computed(() => split.value.waitlist);
@@ -230,8 +247,12 @@ async function load() {
   }
   if (tab.value !== "depart") return;
   const desk = deskTrips(list.value);
-  if (!desk.depart.length && desk.waitlist.length) tab.value = "waitlist";
+  if (desk.recruiting.length) tab.value = "recruiting";
+  else if (!desk.depart.length && desk.waitlist.length) tab.value = "waitlist";
   else if (!desk.depart.length && !desk.waitlist.length && desk.past.length) tab.value = "past";
+}
+function recruitOf(o) {
+  return recruitFacts(o);
 }
 function dateOf(o) {
   return formatActivityDate(o.start_date);

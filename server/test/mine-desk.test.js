@@ -79,6 +79,23 @@ describe("mine desk", () => {
     assert.equal(res.body.data.couponExpireHint, "1 张明天到期");
   });
 
+  it("counts a paid trip that has not formed as recruiting", async () => {
+    const db = getDb();
+    const enId = Number(
+      db.prepare(
+        "INSERT INTO enrollments (schedule_id, user_id, traveler_name, traveler_phone, status, pay_status, pay_amount) VALUES (?,?,?,?,?,?,?)"
+      ).run(seed.individualScheduleId, seed.userId, "林北野", "13800138000", "joined", "paid", 3).lastInsertRowid
+    );
+    const wallet = await agent.get("/api/me/wallet").set(auth(token)).expect(200);
+    assert.equal(wallet.body.data.recruitingCount, 1);
+    assert.equal(wallet.body.data.departCount, 0);
+    const orders = await agent.get("/api/orders").set(auth(token)).expect(200);
+    const row = orders.body.data.find((item) => item.id === enId);
+    assert.equal(row.guaranteed, false);
+    assert.equal(row.pay_status, "paid");
+    assert.ok(row.shortfall >= 1);
+  });
+
   it("shows where a refund went on the order", async () => {
     const db = getDb();
     const enId = Number(
