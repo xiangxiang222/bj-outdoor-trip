@@ -165,12 +165,12 @@
             <p class="muted" style="margin:6px 0 0">{{ o.start_date }} · {{ statusLine(o) }} · {{ moneyText(o) }}</p>
             <p v-if="o.refundProgress" class="muted" style="margin:6px 0 0">{{ o.refundProgress.text }}</p>
           </div>
-          <div v-if="o.canComplete || o.completed" class="pad" style="padding-top:0">
+          <div v-if="showAfter(o) && (o.canComplete || o.completed)" class="pad" style="padding-top:0">
             <button class="btn block" type="button" @click.stop="$router.push('/m/after/' + o.schedule_id)">
               {{ o.completed ? "评价 / 抽奖 / 评选" : "完成活动" }}
             </button>
           </div>
-          <div v-if="o.canReview" class="pad" style="padding-top:0" @click.stop>
+          <div v-if="showAfter(o) && o.canReview" class="pad" style="padding-top:0" @click.stop>
             <button v-if="reviewing !== o.id" class="btn ghost block" @click="openReview(o)">去评价</button>
             <div v-else>
               <div class="star-pick">
@@ -201,7 +201,7 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { enrollStatusText } from "@/utils/labels";
 import { formatActivityDate } from "@/utils/activityKind";
-import { deskTrips, recruitFacts, tripKindLabel } from "@/utils/trips";
+import { deskTrips, recruitFacts, showAfterActions, tripKindLabel } from "@/utils/trips";
 
 const store = useUserStore();
 const router = useRouter();
@@ -252,6 +252,9 @@ async function load() {
 }
 function recruitOf(o) {
   return recruitFacts(o);
+}
+function showAfter(o) {
+  return showAfterActions(o);
 }
 function dateOf(o) {
   return formatActivityDate(o.start_date);

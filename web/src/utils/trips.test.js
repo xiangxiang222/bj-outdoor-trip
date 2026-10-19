@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { deskTrips, isUpcomingTrip, splitTrips, tripKindLabel } from "./trips";
+import { deskTrips, isUpcomingTrip, showAfterActions, splitTrips, tripKindLabel } from "./trips";
 
 describe("splitTrips", () => {
   const today = "2026-09-05";
@@ -65,6 +65,12 @@ describe("splitTrips", () => {
     expect(desk.depart.map((r) => r.id)).toEqual([9]);
     expect(desk.past.map((r) => r.id)).toEqual([10]);
     expect(desk.review.map((r) => r.id)).toEqual([10]);
+  });
+
+  it("hides complete and review actions until a group trip has formed", () => {
+    expect(showAfterActions({ channel: "trip", schedule_status: "recruiting", guaranteed: false, minGroupSize: 8, joinedCount: 1 })).toBe(false);
+    expect(showAfterActions({ channel: "trip", schedule_status: "confirmed", guaranteed: true })).toBe(true);
+    expect(showAfterActions({ channel: "activity", schedule_status: "recruiting" })).toBe(true);
   });
 
   it("labels activity vs organizer type", () => {

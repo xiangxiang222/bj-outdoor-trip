@@ -75,6 +75,12 @@ function recruitFacts(row, today) {
   return { money: money, gap: gap, date: date, overdue: overdue, line: parts.join(" · ") };
 }
 
+function showAfterActions(row) {
+  if (!row) return false;
+  if (row.channel === "activity") return true;
+  return isFormedTrip(row);
+}
+
 function isReviewTrip(row, today) {
   today = today || todayYmd();
   if (!row || !row.canReview) return false;
@@ -122,4 +128,4 @@ function tripKindLabel(row) {
   return "个人拼团";
 }
 
-module.exports = { todayYmd, isUpcomingTrip, isWaitlistTrip, splitTrips, deskTrips, isUnpaidTrip, isFormedTrip, isRecruitingTrip, isReviewTrip, isRefundTrip, recruitFacts, tripKindLabel };
+module.exports = { todayYmd, isUpcomingTrip, isWaitlistTrip, splitTrips, deskTrips, isUnpaidTrip, isFormedTrip, isRecruitingTrip, isReviewTrip, isRefundTrip, showAfterActions, recruitFacts, tripKindLabel };

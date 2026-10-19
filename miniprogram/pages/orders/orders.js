@@ -1,6 +1,6 @@
 const { request, showError } = require("../../utils/request");
 const { enrollStatusText } = require("../../utils/labels");
-const { deskTrips, tripKindLabel, recruitFacts } = require("../../utils/trips");
+const { deskTrips, tripKindLabel, recruitFacts, showAfterActions } = require("../../utils/trips");
 const app = getApp();
 
 function decorate(item) {
@@ -8,6 +8,7 @@ function decorate(item) {
     statusText: item.channel === "activity" && item.status === "joined" ? "已报名" : enrollStatusText(item),
     kindLabel: tripKindLabel(item),
     recruit: recruitFacts(item),
+    canAfter: showAfterActions(item),
     moneyText:
       item.channel === "activity" && Number(item.pay_amount || 0) === 0
         ? "免费"
