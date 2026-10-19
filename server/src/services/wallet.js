@@ -92,6 +92,52 @@ function clawback(userId, amount, opts = {}) {
   return { debited, shortfall: yuan - debited, balance: row ? row.balance : balanceOf(userId) };
 }
 
+function listWithdrawals(userId) {
+  const pending = getDb()
+    .prepare(
+      `SELECT id, amount, status, created_at FROM payments
+       WHERE user_id=? AND scene='withdraw' AND status='pending'
+       ORDER BY id DESC LIMIT 40`
+    )
+    .all(userId)
+    .map((row) => ({
+      id: `p${row.id}`,
+      amount: Number(row.amount || 0),
+      status: "processing",
+      createdAt: row.created_at,
+      title: "提现到微信零钱",
+    }));
+  const failed = getDb()
+    .prepare(
+      `SELECT id, amount, status, created_at FROM payments
+       WHERE user_id=? AND scene='withdraw' AND status IN ('failed','cancelled')
+       ORDER BY id DESC LIMIT 40`
+    )
+    .all(userId)
+    .map((row) => ({
+      id: `f${row.id}`,
+      amount: Number(row.amount || 0),
+      status: "failed",
+      createdAt: row.created_at,
+      title: "提现到微信零钱",
+    }));
+  const done = getDb()
+    .prepare(
+      `SELECT id, delta, created_at FROM wallet_ledger
+       WHERE user_id=? AND scene='withdraw' AND delta<0
+       ORDER BY id DESC LIMIT 40`
+    )
+    .all(userId)
+    .map((row) => ({
+      id: `l${row.id}`,
+      amount: Math.abs(Number(row.delta || 0)),
+      status: "success",
+      createdAt: row.created_at,
+      title: "提现到微信零钱",
+    }));
+  return pending.concat(done, failed);
+}
+
 function listBills(userId, limit = 50) {
   const n = Math.min(100, Math.max(1, Number(limit) || 50));
   return getDb()
@@ -313,19 +359,39 @@ function tripCounts(userId) {
          AND IFNULL(e.pay_amount,0)>0`
     )
     .get(userId).c;
+  const formed = `IFNULL(s.min_group_size,0)>0 AND (
+         SELECT COUNT(*) FROM enrollments e2
+         LEFT JOIN users u ON u.id=e2.user_id
+         WHERE e2.schedule_id=s.id AND e2.status='joined' AND IFNULL(u.is_virtual,0)=0
+       )>=s.min_group_size`;
   const depart = db
     .prepare(
       `SELECT COUNT(*) AS c FROM enrollments e
        JOIN schedules s ON s.id=e.schedule_id
        WHERE e.user_id=? AND e.status='joined' AND s.status!='cancelled'
          AND s.start_date>=date('now','localtime')
-         AND NOT (e.pay_status='unpaid' AND IFNULL(e.pay_amount,0)>0)`
+         AND NOT (e.pay_status='unpaid' AND IFNULL(e.pay_amount,0)>0)
+         AND (${formed})`
+    )
+    .get(userId).c;
+  const recruiting = db
+    .prepare(
+      `SELECT COUNT(*) AS c FROM enrollments e
+       JOIN schedules s ON s.id=e.schedule_id
+       WHERE e.user_id=? AND e.status='joined' AND s.status!='cancelled'
+         AND NOT (e.pay_status='unpaid' AND IFNULL(e.pay_amount,0)>0)
+         AND IFNULL(s.min_group_size,0)>0
+         AND (
+           SELECT COUNT(*) FROM enrollments e2
+           LEFT JOIN users u ON u.id=e2.user_id
+           WHERE e2.schedule_id=s.id AND e2.status='joined' AND IFNULL(u.is_virtual,0)=0
+         )<s.min_group_size`
     )
     .get(userId).c;
   const couponCount = db
     .prepare("SELECT COUNT(*) AS c FROM user_coupons WHERE user_id=? AND status='unused'")
     .get(userId).c;
-  return { upcoming, waitlist, unpaid, depart, couponCount };
+  return { upcoming, waitlist, unpaid, depart, recruiting, couponCount };
 }
 
 function snapshot(userId) {
@@ -346,6 +412,8 @@ function snapshot(userId) {
     bills: listBills(userId),
     upcomingCount: counts.upcoming,
     departCount: counts.depart,
+    recruitingCount: counts.recruiting,
+    withdrawals: listWithdrawals(userId),
     waitlistCount: counts.waitlist,
     unpaidCount: counts.unpaid,
     couponCount: counts.couponCount,

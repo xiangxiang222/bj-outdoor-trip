@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isUpcomingTrip, splitTrips, tripKindLabel } from "./trips";
+import { deskTrips, isUpcomingTrip, splitTrips, tripKindLabel } from "./trips";
 
 describe("splitTrips", () => {
   const today = "2026-09-05";
@@ -33,6 +33,23 @@ describe("splitTrips", () => {
 
   it("treats today as upcoming", () => {
     expect(isUpcomingTrip({ start_date: today, status: "joined" }, today)).toBe(true);
+  });
+
+  it("keeps a paid unformed trip in 招募中, even after the start date", () => {
+    const desk = deskTrips(
+      [
+        { id: 1, title: "青崖子", start_date: "2026-09-08", status: "joined", pay_status: "paid", pay_amount: 3, minGroupSize: 10, joinedCount: 2, shortfall: 8, guaranteed: false, canReview: false },
+        { id: 2, title: "已成团", start_date: "2026-09-09", status: "joined", pay_status: "paid", pay_amount: 100, minGroupSize: 2, joinedCount: 2, guaranteed: true },
+        { id: 3, title: "过期未成团", start_date: "2026-08-01", status: "joined", pay_status: "paid", pay_amount: 20, minGroupSize: 8, joinedCount: 1, shortfall: 7, guaranteed: false, canReview: true },
+        { id: 4, title: "待付", start_date: "2026-09-10", status: "joined", pay_status: "unpaid", pay_amount: 159, minGroupSize: 10, joinedCount: 1, guaranteed: false },
+      ],
+      today
+    );
+    expect(desk.recruiting.map((r) => r.id)).toEqual([3, 1]);
+    expect(desk.depart.map((r) => r.id)).toEqual([2]);
+    expect(desk.unpaid.map((r) => r.id)).toEqual([4]);
+    expect(desk.past.map((r) => r.id)).toEqual([]);
+    expect(desk.review.map((r) => r.id)).toEqual([]);
   });
 
   it("labels activity vs organizer type", () => {

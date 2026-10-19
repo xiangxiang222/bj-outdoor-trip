@@ -1,12 +1,13 @@
 const { request, showError } = require("../../utils/request");
 const { enrollStatusText } = require("../../utils/labels");
-const { deskTrips, tripKindLabel } = require("../../utils/trips");
+const { deskTrips, tripKindLabel, recruitFacts } = require("../../utils/trips");
 const app = getApp();
 
 function decorate(item) {
   return Object.assign({}, item, {
     statusText: item.channel === "activity" && item.status === "joined" ? "已报名" : enrollStatusText(item),
     kindLabel: tripKindLabel(item),
+    recruit: recruitFacts(item),
     moneyText:
       item.channel === "activity" && Number(item.pay_amount || 0) === 0
         ? "免费"
@@ -19,7 +20,7 @@ function decorate(item) {
 }
 
 Page({
-  data: { loggedIn: false, tab: "depart", holdTab: false, upcoming: [], restUpcoming: [], nextTrip: null, waitlist: [], past: [], unpaid: [], review: [], refund: [], reviewingId: 0, rating: 5, content: "" },
+  data: { loggedIn: false, tab: "depart", holdTab: false, upcoming: [], restUpcoming: [], nextTrip: null, waitlist: [], past: [], unpaid: [], recruiting: [], review: [], refund: [], reviewingId: 0, rating: 5, content: "" },
   onShow() {
     const preset = app.globalData.ordersTab || "";
     if (preset) {
@@ -43,7 +44,8 @@ Page({
         const waitlist = split.waitlist;
         const past = split.past;
         let tab = this.data.tab === "upcoming" ? "depart" : this.data.tab;
-        if (!this.data.holdTab && tab === "depart" && !upcoming.length && waitlist.length) tab = "waitlist";
+        if (!this.data.holdTab && tab === "depart" && split.recruiting.length) tab = "recruiting";
+        else if (!this.data.holdTab && tab === "depart" && !upcoming.length && waitlist.length) tab = "waitlist";
         else if (!this.data.holdTab && tab === "depart" && !upcoming.length && !waitlist.length && past.length) tab = "past";
         this.setData({
           upcoming,
@@ -52,6 +54,7 @@ Page({
           waitlist,
           past,
           unpaid: split.unpaid,
+          recruiting: split.recruiting,
           review: split.review,
           refund: split.refund,
           tab,

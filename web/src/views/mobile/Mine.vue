@@ -54,6 +54,13 @@
           </span>
           <span>候补</span>
         </button>
+        <button type="button" @click="goOrders('recruiting')">
+          <span class="mine-order-ico">
+            <img :src="'/static/mine/order-recruit.png'" alt="" />
+            <em v-if="hub.recruitingCount" class="mine-badge">{{ hub.recruitingCount > 99 ? "99+" : hub.recruitingCount }}</em>
+          </span>
+          <span>招募中</span>
+        </button>
         <button type="button" @click="goOrders('depart')">
           <span class="mine-order-ico">
             <img :src="'/static/mine/order-go.png'" alt="" />

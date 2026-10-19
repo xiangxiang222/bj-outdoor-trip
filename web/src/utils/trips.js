@@ -36,9 +36,38 @@ export function isUnpaidTrip(row) {
   return row.pay_status === "unpaid" && Number(row.pay_amount || row.payAmount || 0) > 0;
 }
 
+export function isFormedTrip(row) {
+  if (!row || row.schedule_status === "cancelled" || row.status === "cancelled") return false;
+  if (row.guaranteed === true || row.schedule_status === "confirmed") return true;
+  const min = Number(row.minGroupSize ?? row.min_group_size);
+  const joined = Number(row.joinedCount ?? row.realEnrolled);
+  return Number.isFinite(min) && min > 0 && Number.isFinite(joined) && joined >= min;
+}
+
+export function isRecruitingTrip(row) {
+  if (!row || row.status !== "joined") return false;
+  if (row.schedule_status === "cancelled") return false;
+  if (isUnpaidTrip(row) || isFormedTrip(row)) return false;
+  const min = Number(row.minGroupSize ?? row.min_group_size);
+  return Number.isFinite(min) && min > 0;
+}
+
+export function recruitFacts(row, today = todayYmd()) {
+  const amount = Number(row?.payAmount || row?.pay_amount || 0);
+  const paid = row?.pay_status === "paid" || Number(row?.paidAmount || 0) > 0;
+  const free = row?.channel === "activity" && amount === 0;
+  const money = free ? "免费" : paid ? `已支付 ¥${amount}` : "";
+  const gap = Math.max(0, Number(row?.shortfall ?? 0));
+  const date = String(row?.start_date || row?.startDate || "").slice(0, 10);
+  const overdue = Boolean(date) && date < today;
+  const parts = [money, gap > 0 ? `还差 ${gap} 人` : "人数未齐"].filter(Boolean);
+  return { money, gap, date, overdue, line: parts.join(" · ") };
+}
+
 export function isReviewTrip(row, today = todayYmd()) {
   if (!row || !row.canReview) return false;
   if (row.schedule_status === "cancelled") return false;
+  if (isRecruitingTrip(row)) return false;
   return String(row.start_date || row.startDate || "").slice(0, 10) < today;
 }
 
@@ -51,17 +80,23 @@ export function deskTrips(rows, today = todayYmd()) {
   const unpaid = [];
   const review = [];
   const refund = [];
+  const recruiting = [];
   for (const row of Array.isArray(rows) ? rows : []) {
     if (isUnpaidTrip(row)) unpaid.push(row);
+    if (isRecruitingTrip(row)) recruiting.push(row);
     if (isReviewTrip(row, today)) review.push(row);
     if (isRefundTrip(row)) refund.push(row);
   }
+  const byDate = (a, b) => String(a.start_date || a.startDate || "").localeCompare(String(b.start_date || b.startDate || ""));
+  recruiting.sort(byDate);
   return {
     ...split,
+    past: split.past.filter((row) => !isRecruitingTrip(row)),
     unpaid,
     review,
     refund,
-    depart: split.upcoming.filter((row) => !isUnpaidTrip(row)),
+    recruiting,
+    depart: split.upcoming.filter((row) => !isUnpaidTrip(row) && !isRecruitingTrip(row)),
   };
 }
 

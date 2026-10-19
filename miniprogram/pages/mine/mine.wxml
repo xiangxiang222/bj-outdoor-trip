@@ -65,6 +65,13 @@
       </view>
       <view class="muted">{{tr.t('候补', lang)}}</view>
     </view>
+    <view bindtap="goOrders" data-tab="recruiting">
+      <view class="mine-order-ico">
+        <image src="{{iconBase}}order-recruit.png" mode="aspectFit" />
+        <text wx:if="{{hub.recruitingCount}}" class="mine-badge">{{hub.recruitingCount > 99 ? '99+' : hub.recruitingCount}}</text>
+      </view>
+      <view class="muted">{{tr.t('招募中', lang)}}</view>
+    </view>
     <view bindtap="goOrders" data-tab="depart">
       <view class="mine-order-ico">
         <image src="{{iconBase}}order-go.png" mode="aspectFit" />
