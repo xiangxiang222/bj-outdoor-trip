@@ -20,7 +20,7 @@
         {{ s.eligibility.reason }}
         <router-link to="/m/student">去校园认证</router-link>
       </p>
-      <p v-if="s.private" class="muted">这是加密团，报名需要发起人给的口令。</p>
+      <p v-if="s.private" class="muted">这是口令团，报名需要发起人给的口令。</p>
     </div></div>
 
     <template v-if="s.joinCodeRequired && !s.joinCode">
@@ -353,7 +353,7 @@ async function submit() {
     return;
   }
   if (s.value.joinCodeRequired && !s.value.joinCode && !String(form.value.joinCode || "").trim()) {
-    err.value = "这是加密团，请填写入团口令";
+    err.value = "这是口令团，请填写入团口令";
     return;
   }
   if (isActivity.value) {

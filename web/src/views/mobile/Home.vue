@@ -141,7 +141,7 @@
       </div>
       <div class="feed-body">
         <p class="feed-when">{{ feedWhen(s.startDate, s.meetupTime) }} · {{ s.city || s.route?.region }}</p>
-        <h3 class="feed-title"><TripKind :kind="s.kind" :type="s.organizerType" :channel="s.channel" /> <span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">加密团</span> {{ s.route?.title }}</h3>
+        <h3 class="feed-title"><TripKind :kind="s.kind" :type="s.organizerType" :channel="s.channel" /> <span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">口令团</span> {{ s.route?.title }}</h3>
         <p class="feed-host">{{ hostName(s) }}<template v-if="s.meetupPoint"> · {{ s.meetupPoint }}</template></p>
         <p class="feed-tagline" v-if="taglineOf(s)">{{ taglineOf(s) }}</p>
         <p class="feed-price">

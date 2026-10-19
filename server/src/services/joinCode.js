@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const { getDb } = require("../db");
 
-const PRIVATE_LABEL = "加密团";
+const PRIVATE_LABEL = "口令团";
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 function normalizeJoinCode(raw) {
@@ -68,7 +68,7 @@ function assertJoinCode(sch, given, user) {
   const stored = normalizeJoinCode(sch && sch.join_code);
   if (!stored) return;
   if (user && sch.organizer_id && Number(user.id) === Number(sch.organizer_id)) return;
-  if (!joinCodesMatch(stored, given)) fail("这是加密团，请填写正确的入团口令");
+  if (!joinCodesMatch(stored, given)) fail("这是口令团，请填写正确的入团口令");
 }
 
 module.exports = {

@@ -160,8 +160,8 @@
     </select>
     <p class="muted">中奖后立刻看到奖品和中奖率，跟团结束后才能领奖。奖品可在后台再改。</p>
 
-    <label class="check-row"><input type="checkbox" v-model="form.privateJoin" /> 加密团（报名要口令）</label>
-    <p class="muted">列表会显示「加密团」。把口令发给要来的人；不填则自动生成 6 位。</p>
+    <label class="check-row"><input type="checkbox" v-model="form.privateJoin" /> 口令团（报名要口令）</label>
+    <p class="muted">列表会显示「口令团」。把口令发给要来的人；不填则自动生成 6 位。</p>
     <input v-if="form.privateJoin" class="input" v-model="form.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" />
 
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
