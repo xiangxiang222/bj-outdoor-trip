@@ -67,7 +67,7 @@
     </view>
     <view bindtap="goOrders" data-tab="recruiting">
       <view class="mine-order-ico">
-        <image src="{{iconBase}}order-recruit.png" mode="aspectFit" />
+        <image src="/images/order-recruit.png" mode="aspectFit" />
         <text wx:if="{{hub.recruitingCount}}" class="mine-badge">{{hub.recruitingCount > 99 ? '99+' : hub.recruitingCount}}</text>
       </view>
       <view class="muted">{{tr.t('招募中', lang)}}</view>
@@ -85,13 +85,6 @@
         <text wx:if="{{hub.reviewCount}}" class="mine-badge">{{hub.reviewCount > 99 ? '99+' : hub.reviewCount}}</text>
       </view>
       <view class="muted">{{tr.t('待评价', lang)}}</view>
-    </view>
-    <view bindtap="goOrders" data-tab="refund">
-      <view class="mine-order-ico">
-        <image src="{{iconBase}}order-refund.png?v=5" mode="aspectFit" />
-        <text wx:if="{{hub.refundCount}}" class="mine-badge">{{hub.refundCount > 99 ? '99+' : hub.refundCount}}</text>
-      </view>
-      <view class="muted">{{tr.t('退款', lang)}}</view>
     </view>
   </view>
 

@@ -52,6 +52,21 @@ describe("splitTrips", () => {
     expect(desk.review.map((r) => r.id)).toEqual([]);
   });
 
+  it("treats a paid recruiting trip as 招募中 even without a headcount", () => {
+    const desk = deskTrips(
+      [
+        { id: 8, start_date: "2026-08-01", status: "joined", pay_status: "paid", pay_amount: 3, channel: "trip", schedule_status: "recruiting", canReview: true },
+        { id: 9, start_date: "2026-09-12", status: "joined", pay_status: "paid", pay_amount: 80, channel: "trip", schedule_status: "confirmed" },
+        { id: 10, start_date: "2026-08-02", status: "joined", pay_status: "paid", pay_amount: 0, channel: "activity", schedule_status: "recruiting", canReview: true },
+      ],
+      today
+    );
+    expect(desk.recruiting.map((r) => r.id)).toEqual([8]);
+    expect(desk.depart.map((r) => r.id)).toEqual([9]);
+    expect(desk.past.map((r) => r.id)).toEqual([10]);
+    expect(desk.review.map((r) => r.id)).toEqual([10]);
+  });
+
   it("labels activity vs organizer type", () => {
     expect(tripKindLabel({ channel: "activity" })).toBe("同城局");
     expect(tripKindLabel({ channel: "trip", organizerType: "official" })).toBe("官方团");

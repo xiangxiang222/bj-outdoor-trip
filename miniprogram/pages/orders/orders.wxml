@@ -15,7 +15,6 @@
     <view class="chip {{tab=='recruiting'?'on':''}}" bindtap="setTab" data-tab="recruiting">{{tr.t('招募中', lang)}} {{tr.t(recruiting.length, lang)}}</view>
     <view class="chip {{tab=='depart'?'on':''}}" bindtap="setTab" data-tab="depart">{{tr.t('待出发', lang)}} {{tr.t(upcoming.length, lang)}}</view>
     <view class="chip {{tab=='review'?'on':''}}" bindtap="setTab" data-tab="review">{{tr.t('待评价', lang)}} {{tr.t(review.length, lang)}}</view>
-    <view class="chip {{tab=='refund'?'on':''}}" bindtap="setTab" data-tab="refund">{{tr.t('退款', lang)}} {{tr.t(refund.length, lang)}}</view>
     <view class="chip {{tab=='past'?'on':''}}" bindtap="setTab" data-tab="past">{{tr.t('历史', lang)}} {{tr.t(past.length, lang)}}</view>
   </view>
 
