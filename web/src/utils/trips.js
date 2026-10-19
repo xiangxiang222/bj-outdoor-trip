@@ -36,20 +36,25 @@ export function isUnpaidTrip(row) {
   return row.pay_status === "unpaid" && Number(row.pay_amount || row.payAmount || 0) > 0;
 }
 
+function isGroupTrip(row) {
+  return Boolean(row) && row.channel !== "activity";
+}
+
 export function isFormedTrip(row) {
-  if (!row || row.schedule_status === "cancelled" || row.status === "cancelled") return false;
-  if (row.guaranteed === true || row.schedule_status === "confirmed") return true;
+  if (!isGroupTrip(row) || row.schedule_status === "cancelled" || row.status === "cancelled") return false;
+  if (row.guaranteed === true || row.schedule_status === "confirmed" || row.schedule_status === "full" || row.schedule_status === "finished") {
+    return true;
+  }
   const min = Number(row.minGroupSize ?? row.min_group_size);
   const joined = Number(row.joinedCount ?? row.realEnrolled);
   return Number.isFinite(min) && min > 0 && Number.isFinite(joined) && joined >= min;
 }
 
 export function isRecruitingTrip(row) {
-  if (!row || row.status !== "joined") return false;
+  if (!isGroupTrip(row) || row.status !== "joined") return false;
   if (row.schedule_status === "cancelled") return false;
   if (isUnpaidTrip(row) || isFormedTrip(row)) return false;
-  const min = Number(row.minGroupSize ?? row.min_group_size);
-  return Number.isFinite(min) && min > 0;
+  return true;
 }
 
 export function recruitFacts(row, today = todayYmd()) {

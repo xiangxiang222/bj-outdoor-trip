@@ -56,7 +56,7 @@
         </button>
         <button type="button" @click="goOrders('recruiting')">
           <span class="mine-order-ico">
-            <img :src="'/static/mine/order-recruit.png'" alt="" />
+            <img :src="'/static/mine/order-recruit.png?v=2'" alt="" />
             <em v-if="hub.recruitingCount" class="mine-badge">{{ hub.recruitingCount > 99 ? "99+" : hub.recruitingCount }}</em>
           </span>
           <span>招募中</span>
@@ -74,13 +74,6 @@
             <em v-if="hub.reviewCount" class="mine-badge">{{ hub.reviewCount > 99 ? "99+" : hub.reviewCount }}</em>
           </span>
           <span>待评价</span>
-        </button>
-        <button type="button" @click="goOrders('refund')">
-          <span class="mine-order-ico">
-            <img :src="'/static/mine/order-refund.png?v=5'" alt="" />
-            <em v-if="hub.refundCount" class="mine-badge">{{ hub.refundCount > 99 ? "99+" : hub.refundCount }}</em>
-          </span>
-          <span>退款</span>
         </button>
       </div>
 

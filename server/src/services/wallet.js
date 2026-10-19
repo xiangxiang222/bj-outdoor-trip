@@ -371,21 +371,17 @@ function tripCounts(userId) {
        WHERE e.user_id=? AND e.status='joined' AND s.status!='cancelled'
          AND s.start_date>=date('now','localtime')
          AND NOT (e.pay_status='unpaid' AND IFNULL(e.pay_amount,0)>0)
-         AND (${formed})`
+         AND (s.status IN ('confirmed','full') OR (${formed}))`
     )
     .get(userId).c;
   const recruiting = db
     .prepare(
       `SELECT COUNT(*) AS c FROM enrollments e
        JOIN schedules s ON s.id=e.schedule_id
-       WHERE e.user_id=? AND e.status='joined' AND s.status!='cancelled'
+       WHERE e.user_id=? AND e.status='joined' AND s.status='recruiting'
+         AND IFNULL(s.channel,'trip')!='activity'
          AND NOT (e.pay_status='unpaid' AND IFNULL(e.pay_amount,0)>0)
-         AND IFNULL(s.min_group_size,0)>0
-         AND (
-           SELECT COUNT(*) FROM enrollments e2
-           LEFT JOIN users u ON u.id=e2.user_id
-           WHERE e2.schedule_id=s.id AND e2.status='joined' AND IFNULL(u.is_virtual,0)=0
-         )<s.min_group_size`
+         AND NOT (${formed})`
     )
     .get(userId).c;
   const couponCount = db
