@@ -1,28 +1,51 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="card" wx:if="{{data}}">
-  <view class="pad muted">{{tr.t(data.isOwner ? '你的团费' : '帮 ' + data.travelerName + ' 付团费', lang)}}</view>
-  <view class="pad title">{{tr.t(data.title, lang)}}</view>
-  <view class="pad muted">{{tr.t(data.startDate, lang)}} {{tr.t('出发', lang)}}</view>
-  <view class="pad price">{{tr.t('待付 ¥', lang)}}{{tr.t(data.remainAmount, lang)}} {{tr.t('/ 共 ¥', lang)}}{{tr.t(data.payAmount, lang)}}</view>
-  <view class="pad muted" wx:if="{{data.paidAmount}}">{{tr.t('已收到 ¥', lang)}}{{tr.t(data.paidAmount, lang)}}</view>
-  <view class="pad muted">{{tr.t('可以自己付、帮人付全款，或改成更少金额转发给朋友一起分摊。退款按付款人原路退回。', lang)}}</view>
-</view>
-<view class="card" wx:if="{{data && data.contributors && data.contributors.length}}">
-  <view class="pad title">{{tr.t('已付款', lang)}}</view>
-  <view class="pad muted" wx:for="{{data.contributors}}" wx:key="createdAt">{{tr.t(item.self ? '你' : item.nickname, lang)}} · ¥{{tr.t(item.amount, lang)}} · {{tr.t(item.remark, lang)}}</view>
-</view>
-<block wx:if="{{data && data.canPay}}">
-  <view class="pad muted">{{tr.t('本次支付金额（元）', lang)}}</view>
-  <input class="input" type="number" value="{{amount}}" bindinput="setAmount" />
-  <view class="btn" wx:if="{{walletCanCover}}" bindtap="payWallet">{{tr.t('余额支付 ¥', lang)}}{{tr.t(amount, lang)}}{{tr.t('（余额', lang)}} {{tr.t(walletBalance, lang)}}）</view>
-  <view class="btn {{walletCanCover ? 'ghost' : ''}}" bindtap="pay">{{tr.t(payLabel, lang)}}</view>
-  <view class="btn ghost" bindtap="fillRemain">{{tr.t('付剩余全部 ¥', lang)}}{{tr.t(data.remainAmount, lang)}}</view>
+<block wx:if="{{data}}">
+  <view class="pay-hero">
+    <view class="muted" wx:if="{{data.isOwner}}">{{tr.t('已占座，请支付团费', lang)}}</view>
+    <view class="muted" wx:else>{{tr.t('帮付团费', lang)}} · {{data.travelerName}}</view>
+    <view class="pay-title">{{tr.t(data.title, lang)}}</view>
+    <view class="muted">{{tr.t(data.startDate, lang)}} {{tr.t('出发', lang)}}</view>
+    <view class="pay-due">¥{{data.remainAmount}}</view>
+    <view class="muted">{{tr.t('待付 / 共 ¥', lang)}}{{data.payAmount}}</view>
+    <view class="muted" wx:if="{{data.paidAmount}}">{{tr.t('已收到 ¥', lang)}}{{data.paidAmount}}</view>
+  </view>
+
+  <view class="pay-modes" wx:if="{{data.canPay && data.isOwner}}">
+    <view class="pay-mode {{mode=='self'?'on':''}}" data-mode="self" bindtap="setMode">{{tr.t('自己支付', lang)}}</view>
+    <view class="pay-mode {{mode=='proxy'?'on':''}}" data-mode="proxy" bindtap="setMode">{{tr.t('邀请代付', lang)}}</view>
+    <view class="pay-mode {{mode=='split'?'on':''}}" data-mode="split" bindtap="setMode">{{tr.t('一起分担', lang)}}</view>
+  </view>
+  <view class="pay-modes" wx:elif="{{data.canPay}}">
+    <view class="pay-mode {{mode=='self'?'on':''}}" data-mode="self" bindtap="setMode">{{tr.t('代付全款', lang)}}</view>
+    <view class="pay-mode {{mode=='split'?'on':''}}" data-mode="split" bindtap="setMode">{{tr.t('分担一部分', lang)}}</view>
+  </view>
+
+  <view class="card" wx:if="{{data.canPay && mode=='proxy'}}">
+    <view class="pad">{{tr.t('朋友打开链接后可以付清这笔团费。', lang)}} ¥{{data.remainAmount}}</view>
+    <button class="btn" open-type="share">{{tr.t('发给朋友代付', lang)}}</button>
+  </view>
+
+  <view class="card" wx:elif="{{data.canPay}}">
+    <block wx:if="{{mode=='split'}}">
+      <view class="pad muted">{{tr.t('你先付的金额（元）', lang)}}</view>
+      <input class="input" type="number" value="{{amount}}" bindinput="setAmount" />
+    </block>
+    <view class="pad muted" wx:if="{{walletBalance}}">{{tr.t('余额', lang)}} ¥{{walletBalance}}</view>
+    <view class="btn" wx:if="{{walletCanCover}}" bindtap="payWallet">{{tr.t('余额支付', lang)}} ¥{{amount}}</view>
+    <view class="btn {{walletCanCover && mode=='split' ? 'ghost' : ''}}" wx:if="{{!walletCanCover || mode=='split'}}" bindtap="pay">{{tr.t(payLabel, lang)}}</view>
+    <button class="btn ghost" wx:if="{{mode=='split'}}" open-type="share">{{tr.t('发给朋友付剩下的', lang)}}</button>
+  </view>
+
+  <view class="card" wx:if="{{data.contributors && data.contributors.length}}">
+    <view class="pad title">{{tr.t('已付款', lang)}}</view>
+    <view class="pad muted" wx:for="{{data.contributors}}" wx:key="createdAt">{{tr.t(item.self ? '你' : item.nickname, lang)}} · ¥{{item.amount}} · {{tr.t(item.remark, lang)}}</view>
+  </view>
+
+  <view class="pad muted" wx:if="{{!data.canPay && data.company}}">{{tr.t('公司团由开团方统一支付。', lang)}}</view>
+  <view class="pad muted" wx:elif="{{!data.canPay && data.cancelled}}">{{tr.t('该报名已取消或拼团已解散。', lang)}}</view>
+  <view class="pad muted" wx:elif="{{!data.canPay && data.payStatus=='paid'}}">{{tr.t('团费已付清。', lang)}}</view>
+  <view class="pad" wx:if="{{msg}}" style="color:#bc4749">{{tr.t(msg, lang)}}</view>
+  <view class="btn {{data.payStatus=='paid' ? 'clay' : 'ghost'}}" wx:if="{{data.scheduleId}}" bindtap="goTrip">{{tr.t('查看行程', lang)}}</view>
 </block>
-<view class="pad muted" wx:elif="{{data && data.company}}">{{tr.t('公司团由开团方统一支付。', lang)}}</view>
-<view class="pad muted" wx:elif="{{data && data.cancelled}}">{{tr.t('该报名已取消或拼团已解散。', lang)}}</view>
-<view class="pad muted" wx:elif="{{data && data.payStatus=='paid'}}">{{tr.t('团费已付清。', lang)}}</view>
-<view class="pad" wx:if="{{msg}}" style="color:#bc4749">{{tr.t(msg, lang)}}</view>
-<button class="btn ghost" wx:if="{{data && data.remainAmount>0 && !data.cancelled && !data.company}}" open-type="share">{{tr.t('转发给朋友分摊', lang)}}</button>
-<view class="btn ghost" wx:if="{{data && data.scheduleId}}" bindtap="goTrip">{{tr.t('查看行程', lang)}}</view>
 <view class="pad" wx:if="{{err}}" style="color:#bc4749">{{tr.t(err, lang)}}</view>

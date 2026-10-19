@@ -1,6 +1,5 @@
 const { request } = require("../../utils/request");
 const { parseIdCard } = require("../../utils/idcard");
-const { invokeWechatPay } = require("../../utils/pay");
 const app = getApp();
 Page({
   data: {
@@ -220,16 +219,16 @@ Page({
             supplies: (this.data.supplies || []).filter((p) => p.qty > 0).map((p) => ({ code: p.code, qty: p.qty })),
           };
       const res = await request("/enroll", "POST", payload);
-      if (res.data.needPay) {
-        if (res.data.wechatPay && res.data.wechatPay.mock) {
-          await request("/pay/mock-success", "POST", { tradeNo: res.data.tradeNo, enrollmentId: res.data.enrollmentId });
-        } else {
-          await invokeWechatPay(res.data);
-        }
-      }
-      wx.showToast({ title: res.data.waitlisted ? "已加入候补" : "报名成功" });
+      const joined = res.data || {};
+      const payable = joined.payShareToken && joined.status === "joined" && joined.payStatus === "unpaid";
+      if (!payable) wx.showToast({ title: joined.waitlisted ? "已加入候补" : "报名成功" });
       const tpl = this.data.mergeTpl;
-      const go = () => wx.redirectTo({ url: "/pages/schedule/schedule?id=" + this.data.id });
+      const go = () =>
+        wx.redirectTo({
+          url: payable
+            ? "/pages/pay/pay?token=" + joined.payShareToken
+            : "/pages/schedule/schedule?id=" + this.data.id,
+        });
       if (tpl && wx.requestSubscribeMessage) {
         wx.requestSubscribeMessage({
           tmplIds: [tpl],

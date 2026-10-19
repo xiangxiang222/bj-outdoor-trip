@@ -196,11 +196,7 @@
     <image wx:if="{{s.consultGroupQr}}" src="{{s.consultGroupQr}}" style="width:280rpx;height:280rpx;margin:16rpx" />
     <view class="pad muted">{{tr.t(s.consultGroup || contacts.officialWechat, lang)}}</view>
     <view wx:if="{{s.myEnrollment.status=='joined'}}" class="btn" bindtap="goAfter">{{tr.t('完成活动 / 评选', lang)}}</view>
-  <block wx:if="{{s.myEnrollment.status=='joined' && s.myEnrollment.payStatus=='unpaid' && s.myEnrollment.remainAmount>0}}">
-    <view class="pad">{{tr.t('费用待付 ¥', lang)}}{{tr.t(s.myEnrollment.remainAmount, lang)}}</view>
-    <view class="btn" bindtap="payMine">{{tr.t('自己支付', lang)}}</view>
-    <view class="btn ghost" bindtap="invitePay">{{tr.t('邀请代付或分摊', lang)}}</view>
-  </block>
+    <view class="pad" wx:if="{{s.myEnrollment.status=='joined' && s.myEnrollment.payStatus=='unpaid' && s.myEnrollment.remainAmount>0}}">{{tr.t('费用待付 ¥', lang)}}{{tr.t(s.myEnrollment.remainAmount, lang)}}{{tr.t('，点下方去支付。', lang)}}</view>
   </block>
   <block wx:else>
   <view class="pad">{{tr.t('1. 点空位可选座 · 早报名早选座', lang)}}</view>
@@ -209,11 +205,7 @@
   <view class="pad muted">{{tr.t(s.consultGroup || contacts.officialWechat, lang)}}</view>
   <view class="pad">{{tr.t('3. 候选团 / 4. 替代团请在报名页勾选，不成团自动转团多退少补', lang)}}</view>
   <view wx:if="{{s.myEnrollment.status=='joined'}}" class="btn" bindtap="goAfter">{{tr.t('完成活动 / 评选', lang)}}</view>
-  <block wx:if="{{s.myEnrollment.status=='joined' && s.myEnrollment.payStatus=='unpaid' && s.myEnrollment.remainAmount>0}}">
-    <view class="pad">{{tr.t('团费待付 ¥', lang)}}{{tr.t(s.myEnrollment.remainAmount, lang)}} / ¥{{tr.t(s.myEnrollment.payAmount, lang)}}</view>
-    <view class="btn" bindtap="payMine">{{tr.t('自己支付', lang)}}</view>
-    <view class="btn ghost" bindtap="invitePay">{{tr.t('邀请代付或分摊', lang)}}</view>
-  </block>
+  <view class="pad" wx:if="{{s.myEnrollment.status=='joined' && s.myEnrollment.payStatus=='unpaid' && s.myEnrollment.remainAmount>0}}">{{tr.t('团费待付 ¥', lang)}}{{tr.t(s.myEnrollment.remainAmount, lang)}} / ¥{{tr.t(s.myEnrollment.payAmount, lang)}}{{tr.t('，点下方去支付。', lang)}}</view>
   </block>
 </view>
 <view class="pad title" wx:if="{{s.combo.enabled}}">{{tr.t('组合团 · 另一半条件', lang)}}</view>
@@ -232,7 +224,7 @@
   <text wx:if="{{!isActivity && item.lifeStage}}"> {{tr.t(item.lifeStage, lang)}}</text>
   <text wx:if="{{item.waitlisted}}" class="muted"> {{tr.t('候补', lang)}}</text>
   <text wx:elif="{{item.applied}}" class="muted"> {{tr.t('待确认', lang)}}</text>
-  <text wx:elif="{{!isActivity || !isFree && item.canPay}}" class="pay-unpaid" catchtap="payFor" data-id="{{item.enrollmentId}}" data-name="{{item.name}}"> {{tr.t(item.payText, lang)}}{{tr.t(item.canPay ? ' · 去支付' : '', lang)}}</text>
+  <text wx:elif="{{!isActivity || !isFree && item.canPay}}" class="pay-unpaid" catchtap="openPay" data-token="{{item.payShareToken}}"> {{tr.t(item.payText, lang)}}{{tr.t(item.canPay ? ' · 去支付' : '', lang)}}</text>
   <text wx:elif="{{!isActivity || !isFree}}" class="{{item.payStatus=='paid' ? 'pay-paid' : 'muted'}}"> {{tr.t(item.payText, lang)}}</text>
 </view>
 <view id="trip-reviews" class="pad title">{{tr.t('本团评价', lang)}} <text class="muted" wx:if="{{reviews.count}}">{{tr.t(reviews.avg, lang)}}{{tr.t('分 ·', lang)}} {{tr.t(reviews.count, lang)}}{{tr.t('条', lang)}}</text></view>
@@ -386,6 +378,12 @@
       <view class="muted" wx:if="{{priceDock.sub}}">{{tr.t(priceDock.sub, lang)}}</view>
     </view>
     <view class="btn dock-cta" bindtap="enroll">{{tr.t(ctaText, lang)}}</view>
+  </view>
+  <view class="enroll-bar" wx:elif="{{s.myEnrollment.status=='joined' && s.myEnrollment.remainAmount>0 && s.myEnrollment.payShareToken}}">
+    <view class="enroll-price">
+      <text class="strong">{{tr.t('待付 ¥', lang)}}{{tr.t(s.myEnrollment.remainAmount, lang)}}</text>
+    </view>
+    <view class="btn dock-cta" bindtap="invitePay">{{tr.t('去支付', lang)}}</view>
   </view>
   <view class="pad muted" wx:elif="{{s.myEnrollment}}" style="text-align:center">{{tr.t(ticket.title || '已报名', lang)}}<text wx:if="{{isActivity && s.myEnrollment.status != 'waitlist'}}">{{tr.t('，到场找发起人即可', lang)}}</text></view>
 </view>

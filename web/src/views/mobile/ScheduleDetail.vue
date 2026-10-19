@@ -258,12 +258,7 @@
           <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本局群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
           <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
           <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
-          <template v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">
-            <p>费用待付 ¥{{ s.myEnrollment.remainAmount }}。可用余额或微信付款。</p>
-            <button v-if="walletCanCover(s.myEnrollment.remainAmount)" class="btn block" type="button" @click="payMine('wallet')">余额支付 ¥{{ s.myEnrollment.remainAmount }}</button>
-            <button class="btn block" type="button" :class="{ ghost: walletCanCover(s.myEnrollment.remainAmount) }" :style="walletCanCover(s.myEnrollment.remainAmount) ? 'margin-top:8px' : ''" @click="payMine()">微信支付</button>
-            <button class="btn ghost block" type="button" style="margin-top:8px" @click="invitePay">邀请代付或分摊</button>
-          </template>
+          <p v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">费用待付 ¥{{ s.myEnrollment.remainAmount }}，点下方去支付。</p>
         </template>
         <template v-else>
           <p v-if="s.myEnrollment.status === 'applied'">已报名，待确认出行名单。{{ s.oversub?.copy }}</p>
@@ -282,12 +277,7 @@
             <span>如本团未成团，自动加入相同行程的其他日期</span>
           </label>
           <button class="btn ghost block" style="margin-top:8px" :disabled="savingFallbacks" @click="saveFallbacks">保存备选</button>
-          <template v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">
-            <p>团费待付 ¥{{ s.myEnrollment.remainAmount }} / ¥{{ s.myEnrollment.payAmount }}。可余额付、微信付、请人代付，或转发分摊。</p>
-            <button v-if="walletCanCover(s.myEnrollment.remainAmount)" class="btn block" type="button" @click="payMine('wallet')">余额支付 ¥{{ s.myEnrollment.remainAmount }}</button>
-            <button class="btn block" type="button" :class="{ ghost: walletCanCover(s.myEnrollment.remainAmount) }" :style="walletCanCover(s.myEnrollment.remainAmount) ? 'margin-top:8px' : ''" @click="payMine()">微信支付</button>
-            <button class="btn ghost block" type="button" style="margin-top:8px" @click="invitePay">邀请代付或分摊</button>
-          </template>
+          <p v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">团费待付 ¥{{ s.myEnrollment.remainAmount }} / ¥{{ s.myEnrollment.payAmount }}，点下方去支付。</p>
           <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
         </template>
       </div></div>
@@ -319,7 +309,7 @@
           <span
             v-else-if="!isActivity || !isFree"
             :class="{ 'pay-paid': c.payStatus === 'paid', 'pay-unpaid': c.canPay }"
-            @click="c.canPay && payFor(c)"
+            @click="c.canPay && openPay(c)"
           >{{ rosterPayText(c) }}</span>
         </div>
         <p class="muted" v-if="!s.chain?.length">还没有人报名，快来占第一名。</p>
@@ -427,6 +417,10 @@
         </div>
         <button class="btn" type="button" @click="$router.push(enrollHref)">{{ ctaText }}</button>
       </div>
+      <div v-else-if="s.myEnrollment?.status === 'joined' && s.myEnrollment.remainAmount > 0 && s.myEnrollment.payShareToken" class="enroll-bar">
+        <div class="enroll-price"><b>待付 ¥{{ s.myEnrollment.remainAmount }}</b></div>
+        <button class="btn" type="button" @click="invitePay">去支付</button>
+      </div>
       <p v-else-if="s.myEnrollment" class="muted" style="text-align:center;margin:0 0 8px">{{ ticket?.title || "已报名" }}<template v-if="isActivity && s.myEnrollment.status !== 'waitlist'">，到场找发起人即可</template></p>
       <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>
       <button v-if="s.isOrganizer && s.status !== 'cancelled'" class="btn ghost block" style="margin-top:8px;color:var(--clay)" @click="showDissolve = true">解散拼团</button>
@@ -502,7 +496,6 @@ import RouteProfile from "@/components/RouteProfile.vue";
 import LivePulse from "@/components/LivePulse.vue";
 import CampusNamePicker from "@/components/CampusNamePicker.vue";
 import TripKind from "@/components/TripKind.vue";
-import { liveWechatPay, MINIPROGRAM_PAY_HINT } from "@/utils/wechatPay";
 
 const TAB_IDS = ["trip", "route", "rules"];
 const route = useRoute();
@@ -803,13 +796,9 @@ function rosterPayText(c) {
   return seat + payStatusText(c.payStatus);
 }
 
-async function payMine(channel) {
-  if (!s.value?.myEnrollment) return;
-  await payFor({ enrollmentId: s.value.myEnrollment.id, name: "自己" }, channel);
-}
-
-function walletCanCover(amount) {
-  return Number(store.profile?.walletBalance || 0) >= Number(amount || 0) && Number(amount || 0) > 0;
+function openPay(row) {
+  if (row?.payShareToken) router.push("/m/pay/" + row.payShareToken);
+  else msg.value = "暂时无法打开支付";
 }
 
 function invitePay() {
@@ -950,25 +939,6 @@ async function favRoute() {
     if (r.favored) await http.delete("/favorites/" + r.id);
     else await http.post("/favorites/" + r.id);
     if (routeDetail.value) routeDetail.value = { ...routeDetail.value, favored: !r.favored };
-  } catch (e) {
-    msg.value = e.message;
-  }
-}
-
-async function payFor(c, channel) {
-  if (!store.token) {
-    router.push("/m/login?redirect=" + encodeURIComponent(route.fullPath));
-    return;
-  }
-  try {
-    const res = await http.post("/pay/for-enrollment", { enrollmentId: c.enrollmentId, channel });
-    if (liveWechatPay(res.data)) {
-      msg.value = MINIPROGRAM_PAY_HINT;
-      return;
-    }
-    msg.value = "已为 " + c.name + " 完成支付";
-    if (channel === "wallet") await store.fetchMe().catch(() => {});
-    await load();
   } catch (e) {
     msg.value = e.message;
   }

@@ -1,5 +1,4 @@
-const { request, setAuth } = require("../../utils/request");
-const { invokeWechatPay, ensureWechatCode } = require("../../utils/pay");
+const { request } = require("../../utils/request");
 const { payStatusText, starText } = require("../../utils/labels");
 const { shareCover, absMedia } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
@@ -408,46 +407,13 @@ Page({
     if (kind === "guide" && id) wx.navigateTo({ url: "/pages/guide/guide?id=" + id });
     else if (userId || id) wx.navigateTo({ url: "/pages/user/user?id=" + (userId || id) });
   },
-  async payFor(e) {
-    if (!app.globalData.token) {
-      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/schedule/schedule?id=" + this.data.id) });
+  openPay(e) {
+    const token = e.currentTarget.dataset.token;
+    if (!token) {
+      wx.showToast({ title: "暂时无法打开支付", icon: "none" });
       return;
     }
-    const enrollmentId = e.currentTarget.dataset.id;
-    const channel = e.currentTarget.dataset.channel || "";
-    try {
-      const payload = { enrollmentId, channel };
-      if (channel !== "wallet") payload.code = await ensureWechatCode();
-      const res = await request("/pay/for-enrollment", "POST", payload);
-      await invokeWechatPay(res.data);
-      if (res.data.user) setAuth(app.globalData.token, res.data.user);
-      else if (channel === "wallet") {
-        const me = await request("/me");
-        setAuth(app.globalData.token, me.data);
-      }
-      wx.showToast({ title: res.data.payStatus === "paid" ? "已付清" : "已支付", icon: "none" });
-      this.load();
-    } catch (err) {
-      wx.showModal({ title: "支付失败", content: err.message, showCancel: false });
-    }
-  },
-  payMine() {
-    const mine = this.data.s && this.data.s.myEnrollment;
-    if (!mine) return;
-    const remain = Number(mine.remainAmount || 0);
-    const bal = Number((app.globalData.user && app.globalData.user.walletBalance) || 0);
-    if (bal >= remain && remain > 0) {
-      wx.showActionSheet({
-        itemList: ["余额支付 ¥" + remain, "微信支付"],
-        success: (res) => {
-          this.payFor({
-            currentTarget: { dataset: { id: mine.id, channel: res.tapIndex === 0 ? "wallet" : "" } },
-          });
-        },
-      });
-      return;
-    }
-    this.payFor({ currentTarget: { dataset: { id: mine.id } } });
+    wx.navigateTo({ url: "/pages/pay/pay?token=" + token });
   },
   invitePay() {
     const mine = this.data.s && this.data.s.myEnrollment;

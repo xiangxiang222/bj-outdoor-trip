@@ -1,1 +1,6 @@
-/* inherit */
+.pay-hero { background: #fff; margin: 24rpx; border-radius: 24rpx; padding: 32rpx 28rpx; }
+.pay-title { font-size: 34rpx; font-weight: 700; margin-top: 8rpx; }
+.pay-due { margin-top: 20rpx; font-size: 64rpx; font-weight: 700; color: #8c3038; line-height: 1.1; }
+.pay-modes { display: flex; gap: 12rpx; margin: 0 24rpx 16rpx; }
+.pay-mode { flex: 1; text-align: center; background: #fff; border-radius: 999rpx; padding: 18rpx 8rpx; font-size: 26rpx; border: 2rpx solid transparent; }
+.pay-mode.on { border-color: #8c3038; color: #8c3038; font-weight: 700; }
