@@ -195,7 +195,7 @@
     <view class="pad">{{tr.t('本局微信群', lang)}}</view>
     <image wx:if="{{s.consultGroupQr}}" src="{{s.consultGroupQr}}" style="width:280rpx;height:280rpx;margin:16rpx" />
     <view class="pad muted">{{tr.t(s.consultGroup || contacts.officialWechat, lang)}}</view>
-    <view wx:if="{{s.myEnrollment.status=='joined'}}" class="btn" bindtap="goAfter">{{tr.t('完成活动 / 评选', lang)}}</view>
+    <view wx:if="{{showAfter}}" class="btn" bindtap="goAfter">{{tr.t('完成活动 / 评选', lang)}}</view>
     <view class="pad" wx:if="{{s.myEnrollment.status=='joined' && s.myEnrollment.payStatus=='unpaid' && s.myEnrollment.remainAmount>0}}">{{tr.t('费用待付 ¥', lang)}}{{tr.t(s.myEnrollment.remainAmount, lang)}}{{tr.t('，点下方去支付。', lang)}}</view>
   </block>
   <block wx:else>
@@ -204,7 +204,7 @@
   <image wx:if="{{s.consultGroupQr}}" src="{{s.consultGroupQr}}" style="width:280rpx;height:280rpx;margin:16rpx" />
   <view class="pad muted">{{tr.t(s.consultGroup || contacts.officialWechat, lang)}}</view>
   <view class="pad">{{tr.t('3. 候选团 / 4. 替代团请在报名页勾选，不成团自动转团多退少补', lang)}}</view>
-  <view wx:if="{{s.myEnrollment.status=='joined'}}" class="btn" bindtap="goAfter">{{tr.t('完成活动 / 评选', lang)}}</view>
+  <view wx:if="{{showAfter}}" class="btn" bindtap="goAfter">{{tr.t('完成活动 / 评选', lang)}}</view>
   <view class="pad" wx:if="{{s.myEnrollment.status=='joined' && s.myEnrollment.payStatus=='unpaid' && s.myEnrollment.remainAmount>0}}">{{tr.t('团费待付 ¥', lang)}}{{tr.t(s.myEnrollment.remainAmount, lang)}} / ¥{{tr.t(s.myEnrollment.payAmount, lang)}}{{tr.t('，点下方去支付。', lang)}}</view>
   </block>
 </view>
@@ -237,7 +237,6 @@
   </view>
 </view>
 <view class="btn ghost" wx:if="{{!isActivity}}" bindtap="stats">{{tr.t('本团画像', lang)}}</view>
-<button class="btn" open-type="share">{{tr.t('分享到微信', lang)}}</button>
 <view class="btn ghost" bindtap="openPoster">{{tr.t('生成报名海报', lang)}}</view>
 <view class="card" wx:if="{{s.isOrganizer && s.status!='cancelled' && s.eligibility.schools.length}}">
   <view class="pad muted">{{tr.t('当前范围：', lang)}}{{tr.t(s.eligibility.label, lang)}}{{tr.t('。可以再开放学校-学院-专业组合，不能收窄。', lang)}}</view>

@@ -81,6 +81,7 @@ Page({
     ticket: null,
     priceDock: { free: true, main: "免费", sub: "" },
     showEnroll: false,
+    showAfter: false,
     ctaText: "立即报名",
     statusTag: "",
     sellLine: "",
@@ -163,6 +164,7 @@ Page({
         ticket,
         priceDock: dockPrice(s),
         showEnroll: canShowEnroll(s),
+        showAfter: !!(s.myEnrollment && s.myEnrollment.status === "joined" && (isActivity || s.guaranteed || s.status === "confirmed" || s.status === "full" || s.status === "finished")),
         ctaText: enrollCta(s),
         statusTag,
         leaderSlots: [1, 2].map((slot) => ({

@@ -257,7 +257,7 @@
           <p>本局微信群</p>
           <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本局群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
           <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
-          <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
+          <button v-if="showAfter" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
           <p v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">费用待付 ¥{{ s.myEnrollment.remainAmount }}，点下方去支付。</p>
         </template>
         <template v-else>
@@ -278,7 +278,7 @@
           </label>
           <button class="btn ghost block" style="margin-top:8px" :disabled="savingFallbacks" @click="saveFallbacks">保存备选</button>
           <p v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">团费待付 ¥{{ s.myEnrollment.remainAmount }} / ¥{{ s.myEnrollment.payAmount }}，点下方去支付。</p>
-          <button v-if="s.myEnrollment.status === 'joined'" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
+          <button v-if="showAfter" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">完成活动 / 评选</button>
         </template>
       </div></div>
 
@@ -340,12 +340,8 @@
       </div>
       <p class="muted" v-else>还没有评价。</p>
 
-      <div v-if="!isActivity" style="display:flex;gap:8px;margin:12px 0">
-        <button class="btn ghost" style="flex:1" @click="$router.push('/m/stats/' + s.id)">本团画像</button>
-        <button class="btn ghost" style="flex:1" @click="share">分享到微信</button>
-      </div>
-      <div v-else style="margin:12px 0">
-        <button class="btn ghost block" @click="share">分享到微信</button>
+      <div v-if="!isActivity" style="margin:12px 0">
+        <button class="btn ghost block" type="button" @click="$router.push('/m/stats/' + s.id)">本团画像</button>
       </div>
     </div>
 
@@ -529,6 +525,12 @@ const trusts = computed(() => trustChips(s.value));
 const ticket = computed(() => ticketState(s.value, route.query));
 const priceDock = computed(() => dockPrice(s.value));
 const showEnroll = computed(() => canShowEnroll(s.value));
+const showAfter = computed(() => {
+  const row = s.value;
+  if (!row || row.myEnrollment?.status !== "joined") return false;
+  if (row.channel === "activity") return true;
+  return row.guaranteed === true || row.status === "confirmed" || row.status === "full" || row.status === "finished";
+});
 const ctaText = computed(() => enrollCta(s.value));
 const kindTag = computed(() => activityKindOf(s.value)?.label || "");
 const tabItems = computed(() => [

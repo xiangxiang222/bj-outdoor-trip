@@ -71,6 +71,12 @@ export function recruitFacts(row, today = todayYmd()) {
   return { money, gap, date, overdue, line: parts.join(" · ") };
 }
 
+export function showAfterActions(row) {
+  if (!row) return false;
+  if (row.channel === "activity") return true;
+  return isFormedTrip(row);
+}
+
 export function isReviewTrip(row, today = todayYmd()) {
   if (!row || !row.canReview) return false;
   if (row.schedule_status === "cancelled") return false;

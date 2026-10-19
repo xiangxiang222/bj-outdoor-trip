@@ -131,8 +131,8 @@
         <view class="muted">{{tr.t(item.start_date, lang)}} · {{tr.t(item.statusText, lang)}} · {{tr.t(item.moneyText, lang)}}</view>
         <view class="muted" wx:if="{{item.refundProgress}}">{{tr.t(item.refundProgress.text, lang)}}</view>
       </view>
-      <view wx:if="{{item.canComplete || item.completed}}" class="btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{tr.t(item.completed ? '评价 / 评选' : '完成活动', lang)}}</view>
-      <view wx:if="{{item.canReview}}">
+      <view wx:if="{{item.canAfter && (item.canComplete || item.completed)}}" class="btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{tr.t(item.completed ? '评价 / 评选' : '完成活动', lang)}}</view>
+      <view wx:if="{{item.canAfter && item.canReview}}">
         <view wx:if="{{reviewingId != item.id}}" class="btn ghost" catchtap="openReview" data-id="{{item.id}}">{{tr.t('去评价', lang)}}</view>
         <view wx:else class="pad">
           <view class="star-pick">
