@@ -12,7 +12,7 @@
         <p class="rule-title">到账时间</p>
         <p class="muted">提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。</p>
         <p class="rule-title">其他说明</p>
-        <p class="muted">微信支付转到零钱须完成实名并验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。</p>
+        <p class="muted">提现须验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。</p>
         <button class="btn block" type="button" @click="$router.replace('/m/wallet')">去我的钱包</button>
       </div>
     </div>

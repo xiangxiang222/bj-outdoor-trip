@@ -215,7 +215,6 @@ function recordWithdrawDebit(userId, amount, outBillNo) {
 
 async function withdraw(userId, body = {}) {
   const user = loadUser(userId);
-  if (!user.id_verified) fail(400, "提现前请先完成实名");
   verifyPin(user, body.pin);
   const bal = balanceOf(userId);
   if (bal <= 0) fail(400, "当前余额为 0，可先充值后再提现");

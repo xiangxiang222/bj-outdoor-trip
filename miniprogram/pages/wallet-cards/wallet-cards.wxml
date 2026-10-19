@@ -12,7 +12,7 @@
     <view class="rule-title">{{tr.t('到账时间', lang)}}</view>
     <view class="muted">{{tr.t('提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。', lang)}}</view>
     <view class="rule-title">{{tr.t('其他说明', lang)}}</view>
-    <view class="muted">{{tr.t('微信支付转到零钱须完成实名并验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。', lang)}}</view>
+    <view class="muted">{{tr.t('提现须验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。', lang)}}</view>
   </view>
 </view>
 <view class="btn" bindtap="goWallet">{{tr.t('去我的钱包', lang)}}</view>
