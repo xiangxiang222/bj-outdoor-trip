@@ -24,8 +24,7 @@
 
     <div v-if="mode === 'withdraw'" class="card" ref="withdrawBox">
       <div class="pad">
-        <p v-if="!data.realNamed" class="muted">微信支付转到零钱须先<a href="#" @click.prevent="$router.push('/m/profile')">完成实名</a>后再提交。</p>
-        <p v-if="data.realNamed && !data.pinSet" class="muted">请先<a href="#" @click.prevent="$router.push('/m/wallet/pin')">设置 6 位支付密码</a>，再提交提现。</p>
+        <p v-if="!data.pinSet" class="muted">请先<a href="#" @click.prevent="$router.push('/m/wallet/pin')">设置 6 位支付密码</a>，再提交提现。</p>
         <label>提现金额（元）</label>
         <input class="input" v-model="withdrawAmount" type="number" min="0" :max="rule.available" />
         <div v-if="rule.available > 0" class="chips" style="padding-left:0">
@@ -49,7 +48,7 @@
         <p class="muted">每天 00:00–23:59（北京时间），全天可申请。</p>
         <p class="rule-title">到账时间</p>
         <p class="muted">提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。</p>
-        <p class="muted">微信支付转到零钱须完成实名并验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。</p>
+        <p class="muted">提现须验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。</p>
         <p class="rule-title">充值规则</p>
         <p class="rule-title">单笔额度</p>
         <p class="muted">1～5000 元，须为整数元。</p>

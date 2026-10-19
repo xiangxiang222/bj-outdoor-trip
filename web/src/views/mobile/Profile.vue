@@ -44,7 +44,7 @@ const idError = ref("");
 const saving = ref(false);
 
 onMounted(async () => {
-  setChrome("实名信息", "报名和提现用");
+  setChrome("实名信息", "选填");
   if (!requireLogin(store, router, route)) return;
   await store.fetchMe().catch(() => {});
 });

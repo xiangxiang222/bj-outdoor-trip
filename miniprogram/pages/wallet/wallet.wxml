@@ -22,8 +22,7 @@
 </view>
 
 <view class="sheet" wx:if="{{mode=='withdraw'}}" id="wallet-form">
-  <view class="sheet-note" wx:if="{{!data.realNamed}}">{{tr.t('提现前请先完成实名。', lang)}}</view>
-  <view class="sheet-note" wx:if="{{data.realNamed && !data.pinSet}}">{{tr.t('提现前请先设置 6 位支付密码。', lang)}}</view>
+  <view class="sheet-note" wx:if="{{!data.pinSet}}">{{tr.t('提现前请先设置 6 位支付密码。', lang)}}</view>
   <view class="sheet-label">{{tr.t('提现金额（元）', lang)}}</view>
   <input class="sheet-input" type="number" value="{{withdrawAmount}}" bindinput="setWithdraw" />
   <view class="chips" wx:if="{{rule.available > 0}}">
@@ -68,7 +67,7 @@
   <view class="rule-p">{{tr.t('每天 00:00–23:59（北京时间），全天可申请。', lang)}}</view>
   <view class="rule-h">{{tr.t('到账时间', lang)}}</view>
   <view class="rule-p">{{tr.t('提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。', lang)}}</view>
-  <view class="rule-p">{{tr.t('微信支付转到零钱须完成实名并验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。', lang)}}</view>
+  <view class="rule-p">{{tr.t('提现须验证 6 位支付密码。仅支持提到本人微信零钱，不支持银行卡。充值进入的余额可按本规则全额提现。', lang)}}</view>
   <view class="rule-h">{{tr.t('充值', lang)}}</view>
   <view class="rule-p">{{tr.t('单笔 1～5000 元，须为整数元。微信支付成功后立即进入余额，用于支付团费。', lang)}}</view>
 </view>

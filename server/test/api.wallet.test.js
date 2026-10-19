@@ -66,6 +66,16 @@ describe("wallet API", () => {
     assert.equal(wallet.body.data.withdrawRule.todayCount, 1);
   });
 
+  it("withdraws with a pin when the account is not real-name verified", async () => {
+    const token = await loginUser(agent);
+    seed.db.prepare("UPDATE users SET id_verified=0 WHERE id=?").run(seed.userId);
+    await agent.post("/api/me/wallet/topup").set(auth(token)).send({ amount: 80 }).expect(200);
+    await agent.post("/api/me/wallet/pin").set(auth(token)).send({ pin: "258369" }).expect(200);
+    const out = await agent.post("/api/me/wallet/withdraw").set(auth(token)).send({ amount: 20, pin: "258369" }).expect(200);
+    assert.equal(out.body.data.amount, 20);
+    assert.equal(out.body.data.balance, 60);
+  });
+
   it("does not cap daily withdrawals and still splits at the wechat 2000 yuan channel max", async () => {
     const token = await loginUser(agent);
     await agent.post("/api/me/wallet/topup").set(auth(token)).send({ amount: 5000 }).expect(200);
