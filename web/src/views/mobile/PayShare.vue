@@ -1,40 +1,74 @@
 <template>
-  <div v-if="data">
-    <div class="card">
+  <div v-if="data" class="pay-page">
+    <div class="pay-hero">
+      <div class="muted">{{ data.isOwner ? "已占座，请支付团费" : "帮付团费 · " + data.travelerName }}</div>
+      <strong class="pay-title">{{ data.title }}</strong>
+      <p class="muted">{{ data.startDate }} 出发</p>
+      <div class="pay-due">¥{{ data.remainAmount }}</div>
+      <p class="muted">待付 / 共 ¥{{ data.payAmount }}</p>
+      <p v-if="data.paidAmount" class="muted">已收到 ¥{{ data.paidAmount }}</p>
+    </div>
+
+    <div v-if="data.canPay && data.isOwner" class="pay-modes">
+      <button type="button" class="pay-mode" :class="{ on: mode === 'self' }" @click="setMode('self')">自己支付</button>
+      <button type="button" class="pay-mode" :class="{ on: mode === 'proxy' }" @click="setMode('proxy')">邀请代付</button>
+      <button type="button" class="pay-mode" :class="{ on: mode === 'split' }" @click="setMode('split')">一起分担</button>
+    </div>
+    <div v-else-if="data.canPay" class="pay-modes">
+      <button type="button" class="pay-mode" :class="{ on: mode === 'self' }" @click="setMode('self')">代付全款</button>
+      <button type="button" class="pay-mode" :class="{ on: mode === 'split' }" @click="setMode('split')">分担一部分</button>
+    </div>
+
+    <div v-if="data.canPay && mode === 'proxy'" class="card">
       <div class="pad">
-        <div class="muted">{{ data.isOwner ? "你的团费" : "帮 " + data.travelerName + " 付团费" }}</div>
-        <strong>{{ data.title }}</strong>
-        <p class="muted" style="margin:6px 0 0">{{ data.startDate }} 出发</p>
-        <p class="price" style="margin:12px 0 0">待付 ¥{{ data.remainAmount }} / 共 ¥{{ data.payAmount }}</p>
-        <p v-if="data.paidAmount" class="muted">已收到 ¥{{ data.paidAmount }}</p>
-        <p class="muted">可以余额付、微信付、帮人付全款，或改成更少金额转发给朋友一起分摊。退款按付款人原路退回。</p>
+        <p>朋友打开链接后可以付清这笔团费。¥{{ data.remainAmount }}</p>
+        <button class="btn block" type="button" @click="share">发给朋友代付</button>
       </div>
     </div>
 
-    <div class="card" v-if="data.contributors?.length">
+    <div v-else-if="data.canPay" class="card">
+      <div class="pad">
+        <template v-if="mode === 'split'">
+          <label>你先付的金额（元）</label>
+          <input class="input" v-model="amount" type="number" min="1" :max="data.remainAmount" />
+        </template>
+        <p v-if="walletBalance" class="muted">余额 ¥{{ walletBalance }}</p>
+        <button v-if="walletCanCover" class="btn block" type="button" :disabled="paying" @click="pay('wallet')">余额支付 ¥{{ amount }}</button>
+        <button
+          v-if="!walletCanCover || mode === 'split'"
+          class="btn block"
+          :class="{ ghost: walletCanCover && mode === 'split' }"
+          type="button"
+          :disabled="paying"
+          @click="pay()"
+        >{{ payLabel }}</button>
+        <button v-if="mode === 'split'" class="btn ghost block" type="button" style="margin-top:8px" @click="share">发给朋友付剩下的</button>
+      </div>
+    </div>
+
+    <div v-if="data.contributors?.length" class="card">
       <div class="pad">
         <strong>已付款</strong>
-        <p v-for="(c, i) in data.contributors" :key="i" class="muted" style="margin:8px 0 0">
+        <p v-for="(c, i) in data.contributors" :key="i" class="muted">
           {{ c.self ? "你" : c.nickname }} · ¥{{ c.amount }} · {{ c.remark || "微信支付" }}
         </p>
       </div>
     </div>
 
-    <template v-if="data.canPay">
-      <label>本次支付金额（元）</label>
-      <input class="input" v-model="amount" type="number" min="1" :max="data.remainAmount" />
-      <p v-if="msg" :style="ok ? '' : 'color:var(--clay)'">{{ msg }}</p>
-      <button v-if="walletCanCover" class="btn block" type="button" :disabled="paying" @click="pay('wallet')">余额支付 ¥{{ amount }}（余额 {{ walletBalance }}）</button>
-      <button class="btn block" type="button" :class="{ ghost: walletCanCover }" :style="walletCanCover ? 'margin-top:8px' : ''" :disabled="paying" @click="pay()">{{ payLabel }}</button>
-      <button class="btn ghost block" type="button" style="margin-top:8px" @click="fillRemain">付剩余全部 ¥{{ data.remainAmount }}</button>
-    </template>
-    <p v-else-if="data.company" class="muted">公司团由开团方统一支付。</p>
-    <p v-else-if="data.cancelled" class="muted">该报名已取消或拼团已解散。</p>
-    <p v-else-if="data.payStatus === 'paid'" class="muted">团费已付清。</p>
-    <p v-else class="muted">当前不能支付。</p>
+    <p v-if="msg" :style="ok ? '' : 'color:var(--clay)'">{{ msg }}</p>
 
-    <button v-if="data.remainAmount > 0 && !data.cancelled && !data.company" class="btn ghost block" type="button" style="margin-top:8px" @click="share">转发给朋友分摊</button>
-    <button class="btn ghost block" type="button" style="margin-top:8px" @click="goTrip">查看行程</button>
+    <p v-if="!data.canPay && data.company" class="muted">公司团由开团方统一支付。</p>
+    <p v-else-if="!data.canPay && data.cancelled" class="muted">该报名已取消或拼团已解散。</p>
+    <p v-else-if="!data.canPay && data.payStatus === 'paid'" class="muted">团费已付清。</p>
+    <p v-else-if="!data.canPay" class="muted">当前不能支付。</p>
+
+    <button
+      v-if="data.scheduleId"
+      class="btn block"
+      :class="data.payStatus === 'paid' ? 'clay' : 'ghost'"
+      type="button"
+      @click="goTrip"
+    >查看行程</button>
   </div>
   <p v-else-if="err" style="color:var(--clay)">{{ err }}</p>
 </template>
@@ -58,14 +92,15 @@ const msg = ref("");
 const ok = ref(false);
 const paying = ref(false);
 const amount = ref("");
+const mode = ref("self");
 
 const payLabel = computed(() => {
   const n = Number(amount.value);
-  if (data.value && n === Number(data.value.remainAmount)) {
-    return store.token && data.value.isOwner ? `微信支付 ¥${n}` : `微信代付 ¥${n}`;
+  if (!n) return "去支付";
+  if (data.value && !data.value.isOwner && mode.value !== "split" && n === Number(data.value.remainAmount)) {
+    return `微信代付 ¥${n}`;
   }
-  if (n > 0) return `微信支付 ¥${n}`;
-  return "去支付";
+  return `微信支付 ¥${n}`;
 });
 const walletBalance = computed(() => Number(store.profile?.walletBalance || 0));
 const walletCanCover = computed(() => walletBalance.value >= Number(amount.value || 0) && Number(amount.value || 0) > 0);
@@ -73,31 +108,47 @@ const walletCanCover = computed(() => walletBalance.value >= Number(amount.value
 onMounted(load);
 
 async function load() {
-  setChrome("付团费", "余额、微信或分摊");
+  setChrome("支付", data.value?.isOwner === false ? "代付或分担" : "自己付、代付或分担");
   err.value = "";
   try {
     await store.fetchMe().catch(() => {});
     const res = await http.get("/pay/share/" + route.params.token);
-    data.value = res.data;
-    amount.value = String(res.data.remainAmount || "");
+    const next = res.data;
+    const keepSplit = mode.value === "split" && amount.value !== "";
+    if (!next.isOwner && mode.value === "proxy") mode.value = "self";
+    if (!keepSplit) amount.value = String(next.remainAmount || "");
+    data.value = next;
+    setChrome("支付", next.isOwner ? "自己付、代付或分担" : "代付或分担");
   } catch (e) {
     err.value = e.message || "付款分享不存在";
   }
 }
 
-function fillRemain() {
-  if (data.value) amount.value = String(data.value.remainAmount);
+function setMode(next) {
+  mode.value = next;
+  msg.value = "";
+  ok.value = false;
+  if (next !== "split" && data.value) amount.value = String(data.value.remainAmount || "");
 }
 
 async function pay(channel) {
   msg.value = "";
   ok.value = false;
   if (!requireLogin(store, router, route)) return;
+  const n = Number(amount.value);
+  if (!n) {
+    msg.value = "请填写支付金额";
+    return;
+  }
+  if (n > Number(data.value?.remainAmount || 0)) {
+    msg.value = "不能超过待付金额";
+    return;
+  }
   paying.value = true;
   try {
     const res = await http.post("/pay/for-enrollment", {
       token: route.params.token,
-      amount: Number(amount.value),
+      amount: n,
       channel,
     });
     if (liveWechatPay(res.data)) {
@@ -105,7 +156,9 @@ async function pay(channel) {
       return;
     }
     ok.value = true;
-    msg.value = res.data.payStatus === "paid" ? "已付清" : "已支付 ¥" + (res.data.amount || amount.value) + "，还差 ¥" + (res.data.remainAmount || 0);
+    msg.value = res.data.payStatus === "paid" ? "已付清" : "已支付 ¥" + (res.data.amount || n);
+    mode.value = "self";
+    amount.value = "";
     if (channel === "wallet") await store.fetchMe().catch(() => {});
     await load();
   } catch (e) {
@@ -133,6 +186,7 @@ async function share() {
     ok.value = true;
   } catch {
     msg.value = text;
+    ok.value = true;
   }
 }
 
@@ -140,3 +194,24 @@ function goTrip() {
   if (data.value?.scheduleId) router.push("/m/schedule/" + data.value.scheduleId);
 }
 </script>
+
+<style scoped>
+.pay-hero {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px 16px;
+  margin-bottom: 12px;
+}
+.pay-title { display: block; margin-top: 6px; font-size: 18px; }
+.pay-due { margin-top: 12px; font-size: 40px; font-weight: 700; color: #8c3038; line-height: 1.1; }
+.pay-modes { display: flex; gap: 8px; margin-bottom: 12px; }
+.pay-mode {
+  flex: 1;
+  border: 2px solid transparent;
+  background: #fff;
+  border-radius: 999px;
+  padding: 10px 4px;
+  font-size: 13px;
+}
+.pay-mode.on { border-color: #8c3038; color: #8c3038; font-weight: 700; }
+</style>

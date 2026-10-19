@@ -1553,7 +1553,11 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
   const chain = db()
     .prepare(chainSql)
     .all(sch.id)
-    .map((e, i) => chainItem(e, i, req, { paidAmount: paidMap[e.id] || 0, payAmount: e.pay_amount }));
+    .map((e, i) => {
+      const item = chainItem(e, i, req, { paidAmount: paidMap[e.id] || 0, payAmount: e.pay_amount });
+      if (item.canPay) item.payShareToken = ensurePayShareToken(e.id);
+      return item;
+    });
   const groupText = sch.consult_group || contacts.officialWechat;
   let myEnrollment = null;
   if (req.userId) {

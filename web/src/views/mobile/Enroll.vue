@@ -404,7 +404,12 @@ async function submit() {
             .map((p) => ({ code: p.code, qty: Number(supplyQty.value[p.code] || 0) }))
             .filter((p) => p.qty > 0),
         };
-    await http.post("/enroll", payload);
+    const res = await http.post("/enroll", payload);
+    const joined = res.data || {};
+    if (joined.payShareToken && joined.status === "joined" && joined.payStatus === "unpaid") {
+      router.replace("/m/pay/" + joined.payShareToken);
+      return;
+    }
     router.push("/m/schedule/" + route.params.id + "?joined=1");
   } catch (e) {
     err.value = e.message;
