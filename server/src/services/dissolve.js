@@ -1,5 +1,6 @@
+const dayjs = require("dayjs");
 const { getDb } = require("../db");
-const { addPoints, clawActivityPoints } = require("./helpers");
+const { addPoints, clawActivityPoints, realEnrolledCount } = require("./helpers");
 const { reverseEnrollReferral } = require("./referral");
 const { buildCancelSms, sendSms } = require("./sms");
 const { releaseCouponByEnrollment } = require("./coupons");
@@ -96,6 +97,44 @@ async function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
   };
 }
 
+function stillShort(sch) {
+  const need = Number(sch.min_group_size || 0);
+  if (need <= 0) return true;
+  return realEnrolledCount(sch.id) < need;
+}
+
+async function dissolveExpiredUnformed({ now } = {}) {
+  const today = dayjs(now || undefined).format("YYYY-MM-DD");
+  const rows = getDb()
+    .prepare(
+      `SELECT * FROM schedules
+       WHERE status='recruiting' AND start_date < ? AND IFNULL(channel,'trip')!='activity'`
+    )
+    .all(today)
+    .filter(stillShort);
+  const results = [];
+  for (const sch of rows) {
+    try {
+      results.push(
+        await dissolveSchedule(sch.id, {
+          reason: "出发日已过仍未成团，系统自动解散",
+          actor: "system",
+          actorId: 0,
+        })
+      );
+    } catch (err) {
+      console.error("过期未成团解散失败", sch.id, err && err.message);
+    }
+  }
+  return {
+    date: today,
+    count: results.length,
+    ids: results.map((row) => row.scheduleId),
+    refunded: results.reduce((sum, row) => sum + row.refunded, 0),
+    refundAmount: results.reduce((sum, row) => sum + row.refundAmount, 0),
+  };
+}
+
 async function dissolveAllSchedules({ reason, actorId } = {}) {
   const trimmed = String(reason || "").trim();
   if (!trimmed) fail(400, "请填写解散理由");
@@ -119,4 +158,4 @@ async function dissolveAllSchedules({ reason, actorId } = {}) {
   };
 }
 
-module.exports = { dissolveSchedule, dissolveAllSchedules };
+module.exports = { dissolveSchedule, dissolveAllSchedules, dissolveExpiredUnformed };

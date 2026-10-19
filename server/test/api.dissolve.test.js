@@ -1,6 +1,9 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
+const dayjs = require("dayjs");
 const { harness, loginUser, loginCompany, loginAdmin, auth, ID } = require("./http");
+const { dissolveExpiredUnformed } = require("../src/services/dissolve");
+const { refundEnrollmentToPayers } = require("../src/services/payment");
 
 describe("dissolve group", () => {
   let agent;
@@ -163,5 +166,84 @@ describe("dissolve group", () => {
 
     const again = await agent.post("/api/admin/schedules/dissolve-all").set(auth(adminToken)).send({ reason: "再解散" });
     assert.equal(again.status, 400);
+  });
+
+  it("dissolves an expired unformed trip and keeps one that already formed", async () => {
+    const token = await loginUser(agent);
+    const enrolled = await agent
+      .post("/api/enroll")
+      .set(auth(token))
+      .send({
+        scheduleId: seed.individualScheduleId,
+        travelerName: "林北野",
+        travelerPhone: "13800138000",
+        idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
+      })
+      .expect(200);
+    const yesterday = dayjs().subtract(1, "day").format("YYYY-MM-DD");
+    seed.db.prepare("UPDATE schedules SET start_date=?, end_date=? WHERE id=?").run(yesterday, yesterday, seed.individualScheduleId);
+    seed.db.prepare("UPDATE enrollments SET pay_status='paid', pay_amount=3 WHERE id=?").run(enrolled.body.data.enrollmentId);
+    seed.db.prepare("UPDATE schedules SET start_date=?, status='confirmed' WHERE id=?").run(yesterday, seed.companyScheduleId);
+
+    const result = await dissolveExpiredUnformed({ now: dayjs().format("YYYY-MM-DD") });
+    assert.ok(result.ids.includes(seed.individualScheduleId));
+    assert.equal(result.ids.includes(seed.companyScheduleId), false);
+
+    const gone = seed.db.prepare("SELECT status, cancel_reason FROM schedules WHERE id=?").get(seed.individualScheduleId);
+    assert.equal(gone.status, "cancelled");
+    assert.match(gone.cancel_reason, /未成团/);
+    const en = seed.db.prepare("SELECT status, pay_status FROM enrollments WHERE id=?").get(enrolled.body.data.enrollmentId);
+    assert.equal(en.status, "cancelled");
+    assert.equal(en.pay_status, "refunded");
+    const kept = seed.db.prepare("SELECT status FROM schedules WHERE id=?").get(seed.companyScheduleId);
+    assert.equal(kept.status, "confirmed");
+
+    const listed = await agent.get("/api/schedules").expect(200);
+    assert.equal(listed.body.data.some((row) => row.id === seed.individualScheduleId), false);
+  });
+
+  it("puts the paid amount back in the balance when WeChat refund is unavailable", async () => {
+    const token = await loginUser(agent);
+    const enrolled = await agent
+      .post("/api/enroll")
+      .set(auth(token))
+      .send({
+        scheduleId: seed.individualScheduleId,
+        travelerName: "林北野",
+        travelerPhone: "13800138000",
+        idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
+      })
+      .expect(200);
+    const enrollmentId = enrolled.body.data.enrollmentId;
+    seed.db.prepare("UPDATE enrollments SET pay_status='paid', pay_amount=3, pay_channel='wechat' WHERE id=?").run(enrollmentId);
+    seed.db
+      .prepare(
+        "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (?,?,?,?,?,?,?,?,?)"
+      )
+      .run(enrollmentId, seed.userId, seed.individualScheduleId, 3, "wechat", "success", "WXTEST3", "自己支付", "enrollment");
+    const before = Number(seed.db.prepare("SELECT wallet_balance FROM users WHERE id=?").get(seed.userId).wallet_balance || 0);
+    const rows = await refundEnrollmentToPayers(seed.db.prepare("SELECT * FROM enrollments WHERE id=?").get(enrollmentId), {
+      amount: 3,
+      remark: "解散退款：出发日已过仍未成团",
+      refundWechat: async () => {
+        const err = new Error("未配置商户API证书，无法原路退款");
+        err.status = 400;
+        throw err;
+      },
+    });
+    assert.equal(rows[0].channel, "wallet");
+    const after = Number(seed.db.prepare("SELECT wallet_balance FROM users WHERE id=?").get(seed.userId).wallet_balance || 0);
+    assert.equal(after - before, 3);
+    const refund = seed.db.prepare("SELECT channel, amount FROM payments WHERE enrollment_id=? AND IFNULL(refund_of,0)>0").get(enrollmentId);
+    assert.equal(refund.channel, "wallet");
+    assert.equal(Number(refund.amount), 3);
   });
 });

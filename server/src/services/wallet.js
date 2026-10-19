@@ -379,6 +379,7 @@ function tripCounts(userId) {
       `SELECT COUNT(*) AS c FROM enrollments e
        JOIN schedules s ON s.id=e.schedule_id
        WHERE e.user_id=? AND e.status='joined' AND s.status='recruiting'
+         AND s.start_date>=date('now','localtime')
          AND IFNULL(s.channel,'trip')!='activity'
          AND NOT (e.pay_status='unpaid' AND IFNULL(e.pay_amount,0)>0)
          AND NOT (${formed})`

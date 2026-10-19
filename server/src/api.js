@@ -1044,7 +1044,7 @@ router.get("/me/trips", authUser, (req, res) => {
        JOIN schedules s ON s.id=e.schedule_id
        JOIN routes r ON r.id=s.route_id
        WHERE e.user_id=? AND e.status IN ('joined','waitlist','applied') AND s.status!='cancelled'
-         AND s.start_date>=date('now','-1 day')
+         AND s.start_date>=date('now','localtime')
        ORDER BY s.start_date, e.id`
     )
     .all(req.userId)
@@ -1374,7 +1374,7 @@ function guideProfile(g, req) {
     .prepare(
       `SELECT s.id, s.start_date, s.end_date, s.status, r.title, r.cover, r.region
        FROM schedules s JOIN routes r ON r.id=s.route_id
-       WHERE s.guide_id=? AND s.status!='cancelled' AND s.start_date>=date('now','-1 day')
+       WHERE s.guide_id=? AND s.status!='cancelled' AND s.start_date>=date('now','localtime')
        ORDER BY s.start_date LIMIT 8`
     )
     .all(g.id)
@@ -1443,7 +1443,7 @@ router.get("/routes", (req, res) => {
   const rows = db().prepare(sql).all(...args);
   const data = rows.map((row) => {
     const tiers = db().prepare("SELECT * FROM route_price_tiers WHERE route_id=? ORDER BY min_people").all(row.id);
-    const schedules = db().prepare("SELECT id,start_date,status FROM schedules WHERE route_id=? AND start_date>=date('now') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved' ORDER BY start_date LIMIT 3").all(row.id);
+    const schedules = db().prepare("SELECT id,start_date,status FROM schedules WHERE route_id=? AND start_date>=date('now','localtime') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved' ORDER BY start_date LIMIT 3").all(row.id);
     const mapped = mapRoute(row, req);
     const names = new Set([mapped.category, ...(mapped.tags || [])]);
     const playTags = listPlayTags().filter((t) => names.has(t.name)).map((t) => mapPlayTag(t, req));
@@ -1477,7 +1477,7 @@ router.get("/routes/:id", optionalUser, (req, res) => {
   if (!isListed(row) && !mine) return res.status(404).json({ ok: false, message: "线路不存在" });
   const bundle = loadRouteBundle(row.id);
   const schedules = db()
-    .prepare("SELECT * FROM schedules WHERE route_id=? AND start_date>=date('now','-1 day') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved' ORDER BY start_date")
+    .prepare("SELECT * FROM schedules WHERE route_id=? AND start_date>=date('now','localtime') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved' ORDER BY start_date")
     .all(row.id)
     .map((s) => scheduleView(s, req, { card: true }));
   let favored = false;
@@ -1502,7 +1502,7 @@ router.get("/routes/:id", optionalUser, (req, res) => {
 
 router.get("/schedules", (req, res) => {
   const { routeId, organizerType, city, tag, offerType, month, date, channel } = req.query;
-  let sql = `SELECT * FROM schedules WHERE start_date>=date('now','-1 day') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved'
+  let sql = `SELECT * FROM schedules WHERE start_date>=date('now','localtime') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved'
     AND (
       IFNULL(channel,'trip')='activity'
       OR route_id IN (SELECT id FROM routes WHERE IFNULL(status,'on')='on' AND IFNULL(review_status,'approved')='approved')
@@ -2832,10 +2832,14 @@ router.get("/admin/schedules/:id", authAdmin, requireCap("roster"), (req, res) =
   }
 });
 
-router.post("/admin/schedules/official-sync", authAdmin, requireCap("ops"), (req, res) => {
+router.post("/admin/schedules/official-sync", authAdmin, requireCap("ops"), async (req, res) => {
   try {
-    const data = runOfficialJobs();
-    res.json({ ok: true, data, message: `已补齐 ${data.created.count} 个官方团，并入 ${data.merged.sources.length} 个未成团` });
+    const data = await runOfficialJobs();
+    res.json({
+      ok: true,
+      data,
+      message: `已补齐 ${data.created.count} 个官方团，并入 ${data.merged.sources.length} 个未成团，解散 ${data.dissolved.count} 个过期未成团`,
+    });
   } catch (e) {
     jsonError(res, e);
   }
