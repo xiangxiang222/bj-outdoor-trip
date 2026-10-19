@@ -53,10 +53,12 @@ function isFormedTrip(row) {
   return Number.isFinite(min) && min > 0 && Number.isFinite(joined) && joined >= min;
 }
 
-function isRecruitingTrip(row) {
+function isRecruitingTrip(row, today) {
   if (!isGroupTrip(row) || row.status !== "joined") return false;
   if (row.schedule_status === "cancelled") return false;
   if (isUnpaidTrip(row) || isFormedTrip(row)) return false;
+  const date = String(row.start_date || row.startDate || "").slice(0, 10);
+  if (date && date < (today || todayYmd())) return false;
   return true;
 }
 
@@ -77,7 +79,8 @@ function isReviewTrip(row, today) {
   today = today || todayYmd();
   if (!row || !row.canReview) return false;
   if (row.schedule_status === "cancelled") return false;
-  if (isRecruitingTrip(row)) return false;
+  if (isRecruitingTrip(row, today)) return false;
+  if (isGroupTrip(row) && row.status === "joined" && !isFormedTrip(row)) return false;
   return String(row.start_date || row.startDate || "").slice(0, 10) < today;
 }
 
@@ -94,19 +97,19 @@ function deskTrips(rows, today) {
   const recruiting = [];
   (Array.isArray(rows) ? rows : []).forEach((row) => {
     if (isUnpaidTrip(row)) unpaid.push(row);
-    if (isRecruitingTrip(row)) recruiting.push(row);
+    if (isRecruitingTrip(row, today)) recruiting.push(row);
     if (isReviewTrip(row, today)) review.push(row);
     if (isRefundTrip(row)) refund.push(row);
   });
   const byDate = (a, b) => String(a.start_date || a.startDate || "").localeCompare(String(b.start_date || b.startDate || ""));
   recruiting.sort(byDate);
   return Object.assign({}, split, {
-    past: split.past.filter((row) => !isRecruitingTrip(row)),
+    past: split.past.filter((row) => !isRecruitingTrip(row, today)),
     unpaid,
     review,
     refund,
     recruiting,
-    depart: split.upcoming.filter((row) => !isUnpaidTrip(row) && !isRecruitingTrip(row)),
+    depart: split.upcoming.filter((row) => !isUnpaidTrip(row) && !isRecruitingTrip(row, today)),
   });
 }
 

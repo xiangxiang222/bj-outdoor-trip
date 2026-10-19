@@ -8,11 +8,11 @@ try {
     const { runOfficialJobs } = require("./services/official-trip");
     const { runHeatJobs } = require("./services/virtual-heat");
     const tick = () => {
-      try {
-        runOfficialJobs();
-      } catch (err) {
-        console.error("官方团任务失败", err);
-      }
+      Promise.resolve()
+        .then(() => runOfficialJobs())
+        .catch((err) => {
+          console.error("官方团任务失败", err);
+        });
       try {
         runHeatJobs();
       } catch (err) {
@@ -21,11 +21,11 @@ try {
     };
     tick();
     setInterval(() => {
-      try {
-        runOfficialJobs();
-      } catch (err) {
-        console.error("官方团任务失败", err);
-      }
+      Promise.resolve()
+        .then(() => runOfficialJobs())
+        .catch((err) => {
+          console.error("官方团任务失败", err);
+        });
     }, 60 * 60 * 1000);
     setInterval(() => {
       try {

@@ -245,32 +245,49 @@ function recordRefundSlice(en, slice, refundNo, remark) {
   }
 }
 
-async function refundEnrollmentToPayers(en, { amount, remark } = {}) {
+function walletRefundClosed(err) {
+  return Boolean(err && err.status === 400 && /无法原路退款|未配置商户API证书/.test(String(err.message || "")));
+}
+
+function creditRefundToWallet(en, slice, remark) {
+  require("./wallet").credit(slice.userId, slice.amount, {
+    reason: remark || "报名退款",
+    scene: "refund",
+    refType: "enrollment",
+    refId: en.id,
+  });
+}
+
+async function refundEnrollmentToPayers(en, { amount, remark, refundWechat } = {}) {
   const plan = planPayerRefunds(en, amount);
   const results = [];
-  for (const slice of plan) {
+  for (let slice of plan) {
     const refundNo = newTradeNo("RF", slice.userId);
     if (slice.channel === "wallet") {
-      require("./wallet").credit(slice.userId, slice.amount, {
-        reason: remark || "报名退款",
-        scene: "refund",
-        refType: "enrollment",
-        refId: en.id,
-      });
-    } else if (slice.channel === "wechat" && payLive() && slice.tradeNo) {
+      creditRefundToWallet(en, slice, remark);
+    } else if (slice.channel === "wechat" && (payLive() || refundWechat) && slice.tradeNo) {
       const orderTotal = getDb()
         .prepare(
           "SELECT IFNULL(SUM(amount),0) AS s FROM payments WHERE trade_no=? AND status='success' AND IFNULL(refund_of,0)=0 AND IFNULL(scene,'')!='company'"
         )
         .get(slice.tradeNo);
       const totalYuan = Number(orderTotal?.s || 0) || Number(slice.chargeAmount || 0);
-      await refundOrder({
-        tradeNo: slice.tradeNo,
-        transactionId: slice.transactionId,
-        refundNo,
-        totalFen: yuanToFen(totalYuan),
-        refundFen: yuanToFen(slice.amount),
-      });
+      try {
+        await (refundWechat || refundOrder)({
+          tradeNo: slice.tradeNo,
+          transactionId: slice.transactionId,
+          refundNo,
+          totalFen: yuanToFen(totalYuan),
+          refundFen: yuanToFen(slice.amount),
+        });
+      } catch (err) {
+        if (!walletRefundClosed(err)) throw err;
+        creditRefundToWallet(en, slice, remark || "报名退回余额");
+        slice = { ...slice, channel: "wallet" };
+      }
+    } else if (slice.channel === "wechat" && payLive() && !slice.tradeNo) {
+      creditRefundToWallet(en, slice, remark || "报名退回余额");
+      slice = { ...slice, channel: "wallet" };
     }
     recordRefundSlice(en, slice, refundNo, remark || "原路退款");
     results.push({
@@ -278,6 +295,7 @@ async function refundEnrollmentToPayers(en, { amount, remark } = {}) {
       amount: slice.amount,
       tradeNo: refundNo,
       originalTradeNo: slice.tradeNo || "",
+      channel: slice.channel,
     });
   }
   return results;

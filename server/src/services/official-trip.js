@@ -386,10 +386,11 @@ function settlePersonalBounty(sch) {
   return { amount: 0, mock: true };
 }
 
-function runOfficialJobs(opts = {}) {
+async function runOfficialJobs(opts = {}) {
   const created = ensureOfficialTrips(opts);
   const merged = mergeDueTrips(opts);
-  return { created, merged };
+  const dissolved = await require("./dissolve").dissolveExpiredUnformed(opts);
+  return { created, merged, dissolved };
 }
 
 module.exports = {
