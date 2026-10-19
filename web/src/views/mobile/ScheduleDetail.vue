@@ -27,7 +27,7 @@
         <div class="tag-row">
           <TripKind :kind="s.kind" :type="s.organizerType" :channel="s.channel" />
           <span v-if="s.offerLabel" class="offer-chip inline" :style="{ background: s.offerColor }">{{ s.offerLabel }}</span>
-          <span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">{{ s.privateLabel || "加密团" }}</span>
+          <span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">{{ s.privateLabel || "口令团" }}</span>
           <span class="play-tag sm" v-for="t in s.playTags || s.route.tags || []" :key="t.id || t" :style="{ background: t.color || '#2d6a4f' }">{{ t.name || t }}</span>
         </div>
         <div class="trust-row" v-if="trusts.length">
@@ -111,7 +111,7 @@
         <div class="pad">
           <div v-if="s.joinCode" class="ticket-card posted">
             <strong>入团口令 {{ s.joinCode }}</strong>
-            <p class="muted" style="margin:6px 0 0">把这串口令发给要来的人。列表上会显示「加密团」，没有口令不能报名。</p>
+            <p class="muted" style="margin:6px 0 0">把这串口令发给要来的人。列表上会显示「口令团」，没有口令不能报名。</p>
           </div>
           <div v-if="ticket" class="ticket-card" :class="{ wait: ticket.kind === 'waitlist', posted: ticket.kind === 'posted' }">
             <strong>{{ ticket.title }}</strong>

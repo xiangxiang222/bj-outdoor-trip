@@ -51,8 +51,8 @@
       <el-table-column label="报名限制" width="140">
         <template #default="{ row }">{{ [row.eligibility?.label, row.oversub?.enabled ? row.oversub.label : ""].filter(Boolean).join(" · ") || "—" }}</template>
       </el-table-column>
-      <el-table-column label="加密" width="120">
-        <template #default="{ row }">{{ row.private ? row.joinCode || row.privateLabel || "加密团" : "—" }}</template>
+      <el-table-column label="口令" width="120">
+        <template #default="{ row }">{{ row.private ? row.joinCode || row.privateLabel || "口令团" : "—" }}</template>
       </el-table-column>
       <el-table-column label="人数" width="130">
         <template #default="{ row }">
@@ -174,7 +174,7 @@
           <el-switch v-model="neu.oversub" />
           <span v-if="neu.organizerType === 'campus' && neu.offerType === 'free'" class="muted" style="margin-left:8px">高校免费团默认开启：先报名待确认，超过座位才抽签</span>
         </el-form-item>
-        <el-form-item label="加密团">
+        <el-form-item label="口令团">
           <el-switch v-model="neu.privateJoin" />
         </el-form-item>
         <el-form-item v-if="neu.privateJoin" label="入团口令">
@@ -315,7 +315,7 @@
       <p v-if="cur">
         「{{ cur.route?.title }} {{ cur.startDate }}」真实 {{ cur.realEnrolled || 0 }} 人、虚拟 {{ cur.virtualEnrolled || 0 }} 人、座位 {{ cur.maxSeats }}。
       </p>
-      <p class="muted">官方团和用户自建团默认开自动热度（规则 A：真人 +1 则虚拟 −1，展示钉在成团人数约 45%，且低于成团线）。加密团、同城局不开。改人数会暂停自动。</p>
+      <p class="muted">官方团和用户自建团默认开自动热度（规则 A：真人 +1 则虚拟 −1，展示钉在成团人数约 45%，且低于成团线）。口令团、同城局不开。改人数会暂停自动。</p>
       <p v-if="cur?.heat" class="muted">底线 {{ cur.heat.floor }} · 种子 {{ cur.heat.seed }} · 上限 {{ cur.heat.ceiling }} · 当前目标 {{ cur.heat.target }}{{ cur.heatLocked ? " · 已锁手工人数" : "" }}</p>
       <el-form label-width="120px">
         <el-form-item label="自动热度">

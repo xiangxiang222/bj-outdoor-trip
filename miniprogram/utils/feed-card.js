@@ -46,7 +46,7 @@ function coverOf(row) {
 }
 
 function taglineOf(row) {
-  const lock = row && row.private ? row.privateLabel || "加密团" : "";
+  const lock = row && row.private ? row.privateLabel || "口令团" : "";
   const tags = ((row && row.playTags) || []).map((t) => t.name || t).filter(Boolean);
   const rest = tags.length
     ? tags.slice(0, 3).join(" · ")

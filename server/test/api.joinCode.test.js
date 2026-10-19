@@ -21,7 +21,7 @@ describe("encrypted trip join code", () => {
     ({ agent, seed } = harness());
   });
 
-  it("marks 加密团, hides the code from strangers, and requires it to enroll", async () => {
+  it("marks 口令团, hides the code from strangers, and requires it to enroll", async () => {
     const host = await loginUser(agent);
     const created = await agent
       .post("/api/schedules")

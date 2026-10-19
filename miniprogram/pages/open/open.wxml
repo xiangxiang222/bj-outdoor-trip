@@ -45,7 +45,7 @@
 </block>
 <view class="field-error" wx:if="{{errors.campus}}">{{tr.t(errors.campus, lang)}}</view>
 <view class="pad" bindtap="toggleAlumniOk">{{tr.t(form.alumniOk ? '☑' : '☐', lang)}} {{tr.t('允许已认证校友', lang)}}</view>
-<view class="pad" bindtap="togglePrivateJoin">{{tr.t(form.privateJoin ? '☑' : '☐', lang)}} {{tr.t('加密团（报名要口令）', lang)}}</view>
+<view class="pad" bindtap="togglePrivateJoin">{{tr.t(form.privateJoin ? '☑' : '☐', lang)}} {{tr.t('口令团（报名要口令）', lang)}}</view>
 <input wx:if="{{form.privateJoin}}" class="input" placeholder="{{tr.t('入团口令 4～16 字，可空则自动生成', lang)}}" value="{{form.joinCode}}" bindinput="setJoinCode" maxlength="16" />
 
 <view class="label">{{tr.t('大巴车型', lang)}}</view>

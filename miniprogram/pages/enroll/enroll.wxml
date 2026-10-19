@@ -11,7 +11,7 @@
 <view class="pad muted" wx:if="{{s.eligibility.enabled}}">{{tr.t(s.eligibility.label, lang)}}</view>
 <view class="pad" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" style="color:#bc4749">{{tr.t(s.eligibility.reason, lang)}}</view>
 <view class="btn ghost" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" bindtap="goStudent">{{tr.t('去校园认证', lang)}}</view>
-<view class="pad muted" wx:if="{{s.private}}">{{tr.t('这是加密团，报名需要发起人给的口令。', lang)}}</view>
+<view class="pad muted" wx:if="{{s.private}}">{{tr.t('这是口令团，报名需要发起人给的口令。', lang)}}</view>
 <view class="label" wx:if="{{s.joinCodeRequired && !s.joinCode}}">{{tr.t('入团口令', lang)}}</view>
 <input wx:if="{{s.joinCodeRequired && !s.joinCode}}" class="input" placeholder="{{tr.t('向发起人索取', lang)}}" value="{{form.joinCode}}" bindinput="setJoinCode" maxlength="16" />
 <view class="field-error" wx:if="{{errors.joinCode}}">{{tr.t(errors.joinCode, lang)}}</view>
