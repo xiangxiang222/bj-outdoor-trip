@@ -406,7 +406,7 @@ async function cancelEnrollment(enrollmentId, userId, options = {}) {
     refundedAmount = refundable;
   }
 
-  const nextPay = hasMoney ? "refunded" : en.pay_status;
+  const nextPay = refundedAmount > 0 ? "refunded" : en.pay_status;
   const wasJoined = en.status === "joined";
   const remark = options.admin
     ? "后台取消报名退款"

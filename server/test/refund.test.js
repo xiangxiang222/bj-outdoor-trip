@@ -21,6 +21,9 @@ describe("refund rules", () => {
     assert.equal(matchPercent(DEFAULT_TIERS, 20, { startedAt: "2026-09-01 08:00" }), 0);
     assert.equal(refundAmount(199, 80), 159);
     assert.equal(refundAmount(199, 100), 199);
+    assert.equal(refundAmount(1, 50), 1);
+    assert.equal(refundAmount(1, 80), 1);
+    assert.equal(refundAmount(1, 0), 0);
   });
 
   it("rejects incomplete or duplicate tiers", () => {
