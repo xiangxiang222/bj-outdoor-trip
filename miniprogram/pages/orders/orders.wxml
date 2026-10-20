@@ -25,6 +25,16 @@
         <view class="muted">{{tr.t('下一趟 ·', lang)}} {{tr.t(nextTrip.kindLabel, lang)}}</view>
         <view class="title">{{tr.t(nextTrip.title, lang)}}</view>
         <view class="muted">{{tr.t(nextTrip.start_date, lang)}} {{tr.t(nextTrip.meetup_time, lang)}} · {{tr.t(nextTrip.meetup_point, lang)}}</view>
+        <view class="payer-list" wx:if="{{nextTrip.helpers && nextTrip.helpers.length}}">
+          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
+          <view class="payer-row" wx:for="{{nextTrip.helpers}}" wx:for-item="payer" wx:key="index">
+            <view>
+              <view>{{tr.t(payer.nickname, lang)}}</view>
+              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
+            </view>
+            <view class="payer-amt">¥{{payer.amount}}</view>
+          </view>
+        </view>
       </view>
       <view wx:if="{{nextTrip.canPay}}" class="cancel-link" catchtap="goPay" data-token="{{nextTrip.payShareToken}}" data-sid="{{nextTrip.schedule_id}}">{{tr.t('去支付', lang)}}</view>
       <view wx:if="{{nextTrip.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{nextTrip.id}}">{{tr.t('取消报名', lang)}}</view>
@@ -37,6 +47,16 @@
         </view>
         <view class="muted">{{tr.t(item.meetup_time, lang)}} {{tr.t(item.meetup_point, lang)}}</view>
         <view class="muted">{{tr.t(item.statusText, lang)}} · {{tr.t(item.moneyText, lang)}}</view>
+        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
+          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
+          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
+            <view>
+              <view>{{tr.t(payer.nickname, lang)}}</view>
+              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
+            </view>
+            <view class="payer-amt">¥{{payer.amount}}</view>
+          </view>
+        </view>
       </view>
       <view wx:if="{{item.canPay}}" class="cancel-link" catchtap="goPay" data-token="{{item.payShareToken}}" data-sid="{{item.schedule_id}}">{{tr.t('去支付', lang)}}</view>
       <view wx:if="{{item.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{item.id}}">{{tr.t('取消报名', lang)}}</view>
@@ -62,6 +82,16 @@
         </view>
         <view class="muted">{{tr.t(item.start_date, lang)}} {{tr.t(item.meetup_time, lang)}} · {{tr.t(item.meetup_point, lang)}}</view>
         <view class="muted">{{tr.t(item.statusText, lang)}} · {{tr.t(item.moneyText, lang)}}</view>
+        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
+          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
+          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
+            <view>
+              <view>{{tr.t(payer.nickname, lang)}}</view>
+              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
+            </view>
+            <view class="payer-amt">¥{{payer.amount}}</view>
+          </view>
+        </view>
       </view>
       <view wx:if="{{item.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{item.id}}">{{tr.t('取消候补', lang)}}</view>
     </view>
@@ -77,6 +107,16 @@
         </view>
         <view class="muted">{{tr.t(item.start_date, lang)}} · {{tr.t(item.recruit.line, lang)}}</view>
         <view class="muted" wx:if="{{item.recruit.overdue}}">{{tr.t('出发日已过，等并团或解散退款。', lang)}}</view>
+        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
+          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
+          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
+            <view>
+              <view>{{tr.t(payer.nickname, lang)}}</view>
+              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
+            </view>
+            <view class="payer-amt">¥{{payer.amount}}</view>
+          </view>
+        </view>
       </view>
       <view wx:if="{{item.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{item.id}}">{{tr.t('取消报名', lang)}}</view>
     </view>
@@ -88,6 +128,16 @@
       <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
         <view class="title">{{tr.t(item.title, lang)}}</view>
         <view class="muted">{{tr.t(item.start_date, lang)}} · {{tr.t(item.moneyText, lang)}}</view>
+        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
+          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
+          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
+            <view>
+              <view>{{tr.t(payer.nickname, lang)}}</view>
+              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
+            </view>
+            <view class="payer-amt">¥{{payer.amount}}</view>
+          </view>
+        </view>
       </view>
       <view wx:if="{{item.canPay}}" class="cancel-link" catchtap="goPay" data-token="{{item.payShareToken}}" data-sid="{{item.schedule_id}}">{{tr.t('去支付', lang)}}</view>
     </view>
@@ -99,6 +149,16 @@
       <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
         <view class="title">{{tr.t(item.title, lang)}}</view>
         <view class="muted">{{tr.t(item.start_date, lang)}} · {{tr.t('待评价', lang)}}</view>
+        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
+          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
+          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
+            <view>
+              <view>{{tr.t(payer.nickname, lang)}}</view>
+              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
+            </view>
+            <view class="payer-amt">¥{{payer.amount}}</view>
+          </view>
+        </view>
       </view>
       <view wx:if="{{reviewingId != item.id}}" class="btn ghost" catchtap="openReview" data-id="{{item.id}}">{{tr.t('去评价', lang)}}</view>
       <view wx:else class="pad">
@@ -117,6 +177,16 @@
       <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
         <view class="title">{{tr.t(item.title, lang)}}</view>
         <view class="muted">{{tr.t(item.refundProgress.text, lang)}}</view>
+        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
+          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
+          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
+            <view>
+              <view>{{tr.t(payer.nickname, lang)}}</view>
+              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
+            </view>
+            <view class="payer-amt">¥{{payer.amount}}</view>
+          </view>
+        </view>
       </view>
     </view>
     <view class="pad muted" wx:if="{{!refund.length}}">{{tr.t('还没有退款记录。', lang)}}</view>
@@ -131,6 +201,16 @@
         </view>
         <view class="muted">{{tr.t(item.start_date, lang)}} · {{tr.t(item.statusText, lang)}} · {{tr.t(item.moneyText, lang)}}</view>
         <view class="muted" wx:if="{{item.refundProgress}}">{{tr.t(item.refundProgress.text, lang)}}</view>
+        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
+          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
+          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
+            <view>
+              <view>{{tr.t(payer.nickname, lang)}}</view>
+              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
+            </view>
+            <view class="payer-amt">¥{{payer.amount}}</view>
+          </view>
+        </view>
       </view>
       <view wx:if="{{item.canAfter && item.completed}}" class="btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{tr.t('评价 / 评选', lang)}}</view>
       <view wx:if="{{item.canAfter && item.canReview}}">

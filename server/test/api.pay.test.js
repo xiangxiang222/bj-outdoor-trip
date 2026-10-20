@@ -291,10 +291,12 @@ describe("enrollment pay share and crowdfund", () => {
     assert.equal(paid.body.data.remainAmount, 0);
     const row = seed.db.prepare("SELECT remark FROM payments WHERE enrollment_id=? AND status='success'").get(enrollmentId);
     assert.equal(row.remark, "自己支付");
+    const shareAfter = await agent.get("/api/pay/share/" + payShareToken).set(auth(token)).expect(200);
+    assert.equal(shareAfter.body.data.helpers.length, 0);
   });
 
   it("lets a friend pay the remaining amount as 代付", async () => {
-    const { enrollmentId, payShareToken } = await enrollSelf();
+    const { token, enrollmentId, payShareToken } = await enrollSelf();
     const friend = await registerFriend();
     const paid = await agent
       .post("/api/pay/for-enrollment")
@@ -306,6 +308,15 @@ describe("enrollment pay share and crowdfund", () => {
     const row = seed.db.prepare("SELECT user_id, remark FROM payments WHERE enrollment_id=? AND status='success'").get(enrollmentId);
     assert.notEqual(Number(row.user_id), Number(seed.userId));
     assert.equal(row.remark, "他人代付");
+    const share = await agent.get("/api/pay/share/" + payShareToken).set(auth(token)).expect(200);
+    assert.equal(share.body.data.helpers.length, 1);
+    assert.equal(share.body.data.helpers[0].nickname, "代付好友");
+    assert.equal(share.body.data.helpers[0].remark, "他人代付");
+    assert.equal(share.body.data.helpers[0].amount, paid.body.data.amount);
+    const orders = await agent.get("/api/orders").set(auth(token)).expect(200);
+    const mine = orders.body.data.find((item) => item.id === enrollmentId);
+    assert.equal(mine.helpers.length, 1);
+    assert.equal(mine.helpers[0].nickname, "代付好友");
   });
 
   it("accepts partial crowdfund payments until the fee is covered", async () => {
@@ -330,6 +341,9 @@ describe("enrollment pay share and crowdfund", () => {
     assert.equal(detail.body.data.myEnrollment.remainAmount, 0);
     assert.equal(detail.body.data.chain[0].canPay, false);
     assert.equal(detail.body.data.myEnrollment.contributors.length, 2);
+    assert.equal(detail.body.data.myEnrollment.helpers.length, 1);
+    assert.equal(detail.body.data.myEnrollment.helpers[0].nickname, "代付好友");
+    assert.equal(detail.body.data.myEnrollment.helpers[0].remark, "他人代付");
   });
 
   it("refunds each crowdfund payer on cancel", async () => {

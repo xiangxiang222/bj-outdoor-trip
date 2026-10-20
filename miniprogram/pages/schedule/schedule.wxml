@@ -207,6 +207,16 @@
   <view wx:if="{{showAfter}}" class="btn" bindtap="goAfter">{{tr.t('评价 / 评选', lang)}}</view>
   <view class="pad" wx:if="{{s.myEnrollment.status=='joined' && s.myEnrollment.payStatus=='unpaid' && s.myEnrollment.remainAmount>0}}">{{tr.t('团费待付 ¥', lang)}}{{tr.t(s.myEnrollment.remainAmount, lang)}} / ¥{{tr.t(s.myEnrollment.payAmount, lang)}}{{tr.t('，点下方去支付。', lang)}}</view>
   </block>
+  <view class="pad payer-list" wx:if="{{s.myEnrollment.helpers && s.myEnrollment.helpers.length}}">
+    <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
+    <view class="payer-row" wx:for="{{s.myEnrollment.helpers}}" wx:key="index">
+      <view>
+        <view>{{tr.t(item.nickname, lang)}}</view>
+        <view class="muted" wx:if="{{item.remark}}">{{tr.t(item.remark, lang)}}</view>
+      </view>
+      <view class="payer-amt">¥{{item.amount}}</view>
+    </view>
+  </view>
 </view>
 <view class="pad title" wx:if="{{s.combo.enabled}}">{{tr.t('组合团 · 另一半条件', lang)}}</view>
 <view class="card" wx:if="{{s.combo.enabled}}">

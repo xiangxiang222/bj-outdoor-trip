@@ -280,6 +280,7 @@
           <p v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">团费待付 ¥{{ s.myEnrollment.remainAmount }} / ¥{{ s.myEnrollment.payAmount }}，点下方去支付。</p>
           <button v-if="showAfter" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">评价 / 评选</button>
         </template>
+        <PayHelpers :list="s.myEnrollment.helpers" />
       </div></div>
 
       <div class="h2" v-if="s.combo?.enabled">组合团 · 另一半条件</div>
@@ -487,6 +488,7 @@ import { nativeShareSupported, scheduleShareText, scheduleShareUrl } from "@/uti
 import { drawTripPoster, downloadPosterPng, posterDataUrl } from "@/utils/sharePoster";
 import { setChrome } from "@/utils/pageChrome";
 import WeatherChart from "@/components/WeatherChart.vue";
+import PayHelpers from "@/components/PayHelpers.vue";
 import GoodsTabs from "@/components/GoodsTabs.vue";
 import RouteProfile from "@/components/RouteProfile.vue";
 import LivePulse from "@/components/LivePulse.vue";

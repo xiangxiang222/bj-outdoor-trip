@@ -41,12 +41,9 @@
       </div>
     </div>
 
-    <div v-if="data.contributors?.length" class="card">
+    <div v-if="data.helpers?.length" class="card">
       <div class="pad">
-        <strong>已付款</strong>
-        <p v-for="(c, i) in data.contributors" :key="i" class="muted">
-          {{ c.self ? "你" : c.nickname }} · ¥{{ c.amount }} · {{ c.remark || "微信支付" }}
-        </p>
+        <PayHelpers :list="data.helpers" />
       </div>
     </div>
 
@@ -77,6 +74,7 @@ import { requireLogin } from "@/utils/auth";
 import { setChrome } from "@/utils/pageChrome";
 import { liveWechatPay, MINIPROGRAM_PAY_HINT } from "@/utils/wechatPay";
 import { nativeShareSupported, payShareText, payShareUrl } from "@/utils/share";
+import PayHelpers from "@/components/PayHelpers.vue";
 
 const route = useRoute();
 const router = useRouter();

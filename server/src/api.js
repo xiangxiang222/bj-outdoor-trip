@@ -1569,6 +1569,7 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
       .get(sch.id, req.userId);
     if (mine) {
       const progress = payProgress(mine);
+      const payers = contributorsOf(mine.id, mine.user_id);
       myEnrollment = {
         id: mine.id,
         status: mine.status,
@@ -1580,7 +1581,8 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
         paidAmount: progress.paidAmount,
         remainAmount: progress.remainAmount,
         payShareToken: mine.pay_status === "unpaid" ? ensurePayShareToken(mine.id) : mine.pay_share_token || "",
-        contributors: contributorsOf(mine.id),
+        contributors: payers,
+        helpers: payers.filter((row) => row.helper),
       };
     }
   }
@@ -2099,6 +2101,7 @@ router.get("/orders", authUser, (req, res) => {
         remainAmount: progress.remainAmount,
         canPay: e.status === "joined" && e.pay_status === "unpaid" && progress.remainAmount > 0,
         payShareToken: e.pay_status === "unpaid" ? ensurePayShareToken(e.id) : e.pay_share_token || "",
+        helpers: contributorsOf(e.id, e.user_id).filter((row) => row.helper),
         reviewed: reviewed.has(e.schedule_id),
         canReview: e.status === "joined" && !reviewed.has(e.schedule_id),
         refundProgress: refunds.get(e.id) || null,

@@ -107,11 +107,11 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | POST | `/enroll` | 用户 | 见下方报名 body。报超会抽且名单未确认时写入 `applied`（不占座）；确认后中签 `joined`、未中 `waitlist`。候补/`applied` 券为 `held` |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。`WX_PAY_MOCK=0` 时返回 403 |
 | POST | `/pay/for-enrollment` | 用户 | 自己付、他人代付或众筹分摊。`enrollmentId` 或付款分享 `token`；可选 `amount`（整数元，默认付清余额）、`channel=wallet` 用余额（不足则 400）。演示立即成功。真实微信支付返回 `{ needPay, wechatPay, tradeNo }`，需小程序 `wx.requestPayment`。公司挂账不可用。余额支付退款退回钱包 |
-| GET | `/pay/share/:token` | 可选 | 付款分享：待付余额、已付款名单。登录后 `isOwner`/`self` 更准 |
+| GET | `/pay/share/:token` | 可选 | 付款分享：待付余额、已付款名单。`helpers` 是报名者以外的付款人（昵称、实付金额、备注）。登录后 `isOwner`/`self` 更准 |
 | POST | `/pay/confirm` | 用户 | `{ tradeNo }`。向微信查单，成功则入账（报名已付或开通会员） |
 | POST | `/pay/wechat/notify` | 否 | 微信支付 XML 回调，验签后入账。返回微信 XML |
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
-| GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canPay` `payShareToken` `paidAmount` `remainAmount` `canReview` `reviewed`、`channel`、`refundPercent` `refundHint` `refundAmount` |
+| GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canPay` `payShareToken` `paidAmount` `remainAmount` `canReview` `reviewed`、`channel`、`refundPercent` `refundHint` `refundAmount`、`helpers`（代付或分摊的付款人） |
 | POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（山野团开团前按比例退；同城局出发日前；当天同城局不可取消） |
 | POST | `/member/buy` | 用户 | 演示环境立即开通/续费会员（年费 99）。真实支付返回 JSAPI 参数，开通发生在回调或 `/pay/confirm`。可带 `code` |
 | GET | `/points` | 用户 | 积分余额与流水 |
@@ -165,7 +165,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 
 已解散返回 400。满员时报名成功但 `waitlisted: true`、`status=waitlist`，不占座位；有人取消后按报名顺序（抽签团按 `draw_rank`）自动递补。报超会抽且名单未确认时 `status=applied`，不占座。当前实现报名时 `points_used=0`，不读取抵现开关。可选 `referrerCode` `couponCode` `autoAlt` `fallbackScheduleIds` `joinCode`（加密团必填，忽略大小写；也可走 query `code`/`joinCode`）。发起人报名可免填。`joinMode` 可为 `assistant` / `photographer`（免个人团费，保险另计；摄影师每团一位）。`couponCode` 为活动码或已领实例码；未领则先领取。会员价与券取更低；候补/`applied` `held`，占座成功才 `used`。
 
-排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`、`channel`、`oversub`、`photographer`、`refundPolicy`、加密团 `private` / `joinCodeRequired`；名单项含 `waitlisted`、`applied`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位；报超待确认时不选座。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`，已付款（含众筹分摊）按档位返回 `refundPercent` `refundAmount`，`refunds` 为各付款人原路退回金额。前端有 `myEnrollment` 时不再展示报名按钮。
+排期详情含 `waitlistCount`、`remain`、`guaranteed`、`meetupMapUrl`、`channel`、`oversub`、`photographer`、`refundPolicy`、加密团 `private` / `joinCodeRequired`；名单项含 `waitlisted`、`applied`、`seatNo`。报名可传 `seatNo`（如 `1A`），不传则自动分配空位；报超待确认时不选座。取消报名成功时若递补了候补，返回 `promoted.enrollmentId`，已付款（含众筹分摊）按档位返回 `refundPercent` `refundAmount`，`refunds` 为各付款人原路退回金额。前端有 `myEnrollment` 时不再展示报名按钮。`myEnrollment.helpers` 是报名者以外的付款人，含昵称、实付金额和备注。
 
 报名成功示例：
 

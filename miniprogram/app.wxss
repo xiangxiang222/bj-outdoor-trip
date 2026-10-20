@@ -102,6 +102,10 @@ button.btn::after { border: none; }
 .hourly { white-space: nowrap; margin-top: 12rpx; }
 .hour { display: inline-block; width: 140rpx; margin-right: 12rpx; background: #fff; border-radius: 12rpx; padding: 8rpx; font-size: calc(22rpx * var(--ui-scale)); text-align: center; white-space: pre-wrap; }
 .chain-line { font-size: calc(26rpx * var(--ui-scale)); }
+.payer-list { margin-top: 12rpx; }
+.payer-title { font-weight: 700; font-size: calc(28rpx * var(--ui-scale)); }
+.payer-row { display: flex; justify-content: space-between; align-items: center; gap: 16rpx; padding: 12rpx 0; border-top: 1px dashed #e6dfd2; font-size: calc(26rpx * var(--ui-scale)); }
+.payer-amt { color: #8c3038; font-weight: 700; }
 .cal { display: flex; gap: 8rpx; padding: 8rpx 16rpx 16rpx; overflow-x: auto; }
 .cal-day { min-width: 88rpx; padding: 12rpx 8rpx; border: 1px solid #e6dfd2; border-radius: 12rpx; text-align: center; background: #fff; }
 .cal-day.on {
