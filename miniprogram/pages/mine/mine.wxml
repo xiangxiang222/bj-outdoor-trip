@@ -17,16 +17,16 @@
     </view>
     <view class="mine-tools {{dark ? 'is-dark' : ''}}">
       <view class="mine-tool" bindtap="goOfficial">
-        <view class="mine-tool-ico"><image src="{{iconBase}}tool-help.png" mode="aspectFit" /></view>
+        <view class="mine-tool-ico"><image src="{{iconBase}}tool-help.png?v=10" mode="aspectFit" /></view>
         <text>{{tr.t('客服', lang)}}</text>
       </view>
       <view class="mine-tool" bindtap="go" data-url="/pages/settings/settings">
-        <view class="mine-tool-ico"><image src="{{iconBase}}tool-set.png" mode="aspectFit" /></view>
+        <view class="mine-tool-ico"><image src="{{iconBase}}tool-set.png?v=10" mode="aspectFit" /></view>
         <text>{{tr.t('设置', lang)}}</text>
       </view>
       <view class="mine-tool" bindtap="go" data-url="/pages/notices/notices">
         <view class="mine-tool-ico">
-          <image src="{{iconBase}}tool-msg.png" mode="aspectFit" />
+          <image src="{{iconBase}}tool-msg.png?v=10" mode="aspectFit" />
           <text wx:if="{{hub.unreadCount}}" class="mine-badge">{{hub.unreadCount > 9 ? '9+' : hub.unreadCount}}</text>
         </view>
         <text>{{tr.t('消息', lang)}}</text>
@@ -63,7 +63,7 @@
       <view class="mine-shortcuts">
         <view bindtap="goOrders" data-tab="unpaid">
           <view class="mine-order-ico">
-            <image src="{{iconBase}}order-pay.png" mode="aspectFit" />
+            <image src="{{iconBase}}order-pay.png?v=10" mode="aspectFit" />
             <text wx:if="{{hub.unpaidCount}}" class="mine-badge">{{hub.unpaidCount > 99 ? '99+' : hub.unpaidCount}}</text>
           </view>
           <view class="mine-order-name">{{tr.t('待付款', lang)}}</view>
@@ -77,21 +77,21 @@
         </view>
         <view bindtap="goOrders" data-tab="depart">
           <view class="mine-order-ico">
-            <image src="{{iconBase}}order-go.png" mode="aspectFit" />
+            <image src="{{iconBase}}order-go.png?v=10" mode="aspectFit" />
             <text wx:if="{{hub.departCount}}" class="mine-badge">{{hub.departCount > 99 ? '99+' : hub.departCount}}</text>
           </view>
           <view class="mine-order-name">{{tr.t('待出行', lang)}}</view>
         </view>
         <view bindtap="goOrders" data-tab="review">
           <view class="mine-order-ico">
-            <image src="{{iconBase}}order-review.png" mode="aspectFit" />
+            <image src="{{iconBase}}order-review.png?v=10" mode="aspectFit" />
             <text wx:if="{{hub.reviewCount}}" class="mine-badge">{{hub.reviewCount > 99 ? '99+' : hub.reviewCount}}</text>
           </view>
           <view class="mine-order-name">{{tr.t('待评价', lang)}}</view>
         </view>
         <view bindtap="goOrders" data-tab="refund">
           <view class="mine-order-ico">
-            <image src="{{iconBase}}order-refund.png" mode="aspectFit" />
+            <image src="{{iconBase}}order-refund.png?v=10" mode="aspectFit" />
             <text wx:if="{{hub.refundCount}}" class="mine-badge">{{hub.refundCount > 99 ? '99+' : hub.refundCount}}</text>
           </view>
           <view class="mine-order-name">{{tr.t('已退款', lang)}}</view>
@@ -106,13 +106,13 @@
 
   <view class="mine-wallet" bindtap="go" data-url="/pages/wallet/wallet">
     <view class="mine-wallet-item">
-      <image class="wal-ico" src="{{iconBase}}wal-coin.png?v=8" mode="aspectFit" />
+      <image class="wal-ico" src="{{iconBase}}wal-coin.png?v=10" mode="aspectFit" />
       <view class="wal-num">{{tr.t(hub.balance, lang)}}</view>
       <view class="wal-name">{{tr.t('余额', lang)}}</view>
     </view>
     <view class="mine-wallet-item">
       <view class="wal-ico-wrap">
-        <image class="wal-ico" src="{{iconBase}}wal-coupon.png?v=8" mode="aspectFit" />
+        <image class="wal-ico" src="{{iconBase}}wal-coupon.png?v=11" mode="aspectFit" />
         <view wx:if="{{hub.couponCount}}" class="wal-dot"></view>
       </view>
       <view class="wal-num">{{tr.t(hub.couponCount, lang)}}</view>
@@ -120,12 +120,12 @@
       <view class="mine-expire" wx:if="{{hub.couponExpireHint}}">{{tr.t(hub.couponExpireHint, lang)}}</view>
     </view>
     <view class="mine-wallet-item">
-      <image class="wal-ico" src="{{iconBase}}wal-point.png?v=9" mode="aspectFit" />
+      <image class="wal-ico" src="{{iconBase}}wal-point.png?v=10" mode="aspectFit" />
       <view class="wal-num">{{tr.t(user.points, lang)}}</view>
       <view class="wal-name">{{tr.t('积分', lang)}}</view>
     </view>
     <view class="mine-wallet-item">
-      <image class="wal-ico" src="{{iconBase}}wal-purse.png?v=9" mode="aspectFit" />
+      <image class="wal-ico" src="{{iconBase}}wal-purse.png?v=10" mode="aspectFit" />
       <view class="wal-entry">{{tr.t('钱包', lang)}} ›</view>
     </view>
   </view>
@@ -136,14 +136,14 @@
 
 <view class="cell-label">{{tr.t('常用', lang)}}</view>
 <view class="mine-grid">
-  <view bindtap="go" data-url="/pages/favorites/favorites"><image class="ico" src="{{iconBase}}fav.png?v=3" mode="aspectFit" />{{tr.t('收藏', lang)}}</view>
-  <view bindtap="go" data-url="/pages/views/views"><image class="ico" src="{{iconBase}}views.png?v=3" mode="aspectFit" />{{tr.t('最近看过', lang)}}</view>
-  <view bindtap="go" data-url="/pages/companions/companions"><image class="ico" src="{{iconBase}}people.png?v=3" mode="aspectFit" />{{tr.t('报名人', lang)}}</view>
-  <view bindtap="go" data-url="/pages/follows/follows"><image class="ico" src="{{iconBase}}follow.png?v=3" mode="aspectFit" />{{tr.t('关注领队', lang)}}</view>
-  <view bindtap="go" data-url="/pages/student/student"><image class="ico" src="{{iconBase}}campus.png?v=3" mode="aspectFit" />{{tr.t(campusLabel, lang)}}</view>
-  <view bindtap="go" data-url="/pages/leader/leader"><image class="ico" src="{{iconBase}}leader.png?v=3" mode="aspectFit" />{{tr.t(leaderLabel, lang)}}</view>
-  <view bindtap="go" data-url="/pages/publish/publish"><image class="ico" src="{{iconBase}}publish.png?v=3" mode="aspectFit" />{{tr.t('发团', lang)}}</view>
-  <view bindtap="go" data-url="/pages/route-apply/route-apply"><image class="ico" src="{{iconBase}}route.png?v=3" mode="aspectFit" />{{tr.t('收录线路', lang)}}</view>
-  <view bindtap="go" data-url="/pages/feedback/feedback"><image class="ico" src="{{iconBase}}feedback.png?v=3" mode="aspectFit" />{{tr.t('建议', lang)}}</view>
-  <view bindtap="goRoutes"><image class="ico" src="{{iconBase}}trails.png?v=3" mode="aspectFit" />{{tr.t('看线路', lang)}}</view>
+  <view bindtap="go" data-url="/pages/favorites/favorites"><image class="ico" src="{{iconBase}}fav.png?v=10" mode="aspectFit" />{{tr.t('收藏', lang)}}</view>
+  <view bindtap="go" data-url="/pages/views/views"><image class="ico" src="{{iconBase}}views.png?v=10" mode="aspectFit" />{{tr.t('最近看过', lang)}}</view>
+  <view bindtap="go" data-url="/pages/companions/companions"><image class="ico" src="{{iconBase}}people.png?v=10" mode="aspectFit" />{{tr.t('报名人', lang)}}</view>
+  <view bindtap="go" data-url="/pages/follows/follows"><image class="ico" src="{{iconBase}}follow.png?v=10" mode="aspectFit" />{{tr.t('关注领队', lang)}}</view>
+  <view bindtap="go" data-url="/pages/student/student"><image class="ico" src="{{iconBase}}campus.png?v=10" mode="aspectFit" />{{tr.t(campusLabel, lang)}}</view>
+  <view bindtap="go" data-url="/pages/leader/leader"><image class="ico" src="{{iconBase}}leader.png?v=10" mode="aspectFit" />{{tr.t(leaderLabel, lang)}}</view>
+  <view bindtap="go" data-url="/pages/publish/publish"><image class="ico" src="{{iconBase}}publish.png?v=10" mode="aspectFit" />{{tr.t('发团', lang)}}</view>
+  <view bindtap="go" data-url="/pages/route-apply/route-apply"><image class="ico" src="{{iconBase}}route.png?v=10" mode="aspectFit" />{{tr.t('收录线路', lang)}}</view>
+  <view bindtap="go" data-url="/pages/feedback/feedback"><image class="ico" src="{{iconBase}}feedback.png?v=10" mode="aspectFit" />{{tr.t('建议', lang)}}</view>
+  <view bindtap="goRoutes"><image class="ico" src="{{iconBase}}trails.png?v=10" mode="aspectFit" />{{tr.t('看线路', lang)}}</view>
 </view>

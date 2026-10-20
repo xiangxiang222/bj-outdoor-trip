@@ -14,16 +14,16 @@
         </div>
         <div class="mine-tools">
           <button class="mine-tool" type="button" @click="$router.push('/m/official')">
-            <span class="mine-tool-ico"><img :src="'/static/mine/tool-help.png'" alt="" /></span>
+            <span class="mine-tool-ico"><img :src="'/static/mine/tool-help.png?v=10'" alt="" /></span>
             <span>客服</span>
           </button>
           <button class="mine-tool" type="button" @click="goAuth('/m/settings')">
-            <span class="mine-tool-ico"><img :src="'/static/mine/tool-set.png'" alt="" /></span>
+            <span class="mine-tool-ico"><img :src="'/static/mine/tool-set.png?v=10'" alt="" /></span>
             <span>设置</span>
           </button>
           <button class="mine-tool" type="button" @click="goAuth('/m/notices')">
             <span class="mine-tool-ico">
-              <img :src="'/static/mine/tool-msg.png'" alt="" />
+              <img :src="'/static/mine/tool-msg.png?v=10'" alt="" />
               <em v-if="hub.unreadCount" class="mine-badge">{{ hub.unreadCount > 9 ? "9+" : hub.unreadCount }}</em>
             </span>
             <span>消息</span>
@@ -49,35 +49,35 @@
           <div class="mine-shortcuts">
             <button type="button" @click="goOrders('unpaid')">
               <span class="mine-order-ico">
-                <img :src="'/static/mine/order-pay.png'" alt="" />
+                <img :src="'/static/mine/order-pay.png?v=10'" alt="" />
                 <em v-if="hub.unpaidCount" class="mine-badge">{{ hub.unpaidCount > 99 ? "99+" : hub.unpaidCount }}</em>
               </span>
               <span>待付款</span>
             </button>
             <button type="button" @click="goOrders('recruiting')">
               <span class="mine-order-ico">
-                <img :src="'/static/mine/order-recruit.png?v=2'" alt="" />
+                <img :src="'/static/mine/order-recruit.png?v=10'" alt="" />
                 <em v-if="hub.recruitingCount" class="mine-badge">{{ hub.recruitingCount > 99 ? "99+" : hub.recruitingCount }}</em>
               </span>
               <span>待成团</span>
             </button>
             <button type="button" @click="goOrders('depart')">
               <span class="mine-order-ico">
-                <img :src="'/static/mine/order-go.png'" alt="" />
+                <img :src="'/static/mine/order-go.png?v=10'" alt="" />
                 <em v-if="hub.departCount" class="mine-badge">{{ hub.departCount > 99 ? "99+" : hub.departCount }}</em>
               </span>
               <span>待出行</span>
             </button>
             <button type="button" @click="goOrders('review')">
               <span class="mine-order-ico">
-                <img :src="'/static/mine/order-review.png'" alt="" />
+                <img :src="'/static/mine/order-review.png?v=10'" alt="" />
                 <em v-if="hub.reviewCount" class="mine-badge">{{ hub.reviewCount > 99 ? "99+" : hub.reviewCount }}</em>
               </span>
               <span>待评价</span>
             </button>
             <button type="button" @click="goOrders('refund')">
               <span class="mine-order-ico">
-                <img :src="'/static/mine/order-refund.png'" alt="" />
+                <img :src="'/static/mine/order-refund.png?v=10'" alt="" />
                 <em v-if="hub.refundCount" class="mine-badge">{{ hub.refundCount > 99 ? "99+" : hub.refundCount }}</em>
               </span>
               <span>已退款</span>
@@ -92,13 +92,13 @@
 
       <button class="mine-wallet" type="button" @click="goAuth('/m/wallet')">
         <span class="mine-wallet-item">
-          <img :src="'/static/mine/wal-coin.png?v=8'" alt="" />
+          <img :src="'/static/mine/wal-coin.png?v=10'" alt="" />
           <strong>{{ hub.balance ?? store.profile.walletBalance ?? 0 }}</strong>
           <span>余额</span>
         </span>
         <span class="mine-wallet-item">
           <span class="wal-ico">
-            <img :src="'/static/mine/wal-coupon.png?v=8'" alt="" />
+            <img :src="'/static/mine/wal-coupon.png?v=11'" alt="" />
             <i v-if="hub.couponCount || coupons.length" class="wal-dot"></i>
           </span>
           <strong>{{ hub.couponCount || coupons.length || 0 }}</strong>
@@ -106,12 +106,12 @@
           <em v-if="hub.couponExpireHint">{{ hub.couponExpireHint }}</em>
         </span>
         <span class="mine-wallet-item">
-          <img :src="'/static/mine/wal-point.png?v=9'" alt="" />
+          <img :src="'/static/mine/wal-point.png?v=10'" alt="" />
           <strong>{{ store.profile.points || 0 }}</strong>
           <span>积分</span>
         </span>
         <span class="mine-wallet-item is-entry">
-          <img :src="'/static/mine/wal-purse.png?v=9'" alt="" />
+          <img :src="'/static/mine/wal-purse.png?v=10'" alt="" />
           <span>钱包 ›</span>
         </span>
       </button>
@@ -127,17 +127,17 @@
 
     <p class="cell-label">常用</p>
     <div class="mine-grid">
-      <button type="button" @click="goAuth('/m/favorites')"><img :src="'/static/mine/fav.png?v=3'" alt="" />我的收藏</button>
-      <button type="button" @click="goAuth('/m/views')"><img :src="'/static/mine/views.png?v=3'" alt="" />最近看过</button>
-      <button type="button" @click="goAuth('/m/companions')"><img :src="'/static/mine/people.png?v=3'" alt="" />常用报名人</button>
-      <button type="button" @click="goAuth('/m/follows')"><img :src="'/static/mine/follow.png?v=3'" alt="" />关注领队</button>
-      <button type="button" @click="goAuth('/m/student')"><img :src="'/static/mine/campus.png?v=3'" alt="" />{{ campusShort }}</button>
-      <button type="button" @click="goAuth('/m/leader')"><img :src="'/static/mine/leader.png?v=3'" alt="" />{{ leaderShort }}</button>
-      <button type="button" @click="goAuth('/m/publish')"><img :src="'/static/mine/publish.png?v=3'" alt="" />去发团</button>
-      <button type="button" @click="goReferral"><img :src="'/static/mine/referral.png?v=3'" alt="" />推荐报名</button>
-      <button type="button" @click="goAuth('/m/lottery')"><img :src="'/static/mine/lottery.png?v=4'" alt="" />抽奖</button>
-      <button type="button" @click="goAuth('/m/route-apply')"><img :src="'/static/mine/route.png?v=3'" alt="" />收录线路</button>
-      <button type="button" @click="goAuth('/m/feedback')"><img :src="'/static/mine/feedback.png?v=3'" alt="" />建议反馈</button>
+      <button type="button" @click="goAuth('/m/favorites')"><img :src="'/static/mine/fav.png?v=10'" alt="" />我的收藏</button>
+      <button type="button" @click="goAuth('/m/views')"><img :src="'/static/mine/views.png?v=10'" alt="" />最近看过</button>
+      <button type="button" @click="goAuth('/m/companions')"><img :src="'/static/mine/people.png?v=10'" alt="" />常用报名人</button>
+      <button type="button" @click="goAuth('/m/follows')"><img :src="'/static/mine/follow.png?v=10'" alt="" />关注领队</button>
+      <button type="button" @click="goAuth('/m/student')"><img :src="'/static/mine/campus.png?v=10'" alt="" />{{ campusShort }}</button>
+      <button type="button" @click="goAuth('/m/leader')"><img :src="'/static/mine/leader.png?v=10'" alt="" />{{ leaderShort }}</button>
+      <button type="button" @click="goAuth('/m/publish')"><img :src="'/static/mine/publish.png?v=10'" alt="" />去发团</button>
+      <button type="button" @click="goReferral"><img :src="'/static/mine/referral.png?v=10'" alt="" />推荐报名</button>
+      <button type="button" @click="goAuth('/m/lottery')"><img :src="'/static/mine/lottery.png?v=10'" alt="" />抽奖</button>
+      <button type="button" @click="goAuth('/m/route-apply')"><img :src="'/static/mine/route.png?v=10'" alt="" />收录线路</button>
+      <button type="button" @click="goAuth('/m/feedback')"><img :src="'/static/mine/feedback.png?v=10'" alt="" />建议反馈</button>
     </div>
 
     <p class="cell-label">服务</p>
