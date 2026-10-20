@@ -132,7 +132,18 @@
         </div>
         <button class="wal-forget" type="button" @click="router.push('/m/wallet/pin')">忘记密码</button>
         <div class="wal-keys">
-          <button v-for="key in keys" :key="key.label" type="button" :disabled="!key.label" @click="pressKey(key)">{{ key.label }}</button>
+          <button
+            v-for="key in keys"
+            :key="key.label"
+            type="button"
+            :disabled="!key.label"
+            :class="{ down: downKey === key.label }"
+            @pointerdown="downKey = key.label"
+            @pointerup="downKey = ''"
+            @pointercancel="downKey = ''"
+            @pointerleave="downKey = ''"
+            @click="pressKey(key)"
+          >{{ key.label }}</button>
         </div>
       </div>
     </div>
@@ -158,6 +169,7 @@ const topupAmount = ref("100");
 const withdrawAmount = ref("");
 const pin = ref("");
 const pinOpen = ref(false);
+const downKey = ref("");
 const busy = ref(false);
 const msg = ref("");
 const ok = ref(false);
@@ -365,7 +377,21 @@ async function doWithdraw() {
 .wal-dots i { width: 36px; height: 44px; border-radius: 8px; background: #fff; display: block; position: relative; }
 .wal-dots i.on::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #222; position: absolute; left: 14px; top: 18px; }
 .wal-keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
-.wal-keys button { height: 52px; border: 0; border-radius: 8px; background: #fff; font-size: calc(22px * var(--ui-scale)); }
-.wal-keys button:disabled { background: transparent; }
+.wal-keys button {
+  height: 52px;
+  border: 0;
+  border-radius: 8px;
+  background: #fff;
+  font-size: calc(22px * var(--ui-scale));
+  box-shadow: 0 1px 0 rgba(20, 20, 20, 0.06);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.wal-keys button.down,
+.wal-keys button:active:not(:disabled) {
+  background: #d2d2d7;
+  box-shadow: inset 0 2px 6px rgba(20, 20, 20, 0.18);
+}
+.wal-keys button:disabled { background: transparent; box-shadow: none; }
 .btn.block { margin-top: 12px; }
 </style>
