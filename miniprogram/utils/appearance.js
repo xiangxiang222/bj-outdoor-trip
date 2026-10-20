@@ -195,7 +195,7 @@ function applyChrome(look) {
   });
   wx.setTabBarStyle({
     color: dark ? "#9a9a9a" : "#7a7d74",
-    selectedColor: "#6b2178",
+    selectedColor: dark ? "#f2f2f2" : "#141414",
     backgroundColor: dark ? "#1c1c1e" : "#ffffff",
     fail() {},
   });
