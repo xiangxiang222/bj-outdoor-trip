@@ -1,6 +1,6 @@
 const { request, showError } = require("../../utils/request");
 const { showAfterActions, todayYmd } = require("../../utils/trips");
-const { orderBadge, orderHint, orderMoney, orderShop, orderSpec, canReorder, priceLines, payMethodLabel, placedLabel, maskTravelerPhone } = require("../../utils/order-view");
+const { orderBadge, orderHint, orderMoney, orderShop, orderSpec, canReorder, priceLines, payMethodLabel, placedLabel, orderNo, maskTravelerPhone } = require("../../utils/order-view");
 const { detailUrl } = require("../../utils/media");
 const app = getApp();
 
@@ -17,6 +17,7 @@ Page({
     phone: "",
     place: "",
     placed: "",
+    orderNo: "",
     payMethod: "",
     lines: [],
     helpers: "",
@@ -59,6 +60,7 @@ Page({
         phone: maskTravelerPhone(order && order.traveler_phone),
         place: (order && (order.meetup_point || order.city)) || orderSpec(order),
         placed: placedLabel(order),
+        orderNo: orderNo(order),
         payMethod: payMethodLabel(order),
         lines: priceLines(order).lines,
         helpers: names,
@@ -71,7 +73,11 @@ Page({
     }
   },
   copyNo() {
-    wx.setClipboardData({ data: String(this.data.order.id) });
+    wx.setClipboardData({ data: this.data.orderNo || "" });
+  },
+  goSchedule() {
+    const sid = this.data.order && this.data.order.schedule_id;
+    if (sid) wx.navigateTo({ url: "/pages/schedule/schedule?id=" + sid });
   },
   goPay() {
     const token = this.data.order && this.data.order.payShareToken;

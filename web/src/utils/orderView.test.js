@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canReorder, matchOrderQuery, matchOrderTime, orderBadge, orderTimePresets } from "./orderView";
+import { canReorder, matchOrderQuery, matchOrderTime, orderBadge, orderNo, orderTimePresets } from "./orderView";
 
 const today = "2026-10-20";
 
@@ -48,5 +48,10 @@ describe("matchOrderTime", () => {
     expect(matchOrderTime(older, { start: "2026-10-01" }, now)).toBe(false);
     expect(matchOrderQuery({ title: "青崖子" }, "崖")).toBe(true);
     expect(matchOrderQuery({ title: "青崖子" }, "金海")).toBe(false);
+  });
+
+  it("builds a stable 16-digit order number from the day and id", () => {
+    expect(orderNo({ id: 235, created_at: "2026-10-20 00:05:59" })).toBe("2026102000000235");
+    expect(orderNo({ id: 235, created_at: "2026-10-20 00:05:59" })).toHaveLength(16);
   });
 });

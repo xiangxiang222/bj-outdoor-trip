@@ -10,8 +10,11 @@
     <view class="od-spec">{{tr.t(place, lang)}}</view>
   </view>
   <view class="od-card">
-    <view class="od-head"><view class="od-shop">{{tr.t(shop, lang)}}</view></view>
-    <view class="od-goods">
+    <view class="od-head">
+      <view class="od-shop">{{tr.t(shop, lang)}}</view>
+      <view wx:if="{{order.schedule_id}}" class="od-jump" bindtap="goSchedule">{{tr.t('团详情', lang)}} ›</view>
+    </view>
+    <view class="od-goods" bindtap="goSchedule">
       <image wx:if="{{order.cover}}" src="{{order.cover}}" mode="aspectFill" />
       <view wx:else class="od-ph"></view>
       <view class="od-main">
@@ -39,7 +42,7 @@
   <view class="od-card od-lines">
     <view class="od-line">
       <text>{{tr.t('订单编号', lang)}}</text>
-      <text class="od-val">{{order.id}} <text class="od-copy" bindtap="copyNo">{{tr.t('复制', lang)}}</text></text>
+      <text class="od-val od-no">{{orderNo}} <text class="od-copy" catchtap="copyNo">{{tr.t('复制', lang)}}</text></text>
     </view>
     <view class="od-line" wx:if="{{placed}}">
       <text>{{tr.t('下单时间', lang)}}</text>

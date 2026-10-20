@@ -2601,7 +2601,7 @@ html[data-night="dark"] .day-stop > div { border-left-color: #2d6a4f; }
   font-size: calc(13px * var(--ui-scale));
   cursor: pointer;
 }
-.od-page { padding-bottom: 8px; }
+.od-page { padding-bottom: 28px; }
 .od-search {
   width: 100%;
   box-sizing: border-box;
@@ -2717,7 +2717,18 @@ html[data-night="dark"] .day-stop > div { border-left-color: #2d6a4f; }
   font-size: calc(13px * var(--ui-scale));
 }
 .od-lines span { color: #8a8a8a; }
-.od-lines b { font-weight: 650; }
+.od-lines b { font-weight: 650; text-align: right; }
+.od-lines .od-no { font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.od-jump {
+  border: 0;
+  background: transparent;
+  color: #8a8a8a;
+  font: inherit;
+  font-size: calc(13px * var(--ui-scale));
+  padding: 0;
+  cursor: pointer;
+}
+.od-tap { cursor: pointer; }
 .od-lines button {
   border: 0;
   background: transparent;
