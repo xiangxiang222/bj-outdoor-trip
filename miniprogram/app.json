@@ -50,7 +50,10 @@
     "navigationBarBackgroundColor": "#7a4e92",
     "navigationBarTitleText": "同行者众",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#f4efe6"
+    "backgroundColor": "#7a4e92",
+    "backgroundColorTop": "#7a4e92",
+    "backgroundColorBottom": "#f3f4f6",
+    "backgroundTextStyle": "light"
   },
   "tabBar": {
     "custom": true,

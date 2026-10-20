@@ -199,10 +199,14 @@ function applyChrome(look) {
     backgroundColor: dark ? "#1c1c1e" : "#ffffff",
     fail() {},
   });
+  const chrome = dark ? "#5c3d78" : "#7a4e92";
   wx.setBackgroundColor({
-    backgroundColor: dark ? "#121214" : "#f5f6f3",
+    backgroundColor: chrome,
+    backgroundColorTop: chrome,
+    backgroundColorBottom: dark ? "#121214" : "#f3f4f6",
     fail() {},
   });
+  wx.setBackgroundTextStyle({ textStyle: "light", fail() {} });
 }
 
 function t(look) {

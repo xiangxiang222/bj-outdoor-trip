@@ -34,7 +34,7 @@ a { color: inherit; text-decoration: none; }
 button, input, textarea, select { font-family: inherit; font-size: inherit; }
 
 .mp-phone.is-account {
-  background: #f3f4f6;
+  background-color: #f3f4f6;
   color: #111;
   font-family: "PingFang SC", "SF Pro Text", "Helvetica Neue", "Noto Sans SC", sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -80,7 +80,8 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   height: 100vh;
   min-height: 100vh;
   margin: 0 auto;
-  background: var(--cream);
+  background-color: #f3f4f6;
+  background-image: linear-gradient(#7a4e92 0, #7a4e92 200px, #f3f4f6 200px);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -2385,6 +2386,7 @@ html[data-night="dark"] {
 html[data-night="dark"] .mp-phone,
 html[data-night="dark"] .mp-phone.is-account {
   background-color: #1a121c;
+  background-image: linear-gradient(#5c3d78 0, #5c3d78 200px, #1a121c 200px);
   color: #f4f0f5;
 }
 html[data-night="dark"] .mp-status,
