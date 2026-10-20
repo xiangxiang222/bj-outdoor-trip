@@ -55,7 +55,6 @@
   </view>
 
   <view class="mine-orders">
-    <view class="mine-join" wx:if="{{user.membership}}"></view>
     <view class="mine-traces">
       <view bindtap="go" data-url="/pages/views/views"><text>{{tr.t('足迹', lang)}}</text><text class="mine-trace-num">{{hub.viewCount || 0}}</text></view>
       <view bindtap="go" data-url="/pages/favorites/favorites"><text>{{tr.t('收藏', lang)}}</text><text class="mine-trace-num">{{hub.favoriteCount || 0}}</text></view>

@@ -2084,17 +2084,17 @@ html.admin-theme .el-dialog__footer {
 .mine-board {
   margin: 8px 0 10px;
   border-radius: 12px;
-  overflow: hidden;
-  background: var(--thu-soft);
+  background: #fff;
+  overflow: visible;
 }
 .mine-member {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   width: 100%;
   margin: 0;
   border: 0;
-  border-radius: 0;
-  padding: 14px 16px;
+  border-radius: 12px 12px 0 0;
+  padding: 14px 16px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2103,13 +2103,8 @@ html.admin-theme .el-dialog__footer {
   font: inherit;
   cursor: pointer;
   text-align: left;
-  box-shadow: none;
-}
-.mine-join {
-  display: block;
-  height: 16px;
-  margin-top: -8px;
-  background: var(--thu-soft);
+  appearance: none;
+  box-shadow: 0 4px 0 var(--thu-soft);
 }
 .mine-member strong { display: block; font-size: calc(18px * var(--ui-scale)); font-weight: 700; color: var(--thu); }
 .mine-level em { font-style: italic; font-weight: 800; margin-right: 1px; }
@@ -2141,10 +2136,8 @@ html.admin-theme .el-dialog__footer {
 .mine-tool-ico { position: relative; width: 24px; height: 24px; display: grid; place-items: center; }
 .mine-tool-ico img { width: 22px; height: 22px; display: block; object-fit: contain; filter: invert(1); }
 .mine-orders {
-  position: relative;
-  z-index: 1;
   margin: 0;
-  background: #fff;
+  background: transparent;
   border-radius: 0;
   padding: 0 0 12px;
   font-family: "PingFang SC", "Helvetica Neue", sans-serif;
@@ -2426,7 +2419,8 @@ html[data-night="dark"] .mine-tool { color: #f2f2f2; }
 html[data-night="dark"] .mine-tool-ico img,
 html[data-night="dark"] .mine-grid img,
 html[data-night="dark"] .mine-wallet-item img { filter: invert(1); }
-html[data-night="dark"] .mine-member { background: var(--thu-soft); }
+html[data-night="dark"] .mine-board { background: #1c1c1e; }
+html[data-night="dark"] .mine-member { background: var(--thu-soft); box-shadow: 0 4px 0 var(--thu-soft); }
 html[data-night="dark"] .mine-member strong { color: #f4f0f5; }
 html[data-night="dark"] .mine-member span { color: var(--muted); }
 html[data-night="dark"] .mine-avatar { background: var(--thu-soft); color: #f4f0f5; }
@@ -2437,7 +2431,7 @@ html[data-night="dark"] .mine-page {
 html[data-night="dark"] .mine-name,
 html[data-night="dark"] .mine-phone,
 html[data-night="dark"] .mine-tool { color: #f2f2f2; }
-html[data-night="dark"] .mine-orders,
+html[data-night="dark"] .mine-orders { background: transparent; }
 html[data-night="dark"] .mine-wallet,
 html[data-night="dark"] .mine-grid { background: #1c1c1e; }
 html[data-night="dark"] .mine-order-ico img { filter: invert(1); }
