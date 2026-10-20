@@ -9,21 +9,30 @@
 </view>
 
 <block wx:else>
-  <input class="od-search" placeholder="{{tr.t('搜索我的订单', lang)}}" value="{{keyword}}" bindinput="setKeyword" />
-  <view class="od-tools">
-    <scroll-view class="od-tabs" scroll-x enhanced show-scrollbar="{{false}}">
-      <view class="od-tab-row">
-        <view class="od-tab {{tab=='all'?'on':''}}" bindtap="setTab" data-tab="all">{{tr.t('全部', lang)}}</view>
-        <view class="od-tab {{tab=='unpaid'?'on':''}}" bindtap="setTab" data-tab="unpaid">{{tr.t('待支付', lang)}}</view>
-        <view class="od-tab {{tab=='recruiting'?'on':''}}" bindtap="setTab" data-tab="recruiting">{{tr.t('招募中', lang)}}</view>
-        <view class="od-tab {{tab=='depart'?'on':''}}" bindtap="setTab" data-tab="depart">{{tr.t('待出发', lang)}}</view>
-        <view class="od-tab {{tab=='review'?'on':''}}" bindtap="setTab" data-tab="review">{{tr.t('待评价', lang)}}</view>
-        <view class="od-tab {{tab=='waitlist'?'on':''}}" bindtap="setTab" data-tab="waitlist">{{tr.t('候补中', lang)}}</view>
-        <view class="od-tab {{tab=='refund'?'on':''}}" bindtap="setTab" data-tab="refund">{{tr.t('已退款', lang)}}</view>
+  <view class="od-bar">
+    <input class="od-search" placeholder="{{tr.t('搜索我的订单', lang)}}" value="{{keyword}}" bindinput="setKeyword" />
+    <view class="od-tools">
+      <view class="od-tabs-wrap">
+      <scroll-view class="od-tabs" scroll-x enhanced show-scrollbar="{{false}}" scroll-into-view="{{tabInto}}" scroll-with-animation>
+        <view class="od-tab-row">
+          <view id="tab-all" class="od-tab {{tab=='all'?'on':''}}" bindtap="setTab" data-tab="all">{{tr.t('全部', lang)}}</view>
+          <view id="tab-unpaid" class="od-tab {{tab=='unpaid'?'on':''}}" bindtap="setTab" data-tab="unpaid">{{tr.t('待付款', lang)}}</view>
+          <view id="tab-recruiting" class="od-tab {{tab=='recruiting'?'on':''}}" bindtap="setTab" data-tab="recruiting">{{tr.t('招募中', lang)}}</view>
+          <view id="tab-depart" class="od-tab {{tab=='depart'?'on':''}}" bindtap="setTab" data-tab="depart">{{tr.t('待出发', lang)}}</view>
+          <view id="tab-review" class="od-tab {{tab=='review'?'on':''}}" bindtap="setTab" data-tab="review">{{tr.t('待评价', lang)}}</view>
+          <view id="tab-waitlist" class="od-tab {{tab=='waitlist'?'on':''}}" bindtap="setTab" data-tab="waitlist">{{tr.t('候补中', lang)}}</view>
+          <view id="tab-refund" class="od-tab {{tab=='refund'?'on':''}}" bindtap="setTab" data-tab="refund">{{tr.t('已退款', lang)}}</view>
+        </view>
+      </scroll-view>
+      <view class="od-fade"></view>
       </view>
-    </scroll-view>
-    <view class="od-filter {{filterOn?'on':''}}" bindtap="openFilter">{{tr.t('筛选', lang)}}</view>
+      <view class="od-filter {{filterOn?'on':''}}" bindtap="openFilter">
+        <view class="od-funnel"></view>
+        <text>{{tr.t('筛选', lang)}}</text>
+      </view>
+    </view>
   </view>
+  <view class="od-list">
 
   <view class="od-card" wx:for="{{shown}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
     <view class="od-head">
@@ -61,7 +70,9 @@
     </view>
   </view>
   <view class="pad muted" wx:elif="{{!shown.length}}">{{tr.t('没有符合条件的订单', lang)}}</view>
+  <view class="od-end" wx:else>{{tr.t('没有更多订单', lang)}}</view>
   <view class="od-tab-space"></view>
+  </view>
 </block>
 
 <view class="od-mask" wx:if="{{sheet}}" bindtap="closeFilter">
