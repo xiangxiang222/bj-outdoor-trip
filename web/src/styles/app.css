@@ -2019,18 +2019,23 @@ html.admin-theme .el-dialog__footer {
 .home-foot { text-align: center; margin: 8px 0 4px; }
 .home-foot a { color: var(--thu); }
 .mine-hero { background: var(--thu); color: #fff; }
-.mine-name { font-size: calc(22px * var(--ui-scale)); font-weight: 700; letter-spacing: -0.4px; color: #fff; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 9em; }
+.mine-name { font-size: calc(22px * var(--ui-scale)); font-weight: 700; letter-spacing: -0.4px; color: #1a1a1a; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 9em; }
 .mine-page {
   margin: 0;
   padding: 8px 12px 16px;
   background: linear-gradient(180deg, #c045ab 0, #c045ab 120px, #e7b6dc 210px, #f3f4f6 280px);
   color: #1a1a1a;
 }
+.mine-profile {
+  margin: 4px 0 10px;
+  background: #fff;
+  border-radius: 12px;
+}
 .mine-hero-card {
   background: transparent;
   border-radius: 0;
   box-shadow: none;
-  padding: 8px 4px 4px;
+  padding: 14px 8px 8px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -2069,7 +2074,7 @@ html.admin-theme .el-dialog__footer {
 .avatar-grid button { border: 0; background: transparent; padding: 0; cursor: pointer; }
 .avatar-grid img { width: 64px; height: 64px; border-radius: 50%; display: block; margin: 0 auto; }
 .avatar-action { display: block; width: 100%; border: 0; border-top: 1px solid #f0f1f3; background: #fff; padding: 14px 0; font: inherit; text-align: center; cursor: pointer; }
-.mine-phone { color: rgba(255, 255, 255, 0.72); font-size: calc(13px * var(--ui-scale)); margin-top: 2px; }
+.mine-phone { color: #8d8d8d; font-size: calc(13px * var(--ui-scale)); margin-top: 2px; }
 .mine-gear {
   position: relative;
   border: 0;
@@ -2081,19 +2086,12 @@ html.admin-theme .el-dialog__footer {
   cursor: pointer;
   color: #666;
 }
-.mine-board {
-  margin: 8px 0 10px;
-  border-radius: 12px;
-  overflow: hidden;
-  background-color: #fff;
-  background-image: linear-gradient(var(--thu-soft) 0, var(--thu-soft) var(--member-h, 0px), #fff var(--member-h, 0px));
-}
 .mine-member {
   width: 100%;
   margin: 0;
   border: 0;
   border-radius: 0;
-  padding: 14px 16px 18px;
+  padding: 4px 12px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2116,7 +2114,7 @@ html.admin-theme .el-dialog__footer {
   position: relative;
   border: 0;
   background: transparent;
-  color: #fff;
+  color: #1a1a1a;
   font: inherit;
   font-size: calc(11px * var(--ui-scale));
   line-height: 1.15;
@@ -2133,12 +2131,12 @@ html.admin-theme .el-dialog__footer {
 }
 .mine-tool > span:last-child { white-space: nowrap; }
 .mine-tool-ico { position: relative; width: 24px; height: 24px; display: grid; place-items: center; }
-.mine-tool-ico img { width: 22px; height: 22px; display: block; object-fit: contain; filter: invert(1); }
+.mine-tool-ico img { width: 22px; height: 22px; display: block; object-fit: contain; }
 .mine-orders {
-  margin: 0;
-  background: transparent;
-  border-radius: 0;
-  padding: 0 0 12px;
+  margin: 0 0 10px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 0;
   font-family: "PingFang SC", "Helvetica Neue", sans-serif;
 }
 .mine-traces {
@@ -2418,10 +2416,8 @@ html[data-night="dark"] .mine-tool { color: #f2f2f2; }
 html[data-night="dark"] .mine-tool-ico img,
 html[data-night="dark"] .mine-grid img,
 html[data-night="dark"] .mine-wallet-item img { filter: invert(1); }
-html[data-night="dark"] .mine-board {
-  background-color: #1c1c1e;
-  background-image: linear-gradient(var(--thu-soft) 0, var(--thu-soft) var(--member-h, 0px), #1c1c1e var(--member-h, 0px));
-}
+html[data-night="dark"] .mine-profile,
+html[data-night="dark"] .mine-orders { background: #1c1c1e; }
 html[data-night="dark"] .mine-member { background: transparent; box-shadow: none; }
 html[data-night="dark"] .mine-member strong { color: #f4f0f5; }
 html[data-night="dark"] .mine-member span { color: var(--muted); }
@@ -2433,7 +2429,6 @@ html[data-night="dark"] .mine-page {
 html[data-night="dark"] .mine-name,
 html[data-night="dark"] .mine-phone,
 html[data-night="dark"] .mine-tool { color: #f2f2f2; }
-html[data-night="dark"] .mine-orders { background: transparent; }
 html[data-night="dark"] .mine-wallet,
 html[data-night="dark"] .mine-grid { background: #1c1c1e; }
 html[data-night="dark"] .mine-order-ico img { filter: invert(1); }
