@@ -260,6 +260,10 @@ button.btn::after { border: none; }
 .enroll-price { flex: 1; }
 .enroll-price .strong { font-size: calc(36rpx * var(--ui-scale)); font-weight: 700; }
 .dock-cta { margin: 0; min-width: 42%; }
+.tab-pad {
+  height: calc(140rpx + constant(safe-area-inset-bottom));
+  height: calc(140rpx + env(safe-area-inset-bottom));
+}
 .home-seg {
   display: flex;
   margin: 8rpx 24rpx 16rpx;

@@ -69,7 +69,26 @@
         <view class="mine-stat-num">{{tr.t(hub.points != null ? hub.points : user.points, lang)}}</view>
         <view class="mine-stat-name">{{tr.t('积分', lang)}}</view>
       </view>
+      <view bindtap="go" data-url="/pages/signin/signin">
+        <view class="mine-stat-num">{{hub.signedToday ? tr.t('已签到', lang) : tr.t('去签', lang)}}</view>
+        <view class="mine-stat-name">{{tr.t('签到', lang)}}</view>
+      </view>
       <view class="mine-more" bindtap="go" data-url="/pages/wallet/wallet">{{tr.t('更多', lang)}}</view>
+    </view>
+  </view>
+
+  <view class="mine-links">
+    <view bindtap="go" data-url="/pages/views/views">
+      <text>{{tr.t('足迹', lang)}}</text>
+      <text class="mine-link-num">{{hub.viewCount || 0}}</text>
+    </view>
+    <view bindtap="go" data-url="/pages/favorites/favorites">
+      <text>{{tr.t('收藏', lang)}}</text>
+      <text class="mine-link-num">{{hub.favoriteCount || 0}}</text>
+    </view>
+    <view bindtap="go" data-url="/pages/follows/follows">
+      <text>{{tr.t('关注', lang)}}</text>
+      <text class="mine-link-num">{{hub.followCount || 0}}</text>
     </view>
   </view>
 
@@ -119,40 +138,21 @@
     </view>
   </view>
 
-  <view class="mine-links">
-    <view bindtap="go" data-url="/pages/views/views">
-      <image src="{{iconBase}}views.png?v=10" mode="aspectFit" />
-      <text>{{tr.t('足迹', lang)}}</text>
-    </view>
-    <view bindtap="go" data-url="/pages/favorites/favorites">
-      <image src="{{iconBase}}fav.png?v=10" mode="aspectFit" />
-      <text>{{tr.t('收藏', lang)}}</text>
-    </view>
-    <view bindtap="go" data-url="/pages/follows/follows">
-      <image src="{{iconBase}}follow.png?v=10" mode="aspectFit" />
-      <text>{{tr.t('关注', lang)}}</text>
-    </view>
-  </view>
-
   <view class="mine-play">
-    <view bindtap="go" data-url="/pages/signin/signin">
-      <view class="mine-sign-ico"></view>
-      <text>{{hub.signedToday ? tr.t('已签到', lang) : tr.t('签到', lang)}}</text>
-    </view>
     <view bindtap="go" data-url="/pages/student/student">
-      <image src="{{iconBase}}campus.png?v=10" mode="aspectFit" />
+      <view class="mine-ico"><image src="{{iconBase}}campus.png?v=10" mode="aspectFit" /></view>
       <text>{{tr.t(campusLabel, lang)}}</text>
     </view>
     <view bindtap="go" data-url="/pages/leader/leader">
-      <image src="{{iconBase}}leader.png?v=10" mode="aspectFit" />
+      <view class="mine-ico"><image src="{{iconBase}}leader.png?v=10" mode="aspectFit" /></view>
       <text>{{tr.t(leaderLabel, lang)}}</text>
     </view>
     <view bindtap="go" data-url="/pages/photo-apply/photo-apply">
-      <view class="mine-cam"></view>
+      <view class="mine-ico"><view class="mine-cam"></view></view>
       <text>{{tr.t('摄影师申请', lang)}}</text>
     </view>
     <view bindtap="go" data-url="/pages/feedback/feedback">
-      <image src="{{iconBase}}feedback.png?v=10" mode="aspectFit" />
+      <view class="mine-ico"><image src="{{iconBase}}feedback.png?v=10" mode="aspectFit" /></view>
       <text>{{tr.t('反馈', lang)}}</text>
     </view>
   </view>
@@ -170,3 +170,4 @@
     <text class="mine-rec-price" wx:if="{{item.fromPrice != null}}">¥{{item.fromPrice}}</text>
   </view>
 </view>
+<view class="tab-pad"></view>

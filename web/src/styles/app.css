@@ -2150,9 +2150,10 @@ html.admin-theme .el-dialog__footer {
 .mine-more { flex: none !important; width: 36px; border-left: 1px solid #eee !important; color: #8d8d8d; font-size: calc(11px * var(--ui-scale)); }
 .mine-links {
   display: flex;
+  align-items: center;
   background: #fff;
   border-radius: 12px;
-  padding: 14px 6px 12px;
+  padding: 14px 8px;
   margin-bottom: 10px;
 }
 .mine-links button {
@@ -2163,16 +2164,17 @@ html.admin-theme .el-dialog__footer {
   cursor: pointer;
   padding: 0;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
   color: #1a1a1a;
 }
-.mine-links img { width: 28px; height: 28px; object-fit: contain; display: block; }
-.mine-links span { font-size: calc(12px * var(--ui-scale)); }
-.mine-links b { display: none; }
+.mine-links span { font-size: calc(14px * var(--ui-scale)); }
+.mine-links b { font-size: calc(15px * var(--ui-scale)); font-weight: 650; color: inherit; }
 .mine-play {
   display: flex;
+  align-items: flex-start;
   background: #fff;
   border-radius: 12px;
   padding: 14px 6px 12px;
@@ -2180,24 +2182,37 @@ html.admin-theme .el-dialog__footer {
 }
 .mine-play button {
   flex: 1;
+  min-width: 0;
   border: 0;
   background: transparent;
   font: inherit;
   cursor: pointer;
-  padding: 0;
+  padding: 0 2px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
   color: #1a1a1a;
-  font-size: calc(12px * var(--ui-scale));
 }
-.mine-play span { font-size: calc(11px * var(--ui-scale)); white-space: nowrap; }
-.mine-play img { width: 28px; height: 28px; object-fit: contain; }
+.mine-ico {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.mine-play-name {
+  font-size: calc(11px * var(--ui-scale));
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
+}
+.mine-play img { width: 28px; height: 28px; object-fit: contain; display: block; }
 .mine-cam {
-  width: 26px;
-  height: 20px;
-  border: 1.6px solid #1a1a1a;
+  width: 22px;
+  height: 16px;
+  margin-bottom: 2px;
+  border: 1.6px solid currentColor;
   border-radius: 4px;
   position: relative;
   box-sizing: border-box;
@@ -2206,22 +2221,24 @@ html.admin-theme .el-dialog__footer {
 .mine-cam::before {
   content: "";
   position: absolute;
-  left: 7px;
-  top: 4px;
-  width: 8px;
-  height: 8px;
-  border: 1.6px solid #1a1a1a;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border: 1.6px solid currentColor;
   border-radius: 50%;
   box-sizing: border-box;
 }
 .mine-cam::after {
   content: "";
   position: absolute;
-  left: 4px;
-  top: -5px;
+  left: 50%;
+  top: -4px;
   width: 8px;
-  height: 5px;
-  border: 1.6px solid #1a1a1a;
+  height: 4px;
+  margin-left: -4px;
+  border: 1.6px solid currentColor;
   border-bottom: 0;
   border-radius: 3px 3px 0 0;
   box-sizing: border-box;
@@ -2663,7 +2680,7 @@ html[data-night="dark"] .mine-stats b,
 html[data-night="dark"] .mine-links button,
 html[data-night="dark"] .sg-top strong,
 html[data-night="dark"] .sg-day b { color: #f2f2f2; }
-html[data-night="dark"] .mine-links img { filter: invert(1); }
+html[data-night="dark"] .mine-links b { color: inherit; }
 html[data-night="dark"] .mine-sign-ico { border-color: #f2f2f2; }
 html[data-night="dark"] .mine-sign-ico::before { background: #f2f2f2; }
 html[data-night="dark"] .mine-order-row,

@@ -55,8 +55,27 @@
             <b>{{ hub.points ?? store.profile.points ?? 0 }}</b>
             <span>积分</span>
           </button>
+          <button type="button" @click="goAuth('/m/signin')">
+            <b>{{ hub.signedToday ? "已签到" : "去签" }}</b>
+            <span>签到</span>
+          </button>
           <button class="mine-more" type="button" @click="goAuth('/m/wallet')">更多</button>
         </div>
+      </div>
+
+      <div class="mine-links">
+        <button type="button" @click="goAuth('/m/views')">
+          <span>足迹</span>
+          <b>{{ hub.viewCount || 0 }}</b>
+        </button>
+        <button type="button" @click="goAuth('/m/favorites')">
+          <span>收藏</span>
+          <b>{{ hub.favoriteCount || 0 }}</b>
+        </button>
+        <button type="button" @click="goAuth('/m/follows')">
+          <span>关注</span>
+          <b>{{ hub.followCount || 0 }}</b>
+        </button>
       </div>
 
       <div class="mine-orders">
@@ -105,41 +124,22 @@
         </div>
       </div>
 
-      <div class="mine-links">
-        <button type="button" @click="goAuth('/m/views')">
-          <img :src="'/static/mine/views.png?v=10'" alt="" />
-          <span>足迹</span>
-        </button>
-        <button type="button" @click="goAuth('/m/favorites')">
-          <img :src="'/static/mine/fav.png?v=10'" alt="" />
-          <span>收藏</span>
-        </button>
-        <button type="button" @click="goAuth('/m/follows')">
-          <img :src="'/static/mine/follow.png?v=10'" alt="" />
-          <span>关注</span>
-        </button>
-      </div>
-
       <div class="mine-play">
-        <button type="button" @click="goAuth('/m/signin')">
-          <i class="mine-sign-ico"></i>
-          <span>{{ hub.signedToday ? "已签到" : "签到" }}</span>
-        </button>
         <button type="button" @click="goAuth('/m/student')">
-          <img :src="'/static/mine/campus.png?v=10'" alt="" />
-          <span>{{ campusShort }}</span>
+          <span class="mine-ico"><img :src="'/static/mine/campus.png?v=10'" alt="" /></span>
+          <span class="mine-play-name">{{ campusShort }}</span>
         </button>
         <button type="button" @click="goAuth('/m/leader')">
-          <img :src="'/static/mine/leader.png?v=10'" alt="" />
-          <span>{{ leaderShort }}</span>
+          <span class="mine-ico"><img :src="'/static/mine/leader.png?v=10'" alt="" /></span>
+          <span class="mine-play-name">{{ leaderShort }}</span>
         </button>
         <button type="button" @click="goAuth('/m/photo-apply')">
-          <i class="mine-cam"></i>
-          <span>摄影师申请</span>
+          <span class="mine-ico"><i class="mine-cam"></i></span>
+          <span class="mine-play-name">摄影师申请</span>
         </button>
         <button type="button" @click="goAuth('/m/feedback')">
-          <img :src="'/static/mine/feedback.png?v=10'" alt="" />
-          <span>反馈</span>
+          <span class="mine-ico"><img :src="'/static/mine/feedback.png?v=10'" alt="" /></span>
+          <span class="mine-play-name">反馈</span>
         </button>
       </div>
     </template>
