@@ -32,16 +32,11 @@
           <label>你先付的金额（元）</label>
           <input class="input" v-model="amount" type="number" min="1" :max="data.remainAmount" />
         </template>
-        <p v-if="walletBalance" class="muted">余额 ¥{{ walletBalance }}</p>
-        <button v-if="walletCanCover" class="btn block" type="button" :disabled="paying" @click="pay('wallet')">余额支付 ¥{{ amount }}</button>
-        <button
-          v-if="!walletCanCover || mode === 'split'"
-          class="btn block"
-          :class="{ ghost: walletCanCover && mode === 'split' }"
-          type="button"
-          :disabled="paying"
-          @click="pay()"
-        >{{ payLabel }}</button>
+        <p v-if="walletBalance" class="muted">余额 ¥{{ walletBalance }}{{ walletCanCover ? "，可选用余额或微信" : "，不够付这笔时请用微信" }}</p>
+        <div class="pay-actions">
+          <button class="btn block" type="button" :disabled="paying" @click="pay('wechat')">{{ payLabel }}</button>
+          <button v-if="walletBalance > 0" class="btn block" type="button" :disabled="paying || !walletCanCover" @click="pay('wallet')">余额支付 ¥{{ amount || data.remainAmount }}</button>
+        </div>
         <button v-if="mode === 'split'" class="btn ghost block" type="button" style="margin-top:8px" @click="share">发给朋友付剩下的</button>
       </div>
     </div>
@@ -146,10 +141,11 @@ async function pay(channel) {
   }
   paying.value = true;
   try {
+    const method = channel === "wallet" ? "wallet" : "wechat";
     const res = await http.post("/pay/for-enrollment", {
       token: route.params.token,
       amount: n,
-      channel,
+      channel: method,
     });
     if (liveWechatPay(res.data)) {
       msg.value = MINIPROGRAM_PAY_HINT;
@@ -159,7 +155,7 @@ async function pay(channel) {
     msg.value = res.data.payStatus === "paid" ? "已付清" : "已支付 ¥" + (res.data.amount || n);
     mode.value = "self";
     amount.value = "";
-    if (channel === "wallet") await store.fetchMe().catch(() => {});
+    if (method === "wallet") await store.fetchMe().catch(() => {});
     await load();
   } catch (e) {
     msg.value = e.message;
@@ -214,4 +210,5 @@ function goTrip() {
   font-size: 13px;
 }
 .pay-mode.on { border-color: #8c3038; color: #8c3038; font-weight: 700; }
+.pay-actions { display: flex; flex-direction: column; gap: 8px; }
 </style>

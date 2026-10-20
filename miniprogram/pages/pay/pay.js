@@ -62,7 +62,7 @@ Page({
     this.setData({ amount, payLabel: payLabel(this.data.data, amount, this.data.mode), ...walletState(amount) });
   },
   pay() {
-    return this.charge("");
+    return this.charge("wechat");
   },
   payWallet() {
     return this.charge("wallet");
