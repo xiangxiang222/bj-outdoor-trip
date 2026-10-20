@@ -99,6 +99,7 @@ function ticketState(row, query) {
     return { kind: "waitlist", title: "候补票", sub: "有人取消后按报名顺序递补，不占座位。", share: true, trips: true };
   }
   if (en.status === "cancelled") return null;
+  if (row.channel !== "activity" && (en.payStatus === "paid" || en.pay_status === "paid")) return null;
   return {
     kind: "joined",
     title: row.channel === "activity" ? "已报名" : "出行票",

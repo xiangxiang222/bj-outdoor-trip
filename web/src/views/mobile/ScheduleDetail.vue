@@ -417,7 +417,7 @@
         <div class="enroll-price"><b>待付 ¥{{ s.myEnrollment.remainAmount }}</b></div>
         <button class="btn" type="button" @click="invitePay">去支付</button>
       </div>
-      <p v-else-if="s.myEnrollment" class="muted" style="text-align:center;margin:0 0 8px">{{ ticket?.title || "已报名" }}<template v-if="isActivity && s.myEnrollment.status !== 'waitlist'">，到场找发起人即可</template></p>
+      <p v-else-if="s.myEnrollment && (isActivity || s.myEnrollment.payStatus !== 'paid')" class="muted" style="text-align:center;margin:0 0 8px">{{ ticket?.title || "已报名" }}<template v-if="isActivity && s.myEnrollment.status !== 'waitlist'">，到场找发起人即可</template></p>
       <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>
       <button v-if="s.isOrganizer && s.status !== 'cancelled'" class="btn ghost block" style="margin-top:8px;color:var(--clay)" @click="showDissolve = true">解散拼团</button>
       <p v-if="msg" class="muted">{{ msg }}</p>

@@ -384,7 +384,7 @@
     </view>
     <view class="btn dock-cta" bindtap="invitePay">{{tr.t('去支付', lang)}}</view>
   </view>
-  <view class="pad muted" wx:elif="{{s.myEnrollment}}" style="text-align:center">{{tr.t(ticket.title || '已报名', lang)}}<text wx:if="{{isActivity && s.myEnrollment.status != 'waitlist'}}">{{tr.t('，到场找发起人即可', lang)}}</text></view>
+  <view class="pad muted" wx:elif="{{s.myEnrollment && (isActivity || s.myEnrollment.payStatus!='paid')}}" style="text-align:center">{{tr.t(ticket.title || '已报名', lang)}}<text wx:if="{{isActivity && s.myEnrollment.status != 'waitlist'}}">{{tr.t('，到场找发起人即可', lang)}}</text></view>
 </view>
 
 <canvas type="2d" id="shareCardCanvas" class="share-offscreen"></canvas>
