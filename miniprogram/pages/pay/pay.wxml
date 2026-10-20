@@ -31,9 +31,9 @@
       <view class="pad muted">{{tr.t('你先付的金额（元）', lang)}}</view>
       <input class="input" type="number" value="{{amount}}" bindinput="setAmount" />
     </block>
-    <view class="pad muted" wx:if="{{walletBalance}}">{{tr.t('余额', lang)}} ¥{{walletBalance}}</view>
+    <view class="pad muted" wx:if="{{walletBalance}}">{{tr.t('余额', lang)}} ¥{{walletBalance}}{{walletCanCover ? tr.t('，可选用余额或微信', lang) : tr.t('，不够付这笔时请用微信', lang)}}</view>
+    <view class="btn" bindtap="pay">{{tr.t(payLabel, lang)}}</view>
     <view class="btn" wx:if="{{walletCanCover}}" bindtap="payWallet">{{tr.t('余额支付', lang)}} ¥{{amount}}</view>
-    <view class="btn {{walletCanCover && mode=='split' ? 'ghost' : ''}}" wx:if="{{!walletCanCover || mode=='split'}}" bindtap="pay">{{tr.t(payLabel, lang)}}</view>
     <button class="btn ghost" wx:if="{{mode=='split'}}" open-type="share">{{tr.t('发给朋友付剩下的', lang)}}</button>
   </view>
 
