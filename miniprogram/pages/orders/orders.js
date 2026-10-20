@@ -7,7 +7,7 @@ function decorate(item) {
   const badge = orderBadge(item);
   return Object.assign({}, item, {
     badge: badge.label,
-    hot: badge.key === "unpaid" || badge.key === "refund",
+    hot: badge.key === "unpaid",
     shop: orderShop(item),
     spec: orderSpec(item),
     moneyText: orderMoney(item),
@@ -21,6 +21,7 @@ Page({
   data: {
     loggedIn: false,
     tab: "depart",
+    tabInto: "",
     keyword: "",
     list: [],
     shown: [],
@@ -92,6 +93,7 @@ Page({
     const shown = pool.filter((row) => matchOrderTime(row, filter) && matchOrderQuery(row, this.data.keyword));
     this.setData({
       tab,
+      tabInto: "tab-" + tab,
       list: this.data.list,
       shown,
       emptyAll: !this.data.list.length,

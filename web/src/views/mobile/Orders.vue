@@ -9,12 +9,17 @@
     </div>
 
     <template v-else>
-      <input v-model="keyword" class="od-search" type="search" placeholder="搜索我的订单" />
-      <div class="od-tools">
-        <div class="od-tabs">
-          <button v-for="item in statusTabs" :key="item.key" type="button" :class="{ on: tab === item.key }" @click="tab = item.key">{{ item.label }}</button>
+      <div class="od-bar">
+        <input v-model="keyword" class="od-search" type="search" placeholder="搜索我的订单" />
+        <div class="od-tools">
+          <div class="od-tabs">
+            <button v-for="item in statusTabs" :key="item.key" type="button" :class="{ on: tab === item.key }" @click="tab = item.key">{{ item.label }}</button>
+          </div>
+          <button class="od-filter" :class="{ on: filterOn }" type="button" @click="openFilter">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3.5h12M4.2 8h7.6M6.5 12.5h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" /></svg>
+            筛选
+          </button>
         </div>
-        <button class="od-filter" :class="{ on: filterOn }" type="button" @click="openFilter">筛选</button>
       </div>
 
       <article v-for="o in shown" :key="o.id" class="od-card" @click="openOrder(o)">
@@ -53,6 +58,7 @@
         </div>
       </div>
       <div v-else-if="!shown.length" class="card"><div class="pad muted">没有符合条件的订单。</div></div>
+      <p v-else class="od-end">没有更多订单</p>
     </template>
 
     <div v-if="sheet" class="od-mask" @click.self="sheet = false">
@@ -86,7 +92,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
@@ -107,7 +113,7 @@ const draft = ref({ preset: "", start: "", end: "" });
 const tabs = new Set(["unpaid", "recruiting", "depart", "review", "waitlist", "refund", "all"]);
 const statusTabs = [
   { key: "all", label: "全部" },
-  { key: "unpaid", label: "待支付" },
+  { key: "unpaid", label: "待付款" },
   { key: "recruiting", label: "招募中" },
   { key: "depart", label: "待出发" },
   { key: "review", label: "待评价" },
@@ -140,6 +146,7 @@ const pool = computed(() => {
 const shown = computed(() => pool.value.filter((row) => matchOrderTime(row, applied.value) && matchOrderQuery(row, keyword.value)));
 
 onMounted(load);
+watch(tab, () => nextTick(revealTab));
 watch(
   () => String(pageRoute.query.tab || ""),
   (q) => {
@@ -155,13 +162,19 @@ async function load() {
     return;
   }
   list.value = (await http.get("/orders")).data || [];
-  if (ready.value) return;
-  ready.value = true;
-  if (normalizeTab(pageRoute.query.tab)) {
-    tab.value = normalizeTab(pageRoute.query.tab);
-    return;
+  if (!ready.value) {
+    ready.value = true;
+    if (normalizeTab(pageRoute.query.tab)) tab.value = normalizeTab(pageRoute.query.tab);
+    else pickDefault();
   }
-  pickDefault();
+  nextTick(revealTab);
+}
+function revealTab() {
+  const scroller = document.querySelector(".od-tabs");
+  const el = scroller?.querySelector("button.on");
+  if (!scroller || !el) return;
+  const left = el.offsetLeft - (scroller.clientWidth - el.offsetWidth) / 2;
+  scroller.scrollTo({ left: Math.max(0, left) });
 }
 function pickDefault() {
   const desk = deskTrips(list.value);
@@ -190,7 +203,7 @@ function moneyOf(o) {
 }
 function hotStatus(o) {
   const key = orderBadge(o).key;
-  return key === "unpaid" || key === "refund";
+  return key === "unpaid";
 }
 function againOf(o) {
   return canReorder(o);
