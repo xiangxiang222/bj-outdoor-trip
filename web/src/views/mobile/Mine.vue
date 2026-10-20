@@ -10,11 +10,11 @@
           <div class="mine-user-main">
             <button type="button" class="mine-name-hit" @click="$router.push('/m/user/' + store.profile.id)">
               <div class="mine-name">{{ store.profile.nickname }}</div>
-              <div class="mine-phone">{{ maskPhone(store.profile.phone) }}</div>
             </button>
-            <button class="mine-chip" type="button" @click="openMember">
-              {{ store.profile.membership ? store.profile.membership.code + "会员 ›" : "会员中心 ›" }}
-            </button>
+            <div class="mine-tags">
+              <button v-if="store.profile.membership" class="mine-lv" type="button" @click="openMember">{{ store.profile.membership.code }}</button>
+              <button class="mine-chip" type="button" @click="openMember">会员 ›</button>
+            </div>
           </div>
         </div>
         <div class="mine-tools">
@@ -39,7 +39,7 @@
       <div class="mine-sheet">
         <div class="mine-sheet-head">
           <button type="button" @click="goAuth('/m/wallet')">我的钱包 ›</button>
-          <button class="mine-pill" type="button" @click="openMember">会员中心 ›</button>
+          <button class="mine-member-banner" type="button" @click="openMember">会员中心 ›</button>
         </div>
         <div class="mine-stats">
           <button type="button" @click="goAuth('/m/wallet')">
@@ -55,6 +55,7 @@
             <b>{{ hub.points ?? store.profile.points ?? 0 }}</b>
             <span>积分</span>
           </button>
+          <button class="mine-more" type="button" @click="goAuth('/m/wallet')">更多</button>
         </div>
         <div class="mine-order-row">
           <div class="mine-shortcuts">
@@ -95,8 +96,8 @@
             </button>
           </div>
           <button class="mine-all" type="button" @click="goOrders('all')">
+            <span class="mine-order-ico"><i class="mine-all-ico"></i></span>
             <span>全部</span>
-            <i class="mine-all-arrow"></i>
           </button>
         </div>
       </div>
@@ -105,22 +106,37 @@
         <button type="button" @click="goAuth('/m/views')">
           <img :src="'/static/mine/views.png?v=10'" alt="" />
           <span>足迹</span>
-          <b>{{ hub.viewCount || 0 }}</b>
         </button>
         <button type="button" @click="goAuth('/m/favorites')">
           <img :src="'/static/mine/fav.png?v=10'" alt="" />
           <span>收藏</span>
-          <b>{{ hub.favoriteCount || 0 }}</b>
         </button>
         <button type="button" @click="goAuth('/m/follows')">
           <img :src="'/static/mine/follow.png?v=10'" alt="" />
           <span>关注</span>
-          <b>{{ hub.followCount || 0 }}</b>
         </button>
+      </div>
+
+      <div class="mine-play">
         <button type="button" @click="goAuth('/m/signin')">
           <i class="mine-sign-ico"></i>
-          <span>签到</span>
-          <b>{{ hub.signedToday ? "已签" : "领积分" }}</b>
+          <span>{{ hub.signedToday ? "已签到" : "签到" }}</span>
+        </button>
+        <button type="button" @click="goAuth('/m/lottery')">
+          <img :src="'/static/mine/lottery.png?v=10'" alt="" />
+          <span>抽奖</span>
+        </button>
+        <button type="button" @click="goAuth('/m/publish')">
+          <img :src="'/static/mine/publish.png?v=10'" alt="" />
+          <span>去发团</span>
+        </button>
+        <button type="button" @click="goAuth('/m/coupons')">
+          <img :src="'/static/mine/wal-coupon.png?v=11'" alt="" />
+          <span>优惠券</span>
+        </button>
+        <button type="button" @click="goAuth('/m/feedback')">
+          <img :src="'/static/mine/feedback.png?v=10'" alt="" />
+          <span>反馈</span>
         </button>
       </div>
     </template>
