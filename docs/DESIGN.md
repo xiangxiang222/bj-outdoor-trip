@@ -124,7 +124,7 @@ User 1──n Favorite / PointsLedger / Review
 | `bounty_status` / `bounty_amount` | 用户个人发团为 `pending` + 200；成团后记 `trip_bounty` 并标 `paid`。官方/公司/高校不发 |
 | `merged_into` | 出行前一天并入的官方团 id |
 | `cancel_reason` 等 | 解散理由、时间、操作者类型与 id |
-| 成本六项 | 大巴、门票、住宿、餐食、导游、其他；利润 = 已收 `pay_amount` 合计 − 成本合计 |
+| 成本六项 | 大巴、门票、住宿、餐食、导游、其他；利润 = 真实用户实付（扣除已退）− 成本合计。虚拟报名不计入收入 |
 
 `scheduleStatus(enrolled, min, max, date)` 规则（已解散以库中 `cancelled` 为准）：
 

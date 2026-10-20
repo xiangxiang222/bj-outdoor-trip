@@ -28,6 +28,50 @@ describe("admin API", () => {
     assert.ok(Array.isArray(res.body.data.byDay));
   });
 
+  it("counts revenue from real payments and leaves virtual quotes out", async () => {
+    const token = await loginUser(agent);
+    const enrolled = await agent
+      .post("/api/enroll")
+      .set(auth(token))
+      .send({
+        scheduleId: seed.individualScheduleId,
+        travelerName: "林北野",
+        travelerPhone: "13800138000",
+        idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
+      })
+      .expect(200);
+    const enrollmentId = enrolled.body.data.enrollmentId;
+    seed.db.prepare("UPDATE enrollments SET pay_status='paid', pay_amount=199 WHERE id=?").run(enrollmentId);
+    seed.db
+      .prepare(
+        "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene,refunded_amount) VALUES (?,?,?,?,?,?,?,?,?,?)"
+      )
+      .run(enrollmentId, seed.userId, seed.individualScheduleId, 80, "wechat", "success", "REV80", "自己支付", "enrollment", 0);
+    const virtualId = Number(
+      seed.db.prepare("INSERT INTO users (phone,nickname,is_virtual) VALUES (?,?,1)").run("13700009991", "虚拟甲").lastInsertRowid
+    );
+    seed.db
+      .prepare(
+        "INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,pay_status,pay_amount,status) VALUES (?,?,?,?,?,?,?)"
+      )
+      .run(seed.individualScheduleId, virtualId, "虚拟甲", "13700009991", "unpaid", 500, "joined");
+
+    const list = await agent.get("/api/admin/schedules").set(auth(adminToken)).expect(200);
+    const row = list.body.data.find((item) => item.id === seed.individualScheduleId);
+    assert.equal(row.revenue, 80);
+    assert.equal(row.virtualEnrolled, 1);
+    assert.equal(row.profit, 80 - row.cost);
+
+    const dash = await agent.get("/api/admin/dashboard").set(auth(adminToken)).expect(200);
+    assert.equal(dash.body.data.revenue, 80);
+    const line = dash.body.data.byRoute.find((item) => item.id === seed.routeId);
+    assert.equal(line.revenue, 80);
+  });
+
   it("drafts route copy without a model key", async () => {
     await agent.post("/api/admin/routes/draft").send({ title: "慕田峪长城一日游" }).expect(401);
     const blank = await agent.post("/api/admin/routes/draft").set(auth(adminToken)).send({ title: "" }).expect(400);
