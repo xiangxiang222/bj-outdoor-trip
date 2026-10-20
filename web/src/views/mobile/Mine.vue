@@ -31,8 +31,8 @@
         </div>
       </div>
 
-      <div class="mine-board">
-      <button v-if="store.profile.membership" class="mine-member" type="button" @click="openMember">
+      <div class="mine-board" :style="boardStyle">
+      <button v-if="store.profile.membership" ref="memberEl" class="mine-member" type="button" @click="openMember">
         <div>
           <strong class="mine-level"><em>{{ store.profile.membership.code }}</em>会员</strong>
           <span>本月累计新增 {{ store.profile.membership.monthGrowth }} 成长值</span>
@@ -175,7 +175,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
@@ -187,6 +187,25 @@ const coupons = ref([]);
 const hub = ref({});
 const picker = ref(false);
 const defaults = ref([]);
+const memberEl = ref(null);
+const memberH = ref(0);
+const boardStyle = computed(() => (memberH.value ? { "--member-h": memberH.value + "px" } : {}));
+let memberObserver = null;
+
+function syncMemberBand() {
+  const el = memberEl.value;
+  if (!el) {
+    memberH.value = 0;
+    return;
+  }
+  const next = Math.ceil(el.getBoundingClientRect().height) + 1;
+  if (next !== memberH.value) memberH.value = next;
+  if (typeof ResizeObserver === "undefined") return;
+  if (!memberObserver) {
+    memberObserver = new ResizeObserver(() => syncMemberBand());
+  }
+  memberObserver.observe(el);
+}
 
 const campusShort = computed(() => {
   const u = store.profile;
@@ -208,7 +227,12 @@ const groupLabel = computed(() => {
   return "团体认证";
 });
 
-onMounted(load);
+onMounted(() => {
+  load();
+  nextTick(syncMemberBand);
+});
+onBeforeUnmount(() => memberObserver && memberObserver.disconnect());
+watch(() => store.profile && store.profile.membership, () => nextTick(syncMemberBand));
 
 async function load() {
   await store.fetchMe().catch(() => {});
