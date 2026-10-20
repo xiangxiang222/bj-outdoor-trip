@@ -170,10 +170,11 @@ function collectedMapForSchedule(scheduleId) {
   return map;
 }
 
-function contributorsOf(enrollmentId) {
+function contributorsOf(enrollmentId, enrolleeId) {
+  const enrollee = Number(enrolleeId);
   return getDb()
     .prepare(
-      `SELECT p.user_id, p.amount, p.remark, p.created_at, u.nickname
+      `SELECT p.user_id, p.amount, IFNULL(p.refunded_amount,0) AS refunded_amount, p.remark, p.created_at, u.nickname
        FROM payments p LEFT JOIN users u ON u.id=p.user_id
        WHERE p.enrollment_id=? AND p.status='success' AND IFNULL(p.refund_of,0)=0 AND IFNULL(p.scene,'')!='member'
        ORDER BY p.id`
@@ -182,10 +183,12 @@ function contributorsOf(enrollmentId) {
     .map((row) => ({
       userId: row.user_id,
       nickname: row.nickname || "同行",
-      amount: Number(row.amount || 0),
+      amount: Math.max(0, Number(row.amount || 0) - Number(row.refunded_amount || 0)),
       remark: row.remark || "",
       createdAt: row.created_at,
-    }));
+      helper: Number.isFinite(enrollee) && enrollee > 0 && Number(row.user_id) !== enrollee,
+    }))
+    .filter((row) => row.amount > 0);
 }
 
 function ensurePayShareToken(enrollmentId) {
@@ -277,6 +280,10 @@ function payShareView(token, { userId, req } = {}) {
   const route = sch ? db.prepare("SELECT id, title, cover FROM routes WHERE id=?").get(sch.route_id) : null;
   const progress = payProgress(en);
   const owner = !!(userId && Number(userId) === Number(en.user_id));
+  const people = contributorsOf(en.id, en.user_id).map((row) => ({
+    ...row,
+    self: !!(userId && Number(userId) === Number(row.userId)),
+  }));
   const canPay =
     en.status === "joined" &&
     en.pay_status === "unpaid" &&
@@ -299,10 +306,8 @@ function payShareView(token, { userId, req } = {}) {
     payAmount: progress.payAmount,
     paidAmount: progress.paidAmount,
     remainAmount: progress.remainAmount,
-    contributors: contributorsOf(en.id).map((row) => ({
-      ...row,
-      self: !!(userId && Number(userId) === Number(row.userId)),
-    })),
+    contributors: people,
+    helpers: people.filter((row) => row.helper),
   };
 }
 

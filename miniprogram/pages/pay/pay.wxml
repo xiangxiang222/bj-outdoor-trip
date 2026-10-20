@@ -37,9 +37,17 @@
     <button class="btn ghost" wx:if="{{mode=='split'}}" open-type="share">{{tr.t('发给朋友付剩下的', lang)}}</button>
   </view>
 
-  <view class="card" wx:if="{{data.contributors && data.contributors.length}}">
-    <view class="pad title">{{tr.t('已付款', lang)}}</view>
-    <view class="pad muted" wx:for="{{data.contributors}}" wx:key="createdAt">{{tr.t(item.self ? '你' : item.nickname, lang)}} · ¥{{item.amount}} · {{tr.t(item.remark, lang)}}</view>
+  <view class="card" wx:if="{{data.helpers && data.helpers.length}}">
+    <view class="pad payer-list">
+      <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
+      <view class="payer-row" wx:for="{{data.helpers}}" wx:key="index">
+        <view>
+          <view>{{tr.t(item.self ? '你' : item.nickname, lang)}}</view>
+          <view class="muted" wx:if="{{item.remark}}">{{tr.t(item.remark, lang)}}</view>
+        </view>
+        <view class="payer-amt">¥{{item.amount}}</view>
+      </view>
+    </view>
   </view>
 
   <view class="pad muted" wx:if="{{!data.canPay && data.company}}">{{tr.t('公司团由开团方统一支付。', lang)}}</view>

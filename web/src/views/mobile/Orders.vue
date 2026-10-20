@@ -25,6 +25,7 @@
             <div class="muted">下一趟 · {{ kindLabel(nextTrip) }}</div>
             <strong>{{ nextTrip.title }}</strong>
             <p class="muted" style="margin:6px 0 0">{{ nextTrip.start_date }} {{ nextTrip.meetup_time || "" }} · {{ nextTrip.meetup_point || nextTrip.city || "" }}</p>
+            <PayHelpers :list="nextTrip.helpers" />
           </div>
           <button v-if="nextTrip.canPay" class="cancel-link" type="button" @click.stop="goPay(nextTrip)">去支付</button>
           <button v-if="nextTrip.canCancel" class="cancel-link" type="button" :disabled="cancelling === nextTrip.id" @click.stop="cancel(nextTrip)">取消报名</button>
@@ -48,6 +49,7 @@
                   <span v-if="o.channel !== 'activity' && o.seat_no">{{ o.seat_no }} 座</span>
                   <span>{{ moneyText(o) }}</span>
                 </p>
+                <PayHelpers :list="o.helpers" />
               </div>
             </div>
           </div>
@@ -79,6 +81,7 @@
               <span>{{ statusLine(o) }}</span>
               <span>{{ moneyText(o) }}</span>
             </p>
+            <PayHelpers :list="o.helpers" />
           </div>
           <button v-if="o.canCancel" class="cancel-link" type="button" :disabled="cancelling === o.id" @click.stop="cancel(o)">取消候补</button>
         </article>
@@ -96,6 +99,7 @@
             </div>
             <p class="muted" style="margin:6px 0 0">{{ o.start_date }} · {{ recruitOf(o).line }}</p>
             <p v-if="recruitOf(o).overdue" class="muted" style="margin:6px 0 0">出发日已过，等并团或解散退款。</p>
+            <PayHelpers :list="o.helpers" />
           </div>
           <button v-if="o.canCancel" class="cancel-link" type="button" :disabled="cancelling === o.id" @click.stop="cancel(o)">取消报名</button>
         </article>
@@ -110,6 +114,7 @@
               <span class="tag">待支付</span>
             </div>
             <p class="muted" style="margin:6px 0 0">{{ o.start_date }} · {{ moneyText(o) }}</p>
+            <PayHelpers :list="o.helpers" />
           </div>
           <button v-if="o.canPay" class="cancel-link" type="button" @click.stop="goPay(o)">去支付</button>
         </article>
@@ -124,6 +129,7 @@
               <span class="tag">待评价</span>
             </div>
             <p class="muted" style="margin:6px 0 0">{{ o.start_date }} · {{ statusLine(o) }}</p>
+            <PayHelpers :list="o.helpers" />
           </div>
           <div class="pad" style="padding-top:0" @click.stop>
             <button v-if="reviewing !== o.id" class="btn ghost block" @click="openReview(o)">去评价</button>
@@ -151,6 +157,7 @@
             </div>
             <p class="muted" style="margin:6px 0 0">{{ o.refundProgress.text }}</p>
             <p class="muted" style="margin:6px 0 0">{{ o.start_date }}</p>
+            <PayHelpers :list="o.helpers" />
           </div>
         </article>
         <div v-if="!refund.length" class="card"><div class="pad muted">还没有退款记录。取消后会写在这里：退回余额或原路退回微信。</div></div>
@@ -165,6 +172,7 @@
             </div>
             <p class="muted" style="margin:6px 0 0">{{ o.start_date }} · {{ statusLine(o) }} · {{ moneyText(o) }}</p>
             <p v-if="o.refundProgress" class="muted" style="margin:6px 0 0">{{ o.refundProgress.text }}</p>
+            <PayHelpers :list="o.helpers" />
           </div>
           <div v-if="showAfter(o) && o.completed" class="pad" style="padding-top:0">
             <button class="btn block" type="button" @click.stop="$router.push('/m/after/' + o.schedule_id)">评价 / 评选</button>
@@ -201,6 +209,7 @@ import { useUserStore } from "@/stores/user";
 import { enrollStatusText } from "@/utils/labels";
 import { formatActivityDate } from "@/utils/activityKind";
 import { deskTrips, recruitFacts, showAfterActions, tripKindLabel } from "@/utils/trips";
+import PayHelpers from "@/components/PayHelpers.vue";
 
 const store = useUserStore();
 const router = useRouter();
