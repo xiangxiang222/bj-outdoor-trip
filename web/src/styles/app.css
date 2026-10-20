@@ -2082,6 +2082,8 @@ html.admin-theme .el-dialog__footer {
   color: #666;
 }
 .mine-member {
+  position: relative;
+  z-index: 2;
   width: 100%;
   margin-top: 8px;
   border: 0;
@@ -2127,10 +2129,12 @@ html.admin-theme .el-dialog__footer {
 .mine-tool-ico { position: relative; width: 24px; height: 24px; display: grid; place-items: center; }
 .mine-tool-ico img { width: 22px; height: 22px; display: block; object-fit: contain; filter: invert(1); }
 .mine-orders {
-  margin: 10px 0;
+  position: relative;
+  z-index: 1;
+  margin: -12px 0 10px;
   background: #fff;
   border-radius: 12px;
-  padding: 14px 0 12px;
+  padding: 22px 0 12px;
   font-family: "PingFang SC", "Helvetica Neue", sans-serif;
 }
 .mine-traces {
