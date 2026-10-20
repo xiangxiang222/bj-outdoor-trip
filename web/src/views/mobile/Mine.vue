@@ -57,6 +57,9 @@
           </button>
           <button class="mine-more" type="button" @click="goAuth('/m/wallet')">更多</button>
         </div>
+      </div>
+
+      <div class="mine-orders">
         <div class="mine-order-row">
           <div class="mine-shortcuts">
             <button type="button" @click="goOrders('unpaid')">
