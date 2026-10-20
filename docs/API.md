@@ -111,7 +111,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | POST | `/pay/confirm` | 用户 | `{ tradeNo }`。向微信查单，成功则入账（报名已付或开通会员） |
 | POST | `/pay/wechat/notify` | 否 | 微信支付 XML 回调，验签后入账。返回微信 XML |
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
-| GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canPay` `payShareToken` `paidAmount` `remainAmount` `canReview` `reviewed`、`channel`、`refundPercent` `refundHint` `refundAmount`、`helpers`（代付或分摊的付款人） |
+| GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canPay` `payShareToken` `paidAmount` `remainAmount` `canReview` `reviewed`、`channel`、`refundPercent` `refundHint` `refundAmount`、`deductPercent` `deductAmount`（临近出发不能全额退时的扣除比例和金额）、`helpers`（代付或分摊的付款人） |
 | POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（山野团开团前按比例退；同城局出发日前；当天同城局不可取消） |
 | POST | `/member/buy` | 用户 | 演示环境立即开通/续费会员（年费 99）。真实支付返回 JSAPI 参数，开通发生在回调或 `/pay/confirm`。可带 `code` |
 | GET | `/points` | 用户 | 积分余额与流水 |

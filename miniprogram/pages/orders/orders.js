@@ -128,10 +128,19 @@ Page({
   cancel(e) {
     const id = e.currentTarget.dataset.id;
     if (!id) return;
-    const item = [].concat(this.data.upcoming, this.data.waitlist, this.data.past).find((row) => String(row.id) === String(id));
+    const item = []
+      .concat(this.data.upcoming, this.data.restUpcoming, this.data.waitlist, this.data.past, this.data.unpaid, this.data.recruiting, this.data.review, this.data.refund, this.data.nextTrip)
+      .filter(Boolean)
+      .find((row) => String(row.id) === String(id));
+    const deduct = Number(item && item.deductAmount) || 0;
+    const content = deduct
+      ? "临近出发，取消将扣除 " + item.deductPercent + "%（¥" + deduct + "），退回 ¥" + (Number(item.refundAmount) || 0) + "。确定取消报名？名额将释放给其他人。"
+      : item && item.refundHint
+        ? "确定取消报名？" + item.refundHint + "。名额将释放给其他人。已付款按付款人原路退回。"
+        : "确定取消报名？名额将释放给其他人。已付款按付款人原路退回。";
     wx.showModal({
-      title: "取消报名",
-      content: item && item.refundHint ? "确定取消报名？" + item.refundHint + "。名额将释放给其他人。已付款按付款人原路退回。" : "确定取消报名？名额将释放给其他人。已付款按付款人原路退回。",
+      title: deduct ? "取消将扣费" : "取消报名",
+      content,
       confirmColor: "#bc4749",
       success: async (res) => {
         if (!res.confirm) return;

@@ -2096,6 +2096,8 @@ router.get("/orders", authUser, (req, res) => {
         refundPercent: quote.percent,
         refundHint: quote.hint,
         refundAmount: quote.amount || 0,
+        deductPercent: quote.deductPercent || 0,
+        deductAmount: quote.deductAmount || 0,
         payAmount: progress.payAmount,
         paidAmount: progress.paidAmount,
         remainAmount: progress.remainAmount,

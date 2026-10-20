@@ -271,16 +271,20 @@ function cancelQuote(en, sch) {
     };
   }
   const amount = paid ? refundAmount(collected, percent) : 0;
+  const deductAmount = paid ? Math.max(0, collected - amount) : 0;
+  const deductPercent = paid && percent < 100 ? 100 - percent : 0;
   const hint = !formed
     ? paid
       ? `未成团，取消可全额退回（¥${amount}）`
       : "未成团，取消可全额退回"
-    : paid
-      ? `现在取消可退 ${percent}%（¥${amount}）`
-      : remaining === 0
-        ? `出发当天尚未正式开团，取消可退 ${percent}%`
-        : `距出发还有 ${remaining} 天，取消可退 ${percent}%`;
-  return { canCancel: true, percent, remainingDays: remaining, started: false, amount, hint };
+    : paid && deductAmount > 0
+      ? `临近出发，取消将扣除 ${deductPercent}%（¥${deductAmount}），退回 ¥${amount}`
+      : paid
+        ? `现在取消可退 ${percent}%（¥${amount}）`
+        : remaining === 0
+          ? `出发当天尚未正式开团，取消可退 ${percent}%`
+          : `距出发还有 ${remaining} 天，取消可退 ${percent}%`;
+  return { canCancel: true, percent, remainingDays: remaining, started: false, amount, deductPercent, deductAmount, hint };
 }
 
 function applyRouteRefundRules(routeId, body, { updating } = {}) {
