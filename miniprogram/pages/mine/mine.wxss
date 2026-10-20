@@ -59,7 +59,6 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-page.is-dark .mine-chip { color: #fff; }
 .mine-page.is-dark .mine-sheet,
 .mine-page.is-dark .mine-orders,
-.mine-page.is-dark .mine-links,
 .mine-page.is-dark .mine-play { background: #1c1c1e; }
 .mine-page.is-dark .mine-sheet-head,
 .mine-page.is-dark .mine-stat-num,
@@ -82,8 +81,8 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-stats > .mine-more { flex: none; width: 64rpx; }
 .mine-stat-num { font-size: calc(34rpx * var(--ui-scale)); font-weight: 700; color: #1a1a1a; line-height: 1.2; }
 .mine-stat-name { margin-top: 4rpx; font-size: calc(22rpx * var(--ui-scale)); color: #8d8d8d; }
-.mine-links { display: flex; align-items: center; background: #fff; margin: 0 24rpx 16rpx; border-radius: 24rpx; padding: 28rpx 8rpx; }
-.mine-links > view { flex: 1; display: flex; flex-direction: row; align-items: baseline; justify-content: center; gap: 8rpx; font-size: calc(28rpx * var(--ui-scale)); color: #1a1a1a; }
+.mine-links { display: flex; align-items: center; padding: 16rpx 8rpx 8rpx; color: #1a1a1a; }
+.mine-links > view { flex: 1; display: flex; flex-direction: row; align-items: baseline; justify-content: center; gap: 8rpx; font-size: calc(28rpx * var(--ui-scale)); color: inherit; }
 .mine-link-num { color: inherit; font-size: calc(30rpx * var(--ui-scale)); font-weight: 650; }
 .mine-ico { width: 56rpx; height: 56rpx; display: flex; align-items: flex-end; justify-content: center; }
 .mine-cam { width: 40rpx; height: 28rpx; margin-bottom: 4rpx; border: 3rpx solid currentColor; border-radius: 6rpx; position: relative; box-sizing: border-box; }

@@ -2151,10 +2151,7 @@ html.admin-theme .el-dialog__footer {
 .mine-links {
   display: flex;
   align-items: center;
-  background: #fff;
-  border-radius: 12px;
-  padding: 14px 8px;
-  margin-bottom: 10px;
+  padding: 2px 4px 12px;
 }
 .mine-links button {
   flex: 1;
@@ -2672,7 +2669,6 @@ html[data-night="dark"] .mine-grid img,
 html[data-night="dark"] .mine-wallet-item img { filter: invert(1); }
 html[data-night="dark"] .mine-sheet,
 html[data-night="dark"] .mine-orders,
-html[data-night="dark"] .mine-links,
 html[data-night="dark"] .sg-card,
 html[data-night="dark"] .sg-result { background: #1c1c1e; }
 html[data-night="dark"] .mine-sheet-head button,
