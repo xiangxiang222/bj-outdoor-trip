@@ -67,6 +67,18 @@ describe("splitTrips", () => {
     expect(desk.review.map((r) => r.id)).toEqual([10]);
   });
 
+  it("keeps refunded trips on their own filter", () => {
+    const desk = deskTrips(
+      [
+        { id: 1, start_date: "2026-08-01", status: "cancelled", pay_status: "refunded", refundProgress: { text: "已原路退回微信 ¥3" } },
+        { id: 2, start_date: "2026-08-02", status: "joined", pay_status: "paid" },
+      ],
+      today
+    );
+    expect(desk.refund.map((r) => r.id)).toEqual([1]);
+    expect(desk.past.map((r) => r.id)).toEqual([1, 2]);
+  });
+
   it("hides complete and review actions until a group trip has formed", () => {
     expect(showAfterActions({ channel: "trip", schedule_status: "recruiting", guaranteed: false, minGroupSize: 8, joinedCount: 1 })).toBe(false);
     expect(showAfterActions({ channel: "trip", schedule_status: "confirmed", guaranteed: true })).toBe(true);

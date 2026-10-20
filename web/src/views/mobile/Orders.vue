@@ -15,6 +15,7 @@
         <div class="chip" :class="{ on: tab === 'recruiting' }" @click="tab = 'recruiting'">招募中 {{ recruiting.length }}</div>
         <div class="chip" :class="{ on: tab === 'depart' }" @click="tab = 'depart'">待出发 {{ depart.length }}</div>
         <div class="chip" :class="{ on: tab === 'review' }" @click="tab = 'review'">待评价 {{ review.length }}</div>
+        <div class="chip" :class="{ on: tab === 'refund' }" @click="tab = 'refund'">已退款 {{ refund.length }}</div>
         <div class="chip" :class="{ on: tab === 'past' }" @click="tab = 'past'">历史 {{ past.length }}</div>
       </div>
 

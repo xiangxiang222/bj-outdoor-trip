@@ -86,6 +86,13 @@
       </view>
       <view class="muted">{{tr.t('待评价', lang)}}</view>
     </view>
+    <view bindtap="goOrders" data-tab="refund">
+      <view class="mine-order-ico">
+        <image src="{{iconBase}}order-refund.png" mode="aspectFit" />
+        <text wx:if="{{hub.refundCount}}" class="mine-badge">{{hub.refundCount > 99 ? '99+' : hub.refundCount}}</text>
+      </view>
+      <view class="muted">{{tr.t('已退款', lang)}}</view>
+    </view>
   </view>
 
   <view class="mine-wallet" bindtap="go" data-url="/pages/wallet/wallet">
