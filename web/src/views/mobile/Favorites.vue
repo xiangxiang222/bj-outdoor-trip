@@ -7,7 +7,12 @@
         <div class="muted">{{ r.subtitle }}</div>
       </div>
     </div>
-    <p v-if="!list.length" class="muted">还没有收藏线路，去线路详情点「收藏」即可。</p>
+    <div v-if="!list.length" class="card">
+      <div class="pad">
+        <p style="margin-top:0">还没有收藏线路，去线路详情点「收藏」即可。</p>
+        <p class="muted" style="margin-bottom:0">已经下架的线路不会留在这里。</p>
+      </div>
+    </div>
   </div>
 </template>
 

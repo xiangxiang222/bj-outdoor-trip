@@ -61,7 +61,8 @@ function tripBuckets(userId, req) {
     .prepare(
       `SELECT r.id, r.title, r.cover, r.region, r.days
        FROM favorites f JOIN routes r ON r.id=f.route_id
-       WHERE f.user_id=? AND r.status='on' ORDER BY f.created_at DESC LIMIT 20`
+       WHERE f.user_id=? AND IFNULL(r.status,'on')='on' AND IFNULL(r.review_status,'approved')='approved'
+       ORDER BY f.created_at DESC LIMIT 20`
     )
     .all(userId)
     .map((r) => ({

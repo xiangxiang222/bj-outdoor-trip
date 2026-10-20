@@ -1,5 +1,14 @@
 <template>
-  <div v-if="r">
+  <div v-if="missing" class="route-miss">
+    <div class="route-miss-card">
+      <div class="route-miss-mark" aria-hidden="true">线</div>
+      <h2>找不到这条线路</h2>
+      <p>它可能已经下架，或这条链接已经失效。收藏和最近看过里不会再列出下架的线路。</p>
+      <button class="btn clay block" type="button" @click="router.push('/m')">去首页看线路</button>
+      <button class="btn ghost block" type="button" @click="back">返回</button>
+    </div>
+  </div>
+  <div v-else-if="r">
     <div v-if="r.reviewStatus === 'pending'" class="card">
       <div class="pad">
         <p style="margin-top:0;color:var(--leaf)">已提交审核，通过后会出现在线路目录。</p>
@@ -39,13 +48,19 @@ const pageRoute = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const r = ref(null);
+const missing = ref(false);
 const reviews = ref({ list: [], count: 0, avg: 0 });
 const faqs = ref([]);
 const copied = ref(false);
 const favMsg = ref("");
 
 onMounted(async () => {
-  r.value = (await http.get("/routes/" + pageRoute.params.id)).data;
+  try {
+    r.value = (await http.get("/routes/" + pageRoute.params.id)).data;
+  } catch {
+    missing.value = true;
+    return;
+  }
   try {
     reviews.value = (await http.get("/routes/" + pageRoute.params.id + "/reviews")).data;
   } catch {
@@ -57,6 +72,11 @@ onMounted(async () => {
     faqs.value = [];
   }
 });
+
+function back() {
+  if (window.history.length > 1) router.back();
+  else router.push("/m");
+}
 
 async function fav() {
   favMsg.value = "";
