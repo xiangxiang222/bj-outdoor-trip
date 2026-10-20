@@ -1,7 +1,7 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
 <view class="mine-nav {{dark ? 'is-dark' : ''}}" style="padding-top: {{statusBarHeight}}px;">
-  <view class="mine-nav-bar" style="height: {{navBarHeight}}px;">{{tr.t('我的', lang)}}</view>
+  <view class="mine-nav-bar" style="height: {{navBarHeight}}px;"></view>
 </view>
 <view class="mine-page {{dark ? 'is-dark' : ''}}" wx:if="{{user}}">
   <view class="mine-head">
@@ -13,9 +13,11 @@
     <view class="mine-user-main">
       <view bindtap="goHome">
         <view class="title">{{tr.t(user.nickname, lang)}}</view>
-        <view class="muted">{{tr.t(phone, lang)}}</view>
       </view>
-      <view class="mine-chip" catchtap="openMember">{{user.membership ? tr.t(user.membership.code, lang) + tr.t('会员', lang) + ' ›' : tr.t('会员中心 ›', lang)}}</view>
+      <view class="mine-tags">
+        <view wx:if="{{user.membership}}" class="mine-lv" catchtap="openMember">{{tr.t(user.membership.code, lang)}}</view>
+        <view class="mine-chip" catchtap="openMember">{{tr.t('会员 ›', lang)}}</view>
+      </view>
     </view>
   </view>
   <view class="mine-tools {{dark ? 'is-dark' : ''}}">
@@ -51,7 +53,7 @@
   <view class="mine-sheet">
     <view class="mine-sheet-head">
       <view bindtap="go" data-url="/pages/wallet/wallet">{{tr.t('我的钱包', lang)}} ›</view>
-      <view class="mine-pill" bindtap="openMember">{{tr.t('会员中心 ›', lang)}}</view>
+      <view class="mine-member-banner" bindtap="openMember">{{tr.t('会员中心 ›', lang)}}</view>
     </view>
     <view class="mine-stats">
       <view bindtap="go" data-url="/pages/wallet/wallet">
@@ -67,6 +69,7 @@
         <view class="mine-stat-num">{{tr.t(hub.points != null ? hub.points : user.points, lang)}}</view>
         <view class="mine-stat-name">{{tr.t('积分', lang)}}</view>
       </view>
+      <view class="mine-more" bindtap="go" data-url="/pages/wallet/wallet">{{tr.t('更多', lang)}}</view>
     </view>
     <view class="mine-order-row">
       <view class="mine-shortcuts">
@@ -107,8 +110,8 @@
         </view>
       </view>
       <view class="mine-all" bindtap="goOrders" data-tab="all">
+        <view class="mine-all-ico"></view>
         <text>{{tr.t('全部', lang)}}</text>
-        <view class="mine-all-arrow"></view>
       </view>
     </view>
   </view>
@@ -117,22 +120,37 @@
     <view bindtap="go" data-url="/pages/views/views">
       <image src="{{iconBase}}views.png?v=10" mode="aspectFit" />
       <text>{{tr.t('足迹', lang)}}</text>
-      <text class="mine-link-num">{{hub.viewCount || 0}}</text>
     </view>
     <view bindtap="go" data-url="/pages/favorites/favorites">
       <image src="{{iconBase}}fav.png?v=10" mode="aspectFit" />
       <text>{{tr.t('收藏', lang)}}</text>
-      <text class="mine-link-num">{{hub.favoriteCount || 0}}</text>
     </view>
     <view bindtap="go" data-url="/pages/follows/follows">
       <image src="{{iconBase}}follow.png?v=10" mode="aspectFit" />
       <text>{{tr.t('关注', lang)}}</text>
-      <text class="mine-link-num">{{hub.followCount || 0}}</text>
     </view>
+  </view>
+
+  <view class="mine-play">
     <view bindtap="go" data-url="/pages/signin/signin">
       <view class="mine-sign-ico"></view>
-      <text>{{tr.t('签到', lang)}}</text>
-      <text class="mine-link-num">{{hub.signedToday ? tr.t('已签', lang) : tr.t('领积分', lang)}}</text>
+      <text>{{hub.signedToday ? tr.t('已签到', lang) : tr.t('签到', lang)}}</text>
+    </view>
+    <view bindtap="go" data-url="/pages/lottery/lottery">
+      <image src="{{iconBase}}lottery.png?v=10" mode="aspectFit" />
+      <text>{{tr.t('抽奖', lang)}}</text>
+    </view>
+    <view bindtap="go" data-url="/pages/publish/publish">
+      <image src="{{iconBase}}publish.png?v=10" mode="aspectFit" />
+      <text>{{tr.t('去发团', lang)}}</text>
+    </view>
+    <view bindtap="go" data-url="/pages/coupons/coupons">
+      <image src="{{iconBase}}wal-coupon.png?v=11" mode="aspectFit" />
+      <text>{{tr.t('优惠券', lang)}}</text>
+    </view>
+    <view bindtap="go" data-url="/pages/feedback/feedback">
+      <image src="{{iconBase}}feedback.png?v=10" mode="aspectFit" />
+      <text>{{tr.t('反馈', lang)}}</text>
     </view>
   </view>
 </view>

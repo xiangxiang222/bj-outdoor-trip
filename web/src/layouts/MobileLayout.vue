@@ -12,7 +12,7 @@
       </router-link>
       <span class="mp-capsule">微信小程序演示</span>
     </div>
-    <div v-if="!isHome" class="mp-nav">
+    <div v-if="!isHome && route.name !== 'mine'" class="mp-nav">
       <button v-if="showBack" class="nav-back" type="button" aria-label="返回" @click="goBack">‹</button>
       <div>
         <h1>{{ title }}</h1>
