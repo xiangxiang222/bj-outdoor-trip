@@ -1,5 +1,5 @@
 page {
-  background: #f3f4f6;
+  background-color: #f3f4f6;
   color: #111111;
   font-family: "PingFang SC", "Helvetica Neue", "Noto Sans SC", sans-serif;
 }

@@ -1,5 +1,5 @@
 @import "../../styles/account.wxss";
-page { background: #f5f6f8; }
+page { background-color: #f3f4f6; }
 .notice { margin: 24rpx; padding: 20rpx 24rpx; background: #fff7f0; color: #8a5a2a; font-size: calc(24rpx * var(--ui-scale)); line-height: 1.5; border-radius: 16rpx; }
 .list { margin: 0 24rpx 24rpx; background: #fff; border-radius: 24rpx; overflow: hidden; }
 .row { display: flex; justify-content: space-between; align-items: center; padding: 32rpx; border-bottom: 1rpx solid #f0f1f3; font-size: calc(30rpx * var(--ui-scale)); }
