@@ -271,9 +271,29 @@ function deskCounts(userId) {
   const refund = db
     .prepare("SELECT COUNT(DISTINCT enrollment_id) AS c FROM payments WHERE user_id=? AND IFNULL(refund_of,0)>0")
     .get(userId).c;
+  const views = db
+    .prepare(
+      `SELECT COUNT(DISTINCT v.route_id) AS c FROM page_views v
+       JOIN routes r ON r.id=v.route_id
+       WHERE v.user_id=? AND v.route_id IS NOT NULL`
+    )
+    .get(userId).c;
+  const favorites = db
+    .prepare("SELECT COUNT(*) AS c FROM favorites f JOIN routes r ON r.id=f.route_id WHERE f.user_id=?")
+    .get(userId).c;
+  const follows = db
+    .prepare(
+      `SELECT COUNT(*) AS c FROM follows f
+       JOIN users u ON u.id=f.target_user_id
+       WHERE f.user_id=? AND u.deleted_at IS NULL`
+    )
+    .get(userId).c;
   return {
     reviewCount: review,
     refundCount: refund,
+    viewCount: views,
+    favoriteCount: favorites,
+    followCount: follows,
     unreadCount: unreadCount(userId),
     couponExpireHint: couponExpireHint(userId),
   };

@@ -2078,18 +2078,50 @@ html.admin-theme .el-dialog__footer {
 .mine-tool > span:last-child { white-space: nowrap; }
 .mine-tool-ico { position: relative; width: 24px; height: 24px; display: grid; place-items: center; }
 .mine-tool-ico img { width: 22px; height: 22px; display: block; object-fit: contain; }
-.mine-shortcuts {
-  display: flex;
-  gap: 4px;
+.mine-orders {
   margin: 10px 0;
   background: #fff;
   border-radius: 12px;
-  box-shadow: none;
-  padding: 14px 4px;
-  overflow: auto;
+  padding: 14px 0 12px;
+  font-family: "PingFang SC", "Helvetica Neue", sans-serif;
+}
+.mine-traces {
+  display: flex;
+  align-items: center;
+  padding: 0 8px 12px;
+}
+.mine-traces button {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: calc(14px * var(--ui-scale));
+  font-weight: 400;
+  line-height: 20px;
+  color: #1a1a1a;
+  cursor: pointer;
+  padding: 0;
+}
+.mine-traces b {
+  margin-left: 4px;
+  font-weight: 600;
+  font-size: calc(14px * var(--ui-scale));
+  color: #1a1a1a;
+}
+.mine-order-row { display: flex; align-items: stretch; }
+.mine-shortcuts {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  margin: 0;
+  background: transparent;
+  border-radius: 0;
+  padding: 0 2px;
+  overflow: hidden;
 }
 .mine-shortcuts button {
-  flex: 1 0 58px;
+  flex: 1;
+  min-width: 0;
   border: 0;
   background: transparent;
   font: inherit;
@@ -2101,9 +2133,35 @@ html.admin-theme .el-dialog__footer {
   align-items: center;
   gap: 6px;
 }
-.mine-order-ico { position: relative; width: 32px; height: 32px; }
-.mine-order-ico img { width: 32px; height: 32px; display: block; object-fit: contain; }
-.mine-order-ico .mine-badge { top: -7px; right: -10px; box-shadow: 0 0 0 1.5px #fff; }
+.mine-order-ico { position: relative; width: 28px; height: 28px; }
+.mine-order-ico img { width: 28px; height: 28px; display: block; object-fit: contain; }
+.mine-order-ico .mine-badge { top: -6px; right: -10px; box-shadow: 0 0 0 1.5px #fff; }
+.mine-all {
+  flex: none;
+  width: 52px;
+  margin: 2px 0;
+  border: 0;
+  border-left: 1px solid #e6e6e6;
+  background: transparent;
+  font: inherit;
+  font-size: calc(12px * var(--ui-scale));
+  font-weight: 400;
+  line-height: 1.2;
+  color: #1a1a1a;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.mine-all-arrow {
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid #1a1a1a;
+  border-bottom: 1.5px solid #1a1a1a;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
 .mine-badge {
   position: absolute;
   top: -6px;
@@ -2119,7 +2177,7 @@ html.admin-theme .el-dialog__footer {
   line-height: 16px;
   text-align: center;
 }
-.mine-shortcuts span { font-size: calc(12px * var(--ui-scale)); color: #666; }
+.mine-shortcuts span { font-size: calc(12px * var(--ui-scale)); font-weight: 400; line-height: 1.2; color: #1a1a1a; }
 .mine-wallet {
   width: 100%;
   border: 0;
@@ -2294,12 +2352,17 @@ html[data-night="dark"] .mine-member strong { color: #f4f0f5; }
 html[data-night="dark"] .mine-member span { color: var(--muted); }
 html[data-night="dark"] .mine-avatar { background: var(--thu-soft); color: #f4f0f5; }
 html[data-night="dark"] .mine-name { color: #f2f2f2; }
-html[data-night="dark"] .mine-shortcuts,
+html[data-night="dark"] .mine-orders,
 html[data-night="dark"] .mine-wallet,
 html[data-night="dark"] .mine-grid { background: #1c1c1e; }
 html[data-night="dark"] .mine-order-ico img { filter: invert(1); }
 html[data-night="dark"] .mine-order-ico .mine-badge { box-shadow: 0 0 0 1.5px #1c1c1e; }
-html[data-night="dark"] .mine-shortcuts button > span:last-child { color: #c7c7c7; }
+html[data-night="dark"] .mine-traces button,
+html[data-night="dark"] .mine-traces b,
+html[data-night="dark"] .mine-shortcuts button > span:last-child,
+html[data-night="dark"] .mine-all { color: #f2f2f2; }
+html[data-night="dark"] .mine-all { border-left-color: #3a3a3c; }
+html[data-night="dark"] .mine-all-arrow { border-right-color: #f2f2f2; border-bottom-color: #f2f2f2; }
 html[data-night="dark"] .mine-wallet-item strong { color: #f2f2f2; }
 html[data-night="dark"] .mine-wallet-item > span { color: #c7c7c7; }
 html[data-night="dark"] .wal-dot { box-shadow: 0 0 0 2px #1c1c1e; }
