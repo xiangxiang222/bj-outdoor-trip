@@ -1,7 +1,7 @@
 {
     "navigationBarTitleText": "同行者众",
   "enablePullDownRefresh": true,
-  "backgroundColorTop": "#8a5ea2",
+  "backgroundColorTop": "#c045ab",
   "backgroundTextStyle": "light",
   "usingComponents": {
     "live-pulse": "/components/live-pulse/live-pulse"

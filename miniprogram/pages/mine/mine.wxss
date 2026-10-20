@@ -1,8 +1,22 @@
 @import "../../styles/account.wxss";
 page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helvetica Neue", sans-serif; }
+.mine-nav { background: #c045ab; color: #fff; }
+.mine-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(34rpx * var(--ui-scale));
+  font-weight: 650;
+  line-height: 1;
+}
+.mine-nav.is-dark { background: #9a4584; }
 .mine-page {
-  background: linear-gradient(180deg, #8a5ea2 0, #8a5ea2 180rpx, #d4bce4 360rpx, #f3f4f6 520rpx);
+  background: linear-gradient(180deg, #c045ab 0, #c045ab 200rpx, #e7b6dc 400rpx, #f3f4f6 560rpx);
   padding-bottom: 24rpx;
+}
+.mine-page.is-dark {
+  background: linear-gradient(180deg, #9a4584 0, #9a4584 200rpx, #2a1834 400rpx, #121214 560rpx);
+  color: #f2f2f2;
 }
 .cell-label { margin: 24rpx 32rpx 8rpx; font-size: calc(24rpx * var(--ui-scale)); color: #9a9a9a; font-weight: 400; }
 .cell-group { background: #fff; border-radius: 24rpx; margin: 0 24rpx 8rpx; overflow: hidden; }

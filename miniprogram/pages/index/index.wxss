@@ -85,7 +85,7 @@
 }
 .campus-card {
   margin: 16rpx;
-  padding: 20rpx 24rpx 20rpx 32rpx;
+  padding: 20rpx 24rpx;
   background: #fff;
   border-radius: 24rpx;
   display: flex;
@@ -94,13 +94,6 @@
   gap: 16rpx;
   position: relative;
   overflow: hidden;
-}
-.campus-card::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 8rpx;
-  background: linear-gradient(180deg, #6b2178, #821a2a);
 }
 .qb-seals { display: flex; gap: 10rpx; margin-bottom: 10rpx; }
 .qb-seal {
