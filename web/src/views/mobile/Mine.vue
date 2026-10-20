@@ -19,16 +19,16 @@
         </div>
         <div class="mine-tools">
           <button class="mine-tool" type="button" @click="$router.push('/m/official')">
-            <span class="mine-tool-ico"><img :src="'/static/mine/tool-help.png?v=10'" alt="" /></span>
+            <span class="mine-tool-ico"><MineGlyph name="headset" /></span>
             <span>客服</span>
           </button>
           <button class="mine-tool" type="button" @click="goAuth('/m/settings')">
-            <span class="mine-tool-ico"><img :src="'/static/mine/tool-set.png?v=10'" alt="" /></span>
+            <span class="mine-tool-ico"><MineGlyph name="hex" /></span>
             <span>设置</span>
           </button>
           <button class="mine-tool" type="button" @click="goAuth('/m/notices')">
             <span class="mine-tool-ico">
-              <img :src="'/static/mine/tool-msg.png?v=10'" alt="" />
+              <MineGlyph name="bubble" />
               <em v-if="hub.unreadCount" class="mine-badge">{{ hub.unreadCount > 9 ? "9+" : hub.unreadCount }}</em>
             </span>
             <span>消息</span>
@@ -82,35 +82,35 @@
           <div class="mine-shortcuts">
             <button type="button" @click="goOrders('unpaid')">
               <span class="mine-order-ico">
-                <img :src="'/static/mine/order-pay.png?v=10'" alt="" />
+                <MineGlyph name="card" />
                 <em v-if="hub.unpaidCount" class="mine-badge">{{ hub.unpaidCount > 99 ? "99+" : hub.unpaidCount }}</em>
               </span>
               <span>待付款</span>
             </button>
             <button type="button" @click="goOrders('recruiting')">
               <span class="mine-order-ico">
-                <img :src="'/static/mine/order-recruit.png?v=10'" alt="" />
+                <MineGlyph name="people" />
                 <em v-if="hub.recruitingCount" class="mine-badge">{{ hub.recruitingCount > 99 ? "99+" : hub.recruitingCount }}</em>
               </span>
               <span>待成团</span>
             </button>
             <button type="button" @click="goOrders('depart')">
               <span class="mine-order-ico">
-                <img :src="'/static/mine/order-go.png?v=10'" alt="" />
+                <MineGlyph name="cube" />
                 <em v-if="hub.departCount" class="mine-badge">{{ hub.departCount > 99 ? "99+" : hub.departCount }}</em>
               </span>
               <span>待出行</span>
             </button>
             <button type="button" @click="goOrders('review')">
               <span class="mine-order-ico">
-                <img :src="'/static/mine/order-review.png?v=10'" alt="" />
+                <MineGlyph name="smile" />
                 <em v-if="hub.reviewCount" class="mine-badge">{{ hub.reviewCount > 99 ? "99+" : hub.reviewCount }}</em>
               </span>
               <span>待评价</span>
             </button>
             <button type="button" @click="goOrders('refund')">
               <span class="mine-order-ico">
-                <img :src="'/static/mine/order-refund.png?v=10'" alt="" />
+                <MineGlyph name="yen" />
                 <em v-if="hub.refundCount" class="mine-badge">{{ hub.refundCount > 99 ? "99+" : hub.refundCount }}</em>
               </span>
               <span>已退款</span>
@@ -125,11 +125,11 @@
 
       <div class="mine-play">
         <button type="button" @click="goAuth('/m/student')">
-          <span class="mine-ico"><img :src="'/static/mine/campus.png?v=10'" alt="" /></span>
+          <span class="mine-ico"><MineGlyph name="cap" /></span>
           <span class="mine-play-name">{{ campusShort }}</span>
         </button>
         <button type="button" @click="goAuth('/m/leader')">
-          <span class="mine-ico"><img :src="'/static/mine/leader.png?v=10'" alt="" /></span>
+          <span class="mine-ico"><MineGlyph name="peak" /></span>
           <span class="mine-play-name">{{ leaderShort }}</span>
         </button>
         <button type="button" @click="goAuth('/m/photo-apply')">
@@ -137,7 +137,7 @@
           <span class="mine-play-name">摄影师申请</span>
         </button>
         <button type="button" @click="goAuth('/m/feedback')">
-          <span class="mine-ico"><img :src="'/static/mine/feedback.png?v=10'" alt="" /></span>
+          <span class="mine-ico"><MineGlyph name="bubble" /></span>
           <span class="mine-play-name">反馈</span>
         </button>
       </div>
@@ -197,6 +197,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
+import MineGlyph from "@/components/MineGlyph.vue";
 import { useUserStore } from "@/stores/user";
 import { maskPhone } from "@/utils/labels";
 
