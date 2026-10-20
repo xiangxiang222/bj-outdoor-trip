@@ -45,6 +45,7 @@
     </view>
   </view>
 
+  <view class="mine-board">
   <view class="mine-member" wx:if="{{user.membership}}" bindtap="openMember">
     <view>
       <view class="mine-level"><text class="mine-em">{{tr.t(user.membership.code, lang)}}</text>{{tr.t('会员', lang)}}</view>
@@ -102,6 +103,7 @@
         <view class="mine-all-arrow"></view>
       </view>
     </view>
+  </view>
   </view>
 
   <view class="mine-wallet" bindtap="go" data-url="/pages/wallet/wallet">

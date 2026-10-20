@@ -43,11 +43,12 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-tools.is-dark .mine-tool-ico image { filter: invert(1); }
 .mine-badge { position: absolute; top: -8rpx; right: -16rpx; min-width: 28rpx; height: 28rpx; line-height: 28rpx; padding: 0 6rpx; border-radius: 99rpx; background: #e23d3d; color: #fff; font-size: 18rpx; text-align: center; }
 .mine-expire { color: #c45c26; font-size: calc(20rpx * var(--ui-scale)); }
-.mine-member { margin: 8rpx 24rpx 0; padding: 28rpx 32rpx; border-radius: 24rpx 24rpx 0 0; background: #f3eaf5; display: flex; justify-content: space-between; align-items: center; color: #1a1a1a; }
+.mine-board { margin: 8rpx 24rpx 16rpx; border-radius: 24rpx; overflow: hidden; background: #fff; }
+.mine-member { position: relative; z-index: 1; margin: 0 0 -2rpx; padding: 28rpx 32rpx; border-radius: 0; background: #f3eaf5; display: flex; justify-content: space-between; align-items: center; color: #1a1a1a; }
 .mine-level { font-size: calc(34rpx * var(--ui-scale)); font-weight: 700; color: #642470; text-decoration: underline; text-underline-offset: 8rpx; }
 .mine-em { font-style: italic; font-weight: 800; }
 .mine-pill { background: #642470; color: #fff; border-radius: 999rpx; padding: 10rpx 20rpx; font-size: calc(24rpx * var(--ui-scale)); font-weight: 600; }
-.mine-orders { background: #fff; margin: 0 24rpx 16rpx; border-radius: 0 0 24rpx 24rpx; padding: 20rpx 0 24rpx; font-family: "PingFang SC", "Helvetica Neue", sans-serif; }
+.mine-orders { position: relative; z-index: 0; background: #fff; margin: 0; border-radius: 0; padding: 20rpx 0 24rpx; font-family: "PingFang SC", "Helvetica Neue", sans-serif; }
 .mine-traces { display: flex; align-items: center; position: relative; z-index: 0; padding: 0 16rpx 8rpx; }
 .mine-traces > view { flex: 1; text-align: center; font-size: 28rpx; font-weight: 400; line-height: 40rpx; color: #1a1a1a; }
 .mine-trace-num { margin-left: 8rpx; font-weight: 600; font-size: 28rpx; color: #1a1a1a; }

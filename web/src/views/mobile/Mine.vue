@@ -31,6 +31,7 @@
         </div>
       </div>
 
+      <div class="mine-board">
       <button v-if="store.profile.membership" class="mine-member" type="button" @click="openMember">
         <div>
           <strong class="mine-level"><em>{{ store.profile.membership.code }}</em>会员</strong>
@@ -88,6 +89,7 @@
             <i class="mine-all-arrow"></i>
           </button>
         </div>
+      </div>
       </div>
 
       <button class="mine-wallet" type="button" @click="goAuth('/m/wallet')">
