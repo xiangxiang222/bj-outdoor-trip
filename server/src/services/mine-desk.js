@@ -296,6 +296,7 @@ function deskCounts(userId) {
   return {
     reviewCount: review,
     refundCount: refund,
+    signedToday: require("./signin").signedToday(userId),
     viewCount: views,
     favoriteCount: favorites,
     followCount: follows,

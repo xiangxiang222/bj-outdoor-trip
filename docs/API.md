@@ -68,6 +68,8 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | DELETE | `/me/wallet/cards/:id` | 用户 | 已关闭，同上 |
 | POST | `/me/wallet/pin` | 用户 | `{ pin, oldPin }`。6 位数字。已设置时须带原密码 |
 | POST | `/me/wallet/pin/reset` | 用户 | `{ idCard, pin }`。身份证须与实名一致 |
+| GET | `/me/signin` | 用户 | 每日签到：今天是否已签、连续天数、今日积分、往后 7 天的积分 |
+| POST | `/me/signin` | 用户 | 签今天。一天一次，连续天数决定积分（2、2、5、5、8、8、20，之后循环）。重复签到不再加积分 |
 | GET | `/me/trips` | 用户 | 即将出行：已报名且团未解散、出发日 ≥ 昨天的 `joined`/`waitlist`/`applied` |
 | GET | `/me/coupons` | 用户 | 我领取的券（含未用/已用/候补占用）。含 `expiresAt` `claimedAt` `validHours` `universal` |
 | GET | `/me/referral` | 用户 | 推荐码、专属二维码、5% 按人结算明细。Query：`scheduleId`。访问时会把已成团报名的 pending 结算进钱包 |

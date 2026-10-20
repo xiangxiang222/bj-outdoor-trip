@@ -1,0 +1,20 @@
+page { background: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helvetica Neue", sans-serif; }
+.sg-page { padding: 24rpx; }
+.sg-card, .sg-result { background: #fff; border-radius: 24rpx; padding: 32rpx 28rpx; }
+.sg-top { display: flex; align-items: center; justify-content: space-between; }
+.sg-title { font-size: 34rpx; font-weight: 700; }
+.sg-sub { margin-top: 8rpx; color: #8d8d8d; font-size: 24rpx; }
+.sg-plus, .sg-gain { color: #bc4749; font-weight: 700; }
+.sg-plus { font-size: 40rpx; }
+.sg-days { display: flex; gap: 8rpx; margin: 28rpx 0; }
+.sg-day { flex: 1; min-width: 0; background: #f6f6f6; border-radius: 12rpx; text-align: center; padding: 14rpx 0 10rpx; }
+.sg-day.on { background: #fff1f0; }
+.sg-pts { font-size: 24rpx; font-weight: 700; }
+.sg-day.on .sg-pts, .sg-day.today .sg-pts { color: #bc4749; }
+.sg-label { margin-top: 6rpx; font-size: 20rpx; color: #8d8d8d; }
+.sg-go { text-align: center; background: #bc4749; color: #fff; border-radius: 999rpx; padding: 22rpx 0; font-size: 30rpx; font-weight: 650; }
+.sg-go.off { background: #f0f0f0; color: #9a9a9a; }
+.sg-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 48rpx; }
+.sg-result { width: 100%; text-align: center; }
+.sg-gain { margin: 16rpx 0; font-size: 52rpx; }
+.sg-result .sg-go { margin-top: 24rpx; }

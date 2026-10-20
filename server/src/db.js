@@ -899,6 +899,18 @@ function migrateSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_page_views_route ON page_views(route_id, created_at);
     CREATE INDEX IF NOT EXISTS idx_page_views_visitor ON page_views(visitor_id, created_at);
   `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_signins (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      day TEXT NOT NULL,
+      streak INTEGER NOT NULL,
+      points INTEGER NOT NULL,
+      created_at TEXT DEFAULT (datetime('now','localtime')),
+      UNIQUE(user_id, day)
+    );
+    CREATE INDEX IF NOT EXISTS idx_user_signins_user ON user_signins(user_id, day);
+  `);
   hideStashedRoutes(db);
   require("./services/payment").repairSkippedWalletRefunds();
 }

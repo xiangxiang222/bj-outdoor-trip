@@ -34,6 +34,7 @@ const routes = [
       { path: "settings/lang", name: "look-lang", component: () => import("@/views/mobile/LookLang.vue") },
       { path: "profile", name: "profile", component: () => import("@/views/mobile/Profile.vue") },
       { path: "wallet", name: "wallet", component: () => import("@/views/mobile/Wallet.vue") },
+      { path: "signin", name: "signin", component: () => import("@/views/mobile/Signin.vue") },
       { path: "wallet/cards", name: "wallet-cards", component: () => import("@/views/mobile/WalletCards.vue") },
       { path: "wallet/pin", name: "wallet-pin", component: () => import("@/views/mobile/WalletPin.vue") },
       { path: "login", name: "login", component: () => import("@/views/mobile/Login.vue") },

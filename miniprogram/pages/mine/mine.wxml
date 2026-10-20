@@ -4,42 +4,36 @@
   <view class="mine-nav-bar" style="height: {{navBarHeight}}px;">{{tr.t('我的', lang)}}</view>
 </view>
 <view class="mine-page {{dark ? 'is-dark' : ''}}" wx:if="{{user}}">
-  <view class="mine-profile">
-  <view class="mine-hero-card">
-    <view class="mine-user" bindtap="goHome">
-      <view class="mine-avatar" catchtap="openAvatar">
-        <image wx:if="{{user.avatar}}" src="{{user.avatar}}" mode="aspectFill" />
-        <text wx:else>{{tr.t(nickHead, lang)}}</text>
-      </view>
-      <view>
+  <view class="mine-head">
+  <view class="mine-user">
+    <view class="mine-avatar" catchtap="openAvatar">
+      <image wx:if="{{user.avatar}}" src="{{user.avatar}}" mode="aspectFill" />
+      <text wx:else>{{tr.t(nickHead, lang)}}</text>
+    </view>
+    <view class="mine-user-main">
+      <view bindtap="goHome">
         <view class="title">{{tr.t(user.nickname, lang)}}</view>
         <view class="muted">{{tr.t(phone, lang)}}</view>
       </view>
-    </view>
-    <view class="mine-tools {{dark ? 'is-dark' : ''}}">
-      <view class="mine-tool" bindtap="goOfficial">
-        <view class="mine-tool-ico"><image src="{{iconBase}}tool-help.png?v=10" mode="aspectFit" /></view>
-        <text>{{tr.t('客服', lang)}}</text>
-      </view>
-      <view class="mine-tool" bindtap="go" data-url="/pages/settings/settings">
-        <view class="mine-tool-ico"><image src="{{iconBase}}tool-set.png?v=10" mode="aspectFit" /></view>
-        <text>{{tr.t('设置', lang)}}</text>
-      </view>
-      <view class="mine-tool" bindtap="go" data-url="/pages/notices/notices">
-        <view class="mine-tool-ico">
-          <image src="{{iconBase}}tool-msg.png?v=10" mode="aspectFit" />
-          <text wx:if="{{hub.unreadCount}}" class="mine-badge">{{hub.unreadCount > 9 ? '9+' : hub.unreadCount}}</text>
-        </view>
-        <text>{{tr.t('消息', lang)}}</text>
-      </view>
+      <view class="mine-chip" catchtap="openMember">{{user.membership ? tr.t(user.membership.code, lang) + tr.t('会员', lang) + ' ›' : tr.t('会员中心 ›', lang)}}</view>
     </view>
   </view>
-  <view class="mine-member" wx:if="{{user.membership}}" bindtap="openMember">
-    <view>
-      <view class="mine-level"><text class="mine-em">{{tr.t(user.membership.code, lang)}}</text>{{tr.t('会员', lang)}}</view>
-      <view class="muted">{{tr.t('本月累计新增', lang)}} {{tr.t(user.membership.monthGrowth, lang)}} {{tr.t('成长值', lang)}}</view>
+  <view class="mine-tools {{dark ? 'is-dark' : ''}}">
+    <view class="mine-tool" bindtap="goOfficial">
+      <view class="mine-tool-ico"><image src="{{iconBase}}tool-help.png?v=10" mode="aspectFit" /></view>
+      <text>{{tr.t('客服', lang)}}</text>
     </view>
-    <view class="mine-pill">{{tr.t('会员中心 ›', lang)}}</view>
+    <view class="mine-tool" bindtap="go" data-url="/pages/settings/settings">
+      <view class="mine-tool-ico"><image src="{{iconBase}}tool-set.png?v=10" mode="aspectFit" /></view>
+      <text>{{tr.t('设置', lang)}}</text>
+    </view>
+    <view class="mine-tool" bindtap="go" data-url="/pages/notices/notices">
+      <view class="mine-tool-ico">
+        <image src="{{iconBase}}tool-msg.png?v=10" mode="aspectFit" />
+        <text wx:if="{{hub.unreadCount}}" class="mine-badge">{{hub.unreadCount > 9 ? '9+' : hub.unreadCount}}</text>
+      </view>
+      <text>{{tr.t('消息', lang)}}</text>
+    </view>
   </view>
   </view>
   <view class="avatar-mask" wx:if="{{picker}}" catchtap="closeAvatar">
@@ -54,11 +48,25 @@
     </view>
   </view>
 
-  <view class="mine-orders">
-    <view class="mine-traces">
-      <view bindtap="go" data-url="/pages/views/views"><text>{{tr.t('足迹', lang)}}</text><text class="mine-trace-num">{{hub.viewCount || 0}}</text></view>
-      <view bindtap="go" data-url="/pages/favorites/favorites"><text>{{tr.t('收藏', lang)}}</text><text class="mine-trace-num">{{hub.favoriteCount || 0}}</text></view>
-      <view bindtap="go" data-url="/pages/follows/follows"><text>{{tr.t('关注', lang)}}</text><text class="mine-trace-num">{{hub.followCount || 0}}</text></view>
+  <view class="mine-sheet">
+    <view class="mine-sheet-head">
+      <view bindtap="go" data-url="/pages/wallet/wallet">{{tr.t('我的钱包', lang)}} ›</view>
+      <view class="mine-pill" bindtap="openMember">{{tr.t('会员中心 ›', lang)}}</view>
+    </view>
+    <view class="mine-stats">
+      <view bindtap="go" data-url="/pages/wallet/wallet">
+        <view class="mine-stat-num">{{tr.t(hub.balance, lang)}}</view>
+        <view class="mine-stat-name">{{tr.t('余额', lang)}}</view>
+      </view>
+      <view bindtap="go" data-url="/pages/coupons/coupons">
+        <view class="mine-stat-num">{{tr.t(hub.couponCount, lang)}}</view>
+        <view class="mine-stat-name">{{tr.t('优惠券', lang)}}</view>
+        <view class="mine-expire" wx:if="{{hub.couponExpireHint}}">{{tr.t(hub.couponExpireHint, lang)}}</view>
+      </view>
+      <view bindtap="go" data-url="/pages/signin/signin">
+        <view class="mine-stat-num">{{tr.t(hub.points != null ? hub.points : user.points, lang)}}</view>
+        <view class="mine-stat-name">{{tr.t('积分', lang)}}</view>
+      </view>
     </view>
     <view class="mine-order-row">
       <view class="mine-shortcuts">
@@ -105,29 +113,26 @@
     </view>
   </view>
 
-  <view class="mine-wallet" bindtap="go" data-url="/pages/wallet/wallet">
-    <view class="mine-wallet-item">
-      <image class="wal-ico" src="{{iconBase}}wal-coin.png?v=10" mode="aspectFit" />
-      <view class="wal-num">{{tr.t(hub.balance, lang)}}</view>
-      <view class="wal-name">{{tr.t('余额', lang)}}</view>
+  <view class="mine-links">
+    <view bindtap="go" data-url="/pages/views/views">
+      <image src="{{iconBase}}views.png?v=10" mode="aspectFit" />
+      <text>{{tr.t('足迹', lang)}}</text>
+      <text class="mine-link-num">{{hub.viewCount || 0}}</text>
     </view>
-    <view class="mine-wallet-item">
-      <view class="wal-ico-wrap">
-        <image class="wal-ico" src="{{iconBase}}wal-coupon.png?v=11" mode="aspectFit" />
-        <view wx:if="{{hub.couponCount}}" class="wal-dot"></view>
-      </view>
-      <view class="wal-num">{{tr.t(hub.couponCount, lang)}}</view>
-      <view class="wal-name">{{tr.t('优惠券', lang)}}</view>
-      <view class="mine-expire" wx:if="{{hub.couponExpireHint}}">{{tr.t(hub.couponExpireHint, lang)}}</view>
+    <view bindtap="go" data-url="/pages/favorites/favorites">
+      <image src="{{iconBase}}fav.png?v=10" mode="aspectFit" />
+      <text>{{tr.t('收藏', lang)}}</text>
+      <text class="mine-link-num">{{hub.favoriteCount || 0}}</text>
     </view>
-    <view class="mine-wallet-item">
-      <image class="wal-ico" src="{{iconBase}}wal-point.png?v=10" mode="aspectFit" />
-      <view class="wal-num">{{tr.t(user.points, lang)}}</view>
-      <view class="wal-name">{{tr.t('积分', lang)}}</view>
+    <view bindtap="go" data-url="/pages/follows/follows">
+      <image src="{{iconBase}}follow.png?v=10" mode="aspectFit" />
+      <text>{{tr.t('关注', lang)}}</text>
+      <text class="mine-link-num">{{hub.followCount || 0}}</text>
     </view>
-    <view class="mine-wallet-item">
-      <image class="wal-ico" src="{{iconBase}}wal-purse.png?v=10" mode="aspectFit" />
-      <view class="wal-entry">{{tr.t('钱包', lang)}} ›</view>
+    <view bindtap="go" data-url="/pages/signin/signin">
+      <view class="mine-sign-ico"></view>
+      <text>{{tr.t('签到', lang)}}</text>
+      <text class="mine-link-num">{{hub.signedToday ? tr.t('已签', lang) : tr.t('领积分', lang)}}</text>
     </view>
   </view>
 </view>

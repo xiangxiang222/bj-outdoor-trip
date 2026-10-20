@@ -11,6 +11,7 @@
     "pages/look-lang/look-lang",
     "pages/profile/profile",
     "pages/wallet/wallet",
+    "pages/signin/signin",
     "pages/wallet-cards/wallet-cards",
     "pages/wallet-pin/wallet-pin",
     "pages/rules/rules",
