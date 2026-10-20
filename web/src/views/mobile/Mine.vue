@@ -41,7 +41,6 @@
       </button>
 
       <div class="mine-orders">
-        <span v-if="store.profile.membership" class="mine-join" aria-hidden="true"></span>
         <div class="mine-traces">
           <button type="button" @click="goAuth('/m/views')"><span>足迹</span><b>{{ hub.viewCount || 0 }}</b></button>
           <button type="button" @click="goAuth('/m/favorites')"><span>收藏</span><b>{{ hub.favoriteCount || 0 }}</b></button>
