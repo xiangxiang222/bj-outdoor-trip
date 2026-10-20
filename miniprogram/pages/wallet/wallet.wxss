@@ -41,5 +41,6 @@ page { background: #f5f6f8; }
 .dot { width: 72rpx; height: 88rpx; background: #fff; border-radius: 12rpx; position: relative; }
 .dot.on::after { content: ""; width: 16rpx; height: 16rpx; border-radius: 50%; background: #222; position: absolute; left: 28rpx; top: 36rpx; }
 .keys { display: flex; flex-wrap: wrap; gap: 12rpx; }
-.key { width: calc((100% - 24rpx) / 3); height: 96rpx; line-height: 96rpx; text-align: center; background: #fff; border-radius: 12rpx; font-size: calc(40rpx * var(--ui-scale)); }
-.key.blank { background: transparent; }
+.key { width: calc((100% - 24rpx) / 3); height: 96rpx; line-height: 96rpx; text-align: center; background: #fff; border-radius: 12rpx; font-size: calc(40rpx * var(--ui-scale)); box-shadow: 0 1rpx 0 rgba(20, 20, 20, 0.06); }
+.key.blank { background: transparent; box-shadow: none; }
+.key-down { background: #d2d2d7; box-shadow: inset 0 4rpx 10rpx rgba(20, 20, 20, 0.18); }
