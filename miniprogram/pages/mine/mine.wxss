@@ -1,6 +1,6 @@
 @import "../../styles/account.wxss";
 page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helvetica Neue", sans-serif; }
-.mine-nav { background: #f7f1ee; color: transparent; }
+.mine-nav { background: #c045ab; color: #fff; }
 .mine-nav-bar {
   display: flex;
   align-items: center;
@@ -9,13 +9,13 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
   font-weight: 650;
   line-height: 1;
 }
-.mine-nav.is-dark { background: #121214; }
+.mine-nav.is-dark { background: #9a4584; }
 .mine-page {
-  background: linear-gradient(180deg, #f7f1ee 0, #f4f4f4 280rpx);
+  background: linear-gradient(180deg, #c045ab 0, #c045ab 168rpx, #f3f4f6 168rpx);
   padding-bottom: 24rpx;
 }
 .mine-page.is-dark {
-  background: #121214;
+  background: linear-gradient(180deg, #9a4584 0, #9a4584 168rpx, #121214 168rpx);
   color: #f2f2f2;
 }
 .cell-label { margin: 24rpx 32rpx 8rpx; font-size: calc(24rpx * var(--ui-scale)); color: #9a9a9a; font-weight: 400; }
@@ -26,7 +26,7 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-user-main { flex: 1; min-width: 0; }
 .mine-tags { display: flex; align-items: center; gap: 12rpx; margin-top: 8rpx; }
 .mine-lv { background: #1a1a1a; color: #f6e7c1; border-radius: 6rpx; padding: 2rpx 10rpx; font-size: calc(20rpx * var(--ui-scale)); font-weight: 700; }
-.mine-chip { color: #c45c7a; font-size: calc(22rpx * var(--ui-scale)); font-weight: 600; }
+.mine-chip { color: #fff; font-size: calc(22rpx * var(--ui-scale)); font-weight: 600; }
 .mine-hero-card { background: transparent; margin: 0; padding: 24rpx 16rpx 12rpx; display: flex; align-items: center; gap: 16rpx; }
 .mine-user { display: flex; align-items: center; gap: 16rpx; flex: 1; }
 .mine-avatar { width: 96rpx; height: 96rpx; border-radius: 50%; background: #f3eaf5; color: #642470; text-align: center; line-height: 96rpx; font-weight: 700; overflow: hidden; }
@@ -39,11 +39,11 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .avatar-action { text-align: center; padding: 28rpx 0; border-top: 1rpx solid #f0f1f3; font-size: calc(32rpx * var(--ui-scale)); }
 .avatar-action.cancel { color: #7a7d74; }
 .mine-tools { display: flex; align-items: flex-start; gap: 4rpx; flex: none; }
-.mine-hero-card .title, .mine-head .title { color: #1a1a1a; font-size: calc(34rpx * var(--ui-scale)); font-weight: 700; }
+.mine-hero-card .title, .mine-head .title { color: #fff; font-size: calc(34rpx * var(--ui-scale)); font-weight: 700; }
 .mine-hero-card .muted, .mine-head .muted { color: rgba(255, 255, 255, 0.72); }
-.mine-tool { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4rpx; min-width: 88rpx; min-height: 88rpx; padding: 8rpx 4rpx; box-sizing: border-box; color: #595959; font-size: calc(20rpx * var(--ui-scale)); line-height: 1.15; }
+.mine-tool { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4rpx; min-width: 88rpx; min-height: 88rpx; padding: 8rpx 4rpx; box-sizing: border-box; color: #fff; font-size: calc(20rpx * var(--ui-scale)); line-height: 1.15; }
 .mine-tool-ico { position: relative; width: 44rpx; height: 44rpx; }
-.mine-tool-ico image { width: 44rpx; height: 44rpx; }
+.mine-tool-ico image { width: 44rpx; height: 44rpx; filter: invert(1); }
 .mine-tools.is-dark .mine-tool { color: #f2f2f2; }
 .mine-tools.is-dark .mine-tool-ico image { filter: invert(1); }
 .mine-badge { position: absolute; top: -8rpx; right: -16rpx; min-width: 28rpx; height: 28rpx; line-height: 28rpx; padding: 0 6rpx; border-radius: 99rpx; background: #e23d3d; color: #fff; font-size: 18rpx; text-align: center; }
@@ -51,8 +51,9 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-sheet { background: #fff; margin: 0 24rpx 16rpx; border-radius: 24rpx; padding: 24rpx 8rpx 16rpx; }
 .mine-page.is-dark .mine-nav,
 .mine-page.is-dark .title { color: #f2f2f2; }
-.mine-page.is-dark .mine-chip { color: #f0b4c4; }
+.mine-page.is-dark .mine-chip { color: #fff; }
 .mine-page.is-dark .mine-sheet,
+.mine-page.is-dark .mine-orders,
 .mine-page.is-dark .mine-links,
 .mine-page.is-dark .mine-play { background: #1c1c1e; }
 .mine-page.is-dark .mine-sheet-head,

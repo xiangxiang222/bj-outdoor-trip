@@ -71,6 +71,9 @@
       </view>
       <view class="mine-more" bindtap="go" data-url="/pages/wallet/wallet">{{tr.t('更多', lang)}}</view>
     </view>
+  </view>
+
+  <view class="mine-orders">
     <view class="mine-order-row">
       <view class="mine-shortcuts">
         <view bindtap="goOrders" data-tab="unpaid">
