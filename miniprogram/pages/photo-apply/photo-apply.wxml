@@ -1,0 +1,10 @@
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="pad muted">{{tr.t('还没有摄影师的团可以报名。免个人团费，保险另计。一个团只设一位。', lang)}}</view>
+<view class="photo-trip" wx:for="{{trips}}" wx:key="id" bindtap="open" data-id="{{item.id}}">
+  <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
+  <view>
+    <view class="photo-title">{{tr.t(item.title, lang)}}</view>
+    <view class="muted">{{item.startDate}} {{tr.t('出发', lang)}}</view>
+  </view>
+</view>
+<view class="pad muted" wx:if="{{loaded && !trips.length}}">{{tr.t('这几天没有空着的摄影师位。', lang)}}</view>

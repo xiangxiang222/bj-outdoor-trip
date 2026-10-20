@@ -39,6 +39,7 @@ Page({
     hub: { balance: 0, departCount: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, reviewCount: 0, refundCount: 0, unreadCount: 0, couponCount: 0, couponExpireHint: "" },
     picker: false,
     defaults: [],
+    picks: [],
     iconBase: (app && app.globalData && app.globalData.baseUrl ? app.globalData.baseUrl : "") + "/static/mine/",
     dark: false,
     statusBarHeight: 20,
@@ -74,6 +75,7 @@ Page({
       iconBase: app.globalData.baseUrl + "/static/mine/",
     });
     this.loadHub();
+    this.loadPicks();
   },
   async loadHub() {
     if (!app.globalData.token) {
@@ -168,9 +170,28 @@ Page({
   goOfficial() {
     wx.navigateTo({ url: "/pages/official/official" });
   },
-  goRoutes() {
-    getApp().globalData.homeView = "routes";
-    wx.switchTab({ url: "/pages/index/index" });
+  async loadPicks() {
+    try {
+      const res = await request("/routes");
+      const rows = res.data || [];
+      const ranked = rows.slice().sort((a, b) => ((b.upcoming && b.upcoming.length) || 0) - ((a.upcoming && a.upcoming.length) || 0));
+      const withCover = ranked.filter((r) => r.cover);
+      const picks = (withCover.length >= 4 ? withCover : ranked).slice(0, 6).map((r) => ({
+        id: r.id,
+        title: r.title,
+        cover: r.cover,
+        fromPrice: r.fromPrice,
+        mark: (r.title || "线").slice(0, 1),
+      }));
+      this.setData({ picks });
+    } catch {
+      this.setData({ picks: [] });
+    }
+  },
+  openRoute(e) {
+    const id = e.currentTarget.dataset.id;
+    if (!id) return;
+    wx.navigateTo({ url: "/pkg-detail/detail/detail?id=" + id });
   },
   goOrders(e) {
     const tab = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.tab) || "depart";

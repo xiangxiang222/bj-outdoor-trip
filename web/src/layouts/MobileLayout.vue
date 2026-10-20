@@ -77,10 +77,10 @@ watch(() => route.path, () => clearChrome());
 const tabNames = new Set(["home", "activities", "orders", "mine"]);
 const isHome = computed(() => route.name === "home");
 const showBack = computed(() => !tabNames.has(route.name));
-const accountPaths = ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile", "/m/orders", "/m/lottery", "/m/publish", "/m/coupons", "/m/user"];
+const accountPaths = ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/photo-apply", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile", "/m/orders", "/m/lottery", "/m/publish", "/m/coupons", "/m/user"];
 const accountTone = computed(() => accountPaths.some((p) => route.path === p || route.path.startsWith(p + "/")));
 const mineActive = computed(() =>
-  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile"].some(
+  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/photo-apply", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile"].some(
     (p) => route.path === p || route.path.startsWith(p + "/")
   )
 );
@@ -103,6 +103,7 @@ const title = computed(() => {
     student: "校园认证",
     group: "团体认证",
     leader: "领队申请",
+    "photo-apply": "摄影师申请",
     feedback: "意见反馈",
     lottery: "抽奖",
     after: "完成活动",
@@ -147,6 +148,7 @@ const subtitle = computed(() => {
     rules: "加微信、看规则、找客服",
     student: "认证后可走学生价",
     leader: "通过后可在团里报名领队",
+    "photo-apply": "免个人团费，一个团一位",
     mine: "账号、权益与客服",
     signin: "连续签到，积分直接入账",
     orders: "待出发、待评价和全部报名",

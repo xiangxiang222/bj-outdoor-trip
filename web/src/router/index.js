@@ -13,6 +13,7 @@ const routes = [
       { path: "student", name: "student", component: () => import("@/views/mobile/Student.vue") },
       { path: "group", name: "group", component: () => import("@/views/mobile/Group.vue") },
       { path: "leader", name: "leader", component: () => import("@/views/mobile/Leader.vue") },
+      { path: "photo-apply", name: "photo-apply", component: () => import("@/views/mobile/PhotoApply.vue") },
       { path: "route-apply", name: "route-apply", component: () => import("@/views/mobile/RouteApply.vue") },
       { path: "feedback", name: "feedback", component: () => import("@/views/mobile/Feedback.vue") },
       { path: "lottery", name: "lottery", component: () => import("@/views/mobile/Lottery.vue") },
