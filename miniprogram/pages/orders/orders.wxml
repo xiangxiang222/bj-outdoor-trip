@@ -3,231 +3,91 @@
 <view class="card" wx:if="{{!loggedIn}}">
   <view class="pad">
     <view class="title">{{tr.t('登录后看出行计划', lang)}}</view>
-    <view class="muted">{{tr.t('山野团和同城局都会出现在这里。', lang)}}</view>
+    <view class="muted">{{tr.t('山野团和同城局都会出现在这里，出发前能看到集合时间和地点。', lang)}}</view>
     <view class="btn" bindtap="goLogin">{{tr.t('登录查看行程', lang)}}</view>
   </view>
 </view>
 
 <block wx:else>
-  <view class="chips">
-    <view class="chip {{tab=='unpaid'?'on':''}}" bindtap="setTab" data-tab="unpaid">{{tr.t('待支付', lang)}} {{tr.t(unpaid.length, lang)}}</view>
-    <view class="chip {{tab=='recruiting'?'on':''}}" bindtap="setTab" data-tab="recruiting">{{tr.t('招募中', lang)}} {{tr.t(recruiting.length, lang)}}</view>
-    <view class="chip {{tab=='depart'?'on':''}}" bindtap="setTab" data-tab="depart">{{tr.t('待出发', lang)}} {{tr.t(upcoming.length, lang)}}</view>
-    <view class="chip {{tab=='review'?'on':''}}" bindtap="setTab" data-tab="review">{{tr.t('待评价', lang)}} {{tr.t(review.length, lang)}}</view>
-    <view class="chip {{tab=='waitlist'?'on':''}}" bindtap="setTab" data-tab="waitlist">{{tr.t('候补中', lang)}} {{tr.t(waitlist.length, lang)}}</view>
-    <view class="chip {{tab=='refund'?'on':''}}" bindtap="setTab" data-tab="refund">{{tr.t('已退款', lang)}} {{tr.t(refund.length, lang)}}</view>
-    <view class="chip {{tab=='all'?'on':''}}" bindtap="setTab" data-tab="all">{{tr.t('全部订单', lang)}} {{tr.t(all.length, lang)}}</view>
+  <input class="od-search" placeholder="{{tr.t('搜索我的订单', lang)}}" value="{{keyword}}" bindinput="setKeyword" />
+  <view class="od-tools">
+    <scroll-view class="od-tabs" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="od-tab-row">
+        <view class="od-tab {{tab=='all'?'on':''}}" bindtap="setTab" data-tab="all">{{tr.t('全部', lang)}}</view>
+        <view class="od-tab {{tab=='unpaid'?'on':''}}" bindtap="setTab" data-tab="unpaid">{{tr.t('待支付', lang)}}</view>
+        <view class="od-tab {{tab=='recruiting'?'on':''}}" bindtap="setTab" data-tab="recruiting">{{tr.t('招募中', lang)}}</view>
+        <view class="od-tab {{tab=='depart'?'on':''}}" bindtap="setTab" data-tab="depart">{{tr.t('待出发', lang)}}</view>
+        <view class="od-tab {{tab=='review'?'on':''}}" bindtap="setTab" data-tab="review">{{tr.t('待评价', lang)}}</view>
+        <view class="od-tab {{tab=='waitlist'?'on':''}}" bindtap="setTab" data-tab="waitlist">{{tr.t('候补中', lang)}}</view>
+        <view class="od-tab {{tab=='refund'?'on':''}}" bindtap="setTab" data-tab="refund">{{tr.t('已退款', lang)}}</view>
+      </view>
+    </scroll-view>
+    <view class="od-filter {{filterOn?'on':''}}" bindtap="openFilter">{{tr.t('筛选', lang)}}</view>
   </view>
 
-  <block wx:if="{{tab=='depart'}}">
-    <view class="card" wx:if="{{nextTrip}}" bindtap="goSchedule" data-id="{{nextTrip.schedule_id}}">
-      <view class="pad">
-        <view class="muted">{{tr.t('下一趟 ·', lang)}} {{tr.t(nextTrip.kindLabel, lang)}}</view>
-        <view class="title">{{tr.t(nextTrip.title, lang)}}</view>
-        <view class="muted">{{tr.t(nextTrip.start_date, lang)}} {{tr.t(nextTrip.meetup_time, lang)}} · {{tr.t(nextTrip.meetup_point, lang)}}</view>
-        <view class="payer-list" wx:if="{{nextTrip.helpers && nextTrip.helpers.length}}">
-          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
-          <view class="payer-row" wx:for="{{nextTrip.helpers}}" wx:for-item="payer" wx:key="index">
-            <view>
-              <view>{{tr.t(payer.nickname, lang)}}</view>
-              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
-            </view>
-            <view class="payer-amt">¥{{payer.amount}}</view>
-          </view>
-        </view>
-      </view>
-      <view wx:if="{{nextTrip.canPay}}" class="cancel-link" catchtap="goPay" data-token="{{nextTrip.payShareToken}}" data-sid="{{nextTrip.schedule_id}}">{{tr.t('去支付', lang)}}</view>
-      <view wx:if="{{nextTrip.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{nextTrip.id}}">{{tr.t('取消报名', lang)}}</view>
+  <view class="od-card" wx:for="{{shown}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+    <view class="od-head">
+      <view class="od-shop">{{tr.t(item.shop, lang)}}</view>
+      <view class="od-status {{item.hot?'is-hot':''}}">{{tr.t(item.badge, lang)}}</view>
     </view>
-    <view class="card" wx:for="{{restUpcoming}}" wx:key="id">
-      <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
-        <view class="row">
-          <view class="title">{{tr.t(item.title, lang)}}</view>
-          <view class="tag">{{tr.t(item.kindLabel, lang)}}</view>
-        </view>
-        <view class="muted">{{tr.t(item.meetup_time, lang)}} {{tr.t(item.meetup_point, lang)}}</view>
-        <view class="muted">{{tr.t(item.statusText, lang)}} · {{tr.t(item.moneyText, lang)}}</view>
-        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
-          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
-          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
-            <view>
-              <view>{{tr.t(payer.nickname, lang)}}</view>
-              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
-            </view>
-            <view class="payer-amt">¥{{payer.amount}}</view>
-          </view>
-        </view>
+    <view class="od-goods">
+      <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
+      <view wx:else class="od-ph"></view>
+      <view class="od-main">
+        <view class="od-title">{{tr.t(item.title, lang)}}</view>
+        <view class="od-spec">{{tr.t(item.spec, lang)}}</view>
       </view>
-      <view wx:if="{{item.canPay}}" class="cancel-link" catchtap="goPay" data-token="{{item.payShareToken}}" data-sid="{{item.schedule_id}}">{{tr.t('去支付', lang)}}</view>
-      <view wx:if="{{item.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{item.id}}">{{tr.t('取消报名', lang)}}</view>
+      <view class="od-price">
+        <view>{{tr.t(item.moneyText, lang)}}</view>
+        <view class="od-qty">{{tr.t('共1人', lang)}}</view>
+      </view>
     </view>
+    <view class="od-help" wx:if="{{item.helperCount}}">{{tr.t('帮忙支付', lang)}} {{item.helperCount}} {{tr.t('人', lang)}}</view>
+    <view class="od-actions" wx:if="{{item.canCancel || item.canPay || item.reviewable || (item.canAfter && item.completed) || item.again}}" catchtap="noop">
+      <view wx:if="{{item.canCancel}}" class="od-btn" catchtap="cancel" data-id="{{item.id}}">{{tr.t(item.status=='waitlist'?'取消候补':'取消报名', lang)}}</view>
+      <view wx:if="{{item.canPay}}" class="od-btn solid" catchtap="goPay" data-token="{{item.payShareToken}}" data-id="{{item.id}}">{{tr.t('去支付', lang)}}</view>
+      <view wx:if="{{item.reviewable}}" class="od-btn solid" catchtap="goDetail" data-id="{{item.id}}" data-review="1">{{tr.t('去评价', lang)}}</view>
+      <view wx:if="{{item.canAfter && item.completed}}" class="od-btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{tr.t('评价 / 评选', lang)}}</view>
+      <view wx:if="{{item.again}}" class="od-btn {{item.reviewable ? '' : 'solid'}}" catchtap="goRoute" data-rid="{{item.route_id}}">{{tr.t('再次报名', lang)}}</view>
+    </view>
+  </view>
 
-    <view class="card" wx:if="{{!all.length}}">
-      <view class="pad">
-        <view class="title">{{tr.t('还没有行程', lang)}}</view>
-        <view class="muted">{{tr.t('去首页报团，或去活动页约一局。', lang)}}</view>
-        <view class="btn" bindtap="goHomeTab">{{tr.t('去首页', lang)}}</view>
-        <view class="btn ghost" bindtap="goActTab">{{tr.t('去同城局', lang)}}</view>
-      </view>
+  <view class="card" wx:if="{{emptyAll}}">
+    <view class="pad">
+      <view class="title">{{tr.t('还没有报名。', lang)}}</view>
+      <view class="muted">{{tr.t('去首页报一个山野团，或去活动页约一局。', lang)}}</view>
+      <view class="btn" bindtap="goHomeTab">{{tr.t('去首页', lang)}}</view>
+      <view class="btn ghost" bindtap="goActTab">{{tr.t('去同城局', lang)}}</view>
     </view>
-    <view class="pad muted" wx:elif="{{!upcoming.length}}">{{tr.t(waitlist.length ? '没有已占座的行程。候补在「候补中」里。' : '最近没有待出发。点「全部订单」看全部报名。', lang)}}</view>
-  </block>
-
-  <block wx:elif="{{tab=='waitlist'}}">
-    <view class="card" wx:for="{{waitlist}}" wx:key="id">
-      <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
-        <view class="row">
-          <view class="title">{{tr.t(item.title, lang)}}</view>
-          <view class="tag">{{tr.t('候补', lang)}}</view>
-        </view>
-        <view class="muted">{{tr.t(item.start_date, lang)}} {{tr.t(item.meetup_time, lang)}} · {{tr.t(item.meetup_point, lang)}}</view>
-        <view class="muted">{{tr.t(item.statusText, lang)}} · {{tr.t(item.moneyText, lang)}}</view>
-        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
-          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
-          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
-            <view>
-              <view>{{tr.t(payer.nickname, lang)}}</view>
-              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
-            </view>
-            <view class="payer-amt">¥{{payer.amount}}</view>
-          </view>
-        </view>
-      </view>
-      <view wx:if="{{item.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{item.id}}">{{tr.t('取消候补', lang)}}</view>
-    </view>
-    <view class="pad muted" wx:if="{{!waitlist.length}}">{{tr.t('还没有候补。满员团仍可报名进候补。', lang)}}</view>
-  </block>
-
-  <block wx:elif="{{tab=='recruiting'}}">
-    <view class="card" wx:for="{{recruiting}}" wx:key="id">
-      <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
-        <view class="row">
-          <view class="title">{{tr.t(item.title, lang)}}</view>
-          <view class="tag">{{tr.t(item.recruit.overdue ? '待处理' : '招募中', lang)}}</view>
-        </view>
-        <view class="muted">{{tr.t(item.start_date, lang)}} · {{tr.t(item.recruit.line, lang)}}</view>
-        <view class="muted" wx:if="{{item.recruit.overdue}}">{{tr.t('出发日已过，等并团或解散退款。', lang)}}</view>
-        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
-          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
-          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
-            <view>
-              <view>{{tr.t(payer.nickname, lang)}}</view>
-              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
-            </view>
-            <view class="payer-amt">¥{{payer.amount}}</view>
-          </view>
-        </view>
-      </view>
-      <view wx:if="{{item.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{item.id}}">{{tr.t('取消报名', lang)}}</view>
-    </view>
-    <view class="pad muted" wx:if="{{!recruiting.length}}">{{tr.t('没有还在招人的报名。付完款、团还没齐时会出现在这里。', lang)}}</view>
-  </block>
-
-  <block wx:elif="{{tab=='unpaid'}}">
-    <view class="card" wx:for="{{unpaid}}" wx:key="id">
-      <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
-        <view class="title">{{tr.t(item.title, lang)}}</view>
-        <view class="muted">{{tr.t(item.start_date, lang)}} · {{tr.t(item.moneyText, lang)}}</view>
-        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
-          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
-          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
-            <view>
-              <view>{{tr.t(payer.nickname, lang)}}</view>
-              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
-            </view>
-            <view class="payer-amt">¥{{payer.amount}}</view>
-          </view>
-        </view>
-      </view>
-      <view wx:if="{{item.canPay}}" class="cancel-link" catchtap="goPay" data-token="{{item.payShareToken}}" data-sid="{{item.schedule_id}}">{{tr.t('去支付', lang)}}</view>
-    </view>
-    <view class="pad muted" wx:if="{{!unpaid.length}}">{{tr.t('没有待支付的报名。', lang)}}</view>
-  </block>
-
-  <block wx:elif="{{tab=='review'}}">
-    <view class="card" wx:for="{{review}}" wx:key="id">
-      <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
-        <view class="title">{{tr.t(item.title, lang)}}</view>
-        <view class="muted">{{tr.t(item.start_date, lang)}} · {{tr.t('待评价', lang)}}</view>
-        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
-          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
-          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
-            <view>
-              <view>{{tr.t(payer.nickname, lang)}}</view>
-              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
-            </view>
-            <view class="payer-amt">¥{{payer.amount}}</view>
-          </view>
-        </view>
-      </view>
-      <view wx:if="{{reviewingId != item.id}}" class="btn ghost" catchtap="openReview" data-id="{{item.id}}">{{tr.t('去评价', lang)}}</view>
-      <view wx:else class="pad">
-        <view class="star-pick">
-          <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="star {{rating >= n ? 'on' : ''}}" catchtap="pickStar" data-n="{{n}}">★</text>
-        </view>
-        <textarea class="input" placeholder="{{tr.t('这次出行怎么样（选填）', lang)}}" value="{{content}}" bindinput="setContent" />
-        <view class="btn" catchtap="submitReview" data-id="{{item.id}}">{{tr.t('提交评价', lang)}}</view>
-      </view>
-    </view>
-    <view class="pad muted" wx:if="{{!review.length}}">{{tr.t('回来的行程都评过了。', lang)}}</view>
-  </block>
-
-  <block wx:elif="{{tab=='refund'}}">
-    <view class="card" wx:for="{{refund}}" wx:key="id">
-      <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
-        <view class="title">{{tr.t(item.title, lang)}}</view>
-        <view class="muted">{{tr.t(item.refundProgress.text, lang)}}</view>
-        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
-          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
-          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
-            <view>
-              <view>{{tr.t(payer.nickname, lang)}}</view>
-              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
-            </view>
-            <view class="payer-amt">¥{{payer.amount}}</view>
-          </view>
-        </view>
-      </view>
-    </view>
-    <view class="pad muted" wx:if="{{!refund.length}}">{{tr.t('还没有退款记录。', lang)}}</view>
-  </block>
-
-  <block wx:elif="{{tab=='all'}}">
-    <view class="card" wx:for="{{all}}" wx:key="id">
-      <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
-        <view class="row">
-          <view class="title">{{tr.t(item.title, lang)}}</view>
-          <view class="tag">{{tr.t(item.status=='cancelled'?'已取消':item.kindLabel, lang)}}</view>
-        </view>
-        <view class="muted">{{tr.t(item.start_date, lang)}} · {{tr.t(item.statusText, lang)}} · {{tr.t(item.moneyText, lang)}}</view>
-        <view class="muted" wx:if="{{item.refundProgress}}">{{tr.t(item.refundProgress.text, lang)}}</view>
-        <view class="payer-list" wx:if="{{item.helpers && item.helpers.length}}">
-          <view class="payer-title">{{tr.t('帮忙支付', lang)}}</view>
-          <view class="payer-row" wx:for="{{item.helpers}}" wx:for-item="payer" wx:key="index">
-            <view>
-              <view>{{tr.t(payer.nickname, lang)}}</view>
-              <view class="muted" wx:if="{{payer.remark}}">{{tr.t(payer.remark, lang)}}</view>
-            </view>
-            <view class="payer-amt">¥{{payer.amount}}</view>
-          </view>
-        </view>
-      </view>
-      <view wx:if="{{item.canAfter && item.completed}}" class="btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{tr.t('评价 / 评选', lang)}}</view>
-      <view wx:if="{{item.reviewable}}">
-        <view wx:if="{{reviewingId != item.id}}" class="btn ghost" catchtap="openReview" data-id="{{item.id}}">{{tr.t('去评价', lang)}}</view>
-        <view wx:else class="pad">
-          <view class="star-pick">
-            <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="star {{rating >= n ? 'on' : ''}}" catchtap="pickStar" data-n="{{n}}">★</text>
-          </view>
-          <textarea class="input" placeholder="{{tr.t('这次出行怎么样（选填）', lang)}}" value="{{content}}" bindinput="setContent" />
-          <view class="row">
-            <view class="btn ghost" style="flex:1;margin:0 8rpx 0 0" catchtap="closeReview">{{tr.t('取消', lang)}}</view>
-            <view class="btn" style="flex:1;margin:0 0 0 8rpx" catchtap="submitReview" data-id="{{item.id}}">{{tr.t('提交评价', lang)}}</view>
-          </view>
-        </view>
-      </view>
-      <view wx:elif="{{item.reviewed}}" class="pad muted">{{tr.t('已评价', lang)}}</view>
-    </view>
-    <view class="pad muted" wx:if="{{!all.length}}">{{tr.t('还没有报名。', lang)}}</view>
-  </block>
+  </view>
+  <view class="pad muted" wx:elif="{{!shown.length}}">{{tr.t('没有符合条件的订单', lang)}}</view>
 </block>
+
+<view class="od-mask" wx:if="{{sheet}}" bindtap="closeFilter">
+  <view class="od-sheet" catchtap="noop">
+    <view class="od-x" bindtap="closeFilter">×</view>
+    <view class="od-sheet-title">{{tr.t('订单筛选', lang)}}</view>
+    <view class="od-label">{{tr.t('下单时间', lang)}}</view>
+    <view class="od-presets">
+      <view wx:for="{{quick}}" wx:key="key" class="od-preset {{draftPreset==item.key?'on':''}}" data-key="{{item.key}}" bindtap="pickPreset">{{tr.t(item.label, lang)}}</view>
+      <view wx:for="{{years}}" wx:key="key" class="od-preset {{draftPreset==item.key?'on':''}}" data-key="{{item.key}}" bindtap="pickPreset">{{item.label}}</view>
+      <block wx:if="{{moreYears}}">
+        <view wx:for="{{extra}}" wx:key="key" class="od-preset {{draftPreset==item.key?'on':''}}" data-key="{{item.key}}" bindtap="pickPreset">{{item.label}}</view>
+      </block>
+      <view wx:if="{{!moreYears && extra.length}}" class="od-preset" bindtap="showYears">{{tr.t('展开', lang)}}</view>
+    </view>
+    <view class="od-range">
+      <picker mode="date" value="{{draftStart}}" bindchange="setStart">
+        <view class="od-date">{{draftStart || tr.t('起始时间', lang)}}</view>
+      </picker>
+      <view class="od-dash">—</view>
+      <picker mode="date" value="{{draftEnd}}" bindchange="setEnd">
+        <view class="od-date">{{draftEnd || tr.t('终止时间', lang)}}</view>
+      </picker>
+    </view>
+    <view class="od-sheet-bar">
+      <view class="od-btn" bindtap="resetDraft">{{tr.t('重置', lang)}}</view>
+      <view class="od-btn solid" bindtap="applyFilter">{{tr.t('确定', lang)}}</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,72 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
+<block wx:if="{{order}}">
+  <view class="od-hero">
+    <view class="od-hero-title">{{tr.t(badge, lang)}}</view>
+    <view class="od-hero-sub">{{tr.t(hint, lang)}}</view>
+  </view>
+  <view class="od-card od-block" wx:if="{{order.traveler_name || place}}">
+    <view class="od-who">{{tr.t(order.traveler_name || '出行人', lang)}} {{phone}}</view>
+    <view class="od-spec">{{tr.t(place, lang)}}</view>
+  </view>
+  <view class="od-card">
+    <view class="od-head"><view class="od-shop">{{tr.t(shop, lang)}}</view></view>
+    <view class="od-goods">
+      <image wx:if="{{order.cover}}" src="{{order.cover}}" mode="aspectFill" />
+      <view wx:else class="od-ph"></view>
+      <view class="od-main">
+        <view class="od-title">{{tr.t(order.title, lang)}}</view>
+        <view class="od-spec">{{tr.t(spec, lang)}}</view>
+        <view class="od-spec" wx:if="{{order.seat_no}}">{{order.seat_no}} {{tr.t('座', lang)}}</view>
+      </view>
+      <view class="od-price">
+        <view>{{tr.t(money, lang)}}</view>
+        <view class="od-qty">{{tr.t('共1人', lang)}}</view>
+      </view>
+    </view>
+    <view class="od-help" wx:if="{{helpers}}">{{tr.t('帮忙支付', lang)}} {{helpers}}</view>
+  </view>
+  <view class="od-card od-lines">
+    <view class="od-line" wx:for="{{lines}}" wx:key="label">
+      <text>{{tr.t(item.label, lang)}}</text>
+      <text class="od-val">{{tr.t(item.text, lang)}}</text>
+    </view>
+    <view class="od-line is-due">
+      <text>{{tr.t('应付', lang)}}</text>
+      <text class="od-val">{{tr.t(money, lang)}}</text>
+    </view>
+  </view>
+  <view class="od-card od-lines">
+    <view class="od-line">
+      <text>{{tr.t('订单编号', lang)}}</text>
+      <text class="od-val">{{order.id}} <text class="od-copy" bindtap="copyNo">{{tr.t('复制', lang)}}</text></text>
+    </view>
+    <view class="od-line" wx:if="{{placed}}">
+      <text>{{tr.t('下单时间', lang)}}</text>
+      <text class="od-val">{{placed}}</text>
+    </view>
+    <view class="od-line">
+      <text>{{tr.t('支付方式', lang)}}</text>
+      <text class="od-val">{{tr.t(payMethod, lang)}}</text>
+    </view>
+    <view class="od-line" wx:if="{{order.start_date}}">
+      <text>{{tr.t('出发日期', lang)}}</text>
+      <text class="od-val">{{order.start_date}}</text>
+    </view>
+  </view>
+  <view class="od-card od-block" wx:if="{{reviewOpen}}">
+    <view class="star-pick">
+      <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="star {{rating >= n ? 'on' : ''}}" catchtap="pickStar" data-n="{{n}}">★</text>
+    </view>
+    <textarea class="input" placeholder="{{tr.t('这次出行怎么样（选填）', lang)}}" value="{{content}}" bindinput="setContent" />
+    <view class="btn" bindtap="submitReview">{{tr.t('提交评价', lang)}}</view>
+  </view>
+  <view class="od-dock" wx:if="{{order.canCancel || order.canPay || canReview || (order.canAfter && order.completed) || again}}">
+    <view wx:if="{{order.canCancel}}" class="od-btn" bindtap="cancel">{{tr.t(order.status=='waitlist'?'取消候补':'取消报名', lang)}}</view>
+    <view wx:if="{{order.canPay}}" class="od-btn solid" bindtap="goPay">{{tr.t('去支付', lang)}}</view>
+    <view wx:if="{{canReview && !reviewOpen}}" class="od-btn solid" bindtap="openReview">{{tr.t('去评价', lang)}}</view>
+    <view wx:if="{{order.canAfter && order.completed}}" class="od-btn" bindtap="goAfter">{{tr.t('评价 / 评选', lang)}}</view>
+    <view wx:if="{{again}}" class="od-btn {{canReview ? '' : 'solid'}}" bindtap="goRoute">{{tr.t('再次报名', lang)}}</view>
+  </view>
+</block>
+<view class="pad" wx:if="{{err}}" style="color:#bc4749">{{tr.t(err, lang)}}</view>

@@ -23,6 +23,7 @@
     "pages/enroll/enroll",
     "pages/pay/pay",
     "pages/order-detail/order-detail",
+    "pages/enroll-order/enroll-order",
     "pages/coupon/coupon",
     "pages/coupons/coupons",
     "pages/open/open",

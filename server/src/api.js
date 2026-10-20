@@ -2060,10 +2060,58 @@ router.post("/pay/company-settle", authUser, async (req, res) => {
   }
 });
 
-router.get("/orders", authUser, (req, res) => {
-  const reviewed = reviewedScheduleIds(req.userId);
-  const refunds = refundByEnrollment(req.userId);
-  const rows = db()
+function mapUserOrder(e, req, reviewed, refunds) {
+  const quote = cancelQuote(e, {
+    status: e.schedule_status,
+    startDate: e.start_date,
+    startedAt: e.started_at,
+    channel: e.channel,
+    refundRulesJson: e.refund_rules_json,
+    minGroupSize: e.min_group_size,
+    realEnrolled: e.real_enrolled,
+  });
+  const progress = payProgress(e);
+  const { refund_rules_json, ...rest } = e;
+  return {
+    ...rest,
+    cover: attachAssetHost(req, e.cover),
+    idCard: maskIdCard(e.id_card),
+    canCancel: quote.canCancel,
+    refundPercent: quote.percent,
+    refundHint: quote.hint,
+    refundAmount: quote.amount || 0,
+    deductPercent: quote.deductPercent || 0,
+    deductAmount: quote.deductAmount || 0,
+    payAmount: progress.payAmount,
+    paidAmount: progress.paidAmount,
+    remainAmount: progress.remainAmount,
+    canPay: e.status === "joined" && e.pay_status === "unpaid" && progress.remainAmount > 0,
+    payShareToken: e.pay_status === "unpaid" ? ensurePayShareToken(e.id) : e.pay_share_token || "",
+    helpers: contributorsOf(e.id, e.user_id).filter((row) => row.helper),
+    reviewed: reviewed.has(e.schedule_id),
+    canReview: e.status === "joined" && !reviewed.has(e.schedule_id),
+    refundProgress: refunds.get(e.id) || null,
+    completed: !!e.completed_at,
+    canComplete: false,
+    organizerType: e.organizer_type,
+    minGroupSize: Number(e.min_group_size || 0),
+    joinedCount: Number(e.real_enrolled || 0),
+    shortfall: Math.max(0, Number(e.min_group_size || 0) - Number(e.real_enrolled || 0)),
+    guaranteed:
+      e.schedule_status !== "cancelled" &&
+      Number(e.min_group_size || 0) > 0 &&
+      Number(e.real_enrolled || 0) >= Number(e.min_group_size || 0),
+    kind: tripKindOf(e.organizer_type, e.channel).key,
+    kindLabel: tripKindOf(e.organizer_type, e.channel).label,
+  };
+}
+
+function loadUserOrders(userId, req, onlyId) {
+  const reviewed = reviewedScheduleIds(userId);
+  const refunds = refundByEnrollment(userId);
+  const where = onlyId ? "e.user_id=? AND e.id=?" : "e.user_id=?";
+  const params = onlyId ? [userId, onlyId] : [userId];
+  return db()
     .prepare(
       `SELECT e.*, s.start_date, s.end_date, s.organizer_type, s.status AS schedule_status, s.route_id,
               s.meetup_point, s.meetup_time, s.city, s.started_at, IFNULL(s.channel,'trip') AS channel,
@@ -2073,55 +2121,20 @@ router.get("/orders", authUser, (req, res) => {
                WHERE e2.schedule_id=s.id AND e2.status='joined' AND IFNULL(u.is_virtual,0)=0) AS real_enrolled,
               r.title, r.cover, r.days, r.refund_rules_json
        FROM enrollments e JOIN schedules s ON s.id=e.schedule_id JOIN routes r ON r.id=s.route_id
-       WHERE e.user_id=? ORDER BY e.id DESC`
+       WHERE ${where} ORDER BY e.id DESC`
     )
-    .all(req.userId)
-    .map((e) => {
-      const quote = cancelQuote(e, {
-        status: e.schedule_status,
-        startDate: e.start_date,
-        startedAt: e.started_at,
-        channel: e.channel,
-        refundRulesJson: e.refund_rules_json,
-        minGroupSize: e.min_group_size,
-        realEnrolled: e.real_enrolled,
-      });
-      const progress = payProgress(e);
-      const { refund_rules_json, ...rest } = e;
-      return {
-        ...rest,
-        cover: attachAssetHost(req, e.cover),
-        idCard: maskIdCard(e.id_card),
-        canCancel: quote.canCancel,
-        refundPercent: quote.percent,
-        refundHint: quote.hint,
-        refundAmount: quote.amount || 0,
-        deductPercent: quote.deductPercent || 0,
-        deductAmount: quote.deductAmount || 0,
-        payAmount: progress.payAmount,
-        paidAmount: progress.paidAmount,
-        remainAmount: progress.remainAmount,
-        canPay: e.status === "joined" && e.pay_status === "unpaid" && progress.remainAmount > 0,
-        payShareToken: e.pay_status === "unpaid" ? ensurePayShareToken(e.id) : e.pay_share_token || "",
-        helpers: contributorsOf(e.id, e.user_id).filter((row) => row.helper),
-        reviewed: reviewed.has(e.schedule_id),
-        canReview: e.status === "joined" && !reviewed.has(e.schedule_id),
-        refundProgress: refunds.get(e.id) || null,
-        completed: !!e.completed_at,
-        canComplete: false,
-        organizerType: e.organizer_type,
-        minGroupSize: Number(e.min_group_size || 0),
-        joinedCount: Number(e.real_enrolled || 0),
-        shortfall: Math.max(0, Number(e.min_group_size || 0) - Number(e.real_enrolled || 0)),
-        guaranteed:
-          e.schedule_status !== "cancelled" &&
-          Number(e.min_group_size || 0) > 0 &&
-          Number(e.real_enrolled || 0) >= Number(e.min_group_size || 0),
-        kind: tripKindOf(e.organizer_type, e.channel).key,
-        kindLabel: tripKindOf(e.organizer_type, e.channel).label,
-      };
-    });
-  res.json({ ok: true, data: rows });
+    .all(...params)
+    .map((e) => mapUserOrder(e, req, reviewed, refunds));
+}
+
+router.get("/orders", authUser, (req, res) => {
+  res.json({ ok: true, data: loadUserOrders(req.userId, req) });
+});
+
+router.get("/orders/:id", authUser, (req, res) => {
+  const row = loadUserOrders(req.userId, req, Number(req.params.id))[0];
+  if (!row) return res.status(404).json({ ok: false, message: "订单不存在" });
+  res.json({ ok: true, data: row });
 });
 
 router.post("/orders/:id/cancel", authUser, async (req, res) => {

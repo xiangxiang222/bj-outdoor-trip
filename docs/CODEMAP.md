@@ -110,7 +110,8 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | --- | --- | --- |
 | `/m` | Home | 山野发现：轮播下实时动态条；搜索、城市/玩法、官方/公司/高校/个人、排序（即将出发/快满员/最新）、满员可候补仍出现在列表，日历进筛选 |
 | `/m/activities` | Activities | 同城局：搜索、分类、同一套 feed 排序；含候补 |
-| `/m/orders` | Orders | 下一趟 + 待出行/候补/历史 |
+| `/m/orders` | Orders | 已报名订单列表，可按状态和下单时间筛选 |
+| `/m/orders/:id` | OrderDetail | 这一次报名的订单详情，不进线路或团 |
 | `/m/mine` | Mine | 资料、会员条、行程快捷入口、钱包余额条、常用宫格 |
 | `/m/wallet` | Wallet | 余额、充值、提现、账单 |
 | `/m/wallet/cards` | WalletCards | 提示已改为微信零钱，回钱包 |
@@ -175,7 +176,7 @@ Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#c045ab`。底栏
 活动 GET /schedules?channel=activity
 详情 GET /schedules/:id（optionalUser → myEnrollment）；线路/团顶栏 GET /live/pulse，POST /live/view
 报名 POST /enroll → services/enroll.js
-行程 GET /orders  （H5 Orders.vue 拆待出行/历史）
+行程 GET /orders ；单条 GET /orders/:id 打开订单详情
 我的 GET /me + GET /me/wallet + GET /me/coupons
 发团 POST /trips（review_status=pending）→ 后台 POST /admin/schedules/:id/review；个人成团 settlePersonalBounty 200 元
 申请收录 POST /routes/apply → 后台 POST /admin/routes/:id/review；首次成团 settleRouteBounty
