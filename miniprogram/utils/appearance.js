@@ -158,7 +158,10 @@ function pageStyle(look, freezeScale) {
   const grid = look.textMode ? "none" : "grid";
   const hero = look.textMode ? "0px" : "360rpx";
   const font = FONTS[look.font] || FONTS.system;
-  return vars + "--ui-scale:" + scale + ";--media:" + media + ";--media-grid:" + grid + ";--hero-h:" + hero + ";background:var(--bg);color:var(--ink);font-family:" + font + ";";
+  const wash = dark
+    ? "background-color:#121214;background-image:linear-gradient(to right,rgba(122,78,146,.5),rgba(122,78,146,0) 16px),linear-gradient(to left,rgba(122,78,146,.5),rgba(122,78,146,0) 16px),linear-gradient(to bottom,#5c3d78 0,#5c3d78 72px,rgba(18,18,20,0) 140px);background-repeat:no-repeat;background-attachment:scroll,scroll,local;"
+    : "background-color:#f3f4f6;background-image:linear-gradient(to right,rgba(122,78,146,.5),rgba(122,78,146,0) 16px),linear-gradient(to left,rgba(122,78,146,.5),rgba(122,78,146,0) 16px),linear-gradient(to bottom,#7a4e92 0,#7a4e92 72px,rgba(243,244,246,0) 140px);background-repeat:no-repeat;background-attachment:scroll,scroll,local;";
+  return vars + "--ui-scale:" + scale + ";--media:" + media + ";--media-grid:" + grid + ";--hero-h:" + hero + ";" + wash + "color:var(--ink);font-family:" + font + ";";
 }
 
 function paint(page, look) {
@@ -187,7 +190,7 @@ function applyChrome(look) {
   const dark = isDark(look);
   wx.setNavigationBarColor({
     frontColor: "#ffffff",
-    backgroundColor: dark ? "#1a1020" : "#3a1848",
+    backgroundColor: dark ? "#5c3d78" : "#7a4e92",
     fail() {},
   });
   wx.setTabBarStyle({

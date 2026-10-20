@@ -1,5 +1,5 @@
 @import "../../styles/account.wxss";
-page { background: var(--bg, #f5f6f8); }
+page { background-color: var(--bg, #f3f4f6); }
 .sec { margin: 28rpx 32rpx 12rpx; color: var(--muted, #8a8f99); font-size: calc(24rpx * var(--ui-scale)); }
 .account { margin: 0 24rpx 24rpx; padding: 28rpx 32rpx; background: var(--card, #fff); border-radius: 24rpx; display: flex; align-items: center; gap: 24rpx; }
 .avatar { width: 88rpx; height: 88rpx; border-radius: 50%; background: #ff7d1a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: calc(36rpx * var(--ui-scale)); font-weight: 700; overflow: hidden; }

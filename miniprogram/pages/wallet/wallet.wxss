@@ -1,5 +1,5 @@
 @import "../../styles/account.wxss";
-page { background: #f5f6f8; }
+page { background-color: #f3f4f6; }
 .cash-card, .panel { margin: 24rpx; padding: 36rpx 32rpx; background: #fff; border-radius: 24rpx; }
 .cash-label, .hint, .sec, .faq-label { color: #8a8f99; }
 .cash-label { font-size: calc(26rpx * var(--ui-scale)); }

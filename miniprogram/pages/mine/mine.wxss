@@ -1,8 +1,7 @@
 @import "../../styles/account.wxss";
-page { background: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helvetica Neue", sans-serif; }
+page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helvetica Neue", sans-serif; }
 .mine-page {
-  min-height: 100vh;
-  background: linear-gradient(180deg, #3a1848 0, #3a1848 120rpx, #7a4c86 300rpx, #f3f4f6 520rpx);
+  background: transparent;
   padding-bottom: 24rpx;
 }
 .cell-label { margin: 24rpx 32rpx 8rpx; font-size: calc(24rpx * var(--ui-scale)); color: #9a9a9a; font-weight: 400; }

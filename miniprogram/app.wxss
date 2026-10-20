@@ -1,6 +1,12 @@
 page {
   --ui-scale: 1;
-  background: var(--bg, #f5f6f3);
+  background-color: var(--bg, #f3f4f6);
+  background-image:
+    linear-gradient(to right, rgba(122, 78, 146, 0.5), rgba(122, 78, 146, 0) 16px),
+    linear-gradient(to left, rgba(122, 78, 146, 0.5), rgba(122, 78, 146, 0) 16px),
+    linear-gradient(to bottom, #7a4e92 0, #7a4e92 72px, rgba(243, 244, 246, 0) 140px);
+  background-repeat: no-repeat;
+  background-attachment: scroll, scroll, local;
   color: var(--ink, #141414);
   font-family: var(--font, "PingFang SC", "Noto Sans SC", sans-serif);
   font-size: calc(32rpx * var(--ui-scale));
