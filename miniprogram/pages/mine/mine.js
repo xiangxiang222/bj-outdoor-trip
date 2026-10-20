@@ -43,6 +43,7 @@ Page({
     dark: false,
     statusBarHeight: 20,
     navBarHeight: 44,
+    memberH: 0,
   },
   onLoad() {
     this.setData(this.navMetrics());
@@ -73,7 +74,16 @@ Page({
       dark: appearance.isDark(),
       iconBase: app.globalData.baseUrl + "/static/mine/",
     });
+    this.syncMemberBand();
     this.loadHub();
+  },
+  syncMemberBand() {
+    wx.nextTick(() => {
+      wx.createSelectorQuery().select(".mine-member").boundingClientRect((rect) => {
+        const h = rect && rect.height ? Math.ceil(rect.height) + 1 : 0;
+        if (h !== this.data.memberH) this.setData({ memberH: h });
+      }).exec();
+    });
   },
   async loadHub() {
     if (!app.globalData.token) {
@@ -94,6 +104,7 @@ Page({
         phone: maskPhone(me.data && me.data.phone),
         nickHead: me.data && me.data.nickname ? me.data.nickname.slice(0, 1) : "友",
       });
+      this.syncMemberBand();
     } catch {
       /* keep cached */
     }

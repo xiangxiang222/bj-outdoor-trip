@@ -45,7 +45,7 @@
     </view>
   </view>
 
-  <view class="mine-board">
+  <view class="mine-board" style="{{memberH ? 'background-image:linear-gradient(#f3eaf5 0,#f3eaf5 ' + memberH + 'px,#fff ' + memberH + 'px)' : ''}}">
   <view class="mine-member" wx:if="{{user.membership}}" bindtap="openMember">
     <view>
       <view class="mine-level"><text class="mine-em">{{tr.t(user.membership.code, lang)}}</text>{{tr.t('会员', lang)}}</view>
