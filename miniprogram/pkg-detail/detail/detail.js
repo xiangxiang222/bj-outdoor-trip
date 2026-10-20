@@ -141,6 +141,13 @@ Page({
   goGuides() {
     wx.navigateTo({ url: "/pages/guides/guides" });
   },
+  goHome() {
+    wx.switchTab({ url: "/pages/index/index" });
+  },
+  goBack() {
+    if (getCurrentPages().length > 1) wx.navigateBack();
+    else this.goHome();
+  },
   goLogin() {
     wx.navigateTo({
       url: "/pages/login/login?redirect=" + encodeURIComponent(detailUrl(this.data.id)),

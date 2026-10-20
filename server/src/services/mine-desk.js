@@ -96,6 +96,7 @@ function recentViews(userId, req) {
        FROM page_views v
        JOIN routes r ON r.id=v.route_id
        WHERE v.user_id=? AND v.route_id IS NOT NULL
+         AND IFNULL(r.status,'on')='on' AND IFNULL(r.review_status,'approved')='approved'
        GROUP BY v.route_id
        ORDER BY seenAt DESC
        LIMIT 20`
@@ -275,11 +276,15 @@ function deskCounts(userId) {
     .prepare(
       `SELECT COUNT(DISTINCT v.route_id) AS c FROM page_views v
        JOIN routes r ON r.id=v.route_id
-       WHERE v.user_id=? AND v.route_id IS NOT NULL`
+       WHERE v.user_id=? AND v.route_id IS NOT NULL
+         AND IFNULL(r.status,'on')='on' AND IFNULL(r.review_status,'approved')='approved'`
     )
     .get(userId).c;
   const favorites = db
-    .prepare("SELECT COUNT(*) AS c FROM favorites f JOIN routes r ON r.id=f.route_id WHERE f.user_id=?")
+    .prepare(
+      `SELECT COUNT(*) AS c FROM favorites f JOIN routes r ON r.id=f.route_id
+       WHERE f.user_id=? AND IFNULL(r.status,'on')='on' AND IFNULL(r.review_status,'approved')='approved'`
+    )
     .get(userId).c;
   const follows = db
     .prepare(

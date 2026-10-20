@@ -2160,7 +2160,10 @@ router.delete("/favorites/:routeId", authUser, (req, res) => {
 
 router.get("/favorites", authUser, (req, res) => {
   const rows = db()
-    .prepare("SELECT r.* FROM favorites f JOIN routes r ON r.id=f.route_id WHERE f.user_id=?")
+    .prepare(
+      `SELECT r.* FROM favorites f JOIN routes r ON r.id=f.route_id
+       WHERE f.user_id=? AND IFNULL(r.status,'on')='on' AND IFNULL(r.review_status,'approved')='approved'`
+    )
     .all(req.userId)
     .map((r) => mapRoute(r, req));
   res.json({ ok: true, data: rows });

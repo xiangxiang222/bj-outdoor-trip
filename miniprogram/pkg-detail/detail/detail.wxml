@@ -1,6 +1,14 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../utils/locale.wxs" module="tr" />
-<view wx:if="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>
+<view wx:if="{{err}}" class="route-miss">
+  <view class="route-miss-card">
+    <view class="route-miss-mark">线</view>
+    <view class="route-miss-title">{{tr.t('找不到这条线路', lang)}}</view>
+    <view class="route-miss-text">{{tr.t('它可能已经下架，或这条链接已经失效。收藏和最近看过里不会再列出下架的线路。', lang)}}</view>
+    <view class="btn clay" bindtap="goHome">{{tr.t('去首页看线路', lang)}}</view>
+    <view class="btn ghost" bindtap="goBack">{{tr.t('返回', lang)}}</view>
+  </view>
+</view>
 <view class="card" wx:if="{{r.reviewStatus=='pending'}}">
   <view class="pad">
     <view style="color:#2d6a4f">{{tr.t('已提交审核，通过后会出现在线路目录。', lang)}}</view>

@@ -70,6 +70,20 @@ describe("mine desk", () => {
     assert.ok(res.body.data[0].title);
   });
 
+  it("drops an off-shelf route from favorites, views, and the counts", async () => {
+    const db = getDb();
+    db.prepare("INSERT INTO page_views (visitor_id, user_id, route_id) VALUES (?,?,?)").run("desk-off", seed.userId, seed.routeId);
+    db.prepare("INSERT OR IGNORE INTO favorites (user_id, route_id) VALUES (?,?)").run(seed.userId, seed.routeId);
+    db.prepare("UPDATE routes SET status='off' WHERE id=?").run(seed.routeId);
+    const views = await agent.get("/api/me/views").set(auth(token)).expect(200);
+    assert.equal(views.body.data.find((row) => row.id === seed.routeId), undefined);
+    const favorites = await agent.get("/api/favorites").set(auth(token)).expect(200);
+    assert.equal(favorites.body.data.find((row) => row.id === seed.routeId), undefined);
+    const wallet = await agent.get("/api/me/wallet").set(auth(token)).expect(200);
+    assert.equal(wallet.body.data.viewCount, 0);
+    assert.equal(wallet.body.data.favoriteCount, 0);
+  });
+
   it("hints when a coupon expires tomorrow", async () => {
     const at = dayjs().add(1, "day").hour(12).minute(0).second(0).format("YYYY-MM-DD HH:mm:ss");
     getDb()

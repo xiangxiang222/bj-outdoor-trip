@@ -7,7 +7,12 @@
         <div class="muted">{{ r.region }} · {{ r.seenAt }}</div>
       </div>
     </div>
-    <p v-if="!list.length" class="muted">还没有看过的线路。打开一条线路后会出现在这里。</p>
+    <div v-if="!list.length" class="card">
+      <div class="pad">
+        <p style="margin-top:0">还没有看过的线路。打开一条线路后会出现在这里。</p>
+        <p class="muted" style="margin-bottom:0">已经下架的线路不会留在这里。</p>
+      </div>
+    </div>
   </div>
 </template>
 
