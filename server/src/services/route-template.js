@@ -58,7 +58,6 @@ const TEMPLATE_SECTIONS = [
   ["标签", "用顿号分隔，例如 长城、一日、纯玩"],
   ["封面", "在下面贴 1 张实拍。单张不超过 5MB，不要写价格、日期或集合点"],
   ["相册", "在下面贴图，张数不限，单张不超过 5MB"],
-  ["视频", "一行一条链接，不把视频嵌进文档"],
   ["亮点", "每行一条，最多 6 条"],
   ["介绍", "给用户看的说明，可分段"],
   ["图文", "一段字后面贴一张图，图最多 6 张。图的下一行以「图说：」开头"],
@@ -216,7 +215,7 @@ function buildDocx(blocks, { method = 0 } = {}) {
 function buildRouteTemplate() {
   const blocks = [
     {
-      text: "按下面的标题填写。以「说明」开头的行只是提示，上传时会跳过。照片直接贴在对应标题下面。视频只写链接，一行一条。退款用全站规则，不用写。",
+      text: "按下面的标题填写。以「说明」开头的行只是提示，上传时会跳过。照片直接贴在对应标题下面。退款用全站规则，不用写。",
     },
   ];
   for (const [title, hint] of TEMPLATE_SECTIONS) {
@@ -526,16 +525,7 @@ function parseRouteTemplate(buffer, { destDir } = {}) {
 
   const highlightLines = linesOf(take("亮点")).map((line) => line.replace(/^(?:[-•·]|\d+[.、])\s*/, "").trim()).filter(Boolean);
   if (highlightLines.length > HIGHLIGHT_MAX) warn("亮点只导入前 6 条");
-
-  const videos = [];
-  for (const line of linesOf(take("视频"))) {
-    const found = line.match(/https?:\/\/\S+/g);
-    if (!found) {
-      warn("有一条视频不是链接，已跳过");
-      continue;
-    }
-    videos.push(...found.map((url) => url.replace(/[，。,]+$/, "")));
-  }
+  if (linesOf(take("视频")).length) warn("模板里的视频没有导入");
 
   const priceTiers = [];
   for (const line of linesOf(take("阶梯价"))) {
@@ -586,7 +576,6 @@ function parseRouteTemplate(buffer, { destDir } = {}) {
     tags: splitList(linesOf(take("标签"))),
     cover,
     gallery,
-    videos,
     highlights: highlightLines.slice(0, HIGHLIGHT_MAX),
     description: proseOf(take("介绍")),
     story,

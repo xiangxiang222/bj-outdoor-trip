@@ -50,6 +50,7 @@ describe("route docx template", () => {
     assert.match(xml, /标题/);
     assert.match(xml, /说明：线路名称/);
     assert.match(xml, /图说：/);
+    assert.doesNotMatch(xml, /视频/);
     const dir = tmpDir();
     const parsed = parseRouteTemplate(buf, { destDir: dir });
     assert.equal(parsed.title, "");
@@ -152,7 +153,8 @@ describe("route docx template", () => {
     assert.match(parsed.cover, /^\/static\/uploads\/.+\.png$/);
     assert.equal(fs.existsSync(path.join(dir, path.basename(parsed.cover))), true);
     assert.equal(parsed.gallery.length, 13);
-    assert.deepEqual(parsed.videos, ["https://www.bilibili.com/video/BV1xx"]);
+    assert.equal(parsed.videos, undefined);
+    assert.ok(parsed.warnings.includes("模板里的视频没有导入"));
     assert.equal(parsed.highlights.length, 6);
     assert.equal(parsed.highlights[0], "看山");
     assert.match(parsed.description, /第一段/);
@@ -183,7 +185,6 @@ describe("route docx template", () => {
     assert.ok(parsed.warnings.includes("封面只导入第 1 张"));
     assert.ok(parsed.warnings.includes("图文只导入前 6 张"));
     assert.ok(parsed.warnings.includes("亮点只导入前 6 条"));
-    assert.ok(parsed.warnings.includes("有一条视频不是链接，已跳过"));
     assert.ok(parsed.warnings.includes("每一站只导入 1 张配图"));
     assert.ok(parsed.warnings.includes("未识别的车型：直升机"));
     assert.ok(parsed.warnings.includes("退款仍用全站规则，模板里的退款没有导入"));
