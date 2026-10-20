@@ -76,6 +76,9 @@
 }
 .next-date { color: #2d6a4f; font-weight: 700; }
 .jumps {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   white-space: nowrap;
   margin-top: 12rpx;
   padding: 8rpx 0 8rpx 24rpx;

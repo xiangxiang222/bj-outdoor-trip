@@ -208,16 +208,18 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 .mp-body {
   flex: 1;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 12px 14px 16px;
   background-color: #f3f4f6;
   background-image:
-    linear-gradient(to right, rgba(122, 78, 146, 0.5), rgba(122, 78, 146, 0) 16px),
-    linear-gradient(to left, rgba(122, 78, 146, 0.5), rgba(122, 78, 146, 0) 16px),
+    linear-gradient(to bottom, rgba(122, 78, 146, 0.5), rgba(122, 78, 146, 0)),
+    linear-gradient(to bottom, rgba(122, 78, 146, 0.5), rgba(122, 78, 146, 0)),
     linear-gradient(to bottom, #7a4e92 0, #7a4e92 72px, rgba(243, 244, 246, 0) 140px);
+  background-size: 16px 50vh, 16px 50vh, 100% 160px;
+  background-position: left top, right top, center top;
   background-repeat: no-repeat;
-  background-attachment: scroll, scroll, local;
 }
 
 .icp-foot {
@@ -372,7 +374,7 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 .load-row { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .spinner { width: 18px; height: 18px; border: 2px solid var(--line); border-top-color: var(--thu); border-radius: 50%; animation: load-spin 0.8s linear infinite; flex: none; }
 @keyframes load-spin { to { transform: rotate(360deg); } }
-.chips { display: flex; gap: 8px; overflow: auto; padding: 4px 0 10px; }
+.chips { display: flex; gap: 8px; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 4px 0 10px; }
 .chip {
   flex: none;
   display: inline-flex;
@@ -2393,10 +2395,11 @@ html[data-night="dark"] .mp-phone.is-account .mp-body,
 html[data-night="dark"] .mp-body {
   background-color: #1a121c;
   background-image:
-    linear-gradient(to right, rgba(122, 78, 146, 0.45), rgba(122, 78, 146, 0) 16px),
-    linear-gradient(to left, rgba(122, 78, 146, 0.45), rgba(122, 78, 146, 0) 16px),
+    linear-gradient(to bottom, rgba(122, 78, 146, 0.45), rgba(122, 78, 146, 0)),
+    linear-gradient(to bottom, rgba(122, 78, 146, 0.45), rgba(122, 78, 146, 0)),
     linear-gradient(to bottom, #5c3d78 0, #5c3d78 72px, rgba(26, 18, 28, 0) 140px);
-  background-attachment: scroll, scroll, local;
+  background-size: 16px 50vh, 16px 50vh, 100% 160px;
+  background-position: left top, right top, center top;
   color: #f4f0f5;
 }
 html[data-night="dark"] .mp-phone.is-account .card,
