@@ -1,5 +1,5 @@
 <template>
-  <div class="trip-page">
+  <div class="od-page">
     <div v-if="!store.token" class="card">
       <div class="pad">
         <strong>登录后看出行计划</strong>
@@ -9,207 +9,89 @@
     </div>
 
     <template v-else>
-      <div class="chips">
-        <div class="chip" :class="{ on: tab === 'unpaid' }" @click="tab = 'unpaid'">待支付 {{ unpaid.length }}</div>
-        <div class="chip" :class="{ on: tab === 'recruiting' }" @click="tab = 'recruiting'">招募中 {{ recruiting.length }}</div>
-        <div class="chip" :class="{ on: tab === 'depart' }" @click="tab = 'depart'">待出发 {{ depart.length }}</div>
-        <div class="chip" :class="{ on: tab === 'review' }" @click="tab = 'review'">待评价 {{ review.length }}</div>
-        <div class="chip" :class="{ on: tab === 'waitlist' }" @click="tab = 'waitlist'">候补中 {{ waitlist.length }}</div>
-        <div class="chip" :class="{ on: tab === 'refund' }" @click="tab = 'refund'">已退款 {{ refund.length }}</div>
-        <div class="chip" :class="{ on: tab === 'all' }" @click="tab = 'all'">全部订单 {{ list.length }}</div>
+      <input v-model="keyword" class="od-search" type="search" placeholder="搜索我的订单" />
+      <div class="od-tools">
+        <div class="od-tabs">
+          <button v-for="item in statusTabs" :key="item.key" type="button" :class="{ on: tab === item.key }" @click="tab = item.key">{{ item.label }}</button>
+        </div>
+        <button class="od-filter" :class="{ on: filterOn }" type="button" @click="openFilter">筛选</button>
       </div>
 
-      <template v-if="tab === 'depart'">
-        <div v-if="nextTrip" class="card trip-soon">
-          <div class="pad tap" @click="goSchedule(nextTrip)">
-            <div class="muted">下一趟 · {{ kindLabel(nextTrip) }}</div>
-            <strong>{{ nextTrip.title }}</strong>
-            <p class="muted" style="margin:6px 0 0">{{ nextTrip.start_date }} {{ nextTrip.meetup_time || "" }} · {{ nextTrip.meetup_point || nextTrip.city || "" }}</p>
-            <PayHelpers :list="nextTrip.helpers" />
+      <article v-for="o in shown" :key="o.id" class="od-card" @click="openOrder(o)">
+        <header class="od-head">
+          <span class="od-shop">{{ shopOf(o) }}</span>
+          <span class="od-status" :class="{ 'is-hot': hotStatus(o) }">{{ badgeOf(o).label }}</span>
+        </header>
+        <div class="od-goods">
+          <img v-if="o.cover" :src="o.cover" alt="" />
+          <span v-else class="od-ph"></span>
+          <div>
+            <b>{{ o.title }}</b>
+            <p>{{ specOf(o) }}</p>
           </div>
-          <button v-if="nextTrip.canPay" class="cancel-link" type="button" @click.stop="goPay(nextTrip)">去支付</button>
-          <button v-if="nextTrip.canCancel" class="cancel-link" type="button" :disabled="cancelling === nextTrip.id" @click.stop="cancel(nextTrip)">取消报名</button>
-        </div>
-        <article class="card" v-for="o in restUpcoming" :key="o.id">
-          <div class="pad tap" @click="goSchedule(o)">
-            <div class="act-card inner">
-              <div class="act-date">
-                <b>{{ dateOf(o).day }}</b>
-                <span>{{ dateOf(o).weekday }}</span>
-                <small>{{ dateOf(o).month }}</small>
-              </div>
-              <div class="act-main">
-                <div class="row">
-                  <strong>{{ o.title }}</strong>
-                  <span class="tag">{{ kindLabel(o) }}</span>
-                </div>
-                <p class="muted">{{ o.meetup_time || "" }} {{ o.meetup_point || o.city || "" }}</p>
-                <p class="act-meta">
-                  <span>{{ statusLine(o) }}</span>
-                  <span v-if="o.channel !== 'activity' && o.seat_no">{{ o.seat_no }} 座</span>
-                  <span>{{ moneyText(o) }}</span>
-                </p>
-                <PayHelpers :list="o.helpers" />
-              </div>
-            </div>
-          </div>
-          <button v-if="o.canPay" class="cancel-link" type="button" @click.stop="goPay(o)">去支付</button>
-          <button v-if="o.canCancel" class="cancel-link" type="button" :disabled="cancelling === o.id" @click.stop="cancel(o)">取消报名</button>
-        </article>
-        <div v-if="!list.length" class="card act-empty">
-          <div class="pad">
-            <strong>还没有行程</strong>
-            <p class="muted">去首页报一个山野团，或去活动页约一局。</p>
-            <button class="btn block" type="button" @click="$router.push('/m')">去首页</button>
-            <button class="btn ghost block" type="button" style="margin-top:8px" @click="$router.push('/m/activities')">去同城局</button>
+          <div class="od-price">
+            <b>{{ moneyOf(o) }}</b>
+            <span>共1人</span>
           </div>
         </div>
-        <div v-else-if="!depart.length" class="card">
-          <div class="pad muted">{{ waitlist.length ? "没有已占座的行程。候补在「候补中」里。" : "最近没有待出发。点「全部订单」看全部报名。" }}</div>
+        <p v-if="o.helpers?.length" class="od-help">帮忙支付 {{ o.helpers.length }} 人</p>
+        <div v-if="hasActions(o)" class="od-actions" @click.stop>
+          <button v-if="o.canCancel" class="od-btn" type="button" :disabled="cancelling === o.id" @click="cancel(o)">{{ o.status === "waitlist" ? "取消候补" : "取消报名" }}</button>
+          <button v-if="o.canPay" class="od-btn solid" type="button" @click="goPay(o)">去支付</button>
+          <button v-if="reviewable(o)" class="od-btn solid" type="button" @click="openReview(o)">去评价</button>
+          <button v-if="o.canAfter && o.completed" class="od-btn" type="button" @click="goAfter(o)">评价 / 评选</button>
+          <button v-if="againOf(o)" class="od-btn" :class="{ solid: !reviewable(o) }" type="button" @click="again(o)">再次报名</button>
         </div>
-      </template>
+      </article>
 
-      <template v-else-if="tab === 'waitlist'">
-        <article class="card" v-for="o in waitlist" :key="o.id">
-          <div class="pad tap" @click="goSchedule(o)">
-            <div class="row">
-              <strong>{{ o.title }}</strong>
-              <span class="tag">候补</span>
-            </div>
-            <p class="muted" style="margin:6px 0 0">{{ o.start_date }} {{ o.meetup_time || "" }} · {{ o.meetup_point || o.city || "" }}</p>
-            <p class="act-meta">
-              <span>{{ statusLine(o) }}</span>
-              <span>{{ moneyText(o) }}</span>
-            </p>
-            <PayHelpers :list="o.helpers" />
-          </div>
-          <button v-if="o.canCancel" class="cancel-link" type="button" :disabled="cancelling === o.id" @click.stop="cancel(o)">取消候补</button>
-        </article>
-        <div v-if="!waitlist.length" class="card">
-          <div class="pad muted">还没有候补。满员团仍可报名进候补，有人取消后按顺序递补。</div>
+      <div v-if="!list.length" class="card">
+        <div class="pad">
+          <strong>还没有报名</strong>
+          <p class="muted">去首页报一个山野团，或去活动页约一局。</p>
+          <button class="btn block" type="button" @click="$router.push('/m')">去首页</button>
+          <button class="btn ghost block" type="button" style="margin-top:8px" @click="$router.push('/m/activities')">去同城局</button>
         </div>
-      </template>
-
-      <template v-else-if="tab === 'recruiting'">
-        <article class="card" v-for="o in recruiting" :key="o.id">
-          <div class="pad tap" @click="goSchedule(o)">
-            <div class="row">
-              <strong>{{ o.title }}</strong>
-              <span class="tag">{{ recruitOf(o).overdue ? "待处理" : "招募中" }}</span>
-            </div>
-            <p class="muted" style="margin:6px 0 0">{{ o.start_date }} · {{ recruitOf(o).line }}</p>
-            <p v-if="recruitOf(o).overdue" class="muted" style="margin:6px 0 0">出发日已过，等并团或解散退款。</p>
-            <PayHelpers :list="o.helpers" />
-          </div>
-          <button v-if="o.canCancel" class="cancel-link" type="button" :disabled="cancelling === o.id" @click.stop="cancel(o)">取消报名</button>
-        </article>
-        <div v-if="!recruiting.length" class="card"><div class="pad muted">没有还在招人的报名。付完款、团还没齐时会出现在这里。</div></div>
-      </template>
-
-      <template v-else-if="tab === 'unpaid'">
-        <article class="card" v-for="o in unpaid" :key="o.id">
-          <div class="pad tap" @click="goSchedule(o)">
-            <div class="row">
-              <strong>{{ o.title }}</strong>
-              <span class="tag">待支付</span>
-            </div>
-            <p class="muted" style="margin:6px 0 0">{{ o.start_date }} · {{ moneyText(o) }}</p>
-            <PayHelpers :list="o.helpers" />
-          </div>
-          <button v-if="o.canPay" class="cancel-link" type="button" @click.stop="goPay(o)">去支付</button>
-        </article>
-        <div v-if="!unpaid.length" class="card"><div class="pad muted">没有待支付的报名。</div></div>
-      </template>
-
-      <template v-else-if="tab === 'review'">
-        <article class="card" v-for="o in review" :key="o.id">
-          <div class="pad tap" @click="goSchedule(o)">
-            <div class="row">
-              <strong>{{ o.title }}</strong>
-              <span class="tag">待评价</span>
-            </div>
-            <p class="muted" style="margin:6px 0 0">{{ o.start_date }} · {{ statusLine(o) }}</p>
-            <PayHelpers :list="o.helpers" />
-          </div>
-          <div class="pad" style="padding-top:0" @click.stop>
-            <button v-if="reviewing !== o.id" class="btn ghost block" @click="openReview(o)">去评价</button>
-            <div v-else>
-              <div class="star-pick">
-                <button v-for="n in 5" :key="n" type="button" :class="{ on: form.rating >= n }" @click="form.rating = n">★</button>
-              </div>
-              <textarea class="input" v-model="form.content" rows="3" placeholder="这次出行怎么样（选填）" />
-              <div style="display:flex;gap:8px">
-                <button class="btn ghost" style="flex:1" @click="reviewing = 0">取消</button>
-                <button class="btn" style="flex:1" :disabled="submitting" @click="submitReview(o)">提交评价</button>
-              </div>
-            </div>
-          </div>
-        </article>
-        <div v-if="!review.length" class="card"><div class="pad muted">回来的行程都评过了。</div></div>
-      </template>
-
-      <template v-else-if="tab === 'refund'">
-        <article class="card" v-for="o in refund" :key="o.id">
-          <div class="pad tap" @click="goSchedule(o)">
-            <div class="row">
-              <strong>{{ o.title }}</strong>
-              <span class="tag">退款</span>
-            </div>
-            <p class="muted" style="margin:6px 0 0">{{ o.refundProgress.text }}</p>
-            <p class="muted" style="margin:6px 0 0">{{ o.start_date }}</p>
-            <PayHelpers :list="o.helpers" />
-          </div>
-        </article>
-        <div v-if="!refund.length" class="card"><div class="pad muted">还没有退款记录。取消后会写在这里：退回余额或原路退回微信。</div></div>
-      </template>
-
-      <template v-else-if="tab === 'all'">
-        <article class="card" v-for="o in list" :key="o.id">
-          <div class="pad tap" @click="goSchedule(o)">
-            <div class="row">
-              <strong>{{ o.title }}</strong>
-              <span class="tag">{{ o.status === "cancelled" ? "已取消" : kindLabel(o) }}</span>
-            </div>
-            <p class="muted" style="margin:6px 0 0">{{ o.start_date }} · {{ statusLine(o) }} · {{ moneyText(o) }}</p>
-            <p v-if="o.refundProgress" class="muted" style="margin:6px 0 0">{{ o.refundProgress.text }}</p>
-            <PayHelpers :list="o.helpers" />
-          </div>
-          <div v-if="showAfter(o) && o.completed" class="pad" style="padding-top:0">
-            <button class="btn block" type="button" @click.stop="$router.push('/m/after/' + o.schedule_id)">评价 / 评选</button>
-          </div>
-          <div v-if="reviewable(o)" class="pad" style="padding-top:0" @click.stop>
-            <button v-if="reviewing !== o.id" class="btn ghost block" @click="openReview(o)">去评价</button>
-            <div v-else>
-              <div class="star-pick">
-                <button v-for="n in 5" :key="n" type="button" :class="{ on: form.rating >= n }" @click="form.rating = n">★</button>
-              </div>
-              <textarea class="input" v-model="form.content" rows="3" placeholder="这次出行怎么样（选填）" />
-              <div style="display:flex;gap:8px">
-                <button class="btn ghost" style="flex:1" @click="reviewing = 0">取消</button>
-                <button class="btn" style="flex:1" :disabled="submitting" @click="submitReview(o)">提交评价</button>
-              </div>
-            </div>
-          </div>
-          <p v-else-if="o.reviewed" class="pad muted" style="padding-top:0">已评价</p>
-        </article>
-        <div v-if="!list.length" class="card">
-          <div class="pad muted">还没有报名。</div>
-        </div>
-      </template>
+      </div>
+      <div v-else-if="!shown.length" class="card"><div class="pad muted">没有符合条件的订单。</div></div>
     </template>
+
+    <div v-if="sheet" class="od-mask" @click.self="sheet = false">
+      <div class="od-sheet">
+        <button class="od-x" type="button" @click="sheet = false">×</button>
+        <h3>订单筛选</h3>
+        <p class="od-label">下单时间</p>
+        <div class="od-presets">
+          <button v-for="item in presetCells" :key="item.key" type="button" :class="{ on: draft.preset === item.key }" @click="pickPreset(item.key)">{{ item.label }}</button>
+          <button v-if="presets.extra.length && !moreYears" type="button" @click="moreYears = true">展开</button>
+        </div>
+        <div class="od-range">
+          <label class="od-date">
+            <span>{{ draft.start || "起始时间" }}</span>
+            <input v-model="draft.start" type="date" @change="draft.preset = ''" />
+          </label>
+          <i>—</i>
+          <label class="od-date">
+            <span>{{ draft.end || "终止时间" }}</span>
+            <input v-model="draft.end" type="date" @change="draft.preset = ''" />
+          </label>
+        </div>
+        <div class="od-sheet-bar">
+          <button class="od-btn" type="button" @click="resetDraft">重置</button>
+          <button class="od-btn solid" type="button" @click="applyFilter">确定</button>
+        </div>
+      </div>
+    </div>
     <p v-if="msg" class="muted">{{ msg }}</p>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
-import { enrollStatusText } from "@/utils/labels";
-import { formatActivityDate } from "@/utils/activityKind";
-import { deskTrips, recruitFacts, showAfterActions, todayYmd, tripKindLabel } from "@/utils/trips";
-import PayHelpers from "@/components/PayHelpers.vue";
+import { deskTrips, showAfterActions, todayYmd } from "@/utils/trips";
+import { canReorder, matchOrderQuery, matchOrderTime, orderBadge, orderMoney, orderShop, orderSpec, orderTimePresets } from "@/utils/orderView";
 
 const store = useUserStore();
 const router = useRouter();
@@ -217,30 +99,55 @@ const pageRoute = useRoute();
 const list = ref([]);
 const msg = ref("");
 const cancelling = ref(0);
-const reviewing = ref(0);
-const submitting = ref(false);
-const form = ref({ rating: 5, content: "" });
+const keyword = ref("");
+const sheet = ref(false);
+const moreYears = ref(false);
+const applied = ref({ preset: "", start: "", end: "" });
+const draft = ref({ preset: "", start: "", end: "" });
 const tabs = new Set(["unpaid", "recruiting", "depart", "review", "waitlist", "refund", "all"]);
-function initialTab() {
-  const q = String(pageRoute.query.tab || "");
+const statusTabs = [
+  { key: "all", label: "全部" },
+  { key: "unpaid", label: "待支付" },
+  { key: "recruiting", label: "招募中" },
+  { key: "depart", label: "待出发" },
+  { key: "review", label: "待评价" },
+  { key: "waitlist", label: "候补中" },
+  { key: "refund", label: "已退款" },
+];
+
+function normalizeTab(raw) {
+  const q = String(raw || "");
   if (q === "upcoming") return "depart";
   if (q === "past") return "all";
-  return tabs.has(q) ? q : "depart";
+  return tabs.has(q) ? q : "";
 }
-const tab = ref(initialTab());
-const holdTab = ref(Boolean(pageRoute.query.tab));
 
+const tab = ref(normalizeTab(pageRoute.query.tab) || "depart");
+const ready = ref(false);
+const presets = computed(() => orderTimePresets());
+const presetCells = computed(() => presets.value.quick.concat(presets.value.years, moreYears.value ? presets.value.extra : []));
+const filterOn = computed(() => Boolean(applied.value.preset || applied.value.start || applied.value.end));
 const split = computed(() => deskTrips(list.value));
-const depart = computed(() => split.value.depart);
-const unpaid = computed(() => split.value.unpaid);
-const recruiting = computed(() => split.value.recruiting);
-const review = computed(() => split.value.review);
-const refund = computed(() => split.value.refund);
-const waitlist = computed(() => split.value.waitlist);
-const nextTrip = computed(() => depart.value[0] || null);
-const restUpcoming = computed(() => depart.value.slice(1));
+const pool = computed(() => {
+  if (tab.value === "unpaid") return split.value.unpaid;
+  if (tab.value === "recruiting") return split.value.recruiting;
+  if (tab.value === "depart") return split.value.depart;
+  if (tab.value === "review") return split.value.review;
+  if (tab.value === "waitlist") return split.value.waitlist;
+  if (tab.value === "refund") return split.value.refund;
+  return list.value;
+});
+const shown = computed(() => pool.value.filter((row) => matchOrderTime(row, applied.value) && matchOrderQuery(row, keyword.value)));
 
 onMounted(load);
+watch(
+  () => String(pageRoute.query.tab || ""),
+  (q) => {
+    const next = normalizeTab(q);
+    if (next) tab.value = next;
+    else if (list.value.length) pickDefault();
+  }
+);
 
 async function load() {
   if (!store.token) {
@@ -248,78 +155,82 @@ async function load() {
     return;
   }
   list.value = (await http.get("/orders")).data || [];
-  if (holdTab.value) {
-    holdTab.value = false;
+  if (ready.value) return;
+  ready.value = true;
+  if (normalizeTab(pageRoute.query.tab)) {
+    tab.value = normalizeTab(pageRoute.query.tab);
     return;
   }
-  if (tab.value !== "depart") return;
+  pickDefault();
+}
+function pickDefault() {
   const desk = deskTrips(list.value);
-  if (desk.depart.length) return;
-  if (desk.unpaid.length) tab.value = "unpaid";
+  if (desk.depart.length) tab.value = "depart";
+  else if (desk.unpaid.length) tab.value = "unpaid";
   else if (desk.recruiting.length) tab.value = "recruiting";
   else if (desk.review.length) tab.value = "review";
   else if (desk.waitlist.length) tab.value = "waitlist";
   else if (desk.refund.length) tab.value = "refund";
-  else if (list.value.length) tab.value = "all";
+  else tab.value = "all";
 }
 function reviewable(o) {
-  return showAfter(o) && o.canReview && String(o.start_date || "").slice(0, 10) < todayYmd();
+  return showAfterActions(o) && o.canReview && String(o.start_date || "").slice(0, 10) < todayYmd();
 }
-function recruitOf(o) {
-  return recruitFacts(o);
+function badgeOf(o) {
+  return orderBadge(o);
 }
-function showAfter(o) {
-  return showAfterActions(o);
+function shopOf(o) {
+  return orderShop(o);
 }
-function dateOf(o) {
-  return formatActivityDate(o.start_date);
+function specOf(o) {
+  return orderSpec(o);
 }
-function kindLabel(o) {
-  return tripKindLabel(o);
+function moneyOf(o) {
+  return orderMoney(o);
 }
-function moneyText(o) {
-  if (o.channel === "activity" && Number(o.pay_amount || 0) === 0) return "免费";
-  if (o.pay_status === "unpaid" && Number(o.remainAmount || 0) > 0) {
-    return Number(o.paidAmount || 0) > 0 ? `已付 ¥${o.paidAmount} / ¥${o.payAmount || o.pay_amount}` : "待付 ¥" + (o.remainAmount || o.pay_amount);
-  }
-  return "¥" + (o.payAmount || o.pay_amount);
+function hotStatus(o) {
+  const key = orderBadge(o).key;
+  return key === "unpaid" || key === "refund";
 }
-function statusLine(o) {
-  if (o.channel === "activity" && o.status === "joined") return "已报名";
-  return enrollStatusText(o);
+function againOf(o) {
+  return canReorder(o);
+}
+function hasActions(o) {
+  return o.canCancel || o.canPay || reviewable(o) || (o.canAfter && o.completed) || canReorder(o);
 }
 function goLogin() {
   router.push({ path: "/m/login", query: { redirect: "/m/orders" } });
 }
-function goSchedule(o) {
-  if (o.schedule_id) router.push("/m/schedule/" + o.schedule_id);
+function openOrder(o) {
+  router.push("/m/orders/" + o.id);
+}
+function openReview(o) {
+  router.push({ path: "/m/orders/" + o.id, query: { review: "1" } });
+}
+function goAfter(o) {
+  router.push("/m/after/" + o.schedule_id);
+}
+function again(o) {
+  if (o.route_id) router.push("/m/route/" + o.route_id);
 }
 function goPay(o) {
   if (o.payShareToken) router.push("/m/pay/" + o.payShareToken);
-  else goSchedule(o);
+  else openOrder(o);
 }
-function openReview(o) {
-  reviewing.value = o.id;
-  form.value = { rating: 5, content: "" };
-  msg.value = "";
+function openFilter() {
+  draft.value = { ...applied.value };
+  moreYears.value = presets.value.extra.some((item) => item.key === draft.value.preset);
+  sheet.value = true;
 }
-async function submitReview(o) {
-  submitting.value = true;
-  msg.value = "";
-  try {
-    await http.post("/reviews", {
-      scheduleId: o.schedule_id,
-      rating: form.value.rating,
-      content: form.value.content,
-    });
-    reviewing.value = 0;
-    await load();
-    msg.value = "评价已提交";
-  } catch (e) {
-    msg.value = e.message || "评价失败";
-  } finally {
-    submitting.value = false;
-  }
+function pickPreset(key) {
+  draft.value = { preset: draft.value.preset === key ? "" : key, start: "", end: "" };
+}
+function resetDraft() {
+  draft.value = { preset: "", start: "", end: "" };
+}
+function applyFilter() {
+  applied.value = { ...draft.value };
+  sheet.value = false;
 }
 function cancelMessage(o) {
   const deduct = Number(o && o.deductAmount) || 0;

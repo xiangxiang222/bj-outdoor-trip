@@ -124,6 +124,10 @@ describe("mine desk", () => {
     const row = res.body.data.find((item) => item.id === enId);
     assert.equal(row.refundProgress.text, "已退回余额 ¥80");
     assert.equal(row.refundProgress.channel, "wallet");
+    const one = await agent.get(`/api/orders/${enId}`).set(auth(token)).expect(200);
+    assert.equal(one.body.data.id, enId);
+    assert.equal(one.body.data.refundProgress.text, "已退回余额 ¥80");
+    await agent.get("/api/orders/99999999").set(auth(token)).expect(404);
     const wallet = await agent.get("/api/me/wallet").set(auth(token)).expect(200);
     assert.equal(wallet.body.data.refundCount, 1);
   });

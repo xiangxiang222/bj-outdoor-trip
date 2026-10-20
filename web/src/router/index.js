@@ -39,6 +39,7 @@ const routes = [
       { path: "login", name: "login", component: () => import("@/views/mobile/Login.vue") },
       { path: "member", name: "member", component: () => import("@/views/mobile/Member.vue") },
       { path: "orders", name: "orders", component: () => import("@/views/mobile/Orders.vue") },
+      { path: "orders/:id", name: "order", component: () => import("@/views/mobile/OrderDetail.vue") },
       { path: "favorites", name: "favorites", component: () => import("@/views/mobile/Favorites.vue") },
       { path: "notices", name: "notices", component: () => import("@/views/mobile/Notices.vue") },
       { path: "views", name: "views", component: () => import("@/views/mobile/Views.vue") },

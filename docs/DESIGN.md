@@ -262,7 +262,7 @@ User 1──n Favorite / PointsLedger / Review
 | --- | --- |
 | 首页 | 山野发现。状态栏图形标 + 活字「同行者众」+ 口号；圆角景点轮播（可点进线路）；轮播下实时动态条（报名/浏览/收藏/评价/开团，姓名脱敏）；薄学生认证条；搜索；城市/玩法/公司高校胶囊；feed 活动卡（含满员可候补）；排序/筛选/发团 |
 | 活动 | 同城局：搜索、四宫格分类、即将出发/快满员/最新、feed 卡（含候补）。「发起一局」 |
-| 行程 | 待支付 / 招募中 / 待出发 / 待评价 / 候补中 / 已退款 / 全部订单；有待出发时默认停在待出发；候补不混进待出发；取消为文字链；免费局不显示 ¥0 |
+| 行程 | 已报名的订单列表。状态：全部 / 待支付 / 招募中 / 待出发 / 待评价 / 候补中 / 已退款；可按下单时间筛选。点一条进订单详情，不进线路或团详情 |
 | 我的 | 夜色资料卡 + 出行 / 权益 / 服务三组 cell。会员、学生、团体、抽奖、客服都在这里，不回首页堆增长入口 |
 
 同城局详情按时间/地点/人数组织，不展示座位图、装备、保险、推荐佣金、本团画像。已报名则隐藏报名按钮，提示到场找发起人。山野团仍走座位图与实名报名。
@@ -273,7 +273,7 @@ User 1──n Favorite / PointsLedger / Review
 
 后台账号 `admin_users.status`：`on` 启用 / `off` 停用。角色 `admin` 可管理其他后台账号，`operator` 不能。至少保留一名启用中的管理员。权限点见 `server/src/services/staff.js`：`staff` / `ops` / `field` / `roster` / `photo`。
 
-小程序页面：`pages/index|activities|orders|mine|official|feedback|lottery|after|routes|chain|schedule|enroll|coupon|coupons|open|login|member|favorites|stats|guides|guide|user|publish|leader|student`，线路详情在分包 `pkg-detail`。H5 另有 `/m/student`、`/m/group`。
+小程序页面：`pages/index|activities|orders|enroll-order|mine|official|feedback|lottery|after|routes|chain|schedule|enroll|coupon|coupons|open|login|member|favorites|stats|guides|guide|user|publish|leader|student`，线路详情在分包 `pkg-detail`。H5 订单详情是 `/m/orders/:id`。
 
 ### 6.1 视觉规范
 
@@ -285,7 +285,7 @@ User 1──n Favorite / PointsLedger / Review
 - **线路/团详情**：顶图下方同样一条动态。团页看本团+本线路；线路页看本线路。数据来自真实报名、收藏、评价、开团和登录后的浏览，不编造；匿名浏览只计入「此刻 n 人在看」。
 - **活动 Tab**：同城局同样用搜索 + 排序 + feed 卡；分类宫格选中为荧光绿。满员局留在列表里可进候补。
 - **详情扫读**：时间 / 地点+地图 / 人数（含候补）/ 发起人 → 信任条（先报名后付款、出发日前可取消、山野可加购意外险）→ 底栏价格+立即报名。已报名或发团成功出票卡（出行票 / 候补票 / 已提交审核）+ 看行程 / 去分享。山野集合点报名前就展示，不藏地点。
-- **行程票夹**：待出发只含已占座且不在招募中的报名；候补单独一栏；全部订单含每一次报名。
+- **行程订单**：卡片是封面、标题、价格和状态。点开是订单详情。待出发只含已占座且不在招募中的报名；候补单独一栏；全部含每一次报名。
 - **Tab**：底栏四个图标平时是空心轮廓，选中改成深色实心。导航栏 `#c045ab`。只有「我的」在资料区做同色往下淡出，顶栏和资料连成一块，没有分割线。其他页顶栏是纯色。下拉刷新那一块跟导航栏同色。页面不能左右拖动。
 - **首页学生卡**：白卡片 +「去认证」按钮。文案只谈学生价与高校限制，不写具体校名。
 - 报名/开团表单里「例如：北京大学」一类占位符是资格示例，不是品牌文案。

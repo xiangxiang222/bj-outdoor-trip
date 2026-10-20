@@ -1,0 +1,23 @@
+@import "../orders/orders.wxss";
+
+.od-hero { padding: 8rpx 8rpx 20rpx; }
+.od-hero-title { font-size: calc(44rpx * var(--ui-scale)); font-weight: 700; }
+.od-hero-sub { color: #8a8a8a; margin-top: 8rpx; font-size: calc(26rpx * var(--ui-scale)); }
+.od-block { padding: 24rpx; }
+.od-who { font-size: calc(30rpx * var(--ui-scale)); font-weight: 650; }
+.od-lines { padding: 8rpx 24rpx; }
+.od-line { display: flex; justify-content: space-between; gap: 24rpx; padding: 16rpx 0; font-size: calc(26rpx * var(--ui-scale)); }
+.od-line text:first-child { color: #8a8a8a; }
+.od-val { font-weight: 650; }
+.od-copy { color: #5b7f9a; font-weight: 400; margin-left: 8rpx; }
+.od-line.is-due .od-val { color: #bc4749; }
+.od-dock {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 24rpx;
+  margin-top: 8rpx;
+}
