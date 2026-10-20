@@ -137,7 +137,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 
 ## 5. 小程序页面（`miniprogram/app.json`）
 
-Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#7a4e92`，选中色 `#6b2178`。页面顶部同色淡出，左右只在边缘。
+Tab：**首页 / 活动 / 行程 / 我的**。导航栏底色 `#7a4e92`，选中色 `#6b2178`。页面顶部同色淡出，左右边缘收到屏幕中部。页面不能左右拖动。
 
 主包页面与 H5 基本一一对应。线路详情在分包 `pkg-detail/detail`。首页 / 团 / 线路顶图下用 `components/live-pulse` 滚动态。校园选择在 `pages/campus-pick`。
 
