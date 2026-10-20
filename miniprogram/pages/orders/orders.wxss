@@ -21,6 +21,7 @@
 .od-filter { color: #141414; margin-right: 0; flex: none; }
 .od-filter.on { color: #bc4749; font-weight: 700; }
 .od-card { background: #fff; border-radius: 24rpx; margin: 0 0 16rpx; overflow: hidden; }
+.od-tab-space { height: calc(140rpx + env(safe-area-inset-bottom)); }
 .od-head { display: flex; justify-content: space-between; padding: 24rpx 24rpx 12rpx; font-size: calc(26rpx * var(--ui-scale)); }
 .od-shop { font-weight: 650; }
 .od-status { color: #8a8a8a; }

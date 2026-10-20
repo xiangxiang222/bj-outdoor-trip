@@ -61,6 +61,7 @@
     </view>
   </view>
   <view class="pad muted" wx:elif="{{!shown.length}}">{{tr.t('没有符合条件的订单', lang)}}</view>
+  <view class="od-tab-space"></view>
 </block>
 
 <view class="od-mask" wx:if="{{sheet}}" bindtap="closeFilter">

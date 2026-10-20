@@ -10,6 +10,8 @@
 .od-line text:first-child { color: #8a8a8a; }
 .od-val { font-weight: 650; }
 .od-copy { color: #5b7f9a; font-weight: 400; margin-left: 8rpx; }
+.od-no { font-variant-numeric: tabular-nums; }
+.od-jump { color: #8a8a8a; }
 .od-line.is-due .od-val { color: #bc4749; }
 .od-dock {
   display: flex;

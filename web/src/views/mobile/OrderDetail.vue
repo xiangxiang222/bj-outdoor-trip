@@ -13,8 +13,9 @@
     <section class="od-card">
       <header class="od-head">
         <span class="od-shop">{{ shop }}</span>
+        <button v-if="order.schedule_id" class="od-jump" type="button" @click="goSchedule">团详情 ›</button>
       </header>
-      <div class="od-goods">
+      <div class="od-goods od-tap" @click="goSchedule">
         <img v-if="order.cover" :src="order.cover" alt="" />
         <span v-else class="od-ph"></span>
         <div>
@@ -42,7 +43,7 @@
     </section>
 
     <section class="od-card od-lines">
-      <div><span>订单编号</span><b>{{ order.id }} <button type="button" @click="copyNo">复制</button></b></div>
+      <div><span>订单编号</span><b class="od-no">{{ no }} <button type="button" @click="copyNo">复制</button></b></div>
       <div v-if="placed"><span>下单时间</span><b>{{ placed }}</b></div>
       <div><span>支付方式</span><b>{{ payMethod }}</b></div>
       <div v-if="order.start_date"><span>出发日期</span><b>{{ order.start_date }}</b></div>
@@ -73,7 +74,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { showAfterActions, todayYmd } from "@/utils/trips";
-import { canReorder, maskTravelerPhone, orderBadge, orderHint, orderMoney, orderShop, orderSpec, payMethodLabel, placedLabel, priceLines } from "@/utils/orderView";
+import { canReorder, maskTravelerPhone, orderBadge, orderHint, orderMoney, orderNo, orderShop, orderSpec, payMethodLabel, placedLabel, priceLines } from "@/utils/orderView";
 
 const pageRoute = useRoute();
 const router = useRouter();
@@ -93,6 +94,7 @@ const money = computed(() => orderMoney(order.value));
 const prices = computed(() => priceLines(order.value));
 const payMethod = computed(() => payMethodLabel(order.value));
 const placed = computed(() => placedLabel(order.value));
+const no = computed(() => orderNo(order.value));
 const phone = computed(() => maskTravelerPhone(order.value?.traveler_phone));
 const place = computed(() => order.value?.meetup_point || order.value?.city || orderSpec(order.value));
 const canReview = computed(() => showAfterActions(order.value) && order.value?.canReview && String(order.value?.start_date || "").slice(0, 10) < todayYmd());
@@ -115,9 +117,12 @@ async function load() {
 function goPay() {
   if (order.value?.payShareToken) router.push("/m/pay/" + order.value.payShareToken);
 }
+function goSchedule() {
+  if (order.value?.schedule_id) router.push("/m/schedule/" + order.value.schedule_id);
+}
 async function copyNo() {
   try {
-    await navigator.clipboard.writeText(String(order.value.id));
+    await navigator.clipboard.writeText(no.value);
     msg.value = "已复制";
   } catch {
     msg.value = "复制失败";

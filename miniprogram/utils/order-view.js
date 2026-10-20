@@ -98,6 +98,13 @@ function placedLabel(row) {
   return raw.replace("T", " ").slice(0, 16);
 }
 
+function orderNo(row) {
+  const raw = String((row && (row.created_at || row.createdAt || row.start_date || row.startDate)) || "").replace(/\D/g, "");
+  const day = (raw.slice(0, 8) || "00000000").slice(0, 8);
+  const id = String(Math.abs(parseInt(row && row.id, 10) || 0)).padStart(8, "0");
+  return (day + id).slice(0, 16);
+}
+
 function maskTravelerPhone(phone) {
   const s = String(phone || "");
   if (s.length < 7) return s;
@@ -173,6 +180,7 @@ module.exports = {
   priceLines,
   payMethodLabel,
   placedLabel,
+  orderNo,
   maskTravelerPhone,
   orderTimePresets,
   matchOrderTime,
