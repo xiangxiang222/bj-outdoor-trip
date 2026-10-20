@@ -121,3 +121,12 @@ export function ticketState(row, query = {}) {
     trips: true,
   };
 }
+
+export function showDetailTabs(row) {
+  if (!row || canShowEnroll(row)) return false;
+  const en = row.myEnrollment;
+  if (!en) return true;
+  if (en.status === "joined" && Number(en.remainAmount) > 0 && en.payShareToken) return false;
+  if (row.channel === "activity" || (en.payStatus !== "paid" && en.pay_status !== "paid")) return false;
+  return true;
+}

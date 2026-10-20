@@ -405,7 +405,7 @@
       </div></div>
     </div>
 
-    <div class="enroll-dock">
+    <div v-if="dockVisible" class="enroll-dock">
       <div v-if="showEnroll" class="enroll-bar">
         <div class="enroll-price">
           <b>{{ priceDock.main }}</b>
@@ -482,7 +482,7 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { payStatusText, scheduleStatusText, starText } from "@/utils/labels";
 import { formatActivityDate, activityKindOf } from "@/utils/activityKind";
-import { canShowEnroll, dockPrice, enrollCta, peopleLine, ticketState, trustChips } from "@/utils/scanFacts";
+import { canShowEnroll, dockPrice, enrollCta, peopleLine, showDetailTabs, ticketState, trustChips } from "@/utils/scanFacts";
 import { nativeShareSupported, scheduleShareText, scheduleShareUrl } from "@/utils/share";
 import { drawTripPoster, downloadPosterPng, posterDataUrl } from "@/utils/sharePoster";
 import { setChrome } from "@/utils/pageChrome";
@@ -667,6 +667,13 @@ const shownEnrolled = computed(() => {
   return Number(s.value?.enrolled || 0);
 });
 const isOwner = computed(() => store.profile && s.value && Number(s.value.organizerId) === Number(store.profile.id));
+const dockVisible = computed(() => {
+  if (!s.value) return false;
+  if (!showDetailTabs(s.value)) return true;
+  if (s.value.isOrganizer && s.value.status !== "cancelled") return true;
+  if (isOwner.value && s.value.organizerType === "company" && s.value.status !== "cancelled") return true;
+  return !!msg.value;
+});
 const leaderSlots = computed(() => {
   const list = s.value?.leaders || [];
   return [1, 2].map((slot) => ({

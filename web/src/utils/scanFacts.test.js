@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { canShowEnroll, dockPrice, enrollCta, peopleLine, ticketState, timeLine, trustChips } from "./scanFacts";
+import { canShowEnroll, dockPrice, enrollCta, peopleLine, showDetailTabs, ticketState, timeLine, trustChips } from "./scanFacts";
 
 describe("scanFacts", () => {
   it("keeps full trips as waitlist people line", () => {
@@ -41,6 +41,10 @@ describe("scanFacts", () => {
     expect(ticketState({ channel: "activity", myEnrollment: { status: "joined", payStatus: "paid" } }).title).toBe("已报名");
     expect(ticketState({ channel: "trip" }, { joined: "1" }).kind).toBe("joined");
     expect(ticketState({ channel: "trip" })).toBe(null);
+    expect(showDetailTabs({ channel: "trip", myEnrollment: { status: "joined", payStatus: "paid" } })).toBe(true);
+    expect(showDetailTabs({ channel: "trip", myEnrollment: { status: "joined", payStatus: "unpaid", remainAmount: 1, payShareToken: "x" } })).toBe(false);
+    expect(showDetailTabs({ channel: "activity", myEnrollment: { status: "joined", payStatus: "paid" } })).toBe(false);
+    expect(showDetailTabs({ channel: "trip", status: "recruiting" })).toBe(false);
   });
 
   it("joins date and meetup time", () => {

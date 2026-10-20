@@ -3,7 +3,7 @@ const { payStatusText, starText } = require("../../utils/labels");
 const { shareCover, absMedia } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
 const { dateOf } = require("../../utils/activity-kind");
-const { peopleLine, trustChips, dockPrice, enrollCta, canShowEnroll, ticketState } = require("../../utils/scan-facts");
+const { peopleLine, trustChips, dockPrice, enrollCta, canShowEnroll, ticketState, showDetailTabs } = require("../../utils/scan-facts");
 const { openCampusPick } = require("../../utils/campus");
 const { decodeShareScene, persistRef, readRef, enrollQuery } = require("../../utils/share-scene");
 const { drawShareCard, drawSharePoster } = require("../../utils/share-card");
@@ -81,6 +81,7 @@ Page({
     ticket: null,
     priceDock: { free: true, main: "免费", sub: "" },
     showEnroll: false,
+    showDetailTabs: false,
     showAfter: false,
     ctaText: "立即报名",
     statusTag: "",
@@ -164,6 +165,7 @@ Page({
         ticket,
         priceDock: dockPrice(s),
         showEnroll: canShowEnroll(s),
+        showDetailTabs: showDetailTabs(s),
         showAfter: !!(s.myEnrollment && s.myEnrollment.status === "joined" && (isActivity || s.guaranteed || s.status === "confirmed" || s.status === "full" || s.status === "finished")),
         ctaText: enrollCta(s),
         statusTag,
