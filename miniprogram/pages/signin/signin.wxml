@@ -1,0 +1,27 @@
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="sg-page" wx:if="{{state}}">
+  <view class="sg-card">
+    <view class="sg-top">
+      <view>
+        <view class="sg-title">{{tr.t('每日签到', lang)}}</view>
+        <view class="sg-sub">{{tr.t('已连续', lang)}} {{state.streak}} {{tr.t('天', lang)}} · {{tr.t('当前', lang)}} {{state.points}} {{tr.t('积分', lang)}}</view>
+      </view>
+      <view class="sg-plus">+{{state.todayPoints}}</view>
+    </view>
+    <view class="sg-days">
+      <view class="sg-day {{item.signed ? 'on' : ''}} {{item.today ? 'today' : ''}}" wx:for="{{state.days}}" wx:key="day">
+        <view class="sg-pts">+{{item.points}}</view>
+        <view class="sg-label">{{item.label == '今天' ? tr.t('今天', lang) : item.label}}</view>
+      </view>
+    </view>
+    <view class="sg-go {{state.signedToday ? 'off' : ''}}" bindtap="sign">{{state.signedToday ? tr.t('今日已签到', lang) : tr.t('立即签到', lang)}}</view>
+  </view>
+  <view class="sg-mask" wx:if="{{result}}" catchtap="closeResult">
+    <view class="sg-result" catchtap="noop">
+      <view class="sg-title">{{tr.t('签到成功', lang)}}</view>
+      <view class="sg-gain">+{{result.gained}} {{tr.t('积分', lang)}}</view>
+      <view class="sg-sub">{{tr.t('已连续', lang)}} {{result.streak}} {{tr.t('天', lang)}}，{{tr.t('积分已入账', lang)}}</view>
+      <view class="sg-go" bindtap="closeResult">{{tr.t('知道了', lang)}}</view>
+    </view>
+  </view>
+</view>

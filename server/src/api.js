@@ -57,6 +57,7 @@ const { generateVirtualUsers, setVirtualUsersForSchedule, growVirtualPool, virtu
 const { listPulse, recordView, parseVisitorId } = require("./services/pulse");
 const { deleteAccount } = require("./services/account");
 const { snapshot: walletSnapshot, addCard, removeCard, setPin, resetPin, withdraw, confirmWithdraw } = require("./services/wallet");
+const { signIn, state: signinState } = require("./services/signin");
 const { drawPre, drawPost, claimPrizes, lotteryState, lotteryPublic } = require("./services/lottery");
 const { getAdminLottery, listAdminLotteries, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate } = require("./services/lottery-admin");
 const { completeSchedule, afterTripState } = require("./services/aftertrip");
@@ -882,6 +883,22 @@ router.post("/auth/wechat", optionalUser, async (req, res) => {
 router.get("/me", authUser, (req, res) => {
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
   res.json({ ok: true, data: userPublic(user, req) });
+});
+
+router.get("/me/signin", authUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: signinState(req.userId) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.post("/me/signin", authUser, (req, res) => {
+  try {
+    res.json({ ok: true, data: signIn(req.userId) });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 router.get("/me/wallet", authUser, (req, res) => {

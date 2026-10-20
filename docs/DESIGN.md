@@ -252,7 +252,7 @@ User 1──n Favorite / PointsLedger / Review
 
 建表语句见 `server/src/db.js` 的 `createSchema`；旧库通过 `migrateSchema` 补列。种子脚本 `server/src/seed/run.js` **会清空并重建演示数据**，不要在生产库上误跑。仅更新封面可用 `server/src/seed/refresh-images.js`。部署脚本仅在目标机尚无 `app.sqlite` 时 seed。
 
-核心表：`users`（含 `deleted_at`、学生/团体/领队字段、`wallet_balance`）、`admin_users`（含 `status`）、`sms_codes`、`captchas`、`bus_types`、`routes`（含 `refund_rules_json`，空则用 `settings.refund_rules` 全局档）、`route_price_tiers`、`route_buses`、`guides`、`schedules`（含 `channel`、解散字段、审核、成本、`started_at` 正式开团）、`enrollments`、`checkin_sessions`、`checkin_marks`、`payments`、`payment_splits`、`points_ledger`、`wallet_ledger`、`bank_cards`、`favorites`、`reviews`、`page_views`、`settings`、`sms_logs`、`play_tags`、`coupon_campaigns`、`coupon_allowlist`、`user_coupons`、`feedbacks`、`lottery_draws`、`lottery_campaigns`、`lottery_prizes`、`lottery_assigns`、`contest_posts`、`contest_votes`、`user_photos`、`schedule_leaders`、`enrollment_fallbacks`、`referrals`、`leader_referrals`。
+核心表：`users`（含 `deleted_at`、学生/团体/领队字段、`wallet_balance`）、`admin_users`（含 `status`）、`sms_codes`、`captchas`、`bus_types`、`routes`（含 `refund_rules_json`，空则用 `settings.refund_rules` 全局档）、`route_price_tiers`、`route_buses`、`guides`、`schedules`（含 `channel`、解散字段、审核、成本、`started_at` 正式开团）、`enrollments`、`checkin_sessions`、`checkin_marks`、`payments`、`payment_splits`、`points_ledger`、`user_signins`、`wallet_ledger`、`bank_cards`、`favorites`、`reviews`、`page_views`、`settings`、`sms_logs`、`play_tags`、`coupon_campaigns`、`coupon_allowlist`、`user_coupons`、`feedbacks`、`lottery_draws`、`lottery_campaigns`、`lottery_prizes`、`lottery_assigns`、`contest_posts`、`contest_votes`、`user_photos`、`schedule_leaders`、`enrollment_fallbacks`、`referrals`、`leader_referrals`。
 
 ## 6. 前端信息架构与视觉
 
@@ -286,7 +286,7 @@ User 1──n Favorite / PointsLedger / Review
 - **活动 Tab**：同城局同样用搜索 + 排序 + feed 卡；分类宫格选中为荧光绿。满员局留在列表里可进候补。
 - **详情扫读**：时间 / 地点+地图 / 人数（含候补）/ 发起人 → 信任条（先报名后付款、出发日前可取消、山野可加购意外险）→ 底栏价格+立即报名。已报名或发团成功出票卡（出行票 / 候补票 / 已提交审核）+ 看行程 / 去分享。山野集合点报名前就展示，不藏地点。
 - **行程订单**：卡片是封面、标题、价格和状态。点开是订单详情。待出发只含已占座且不在招募中的报名；候补单独一栏；全部含每一次报名。
-- **Tab**：底栏四个图标平时是空心轮廓，选中改成深色实心。导航栏 `#c045ab`。只有「我的」页面向下淡出；头像、客服、设置和会员中心在一个白框里，足迹到待付款在下一个白框里。其他页顶栏是纯色。下拉刷新那一块跟导航栏同色。页面不能左右拖动。
+- **Tab**：底栏四个图标平时是空心轮廓，选中改成深色实心。导航栏 `#c045ab`。只有「我的」页面向下淡出：头像和会员在页头，钱包和订单在一张白卡片里，足迹、收藏、关注和签到在下一张。其他页顶栏是纯色。下拉刷新那一块跟导航栏同色。页面不能左右拖动。
 - **首页学生卡**：白卡片 +「去认证」按钮。文案只谈学生价与高校限制，不写具体校名。
 - 报名/开团表单里「例如：北京大学」一类占位符是资格示例，不是品牌文案。
 

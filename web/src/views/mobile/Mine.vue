@@ -1,17 +1,21 @@
 <template>
   <div class="mine-page">
     <template v-if="store.token && store.profile">
-      <div class="mine-profile">
-      <div class="mine-hero-card">
+      <div class="mine-head">
         <div class="mine-user">
           <button class="mine-avatar" type="button" @click="openAvatar">
             <img v-if="store.profile.avatar" :src="store.profile.avatar" alt="" />
             <span v-else>{{ (store.profile.nickname || "友").slice(0, 1) }}</span>
           </button>
-          <button class="mine-user-main" type="button" @click="$router.push('/m/user/' + store.profile.id)">
-            <div class="mine-name">{{ store.profile.nickname }}</div>
-            <div class="mine-phone">{{ maskPhone(store.profile.phone) }}</div>
-          </button>
+          <div class="mine-user-main">
+            <button type="button" class="mine-name-hit" @click="$router.push('/m/user/' + store.profile.id)">
+              <div class="mine-name">{{ store.profile.nickname }}</div>
+              <div class="mine-phone">{{ maskPhone(store.profile.phone) }}</div>
+            </button>
+            <button class="mine-chip" type="button" @click="openMember">
+              {{ store.profile.membership ? store.profile.membership.code + "会员 ›" : "会员中心 ›" }}
+            </button>
+          </div>
         </div>
         <div class="mine-tools">
           <button class="mine-tool" type="button" @click="$router.push('/m/official')">
@@ -31,20 +35,26 @@
           </button>
         </div>
       </div>
-      <button v-if="store.profile.membership" class="mine-member" type="button" @click="openMember">
-        <div>
-          <strong class="mine-level"><em>{{ store.profile.membership.code }}</em>会员</strong>
-          <span>本月累计新增 {{ store.profile.membership.monthGrowth }} 成长值</span>
-        </div>
-        <i class="mine-pill">会员中心 ›</i>
-      </button>
-      </div>
 
-      <div class="mine-orders">
-        <div class="mine-traces">
-          <button type="button" @click="goAuth('/m/views')"><span>足迹</span><b>{{ hub.viewCount || 0 }}</b></button>
-          <button type="button" @click="goAuth('/m/favorites')"><span>收藏</span><b>{{ hub.favoriteCount || 0 }}</b></button>
-          <button type="button" @click="goAuth('/m/follows')"><span>关注</span><b>{{ hub.followCount || 0 }}</b></button>
+      <div class="mine-sheet">
+        <div class="mine-sheet-head">
+          <button type="button" @click="goAuth('/m/wallet')">我的钱包 ›</button>
+          <button class="mine-pill" type="button" @click="openMember">会员中心 ›</button>
+        </div>
+        <div class="mine-stats">
+          <button type="button" @click="goAuth('/m/wallet')">
+            <b>{{ hub.balance ?? store.profile.walletBalance ?? 0 }}</b>
+            <span>余额</span>
+          </button>
+          <button type="button" @click="goAuth('/m/coupons')">
+            <b>{{ hub.couponCount || coupons.length || 0 }}</b>
+            <span>优惠券</span>
+            <em v-if="hub.couponExpireHint">{{ hub.couponExpireHint }}</em>
+          </button>
+          <button type="button" @click="goAuth('/m/signin')">
+            <b>{{ hub.points ?? store.profile.points ?? 0 }}</b>
+            <span>积分</span>
+          </button>
         </div>
         <div class="mine-order-row">
           <div class="mine-shortcuts">
@@ -91,31 +101,28 @@
         </div>
       </div>
 
-      <button class="mine-wallet" type="button" @click="goAuth('/m/wallet')">
-        <span class="mine-wallet-item">
-          <img :src="'/static/mine/wal-coin.png?v=10'" alt="" />
-          <strong>{{ hub.balance ?? store.profile.walletBalance ?? 0 }}</strong>
-          <span>余额</span>
-        </span>
-        <span class="mine-wallet-item">
-          <span class="wal-ico">
-            <img :src="'/static/mine/wal-coupon.png?v=11'" alt="" />
-            <i v-if="hub.couponCount || coupons.length" class="wal-dot"></i>
-          </span>
-          <strong>{{ hub.couponCount || coupons.length || 0 }}</strong>
-          <span>优惠券</span>
-          <em v-if="hub.couponExpireHint">{{ hub.couponExpireHint }}</em>
-        </span>
-        <span class="mine-wallet-item">
-          <img :src="'/static/mine/wal-point.png?v=10'" alt="" />
-          <strong>{{ store.profile.points || 0 }}</strong>
-          <span>积分</span>
-        </span>
-        <span class="mine-wallet-item is-entry">
-          <img :src="'/static/mine/wal-purse.png?v=10'" alt="" />
-          <span>钱包 ›</span>
-        </span>
-      </button>
+      <div class="mine-links">
+        <button type="button" @click="goAuth('/m/views')">
+          <img :src="'/static/mine/views.png?v=10'" alt="" />
+          <span>足迹</span>
+          <b>{{ hub.viewCount || 0 }}</b>
+        </button>
+        <button type="button" @click="goAuth('/m/favorites')">
+          <img :src="'/static/mine/fav.png?v=10'" alt="" />
+          <span>收藏</span>
+          <b>{{ hub.favoriteCount || 0 }}</b>
+        </button>
+        <button type="button" @click="goAuth('/m/follows')">
+          <img :src="'/static/mine/follow.png?v=10'" alt="" />
+          <span>关注</span>
+          <b>{{ hub.followCount || 0 }}</b>
+        </button>
+        <button type="button" @click="goAuth('/m/signin')">
+          <i class="mine-sign-ico"></i>
+          <span>签到</span>
+          <b>{{ hub.signedToday ? "已签" : "领积分" }}</b>
+        </button>
+      </div>
     </template>
 
     <div v-else class="card">

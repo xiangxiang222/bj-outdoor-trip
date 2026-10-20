@@ -77,10 +77,10 @@ watch(() => route.path, () => clearChrome());
 const tabNames = new Set(["home", "activities", "orders", "mine"]);
 const isHome = computed(() => route.name === "home");
 const showBack = computed(() => !tabNames.has(route.name));
-const accountPaths = ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/settings", "/m/profile", "/m/orders", "/m/lottery", "/m/publish", "/m/coupons", "/m/user"];
+const accountPaths = ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile", "/m/orders", "/m/lottery", "/m/publish", "/m/coupons", "/m/user"];
 const accountTone = computed(() => accountPaths.some((p) => route.path === p || route.path.startsWith(p + "/")));
 const mineActive = computed(() =>
-  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/settings", "/m/profile"].some(
+  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile"].some(
     (p) => route.path === p || route.path.startsWith(p + "/")
   )
 );
@@ -118,6 +118,7 @@ const title = computed(() => {
     settings: "设置",
     profile: "实名信息",
     wallet: "我的钱包",
+    signin: "每日签到",
     "wallet-cards": "提现说明",
     "wallet-pin": "支付密码",
     login: "登录 / 注册",
@@ -147,6 +148,7 @@ const subtitle = computed(() => {
     student: "认证后可走学生价",
     leader: "通过后可在团里报名领队",
     mine: "账号、权益与客服",
+    signin: "连续签到，积分直接入账",
     orders: "待出发、待评价和全部报名",
     order: "集合、费用和订单号",
     publish: "提交后需管理员审核",
