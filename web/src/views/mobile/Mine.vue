@@ -1,6 +1,7 @@
 <template>
   <div class="mine-page">
     <template v-if="store.token && store.profile">
+      <div class="mine-profile">
       <div class="mine-hero-card">
         <div class="mine-user">
           <button class="mine-avatar" type="button" @click="openAvatar">
@@ -30,15 +31,14 @@
           </button>
         </div>
       </div>
-
-      <div class="mine-board" :style="boardStyle">
-      <button v-if="store.profile.membership" ref="memberEl" class="mine-member" type="button" @click="openMember">
+      <button v-if="store.profile.membership" class="mine-member" type="button" @click="openMember">
         <div>
           <strong class="mine-level"><em>{{ store.profile.membership.code }}</em>会员</strong>
           <span>本月累计新增 {{ store.profile.membership.monthGrowth }} 成长值</span>
         </div>
         <i class="mine-pill">会员中心 ›</i>
       </button>
+      </div>
 
       <div class="mine-orders">
         <div class="mine-traces">
@@ -89,7 +89,6 @@
             <i class="mine-all-arrow"></i>
           </button>
         </div>
-      </div>
       </div>
 
       <button class="mine-wallet" type="button" @click="goAuth('/m/wallet')">
@@ -175,7 +174,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
@@ -187,25 +186,6 @@ const coupons = ref([]);
 const hub = ref({});
 const picker = ref(false);
 const defaults = ref([]);
-const memberEl = ref(null);
-const memberH = ref(0);
-const boardStyle = computed(() => (memberH.value ? { "--member-h": memberH.value + "px" } : {}));
-let memberObserver = null;
-
-function syncMemberBand() {
-  const el = memberEl.value;
-  if (!el) {
-    memberH.value = 0;
-    return;
-  }
-  const next = Math.ceil(el.getBoundingClientRect().height) + 1;
-  if (next !== memberH.value) memberH.value = next;
-  if (typeof ResizeObserver === "undefined") return;
-  if (!memberObserver) {
-    memberObserver = new ResizeObserver(() => syncMemberBand());
-  }
-  memberObserver.observe(el);
-}
 
 const campusShort = computed(() => {
   const u = store.profile;
@@ -227,12 +207,7 @@ const groupLabel = computed(() => {
   return "团体认证";
 });
 
-onMounted(() => {
-  load();
-  nextTick(syncMemberBand);
-});
-onBeforeUnmount(() => memberObserver && memberObserver.disconnect());
-watch(() => store.profile && store.profile.membership, () => nextTick(syncMemberBand));
+onMounted(load);
 
 async function load() {
   await store.fetchMe().catch(() => {});

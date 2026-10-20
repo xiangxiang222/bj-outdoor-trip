@@ -4,6 +4,7 @@
   <view class="mine-nav-bar" style="height: {{navBarHeight}}px;">{{tr.t('我的', lang)}}</view>
 </view>
 <view class="mine-page {{dark ? 'is-dark' : ''}}" wx:if="{{user}}">
+  <view class="mine-profile">
   <view class="mine-hero-card">
     <view class="mine-user" bindtap="goHome">
       <view class="mine-avatar" catchtap="openAvatar">
@@ -33,6 +34,14 @@
       </view>
     </view>
   </view>
+  <view class="mine-member" wx:if="{{user.membership}}" bindtap="openMember">
+    <view>
+      <view class="mine-level"><text class="mine-em">{{tr.t(user.membership.code, lang)}}</text>{{tr.t('会员', lang)}}</view>
+      <view class="muted">{{tr.t('本月累计新增', lang)}} {{tr.t(user.membership.monthGrowth, lang)}} {{tr.t('成长值', lang)}}</view>
+    </view>
+    <view class="mine-pill">{{tr.t('会员中心 ›', lang)}}</view>
+  </view>
+  </view>
   <view class="avatar-mask" wx:if="{{picker}}" catchtap="closeAvatar">
     <view class="avatar-sheet" catchtap="noop">
       <view class="avatar-title">{{tr.t('选择默认头像', lang)}}</view>
@@ -43,15 +52,6 @@
       <view class="avatar-action" bindtap="album">{{tr.t('从手机相册选择', lang)}}</view>
       <view class="avatar-action cancel" bindtap="closeAvatar">{{tr.t('取消', lang)}}</view>
     </view>
-  </view>
-
-  <view class="mine-board" style="{{memberH ? 'background-image:linear-gradient(#f3eaf5 0,#f3eaf5 ' + memberH + 'px,#fff ' + memberH + 'px)' : ''}}">
-  <view class="mine-member" wx:if="{{user.membership}}" bindtap="openMember">
-    <view>
-      <view class="mine-level"><text class="mine-em">{{tr.t(user.membership.code, lang)}}</text>{{tr.t('会员', lang)}}</view>
-      <view class="muted">{{tr.t('本月累计新增', lang)}} {{tr.t(user.membership.monthGrowth, lang)}} {{tr.t('成长值', lang)}}</view>
-    </view>
-    <view class="mine-pill">{{tr.t('会员中心 ›', lang)}}</view>
   </view>
 
   <view class="mine-orders">
@@ -103,7 +103,6 @@
         <view class="mine-all-arrow"></view>
       </view>
     </view>
-  </view>
   </view>
 
   <view class="mine-wallet" bindtap="go" data-url="/pages/wallet/wallet">
