@@ -182,7 +182,9 @@ describe("wallet API", () => {
       .expect(200);
     const enrollmentId = enrolled.body.data.enrollmentId;
     seed.db.prepare("UPDATE enrollments SET pay_amount=1 WHERE id=?").run(enrollmentId);
-    seed.db.prepare("UPDATE schedules SET start_date=date('now','localtime') WHERE id=?").run(seed.individualScheduleId);
+    seed.db
+      .prepare("UPDATE schedules SET start_date=date('now','localtime'), min_group_size=1 WHERE id=?")
+      .run(seed.individualScheduleId);
     const paid = await agent
       .post("/api/pay/for-enrollment")
       .set(auth(token))

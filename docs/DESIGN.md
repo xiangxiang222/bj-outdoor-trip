@@ -230,7 +230,7 @@ User 1──n Favorite / PointsLedger / Review
 
 真实微信支付：服务器 `.env` 配齐 AppSecret 与 APIv2 密钥，`WX_PAY_MOCK=0`。小程序 `wx.requestPayment` 后调 `POST /pay/confirm` 查单；微信也会 POST `/pay/wechat/notify`。H5 无法使用小程序 JSAPI，提示去小程序付款。团费可自己付、他人代付或按金额分摊；取消/解散按各付款人原路退（演示记退款单；真收款另需商户 API 证书 `WX_MCH_CERT_PATH` / `WX_MCH_KEY_PATH`）。
 
-山野团退费档存在 `settings.refund_rules`，默认 10 天前 100%、3 天前 80%、不足 3 天（含出发当天未正式开团）50%、导游点正式开团后 0%。线路 `refund_rules_json` 为空则用全局；后台可按线路覆盖。用户自行取消按档位计算；解散与后台代取消仍全额。同城局不走这套比例。
+山野团退费档存在 `settings.refund_rules`，默认 10 天前 100%、3 天前 80%、不足 3 天（含出发当天未正式开团）50%、导游点正式开团后 0%。线路 `refund_rules_json` 为空则用全局；后台可按线路覆盖。未成团时用户取消和到期自动解散都按实付全额退回。已成团后用户自行取消按档位计算；解散与后台代取消仍全额。同城局不走这套比例。
 
 ### 4.4 人口画像
 

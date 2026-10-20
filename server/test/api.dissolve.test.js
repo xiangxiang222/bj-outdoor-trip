@@ -191,6 +191,7 @@ describe("dissolve group", () => {
 
     const result = await dissolveExpiredUnformed({ now: dayjs().format("YYYY-MM-DD") });
     assert.ok(result.ids.includes(seed.individualScheduleId));
+    assert.equal(result.refundAmount, 3);
     assert.equal(result.ids.includes(seed.companyScheduleId), false);
 
     const gone = seed.db.prepare("SELECT status, cancel_reason FROM schedules WHERE id=?").get(seed.individualScheduleId);
