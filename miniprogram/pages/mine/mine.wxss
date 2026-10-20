@@ -112,7 +112,22 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-all-ico::before { top: 14rpx; }
 .mine-all-ico::after { top: 24rpx; }
 .mine-play { display: flex; background: #fff; margin: 0 24rpx 16rpx; border-radius: 24rpx; padding: 24rpx 8rpx 20rpx; }
-.mine-play > view { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8rpx; font-size: calc(22rpx * var(--ui-scale)); color: #1a1a1a; }
+.mine-play > view { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8rpx; font-size: calc(20rpx * var(--ui-scale)); color: #1a1a1a; }
+.mine-play text { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mine-cam { width: 52rpx; height: 40rpx; border: 3rpx solid #1a1a1a; border-radius: 8rpx; position: relative; box-sizing: border-box; }
+.mine-cam::before { content: ""; position: absolute; left: 14rpx; top: 8rpx; width: 16rpx; height: 16rpx; border: 3rpx solid #1a1a1a; border-radius: 50%; box-sizing: border-box; }
+.mine-cam::after { content: ""; position: absolute; left: 8rpx; top: -10rpx; width: 16rpx; height: 10rpx; border: 3rpx solid #1a1a1a; border-bottom: 0; border-radius: 6rpx 6rpx 0 0; box-sizing: border-box; }
+.mine-page.is-dark .mine-cam,
+.mine-page.is-dark .mine-cam::before,
+.mine-page.is-dark .mine-cam::after { border-color: #f2f2f2; }
+.mine-rec { display: flex; flex-wrap: wrap; margin: 0 24rpx 16rpx; gap: 16rpx; }
+.mine-rec > view { width: calc(50% - 8rpx); background: #fff; border-radius: 16rpx; overflow: hidden; padding-bottom: 16rpx; }
+.mine-rec image, .mine-rec-ph { width: 100%; height: 280rpx; display: block; background: #eee; }
+.mine-rec-ph { display: flex; align-items: center; justify-content: center; color: #8d8d8d; font-size: 48rpx; }
+.mine-rec-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 12rpx 12rpx 0; font-size: calc(26rpx * var(--ui-scale)); line-height: 1.35; color: #1a1a1a; min-height: 70rpx; }
+.mine-rec-price { display: block; margin: 8rpx 12rpx 0; color: #e23d3d; font-size: calc(32rpx * var(--ui-scale)); font-weight: 700; }
+.mine-page.is-dark .mine-rec > view { background: #1c1c1e; }
+.mine-page.is-dark .mine-rec-title { color: #f2f2f2; }
 .mine-play image { width: 56rpx; height: 56rpx; }
 .mine-page.is-dark .mine-play { color: #f2f2f2; }
 .mine-wallet { display: grid; grid-template-columns: repeat(4, 1fr); align-items: start; background: #fff; margin: 0 24rpx 8rpx; border-radius: 24rpx; padding: 24rpx 8rpx 20rpx; text-align: center; }

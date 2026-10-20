@@ -505,6 +505,9 @@ function scheduleView(sch, req, opts = {}) {
     guide,
     leaders,
     photographer: light ? null : photographerOf(sch.id, req),
+    ...(opts.photoSlot
+      ? { photoOpen: (sch.channel || "trip") !== "activity" && !photographerOf(sch.id, req) }
+      : {}),
     leaderRecruitCopy: light ? "" : leaderRecruitCopy,
     ...(req.adminId
       ? {
@@ -1551,7 +1554,9 @@ router.get("/schedules", (req, res) => {
     args.push(channel);
   }
   sql += " ORDER BY start_date";
-  let rows = db().prepare(sql).all(...args).map((s) => scheduleView(s, req, { feed: true }));
+  const photoSlot = String(req.query.photoOpen || "") === "1";
+  let rows = db().prepare(sql).all(...args).map((s) => scheduleView(s, req, { feed: true, photoSlot }));
+  if (photoSlot) rows = rows.filter((s) => s.photoOpen);
   if (city) rows = rows.filter((s) => s.city === city);
   if (tag) rows = rows.filter((s) => (s.playTags || []).some((t) => t.name === tag || String(t.id) === String(tag)));
   res.json({ ok: true, data: rows });

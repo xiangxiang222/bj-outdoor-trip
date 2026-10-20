@@ -125,17 +125,17 @@
           <i class="mine-sign-ico"></i>
           <span>{{ hub.signedToday ? "已签到" : "签到" }}</span>
         </button>
-        <button type="button" @click="goAuth('/m/lottery')">
-          <img :src="'/static/mine/lottery.png?v=10'" alt="" />
-          <span>抽奖</span>
+        <button type="button" @click="goAuth('/m/student')">
+          <img :src="'/static/mine/campus.png?v=10'" alt="" />
+          <span>{{ campusShort }}</span>
         </button>
-        <button type="button" @click="goAuth('/m/publish')">
-          <img :src="'/static/mine/publish.png?v=10'" alt="" />
-          <span>去发团</span>
+        <button type="button" @click="goAuth('/m/leader')">
+          <img :src="'/static/mine/leader.png?v=10'" alt="" />
+          <span>{{ leaderShort }}</span>
         </button>
-        <button type="button" @click="goAuth('/m/coupons')">
-          <img :src="'/static/mine/wal-coupon.png?v=11'" alt="" />
-          <span>优惠券</span>
+        <button type="button" @click="goAuth('/m/photo-apply')">
+          <i class="mine-cam"></i>
+          <span>摄影师申请</span>
         </button>
         <button type="button" @click="goAuth('/m/feedback')">
           <img :src="'/static/mine/feedback.png?v=10'" alt="" />
@@ -152,19 +152,14 @@
       </div>
     </div>
 
-    <p class="cell-label">常用</p>
-    <div class="mine-grid">
-      <button type="button" @click="goAuth('/m/favorites')"><img :src="'/static/mine/fav.png?v=10'" alt="" />我的收藏</button>
-      <button type="button" @click="goAuth('/m/views')"><img :src="'/static/mine/views.png?v=10'" alt="" />最近看过</button>
-      <button type="button" @click="goAuth('/m/companions')"><img :src="'/static/mine/people.png?v=10'" alt="" />常用报名人</button>
-      <button type="button" @click="goAuth('/m/follows')"><img :src="'/static/mine/follow.png?v=10'" alt="" />关注领队</button>
-      <button type="button" @click="goAuth('/m/student')"><img :src="'/static/mine/campus.png?v=10'" alt="" />{{ campusShort }}</button>
-      <button type="button" @click="goAuth('/m/leader')"><img :src="'/static/mine/leader.png?v=10'" alt="" />{{ leaderShort }}</button>
-      <button type="button" @click="goAuth('/m/publish')"><img :src="'/static/mine/publish.png?v=10'" alt="" />去发团</button>
-      <button type="button" @click="goReferral"><img :src="'/static/mine/referral.png?v=10'" alt="" />推荐报名</button>
-      <button type="button" @click="goAuth('/m/lottery')"><img :src="'/static/mine/lottery.png?v=10'" alt="" />抽奖</button>
-      <button type="button" @click="goAuth('/m/route-apply')"><img :src="'/static/mine/route.png?v=10'" alt="" />收录线路</button>
-      <button type="button" @click="goAuth('/m/feedback')"><img :src="'/static/mine/feedback.png?v=10'" alt="" />建议反馈</button>
+    <p v-if="picks.length" class="cell-label">路线推荐</p>
+    <div class="mine-rec" v-if="picks.length">
+      <button v-for="item in picks" :key="item.id" type="button" @click="$router.push('/m/route/' + item.id)">
+        <img v-if="item.cover" :src="item.cover" alt="" />
+        <span v-else class="mine-rec-ph">{{ (item.title || "线").slice(0, 1) }}</span>
+        <strong>{{ item.title }}</strong>
+        <b v-if="item.fromPrice != null"><span>¥</span>{{ item.fromPrice }}</b>
+      </button>
     </div>
 
     <p class="cell-label">服务</p>
@@ -212,6 +207,7 @@ const coupons = ref([]);
 const hub = ref({});
 const picker = ref(false);
 const defaults = ref([]);
+const picks = ref([]);
 
 const campusShort = computed(() => {
   const u = store.profile;
@@ -233,7 +229,10 @@ const groupLabel = computed(() => {
   return "团体认证";
 });
 
-onMounted(load);
+onMounted(() => {
+  load();
+  loadPicks();
+});
 
 async function load() {
   await store.fetchMe().catch(() => {});
@@ -265,9 +264,15 @@ function goOrders(tab) {
   if (!store.token) goLogin("/m/orders?tab=" + tab);
   else router.push({ path: "/m/orders", query: { tab } });
 }
-function goReferral() {
-  if (!store.token) goLogin("/m/mine");
-  else router.push(store.profile?.id ? "/m/user/" + store.profile.id : "/m/orders");
+async function loadPicks() {
+  try {
+    const rows = (await http.get("/routes")).data || [];
+    const ranked = rows.slice().sort((a, b) => (b.upcoming?.length || 0) - (a.upcoming?.length || 0));
+    const withCover = ranked.filter((r) => r.cover);
+    picks.value = (withCover.length >= 4 ? withCover : ranked).slice(0, 6);
+  } catch {
+    picks.value = [];
+  }
 }
 async function openAvatar() {
   if (!store.token) {
