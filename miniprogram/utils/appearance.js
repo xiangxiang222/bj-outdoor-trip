@@ -159,8 +159,8 @@ function pageStyle(look, freezeScale) {
   const hero = look.textMode ? "0px" : "360rpx";
   const font = FONTS[look.font] || FONTS.system;
   const wash = dark
-    ? "overflow-x:hidden;width:100%;background-color:#121214;background-image:linear-gradient(to bottom,rgba(122,78,146,.5),rgba(122,78,146,0)),linear-gradient(to bottom,rgba(122,78,146,.5),rgba(122,78,146,0)),linear-gradient(to bottom,#5c3d78 0,#5c3d78 72px,rgba(18,18,20,0) 140px);background-size:16px 50vh,16px 50vh,100% 160px;background-position:left top,right top,center top;background-repeat:no-repeat;"
-    : "overflow-x:hidden;width:100%;background-color:#f3f4f6;background-image:linear-gradient(to bottom,rgba(122,78,146,.5),rgba(122,78,146,0)),linear-gradient(to bottom,rgba(122,78,146,.5),rgba(122,78,146,0)),linear-gradient(to bottom,#7a4e92 0,#7a4e92 72px,rgba(243,244,246,0) 140px);background-size:16px 50vh,16px 50vh,100% 160px;background-position:left top,right top,center top;background-repeat:no-repeat;";
+    ? "overflow-x:hidden;width:100%;background-color:#121214;background-image:none;"
+    : "overflow-x:hidden;width:100%;background-color:#f3f4f6;background-image:none;";
   return vars + "--ui-scale:" + scale + ";--media:" + media + ";--media-grid:" + grid + ";--hero-h:" + hero + ";" + wash + "color:var(--ink);font-family:" + font + ";";
 }
 
@@ -190,7 +190,7 @@ function applyChrome(look) {
   const dark = isDark(look);
   wx.setNavigationBarColor({
     frontColor: "#ffffff",
-    backgroundColor: dark ? "#5c3d78" : "#7a4e92",
+    backgroundColor: dark ? "#6e548c" : "#8a5ea2",
     fail() {},
   });
   wx.setTabBarStyle({
@@ -199,7 +199,7 @@ function applyChrome(look) {
     backgroundColor: dark ? "#1c1c1e" : "#ffffff",
     fail() {},
   });
-  const chrome = dark ? "#5c3d78" : "#7a4e92";
+  const chrome = dark ? "#6e548c" : "#8a5ea2";
   wx.setBackgroundColor({
     backgroundColor: chrome,
     backgroundColorTop: chrome,

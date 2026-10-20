@@ -1,7 +1,7 @@
 @import "../../styles/account.wxss";
 page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helvetica Neue", sans-serif; }
 .mine-page {
-  background: transparent;
+  background: linear-gradient(180deg, #8a5ea2 0, #8a5ea2 180rpx, #d4bce4 360rpx, #f3f4f6 520rpx);
   padding-bottom: 24rpx;
 }
 .cell-label { margin: 24rpx 32rpx 8rpx; font-size: calc(24rpx * var(--ui-scale)); color: #9a9a9a; font-weight: 400; }
