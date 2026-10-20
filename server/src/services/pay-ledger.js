@@ -115,6 +115,47 @@ function payProgress(en) {
   return { payAmount, paidAmount, remainAmount };
 }
 
+const REVENUE_SKIP_SCENES = "('member','wallet_topup','withdraw','trip_bounty','route_bounty','referral')";
+
+function revenueWhere() {
+  return `p.status='success' AND IFNULL(p.refund_of,0)=0
+      AND IFNULL(p.scene,'') NOT IN ${REVENUE_SKIP_SCENES}
+      AND IFNULL(u.is_virtual,0)=0 AND IFNULL(eu.is_virtual,0)=0`;
+}
+
+function revenueFrom() {
+  return `FROM payments p
+    JOIN schedules s ON s.id=p.schedule_id
+    LEFT JOIN routes r ON r.id=s.route_id
+    LEFT JOIN users u ON u.id=p.user_id
+    LEFT JOIN enrollments e ON e.id=p.enrollment_id
+    LEFT JOIN users eu ON eu.id=e.user_id
+    WHERE ${revenueWhere()}`;
+}
+
+function scheduleRevenue(scheduleId) {
+  const row = getDb()
+    .prepare(`SELECT IFNULL(SUM(p.amount - IFNULL(p.refunded_amount,0)),0) AS s ${revenueFrom()} AND p.schedule_id=?`)
+    .get(scheduleId);
+  return Number(row?.s || 0);
+}
+
+function revenueBreakdown() {
+  const db = getDb();
+  const total = Number(db.prepare(`SELECT IFNULL(SUM(p.amount - IFNULL(p.refunded_amount,0)),0) AS s ${revenueFrom()}`).get().s || 0);
+  const byRoute = db
+    .prepare(
+      `SELECT s.route_id AS id, IFNULL(SUM(p.amount - IFNULL(p.refunded_amount,0)),0) AS revenue ${revenueFrom()} GROUP BY s.route_id`
+    )
+    .all();
+  const byDay = db
+    .prepare(
+      `SELECT r.days AS days, IFNULL(SUM(p.amount - IFNULL(p.refunded_amount,0)),0) AS revenue ${revenueFrom()} GROUP BY r.days`
+    )
+    .all();
+  return { total, byRoute, byDay };
+}
+
 function collectedMapForSchedule(scheduleId) {
   const rows = getDb()
     .prepare(
@@ -277,6 +318,8 @@ module.exports = {
   refundableOf,
   payProgress,
   collectedMapForSchedule,
+  scheduleRevenue,
+  revenueBreakdown,
   contributorsOf,
   ensurePayShareToken,
   parsePayYuan,

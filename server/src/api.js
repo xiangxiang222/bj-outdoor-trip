@@ -46,7 +46,7 @@ const { publicUserProfile, updateScheduleTrip, chainItem, galleryOfSchedule } = 
 const { activityCoverPath, activityCoverBlob } = require("./services/activity-cover");
 const { thumbPublicPath } = require("./services/thumbs");
 const { payEnrollment, buyWalletTopup, payCompanySchedule, confirmTrade, orderByTradeNo, applyWechatSession, applyEnrollmentCharge } = require("./services/payment");
-const { payShareView, collectedMapForSchedule, payProgress, ensurePayShareToken, contributorsOf } = require("./services/pay-ledger");
+const { payShareView, collectedMapForSchedule, payProgress, ensurePayShareToken, contributorsOf, scheduleRevenue, revenueBreakdown } = require("./services/pay-ledger");
 const { refundMembership } = require("./services/member");
 const { memberState, setMemberLevel } = require("./services/tiers");
 const { addPhoto, removePhoto, ensureReferralCode, resolveLiveUser, adoptOrganizer } = require("./services/profile");
@@ -422,7 +422,7 @@ function scheduleView(sch, req, opts = {}) {
     (sch.cost_meal || 0) +
     (sch.cost_guide || 0) +
     (sch.cost_other || 0);
-    const revenue = db().prepare("SELECT IFNULL(SUM(pay_amount),0) AS s FROM enrollments WHERE schedule_id=? AND status='joined'").get(sch.id).s;
+    const revenue = scheduleRevenue(sch.id);
   const fullRoute = light && !briefRoute ? null : mapRoute(route, req);
   if ((sch.channel || "trip") === "activity" && fullRoute && !String(fullRoute.cover || "").trim()) {
     const fallback = attachAssetHost(req, activityCoverPath(activityCoverBlob(route, sch)));
@@ -2474,25 +2474,30 @@ router.get("/admin/dashboard", authAdmin, requireCap("ops"), (req, res) => {
   const routeCount = db().prepare("SELECT COUNT(*) c FROM routes").get().c;
   const userCount = db().prepare("SELECT COUNT(*) c FROM users WHERE deleted_at IS NULL").get().c;
   const enrollCount = db().prepare("SELECT COUNT(*) c FROM enrollments WHERE status!='cancelled'").get().c;
-  const revenue = db().prepare("SELECT IFNULL(SUM(pay_amount),0) s FROM enrollments WHERE pay_status='paid'").get().s;
+  const money = revenueBreakdown();
+  const revenue = money.total;
+  const routeMoney = new Map(money.byRoute.map((row) => [Number(row.id), Number(row.revenue || 0)]));
+  const dayMoney = new Map(money.byDay.map((row) => [Number(row.days), Number(row.revenue || 0)]));
   const pending = db().prepare("SELECT IFNULL(SUM(1),0) s FROM enrollments WHERE pay_status='company_pending' AND status='joined'").get().s;
   const byRoute = db()
     .prepare(
-      `SELECT r.id, r.title, r.days, COUNT(e.id) AS people, IFNULL(SUM(CASE WHEN e.pay_status='paid' THEN e.pay_amount ELSE 0 END),0) AS revenue
+      `SELECT r.id, r.title, r.days, COUNT(e.id) AS people
        FROM routes r
        LEFT JOIN schedules s ON s.route_id=r.id
        LEFT JOIN enrollments e ON e.schedule_id=s.id AND e.status!='cancelled'
        GROUP BY r.id ORDER BY people DESC`
     )
-    .all();
+    .all()
+    .map((row) => ({ ...row, revenue: routeMoney.get(Number(row.id)) || 0 }));
   const byDay = db()
     .prepare(
-      `SELECT r.days, COUNT(e.id) people, IFNULL(SUM(CASE WHEN e.pay_status='paid' THEN e.pay_amount ELSE 0 END),0) revenue
+      `SELECT r.days, COUNT(e.id) people
        FROM routes r LEFT JOIN schedules s ON s.route_id=r.id
        LEFT JOIN enrollments e ON e.schedule_id=s.id AND e.status!='cancelled'
        GROUP BY r.days ORDER BY r.days`
     )
-    .all();
+    .all()
+    .map((row) => ({ ...row, revenue: dayMoney.get(Number(row.days)) || 0 }));
   res.json({ ok: true, data: { routeCount, userCount, enrollCount, revenue, pending, byRoute, byDay } });
 });
 
