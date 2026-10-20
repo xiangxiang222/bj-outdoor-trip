@@ -2082,12 +2082,10 @@ html.admin-theme .el-dialog__footer {
   color: #666;
 }
 .mine-member {
-  position: relative;
-  z-index: 2;
   width: 100%;
-  margin-top: 8px;
+  margin: 8px 0 0;
   border: 0;
-  border-radius: 12px;
+  border-radius: 12px 12px 0 0;
   padding: 14px 16px;
   display: flex;
   justify-content: space-between;
@@ -2129,12 +2127,10 @@ html.admin-theme .el-dialog__footer {
 .mine-tool-ico { position: relative; width: 24px; height: 24px; display: grid; place-items: center; }
 .mine-tool-ico img { width: 22px; height: 22px; display: block; object-fit: contain; filter: invert(1); }
 .mine-orders {
-  position: relative;
-  z-index: 1;
-  margin: -12px 0 10px;
+  margin: 0 0 10px;
   background: #fff;
-  border-radius: 12px;
-  padding: 22px 0 12px;
+  border-radius: 0 0 12px 12px;
+  padding: 12px 0;
   font-family: "PingFang SC", "Helvetica Neue", sans-serif;
 }
 .mine-traces {
