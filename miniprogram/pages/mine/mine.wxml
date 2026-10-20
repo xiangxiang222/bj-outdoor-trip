@@ -77,22 +77,21 @@
     </view>
   </view>
 
-  <view class="mine-links">
-    <view bindtap="go" data-url="/pages/views/views">
-      <text>{{tr.t('足迹', lang)}}</text>
-      <text class="mine-link-num">{{hub.viewCount || 0}}</text>
-    </view>
-    <view bindtap="go" data-url="/pages/favorites/favorites">
-      <text>{{tr.t('收藏', lang)}}</text>
-      <text class="mine-link-num">{{hub.favoriteCount || 0}}</text>
-    </view>
-    <view bindtap="go" data-url="/pages/follows/follows">
-      <text>{{tr.t('关注', lang)}}</text>
-      <text class="mine-link-num">{{hub.followCount || 0}}</text>
-    </view>
-  </view>
-
   <view class="mine-orders">
+    <view class="mine-links">
+      <view bindtap="go" data-url="/pages/views/views">
+        <text>{{tr.t('足迹', lang)}}</text>
+        <text class="mine-link-num">{{hub.viewCount || 0}}</text>
+      </view>
+      <view bindtap="go" data-url="/pages/favorites/favorites">
+        <text>{{tr.t('收藏', lang)}}</text>
+        <text class="mine-link-num">{{hub.favoriteCount || 0}}</text>
+      </view>
+      <view bindtap="go" data-url="/pages/follows/follows">
+        <text>{{tr.t('关注', lang)}}</text>
+        <text class="mine-link-num">{{hub.followCount || 0}}</text>
+      </view>
+    </view>
     <view class="mine-order-row">
       <view class="mine-shortcuts">
         <view bindtap="goOrders" data-tab="unpaid">

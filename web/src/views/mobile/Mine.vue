@@ -63,22 +63,21 @@
         </div>
       </div>
 
-      <div class="mine-links">
-        <button type="button" @click="goAuth('/m/views')">
-          <span>足迹</span>
-          <b>{{ hub.viewCount || 0 }}</b>
-        </button>
-        <button type="button" @click="goAuth('/m/favorites')">
-          <span>收藏</span>
-          <b>{{ hub.favoriteCount || 0 }}</b>
-        </button>
-        <button type="button" @click="goAuth('/m/follows')">
-          <span>关注</span>
-          <b>{{ hub.followCount || 0 }}</b>
-        </button>
-      </div>
-
       <div class="mine-orders">
+        <div class="mine-links">
+          <button type="button" @click="goAuth('/m/views')">
+            <span>足迹</span>
+            <b>{{ hub.viewCount || 0 }}</b>
+          </button>
+          <button type="button" @click="goAuth('/m/favorites')">
+            <span>收藏</span>
+            <b>{{ hub.favoriteCount || 0 }}</b>
+          </button>
+          <button type="button" @click="goAuth('/m/follows')">
+            <span>关注</span>
+            <b>{{ hub.followCount || 0 }}</b>
+          </button>
+        </div>
         <div class="mine-order-row">
           <div class="mine-shortcuts">
             <button type="button" @click="goOrders('unpaid')">
