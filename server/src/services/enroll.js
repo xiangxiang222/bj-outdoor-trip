@@ -397,6 +397,8 @@ async function cancelEnrollment(enrollmentId, userId, options = {}) {
       startedAt: sch.started_at,
       channel: sch.channel || "trip",
       route,
+      minGroupSize: sch.min_group_size,
+      realEnrolled: realEnrolledCount(sch.id),
     });
     if (!quote.canCancel) fail(400, quote.hint || "当前不可取消报名");
     refundPercent = quote.percent;

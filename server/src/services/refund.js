@@ -155,6 +155,10 @@ function refundPolicyView(routeRow, schedule) {
     items: copy.items,
   };
   if (schedule) {
+    const realEnrolled =
+      schedule.realEnrolled ??
+      schedule.real_enrolled ??
+      (schedule.id ? require("./helpers").realEnrolledCount(schedule.id) : undefined);
     const quote = cancelQuote(
       { status: "joined", pay_status: "unpaid", pay_amount: 0 },
       {
@@ -163,6 +167,8 @@ function refundPolicyView(routeRow, schedule) {
         startedAt: schedule.started_at || schedule.startedAt,
         channel: schedule.channel || "trip",
         tiers: rules.tiers,
+        minGroupSize: schedule.min_group_size ?? schedule.minGroupSize,
+        realEnrolled,
       }
     );
     view.current = {
@@ -201,7 +207,25 @@ function scheduleLike(sch) {
       tiers = getGlobalRefundRules().tiers;
     }
   }
-  return { status, startDate, startedAt, channel, tiers };
+  return {
+    status,
+    startDate,
+    startedAt,
+    channel,
+    tiers,
+    minGroupSize: sch.minGroupSize ?? sch.min_group_size,
+    realEnrolled: sch.realEnrolled ?? sch.real_enrolled,
+  };
+}
+
+function tripHasFormed(schedule) {
+  const status = schedule.status;
+  if (status === "confirmed" || status === "full" || status === "finished") return true;
+  const min = Number(schedule.minGroupSize ?? schedule.min_group_size);
+  const joined = Number(schedule.realEnrolled ?? schedule.real_enrolled);
+  if (!Number.isFinite(min) || !Number.isFinite(joined)) return true;
+  if (min <= 0) return false;
+  return joined >= min;
 }
 
 function cancelQuote(en, sch) {
@@ -231,7 +255,8 @@ function cancelQuote(en, sch) {
   if (!Number.isFinite(remaining) || remaining < 0) {
     return { canCancel: false, percent: 0, remainingDays: remaining, started: false, amount: 0, hint: "已过出发日，不可取消" };
   }
-  const percent = matchPercent(schedule.tiers, remaining);
+  const formed = tripHasFormed(schedule);
+  const percent = formed ? matchPercent(schedule.tiers, remaining) : 100;
   const { refundableOf } = require("./pay-ledger");
   const collected = en && en.id ? refundableOf(en) : en && en.pay_status === "paid" ? Number(en.pay_amount || 0) : 0;
   const paid = collected > 0;
@@ -246,11 +271,15 @@ function cancelQuote(en, sch) {
     };
   }
   const amount = paid ? refundAmount(collected, percent) : 0;
-  const hint = paid
-    ? `现在取消可退 ${percent}%（¥${amount}）`
-    : remaining === 0
-      ? `出发当天尚未正式开团，取消可退 ${percent}%`
-      : `距出发还有 ${remaining} 天，取消可退 ${percent}%`;
+  const hint = !formed
+    ? paid
+      ? `未成团，取消可全额退回（¥${amount}）`
+      : "未成团，取消可全额退回"
+    : paid
+      ? `现在取消可退 ${percent}%（¥${amount}）`
+      : remaining === 0
+        ? `出发当天尚未正式开团，取消可退 ${percent}%`
+        : `距出发还有 ${remaining} 天，取消可退 ${percent}%`;
   return { canCancel: true, percent, remainingDays: remaining, started: false, amount, hint };
 }
 

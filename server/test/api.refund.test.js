@@ -32,7 +32,7 @@ describe("refund policy API", () => {
     assert.equal(route.body.data.refundPolicy.tiers[0].percent, 100);
 
     const sch = await agent.get(`/api/schedules/${seed.individualScheduleId}`).expect(200);
-    assert.equal(sch.body.data.refundPolicy.current.percent, 80);
+    assert.equal(sch.body.data.refundPolicy.current.percent, 100);
     assert.equal(sch.body.data.refundPolicy.current.canCancel, true);
   });
 
@@ -116,6 +116,7 @@ describe("refund policy API", () => {
       .expect(200);
     const id = enrolled.body.data.enrollmentId;
     seed.db.prepare("UPDATE enrollments SET pay_status='paid', pay_amount=199 WHERE id=?").run(id);
+    seed.db.prepare("UPDATE schedules SET status='confirmed' WHERE id=?").run(seed.individualScheduleId);
 
     const cancelled = await agent.post(`/api/orders/${id}/cancel`).set(auth(token)).expect(200);
     assert.equal(cancelled.body.data.refundPercent, 80);
@@ -164,5 +165,32 @@ describe("refund policy API", () => {
     const started = await agent.post(`/api/orders/${third.body.data.enrollmentId}/cancel`).set(auth(token));
     assert.equal(started.status, 400);
     assert.match(started.body.message, /正式开团后/);
+  });
+
+  it("refunds an unformed trip in full even on the departure day", async () => {
+    const token = await loginUser(agent);
+    const enrolled = await agent
+      .post("/api/enroll")
+      .set(auth(token))
+      .send({
+        scheduleId: seed.individualScheduleId,
+        travelerName: "林北野",
+        travelerPhone: "13800138000",
+        idCard: ID.maleBj,
+        emergencyName: "紧急联系人",
+        emergencyPhone: "13700000002",
+        waiverAccepted: true,
+        healthOk: true,
+      })
+      .expect(200);
+    const id = enrolled.body.data.enrollmentId;
+    seed.db.prepare("UPDATE enrollments SET pay_status='paid', pay_amount=199 WHERE id=?").run(id);
+    seed.db
+      .prepare("UPDATE schedules SET start_date=?, end_date=?, status='recruiting' WHERE id=?")
+      .run(dayjs().format("YYYY-MM-DD"), dayjs().format("YYYY-MM-DD"), seed.individualScheduleId);
+
+    const cancelled = await agent.post(`/api/orders/${id}/cancel`).set(auth(token)).expect(200);
+    assert.equal(cancelled.body.data.refundPercent, 100);
+    assert.equal(cancelled.body.data.refundAmount, 199);
   });
 });

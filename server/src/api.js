@@ -2081,6 +2081,8 @@ router.get("/orders", authUser, (req, res) => {
         startedAt: e.started_at,
         channel: e.channel,
         refundRulesJson: e.refund_rules_json,
+        minGroupSize: e.min_group_size,
+        realEnrolled: e.real_enrolled,
       });
       const progress = payProgress(e);
       const { refund_rules_json, ...rest } = e;
