@@ -11,20 +11,23 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 }
 .mine-nav.is-dark { background: #9a4584; }
 .mine-page {
-  background: #f3f4f6;
+  background-color: #f3f4f6;
+  background-image: linear-gradient(180deg, #c045ab 0, #c045ab 160rpx, #f3f4f6 760rpx);
+  background-repeat: no-repeat;
   padding-bottom: 24rpx;
   margin-top: -8rpx;
 }
 .mine-page.is-dark {
-  background: #121214;
+  background-color: #121214;
+  background-image: linear-gradient(180deg, #9a4584 0, #9a4584 160rpx, #121214 760rpx);
+  background-repeat: no-repeat;
   color: #f2f2f2;
 }
 .cell-label { margin: 24rpx 32rpx 8rpx; font-size: calc(24rpx * var(--ui-scale)); color: #9a9a9a; font-weight: 400; }
 .cell-group { background: #fff; border-radius: 24rpx; margin: 0 24rpx 8rpx; overflow: hidden; }
 .cell { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 24rpx; border-bottom: 1rpx solid #f0f1f3; }
 .cell:last-child { border-bottom: 0; }
-.mine-head { display: flex; align-items: center; gap: 16rpx; margin: 0; padding: 16rpx 32rpx 48rpx; background: #c045ab; }
-.mine-page.is-dark .mine-head { background: #9a4584; }
+.mine-head { display: flex; align-items: center; gap: 16rpx; margin: 0; padding: 16rpx 32rpx 20rpx; background: transparent; }
 .mine-user-main { flex: 1; min-width: 0; }
 .mine-tags { display: flex; align-items: center; gap: 12rpx; margin-top: 8rpx; }
 .mine-lv { background: #1a1a1a; color: #f6e7c1; border-radius: 6rpx; padding: 2rpx 10rpx; font-size: calc(20rpx * var(--ui-scale)); font-weight: 700; }
@@ -50,7 +53,7 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-tools.is-dark .mine-tool-ico image { filter: invert(1); }
 .mine-badge { position: absolute; top: -8rpx; right: -16rpx; min-width: 28rpx; height: 28rpx; line-height: 28rpx; padding: 0 6rpx; border-radius: 99rpx; background: #e23d3d; color: #fff; font-size: 18rpx; text-align: center; }
 .mine-expire { color: #c45c26; font-size: calc(20rpx * var(--ui-scale)); }
-.mine-sheet { background: #fff; margin: -32rpx 24rpx 16rpx; border-radius: 24rpx; padding: 24rpx 8rpx 16rpx; position: relative; z-index: 1; }
+.mine-sheet { background: #fff; margin: 0 24rpx 16rpx; border-radius: 24rpx; padding: 24rpx 8rpx 16rpx; }
 .mine-page.is-dark .mine-nav,
 .mine-page.is-dark .title { color: #f2f2f2; }
 .mine-page.is-dark .mine-chip { color: #fff; }

@@ -2023,7 +2023,7 @@ html.admin-theme .el-dialog__footer {
 .mine-page {
   margin: -2px 0 0;
   padding: 0 12px 16px;
-  background: transparent;
+  background: #f3f4f6 linear-gradient(180deg, #c045ab 0, #c045ab 88px, #f3f4f6 460px) no-repeat;
   color: #1a1a1a;
 }
 .mine-head {
@@ -2031,8 +2031,8 @@ html.admin-theme .el-dialog__footer {
   align-items: center;
   gap: 12px;
   margin: 0 -12px;
-  padding: 10px 16px 28px;
-  background: #c045ab;
+  padding: 10px 16px 16px;
+  background: transparent;
 }
 .mine-name-hit { border: 0; background: transparent; text-align: left; font: inherit; color: inherit; cursor: pointer; padding: 0; display: block; }
 .mine-user {
@@ -2111,7 +2111,6 @@ html.admin-theme .el-dialog__footer {
   padding: 14px 8px 12px;
   margin-bottom: 10px;
 }
-.mine-sheet { margin-top: -16px; position: relative; z-index: 1; }
 .mine-orders { padding: 12px 8px; }
 .mine-sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 0 8px 10px; }
 .mine-sheet-head button {
@@ -2545,7 +2544,6 @@ html[data-night="dark"] .mp-phone.is-mine .mp-body {
   background-color: #1a121c;
   background-image: none;
 }
-html[data-night="dark"] .mine-head { background: #9a4584; }
 html[data-night="dark"] .mp-phone.is-account .card,
 html[data-night="dark"] .mp-phone.is-account .cell-group,
 html[data-night="dark"] .card,
@@ -2578,7 +2576,7 @@ html[data-night="dark"] .mine-member strong { color: #f4f0f5; }
 html[data-night="dark"] .mine-member span { color: var(--muted); }
 html[data-night="dark"] .mine-avatar { background: var(--thu-soft); color: #f4f0f5; }
 html[data-night="dark"] .mine-page {
-  background: transparent;
+  background: #1a121c linear-gradient(180deg, #9a4584 0, #9a4584 88px, #1a121c 460px) no-repeat;
   color: #f4f0f5;
 }
 html[data-night="dark"] .mine-play { background: #1c1c1e; }
