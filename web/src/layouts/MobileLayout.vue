@@ -134,7 +134,7 @@ const subtitle = computed(() => {
     student: "认证后可走学生价",
     leader: "通过后可在团里报名领队",
     mine: "账号、权益与客服",
-    orders: "下一趟，以及走过的局",
+    orders: "待出发、待评价和全部报名",
     publish: "提交后需管理员审核",
     "route-apply": "通过后出现在线路目录",
     feedback: "体验问题、活动与领队",

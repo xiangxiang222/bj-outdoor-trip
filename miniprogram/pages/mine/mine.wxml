@@ -58,13 +58,6 @@
       </view>
       <view class="muted">{{tr.t('待支付', lang)}}</view>
     </view>
-    <view bindtap="goOrders" data-tab="waitlist">
-      <view class="mine-order-ico">
-        <image src="{{iconBase}}order-wait.png?v=4" mode="aspectFit" />
-        <text wx:if="{{hub.waitlistCount}}" class="mine-badge">{{hub.waitlistCount > 99 ? '99+' : hub.waitlistCount}}</text>
-      </view>
-      <view class="muted">{{tr.t('候补', lang)}}</view>
-    </view>
     <view bindtap="goOrders" data-tab="recruiting">
       <view class="mine-order-ico">
         <image src="/images/order-recruit.png" mode="aspectFit" />
@@ -85,6 +78,13 @@
         <text wx:if="{{hub.reviewCount}}" class="mine-badge">{{hub.reviewCount > 99 ? '99+' : hub.reviewCount}}</text>
       </view>
       <view class="muted">{{tr.t('待评价', lang)}}</view>
+    </view>
+    <view bindtap="goOrders" data-tab="waitlist">
+      <view class="mine-order-ico">
+        <image src="{{iconBase}}order-wait.png?v=4" mode="aspectFit" />
+        <text wx:if="{{hub.waitlistCount}}" class="mine-badge">{{hub.waitlistCount > 99 ? '99+' : hub.waitlistCount}}</text>
+      </view>
+      <view class="muted">{{tr.t('候补中', lang)}}</view>
     </view>
     <view bindtap="goOrders" data-tab="refund">
       <view class="mine-order-ico">

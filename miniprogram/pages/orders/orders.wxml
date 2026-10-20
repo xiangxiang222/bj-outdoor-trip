@@ -11,12 +11,12 @@
 <block wx:else>
   <view class="chips">
     <view class="chip {{tab=='unpaid'?'on':''}}" bindtap="setTab" data-tab="unpaid">{{tr.t('待支付', lang)}} {{tr.t(unpaid.length, lang)}}</view>
-    <view class="chip {{tab=='waitlist'?'on':''}}" bindtap="setTab" data-tab="waitlist">{{tr.t('候补', lang)}} {{tr.t(waitlist.length, lang)}}</view>
     <view class="chip {{tab=='recruiting'?'on':''}}" bindtap="setTab" data-tab="recruiting">{{tr.t('招募中', lang)}} {{tr.t(recruiting.length, lang)}}</view>
     <view class="chip {{tab=='depart'?'on':''}}" bindtap="setTab" data-tab="depart">{{tr.t('待出发', lang)}} {{tr.t(upcoming.length, lang)}}</view>
     <view class="chip {{tab=='review'?'on':''}}" bindtap="setTab" data-tab="review">{{tr.t('待评价', lang)}} {{tr.t(review.length, lang)}}</view>
+    <view class="chip {{tab=='waitlist'?'on':''}}" bindtap="setTab" data-tab="waitlist">{{tr.t('候补中', lang)}} {{tr.t(waitlist.length, lang)}}</view>
     <view class="chip {{tab=='refund'?'on':''}}" bindtap="setTab" data-tab="refund">{{tr.t('已退款', lang)}} {{tr.t(refund.length, lang)}}</view>
-    <view class="chip {{tab=='past'?'on':''}}" bindtap="setTab" data-tab="past">{{tr.t('历史', lang)}} {{tr.t(past.length, lang)}}</view>
+    <view class="chip {{tab=='all'?'on':''}}" bindtap="setTab" data-tab="all">{{tr.t('全部订单', lang)}} {{tr.t(all.length, lang)}}</view>
   </view>
 
   <block wx:if="{{tab=='depart'}}">
@@ -62,7 +62,7 @@
       <view wx:if="{{item.canCancel}}" class="cancel-link" catchtap="cancel" data-id="{{item.id}}">{{tr.t('取消报名', lang)}}</view>
     </view>
 
-    <view class="card" wx:if="{{!upcoming.length && !waitlist.length && !past.length}}">
+    <view class="card" wx:if="{{!all.length}}">
       <view class="pad">
         <view class="title">{{tr.t('还没有行程', lang)}}</view>
         <view class="muted">{{tr.t('去首页报团，或去活动页约一局。', lang)}}</view>
@@ -70,7 +70,7 @@
         <view class="btn ghost" bindtap="goActTab">{{tr.t('去同城局', lang)}}</view>
       </view>
     </view>
-    <view class="pad muted" wx:elif="{{!upcoming.length}}">{{tr.t(waitlist.length ? '没有已占座的行程。候补在「候补」里。' : '最近没有待出行。点「历史」看过往报名。', lang)}}</view>
+    <view class="pad muted" wx:elif="{{!upcoming.length}}">{{tr.t(waitlist.length ? '没有已占座的行程。候补在「候补中」里。' : '最近没有待出发。点「全部订单」看全部报名。', lang)}}</view>
   </block>
 
   <block wx:elif="{{tab=='waitlist'}}">
@@ -192,8 +192,8 @@
     <view class="pad muted" wx:if="{{!refund.length}}">{{tr.t('还没有退款记录。', lang)}}</view>
   </block>
 
-  <block wx:else>
-    <view class="card" wx:for="{{past}}" wx:key="id">
+  <block wx:elif="{{tab=='all'}}">
+    <view class="card" wx:for="{{all}}" wx:key="id">
       <view class="pad" bindtap="goSchedule" data-id="{{item.schedule_id}}">
         <view class="row">
           <view class="title">{{tr.t(item.title, lang)}}</view>
@@ -213,7 +213,7 @@
         </view>
       </view>
       <view wx:if="{{item.canAfter && item.completed}}" class="btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{tr.t('评价 / 评选', lang)}}</view>
-      <view wx:if="{{item.canAfter && item.canReview}}">
+      <view wx:if="{{item.reviewable}}">
         <view wx:if="{{reviewingId != item.id}}" class="btn ghost" catchtap="openReview" data-id="{{item.id}}">{{tr.t('去评价', lang)}}</view>
         <view wx:else class="pad">
           <view class="star-pick">
@@ -228,6 +228,6 @@
       </view>
       <view wx:elif="{{item.reviewed}}" class="pad muted">{{tr.t('已评价', lang)}}</view>
     </view>
-    <view class="pad muted" wx:if="{{!past.length}}">{{tr.t('还没有历史报名。', lang)}}</view>
+    <view class="pad muted" wx:if="{{!all.length}}">{{tr.t('还没有报名。', lang)}}</view>
   </block>
 </block>

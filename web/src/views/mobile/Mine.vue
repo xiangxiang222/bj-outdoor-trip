@@ -47,13 +47,6 @@
           </span>
           <span>待支付</span>
         </button>
-        <button type="button" @click="goOrders('waitlist')">
-          <span class="mine-order-ico">
-            <img :src="'/static/mine/order-wait.png?v=4'" alt="" />
-            <em v-if="hub.waitlistCount" class="mine-badge">{{ hub.waitlistCount > 99 ? "99+" : hub.waitlistCount }}</em>
-          </span>
-          <span>候补</span>
-        </button>
         <button type="button" @click="goOrders('recruiting')">
           <span class="mine-order-ico">
             <img :src="'/static/mine/order-recruit.png?v=2'" alt="" />
@@ -74,6 +67,13 @@
             <em v-if="hub.reviewCount" class="mine-badge">{{ hub.reviewCount > 99 ? "99+" : hub.reviewCount }}</em>
           </span>
           <span>待评价</span>
+        </button>
+        <button type="button" @click="goOrders('waitlist')">
+          <span class="mine-order-ico">
+            <img :src="'/static/mine/order-wait.png?v=4'" alt="" />
+            <em v-if="hub.waitlistCount" class="mine-badge">{{ hub.waitlistCount > 99 ? "99+" : hub.waitlistCount }}</em>
+          </span>
+          <span>候补中</span>
         </button>
         <button type="button" @click="goOrders('refund')">
           <span class="mine-order-ico">
