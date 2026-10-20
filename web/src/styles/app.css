@@ -2151,7 +2151,9 @@ html.admin-theme .el-dialog__footer {
 .mine-links {
   display: flex;
   align-items: center;
+  margin: 0 4px;
   padding: 2px 4px 12px;
+  border-bottom: 1px solid #e6e6e6;
 }
 .mine-links button {
   flex: 1;
@@ -2240,6 +2242,14 @@ html.admin-theme .el-dialog__footer {
   border-radius: 3px 3px 0 0;
   box-sizing: border-box;
 }
+.mine-glyph {
+  width: 22px;
+  height: 22px;
+  display: block;
+  overflow: visible;
+  flex: none;
+}
+.mine-glyph * { vector-effect: non-scaling-stroke; }
 .mine-rec {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2428,7 +2438,15 @@ html.admin-theme .el-dialog__footer {
   white-space: nowrap;
   font-size: calc(11px * var(--ui-scale));
 }
-.mine-order-ico { position: relative; width: 28px; height: 28px; }
+.mine-order-ico {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mine-order-ico .mine-glyph { width: 24px; height: 24px; }
 .mine-order-ico img { width: 28px; height: 28px; display: block; object-fit: contain; }
 .mine-order-ico .mine-badge { top: -6px; right: -10px; z-index: 2; box-shadow: 0 0 0 1.5px #fff; }
 .mine-all {
@@ -2453,10 +2471,11 @@ html.admin-theme .el-dialog__footer {
 .mine-all-ico {
   width: 22px;
   height: 22px;
-  border: 1.6px solid #1a1a1a;
+  border: 1.6px solid currentColor;
   border-radius: 4px;
   display: block;
   position: relative;
+  box-sizing: border-box;
 }
 .mine-all-ico::before,
 .mine-all-ico::after {
@@ -2465,7 +2484,7 @@ html.admin-theme .el-dialog__footer {
   left: 4px;
   right: 4px;
   height: 1.6px;
-  background: #1a1a1a;
+  background: currentColor;
 }
 .mine-all-ico::before { top: 7px; }
 .mine-all-ico::after { top: 12px; }
@@ -2676,7 +2695,9 @@ html[data-night="dark"] .mine-stats b,
 html[data-night="dark"] .mine-links button,
 html[data-night="dark"] .sg-top strong,
 html[data-night="dark"] .sg-day b { color: #f2f2f2; }
+html[data-night="dark"] .mine-links { border-bottom-color: #3a3a3c; }
 html[data-night="dark"] .mine-links b { color: inherit; }
+html[data-night="dark"] .mine-order-ico { color: #f2f2f2; }
 html[data-night="dark"] .mine-sign-ico { border-color: #f2f2f2; }
 html[data-night="dark"] .mine-sign-ico::before { background: #f2f2f2; }
 html[data-night="dark"] .mine-order-row,
