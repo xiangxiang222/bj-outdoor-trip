@@ -67,7 +67,10 @@ function refundAmount(payAmount, percent) {
   const paid = Number(payAmount) || 0;
   const pct = Number(percent) || 0;
   if (paid <= 0 || pct <= 0) return 0;
-  return Math.floor((paid * pct) / 100);
+  const yuan = Math.floor((paid * pct) / 100);
+  // 金额是整数元。1 元按 50% 或 80% 会取整成 0，取消后钱就留在系统里。比例大于 0 时至少退 1 元。
+  if (yuan > 0) return yuan;
+  return Math.min(Math.round(paid), 1);
 }
 
 function lineText(tier, higher) {

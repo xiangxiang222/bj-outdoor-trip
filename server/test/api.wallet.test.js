@@ -1,6 +1,7 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
 const { getDb } = require("../src/db");
+const { repairSkippedWalletRefunds } = require("../src/services/payment");
 const { harness, loginUser, auth, ID, enrollPayload } = require("./http");
 
 describe("wallet API", () => {
@@ -162,6 +163,66 @@ describe("wallet API", () => {
     assert.equal(cancelled.body.data.payStatus, "refunded");
     const me = await agent.get("/api/me").set(auth(token)).expect(200);
     assert.equal(me.body.data.walletBalance, 500 - remain + Number(cancelled.body.data.refundAmount || 0));
+  });
+
+  it("returns a 1 yuan wallet payment instead of rounding the ladder down to zero", async () => {
+    const token = await loginUser(agent);
+    await agent.post("/api/me/wallet/topup").set(auth(token)).send({ amount: 10 }).expect(200);
+    const enrolled = await agent
+      .post("/api/enroll")
+      .set(auth(token))
+      .send(
+        enrollPayload({
+          scheduleId: seed.individualScheduleId,
+          travelerName: "林北野",
+          travelerPhone: "13800138000",
+          idCard: ID.maleBj,
+        })
+      )
+      .expect(200);
+    const enrollmentId = enrolled.body.data.enrollmentId;
+    seed.db.prepare("UPDATE enrollments SET pay_amount=1 WHERE id=?").run(enrollmentId);
+    seed.db.prepare("UPDATE schedules SET start_date=date('now','localtime') WHERE id=?").run(seed.individualScheduleId);
+    const paid = await agent
+      .post("/api/pay/for-enrollment")
+      .set(auth(token))
+      .send({ enrollmentId, channel: "wallet", amount: 1 })
+      .expect(200);
+    assert.equal(paid.body.data.walletBalance, 9);
+    const cancelled = await agent.post("/api/orders/" + enrollmentId + "/cancel").set(auth(token)).expect(200);
+    assert.equal(cancelled.body.data.refundPercent, 50);
+    assert.equal(cancelled.body.data.refundAmount, 1);
+    assert.equal(cancelled.body.data.payStatus, "refunded");
+    const me = await agent.get("/api/me").set(auth(token)).expect(200);
+    assert.equal(me.body.data.walletBalance, 10);
+    const credit = seed.db
+      .prepare("SELECT delta FROM wallet_ledger WHERE user_id=? AND scene='refund' AND ref_id=?")
+      .get(seed.userId, enrollmentId);
+    assert.equal(credit.delta, 1);
+  });
+
+  it("puts back a wallet charge that was cancelled without a refund credit", () => {
+    seed.db.prepare("UPDATE users SET wallet_balance=3 WHERE id=?").run(seed.userId);
+    const info = seed.db
+      .prepare(
+        `INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,pay_status,pay_amount,pay_channel,status)
+         VALUES (?,?,?,?,?,?,?,?)`
+      )
+      .run(seed.individualScheduleId, seed.userId, "林北野", "13800138000", "refunded", 1, "wallet", "cancelled");
+    const enrollmentId = Number(info.lastInsertRowid);
+    seed.db
+      .prepare(
+        `INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene)
+         VALUES (?,?,?,?,?,?,?,?,?)`
+      )
+      .run(enrollmentId, seed.userId, seed.individualScheduleId, 1, "wallet", "success", "P-stuck", "自己支付（余额）", "enrollment");
+    seed.db.prepare("DELETE FROM settings WHERE key='wallet_cancel_refund_repair'").run();
+    assert.equal(repairSkippedWalletRefunds(), 1);
+    assert.equal(seed.db.prepare("SELECT wallet_balance FROM users WHERE id=?").get(seed.userId).wallet_balance, 4);
+    const refund = seed.db.prepare("SELECT channel, amount FROM payments WHERE refund_of>0 AND enrollment_id=?").get(enrollmentId);
+    assert.equal(refund.channel, "wallet");
+    assert.equal(refund.amount, 1);
+    assert.equal(repairSkippedWalletRefunds(), 0);
   });
 
   it("credits referral rebate and personal bounty into the wallet", async () => {

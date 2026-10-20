@@ -249,6 +249,40 @@ function walletRefundClosed(err) {
   return Boolean(err && err.status === 400 && /无法原路退款|未配置商户API证书/.test(String(err.message || "")));
 }
 
+function repairSkippedWalletRefunds() {
+  const db = getDb();
+  const key = "wallet_cancel_refund_repair";
+  const done = db.prepare("SELECT value FROM settings WHERE key=?").get(key);
+  if (done && done.value === "1") return 0;
+  const rows = db
+    .prepare(
+      `SELECT p.* FROM payments p
+       JOIN enrollments e ON e.id=p.enrollment_id
+       WHERE p.channel='wallet' AND p.status='success' AND IFNULL(p.refund_of,0)=0
+         AND IFNULL(p.refunded_amount,0)=0 AND IFNULL(p.amount,0)>0
+         AND e.status='cancelled'
+         AND NOT EXISTS (SELECT 1 FROM payments r WHERE r.refund_of=p.id)
+         AND NOT EXISTS (
+           SELECT 1 FROM wallet_ledger w
+           WHERE w.user_id=p.user_id AND w.ref_type='enrollment' AND w.ref_id=p.enrollment_id
+             AND w.scene='refund' AND w.delta>0
+         )`
+    )
+    .all();
+  let count = 0;
+  for (const pay of rows) {
+    const en = db.prepare("SELECT * FROM enrollments WHERE id=?").get(pay.enrollment_id);
+    const amount = leftoverOf(pay);
+    if (!en || amount <= 0) continue;
+    const slice = { paymentId: pay.id, userId: pay.user_id, amount, channel: "wallet" };
+    creditRefundToWallet(en, slice, "取消报名退回余额");
+    recordRefundSlice(en, slice, newTradeNo("RF", pay.user_id), "取消报名退回余额");
+    count += 1;
+  }
+  db.prepare("INSERT INTO settings (key, value) VALUES (?, '1') ON CONFLICT(key) DO UPDATE SET value='1'").run(key);
+  return count;
+}
+
 function creditRefundToWallet(en, slice, remark) {
   require("./wallet").credit(slice.userId, slice.amount, {
     reason: remark || "报名退款",
@@ -818,6 +852,7 @@ module.exports = {
   completeEnrollmentPay,
   applyEnrollmentCharge,
   refundEnrollmentToPayers,
+  repairSkippedWalletRefunds,
   applyWechatSession,
   ensurePayerWechat,
 };

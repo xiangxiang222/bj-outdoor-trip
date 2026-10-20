@@ -900,6 +900,7 @@ function migrateSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_page_views_visitor ON page_views(visitor_id, created_at);
   `);
   hideStashedRoutes(db);
+  require("./services/payment").repairSkippedWalletRefunds();
 }
 
 function hideStashedRoutes(db) {
