@@ -75,6 +75,13 @@
           </span>
           <span>待评价</span>
         </button>
+        <button type="button" @click="goOrders('refund')">
+          <span class="mine-order-ico">
+            <img :src="'/static/mine/order-refund.png'" alt="" />
+            <em v-if="hub.refundCount" class="mine-badge">{{ hub.refundCount > 99 ? "99+" : hub.refundCount }}</em>
+          </span>
+          <span>已退款</span>
+        </button>
       </div>
 
       <button class="mine-wallet" type="button" @click="goAuth('/m/wallet')">
