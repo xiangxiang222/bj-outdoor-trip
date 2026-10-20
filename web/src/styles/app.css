@@ -249,15 +249,25 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   align-items: center;
   justify-content: center;
   font-size: calc(11px * var(--ui-scale));
-  color: var(--muted);
+  color: #6a6a6a;
   gap: 2px;
 }
-.mp-tab a.active { color: var(--thu); font-weight: 600; }
+.mp-tab a.active { color: #141414; font-weight: 600; }
 .mp-tab .tab-ico {
   width: 22px;
   height: 22px;
-  fill: currentColor;
+  overflow: visible;
 }
+.mp-tab .tab-ico .stroke {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.55;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.mp-tab .tab-ico .solid { display: none; fill: currentColor; }
+.mp-tab a.active .tab-ico .stroke { display: none; }
+.mp-tab a.active .tab-ico .solid { display: block; }
 
 .card {
   background: var(--paper);
@@ -2438,7 +2448,8 @@ html[data-night="dark"] .mp-tab {
   color: #f2f2f2;
   background: #1c1c1e;
 }
-html[data-night="dark"] .mp-tab a.active { color: #d7b4e4; }
+html[data-night="dark"] .mp-tab a { color: #b5b5b5; }
+html[data-night="dark"] .mp-tab a.active { color: #f2f2f2; }
 html[data-text="1"] .mp-body img,
 html[data-text="1"] .hero-swipe,
 html[data-text="1"] .cover,

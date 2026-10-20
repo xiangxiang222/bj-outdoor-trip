@@ -25,19 +25,31 @@
     <a class="icp-foot" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">京ICP备2026060284号-2</a>
     <nav class="mp-tab">
       <router-link to="/m" :class="{ active: $route.path === '/m' }">
-        <svg class="tab-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" /></svg>
+        <svg class="tab-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <g class="stroke"><path d="M4.2 11.1 12 4.2l7.8 6.9V20a1.2 1.2 0 0 1-1.2 1.2H5.4A1.2 1.2 0 0 1 4.2 20Z" /><path d="M10 21.2V15h4v6.2" /></g>
+          <path class="solid" fill-rule="evenodd" d="M4.2 11.1 12 4.2l7.8 6.9V20a1.2 1.2 0 0 1-1.2 1.2H5.4A1.2 1.2 0 0 1 4.2 20V11.1Zm5.9 10.1v-6h3.8v6h-3.8Z" />
+        </svg>
         首页
       </router-link>
       <router-link to="/m/activities" :class="{ active: $route.path.startsWith('/m/activities') }">
-        <svg class="tab-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v3H8V4Zm-3 5h14v11H5V9Zm3 3h3v3H8v-3Z" /></svg>
+        <svg class="tab-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <g class="stroke"><rect x="4.6" y="8.4" width="14.8" height="11" rx="1.6" /><path d="M9 8.4V6.5A1.4 1.4 0 0 1 10.4 5.1h3.2A1.4 1.4 0 0 1 15 6.5v1.9" /></g>
+          <path class="solid" fill-rule="evenodd" d="M4.6 8.6h14.8a1.6 1.6 0 0 1 1.6 1.6v7.6a1.6 1.6 0 0 1-1.6 1.6H4.6A1.6 1.6 0 0 1 3 17.8V10.2A1.6 1.6 0 0 1 4.6 8.6Zm4.5 0V6.6a1.5 1.5 0 0 1 1.5-1.5h2.8a1.5 1.5 0 0 1 1.5 1.5V8.6h-1.5V6.7a.15.15 0 0 0-.15-.15h-2.5a.15.15 0 0 0-.15.15V8.6H9.1Z" />
+        </svg>
         活动
       </router-link>
       <router-link to="/m/orders" :class="{ active: $route.path.startsWith('/m/orders') }">
-        <svg class="tab-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h2v2h6V3h2v2h3v16H4V5h3V3zm12 6H5v12h14V9ZM8 12h3v3H8v-3Zm5 0h3v3h-3v-3Z" /></svg>
+        <svg class="tab-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <g class="stroke"><rect x="4.4" y="5.6" width="15.2" height="13.6" rx="1.6" /><path d="M4.4 9.8h15.2M8.2 3.6v3.4M15.8 3.6v3.4" /><rect x="7.8" y="12.2" width="2.5" height="2.5" rx="0.3" /><rect x="13.7" y="12.2" width="2.5" height="2.5" rx="0.3" /></g>
+          <g class="solid"><path fill-rule="evenodd" d="M5 6h14a1.5 1.5 0 0 1 1.5 1.5V18.6A1.5 1.5 0 0 1 19 20.1H5A1.5 1.5 0 0 1 3.5 18.6V7.5A1.5 1.5 0 0 1 5 6Zm2.9 6.4h2.6v2.6H7.9Zm5.6 0h2.6v2.6h-2.6Z" /><rect x="7.5" y="3.3" width="1.6" height="4.2" rx="0.8" /><rect x="14.9" y="3.3" width="1.6" height="4.2" rx="0.8" /></g>
+        </svg>
         行程
       </router-link>
       <router-link to="/m/mine" :class="{ active: mineActive }">
-        <svg class="tab-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5Z" /></svg>
+        <svg class="tab-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <g class="stroke"><circle cx="12" cy="8" r="3.15" /><path d="M5.1 19.6c.7-3.5 3.3-5.3 6.9-5.3s6.2 1.8 6.9 5.3" /></g>
+          <g class="solid"><path d="M12 4.7a3.35 3.35 0 1 1 0 6.7 3.35 3.35 0 0 1 0-6.7Z" /><path d="M4.6 20.1c.8-3.8 3.6-5.9 7.4-5.9s6.6 2.1 7.4 5.9H4.6Z" /></g>
+        </svg>
         我的
       </router-link>
     </nav>
