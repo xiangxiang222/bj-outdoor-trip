@@ -11,12 +11,12 @@
     <template v-else>
       <div class="chips">
         <div class="chip" :class="{ on: tab === 'unpaid' }" @click="tab = 'unpaid'">待支付 {{ unpaid.length }}</div>
-        <div class="chip" :class="{ on: tab === 'waitlist' }" @click="tab = 'waitlist'">候补 {{ waitlist.length }}</div>
         <div class="chip" :class="{ on: tab === 'recruiting' }" @click="tab = 'recruiting'">招募中 {{ recruiting.length }}</div>
         <div class="chip" :class="{ on: tab === 'depart' }" @click="tab = 'depart'">待出发 {{ depart.length }}</div>
         <div class="chip" :class="{ on: tab === 'review' }" @click="tab = 'review'">待评价 {{ review.length }}</div>
+        <div class="chip" :class="{ on: tab === 'waitlist' }" @click="tab = 'waitlist'">候补中 {{ waitlist.length }}</div>
         <div class="chip" :class="{ on: tab === 'refund' }" @click="tab = 'refund'">已退款 {{ refund.length }}</div>
-        <div class="chip" :class="{ on: tab === 'past' }" @click="tab = 'past'">历史 {{ past.length }}</div>
+        <div class="chip" :class="{ on: tab === 'all' }" @click="tab = 'all'">全部订单 {{ list.length }}</div>
       </div>
 
       <template v-if="tab === 'depart'">
@@ -56,7 +56,7 @@
           <button v-if="o.canPay" class="cancel-link" type="button" @click.stop="goPay(o)">去支付</button>
           <button v-if="o.canCancel" class="cancel-link" type="button" :disabled="cancelling === o.id" @click.stop="cancel(o)">取消报名</button>
         </article>
-        <div v-if="!depart.length && !waitlist.length && !past.length && !unpaid.length" class="card act-empty">
+        <div v-if="!list.length" class="card act-empty">
           <div class="pad">
             <strong>还没有行程</strong>
             <p class="muted">去首页报一个山野团，或去活动页约一局。</p>
@@ -65,7 +65,7 @@
           </div>
         </div>
         <div v-else-if="!depart.length" class="card">
-          <div class="pad muted">{{ waitlist.length ? "没有已占座的行程。候补在「候补」里。" : "最近没有待出行。点上面「历史」看过往报名。" }}</div>
+          <div class="pad muted">{{ waitlist.length ? "没有已占座的行程。候补在「候补中」里。" : "最近没有待出发。点「全部订单」看全部报名。" }}</div>
         </div>
       </template>
 
@@ -163,8 +163,8 @@
         <div v-if="!refund.length" class="card"><div class="pad muted">还没有退款记录。取消后会写在这里：退回余额或原路退回微信。</div></div>
       </template>
 
-      <template v-else>
-        <article class="card" v-for="o in past" :key="o.id">
+      <template v-else-if="tab === 'all'">
+        <article class="card" v-for="o in list" :key="o.id">
           <div class="pad tap" @click="goSchedule(o)">
             <div class="row">
               <strong>{{ o.title }}</strong>
@@ -177,7 +177,7 @@
           <div v-if="showAfter(o) && o.completed" class="pad" style="padding-top:0">
             <button class="btn block" type="button" @click.stop="$router.push('/m/after/' + o.schedule_id)">评价 / 评选</button>
           </div>
-          <div v-if="showAfter(o) && o.canReview" class="pad" style="padding-top:0" @click.stop>
+          <div v-if="reviewable(o)" class="pad" style="padding-top:0" @click.stop>
             <button v-if="reviewing !== o.id" class="btn ghost block" @click="openReview(o)">去评价</button>
             <div v-else>
               <div class="star-pick">
@@ -192,8 +192,8 @@
           </div>
           <p v-else-if="o.reviewed" class="pad muted" style="padding-top:0">已评价</p>
         </article>
-        <div v-if="!past.length" class="card">
-          <div class="pad muted">还没有历史报名。</div>
+        <div v-if="!list.length" class="card">
+          <div class="pad muted">还没有报名。</div>
         </div>
       </template>
     </template>
@@ -208,7 +208,7 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { enrollStatusText } from "@/utils/labels";
 import { formatActivityDate } from "@/utils/activityKind";
-import { deskTrips, recruitFacts, showAfterActions, tripKindLabel } from "@/utils/trips";
+import { deskTrips, recruitFacts, showAfterActions, todayYmd, tripKindLabel } from "@/utils/trips";
 import PayHelpers from "@/components/PayHelpers.vue";
 
 const store = useUserStore();
@@ -220,10 +220,11 @@ const cancelling = ref(0);
 const reviewing = ref(0);
 const submitting = ref(false);
 const form = ref({ rating: 5, content: "" });
-const tabs = new Set(["unpaid", "waitlist", "recruiting", "depart", "review", "refund", "past"]);
+const tabs = new Set(["unpaid", "recruiting", "depart", "review", "waitlist", "refund", "all"]);
 function initialTab() {
   const q = String(pageRoute.query.tab || "");
   if (q === "upcoming") return "depart";
+  if (q === "past") return "all";
   return tabs.has(q) ? q : "depart";
 }
 const tab = ref(initialTab());
@@ -236,7 +237,6 @@ const recruiting = computed(() => split.value.recruiting);
 const review = computed(() => split.value.review);
 const refund = computed(() => split.value.refund);
 const waitlist = computed(() => split.value.waitlist);
-const past = computed(() => split.value.past);
 const nextTrip = computed(() => depart.value[0] || null);
 const restUpcoming = computed(() => depart.value.slice(1));
 
@@ -254,9 +254,16 @@ async function load() {
   }
   if (tab.value !== "depart") return;
   const desk = deskTrips(list.value);
-  if (desk.recruiting.length) tab.value = "recruiting";
-  else if (!desk.depart.length && desk.waitlist.length) tab.value = "waitlist";
-  else if (!desk.depart.length && !desk.waitlist.length && desk.past.length) tab.value = "past";
+  if (desk.depart.length) return;
+  if (desk.unpaid.length) tab.value = "unpaid";
+  else if (desk.recruiting.length) tab.value = "recruiting";
+  else if (desk.review.length) tab.value = "review";
+  else if (desk.waitlist.length) tab.value = "waitlist";
+  else if (desk.refund.length) tab.value = "refund";
+  else if (list.value.length) tab.value = "all";
+}
+function reviewable(o) {
+  return showAfter(o) && o.canReview && String(o.start_date || "").slice(0, 10) < todayYmd();
 }
 function recruitOf(o) {
   return recruitFacts(o);

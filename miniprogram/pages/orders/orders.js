@@ -1,6 +1,6 @@
 const { request, showError } = require("../../utils/request");
 const { enrollStatusText } = require("../../utils/labels");
-const { deskTrips, tripKindLabel, recruitFacts, showAfterActions } = require("../../utils/trips");
+const { deskTrips, tripKindLabel, recruitFacts, showAfterActions, todayYmd } = require("../../utils/trips");
 const app = getApp();
 
 function decorate(item) {
@@ -9,6 +9,7 @@ function decorate(item) {
     kindLabel: tripKindLabel(item),
     recruit: recruitFacts(item),
     canAfter: showAfterActions(item),
+    reviewable: showAfterActions(item) && item.canReview && String(item.start_date || "").slice(0, 10) < todayYmd(),
     moneyText:
       item.channel === "activity" && Number(item.pay_amount || 0) === 0
         ? "免费"
@@ -21,12 +22,12 @@ function decorate(item) {
 }
 
 Page({
-  data: { loggedIn: false, tab: "depart", holdTab: false, upcoming: [], restUpcoming: [], nextTrip: null, waitlist: [], past: [], unpaid: [], recruiting: [], review: [], refund: [], reviewingId: 0, rating: 5, content: "" },
+  data: { loggedIn: false, tab: "depart", holdTab: false, upcoming: [], restUpcoming: [], nextTrip: null, waitlist: [], past: [], all: [], unpaid: [], recruiting: [], review: [], refund: [], reviewingId: 0, rating: 5, content: "" },
   onShow() {
     const preset = app.globalData.ordersTab || "";
     if (preset) {
       app.globalData.ordersTab = "";
-      this.data.tab = preset === "upcoming" ? "depart" : preset;
+      this.data.tab = preset === "upcoming" ? "depart" : preset === "past" ? "all" : preset;
       this.data.holdTab = true;
     }
     if (!app.globalData.token) {
@@ -44,16 +45,22 @@ Page({
         const upcoming = split.depart;
         const waitlist = split.waitlist;
         const past = split.past;
-        let tab = this.data.tab === "upcoming" ? "depart" : this.data.tab;
-        if (!this.data.holdTab && tab === "depart" && split.recruiting.length) tab = "recruiting";
-        else if (!this.data.holdTab && tab === "depart" && !upcoming.length && waitlist.length) tab = "waitlist";
-        else if (!this.data.holdTab && tab === "depart" && !upcoming.length && !waitlist.length && past.length) tab = "past";
+        let tab = this.data.tab === "upcoming" ? "depart" : this.data.tab === "past" ? "all" : this.data.tab;
+        if (!this.data.holdTab && tab === "depart" && !upcoming.length) {
+          if (split.unpaid.length) tab = "unpaid";
+          else if (split.recruiting.length) tab = "recruiting";
+          else if (split.review.length) tab = "review";
+          else if (waitlist.length) tab = "waitlist";
+          else if (split.refund.length) tab = "refund";
+          else if (list.length) tab = "all";
+        }
         this.setData({
           upcoming,
           restUpcoming: upcoming.slice(1),
           nextTrip: upcoming[0] || null,
           waitlist,
           past,
+          all: list,
           unpaid: split.unpaid,
           recruiting: split.recruiting,
           review: split.review,
@@ -111,7 +118,7 @@ Page({
   },
   async submitReview(e) {
     const id = Number(e.currentTarget.dataset.id);
-    const item = [].concat(this.data.upcoming, this.data.waitlist, this.data.past).find((row) => Number(row.id) === id);
+    const item = [].concat(this.data.upcoming, this.data.waitlist, this.data.past, this.data.all).find((row) => Number(row.id) === id);
     if (!item) return;
     try {
       await request("/reviews", "POST", {
@@ -129,7 +136,7 @@ Page({
     const id = e.currentTarget.dataset.id;
     if (!id) return;
     const item = []
-      .concat(this.data.upcoming, this.data.restUpcoming, this.data.waitlist, this.data.past, this.data.unpaid, this.data.recruiting, this.data.review, this.data.refund, this.data.nextTrip)
+      .concat(this.data.upcoming, this.data.restUpcoming, this.data.waitlist, this.data.past, this.data.all, this.data.unpaid, this.data.recruiting, this.data.review, this.data.refund, this.data.nextTrip)
       .filter(Boolean)
       .find((row) => String(row.id) === String(id));
     const deduct = Number(item && item.deductAmount) || 0;
