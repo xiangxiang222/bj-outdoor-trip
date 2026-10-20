@@ -7,6 +7,7 @@ const {
   matchPercent,
   refundAmount,
   policyCopy,
+  cancelQuote,
 } = require("../src/services/refund");
 
 describe("refund rules", () => {
@@ -45,6 +46,26 @@ describe("refund rules", () => {
       tiers.map((t) => t.minDays),
       [5, 0]
     );
+  });
+
+  it("quotes the kept percent and yuan when a formed trip is close to departure", () => {
+    const start = new Date();
+    const today = [start.getFullYear(), String(start.getMonth() + 1).padStart(2, "0"), String(start.getDate()).padStart(2, "0")].join("-");
+    const soon = cancelQuote(
+      { status: "joined", pay_status: "paid", pay_amount: 200 },
+      { status: "confirmed", startDate: today, channel: "trip", minGroupSize: 1, realEnrolled: 1 }
+    );
+    assert.equal(soon.percent, 50);
+    assert.equal(soon.deductPercent, 50);
+    assert.equal(soon.amount, 100);
+    assert.equal(soon.deductAmount, 100);
+    assert.match(soon.hint, /扣除 50%（¥100）/);
+    const full = cancelQuote(
+      { status: "joined", pay_status: "paid", pay_amount: 200 },
+      { status: "confirmed", startDate: "2099-01-01", channel: "trip", minGroupSize: 1, realEnrolled: 1 }
+    );
+    assert.equal(full.percent, 100);
+    assert.equal(full.deductAmount, 0);
   });
 
   it("writes proportion copy from the default ladder", () => {

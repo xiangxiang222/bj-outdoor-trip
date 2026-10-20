@@ -314,8 +314,16 @@ async function submitReview(o) {
     submitting.value = false;
   }
 }
+function cancelMessage(o) {
+  const deduct = Number(o && o.deductAmount) || 0;
+  if (deduct > 0) {
+    return `临近出发，取消将扣除 ${o.deductPercent}%（¥${deduct}），退回 ¥${Number(o.refundAmount) || 0}。确定取消报名？名额将释放给其他人。`;
+  }
+  if (o && o.refundHint) return `确定取消报名？${o.refundHint}。名额将释放给其他人。已付款按付款人原路退回。`;
+  return "确定取消报名？名额将释放给其他人。已付款按付款人原路退回。";
+}
 async function cancel(o) {
-  if (!window.confirm(o.refundHint ? `确定取消报名？${o.refundHint}。名额将释放给其他人。已付款按付款人原路退回。` : "确定取消报名？名额将释放给其他人。已付款按付款人原路退回。")) return;
+  if (!window.confirm(cancelMessage(o))) return;
   cancelling.value = o.id;
   msg.value = "";
   try {
