@@ -212,7 +212,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 | PUT | `/admin/refund-rules` | 保存全局档位。`tiers:[{minDays,percent}]`，须含 `minDays=0` 一档；`reset:true` 恢复默认 10/3/0 天 |
 | GET | `/admin/routes` | 含下架；待审申请排在前面。Query：`review=pending\|approved\|rejected`。含 `reviewStatus` `submittedBy` `contactPhone` `contactWechat` `bountyStatus`。`priceTiers` 为 camelCase，`buses` 为车型 id 数组，`refundPolicy` 为生效中的退费规则 |
 | POST | `/admin/routes/draft` | 起草。body：`title`（必填）`region` `days` `category` `notes`。返回文案字段 + `cover` `gallery` + `source`=`llm`/`template` + `photoSource`=`library`/`search`/空。无密钥用模板；图片先用已有景点库，再搜百度 / 360 |
-| POST | `/admin/routes` | 创建。可选 `priceTiers` `buses` `videos`（视频链接数组）、`refundUseGlobal`（默认 true）、`refundTiers` |
+| POST | `/admin/routes` | 创建。可选 `priceTiers` `buses`、`refundUseGlobal`（默认 true）、`refundTiers`。后台表单不再提交视频 |
 | PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换；`videos` 为视频链接数组（省略则保留原值）；`refundUseGlobal`/`refundTiers` 省略则保留原退费设置。用户申请待审时不能靠这个接口改成上架 |
 | POST | `/admin/routes/:id/review` | 审用户申请收录。`action`/`status`=`approve\|reject`，可选 `note`。通过后上架；驳回后下架。官方线路返回 400 |
 | DELETE | `/admin/routes/:id` | 下架 |

@@ -197,16 +197,6 @@
           </el-upload>
           <div class="muted">张数不限。未单独设封面时，用相册第一张。不要上传把说明做成一长条的设计图。</div>
         </el-form-item>
-        <el-form-item label="视频">
-          <div class="list-edit">
-            <div v-for="(v, i) in form.videos" :key="'v' + i" class="line-row">
-              <el-input v-model="form.videos[i]" placeholder="https://www.bilibili.com/video/BVxxxx" />
-              <el-button link type="danger" @click="form.videos.splice(i, 1)">删除</el-button>
-            </div>
-            <el-button @click="form.videos = [...(form.videos || []), '']">加一条视频链接</el-button>
-          </div>
-          <div class="muted">一行一条。支持 B 站完整分享链接（含 BV 号）、YouTube、mp4 直链。线路页会嵌播放器。请不要只用 b23 短链。</div>
-        </el-form-item>
 
         <div class="sec">亮点与介绍</div>
         <el-form-item label="亮点">
@@ -533,7 +523,6 @@ function blankForm() {
     story: [],
     cover: "",
     gallery: [],
-    videos: [],
     meetupPoints: [],
     buses: ["bus30"],
     status: "on",
@@ -558,11 +547,12 @@ function openCreate() {
   show.value = true;
 }
 function edit(row) {
+  const rest = { ...row };
+  delete rest.videos;
   form.value = {
     ...blankForm(),
-    ...row,
+    ...rest,
     gallery: [...(row.gallery || [])],
-    videos: (row.videos || []).map((v) => (typeof v === "string" ? v : v.url || "")).filter(Boolean),
     tags: [...(row.tags || [])],
     highlights: [...(row.highlights || [])],
     story: (row.story || []).map((b) => ({ ...b, _key: nextKey() })),
@@ -651,7 +641,6 @@ function applyTemplate(d) {
   if (d.tags?.length) form.value.tags = d.tags;
   if (text(d.cover)) form.value.cover = d.cover;
   if (d.gallery?.length) form.value.gallery = d.gallery;
-  if (d.videos?.length) form.value.videos = d.videos;
   if (d.highlights?.length) form.value.highlights = d.highlights;
   if (text(d.description)) form.value.description = d.description;
   if (d.story?.length) form.value.story = d.story.map((block) => ({ ...block, _key: nextKey() }));
@@ -880,13 +869,13 @@ async function save() {
       title: String(form.value.title).trim(),
       tags: (form.value.tags || []).map((t) => String(t).trim()).filter(Boolean),
       highlights: (form.value.highlights || []).map((h) => String(h).trim()).filter(Boolean),
-      videos: (form.value.videos || []).map((v) => String(v).trim()).filter(Boolean),
       priceTiers,
       meetupPoints: serializeMeetupPoints(form.value.meetupPoints),
       buses: form.value.buses || [],
       refundUseGlobal: !!form.value.refundUseGlobal,
       refundTiers: form.value.refundTiers || [],
     };
+    delete payload.videos;
     if (form.value.id) await http.put("/admin/routes/" + form.value.id, payload);
     else await http.post("/admin/routes", payload);
     show.value = false;
