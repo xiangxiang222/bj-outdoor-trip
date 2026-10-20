@@ -50,48 +50,54 @@
     <view class="mine-pill">{{tr.t('会员中心 ›', lang)}}</view>
   </view>
 
-  <view class="mine-shortcuts">
-    <view bindtap="goOrders" data-tab="unpaid">
-      <view class="mine-order-ico">
-        <image src="{{iconBase}}order-pay.png" mode="aspectFit" />
-        <text wx:if="{{hub.unpaidCount}}" class="mine-badge">{{hub.unpaidCount > 99 ? '99+' : hub.unpaidCount}}</text>
-      </view>
-      <view class="muted">{{tr.t('待支付', lang)}}</view>
+  <view class="mine-orders">
+    <view class="mine-traces">
+      <view bindtap="go" data-url="/pages/views/views"><text>{{tr.t('足迹', lang)}}</text><text class="mine-trace-num">{{hub.viewCount || 0}}</text></view>
+      <view bindtap="go" data-url="/pages/favorites/favorites"><text>{{tr.t('收藏', lang)}}</text><text class="mine-trace-num">{{hub.favoriteCount || 0}}</text></view>
+      <view bindtap="go" data-url="/pages/follows/follows"><text>{{tr.t('关注', lang)}}</text><text class="mine-trace-num">{{hub.followCount || 0}}</text></view>
     </view>
-    <view bindtap="goOrders" data-tab="recruiting">
-      <view class="mine-order-ico">
-        <image src="/images/order-recruit.png" mode="aspectFit" />
-        <text wx:if="{{hub.recruitingCount}}" class="mine-badge">{{hub.recruitingCount > 99 ? '99+' : hub.recruitingCount}}</text>
+    <view class="mine-order-row">
+      <view class="mine-shortcuts">
+        <view bindtap="goOrders" data-tab="unpaid">
+          <view class="mine-order-ico">
+            <image src="{{iconBase}}order-pay.png" mode="aspectFit" />
+            <text wx:if="{{hub.unpaidCount}}" class="mine-badge">{{hub.unpaidCount > 99 ? '99+' : hub.unpaidCount}}</text>
+          </view>
+          <view class="mine-order-name">{{tr.t('待付款', lang)}}</view>
+        </view>
+        <view bindtap="goOrders" data-tab="recruiting">
+          <view class="mine-order-ico">
+            <image src="/images/order-recruit.png" mode="aspectFit" />
+            <text wx:if="{{hub.recruitingCount}}" class="mine-badge">{{hub.recruitingCount > 99 ? '99+' : hub.recruitingCount}}</text>
+          </view>
+          <view class="mine-order-name">{{tr.t('待成团', lang)}}</view>
+        </view>
+        <view bindtap="goOrders" data-tab="depart">
+          <view class="mine-order-ico">
+            <image src="{{iconBase}}order-go.png" mode="aspectFit" />
+            <text wx:if="{{hub.departCount}}" class="mine-badge">{{hub.departCount > 99 ? '99+' : hub.departCount}}</text>
+          </view>
+          <view class="mine-order-name">{{tr.t('待出行', lang)}}</view>
+        </view>
+        <view bindtap="goOrders" data-tab="review">
+          <view class="mine-order-ico">
+            <image src="{{iconBase}}order-review.png" mode="aspectFit" />
+            <text wx:if="{{hub.reviewCount}}" class="mine-badge">{{hub.reviewCount > 99 ? '99+' : hub.reviewCount}}</text>
+          </view>
+          <view class="mine-order-name">{{tr.t('待评价', lang)}}</view>
+        </view>
+        <view bindtap="goOrders" data-tab="refund">
+          <view class="mine-order-ico">
+            <image src="{{iconBase}}order-refund.png" mode="aspectFit" />
+            <text wx:if="{{hub.refundCount}}" class="mine-badge">{{hub.refundCount > 99 ? '99+' : hub.refundCount}}</text>
+          </view>
+          <view class="mine-order-name">{{tr.t('已退款', lang)}}</view>
+        </view>
       </view>
-      <view class="muted">{{tr.t('招募中', lang)}}</view>
-    </view>
-    <view bindtap="goOrders" data-tab="depart">
-      <view class="mine-order-ico">
-        <image src="{{iconBase}}order-go.png" mode="aspectFit" />
-        <text wx:if="{{hub.departCount}}" class="mine-badge">{{hub.departCount > 99 ? '99+' : hub.departCount}}</text>
+      <view class="mine-all" bindtap="goOrders" data-tab="all">
+        <text>{{tr.t('全部', lang)}}</text>
+        <view class="mine-all-arrow"></view>
       </view>
-      <view class="muted">{{tr.t('待出发', lang)}}</view>
-    </view>
-    <view bindtap="goOrders" data-tab="review">
-      <view class="mine-order-ico">
-        <image src="{{iconBase}}order-review.png" mode="aspectFit" />
-        <text wx:if="{{hub.reviewCount}}" class="mine-badge">{{hub.reviewCount > 99 ? '99+' : hub.reviewCount}}</text>
-      </view>
-      <view class="muted">{{tr.t('待评价', lang)}}</view>
-    </view>
-    <view bindtap="goOrders" data-tab="waitlist">
-      <view class="mine-order-ico">
-        <image src="{{iconBase}}order-wait.png?v=4" mode="aspectFit" />
-        <text wx:if="{{hub.waitlistCount}}" class="mine-badge">{{hub.waitlistCount > 99 ? '99+' : hub.waitlistCount}}</text>
-      </view>
-      <view class="muted">{{tr.t('候补中', lang)}}</view>
-    </view>
-    <view bindtap="goOrders" data-tab="refund">
-      <view class="mine-order-ico">
-        <image src="{{iconBase}}order-refund.png" mode="aspectFit" />
-        <text wx:if="{{hub.refundCount}}" class="mine-badge">{{hub.refundCount > 99 ? '99+' : hub.refundCount}}</text>
-      </view>
-      <view class="muted">{{tr.t('已退款', lang)}}</view>
     </view>
   </view>
 

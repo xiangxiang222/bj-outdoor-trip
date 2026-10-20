@@ -39,49 +39,55 @@
         <i class="mine-pill">会员中心 ›</i>
       </button>
 
-      <div class="mine-shortcuts">
-        <button type="button" @click="goOrders('unpaid')">
-          <span class="mine-order-ico">
-            <img :src="'/static/mine/order-pay.png'" alt="" />
-            <em v-if="hub.unpaidCount" class="mine-badge">{{ hub.unpaidCount > 99 ? "99+" : hub.unpaidCount }}</em>
-          </span>
-          <span>待支付</span>
-        </button>
-        <button type="button" @click="goOrders('recruiting')">
-          <span class="mine-order-ico">
-            <img :src="'/static/mine/order-recruit.png?v=2'" alt="" />
-            <em v-if="hub.recruitingCount" class="mine-badge">{{ hub.recruitingCount > 99 ? "99+" : hub.recruitingCount }}</em>
-          </span>
-          <span>招募中</span>
-        </button>
-        <button type="button" @click="goOrders('depart')">
-          <span class="mine-order-ico">
-            <img :src="'/static/mine/order-go.png'" alt="" />
-            <em v-if="hub.departCount" class="mine-badge">{{ hub.departCount > 99 ? "99+" : hub.departCount }}</em>
-          </span>
-          <span>待出发</span>
-        </button>
-        <button type="button" @click="goOrders('review')">
-          <span class="mine-order-ico">
-            <img :src="'/static/mine/order-review.png'" alt="" />
-            <em v-if="hub.reviewCount" class="mine-badge">{{ hub.reviewCount > 99 ? "99+" : hub.reviewCount }}</em>
-          </span>
-          <span>待评价</span>
-        </button>
-        <button type="button" @click="goOrders('waitlist')">
-          <span class="mine-order-ico">
-            <img :src="'/static/mine/order-wait.png?v=4'" alt="" />
-            <em v-if="hub.waitlistCount" class="mine-badge">{{ hub.waitlistCount > 99 ? "99+" : hub.waitlistCount }}</em>
-          </span>
-          <span>候补中</span>
-        </button>
-        <button type="button" @click="goOrders('refund')">
-          <span class="mine-order-ico">
-            <img :src="'/static/mine/order-refund.png'" alt="" />
-            <em v-if="hub.refundCount" class="mine-badge">{{ hub.refundCount > 99 ? "99+" : hub.refundCount }}</em>
-          </span>
-          <span>已退款</span>
-        </button>
+      <div class="mine-orders">
+        <div class="mine-traces">
+          <button type="button" @click="goAuth('/m/views')"><span>足迹</span><b>{{ hub.viewCount || 0 }}</b></button>
+          <button type="button" @click="goAuth('/m/favorites')"><span>收藏</span><b>{{ hub.favoriteCount || 0 }}</b></button>
+          <button type="button" @click="goAuth('/m/follows')"><span>关注</span><b>{{ hub.followCount || 0 }}</b></button>
+        </div>
+        <div class="mine-order-row">
+          <div class="mine-shortcuts">
+            <button type="button" @click="goOrders('unpaid')">
+              <span class="mine-order-ico">
+                <img :src="'/static/mine/order-pay.png'" alt="" />
+                <em v-if="hub.unpaidCount" class="mine-badge">{{ hub.unpaidCount > 99 ? "99+" : hub.unpaidCount }}</em>
+              </span>
+              <span>待付款</span>
+            </button>
+            <button type="button" @click="goOrders('recruiting')">
+              <span class="mine-order-ico">
+                <img :src="'/static/mine/order-recruit.png?v=2'" alt="" />
+                <em v-if="hub.recruitingCount" class="mine-badge">{{ hub.recruitingCount > 99 ? "99+" : hub.recruitingCount }}</em>
+              </span>
+              <span>待成团</span>
+            </button>
+            <button type="button" @click="goOrders('depart')">
+              <span class="mine-order-ico">
+                <img :src="'/static/mine/order-go.png'" alt="" />
+                <em v-if="hub.departCount" class="mine-badge">{{ hub.departCount > 99 ? "99+" : hub.departCount }}</em>
+              </span>
+              <span>待出行</span>
+            </button>
+            <button type="button" @click="goOrders('review')">
+              <span class="mine-order-ico">
+                <img :src="'/static/mine/order-review.png'" alt="" />
+                <em v-if="hub.reviewCount" class="mine-badge">{{ hub.reviewCount > 99 ? "99+" : hub.reviewCount }}</em>
+              </span>
+              <span>待评价</span>
+            </button>
+            <button type="button" @click="goOrders('refund')">
+              <span class="mine-order-ico">
+                <img :src="'/static/mine/order-refund.png'" alt="" />
+                <em v-if="hub.refundCount" class="mine-badge">{{ hub.refundCount > 99 ? "99+" : hub.refundCount }}</em>
+              </span>
+              <span>已退款</span>
+            </button>
+          </div>
+          <button class="mine-all" type="button" @click="goOrders('all')">
+            <span>全部</span>
+            <i class="mine-all-arrow"></i>
+          </button>
+        </div>
       </div>
 
       <button class="mine-wallet" type="button" @click="goAuth('/m/wallet')">
