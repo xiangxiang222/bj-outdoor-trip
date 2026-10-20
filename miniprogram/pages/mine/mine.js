@@ -41,9 +41,28 @@ Page({
     defaults: [],
     iconBase: (app && app.globalData && app.globalData.baseUrl ? app.globalData.baseUrl : "") + "/static/mine/",
     dark: false,
+    statusBarHeight: 20,
+    navBarHeight: 44,
+  },
+  onLoad() {
+    this.setData(this.navMetrics());
+  },
+  navMetrics() {
+    let statusBarHeight = 20;
+    let navBarHeight = 44;
+    try {
+      const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
+      statusBarHeight = info.statusBarHeight || 20;
+      const menu = wx.getMenuButtonBoundingClientRect();
+      if (menu && menu.top && menu.height) {
+        navBarHeight = (menu.top - statusBarHeight) * 2 + menu.height;
+      }
+    } catch (e) {}
+    return { statusBarHeight, navBarHeight };
   },
   onShow() {
     if (!app || !app.globalData) return;
+    this.setData(this.navMetrics());
     const user = app.globalData.user;
     this.setData({
       user,

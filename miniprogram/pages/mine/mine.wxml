@@ -1,6 +1,9 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="mine-page" wx:if="{{user}}">
+<view class="mine-nav {{dark ? 'is-dark' : ''}}" style="padding-top: {{statusBarHeight}}px;">
+  <view class="mine-nav-bar" style="height: {{navBarHeight}}px;">{{tr.t('我的', lang)}}</view>
+</view>
+<view class="mine-page {{dark ? 'is-dark' : ''}}" wx:if="{{user}}">
   <view class="mine-hero-card">
     <view class="mine-user" bindtap="goHome">
       <view class="mine-avatar" catchtap="openAvatar">
