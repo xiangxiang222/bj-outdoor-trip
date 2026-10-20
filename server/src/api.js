@@ -59,7 +59,7 @@ const { deleteAccount } = require("./services/account");
 const { snapshot: walletSnapshot, addCard, removeCard, setPin, resetPin, withdraw, confirmWithdraw } = require("./services/wallet");
 const { drawPre, drawPost, claimPrizes, lotteryState, lotteryPublic } = require("./services/lottery");
 const { getAdminLottery, listAdminLotteries, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate } = require("./services/lottery-admin");
-const { completeTrip, afterTripState } = require("./services/aftertrip");
+const { completeSchedule, afterTripState } = require("./services/aftertrip");
 const { startTrip, openCheckin, markCheckin, unmarkCheckin, confirmCheckin, tripRunOf } = require("./services/trip-run");
 const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
@@ -485,6 +485,11 @@ function scheduleView(sch, req, opts = {}) {
     status: sch.status,
     startedAt: sch.started_at || "",
     startedBy: sch.started_by || "",
+    completedAt: sch.completed_at || "",
+    canCloseTrip:
+      sch.status !== "cancelled" &&
+      !sch.completed_at &&
+      !dayjs(sch.end_date || sch.start_date).isAfter(dayjs(), "day"),
     cancelReason: sch.cancel_reason || "",
     cancelledAt: sch.cancelled_at || "",
     cancelledBy: sch.cancelled_by || "",
@@ -1289,12 +1294,8 @@ router.get("/schedules/:id/after", optionalUser, (req, res) => {
   }
 });
 
-router.post("/schedules/:id/complete", authUser, (req, res) => {
-  try {
-    res.json({ ok: true, data: completeTrip(req.userId, req.params.id) });
-  } catch (e) {
-    res.status(e.status || 500).json({ ok: false, message: e.message });
-  }
+router.post("/schedules/:id/complete", authUser, (_req, res) => {
+  res.status(403).json({ ok: false, message: "行程结束后由导游或管理员统一结束，不用每人各点一次" });
 });
 
 router.get("/schedules/:id/contest", optionalUser, (req, res) => {
@@ -2100,7 +2101,7 @@ router.get("/orders", authUser, (req, res) => {
         canReview: e.status === "joined" && !reviewed.has(e.schedule_id),
         refundProgress: refunds.get(e.id) || null,
         completed: !!e.completed_at,
-        canComplete: e.status === "joined" && !e.completed_at && !dayjs(e.start_date).isAfter(dayjs(), "day"),
+        canComplete: false,
         organizerType: e.organizer_type,
         minGroupSize: Number(e.min_group_size || 0),
         joinedCount: Number(e.real_enrolled || 0),
@@ -2229,6 +2230,18 @@ router.get("/guide/schedules/:id/travelers/:enrollmentId", authGuide, (req, res)
       openSession: run.openSession ? { id: run.openSession.id, title: run.openSession.title } : null,
     },
   });
+});
+
+router.post("/guide/schedules/:id/complete", authGuide, (req, res) => {
+  const sch = ensureGuideSchedule(req, res);
+  if (!sch) return;
+  try {
+    const data = completeSchedule(sch.id, { role: "guide", id: req.guideId });
+    const next = db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id);
+    res.json({ ok: true, data: { ...checkinPayload(next, req), ...data } });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
 });
 
 router.post("/guide/schedules/:id/start", authGuide, (req, res) => {
@@ -3017,6 +3030,18 @@ router.get("/admin/schedules/:id/checkin", authAdmin, requireCap("field"), (req,
   if (!sch) return;
   try {
     res.json({ ok: true, data: checkinPayload(sch, req, { revealPhones: true }) });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message });
+  }
+});
+
+router.post("/admin/schedules/:id/complete", authAdmin, requireCap("field"), (req, res) => {
+  const sch = loadAdminSchedule(req, res);
+  if (!sch) return;
+  try {
+    const data = completeSchedule(sch.id, { role: "admin", id: req.adminId });
+    const next = db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id);
+    res.json({ ok: true, data: { ...checkinPayload(next, req, { revealPhones: true }), ...data } });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
   }

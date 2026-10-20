@@ -1,5 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
+const dayjs = require("dayjs");
 const { harness, loginUser, loginAdmin, issueCaptcha, auth, ID } = require("./http");
 
 describe("guide portal", () => {
@@ -137,5 +138,39 @@ describe("guide portal", () => {
 
     const user = await agent.get("/api/guide/me").set(auth(userToken));
     assert.equal(user.status, 401);
+  });
+
+  it("closes the assigned trip once for every joined traveler", async () => {
+    const userToken = await loginUser(agent);
+    await agent.post("/api/enroll").set(auth(userToken)).send({
+      scheduleId: seed.individualScheduleId,
+      travelerName: "林北野",
+      travelerPhone: "13800138000",
+      idCard: ID.maleBj,
+      emergencyName: "紧急联系人",
+      emergencyPhone: "13700000002",
+      waiverAccepted: true,
+      healthOk: true,
+    });
+    const cap = await issueCaptcha(agent);
+    const login = await agent.post("/api/guide/login").send({
+      phone: "13700001101",
+      captchaToken: cap.token,
+      captcha: cap.code,
+    }).expect(200);
+    const gauth = auth(login.body.data.token);
+    seed.db.prepare("UPDATE schedules SET guide_id=?, start_date=?, end_date=? WHERE id=?").run(
+      seed.guideId,
+      dayjs().format("YYYY-MM-DD"),
+      dayjs().format("YYYY-MM-DD"),
+      seed.individualScheduleId
+    );
+    const done = await agent.post(`/api/guide/schedules/${seed.individualScheduleId}/complete`).set(gauth).expect(200);
+    assert.equal(done.body.data.already, false);
+    assert.ok(done.body.data.count >= 1);
+    const row = seed.db.prepare("SELECT completed_at FROM enrollments WHERE user_id=? AND schedule_id=?").get(seed.userId, seed.individualScheduleId);
+    assert.ok(row.completed_at);
+    const again = await agent.post(`/api/guide/schedules/${seed.individualScheduleId}/complete`).set(gauth).expect(200);
+    assert.equal(again.body.data.already, true);
   });
 });

@@ -166,7 +166,7 @@ Page({
         priceDock: dockPrice(s),
         showEnroll: canShowEnroll(s),
         showDetailTabs: showDetailTabs(s),
-        showAfter: !!(s.myEnrollment && s.myEnrollment.status === "joined" && (isActivity || s.guaranteed || s.status === "confirmed" || s.status === "full" || s.status === "finished")),
+        showAfter: !!(s.completedAt && s.myEnrollment && s.myEnrollment.status === "joined"),
         ctaText: enrollCta(s),
         statusTag,
         leaderSlots: [1, 2].map((slot) => ({

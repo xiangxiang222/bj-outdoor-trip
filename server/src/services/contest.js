@@ -41,7 +41,7 @@ function submitPost(userId, scheduleId, { url, caption } = {}) {
   const sid = Number(scheduleId);
   const en = joinedEnrollment(userId, sid);
   if (!en) fail(400, "只有本团出行人可以参加评选");
-  if (!en.completed_at) fail(400, "请先点「完成活动」再贴分享链接");
+  if (!en.completed_at) fail(400, "行程结束后才能参加评选");
   const link = String(url || "").trim();
   if (!/^https?:\/\/\S+$/i.test(link)) fail(400, "请填写完整的社交媒体链接");
   const text = String(caption || "").trim().slice(0, 120);

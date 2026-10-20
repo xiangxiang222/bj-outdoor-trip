@@ -255,6 +255,9 @@
       <div v-if="checkinData" class="checkin-toolbar">
         <el-button v-if="!checkinData.startedAt" type="success" :loading="startingTrip" @click="startOfficialAdmin">正式开团</el-button>
         <span v-else>已正式开团 {{ checkinData.startedAt }}</span>
+        <el-button v-if="checkinData.canCloseTrip" type="warning" :loading="closingTrip" @click="closeTripAdmin">结束行程</el-button>
+        <span v-else-if="checkinData.completedAt">已结束行程 {{ checkinData.completedAt }}</span>
+        <span v-else class="muted">行程结束后可统一结束，出行人不用各自点击</span>
         <template v-if="checkinOpen">
           <strong>本轮 {{ checkinOpen.title }} · {{ checkinOpen.markedCount }}/{{ checkinOpen.total }}</strong>
           <el-button type="primary" :loading="confirmingCheckin" @click="confirmCheckinRound">确认本轮签到</el-button>
@@ -397,6 +400,7 @@ const showCheckin = ref(false);
 const checkinData = ref(null);
 const checkinStopKey = ref("depart");
 const startingTrip = ref(false);
+const closingTrip = ref(false);
 const openingCheckin = ref(false);
 const confirmingCheckin = ref(false);
 const markingId = ref(0);
@@ -665,6 +669,20 @@ async function loadCheckin(id) {
   if (!checkinOpen.value) {
     const first = (checkinData.value?.checkin?.stops || [])[0];
     if (first) checkinStopKey.value = first.key;
+  }
+}
+
+async function closeTripAdmin() {
+  closingTrip.value = true;
+  try {
+    const data = (await http.post(`/admin/schedules/${cur.value.id}/complete`)).data;
+    checkinData.value = data;
+    ElMessage.success(data.already ? "行程已经结束" : "已结束行程，全团可以评价和评选");
+    await load();
+  } catch (e) {
+    ElMessage.error(e.message || "结束失败");
+  } finally {
+    closingTrip.value = false;
   }
 }
 

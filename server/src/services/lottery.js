@@ -262,7 +262,7 @@ function requireEnrolled(userId, scheduleId) {
 
 function requireCompleted(userId, scheduleId) {
   const en = requireJoined(userId, scheduleId);
-  if (!en.completed_at) fail(400, "请先在回来的大巴上点「完成活动」");
+  if (!en.completed_at) fail(400, "行程结束后才能继续");
   return en;
 }
 

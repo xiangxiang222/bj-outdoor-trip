@@ -15,21 +15,36 @@ function joinedEnrollment(userId, scheduleId) {
     .get(userId, scheduleId);
 }
 
-function completeTrip(userId, scheduleId) {
+function tripEnded(sch) {
+  const end = sch.end_date || sch.start_date;
+  return !dayjs(end).isAfter(dayjs(), "day");
+}
+
+function completeSchedule(scheduleId, actor = {}) {
   const db = getDb();
   const sid = Number(scheduleId);
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(sid);
   if (!sch) fail(404, "行程不存在");
   if (sch.status === "cancelled") fail(400, "本团已解散");
-  const en = joinedEnrollment(userId, sid);
-  if (!en) fail(400, "只有报名成功的出行人可以完成活动");
-  if (dayjs(sch.start_date).isAfter(dayjs(), "day")) fail(400, "活动还没开始，回来大巴上再点完成");
-  if (en.completed_at) {
-    return { completedAt: en.completed_at, already: true };
-  }
+  if (sch.completed_at) return { completedAt: sch.completed_at, already: true, count: 0 };
+  if (!tripEnded(sch)) fail(400, "行程还没结束");
   const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
-  db.prepare("UPDATE enrollments SET completed_at=? WHERE id=?").run(now, en.id);
-  return { completedAt: now, already: false };
+  const role = actor.role === "guide" ? "guide" : "admin";
+  const count = db.transaction(() => {
+    db.prepare("UPDATE schedules SET completed_at=?, completed_by=?, completed_by_id=? WHERE id=?").run(
+      now,
+      role,
+      Number(actor.id) || 0,
+      sid
+    );
+    const info = db
+      .prepare(
+        "UPDATE enrollments SET completed_at=? WHERE schedule_id=? AND status='joined' AND (completed_at IS NULL OR completed_at='')"
+      )
+      .run(now, sid);
+    return info.changes;
+  })();
+  return { completedAt: now, already: false, count };
 }
 
 function afterTripState(userId, scheduleId) {
@@ -46,13 +61,13 @@ function afterTripState(userId, scheduleId) {
     title: route?.title || "",
     startDate: sch.start_date,
     joined: !!en,
-    completed: !!(en && en.completed_at),
-    completedAt: en?.completed_at || "",
-    canComplete: !!(en && !en.completed_at && !dayjs(sch.start_date).isAfter(dayjs(), "day")),
+    completed: !!(en && (en.completed_at || sch.completed_at)),
+    completedAt: en?.completed_at || sch.completed_at || "",
+    canComplete: false,
     reviewedByMe: !!(userId && reviewedScheduleIds(userId).has(sid)),
     lottery,
     reviews,
   };
 }
 
-module.exports = { completeTrip, afterTripState, joinedEnrollment };
+module.exports = { completeSchedule, afterTripState, joinedEnrollment, tripEnded };

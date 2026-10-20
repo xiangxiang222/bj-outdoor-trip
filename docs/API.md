@@ -84,8 +84,10 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | GET | `/lottery` | 可选用户 | 抽奖状态与圆盘奖品（不含权重）。Query：`scheduleId`。返回 `drawMode` `canPre` `canPost` `canClaim`。有本团配置则用本团奖池。不带 `scheduleId` 时另给 `trips[]`（已抽或已报名的本团抽奖）和平台默认转盘 |
 | POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }`。服务端先出结果再让圆盘转到 `sectorIndex`，返回 `rate` `prizeInfo` `deferred` `claimHint`。指定中奖不会返回给用户。本团奖池中奖先记账，跟团结束后领取。平台默认行后抽：交费（或已占座）且行程结束即可，不必签到或点完成活动 |
 | POST | `/lottery/claim` | 用户 | `{ scheduleId }`。须已交费或已占座，且行程结束日（或出发日）不晚于今天。文案：「跟团结束后才能领奖」 |
-| GET | `/schedules/:id/after` | 可选用户 | 完成活动页状态 |
-| POST | `/schedules/:id/complete` | 用户 | 标记完成活动 |
+| GET | `/schedules/:id/after` | 可选用户 | 行程结束后的评价与评选状态。`canComplete` 恒为 false |
+| POST | `/schedules/:id/complete` | 用户 | 拒绝。出行人不能各自结束行程 |
+| POST | `/guide/schedules/:id/complete` | 导游 | 行程结束日（或出发日）当天及之后，把本团一次结束，已报名的人同时记完成 |
+| POST | `/admin/schedules/:id/complete` | 管理员（现场） | 同上，没有导游时由管理员点 |
 | GET | `/schedules/:id/contest` | 可选用户 | 评选帖列表 |
 | POST | `/schedules/:id/contest` | 用户 | 提交评选 |
 | POST | `/contest/:id/vote` | 用户 | 投票 |

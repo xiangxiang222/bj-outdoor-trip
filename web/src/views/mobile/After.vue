@@ -2,12 +2,12 @@
   <div v-if="s">
     <div class="card"><div class="pad">
       <strong>{{ s.title }}</strong>
-      <p class="muted">{{ s.startDate }} · 交过费即可在行程结束后抽奖，不必签到。回来的大巴上点完成后再评价、评选。</p>
-      <p v-if="s.completed" style="color:var(--leaf)">已完成活动{{ s.completedAt ? " · " + s.completedAt : "" }}</p>
-      <p v-else-if="!s.joined" class="muted">报名参加后才能完成活动。</p>
+      <p class="muted">{{ s.startDate }} · 交过费即可在行程结束后抽奖，不必签到。行程由导游或管理员统一结束后，可以评价和参加评选。</p>
+      <p v-if="s.completed" style="color:var(--leaf)">行程已结束{{ s.completedAt ? " · " + s.completedAt : "" }}</p>
+      <p v-else-if="s.joined" class="muted">导游或管理员结束后，这里可以评价和参加评选。</p>
+      <p v-else class="muted">报名参加后，等行程结束即可回来评价。</p>
     </div></div>
     <p v-if="msg" :style="ok ? 'color:var(--leaf)' : 'color:var(--clay)'">{{ msg }}</p>
-    <button v-if="s.canComplete" class="btn block" type="button" :disabled="loading" @click="complete">{{ loading ? "提交中…" : "完成活动" }}</button>
 
     <div v-if="showLottery">
       <div class="h2" v-if="s.lottery?.drawMode !== 'pre'">{{ s.lottery?.drawMode === 'enroll' ? '报名后抽奖' : '行程结束后抽奖' }}</div>
@@ -92,7 +92,6 @@ const s = ref(null);
 const posts = ref([]);
 const msg = ref("");
 const ok = ref(false);
-const loading = ref(false);
 const saving = ref(false);
 const drawing = ref(false);
 const claiming = ref(false);
@@ -117,23 +116,6 @@ async function load() {
   } catch (e) {
     ok.value = false;
     msg.value = e.message || "加载失败";
-  }
-}
-
-async function complete() {
-  if (!requireLogin(store, router, route)) return;
-  loading.value = true;
-  msg.value = "";
-  try {
-    await http.post("/schedules/" + route.params.id + "/complete");
-    ok.value = true;
-    msg.value = "已完成，可以评价和参加评选";
-    await load();
-  } catch (e) {
-    ok.value = false;
-    msg.value = e.message;
-  } finally {
-    loading.value = false;
   }
 }
 
