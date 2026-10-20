@@ -67,7 +67,6 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-page.is-dark .mine-order-name,
 .mine-page.is-dark .mine-all { color: #f2f2f2; }
 .mine-page.is-dark .mine-order-ico image,
-.mine-page.is-dark .mine-links image,
 .mine-page.is-dark .mine-play image { filter: invert(1); }
 .mine-page.is-dark .mine-all { border-left-color: #3a3a3c; }
 .mine-page.is-dark .mine-all-ico,
@@ -76,8 +75,6 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-page.is-dark .mine-all-ico::before,
 .mine-page.is-dark .mine-all-ico::after { background: #f2f2f2; }
 .mine-page.is-dark .mine-order-ico .mine-badge { box-shadow: 0 0 0 2rpx #1c1c1e; }
-.mine-page.is-dark .mine-sign-ico { border-color: #f2f2f2; }
-.mine-page.is-dark .mine-sign-ico::before { background: #f2f2f2; }
 .mine-page.is-dark .mine-order-row { border-top-color: #3a3a3c; }
 .mine-sheet-head { display: flex; align-items: center; justify-content: space-between; padding: 0 16rpx 16rpx; font-size: calc(30rpx * var(--ui-scale)); font-weight: 650; color: #1a1a1a; }
 .mine-stats { display: flex; align-items: stretch; padding: 0 8rpx 12rpx; }
@@ -85,13 +82,13 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-stats > .mine-more { flex: none; width: 64rpx; }
 .mine-stat-num { font-size: calc(34rpx * var(--ui-scale)); font-weight: 700; color: #1a1a1a; line-height: 1.2; }
 .mine-stat-name { margin-top: 4rpx; font-size: calc(22rpx * var(--ui-scale)); color: #8d8d8d; }
-.mine-links { display: flex; background: #fff; margin: 0 24rpx 16rpx; border-radius: 24rpx; padding: 24rpx 8rpx 20rpx; }
-.mine-links > view { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8rpx; font-size: calc(22rpx * var(--ui-scale)); color: #1a1a1a; }
-.mine-links image { width: 56rpx; height: 56rpx; }
-.mine-link-num { color: #8d8d8d; font-size: calc(22rpx * var(--ui-scale)); font-weight: 600; }
-.mine-sign-ico { width: 56rpx; height: 56rpx; border: 3rpx solid #1a1a1a; border-radius: 12rpx; position: relative; box-sizing: border-box; }
-.mine-sign-ico::before { content: ""; position: absolute; left: 8rpx; right: 8rpx; top: 16rpx; height: 3rpx; background: #1a1a1a; }
-.mine-sign-ico::after { content: ""; position: absolute; left: 16rpx; top: 28rpx; width: 16rpx; height: 8rpx; border-left: 3rpx solid #bc4749; border-bottom: 3rpx solid #bc4749; transform: rotate(-45deg); }
+.mine-links { display: flex; align-items: center; background: #fff; margin: 0 24rpx 16rpx; border-radius: 24rpx; padding: 28rpx 8rpx; }
+.mine-links > view { flex: 1; display: flex; flex-direction: row; align-items: baseline; justify-content: center; gap: 8rpx; font-size: calc(28rpx * var(--ui-scale)); color: #1a1a1a; }
+.mine-link-num { color: inherit; font-size: calc(30rpx * var(--ui-scale)); font-weight: 650; }
+.mine-ico { width: 56rpx; height: 56rpx; display: flex; align-items: flex-end; justify-content: center; }
+.mine-cam { width: 40rpx; height: 28rpx; margin-bottom: 4rpx; border: 3rpx solid currentColor; border-radius: 6rpx; position: relative; box-sizing: border-box; }
+.mine-cam::before { content: ""; position: absolute; left: 50%; top: 50%; width: 14rpx; height: 14rpx; margin: -7rpx 0 0 -7rpx; border: 3rpx solid currentColor; border-radius: 50%; box-sizing: border-box; }
+.mine-cam::after { content: ""; position: absolute; left: 50%; top: -8rpx; width: 16rpx; height: 8rpx; margin-left: -8rpx; border: 3rpx solid currentColor; border-bottom: 0; border-radius: 6rpx 6rpx 0 0; box-sizing: border-box; }
 .mine-member { margin: 0; padding: 8rpx 24rpx 28rpx; border-radius: 0; background: transparent; box-shadow: none; display: flex; justify-content: space-between; align-items: center; color: #1a1a1a; }
 .mine-level { font-size: calc(34rpx * var(--ui-scale)); font-weight: 700; color: #642470; text-decoration: underline; text-underline-offset: 8rpx; }
 .mine-em { font-style: italic; font-weight: 800; }
@@ -111,12 +108,9 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-all-ico::before, .mine-all-ico::after { content: ""; position: absolute; left: 8rpx; right: 8rpx; height: 3rpx; background: #1a1a1a; }
 .mine-all-ico::before { top: 14rpx; }
 .mine-all-ico::after { top: 24rpx; }
-.mine-play { display: flex; background: #fff; margin: 0 24rpx 16rpx; border-radius: 24rpx; padding: 24rpx 8rpx 20rpx; }
+.mine-play { display: flex; align-items: flex-start; background: #fff; margin: 0 24rpx 16rpx; border-radius: 24rpx; padding: 24rpx 8rpx 20rpx; }
 .mine-play > view { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8rpx; font-size: calc(20rpx * var(--ui-scale)); color: #1a1a1a; }
-.mine-play text { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.mine-cam { width: 52rpx; height: 40rpx; border: 3rpx solid #1a1a1a; border-radius: 8rpx; position: relative; box-sizing: border-box; }
-.mine-cam::before { content: ""; position: absolute; left: 14rpx; top: 8rpx; width: 16rpx; height: 16rpx; border: 3rpx solid #1a1a1a; border-radius: 50%; box-sizing: border-box; }
-.mine-cam::after { content: ""; position: absolute; left: 8rpx; top: -10rpx; width: 16rpx; height: 10rpx; border: 3rpx solid #1a1a1a; border-bottom: 0; border-radius: 6rpx 6rpx 0 0; box-sizing: border-box; }
+.mine-play text { max-width: 100%; text-align: center; line-height: 1.25; white-space: normal; }
 .mine-page.is-dark .mine-cam,
 .mine-page.is-dark .mine-cam::before,
 .mine-page.is-dark .mine-cam::after { border-color: #f2f2f2; }

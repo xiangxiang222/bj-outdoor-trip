@@ -47,3 +47,4 @@
     <view class="btn ghost" bindtap="goPublish">{{tr.t('去发起', lang)}}</view>
   </view>
 </view>
+<view class="tab-pad"></view>

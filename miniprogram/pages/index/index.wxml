@@ -159,3 +159,4 @@
   </view>
 </block>
 <view class="home-foot muted" bindtap="goOfficial">{{tr.t('客服与规则', lang)}}</view>
+<view class="tab-pad"></view>

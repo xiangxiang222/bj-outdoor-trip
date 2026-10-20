@@ -42,7 +42,6 @@
 }
 .od-list { padding: 16rpx 16rpx 0; }
 .od-card { background: #fff; border-radius: 16rpx; margin: 0 0 12rpx; overflow: hidden; }
-.od-tab-space { height: calc(140rpx + env(safe-area-inset-bottom)); }
 .od-end { text-align: center; color: #b5b5b5; font-size: calc(22rpx * var(--ui-scale)); padding: 12rpx 0 8rpx; }
 .od-head { display: flex; justify-content: space-between; align-items: center; padding: 20rpx 20rpx 8rpx; font-size: calc(26rpx * var(--ui-scale)); }
 .od-shop { font-weight: 650; color: #1a1a1a; }
