@@ -805,6 +805,9 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "started_at", "TEXT");
   addColumnIfMissing(db, "schedules", "started_by", "TEXT");
   addColumnIfMissing(db, "schedules", "started_by_id", "INTEGER");
+  addColumnIfMissing(db, "schedules", "completed_at", "TEXT");
+  addColumnIfMissing(db, "schedules", "completed_by", "TEXT");
+  addColumnIfMissing(db, "schedules", "completed_by_id", "INTEGER");
   addColumnIfMissing(db, "schedules", "bounty_status", "TEXT DEFAULT ''");
   addColumnIfMissing(db, "schedules", "bounty_amount", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "schedules", "bounty_paid_at", "TEXT");

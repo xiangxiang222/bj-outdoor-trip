@@ -63,14 +63,14 @@ describe("lottery after-trip contest", () => {
     assert.equal(state.body.data.pre.prizeKey, "points20");
   });
 
-  it("blocks complete and second draw until the trip day after joining", async () => {
+  it("does not let each traveler close the trip", async () => {
     const token = await loginUser(agent);
     const early = await agent.post(`/api/schedules/${seed.individualScheduleId}/complete`).set(auth(token));
-    assert.equal(early.status, 400);
+    assert.equal(early.status, 403);
     await enroll(token).expect(200);
-    const beforeDay = await agent.post(`/api/schedules/${seed.individualScheduleId}/complete`).set(auth(token));
-    assert.equal(beforeDay.status, 400);
-    assert.match(beforeDay.body.message, /还没开始/);
+    const denied = await agent.post(`/api/schedules/${seed.individualScheduleId}/complete`).set(auth(token));
+    assert.equal(denied.status, 403);
+    assert.match(denied.body.message, /导游或管理员/);
     const postEarly = await agent
       .post("/api/lottery/draw")
       .set(auth(token))
@@ -81,7 +81,7 @@ describe("lottery after-trip contest", () => {
     assert.equal(orders.body.data[0].completed, false);
   });
 
-  it("completes the trip then allows review, second draw and contest vote", async () => {
+  it("lets a guide or admin close the trip once for everyone", async () => {
     const token = await loginUser(agent);
     await enroll(token).expect(200);
     seed.db.prepare("UPDATE schedules SET start_date=?, end_date=? WHERE id=?").run(
@@ -91,11 +91,28 @@ describe("lottery after-trip contest", () => {
     );
 
     const ready = await agent.get("/api/orders").set(auth(token)).expect(200);
-    assert.equal(ready.body.data[0].canComplete, true);
+    assert.equal(ready.body.data[0].canComplete, false);
+    assert.equal(ready.body.data[0].completed, false);
 
-    const done = await agent.post(`/api/schedules/${seed.individualScheduleId}/complete`).set(auth(token)).expect(200);
+    const admin = await loginAdmin(agent);
+    seed.db.prepare("UPDATE schedules SET start_date=?, end_date=? WHERE id=?").run(
+      dayjs().add(3, "day").format("YYYY-MM-DD"),
+      dayjs().add(3, "day").format("YYYY-MM-DD"),
+      seed.individualScheduleId
+    );
+    const earlyClose = await agent.post(`/api/admin/schedules/${seed.individualScheduleId}/complete`).set(auth(admin));
+    assert.equal(earlyClose.status, 400);
+    assert.match(earlyClose.body.message, /还没结束/);
+    seed.db.prepare("UPDATE schedules SET start_date=?, end_date=? WHERE id=?").run(
+      dayjs().format("YYYY-MM-DD"),
+      dayjs().format("YYYY-MM-DD"),
+      seed.individualScheduleId
+    );
+
+    const done = await agent.post(`/api/admin/schedules/${seed.individualScheduleId}/complete`).set(auth(admin)).expect(200);
     assert.equal(done.body.data.already, false);
-    const again = await agent.post(`/api/schedules/${seed.individualScheduleId}/complete`).set(auth(token)).expect(200);
+    assert.ok(done.body.data.count >= 1);
+    const again = await agent.post(`/api/admin/schedules/${seed.individualScheduleId}/complete`).set(auth(admin)).expect(200);
     assert.equal(again.body.data.already, true);
 
     const after = await agent.get(`/api/schedules/${seed.individualScheduleId}/after`).set(auth(token)).expect(200);
@@ -129,7 +146,7 @@ describe("lottery after-trip contest", () => {
     assert.equal(mine.body.data.votes, 0);
 
     const selfVote = await agent.post(`/api/contest/${mine.body.data.id}/vote`).set(auth(token));
-    assert.equal(selfVote.status, 400);
+    assert.equal(selfVote.status, 400, selfVote.body?.message || "");
 
     const other = await register("13600136008", "投票客", ID.femaleBj);
     await enroll(other, {

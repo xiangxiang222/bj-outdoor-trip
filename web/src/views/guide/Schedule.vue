@@ -19,6 +19,9 @@
     <div class="card"><div class="pad">
       <p class="muted" style="margin:0 0 10px">出发前上车、每个休息点都可以再开一轮。核对名单后点确认，下一轮才能发起。没上车的交费客行程结束后仍可抽奖。</p>
       <button v-if="!s.startedAt" class="btn block" type="button" :disabled="starting" @click="startOfficial">{{ starting ? "开团中…" : "正式开团" }}</button>
+      <p v-if="s.completedAt" class="muted" style="color:var(--leaf)">已结束行程 {{ s.completedAt }}。全团可以评价和评选。</p>
+      <button v-else-if="s.canCloseTrip" class="btn block" type="button" :disabled="closing" @click="closeTrip">{{ closing ? "结束中…" : "结束行程" }}</button>
+      <p v-else class="muted">行程结束后在这里统一点一次，出行人不用各自点击。</p>
       <template v-if="openSession">
         <p><strong>本轮 {{ openSession.title }}</strong> · 已到 {{ openSession.markedCount }} / {{ openSession.total }}</p>
         <button class="btn block" type="button" :disabled="confirming" @click="confirmRound">{{ confirming ? "确认中…" : "确认本轮签到" }}</button>
@@ -141,6 +144,7 @@ const checkinLine = computed(() => {
 });
 const stopKey = ref("depart");
 const starting = ref(false);
+const closing = ref(false);
 const opening = ref(false);
 const confirming = ref(false);
 const seatRows = computed(() => {
@@ -251,6 +255,20 @@ async function onManageSeat(seat) {
     await load();
   } catch (e) {
     msg.value = e.message;
+  }
+}
+
+async function closeTrip() {
+  closing.value = true;
+  msg.value = "";
+  try {
+    const data = (await http.post(`/guide/schedules/${route.params.id}/complete`)).data;
+    s.value = { ...s.value, ...data };
+    msg.value = data.already ? "行程已经结束" : "已结束行程，全团可以评价和评选";
+  } catch (e) {
+    msg.value = e.message;
+  } finally {
+    closing.value = false;
   }
 }
 

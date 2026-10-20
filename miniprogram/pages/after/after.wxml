@@ -2,12 +2,12 @@
 <wxs src="../../utils/locale.wxs" module="tr" />
 <view class="card" wx:if="{{s}}"><view class="pad">
   <view class="title">{{tr.t(s.title, lang)}}</view>
-  <view class="muted">{{tr.t(s.startDate, lang)}} {{tr.t('· 回来的大巴上点完成后再评价、评选。', lang)}}</view>
-  <view wx:if="{{s.completed}}" style="color:#2d6a4f">{{tr.t('已完成活动', lang)}}</view>
-  <view wx:elif="{{!s.joined}}" class="muted">{{tr.t('报名参加后才能完成活动。', lang)}}</view>
+  <view class="muted">{{tr.t(s.startDate, lang)}} {{tr.t('· 行程由导游或管理员统一结束后，可以评价和参加评选。', lang)}}</view>
+  <view wx:if="{{s.completed}}" style="color:#2d6a4f">{{tr.t('行程已结束', lang)}}</view>
+  <view wx:elif="{{s.joined}}" class="muted">{{tr.t('导游或管理员结束后，这里可以评价和参加评选。', lang)}}</view>
+  <view wx:else class="muted">{{tr.t('报名参加后，等行程结束即可回来评价。', lang)}}</view>
 </view></view>
 <view class="pad" wx:if="{{msg}}">{{tr.t(msg, lang)}}</view>
-<view class="btn" wx:if="{{s.canComplete}}" bindtap="complete">{{tr.t('完成活动', lang)}}</view>
 
 <block wx:if="{{s.completed}}">
   <view class="pad title">{{tr.t('评价领队和路线', lang)}}</view>
