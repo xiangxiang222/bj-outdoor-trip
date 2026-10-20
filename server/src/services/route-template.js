@@ -191,8 +191,15 @@ function buildDocx(blocks, { method = 0 } = {}) {
     let image = null;
     if (block.image) {
       const data = Buffer.isBuffer(block.image) ? block.image : Buffer.from(block.image);
-      images.push({ name: `image${images.length + 1}${block.ext || ".png"}`, data });
-      image = { rid: `rIdImg${images.length}`, data, id: images.length };
+      const ext = block.ext || ".png";
+      const same = images.find((img) => img.ext === ext && img.data.equals(data));
+      if (same) {
+        image = { rid: same.rid, data, id: same.id };
+      } else {
+        const id = images.length + 1;
+        images.push({ name: `image${id}${ext}`, data, ext, rid: `rIdImg${id}`, id });
+        image = { rid: `rIdImg${id}`, data, id };
+      }
     }
     paras.push(paragraphXml(block, image));
   }

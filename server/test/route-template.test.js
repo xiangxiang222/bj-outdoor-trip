@@ -21,6 +21,17 @@ function img(n = 1) {
 }
 
 describe("route docx template", () => {
+  it("stores one copy when the same photo is pasted more than once", () => {
+    const buf = buildDocx([
+      { image: PNG, ext: ".png" },
+      { image: Buffer.from(PNG), ext: ".png" },
+    ]);
+    const files = unzip(buf);
+    assert.equal(Object.keys(files).filter((name) => name.startsWith("word/media/")).length, 1);
+    const xml = files["word/document.xml"].toString("utf8");
+    assert.equal(xml.match(/r:embed="rIdImg1"/g).length, 2);
+  });
+
   it("embeds a photo with the drawing markup Word displays", () => {
     const buf = buildDocx(["封面", { image: PNG, ext: ".png" }]);
     const xml = unzip(buf)["word/document.xml"].toString("utf8");
