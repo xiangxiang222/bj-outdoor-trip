@@ -370,7 +370,7 @@
   </view>
 </block>
 
-<view class="enroll-dock">
+<view class="enroll-dock" wx:if="{{!showDetailTabs}}">
   <view class="enroll-bar" wx:if="{{showEnroll}}">
     <view class="enroll-price">
       <text class="strong">{{tr.t(priceDock.main, lang)}}</text>
@@ -386,6 +386,8 @@
   </view>
   <view class="pad muted" wx:elif="{{s.myEnrollment && (isActivity || s.myEnrollment.payStatus!='paid')}}" style="text-align:center">{{tr.t(ticket.title || '已报名', lang)}}<text wx:if="{{isActivity && s.myEnrollment.status != 'waitlist'}}">{{tr.t('，到场找发起人即可', lang)}}</text></view>
 </view>
+<view class="app-tabs-spacer" wx:if="{{showDetailTabs}}"></view>
+<app-tabs wx:if="{{showDetailTabs}}" id="appTabs" />
 
 <canvas type="2d" id="shareCardCanvas" class="share-offscreen"></canvas>
 <canvas type="2d" id="sharePosterCanvas" class="share-offscreen"></canvas>
