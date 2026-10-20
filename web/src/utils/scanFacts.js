@@ -112,6 +112,7 @@ export function ticketState(row, query = {}) {
     };
   }
   if (en.status === "cancelled") return null;
+  if (row.channel !== "activity" && (en.payStatus === "paid" || en.pay_status === "paid")) return null;
   return {
     kind: "joined",
     title: row.channel === "activity" ? "已报名" : "出行票",

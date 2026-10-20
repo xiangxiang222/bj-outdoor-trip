@@ -36,6 +36,9 @@ describe("scanFacts", () => {
     expect(ticketState({ myEnrollment: { status: "applied" }, oversub: { copy: "车位有限。" } }).title).toBe("已报名待确认");
     expect(ticketState({ myEnrollment: { status: "waitlist" } }).title).toBe("候补票");
     expect(ticketState({ channel: "activity", myEnrollment: { status: "joined" } }).title).toBe("已报名");
+    expect(ticketState({ channel: "trip", myEnrollment: { status: "joined", payStatus: "unpaid" } }).title).toBe("出行票");
+    expect(ticketState({ channel: "trip", myEnrollment: { status: "joined", payStatus: "paid" } })).toBe(null);
+    expect(ticketState({ channel: "activity", myEnrollment: { status: "joined", payStatus: "paid" } }).title).toBe("已报名");
     expect(ticketState({ channel: "trip" }, { joined: "1" }).kind).toBe("joined");
     expect(ticketState({ channel: "trip" })).toBe(null);
   });
