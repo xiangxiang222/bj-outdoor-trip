@@ -21,6 +21,7 @@ function parseVideoInput(input) {
 function normalizeHref(value) {
   let href = String(value || "").trim();
   if (!href || href.length > MAX_LEN) return "";
+  if (href.startsWith("/static/") && !href.includes("..") && isDirectFile(href)) return href.split("?")[0];
   if (href.startsWith("//")) href = "https:" + href;
   if (!/^https?:\/\//i.test(href)) return "";
   if (/^(javascript|data|file|ftp):/i.test(href)) return "";

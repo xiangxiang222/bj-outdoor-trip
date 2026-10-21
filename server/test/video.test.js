@@ -43,6 +43,9 @@ describe("route video links", () => {
     const file = videoPlayerOf("https://cdn.example.com/clip.mp4");
     assert.equal(file.kind, "video");
     assert.equal(file.embedUrl, "https://cdn.example.com/clip.mp4");
+    const local = videoPlayerOf("/static/uploads/botv-abc.mp4");
+    assert.equal(local.kind, "video");
+    assert.equal(local.embedUrl, "/static/uploads/botv-abc.mp4");
   });
 
   it("caps the list and skips duplicates", () => {

@@ -210,6 +210,30 @@ const uploadDocx = multer({
   },
 });
 
+const uploadBotVideo = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadsDir()),
+    filename: (_req, _file, cb) => cb(null, `botv-${nanoid(10)}.mp4`),
+  }),
+  limits: { fileSize: 32 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    const ok = ext === ".mp4" || ext === ".m4v" || ext === ".mov" || /^video\/(mp4|quicktime)$/i.test(file.mimetype || "");
+    cb(ok ? null : new Error("请上传 mp4 视频"), ok);
+  },
+});
+
+function videoFileOk(filePath) {
+  const fh = fs.openSync(filePath, "r");
+  try {
+    const buf = Buffer.alloc(12);
+    const n = fs.readSync(fh, buf, 0, 12, 0);
+    return n >= 12 && buf.toString("ascii", 4, 8) === "ftyp";
+  } finally {
+    fs.closeSync(fh);
+  }
+}
+
 const uploadImage = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, uploadsDir()),
@@ -295,7 +319,10 @@ function mapRoute(row, req, extra) {
       : block
   );
   r.gallery = gallery.map((g) => attachAssetHost(req, g));
-  r.videos = videoViews(r.videos);
+  r.videos = videoViews(r.videos).map((v) => {
+    const local = (u) => (String(u || "").startsWith("/static/") ? attachAssetHost(req, u) : u);
+    return { ...v, url: local(v.url), embedUrl: local(v.embedUrl) };
+  });
   r.itinerary = (r.itinerary || []).map((it) => ({
     ...it,
     photo: it.photo ? attachAssetHost(req, resolveStoredMedia(it.photo, { code: r.code })) || "" : "",
@@ -1797,6 +1824,21 @@ router.post("/upload", authUser, (req, res) => {
   uploadImage.single("file")(req, res, (err) => {
     if (err) return res.status(400).json({ ok: false, message: err.message || "上传失败" });
     if (!req.file) return res.status(400).json({ ok: false, message: "请选择图片" });
+    res.json({ ok: true, data: { url: `/static/uploads/${req.file.filename}` } });
+  });
+});
+
+router.post("/bot/videos", authBot, (req, res) => {
+  uploadBotVideo.single("file")(req, res, (err) => {
+    if (err) {
+      const tooBig = err.code === "LIMIT_FILE_SIZE";
+      return res.status(400).json({ ok: false, message: tooBig ? "视频请小于 32MB" : err.message || "上传失败" });
+    }
+    if (!req.file) return res.status(400).json({ ok: false, message: "请上传 mp4 视频" });
+    if (!videoFileOk(req.file.path)) {
+      fs.unlink(req.file.path, () => {});
+      return res.status(400).json({ ok: false, message: "请上传 mp4 视频" });
+    }
     res.json({ ok: true, data: { url: `/static/uploads/${req.file.filename}` } });
   });
 });
