@@ -63,7 +63,7 @@
       </el-table-column>
       <el-table-column label="申请人" min-width="160">
         <template #default="{ row }">
-          <span v-if="row.source === 'bot'">机器采集</span>
+          <span v-if="row.source === 'bot'">机器采集<span v-if="row.reviewNote" class="muted"> · {{ row.reviewNote }}</span></span>
           <span v-else-if="row.submittedBy">{{ row.applicantName || "用户" }} · {{ row.contactPhone }} / {{ row.contactWechat }}</span>
           <span v-else class="muted">官方</span>
         </template>
@@ -126,7 +126,7 @@
             <div v-if="form.sourceUrl">{{ form.sourceUrl }}</div>
             <div v-if="form.suggestedPrice">建议价 ¥{{ form.suggestedPrice }}，还没写入阶梯价</div>
             <div v-if="form.reviewNote">上次说明：{{ form.reviewNote }}</div>
-            <div class="muted">封面和相册用采集到的图片。没给图时按景点名补上，这里可以换。</div>
+            <div class="muted">封面只用机器人上报的图片。驳回意见它能读到，改完会按同一条再上报。</div>
             <div v-for="item in form.photoSources || []" :key="item.url" class="muted">{{ item.caption ? item.caption + " " : "" }}{{ item.url }}</div>
           </div>
         </el-form-item>
@@ -928,12 +928,20 @@ async function decide(row, action) {
   try {
     let note = "";
     if (action === "reject") {
-      const res = await ElMessageBox.prompt(`驳回「${row.title}」？可填写原因。`, "驳回申请", {
-        confirmButtonText: "驳回",
-        cancelButtonText: "取消",
-        inputPlaceholder: "原因，可空",
-        type: "warning",
-      });
+      const bot = row.source === "bot";
+      const res = await ElMessageBox.prompt(
+        bot
+          ? `驳回「${row.title}」。这条意见会交给采集机器人，它按同一来源键重新采集后再上报。`
+          : `驳回「${row.title}」？可填写原因。`,
+        bot ? "驳回采集" : "驳回申请",
+        {
+          confirmButtonText: "驳回",
+          cancelButtonText: "取消",
+          inputPlaceholder: bot ? "例如：封面换成景区实景，补上门票和开放时间" : "原因，可空",
+          inputValidator: bot ? (value) => (String(value || "").trim() ? true : "请写修改意见") : undefined,
+          type: "warning",
+        }
+      );
       note = String(res.value || "").trim();
     } else {
       const bounty = row.source === "bot" ? "" : `首次成团后奖励 ¥${row.bountyAmount || 300}。`;

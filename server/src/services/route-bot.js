@@ -4,7 +4,7 @@ const { normalizeItinerary } = require("./story");
 const { reviewOf } = require("./route-apply");
 const { noticeBotRoute } = require("./notices");
 const { scheduleRouteI18n } = require("./route-i18n");
-const { downloadPhotoList, searchAndSavePhotos } = require("./route-draft");
+const { downloadPhotoList } = require("./route-draft");
 
 const CATEGORIES = ["长城", "登山", "山水", "玩水", "文化", "草原", "海滨"];
 
@@ -83,23 +83,12 @@ function tagsOf(body) {
     .slice(0, 8);
 }
 
-function photoQuery(title) {
-  const cleaned = String(title || "")
-    .replace(/（[^）]*）|\([^)]*\)/g, "")
-    .replace(/一日游|两日游|二日游|三日游|多日游/g, "")
-    .replace(/^(北京市|北京|河北省|河北|张家口市|张家口|门头沟|延庆|怀柔|密云|平谷|昌平|房山)/, "")
-    .replace(/高山草甸|草甸|徒步|穿越|环线|环穿|自驾|秋色|彩林|溪谷|峡谷|冬季|踏冰|赏花|轻穿越|原始森林|四季花海|山脊|风景区|北线|一日|两日/g, "")
-    .replace(/游$/, "")
-    .replace(/\s+/g, "")
-    .trim();
-  return cleaned.length >= 2 ? cleaned : String(title || "").trim();
-}
-
 async function attachBotPhotos(draft, deps = {}) {
   const remote = [];
   for (const item of draft.photoSources || []) {
     if (item && item.url) remote.push(item.url);
   }
+  if (!remote.length) return { cover: "", gallery: [] };
   const download = deps.downloadPhotos || downloadPhotoList;
   let saved = [];
   try {
@@ -108,24 +97,7 @@ async function attachBotPhotos(draft, deps = {}) {
     saved = [];
   }
   if (!Array.isArray(saved)) saved = [];
-  saved = saved.filter((url) => String(url).startsWith("/static/"));
-  const target = remote.length ? Math.min(8, Math.max(4, remote.length)) : 4;
-  if (saved.length < target) {
-    const search = deps.searchPhotos || searchAndSavePhotos;
-    try {
-      const more = await search(
-        { title: photoQuery(draft.title), region: draft.region, category: draft.category },
-        deps
-      );
-      for (const url of more || []) {
-        if (saved.length >= target) break;
-        if (String(url).startsWith("/static/") && !saved.includes(url)) saved.push(url);
-      }
-    } catch {
-      /* 搜图失败就留已经下到的 */
-    }
-  }
-  saved = saved.slice(0, 8);
+  saved = saved.filter((url) => String(url).startsWith("/static/")).slice(0, 8);
   return { cover: saved[0] || "", gallery: saved };
 }
 
@@ -199,6 +171,7 @@ function viewOf(row, extra = {}) {
     suggestedPrice: Number(row.suggested_price || 0),
     photoSources: Array.isArray(photos) ? photos : [],
     reviewNote: row.review_note || "",
+    reviewedAt: row.reviewed_at || "",
     ...extra,
   };
 }
@@ -348,6 +321,22 @@ async function fillMissingBotPhotos(deps) {
   return filled;
 }
 
+function listBotRoutes(review) {
+  const status = String(review || "").trim();
+  if (status && !["pending", "approved", "rejected"].includes(status)) {
+    fail(400, "review 只能是 pending、approved 或 rejected");
+  }
+  const db = getDb();
+  const rows = status
+    ? db
+        .prepare(
+          "SELECT * FROM routes WHERE source='bot' AND IFNULL(review_status,'pending')=? ORDER BY id DESC"
+        )
+        .all(status)
+    : db.prepare("SELECT * FROM routes WHERE source='bot' ORDER BY id DESC").all();
+  return rows.map((row) => viewOf(row));
+}
+
 function botRoute(idOrKey) {
   const db = getDb();
   const key = clip(idOrKey, 200);
@@ -358,4 +347,4 @@ function botRoute(idOrKey) {
   return viewOf(row);
 }
 
-module.exports = { ingestRoute, botRoute, fillMissingBotPhotos, photoQuery };
+module.exports = { ingestRoute, botRoute, listBotRoutes, fillMissingBotPhotos };

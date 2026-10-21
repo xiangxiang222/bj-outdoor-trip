@@ -2,7 +2,7 @@ const { describe, it, beforeEach, afterEach } = require("node:test");
 const assert = require("node:assert/strict");
 const dayjs = require("dayjs");
 const { harness, loginAdmin, loginUser, auth } = require("./http");
-const { ingestRoute, photoQuery } = require("../src/services/route-bot");
+const { ingestRoute } = require("../src/services/route-bot");
 
 const TOKEN = "bot-test-token";
 
@@ -162,8 +162,8 @@ describe("bot route ingest", () => {
     assert.equal(looked.body.data.reviewNote, "图片不够");
   });
 
-  it("stores a downloaded photo and searches by place when none are given", async () => {
-    assert.equal(photoQuery("门头沟北灵山高山草甸徒步"), "北灵山");
+  it("saves reported photos and lists rejection notes for the bot", async () => {
+    const admin = await loginAdmin(agent);
     const jpeg = Buffer.alloc(9000, 7);
     jpeg[0] = 0xff;
     jpeg[1] = 0xd8;
@@ -171,9 +171,6 @@ describe("bot route ingest", () => {
     const urls = [];
     const fetchImpl = async (url) => {
       urls.push(String(url));
-      if (String(url).includes("baidu.com") || String(url).includes("image.so.com")) {
-        return { ok: true, json: async () => ({ data: [], list: [] }) };
-      }
       return { ok: true, arrayBuffer: async () => jpeg };
     };
 
@@ -187,10 +184,9 @@ describe("bot route ingest", () => {
     const row = seed.db.prepare("SELECT cover, gallery_json FROM routes WHERE id=?").get(saved.id);
     assert.match(row.cover, /^\/static\/uploads\/bot-.+\.jpg$/);
     assert.equal(JSON.parse(row.gallery_json)[0], row.cover);
-    assert.equal(urls.some((url) => url.includes("127.0.0.1")), false);
 
     urls.length = 0;
-    const searched = await ingestRoute(
+    const bare = await ingestRoute(
       body({
         sourceKey: "photo-beiling",
         title: "门头沟北灵山高山草甸徒步",
@@ -198,9 +194,32 @@ describe("bot route ingest", () => {
       }),
       { fetchImpl }
     );
-    assert.equal(urls.some((url) => url.includes("127.0.0.1")), false);
-    assert.equal(urls.some((url) => decodeURIComponent(url).includes("北灵山")), true);
-    const empty = seed.db.prepare("SELECT cover FROM routes WHERE id=?").get(searched.id);
+    assert.equal(urls.length, 0);
+    const empty = seed.db.prepare("SELECT cover FROM routes WHERE id=?").get(bare.id);
     assert.equal(empty.cover, "");
+
+    const missing = await agent
+      .post(`/api/admin/routes/${saved.id}/review`)
+      .set(auth(admin))
+      .send({ action: "reject", note: "  " })
+      .expect(400);
+    assert.match(missing.body.message, /修改意见/);
+
+    await agent
+      .post(`/api/admin/routes/${saved.id}/review`)
+      .set(auth(admin))
+      .send({ action: "reject", note: "封面换成湖面实景" })
+      .expect(200);
+    const inbox = await agent.get("/api/bot/routes?review=rejected").set(botAuth()).expect(200);
+    const item = inbox.body.data.find((row) => row.sourceKey === "photo-lake");
+    assert.equal(item.reviewNote, "封面换成湖面实景");
+    assert.equal(item.reviewStatus, "rejected");
+
+    const again = await agent.post("/api/bot/routes").set(botAuth()).send(body({ sourceKey: "photo-lake", description: "补了实景" })).expect(200);
+    assert.equal(again.body.data.reviewStatus, "pending");
+    const left = await agent.get("/api/bot/routes?review=rejected").set(botAuth()).expect(200);
+    assert.equal(left.body.data.some((row) => row.sourceKey === "photo-lake"), false);
+    const looked = await agent.get("/api/bot/routes/photo-lake").set(botAuth()).expect(200);
+    assert.equal(looked.body.data.reviewNote, "封面换成湖面实景");
   });
 });

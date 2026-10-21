@@ -83,8 +83,9 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | POST | `/me/leader` | 用户 | `{ name, years, intro }` 个人领队申请，pending。已通过则 400 |
 | GET | `/routes/apps` | 用户 | 我提交的线路申请、`bounty`、客服 `contacts` |
 | POST | `/routes/apply` | 用户 | 申请收录线路（不是发团）。`title` `region` `contactPhone` `contactWechat` 必填，可选 `subtitle` `days` `minGroupSize` `originPrice` `cover` `description`。写入 `review_status=pending`，后台通过并首次成团后奖励 300 元入账钱包（`route_bounty`）。返回文案含客服微信 |
-| POST | `/bot/routes` | 采集密钥 | 机器采集入库。`title` `region` 必填。可选 `days`（1/2/3/5）、`subtitle` `category` `difficulty` `description` `highlights` `itinerary` `feeInclude` `feeExclude` `equipment` `notices` `meetupPoints` `suggestedPrice` `sourceUrl` `sourceKey` `photoSources`。写入 `source=bot`、`review_status=pending`、`status=off`，不建排期、不进目录、不发奖励。带来的图片会下载到本站，放进封面和相册；没给图片时按景点名搜图补上。同一 `sourceKey`（缺省用来源链接，再没有用标题加地区）重复提交会更新待审稿；已驳回的会重新待审；已通过的不覆盖。未配置 `BOT_INGEST_TOKEN` 返回 503 |
-| GET | `/bot/routes/:id` | 采集密钥 | 回看机器稿。`:id` 可以是线路 id，或 `sourceKey`。返回 `reviewStatus` `status` `reviewNote` |
+| POST | `/bot/routes` | 采集密钥 | 机器采集入库。`title` `region` 必填。可选 `days`（1/2/3/5）、`subtitle` `category` `difficulty` `description` `highlights` `itinerary` `feeInclude` `feeExclude` `equipment` `notices` `meetupPoints` `suggestedPrice` `sourceUrl` `sourceKey` `photoSources`。写入 `source=bot`、`review_status=pending`、`status=off`，不建排期、不进目录、不发奖励。`photoSources` 里的图片会下载到本站，放进封面和相册。没上报图片则封面为空，服务端不搜图。同一 `sourceKey`（缺省用来源链接，再没有用标题加地区）重复提交会更新待审稿；已驳回的会重新待审；已通过的不覆盖。未配置 `BOT_INGEST_TOKEN` 返回 503 |
+| GET | `/bot/routes` | 采集密钥 | 机器稿列表。Query：`review=pending\|approved\|rejected`。驳回意见在 `reviewNote`，机器人按 `sourceKey` 改完再 `POST` 同一键 |
+| GET | `/bot/routes/:id` | 采集密钥 | 回看机器稿。`:id` 可以是线路 id，或 `sourceKey`。返回 `reviewStatus` `status` `reviewNote` `reviewedAt` |
 | POST | `/feedback` | 用户 | `{ kind, content, images? }`。`kind`：体验 `suggest` `enroll` `perf` `other`（旧客户端 `bug`），投诉 `trip` `guide` `refund` `safety`。内容 4～200 字，图片最多 3 张。写入后给后台一条待办 |
 | GET | `/lottery` | 可选用户 | 抽奖状态与圆盘奖品（不含权重）。Query：`scheduleId`。返回 `drawMode` `canPre` `canPost` `canClaim`。有本团配置则用本团奖池。不带 `scheduleId` 时另给 `trips[]`（已抽或已报名的本团抽奖）和平台默认转盘 |
 | POST | `/lottery/draw` | 用户 | `{ phase: pre\|post, scheduleId }`。服务端先出结果再让圆盘转到 `sectorIndex`，返回 `rate` `prizeInfo` `deferred` `claimHint`。指定中奖不会返回给用户。本团奖池中奖先记账，跟团结束后领取。平台默认行后抽：交费（或已占座）且行程结束即可，不必签到或点完成活动 |
@@ -217,7 +218,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 | POST | `/admin/routes/draft` | 起草。body：`title`（必填）`region` `days` `category` `notes`。返回文案字段 + `cover` `gallery` + `source`=`llm`/`template` + `photoSource`=`library`/`search`/空。无密钥用模板；图片先用已有景点库，再搜百度 / 360 |
 | POST | `/admin/routes` | 创建。可选 `priceTiers` `buses`、`refundUseGlobal`（默认 true）、`refundTiers`。后台表单不再提交视频 |
 | PUT | `/admin/routes/:id` | 更新；提交 `priceTiers`/`buses` 会整表替换；`videos` 为视频链接数组（省略则保留原值）；`refundUseGlobal`/`refundTiers` 省略则保留原退费设置。用户申请和机器稿待审时不能靠这个接口改成上架 |
-| POST | `/admin/routes/:id/review` | 审用户申请收录，以及 `source=bot` 的机器稿。`action`/`status`=`approve\|reject`，可选 `note`。通过后上架；驳回后下架。机器稿没有成团奖励。官方线路返回 400 |
+| POST | `/admin/routes/:id/review` | 审用户申请收录，以及 `source=bot` 的机器稿。`action`/`status`=`approve\|reject`，可选 `note`。机器稿驳回必须写 `note`，机器人从 `GET /bot/routes?review=rejected` 读取后再上报。通过后上架；驳回后下架。机器稿没有成团奖励。官方线路返回 400 |
 | POST | `/admin/routes/:id/publish` | 上架已下架线路。待审（用户申请或机器稿）和已驳回不能靠这个接口上架 |
 | DELETE | `/admin/routes/:id` | 下架 |
 | POST | `/admin/schedules` | 后台发布排期。`organizerType=official` 为官方团（用户端显示官方图标，`organizer_id=0`）。可选 `virtualCount` 发布后从虚拟用户池抽人占座；`lotteryMode` 非 off 时挂上默认 4 奖转盘。`organizerType=campus` 且 `offerType=free` 时默认打开报超会抽、仅师生，并用学校名作为限定高校。可带 `campusTargets`（学校-学院-专业组合，学院/专业可空）、旧字段 `schools` `colleges`、`privateJoin` `joinCode` |

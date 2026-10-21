@@ -90,7 +90,7 @@ const {
 } = require("./services/mine-desk");
 const { scheduleRouteI18n } = require("./services/route-i18n");
 const { submitApply, listMine: listRouteApps, reviewApply, adminFields, bountyYuan, applicationView, reviewOf, isListed } = require("./services/route-apply");
-const { ingestRoute, botRoute } = require("./services/route-bot");
+const { ingestRoute, botRoute, listBotRoutes } = require("./services/route-bot");
 const { noticeCampus, noticeGroup, noticeLeader, noticeTrip, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
 const { submitFeedback, listFeedbacks } = require("./services/feedback");
 const { createCaptcha, codesMatch } = require("./services/captcha");
@@ -1804,6 +1804,14 @@ router.post("/upload", authUser, (req, res) => {
 router.post("/bot/routes", authBot, async (req, res) => {
   try {
     res.json({ ok: true, data: await ingestRoute(req.body || {}) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.get("/bot/routes", authBot, (req, res) => {
+  try {
+    res.json({ ok: true, data: listBotRoutes(req.query.review) });
   } catch (e) {
     jsonError(res, e);
   }
