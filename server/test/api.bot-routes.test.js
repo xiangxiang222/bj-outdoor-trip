@@ -255,4 +255,38 @@ describe("bot route ingest", () => {
       .expect(400);
     assert.match(bad.body.message, /上传/);
   });
+
+  it("keeps the written text when a later post only attaches a video", async () => {
+    const mp4 = Buffer.alloc(32);
+    mp4.write("ftyp", 4, "ascii");
+    const up = await agent.post("/api/bot/videos").set(botAuth()).attach("file", mp4, "spot.mp4").expect(200);
+    const created = await agent
+      .post("/api/bot/routes")
+      .set(botAuth())
+      .send(body({ sourceKey: "keep-text", description: "原文还在", notices: "风大停走", days: 2, category: "登山" }))
+      .expect(200);
+    assert.equal(created.body.data.description, "原文还在");
+
+    const patched = await agent
+      .post("/api/bot/routes")
+      .set(botAuth())
+      .send({ sourceKey: "keep-text", videos: [up.body.data.url] })
+      .expect(200);
+    assert.equal(patched.body.data.id, created.body.data.id);
+    assert.equal(patched.body.data.description, "原文还在");
+    assert.equal(patched.body.data.notices, "风大停走");
+    assert.equal(patched.body.data.days, 2);
+    assert.equal(patched.body.data.category, "登山");
+    assert.equal(patched.body.data.suggestedPrice, 128);
+    assert.equal(patched.body.data.photoSources[0].url, "https://example.com/lake.jpg");
+    assert.deepEqual(patched.body.data.videos, [up.body.data.url]);
+
+    const cleared = await agent
+      .post("/api/bot/routes")
+      .set(botAuth())
+      .send({ sourceKey: "keep-text", description: "" })
+      .expect(200);
+    assert.equal(cleared.body.data.description, "");
+    assert.equal(cleared.body.data.notices, "风大停走");
+  });
 });
