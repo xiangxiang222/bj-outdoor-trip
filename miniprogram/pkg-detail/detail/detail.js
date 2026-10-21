@@ -67,6 +67,18 @@ function shapeRoute(raw) {
     extraPhotos.push(typeof item === "string" ? { thumb: url } : item);
   });
   const next = (r.schedules && r.schedules[0]) || null;
+  const app = getApp();
+  const base = app && app.globalData && app.globalData.baseUrl;
+  r.videos = (r.videos || []).map((item) => {
+    if (!item || typeof item !== "object") return item;
+    const fix = (u) => {
+      const s = String(u || "");
+      if (!s || /^https?:\/\//i.test(s)) return s;
+      if (s.charAt(0) === "/") return String(base || "").replace(/\/$/, "") + s;
+      return s;
+    };
+    return Object.assign({}, item, { url: fix(item.url), embedUrl: fix(item.embedUrl || item.url) });
+  });
   r.story = story;
   r.storyGroups = storyGroupsOf(story);
   r.extraPhotos = extraPhotos;

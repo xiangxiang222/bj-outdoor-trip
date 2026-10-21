@@ -285,6 +285,48 @@ describe("admin API", () => {
     await agent.post("/api/admin/upload").set(auth(adminToken)).attach("file", Buffer.from("not-an-image"), "notes.txt").expect(400);
   });
 
+  it("uploads an mp4 and the public detail can play it", async () => {
+    const mp4 = Buffer.alloc(32);
+    mp4.write("ftyp", 4, "ascii");
+    const denied = await agent.post("/api/admin/videos").attach("file", mp4, "spot.mp4").expect(401);
+    assert.equal(denied.body.ok, false);
+    await agent.post("/api/admin/videos").set(auth(adminToken)).attach("file", Buffer.from("hello"), "note.txt").expect(400);
+
+    const up = await agent.post("/api/admin/videos").set(auth(adminToken)).attach("file", mp4, "spot.mp4").expect(200);
+    assert.match(up.body.data.url, /^\/static\/uploads\/adminv-.+\.mp4$/);
+
+    const created = await agent
+      .post("/api/admin/routes")
+      .set(auth(adminToken))
+      .send({
+        title: "带视频线路",
+        videos: [up.body.data.url],
+        priceTiers: [{ minPeople: 10, price: 199, memberPrice: 183 }],
+        buses: ["bus30"],
+      })
+      .expect(200);
+    const detail = await agent.get(`/api/routes/${created.body.data.id}`).expect(200);
+    assert.equal(detail.body.data.videos[0].kind, "video");
+    assert.match(detail.body.data.videos[0].embedUrl, /\/static\/uploads\/adminv-.+\.mp4$/);
+
+    const listed = await agent.get("/api/admin/routes").set(auth(adminToken)).expect(200);
+    const row = listed.body.data.find((r) => r.id === created.body.data.id);
+    assert.equal(row.videos[0].kind, "video");
+
+    await agent
+      .put(`/api/admin/routes/${created.body.data.id}`)
+      .set(auth(adminToken))
+      .send({
+        title: "带视频线路",
+        videos: [],
+        priceTiers: [{ minPeople: 10, price: 199, memberPrice: 183 }],
+        buses: ["bus30"],
+      })
+      .expect(200);
+    const cleared = await agent.get(`/api/routes/${created.body.data.id}`).expect(200);
+    assert.equal(cleared.body.data.videos.length, 0);
+  });
+
   it("rejects admin schedule without route or bus", async () => {
     await agent.post("/api/admin/schedules").set(auth(adminToken)).send({ routeId: 999, startDate: "2099-01-01", busTypeId: "bus30" }).expect(400);
     await agent

@@ -126,14 +126,7 @@
             <div v-if="form.sourceUrl">{{ form.sourceUrl }}</div>
             <div v-if="form.suggestedPrice">建议价 ¥{{ form.suggestedPrice }}，还没写入阶梯价</div>
             <div v-if="form.reviewNote">上次说明：{{ form.reviewNote }}</div>
-            <div class="muted">封面和视频都只用机器人上报的文件。驳回意见它能读到，改完会按同一条再上报。</div>
-            <video
-              v-if="form.videos && form.videos.length"
-              :src="form.videos[0].embedUrl || form.videos[0].url || form.videos[0]"
-              controls
-              playsinline
-              style="width:100%;max-width:420px;margin-top:8px;border-radius:8px;background:#000"
-            />
+            <div class="muted">封面只用机器人上报的图片。视频在下面可以预览、更换或移除。驳回意见它能读到，改完会按同一条再上报。</div>
             <div v-for="item in form.photoSources || []" :key="item.url" class="muted">{{ item.caption ? item.caption + " " : "" }}{{ item.url }}</div>
           </div>
         </el-form-item>
@@ -218,6 +211,25 @@
             <span>上传</span>
           </el-upload>
           <div class="muted">张数不限。未单独设封面时，用相册第一张。不要上传把说明做成一长条的设计图。</div>
+        </el-form-item>
+        <el-form-item label="视频">
+          <div>
+            <video
+              v-if="videoSrc"
+              :src="videoSrc"
+              controls
+              playsinline
+              style="width:100%;max-width:420px;border-radius:8px;background:#000"
+            />
+            <div v-else-if="(form.videos || []).length" class="muted">这条是外链，详情页按链接打开。上传 mp4 后会换成文件。</div>
+            <div class="cover-row" style="margin-top:8px">
+              <el-upload :show-file-list="false" accept="video/mp4,.mp4,.m4v,.mov" :http-request="uploadVideo">
+                <el-button :loading="uploadingVideo">{{ videoSrc ? "更换视频" : "上传 mp4" }}</el-button>
+              </el-upload>
+              <el-button v-if="(form.videos || []).length" link type="danger" @click="clearVideo">移除</el-button>
+            </div>
+            <div class="muted">一条 H.264 的 mp4，不超过 32MB。这里可以预览，保存后 H5 和小程序详情都会播放。</div>
+          </div>
         </el-form-item>
 
         <div class="sec">亮点与介绍</div>
@@ -402,6 +414,14 @@ const rows = ref([]);
 const buses = ref([]);
 const show = ref(false);
 const form = ref({});
+const uploadingVideo = ref(false);
+const videoSrc = computed(() => {
+  for (const item of form.value.videos || []) {
+    const href = typeof item === "string" ? item : item.embedUrl || item.url || "";
+    if (/\.(mp4|webm|m4v|ogg)(\?|#|$)/i.test(href)) return href;
+  }
+  return "";
+});
 const reviewFilter = ref("");
 const filters = reactive({
   q: "",
@@ -550,6 +570,7 @@ function blankForm() {
     story: [],
     cover: "",
     gallery: [],
+    videos: [],
     meetupPoints: [],
     buses: ["bus30"],
     status: "on",
@@ -573,12 +594,25 @@ function openCreate() {
   applyRegion("");
   show.value = true;
 }
+function storedVideoList(list) {
+  const out = [];
+  for (const item of list || []) {
+    const href = typeof item === "string" ? item : (item && (item.url || item.embedUrl)) || "";
+    const text = String(href || "").trim();
+    if (!text) continue;
+    const rel = text.match(/(\/static\/[^?#]+\.(?:mp4|webm|m4v|ogg))/i);
+    out.push(rel ? rel[1] : text.split(/[?#]/)[0]);
+    if (out.length >= 6) break;
+  }
+  return out;
+}
 function edit(row) {
   const rest = { ...row };
   delete rest.videos;
   form.value = {
     ...blankForm(),
     ...rest,
+    videos: storedVideoList(row.videos),
     gallery: [...(row.gallery || [])],
     tags: [...(row.tags || [])],
     highlights: [...(row.highlights || [])],
@@ -743,6 +777,25 @@ async function importTemplate(opt) {
   }
 }
 
+async function uploadVideo(opt) {
+  uploadingVideo.value = true;
+  try {
+    const data = new FormData();
+    data.append("file", opt.file);
+    const res = await http.post("/admin/videos", data, { timeout: 120000 });
+    form.value.videos = [res.data.url];
+    opt.onSuccess?.({ url: res.data.url });
+  } catch (e) {
+    ElMessage.error(e.message || "上传失败");
+    opt.onError?.(e);
+  } finally {
+    uploadingVideo.value = false;
+  }
+}
+function clearVideo() {
+  form.value.videos = [];
+}
+
 async function postImage(file) {
   const data = new FormData();
   data.append("file", file);
@@ -902,7 +955,7 @@ async function save() {
       refundUseGlobal: !!form.value.refundUseGlobal,
       refundTiers: form.value.refundTiers || [],
     };
-    delete payload.videos;
+    payload.videos = storedVideoList(form.value.videos);
     if (form.value.id) await http.put("/admin/routes/" + form.value.id, payload);
     else await http.post("/admin/routes", payload);
     show.value = false;
