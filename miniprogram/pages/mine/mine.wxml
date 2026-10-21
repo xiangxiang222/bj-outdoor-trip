@@ -1,4 +1,4 @@
-<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}{{posterPick || momentsOpen ? 'overflow:hidden;' : ''}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
 <view class="mine-nav {{dark ? 'is-dark' : ''}}" style="padding-top: {{statusBarHeight}}px;">
   <view class="mine-nav-bar" style="height: {{navBarHeight}}px;"></view>
@@ -178,25 +178,39 @@
   <view class="moments-sheet poster-pick" catchtap="noop">
     <view class="poster-pick-title">{{tr.t('选择要放进海报的团', lang)}}</view>
     <view class="muted poster-pick-hint">{{tr.t('最多选 6 个团', lang)}}</view>
+    <view class="poster-tools">
+      <view class="poster-chip {{posterRange=='all' ? 'on' : ''}}" data-range="all" bindtap="setPosterRange">{{tr.t('全部', lang)}}</view>
+      <view class="poster-chip {{posterRange=='week' ? 'on' : ''}}" data-range="week" bindtap="setPosterRange">{{tr.t('最近一周', lang)}}</view>
+      <view class="poster-chip {{posterRange=='month' ? 'on' : ''}}" data-range="month" bindtap="setPosterRange">{{tr.t('最近一个月', lang)}}</view>
+      <view class="poster-chip {{posterRange=='date' ? 'on' : ''}}" data-range="date" bindtap="setPosterRange">{{tr.t('指定日期', lang)}}</view>
+    </view>
+    <picker wx:if="{{posterRange=='date'}}" mode="date" value="{{posterDate}}" bindchange="onPosterDate">
+      <view class="poster-date">{{posterDate || tr.t('选一个出发日期', lang)}}</view>
+    </picker>
+    <input class="poster-search" placeholder="{{tr.t('搜索团名、集合点', lang)}}" value="{{posterQuery}}" bindinput="onPosterQuery" confirm-type="search" />
     <view class="muted poster-pick-empty" wx:if="{{!posterReady}}">{{tr.t('正在加载', lang)}}</view>
     <view class="muted poster-pick-empty" wx:elif="{{!posterTrips.length}}">{{tr.t('还没有可以做成海报的团', lang)}}</view>
-    <view wx:else class="poster-pick-list">
-      <view class="poster-pick-row{{item.on ? ' on' : ''}}" wx:for="{{posterTrips}}" wx:key="id" bindtap="togglePoster" data-id="{{item.id}}">
+    <view class="muted poster-pick-empty" wx:elif="{{posterRange=='date' && !posterDate}}">{{tr.t('选一个出发日期', lang)}}</view>
+    <view class="muted poster-pick-empty" wx:elif="{{!posterShown.length}}">{{tr.t('没有符合条件的团', lang)}}</view>
+    <scroll-view wx:else scroll-y class="poster-pick-list" enhanced show-scrollbar="{{false}}">
+      <view class="poster-pick-row{{item.on ? ' on' : ''}}" wx:for="{{posterShown}}" wx:key="id" bindtap="togglePoster" data-id="{{item.id}}">
         <view class="poster-pick-mark"></view>
         <view class="poster-pick-copy">
           <text class="poster-pick-name">{{tr.t(item.title, lang)}}</text>
           <text class="poster-pick-when">{{item.md}} {{tr.t(item.week, lang)}}<text wx:if="{{item.meet}}"> · {{tr.t(item.meet, lang)}}</text></text>
         </view>
       </view>
-    </view>
+    </scroll-view>
     <view class="btn" bindtap="makePoster">{{tr.t('生成海报', lang)}}{{posterCount ? ' · ' + posterCount : ''}}</view>
     <view class="btn ghost" bindtap="closePosterPick">{{tr.t('关闭', lang)}}</view>
   </view>
 </view>
 <view class="moments-mask" wx:if="{{momentsOpen}}" catchtap="closeMoments">
   <view class="moments-sheet" catchtap="noop">
-    <image class="moments-img" src="{{momentsPath}}" mode="widthFix" show-menu-by-longpress />
-    <view class="muted moments-hint">{{tr.t('长按图片保存，再发到朋友圈', lang)}}</view>
+    <scroll-view scroll-y class="moments-scroll" enhanced show-scrollbar="{{false}}">
+      <image class="moments-img" src="{{momentsPath}}" mode="widthFix" show-menu-by-longpress />
+      <view class="muted moments-hint">{{tr.t('长按图片保存，再发到朋友圈', lang)}}</view>
+    </scroll-view>
     <view class="btn" bindtap="shareMoments">{{tr.t('发到朋友圈', lang)}}</view>
     <view class="btn ghost" bindtap="saveMoments">{{tr.t('保存图片', lang)}}</view>
     <view class="btn ghost" bindtap="closeMoments">{{tr.t('关闭', lang)}}</view>

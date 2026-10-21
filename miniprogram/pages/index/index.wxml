@@ -34,13 +34,6 @@
 </view>
 
 <block wx:if="{{view=='trips'}}">
-<view class="moments-entry" wx:if="{{groups.length}}" bindtap="openMoments">
-  <view class="moments-entry-copy">
-    <view class="moments-entry-title">{{tr.t('把这批团发到朋友圈', lang)}}</view>
-    <view class="moments-entry-sub">{{tr.t('按现在的筛选做成一张海报', lang)}}</view>
-  </view>
-  <view class="moments-entry-go">{{tr.t('海报', lang)}}</view>
-</view>
 <scroll-view scroll-x class="city-bar">
   <view class="chip {{!city?'on':''}}" bindtap="clearCity">{{tr.t('热门', lang)}}</view>
   <view class="chip {{city==item.name?'on':''}}" wx:for="{{home.cities}}" wx:key="name" bindtap="setCity" data-name="{{item.name}}">{{tr.t(item.name, lang)}}</view>
@@ -166,14 +159,4 @@
   </view>
 </block>
 <view class="home-foot muted" bindtap="goOfficial">{{tr.t('客服与规则', lang)}}</view>
-<canvas type="2d" id="momentsCanvas" class="moments-offscreen"></canvas>
-<view class="moments-mask" wx:if="{{momentsOpen}}" catchtap="closeMoments">
-  <view class="moments-sheet" catchtap="noop">
-    <image class="moments-img" src="{{momentsPath}}" mode="widthFix" show-menu-by-longpress />
-    <view class="muted moments-hint">{{tr.t('长按图片保存，再发到朋友圈', lang)}}</view>
-    <view class="btn" bindtap="shareMoments">{{tr.t('发到朋友圈', lang)}}</view>
-    <view class="btn ghost" bindtap="saveMoments">{{tr.t('保存图片', lang)}}</view>
-    <view class="btn ghost" bindtap="closeMoments">{{tr.t('关闭', lang)}}</view>
-  </view>
-</view>
 <view class="tab-pad"></view>

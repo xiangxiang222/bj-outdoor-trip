@@ -64,14 +64,6 @@
     </div>
 
     <template v-if="view === 'trips'">
-    <button v-if="groups.length" class="moments-entry" type="button" @click="openMoments">
-      <span class="moments-entry-copy">
-        <strong>把这批团发到朋友圈</strong>
-        <span>按现在的筛选做成一张海报</span>
-      </span>
-      <span class="moments-entry-go">海报</span>
-    </button>
-
     <div class="chips city-bar">
       <div class="chip" :class="{ on: !city }" @click="city = ''">热门</div>
       <div class="chip" :class="{ on: city === c.name }" v-for="c in home.cities || []" :key="c.name" @click="toggleCity(c.name)">{{ c.name }}</div>
@@ -181,17 +173,6 @@
     </p>
     </div>
 
-    <div v-if="momentsOpen" class="moments-mask" @click.self="momentsOpen = false">
-      <div class="moments-sheet" role="dialog" aria-label="朋友圈海报">
-        <img v-if="momentsUrl" :src="momentsUrl" alt="朋友圈海报" />
-        <p v-else class="muted">正在生成海报</p>
-        <p class="muted">长按图片保存，再发到朋友圈</p>
-        <div class="share-actions">
-          <button class="btn" type="button" :disabled="!momentsUrl" @click="saveMoments">保存图片</button>
-          <button class="btn ghost" type="button" @click="momentsOpen = false">关闭</button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -203,8 +184,6 @@ import { useUserStore } from "@/stores/user";
 import { OFFER_TYPES } from "@/utils/offer";
 import { mediaSrc, slideBg, slideFallback, slideRouteTarget } from "@/utils/media";
 import { boardedLine, coverMark, coverOf, feedWhen, hostName, isFreeOffer, taglineOf } from "@/utils/feedCard";
-import { buildLineup, drawLineupPoster } from "@/utils/momentsPoster";
-import { downloadPosterPng } from "@/utils/sharePoster";
 import { cycleSort, hostFacets as collectHostFacets, processFeed, sortLabel } from "@/utils/feedList";
 import RouteCatalog from "@/components/RouteCatalog.vue";
 import LivePulse from "@/components/LivePulse.vue";
@@ -234,9 +213,6 @@ const upcoming = ref(null);
 const fold = reactive({ extra: false });
 const offers = OFFER_TYPES.filter((o) => o.key !== "full");
 const view = ref(pageRoute.query.view === "routes" ? "routes" : "trips");
-const momentsOpen = ref(false);
-const momentsUrl = ref("");
-let momentsCanvas = null;
 const searchHint = computed(() => (view.value === "routes" ? "搜长城 / 十渡 / 坝上" : "搜线路、城区、主理人"));
 
 const brandSlides = computed(() => {
@@ -414,23 +390,6 @@ function goPublish(when) {
     return;
   }
   router.push(path);
-}
-async function openMoments() {
-  const model = buildLineup(groups.value, { city: city.value });
-  if (!model.count) return;
-  momentsOpen.value = true;
-  momentsUrl.value = "";
-  momentsCanvas = null;
-  try {
-    momentsCanvas = await drawLineupPoster(model);
-    momentsUrl.value = momentsCanvas.toDataURL("image/png");
-  } catch {
-    momentsOpen.value = false;
-  }
-}
-async function saveMoments() {
-  if (!momentsCanvas) return;
-  await downloadPosterPng(momentsCanvas, "moments-lineup.png");
 }
 async function pickMonth(key) {
   monthKey.value = key;

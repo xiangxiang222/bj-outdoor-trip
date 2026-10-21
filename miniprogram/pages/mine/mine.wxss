@@ -121,16 +121,21 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-page.is-dark .mine-poster::before { border-color: #f2f2f2; }
 .mine-page.is-dark .mine-poster::after { background: #f2f2f2; }
 .moments-offscreen { position: fixed; left: -4000px; top: 0; width: 750px; height: 1200px; }
-.moments-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 40; background: rgba(0,0,0,0.55); display: flex; align-items: flex-end; justify-content: center; }
-.moments-sheet { width: 100%; max-height: 88vh; overflow: auto; background: #fff; border-radius: 24rpx 24rpx 0 0; padding: 24rpx 24rpx 40rpx; box-sizing: border-box; }
+.moments-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 200; background: rgba(0,0,0,0.55); display: flex; align-items: flex-end; justify-content: center; }
+.moments-sheet { width: 100%; max-height: calc(100vh - 32rpx); overflow: hidden; display: flex; flex-direction: column; background: #fff; border-radius: 24rpx 24rpx 0 0; padding: 24rpx 24rpx calc(24rpx + env(safe-area-inset-bottom)); box-sizing: border-box; }
+.moments-scroll { height: 58vh; }
 .moments-img { width: 100%; display: block; border-radius: 16rpx; }
-.moments-hint { margin: 16rpx 8rpx; }
-.moments-sheet .btn { margin-top: 16rpx; }
+.moments-hint { margin: 16rpx 8rpx 8rpx; }
+.moments-sheet .btn { margin-top: 16rpx; flex: none; }
 .poster-pick-title { font-size: calc(32rpx * var(--ui-scale)); font-weight: 650; color: #1a1a1a; }
-.poster-pick-hint { margin: 8rpx 0 16rpx; font-size: calc(24rpx * var(--ui-scale)); }
+.poster-pick-hint { margin: 8rpx 0 12rpx; font-size: calc(24rpx * var(--ui-scale)); }
 .poster-pick-empty { margin: 12rpx 0 8rpx; }
-.poster-pick-list { display: flex; flex-direction: column; gap: 16rpx; }
-.poster-pick-row { display: flex; align-items: center; gap: 20rpx; border: 1rpx solid #eee; border-radius: 16rpx; padding: 20rpx 24rpx; }
+.poster-tools { display: flex; flex-wrap: wrap; gap: 12rpx; margin-bottom: 16rpx; }
+.poster-chip { padding: 8rpx 20rpx; border: 1rpx solid #eee; border-radius: 999rpx; font-size: calc(24rpx * var(--ui-scale)); color: #1a1a1a; }
+.poster-chip.on { background: #1a1a1a; border-color: #1a1a1a; color: #fff; }
+.poster-search, .poster-date { width: 100%; box-sizing: border-box; border: 1rpx solid #eee; border-radius: 16rpx; padding: 16rpx 20rpx; margin-bottom: 16rpx; font-size: calc(28rpx * var(--ui-scale)); background: #fff; color: #1a1a1a; }
+.poster-pick-list { height: 42vh; }
+.poster-pick-row { display: flex; align-items: center; gap: 20rpx; border: 1rpx solid #eee; border-radius: 16rpx; padding: 20rpx 24rpx; margin-bottom: 16rpx; }
 .poster-pick-row.on { border-color: #1a1a1a; }
 .poster-pick-mark { width: 36rpx; height: 36rpx; border: 3rpx solid #1a1a1a; border-radius: 8rpx; box-sizing: border-box; flex: none; position: relative; }
 .poster-pick-row.on .poster-pick-mark { background: #1a1a1a; }

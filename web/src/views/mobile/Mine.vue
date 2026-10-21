@@ -175,16 +175,26 @@
       </button>
     </div>
 
-    <div v-if="posterPick" class="moments-mask" @click.self="posterPick = false">
+    <div v-if="posterPick" class="moments-mask" @click.self="posterPick = false" @touchmove.self.prevent>
       <div class="moments-sheet poster-pick" role="dialog" aria-label="选择团">
         <p class="poster-pick-title">选择要放进海报的团</p>
         <p class="poster-pick-hint">最多选 6 个团</p>
+        <div class="poster-tools">
+          <button type="button" :class="{ on: posterRange === 'all' }" @click="posterRange = 'all'">全部</button>
+          <button type="button" :class="{ on: posterRange === 'week' }" @click="posterRange = 'week'">最近一周</button>
+          <button type="button" :class="{ on: posterRange === 'month' }" @click="posterRange = 'month'">最近一个月</button>
+          <button type="button" :class="{ on: posterRange === 'date' }" @click="posterRange = 'date'">指定日期</button>
+        </div>
+        <input v-if="posterRange === 'date'" v-model="posterDate" class="poster-date" type="date" />
+        <input v-model="posterQuery" class="poster-search" type="search" placeholder="搜索团名、集合点" />
         <p v-if="posterLimit" class="poster-pick-limit">一张海报最多放 6 个团</p>
         <p v-if="posterLoading" class="muted">正在加载</p>
         <p v-else-if="!posterTrips.length" class="muted">还没有可以做成海报的团</p>
+        <p v-else-if="posterRange === 'date' && !posterDate" class="muted">选一个出发日期</p>
+        <p v-else-if="!posterView.length" class="muted">没有符合条件的团</p>
         <div v-else class="poster-pick-list">
           <button
-            v-for="item in posterTrips"
+            v-for="item in posterView"
             :key="item.id"
             type="button"
             class="poster-pick-row"
@@ -207,12 +217,14 @@
       </div>
     </div>
 
-    <div v-if="momentsOpen" class="moments-mask" @click.self="momentsOpen = false">
+    <div v-if="momentsOpen" class="moments-mask" @click.self="momentsOpen = false" @touchmove.self.prevent>
       <div class="moments-sheet" role="dialog" aria-label="朋友圈海报">
-        <img v-if="momentsUrl" :src="momentsUrl" alt="朋友圈海报" />
-        <p v-else-if="momentsEmpty" class="muted">还没有可以做成海报的团</p>
-        <p v-else class="muted">正在生成海报</p>
-        <p v-if="momentsUrl" class="muted">长按图片保存，再发到朋友圈</p>
+        <div class="moments-scroll">
+          <img v-if="momentsUrl" :src="momentsUrl" alt="朋友圈海报" />
+          <p v-else-if="momentsEmpty" class="muted">还没有可以做成海报的团</p>
+          <p v-else class="muted">正在生成海报</p>
+          <p v-if="momentsUrl" class="muted">长按图片保存，再发到朋友圈</p>
+        </div>
         <div class="share-actions">
           <button class="btn" type="button" :disabled="!momentsUrl" @click="savePoster">保存图片</button>
           <button class="btn ghost" type="button" @click="momentsOpen = false">关闭</button>
@@ -243,7 +255,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
 import MineGlyph from "@/components/MineGlyph.vue";
@@ -267,11 +279,22 @@ const posterPick = ref(false);
 const posterTrips = ref([]);
 const posterLoading = ref(false);
 const posterLimit = ref(false);
+const posterRange = ref("all");
+const posterDate = ref("");
+const posterQuery = ref("");
 let posterRows = [];
 let momentsCanvas = null;
 const WEEK = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 const posterChosen = computed(() => posterTrips.value.some((row) => row.on));
 const posterCount = computed(() => posterTrips.value.filter((row) => row.on).length);
+const posterView = computed(() => posterTrips.value.filter((item) => inPosterRange(item.date, posterRange.value, posterDate.value) && fuzzyHit(item.blob, posterQuery.value)));
+
+watch([posterPick, momentsOpen], ([picking, open]) => {
+  document.body.style.overflow = picking || open ? "hidden" : "";
+});
+onUnmounted(() => {
+  document.body.style.overflow = "";
+});
 
 const campusShort = computed(() => {
   const u = store.profile;
@@ -365,6 +388,33 @@ async function onFile(e) {
   const up = await http.post("/upload", body);
   await saveAvatar(up.data.url);
 }
+function posterBlob(row) {
+  const route = row.route || {};
+  return [route.title, route.subtitle, route.category, route.region, route.difficulty, row.meetupPoint, row.city].filter(Boolean).join(" ");
+}
+function fuzzyHit(text, query) {
+  const hay = String(text || "").toLowerCase().replace(/\s+/g, "");
+  const needle = String(query || "").trim().toLowerCase().replace(/\s+/g, "");
+  if (!needle) return true;
+  let at = 0;
+  for (let i = 0; i < hay.length && at < needle.length; i += 1) {
+    if (hay[i] === needle[at]) at += 1;
+  }
+  return at === needle.length;
+}
+function dayStamp(offset) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + offset);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function inPosterRange(iso, range, picked) {
+  if (!range || range === "all") return true;
+  if (range === "date") return Boolean(picked) && iso === picked;
+  const start = dayStamp(0);
+  const end = dayStamp(range === "week" ? 6 : 29);
+  return iso >= start && iso <= end;
+}
 function posterWhen(row) {
   const iso = String(row.startDate || "").slice(0, 10);
   const d = new Date(`${iso}T00:00:00`);
@@ -380,6 +430,9 @@ async function openPoster() {
   posterPick.value = true;
   posterLoading.value = true;
   posterLimit.value = false;
+  posterRange.value = "all";
+  posterDate.value = "";
+  posterQuery.value = "";
   posterTrips.value = [];
   posterRows = [];
   try {
@@ -391,6 +444,8 @@ async function openPoster() {
       id: posterId(row, index),
       title: row.route.title,
       when: posterWhen(row),
+      date: String(row.startDate || "").slice(0, 10),
+      blob: posterBlob(row),
       on: false,
     }));
   } catch {

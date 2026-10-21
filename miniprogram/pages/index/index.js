@@ -4,8 +4,6 @@ const { detailUrl } = require("../../utils/media");
 const { decorateFeed } = require("../../utils/feed-card");
 const { cycleSort, hostFacets, processFeed, sortLabel } = require("../../utils/feed-list");
 const { loadRouteCatalog } = require("../../utils/route-catalog");
-const { buildLineup, drawMomentsPoster } = require("../../utils/moments-poster");
-
 function asList(rows) {
   return Array.isArray(rows) && rows.length ? rows : [];
 }
@@ -40,8 +38,6 @@ Page({
     view: "trips",
     searchHint: "搜线路、城区、主理人",
     routeDays: 0,
-    momentsOpen: false,
-    momentsPath: "",
     routeTag: "",
     routeTags: [],
     routeList: [],
@@ -331,49 +327,6 @@ Page({
   goOfficial() {
     wx.navigateTo({ url: "/pages/official/official" });
   },
-  openMoments() {
-    const model = buildLineup(this.data.groups, { city: this.data.city });
-    if (!model.count) {
-      wx.showToast({ title: "还没有可以做成海报的团", icon: "none" });
-      return;
-    }
-    wx.showLoading({ title: "正在生成海报" });
-    drawMomentsPoster(this, model).then((path) => {
-      wx.hideLoading();
-      this.setData({ momentsOpen: true, momentsPath: path });
-    }).catch(() => {
-      wx.hideLoading();
-      wx.showToast({ title: "海报生成失败", icon: "none" });
-    });
-  },
-  shareMoments() {
-    const path = this.data.momentsPath;
-    if (!path) return;
-    if (wx.showShareImageMenu) {
-      wx.showShareImageMenu({
-        path,
-        fail: () => wx.previewImage({ urls: [path] }),
-      });
-      return;
-    }
-    wx.previewImage({ urls: [path] });
-  },
-  saveMoments() {
-    const path = this.data.momentsPath;
-    if (!path) return;
-    wx.saveImageToPhotosAlbum({
-      filePath: path,
-      success: () => wx.showToast({ title: "已保存到相册", icon: "none" }),
-      fail: () => {
-        wx.previewImage({ urls: [path] });
-        wx.showToast({ title: "请长按图片保存", icon: "none" });
-      },
-    });
-  },
-  closeMoments() {
-    this.setData({ momentsOpen: false });
-  },
-  noop() {},
   goStudent() {
     const app = getApp();
     const url = "/pages/student/student";
