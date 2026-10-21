@@ -22,16 +22,16 @@
   </view>
   <view class="mine-tools {{dark ? 'is-dark' : ''}}">
     <view class="mine-tool" bindtap="goOfficial">
-      <view class="mine-tool-ico"><image src="{{iconBase}}tool-help.png?v=11" mode="aspectFit" /></view>
+      <view class="mine-tool-ico"><image src="{{iconBase}}tool-help.png?v=16" mode="aspectFit" /></view>
       <text>{{tr.t('客服', lang)}}</text>
     </view>
     <view class="mine-tool" bindtap="go" data-url="/pages/settings/settings">
-      <view class="mine-tool-ico"><image src="{{iconBase}}tool-set.png?v=11" mode="aspectFit" /></view>
+      <view class="mine-tool-ico"><image src="{{iconBase}}tool-set.png?v=16" mode="aspectFit" /></view>
       <text>{{tr.t('设置', lang)}}</text>
     </view>
     <view class="mine-tool" bindtap="go" data-url="/pages/notices/notices">
       <view class="mine-tool-ico">
-        <image src="{{iconBase}}tool-msg.png?v=11" mode="aspectFit" />
+        <image src="{{iconBase}}tool-msg.png?v=16" mode="aspectFit" />
         <text wx:if="{{hub.unreadCount}}" class="mine-badge">{{hub.unreadCount > 9 ? '9+' : hub.unreadCount}}</text>
       </view>
       <text>{{tr.t('消息', lang)}}</text>
@@ -96,35 +96,35 @@
       <view class="mine-shortcuts">
         <view bindtap="goOrders" data-tab="unpaid">
           <view class="mine-order-ico">
-            <image src="{{iconBase}}order-pay.png?v=11" mode="aspectFit" />
+            <image src="{{iconBase}}order-pay.png?v=16" mode="aspectFit" />
             <text wx:if="{{hub.unpaidCount}}" class="mine-badge">{{hub.unpaidCount > 99 ? '99+' : hub.unpaidCount}}</text>
           </view>
           <view class="mine-order-name">{{tr.t('待付款', lang)}}</view>
         </view>
         <view bindtap="goOrders" data-tab="recruiting">
           <view class="mine-order-ico">
-            <image src="{{iconBase}}order-recruit.png?v=11" mode="aspectFit" />
+            <image src="{{iconBase}}order-recruit.png?v=16" mode="aspectFit" />
             <text wx:if="{{hub.recruitingCount}}" class="mine-badge">{{hub.recruitingCount > 99 ? '99+' : hub.recruitingCount}}</text>
           </view>
           <view class="mine-order-name">{{tr.t('待成团', lang)}}</view>
         </view>
         <view bindtap="goOrders" data-tab="depart">
           <view class="mine-order-ico">
-            <image src="{{iconBase}}order-go.png?v=11" mode="aspectFit" />
+            <image src="{{iconBase}}order-go.png?v=16" mode="aspectFit" />
             <text wx:if="{{hub.departCount}}" class="mine-badge">{{hub.departCount > 99 ? '99+' : hub.departCount}}</text>
           </view>
           <view class="mine-order-name">{{tr.t('待出行', lang)}}</view>
         </view>
         <view bindtap="goOrders" data-tab="review">
           <view class="mine-order-ico">
-            <image src="{{iconBase}}order-review.png?v=15" mode="aspectFit" />
+            <image src="{{iconBase}}order-review.png?v=16" mode="aspectFit" />
             <text wx:if="{{hub.reviewCount}}" class="mine-badge">{{hub.reviewCount > 99 ? '99+' : hub.reviewCount}}</text>
           </view>
           <view class="mine-order-name">{{tr.t('待评价', lang)}}</view>
         </view>
         <view bindtap="goOrders" data-tab="refund">
           <view class="mine-order-ico">
-            <image src="{{iconBase}}order-refund.png?v=11" mode="aspectFit" />
+            <image src="{{iconBase}}order-refund.png?v=16" mode="aspectFit" />
             <text wx:if="{{hub.refundCount}}" class="mine-badge">{{hub.refundCount > 99 ? '99+' : hub.refundCount}}</text>
           </view>
           <view class="mine-order-name">{{tr.t('已退款', lang)}}</view>
@@ -139,11 +139,11 @@
 
   <view class="mine-play">
     <view bindtap="go" data-url="/pages/student/student">
-      <view class="mine-ico"><image src="{{iconBase}}campus.png?v=11" mode="aspectFit" /></view>
+      <view class="mine-ico"><image src="{{iconBase}}campus.png?v=16" mode="aspectFit" /></view>
       <text>{{tr.t(campusLabel, lang)}}</text>
     </view>
     <view bindtap="go" data-url="/pages/leader/leader">
-      <view class="mine-ico"><image src="{{iconBase}}leader.png?v=11" mode="aspectFit" /></view>
+      <view class="mine-ico"><image src="{{iconBase}}leader.png?v=16" mode="aspectFit" /></view>
       <text>{{tr.t(leaderLabel, lang)}}</text>
     </view>
     <view bindtap="go" data-url="/pages/photo-apply/photo-apply">
@@ -151,7 +151,7 @@
       <text>{{tr.t('摄影师申请', lang)}}</text>
     </view>
     <view bindtap="go" data-url="/pages/feedback/feedback">
-      <view class="mine-ico"><image src="{{iconBase}}feedback.png?v=11" mode="aspectFit" /></view>
+      <view class="mine-ico"><image src="{{iconBase}}feedback.png?v=16" mode="aspectFit" /></view>
       <text>{{tr.t('反馈', lang)}}</text>
     </view>
   </view>
