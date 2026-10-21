@@ -278,7 +278,10 @@ function matchPlaces(input) {
   return Object.entries(PLACE_ALBUMS)
     .filter(([, cfg]) =>
       placeKeywords(cfg).some((word) => {
-        if (hay.includes(word)) return true;
+        if (hay.includes(word)) {
+          if (place.length > word.length && place.includes(word)) return false;
+          return true;
+        }
         return place.length >= 3 && word.includes(place);
       })
     )
@@ -404,6 +407,34 @@ function isPublicImageUrl(url) {
   return true;
 }
 
+function imageEdge(buf) {
+  const ext = sniffImageExt(buf);
+  if (ext === ".png" && buf.length >= 24) return Math.min(buf.readUInt32BE(16), buf.readUInt32BE(20));
+  if (ext === ".webp" && buf.toString("ascii", 12, 16) === "VP8X" && buf.length >= 30) {
+    return Math.min(1 + buf.readUIntLE(24, 3), 1 + buf.readUIntLE(27, 3));
+  }
+  if (ext === ".webp" && buf.toString("ascii", 12, 16) === "VP8 " && buf.length >= 30) {
+    return Math.min(buf.readUInt16LE(26) & 0x3fff, buf.readUInt16LE(28) & 0x3fff);
+  }
+  if (ext === ".jpg") {
+    let i = 2;
+    while (i < buf.length - 8) {
+      if (buf[i] !== 0xff) {
+        i += 1;
+        continue;
+      }
+      const marker = buf[i + 1];
+      if (marker === 0xc0 || marker === 0xc1 || marker === 0xc2) {
+        return Math.min(buf.readUInt16BE(i + 5), buf.readUInt16BE(i + 7));
+      }
+      const len = buf.readUInt16BE(i + 2);
+      if (!len) break;
+      i += 2 + len;
+    }
+  }
+  return 0;
+}
+
 function sniffImageExt(buf) {
   if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return ".jpg";
   if (buf.length >= 8 && buf[0] === 0x89 && buf.toString("ascii", 1, 4) === "PNG") return ".png";
@@ -438,7 +469,8 @@ async function downloadPhotoList(urls, deps = {}) {
       if (!ok) continue;
       const buf = fs.readFileSync(tmp);
       const ext = sniffImageExt(buf);
-      if (!ext) {
+      const edge = imageEdge(buf);
+      if (!ext || (edge && edge < 320)) {
         fs.unlinkSync(tmp);
         continue;
       }
@@ -502,7 +534,14 @@ async function searchAndSavePhotos(input, deps = {}) {
     const dest = path.join(destDir, name);
     try {
       const ok = await downloadBuffer(row.url, dest, fetchImpl);
-      if (ok) urls.push(`/static/uploads/${name}`);
+      if (!ok) continue;
+      const sniffed = sniffImageExt(fs.readFileSync(dest));
+      let finalName = name;
+      if (sniffed && !name.endsWith(sniffed)) {
+        finalName = name.replace(/\.[a-z0-9]+$/i, sniffed);
+        fs.renameSync(dest, path.join(destDir, finalName));
+      }
+      urls.push(`/static/uploads/${finalName}`);
     } catch {
       /* skip this file */
     }

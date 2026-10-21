@@ -136,6 +136,8 @@ describe("route draft model and photos", () => {
     const hits = matchPlaces({ title: "慕田峪长城一日游", region: "北京市 / 海淀区" });
     assert.ok(hits.some((row) => row.id === "mutianyu"));
     assert.equal(matchPlaces({ title: "周末山水", region: "北京市 / 海淀区" }).length, 0);
+    assert.equal(matchPlaces({ title: "北灵山" }).some((row) => row.id === "lingshan"), false);
+    assert.equal(matchPlaces({ title: "东灵山" }).some((row) => row.id === "lingshan"), true);
     const queries = searchQueries({ title: "慕田峪长城一日游", region: "北京市 / 海淀区", category: "长城" });
     assert.ok(queries.includes("慕田峪长城"));
     assert.ok(!queries.includes("海淀区"));
