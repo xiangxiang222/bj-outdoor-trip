@@ -324,6 +324,7 @@ button.btn::after { border: none; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   padding: 8rpx 24rpx 16rpx;
 }
 .feed-toolbar .hint { font-size: calc(26rpx * var(--ui-scale)); font-weight: 700; }

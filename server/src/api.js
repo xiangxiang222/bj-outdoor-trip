@@ -439,6 +439,9 @@ function feedRoute(row, req) {
     subtitle: row.subtitle,
     region: row.region,
     category: row.category,
+    difficulty: row.difficulty || "",
+    distanceKm: Number(row.distance_km) || 0,
+    days: Number(row.days) || 1,
     tags,
     cover: attachAssetHost(req, resolveStoredMedia(row.cover, { code: row.code })),
   };
