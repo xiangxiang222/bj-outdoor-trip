@@ -130,6 +130,29 @@
 }
 .home-tile-title { font-size: calc(32rpx * var(--ui-scale)); font-weight: 700; color: #1b4332; }
 .home-foot { text-align: center; padding: 16rpx; color: #2d6a4f; }
+.moments-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin: 0 16rpx 16rpx;
+  padding: 22rpx 24rpx;
+  border-radius: 24rpx;
+  background: #1c2410;
+  color: #fff;
+}
+.moments-entry-copy { min-width: 0; }
+.moments-entry-title { font-size: calc(30rpx * var(--ui-scale)); font-weight: 700; }
+.moments-entry-sub { margin-top: 6rpx; color: rgba(255, 255, 255, 0.72); font-size: calc(24rpx * var(--ui-scale)); }
+.moments-entry-go {
+  flex-shrink: 0;
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  background: #d6ef4a;
+  color: #1c2410;
+  font-size: calc(26rpx * var(--ui-scale));
+  font-weight: 700;
+}
 .moments-offscreen { position: fixed; left: -4000px; top: 0; width: 750px; height: 1200px; }
 .moments-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 40; background: rgba(0,0,0,0.55); display: flex; align-items: flex-end; justify-content: center; }
 .moments-sheet { width: 100%; max-height: 88vh; overflow: auto; background: #fff; border-radius: 24rpx 24rpx 0 0; padding: 24rpx 24rpx 40rpx; box-sizing: border-box; }
