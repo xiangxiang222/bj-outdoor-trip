@@ -919,6 +919,14 @@ function migrateSchema(db) {
     );
     CREATE INDEX IF NOT EXISTS idx_user_signins_user ON user_signins(user_id, day);
   `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS poster_lineups (
+      code TEXT PRIMARY KEY,
+      ids_key TEXT UNIQUE,
+      ids_json TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+  `);
   hideStashedRoutes(db);
   require("./services/payment").repairSkippedWalletRefunds();
 }

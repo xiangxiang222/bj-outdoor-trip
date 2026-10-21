@@ -3,6 +3,8 @@ const W = 750;
 const HEADER = 214;
 const ITEM_H = 144;
 const FOOTER = 156;
+const QR_FOOTER = 300;
+const QR_SIZE = 148;
 const PAD = 40;
 const DATE_COL = 176;
 
@@ -88,7 +90,8 @@ export function buildLineup(trips, options = {}) {
 
 export function lineupHeight(model) {
   const items = (model?.groups || []).reduce((sum, group) => sum + group.items.length, 0);
-  return Math.max(980, HEADER + items * ITEM_H + FOOTER);
+  const footer = model?.qr ? QR_FOOTER : FOOTER;
+  return Math.max(980, HEADER + items * ITEM_H + footer);
 }
 
 function roundRect(ctx, x, y, w, h, r) {
@@ -176,6 +179,44 @@ function drawSearch(ctx, x, y) {
   ctx.restore();
 }
 
+function drawFooter(ctx, height, qr) {
+  const rowY = qr ? height - 72 - QR_SIZE + (QR_SIZE - 62) / 2 : height - 108;
+  ctx.fillStyle = "#fff";
+  ctx.font = "700 26px PingFang SC, sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "top";
+  ctx.fillText("报名方式", PAD, rowY + 16);
+  ctx.strokeStyle = "#fff";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(PAD + 118, rowY + 28);
+  ctx.quadraticCurveTo(PAD + 150, rowY + 8, PAD + 176, rowY + 28);
+  ctx.stroke();
+  ctx.font = "700 28px PingFang SC, sans-serif";
+  const label = "同行者众";
+  const labelW = ctx.measureText(label).width;
+  const pillX = PAD + 196;
+  const pillW = labelW + 96;
+  roundRect(ctx, pillX, rowY, pillW, 62, 31);
+  ctx.fillStyle = "#fff";
+  ctx.fill();
+  ctx.fillStyle = "#1a1a1a";
+  ctx.fillText(label, pillX + 26, rowY + 16);
+  drawSearch(ctx, pillX + pillW - 36, rowY + 31);
+  if (!qr) return;
+  const qrX = W - PAD - QR_SIZE;
+  const qrY = height - 72 - QR_SIZE;
+  roundRect(ctx, qrX - 12, qrY - 12, QR_SIZE + 24, QR_SIZE + 24, 20);
+  ctx.fillStyle = "#fff";
+  ctx.fill();
+  ctx.drawImage(qr, qrX, qrY, QR_SIZE, QR_SIZE);
+  ctx.fillStyle = "#fff";
+  ctx.font = "700 22px PingFang SC, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("扫码看这批团", qrX + QR_SIZE / 2, qrY + QR_SIZE + 18);
+  ctx.textAlign = "left";
+}
+
 export async function drawLineupPoster(model) {
   const height = lineupHeight(model);
   const canvas = document.createElement("canvas");
@@ -184,6 +225,7 @@ export async function drawLineupPoster(model) {
   const ctx = canvas.getContext("2d");
   ctx.textBaseline = "top";
   const cover = await loadImage(model.cover);
+  const qr = await loadImage(model.qr);
   drawCover(ctx, cover, W, height);
   const shade = ctx.createLinearGradient(0, 0, 0, height);
   shade.addColorStop(0, "rgba(12, 22, 20, 0.42)");
@@ -230,28 +272,6 @@ export async function drawLineupPoster(model) {
   ctx.moveTo(PAD + DATE_COL - 28, ruleTop);
   ctx.lineTo(PAD + DATE_COL - 28, y - 16);
   ctx.stroke();
-
-  const footY = height - 108;
-  ctx.fillStyle = "#fff";
-  ctx.font = "700 26px PingFang SC, sans-serif";
-  ctx.fillText("报名方式", PAD, footY + 16);
-  ctx.strokeStyle = "#fff";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(PAD + 118, footY + 28);
-  ctx.quadraticCurveTo(PAD + 150, footY + 8, PAD + 176, footY + 28);
-  ctx.stroke();
-
-  ctx.font = "700 28px PingFang SC, sans-serif";
-  const label = "同行者众";
-  const labelW = ctx.measureText(label).width;
-  const pillX = PAD + 196;
-  const pillW = labelW + 96;
-  roundRect(ctx, pillX, footY, pillW, 62, 31);
-  ctx.fillStyle = "#fff";
-  ctx.fill();
-  ctx.fillStyle = "#1a1a1a";
-  ctx.fillText(label, pillX + 26, footY + 16);
-  drawSearch(ctx, pillX + pillW - 36, footY + 31);
+  drawFooter(ctx, height, qr);
   return canvas;
 }

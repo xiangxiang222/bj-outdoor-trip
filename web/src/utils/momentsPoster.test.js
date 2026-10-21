@@ -41,6 +41,11 @@ describe("moments lineup poster", () => {
     expect(model.groups[1].items[0].pitch).toBe("看点  山水");
     expect(model.cover).toBe("/static/cover.jpg");
     expect(lineupHeight(model)).toBeGreaterThan(900);
+    const many = Array.from({ length: 5 }, () => trip());
+    const plain = buildLineup(many);
+    const coded = buildLineup(many);
+    coded.qr = "data:image/png;base64,xx";
+    expect(lineupHeight(coded)).toBe(lineupHeight(plain) + 144);
   });
 
   it("stops at six trips and uses a general title when no district is chosen", () => {

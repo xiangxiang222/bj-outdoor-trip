@@ -223,8 +223,8 @@
           <img v-if="momentsUrl" :src="momentsUrl" alt="朋友圈海报" />
           <p v-else-if="momentsEmpty" class="muted">还没有可以做成海报的团</p>
           <p v-else class="muted">正在生成海报</p>
-          <p v-if="momentsUrl" class="muted">长按图片保存，再发到朋友圈</p>
         </div>
+        <p v-if="momentsUrl" class="muted moments-hint">长按图片保存，再发到朋友圈</p>
         <div class="share-actions">
           <button class="btn" type="button" :disabled="!momentsUrl" @click="savePoster">保存图片</button>
           <button class="btn ghost" type="button" @click="momentsOpen = false">关闭</button>
@@ -477,6 +477,15 @@ async function makePoster() {
     if (!model.count) {
       momentsEmpty.value = true;
       return;
+    }
+    const ids = rows.slice(0, 6).map((row) => Number(row.id)).filter((id) => id > 0);
+    if (ids.length) {
+      try {
+        const saved = await http.post("/poster-lineups", { ids });
+        model.qr = saved.data?.qr || "";
+      } catch {
+        model.qr = "";
+      }
     }
     momentsCanvas = await drawLineupPoster(model);
     momentsUrl.value = momentsCanvas.toDataURL("image/png");

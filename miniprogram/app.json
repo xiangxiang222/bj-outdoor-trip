@@ -21,6 +21,7 @@
     "pages/routes/routes",
     "pages/chain/chain",
     "pages/schedule/schedule",
+    "pages/lineup/lineup",
     "pages/enroll/enroll",
     "pages/pay/pay",
     "pages/order-detail/order-detail",

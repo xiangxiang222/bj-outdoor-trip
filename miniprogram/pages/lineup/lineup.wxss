@@ -1,0 +1,6 @@
+.lineup-lead {
+  margin: 24rpx 32rpx 16rpx;
+  color: #6a6a6a;
+  font-size: calc(26rpx * var(--ui-scale));
+  line-height: 1.4;
+}

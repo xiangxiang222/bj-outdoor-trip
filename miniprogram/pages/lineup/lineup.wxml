@@ -1,0 +1,27 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="lineup-lead" wx:if="{{trips.length}}">{{tr.t('扫码打开的就是海报上这些团', lang)}}</view>
+<view class="feed-card" wx:for="{{trips}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
+  <view class="feed-cover">
+    <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
+    <view wx:else class="feed-ph">{{tr.t(item.coverMark, lang)}}</view>
+    <view class="feed-boarded">{{tr.t(item.boarded, lang)}}</view>
+  </view>
+  <view class="feed-body">
+    <view class="feed-when">{{tr.t(item.feedWhen, lang)}} · {{tr.t(item.city, lang)}}</view>
+    <view class="feed-title"><view class="trip-kind {{item.kind || 'individual'}}"><view class="trip-kind-ico"></view>{{tr.t(item.kindLabel || '个人', lang)}}</view> {{tr.t(item.route.title, lang)}}</view>
+    <view class="feed-host">{{tr.t(item.host, lang)}}</view>
+    <view class="feed-tagline" wx:if="{{item.tagline}}">{{tr.t(item.tagline, lang)}}</view>
+    <view class="feed-price" wx:if="{{item.free}}">{{tr.t('免费', lang)}}</view>
+    <view class="feed-price" wx:else>
+      <text class="strong">¥{{item.quote.originPrice}}</text>
+      <text> {{tr.t('会员 ¥', lang)}}{{item.quote.memberPrice}}</text>
+    </view>
+  </view>
+</view>
+<view wx:if="{{!ready}}" class="card">
+  <view class="pad muted">{{tr.t('正在加载', lang)}}</view>
+</view>
+<view wx:elif="{{missing}}" class="card">
+  <view class="pad">{{tr.t('这批团已经结束或不存在', lang)}}</view>
+</view>

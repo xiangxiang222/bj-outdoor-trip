@@ -11,6 +11,7 @@ const TABS = [
 Component({
   data: {
     selected: 0,
+    hidden: false,
     labelSize: "22rpx",
     list: TABS,
   },
