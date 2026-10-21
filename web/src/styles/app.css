@@ -1092,6 +1092,17 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   border: 0;
   background: #000;
 }
+.video-file {
+  width: 100%;
+  line-height: 0;
+  background: transparent;
+}
+.video-file video {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: transparent;
+}
 .video-link {
   display: block;
   padding: 14px 16px;

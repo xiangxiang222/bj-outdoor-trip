@@ -185,6 +185,25 @@ Page({
       wx.showToast({ title: e.message, icon: "none" });
     }
   },
+  onVideoMeta(e) {
+    const width = Number(e.detail.width) || 0;
+    const height = Number(e.detail.height) || 0;
+    const index = Number(e.currentTarget.dataset.i);
+    const videos = (this.data.r && this.data.r.videos) || [];
+    if (!width || !height || !videos[index]) return;
+    wx.createSelectorQuery()
+      .in(this)
+      .selectAll(".intro-video")
+      .boundingClientRect((rects) => {
+        const rect = rects && rects[index];
+        const win = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
+        const px = rect && rect.width ? rect.width : win.windowWidth;
+        const vh = Math.max(1, Math.round((height / width) * px * (750 / win.windowWidth)));
+        if (videos[index].vh === vh) return;
+        this.setData({ ["r.videos[" + index + "].vh"]: vh });
+      })
+      .exec();
+  },
   previewStory(e) {
     const url = e.currentTarget.dataset.url;
     if (url) wx.previewImage({ urls: [url], current: url });
