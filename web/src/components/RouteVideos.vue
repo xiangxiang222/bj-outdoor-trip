@@ -1,6 +1,6 @@
 <template>
   <div v-if="videos.length">
-    <div class="h2">线路视频</div>
+    <div v-if="!bare" class="h2">线路视频</div>
     <div class="video-list">
       <div v-for="(v, i) in videos" :key="v.url + i" class="video-card">
         <div v-if="v.kind === 'iframe'" class="video-frame">
@@ -24,5 +24,6 @@
 <script setup>
 defineProps({
   videos: { type: Array, default: () => [] },
+  bare: { type: Boolean, default: false },
 });
 </script>
