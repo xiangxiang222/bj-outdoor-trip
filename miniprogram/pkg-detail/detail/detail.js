@@ -90,7 +90,7 @@ function shapeRoute(raw) {
   if (r.season) stats.push({ label: "季节", value: r.season });
   r.stats = stats;
   const jumps = [];
-  if (story.length || r.description) jumps.push({ id: "sec-intro", label: "介绍" });
+  if (story.length || r.description || (r.videos || []).length) jumps.push({ id: "sec-intro", label: "介绍" });
   if ((r.itinerary || []).length) jumps.push({ id: "sec-itin", label: "行程" });
   if (r.feeInclude || r.feeExclude || r.notices) jumps.push({ id: "sec-fee", label: "费用" });
   if (extraPhotos.length) jumps.push({ id: "sec-photos", label: "相册" });

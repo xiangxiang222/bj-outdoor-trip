@@ -63,25 +63,31 @@
   </view>
 </view>
 
-<view id="sec-intro" class="pad" wx:if="{{r.storyGroups && r.storyGroups.length}}">
+<view id="sec-intro" class="pad" wx:if="{{(r.storyGroups && r.storyGroups.length) || r.description || (r.videos && r.videos.length)}}">
   <view class="title">{{tr.t('线路介绍', lang)}}</view>
-  <block wx:for="{{r.storyGroups}}" wx:key="index">
-    <view wx:if="{{item.type==='text'}}" class="story-text">{{tr.t(item.body, lang)}}</view>
-    <scroll-view wx:elif="{{item.items.length > 1}}" scroll-x class="film" enhanced show-scrollbar="{{false}}">
-      <view class="film-card" wx:for="{{item.items}}" wx:for-item="pic" wx:key="url">
-        <image class="film-img" src="{{pic.url}}" mode="aspectFill" bindtap="previewStory" data-url="{{pic.url}}" show-menu-by-longpress="{{true}}" />
-        <view wx:if="{{pic.caption}}" class="film-cap">{{tr.t(pic.caption, lang)}}</view>
-      </view>
-    </scroll-view>
-    <block wx:else>
-      <image class="story-img" src="{{item.items[0].url}}" mode="aspectFill" bindtap="previewStory" data-url="{{item.items[0].url}}" show-menu-by-longpress="{{true}}" />
-      <view wx:if="{{item.items[0].caption}}" class="muted">{{tr.t(item.items[0].caption, lang)}}</view>
+  <block wx:if="{{r.videos && r.videos.length}}">
+    <block wx:for="{{r.videos}}" wx:key="url">
+      <video wx:if="{{item.kind==='video'}}" src="{{item.embedUrl}}" controls object-fit="contain" show-center-play-btn show-fullscreen-btn style="width:100%;height:420rpx;margin:12rpx 0;border-radius:16rpx;background:#000" />
+      <view wx:elif="{{item.miniPath}}" class="video-link" bindtap="playBilibili" data-appid="{{item.miniAppId}}" data-path="{{item.miniPath}}" data-url="{{item.url}}">{{tr.t(item.label, lang)}} {{tr.t('· 点击播放', lang)}}</view>
+      <view wx:else class="video-link" bindtap="copyVideo" data-url="{{item.url}}">{{tr.t(item.label, lang)}} {{tr.t('· 复制链接去浏览器播放', lang)}}</view>
     </block>
   </block>
-</view>
-<view id="sec-intro" class="pad" wx:elif="{{r.description}}">
-  <view class="title">{{tr.t('线路介绍', lang)}}</view>
-  <view class="story-text">{{tr.t(r.description, lang)}}</view>
+  <block wx:if="{{r.storyGroups && r.storyGroups.length}}">
+    <block wx:for="{{r.storyGroups}}" wx:key="index">
+      <view wx:if="{{item.type==='text'}}" class="story-text">{{tr.t(item.body, lang)}}</view>
+      <scroll-view wx:elif="{{item.items.length > 1}}" scroll-x class="film" enhanced show-scrollbar="{{false}}">
+        <view class="film-card" wx:for="{{item.items}}" wx:for-item="pic" wx:key="url">
+          <image class="film-img" src="{{pic.url}}" mode="aspectFill" bindtap="previewStory" data-url="{{pic.url}}" show-menu-by-longpress="{{true}}" />
+          <view wx:if="{{pic.caption}}" class="film-cap">{{tr.t(pic.caption, lang)}}</view>
+        </view>
+      </scroll-view>
+      <block wx:else>
+        <image class="story-img" src="{{item.items[0].url}}" mode="aspectFill" bindtap="previewStory" data-url="{{item.items[0].url}}" show-menu-by-longpress="{{true}}" />
+        <view wx:if="{{item.items[0].caption}}" class="muted">{{tr.t(item.items[0].caption, lang)}}</view>
+      </block>
+    </block>
+  </block>
+  <view wx:elif="{{r.description}}" class="story-text">{{tr.t(r.description, lang)}}</view>
 </view>
 
 <view id="sec-itin" class="pad" wx:if="{{r.itinerary && r.itinerary.length}}">
@@ -122,15 +128,6 @@
     </view>
   </view>
   <view wx:if="{{r.notices}}" class="note">{{tr.t(r.notices, lang)}}</view>
-</view>
-
-<view class="pad" wx:if="{{r.videos && r.videos.length}}">
-  <view class="title">{{tr.t('线路视频', lang)}}</view>
-  <block wx:for="{{r.videos}}" wx:key="url">
-    <video wx:if="{{item.kind==='video'}}" src="{{item.embedUrl}}" controls object-fit="contain" show-center-play-btn show-fullscreen-btn style="width:100%;height:420rpx;margin:12rpx 0;border-radius:16rpx;background:#000" />
-    <view wx:elif="{{item.miniPath}}" class="video-link" bindtap="playBilibili" data-appid="{{item.miniAppId}}" data-path="{{item.miniPath}}" data-url="{{item.url}}">{{tr.t(item.label, lang)}} {{tr.t('· 点击播放', lang)}}</view>
-    <view wx:else class="video-link" bindtap="copyVideo" data-url="{{item.url}}">{{tr.t(item.label, lang)}} {{tr.t('· 复制链接去浏览器播放', lang)}}</view>
-  </block>
 </view>
 
 <view id="sec-photos" class="pad" wx:if="{{r.extraPhotos && r.extraPhotos.length}}">

@@ -61,12 +61,13 @@
       </div>
     </template>
 
-    <div id="sec-intro" class="rp-anchor" v-if="story.length || route.description">
+    <div id="sec-intro" class="rp-anchor" v-if="story.length || route.description || (route.videos || []).length">
       <div class="h2">线路介绍</div>
+      <RouteVideos :videos="route.videos || []" bare />
       <div class="card" v-if="story.length"><div class="pad">
         <RouteStory :blocks="story" @preview="previewUrl" />
       </div></div>
-      <div class="card" v-else><div class="pad">
+      <div class="card" v-else-if="route.description"><div class="pad">
         <p class="rp-desc">{{ route.description }}</p>
       </div></div>
     </div>
@@ -125,8 +126,6 @@
       </div>
       <p v-if="route.notices" class="rp-note">{{ route.notices }}</p>
     </div>
-
-    <RouteVideos :videos="route.videos || []" />
 
     <div id="sec-photos" class="rp-anchor" v-if="album.length">
       <div class="h2">更多照片</div>
@@ -249,7 +248,7 @@ const jumps = computed(() => {
   const route = props.route;
   if (!route) return [];
   const list = [];
-  if (story.value.length || route.description) list.push({ id: "sec-intro", label: "介绍" });
+  if (story.value.length || route.description || (route.videos || []).length) list.push({ id: "sec-intro", label: "介绍" });
   if (route.itinerary?.length) list.push({ id: "sec-itin", label: "行程" });
   if (route.feeInclude || route.feeExclude || route.notices) list.push({ id: "sec-fee", label: "费用" });
   if (album.value.length) list.push({ id: "sec-photos", label: "相册" });
