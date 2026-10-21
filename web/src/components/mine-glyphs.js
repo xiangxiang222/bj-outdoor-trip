@@ -1,4 +1,4 @@
-/** 线宽 1.6，和摄影师申请的相机描边一致。viewBox 22。 */
+/** 线宽 2。摄影师申请的相机是 1.6px 描边，栅格化后这条线宽才和它一样粗。viewBox 22。 */
 export const mineGlyphs = {
   headset: `
     <path d="M7.2 12.2V9.3a3.8 3.8 0 0 1 7.6 0v2.9"/>
