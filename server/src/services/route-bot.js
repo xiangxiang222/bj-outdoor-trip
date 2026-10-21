@@ -30,6 +30,19 @@ function localPhoto(value) {
   return url.startsWith("/static/") ? url : "";
 }
 
+function hasOwn(body, keys) {
+  return keys.some((key) => body && Object.prototype.hasOwnProperty.call(body, key) && body[key] != null);
+}
+
+function jsonList(raw) {
+  try {
+    const parsed = JSON.parse(raw || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 function localVideo(value) {
   const url = clip(typeof value === "string" ? value : value && (value.url || value.src), 300).split("?")[0];
   if (!url.startsWith("/static/") || url.includes("..")) return "";
@@ -169,34 +182,31 @@ function draftOf(body) {
 }
 
 function viewOf(row, extra = {}) {
-  let photos = [];
-  try {
-    photos = JSON.parse(row.photo_sources_json || "[]");
-  } catch {
-    photos = [];
-  }
   return {
     id: row.id,
     code: row.code,
     title: row.title,
     region: row.region || "",
+    days: Number(row.days) || 1,
+    category: row.category || "",
+    difficulty: row.difficulty || "",
     reviewStatus: reviewOf(row),
     status: row.status || "off",
     source: row.source || "",
     sourceKey: row.source_key || "",
     sourceUrl: row.source_url || "",
     suggestedPrice: Number(row.suggested_price || 0),
-    photoSources: Array.isArray(photos) ? photos : [],
+    description: row.description || "",
+    highlights: jsonList(row.highlights_json),
+    itinerary: jsonList(row.itinerary_json),
+    feeInclude: row.fee_include || "",
+    feeExclude: row.fee_exclude || "",
+    equipment: row.equipment || "",
+    notices: row.notices || "",
+    photoSources: jsonList(row.photo_sources_json),
     reviewNote: row.review_note || "",
     reviewedAt: row.reviewed_at || "",
-    videos: (() => {
-      try {
-        const parsed = JSON.parse(row.videos_json || "[]");
-        return Array.isArray(parsed) ? parsed : [];
-      } catch {
-        return [];
-      }
-    })(),
+    videos: jsonList(row.videos_json),
     ...extra,
   };
 }
@@ -276,6 +286,60 @@ function insertDraft(db, draft) {
   return Number(info.lastInsertRowid);
 }
 
+function draftFromRow(row) {
+  return {
+    title: row.title || "",
+    subtitle: row.subtitle || "",
+    days: Number(row.days) || 1,
+    region: row.region || "",
+    category: row.category || "山水",
+    difficulty: row.difficulty || "休闲",
+    season: row.season || "四季",
+    distanceKm: Number(row.distance_km) || 0,
+    tags: jsonList(row.tags_json),
+    description: row.description || "",
+    highlights: jsonList(row.highlights_json),
+    itinerary: jsonList(row.itinerary_json),
+    feeInclude: row.fee_include || "",
+    feeExclude: row.fee_exclude || "",
+    equipment: row.equipment || "",
+    notices: row.notices || "",
+    meetup: jsonList(row.meetup_json),
+    suggestedPrice: Number(row.suggested_price) || 0,
+    minGroupSize: Number(row.min_group_size) || 10,
+    sourceUrl: row.source_url || "",
+    sourceKey: row.source_key || "",
+    photoSources: jsonList(row.photo_sources_json),
+    cover: row.cover || "",
+    gallery: jsonList(row.gallery_json),
+  };
+}
+
+function keepOmitted(draft, existing, input) {
+  const row = draftFromRow(existing);
+  if (!hasOwn(input, ["title"])) draft.title = row.title;
+  if (!hasOwn(input, ["subtitle"])) draft.subtitle = row.subtitle;
+  if (!hasOwn(input, ["days"])) draft.days = row.days;
+  if (!hasOwn(input, ["region", "city"])) draft.region = row.region;
+  if (!hasOwn(input, ["category"])) draft.category = row.category;
+  if (!hasOwn(input, ["difficulty"])) draft.difficulty = row.difficulty;
+  if (!hasOwn(input, ["season"])) draft.season = row.season;
+  if (!hasOwn(input, ["distanceKm", "distance_km"])) draft.distanceKm = row.distanceKm;
+  if (!hasOwn(input, ["tags"])) draft.tags = row.tags;
+  if (!hasOwn(input, ["description"])) draft.description = row.description;
+  if (!hasOwn(input, ["highlights"])) draft.highlights = row.highlights;
+  if (!hasOwn(input, ["itinerary"])) draft.itinerary = row.itinerary;
+  if (!hasOwn(input, ["feeInclude", "fee_include"])) draft.feeInclude = row.feeInclude;
+  if (!hasOwn(input, ["feeExclude", "fee_exclude"])) draft.feeExclude = row.feeExclude;
+  if (!hasOwn(input, ["equipment"])) draft.equipment = row.equipment;
+  if (!hasOwn(input, ["notices"])) draft.notices = row.notices;
+  if (!hasOwn(input, ["meetupPoints", "meetup_points"])) draft.meetup = row.meetup;
+  if (!hasOwn(input, ["suggestedPrice", "suggested_price", "price"])) draft.suggestedPrice = row.suggestedPrice;
+  if (!hasOwn(input, ["minGroupSize", "min_group_size"])) draft.minGroupSize = row.minGroupSize;
+  if (!hasOwn(input, ["sourceUrl", "source_url"])) draft.sourceUrl = row.sourceUrl;
+  if (!hasOwn(input, ["photoSources", "photo_sources", "photos"])) draft.photoSources = row.photoSources;
+}
+
 function keepStoredPhotos(draft, existing) {
   if (!existing || !String(existing.cover || "").startsWith("/static/")) {
     draft.gallery = [];
@@ -291,29 +355,45 @@ function keepStoredPhotos(draft, existing) {
 }
 
 async function ingestRoute(body, deps) {
-  const draft = draftOf(body);
+  const input = body || {};
   const db = getDb();
-  const existing = db.prepare("SELECT * FROM routes WHERE source_key=?").get(draft.sourceKey);
+  const explicitKey = clip(input.sourceKey || input.source_key, 80);
+  let existing = explicitKey ? db.prepare("SELECT * FROM routes WHERE source_key=?").get(explicitKey) : null;
   if (existing && existing.source !== "bot") fail(409, "来源键已被占用");
   if (existing && reviewOf(existing) === "approved") {
     return viewOf(existing, { updated: false, message: "已通过，未覆盖" });
   }
-  const incomingVideos = videosOf(body);
-  let videos = incomingVideos;
-  if (videos === undefined) {
-    try {
-      const parsed = JSON.parse((existing && existing.videos_json) || "[]");
-      videos = Array.isArray(parsed) ? parsed : [];
-    } catch {
-      videos = [];
+  const draftInput = { ...input };
+  if (existing) {
+    if (!hasOwn(input, ["title"])) draftInput.title = existing.title;
+    if (!hasOwn(input, ["region", "city"])) draftInput.region = existing.region;
+  }
+  const draft = draftOf(draftInput);
+  if (!existing) {
+    existing = db.prepare("SELECT * FROM routes WHERE source_key=?").get(draft.sourceKey);
+    if (existing && existing.source !== "bot") fail(409, "来源键已被占用");
+    if (existing && reviewOf(existing) === "approved") {
+      return viewOf(existing, { updated: false, message: "已通过，未覆盖" });
     }
   }
-  const photos = await attachBotPhotos(draft, deps);
-  if (photos.cover) {
-    draft.cover = photos.cover;
-    draft.gallery = photos.gallery;
+  if (existing) keepOmitted(draft, existing, input);
+  const incomingVideos = videosOf(input);
+  let videos = incomingVideos;
+  if (videos === undefined) {
+    videos = jsonList(existing && existing.videos_json);
+  }
+  const sendPhotos = hasOwn(input, ["photoSources", "photo_sources", "photos"]);
+  if (sendPhotos || !existing) {
+    const photos = await attachBotPhotos(draft, deps);
+    if (photos.cover) {
+      draft.cover = photos.cover;
+      draft.gallery = photos.gallery;
+    } else {
+      keepStoredPhotos(draft, existing);
+    }
   } else {
-    keepStoredPhotos(draft, existing);
+    draft.cover = existing.cover || "";
+    draft.gallery = jsonList(existing.gallery_json);
   }
   const reopen = !existing || reviewOf(existing) === "rejected";
   let id = existing && existing.id;
