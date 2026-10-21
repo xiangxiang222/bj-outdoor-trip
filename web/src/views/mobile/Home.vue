@@ -79,6 +79,7 @@
       <div class="tools">
         <button class="tool-btn" type="button" @click="sort = cycleSort(sort)">{{ sortLabel(sort) }}</button>
         <button class="tool-btn" type="button" @click="fold.extra = !fold.extra">{{ fold.extra ? "收起" : "筛选" }}</button>
+        <button v-if="groups.length" class="tool-btn" type="button" @click="openMoments">朋友圈</button>
         <button class="tool-btn play" type="button" @click="goPublish()">发团</button>
       </div>
     </div>
@@ -172,6 +173,18 @@
       <router-link to="/m/official">客服与规则</router-link>
     </p>
     </div>
+
+    <div v-if="momentsOpen" class="moments-mask" @click.self="momentsOpen = false">
+      <div class="moments-sheet" role="dialog" aria-label="朋友圈海报">
+        <img v-if="momentsUrl" :src="momentsUrl" alt="朋友圈海报" />
+        <p v-else class="muted">正在生成海报</p>
+        <p class="muted">长按图片保存，再发到朋友圈</p>
+        <div class="share-actions">
+          <button class="btn" type="button" :disabled="!momentsUrl" @click="saveMoments">保存图片</button>
+          <button class="btn ghost" type="button" @click="momentsOpen = false">关闭</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -183,6 +196,8 @@ import { useUserStore } from "@/stores/user";
 import { OFFER_TYPES } from "@/utils/offer";
 import { mediaSrc, slideBg, slideFallback, slideRouteTarget } from "@/utils/media";
 import { boardedLine, coverMark, coverOf, feedWhen, hostName, isFreeOffer, taglineOf } from "@/utils/feedCard";
+import { buildLineup, drawLineupPoster } from "@/utils/momentsPoster";
+import { downloadPosterPng } from "@/utils/sharePoster";
 import { cycleSort, hostFacets as collectHostFacets, processFeed, sortLabel } from "@/utils/feedList";
 import RouteCatalog from "@/components/RouteCatalog.vue";
 import LivePulse from "@/components/LivePulse.vue";
@@ -212,6 +227,9 @@ const upcoming = ref(null);
 const fold = reactive({ extra: false });
 const offers = OFFER_TYPES.filter((o) => o.key !== "full");
 const view = ref(pageRoute.query.view === "routes" ? "routes" : "trips");
+const momentsOpen = ref(false);
+const momentsUrl = ref("");
+let momentsCanvas = null;
 const searchHint = computed(() => (view.value === "routes" ? "搜长城 / 十渡 / 坝上" : "搜线路、城区、主理人"));
 
 const brandSlides = computed(() => {
@@ -389,6 +407,23 @@ function goPublish(when) {
     return;
   }
   router.push(path);
+}
+async function openMoments() {
+  const model = buildLineup(groups.value, { city: city.value });
+  if (!model.count) return;
+  momentsOpen.value = true;
+  momentsUrl.value = "";
+  momentsCanvas = null;
+  try {
+    momentsCanvas = await drawLineupPoster(model);
+    momentsUrl.value = momentsCanvas.toDataURL("image/png");
+  } catch {
+    momentsOpen.value = false;
+  }
+}
+async function saveMoments() {
+  if (!momentsCanvas) return;
+  await downloadPosterPng(momentsCanvas, "moments-lineup.png");
 }
 async function pickMonth(key) {
   monthKey.value = key;

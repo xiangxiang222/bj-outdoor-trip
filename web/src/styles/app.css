@@ -1051,6 +1051,31 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   width: 100%;
   height: auto;
 }
+.moments-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+}
+.moments-sheet {
+  width: min(420px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 18px;
+  padding: 12px 12px 16px;
+}
+.moments-sheet img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+.moments-sheet p { margin: 10px 4px 0; }
 .share-card .share-qr {
   display: block;
   width: 180px;
@@ -1721,6 +1746,7 @@ html.admin-theme .el-dialog__footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 8px;
   margin: 2px 0 8px;
 }

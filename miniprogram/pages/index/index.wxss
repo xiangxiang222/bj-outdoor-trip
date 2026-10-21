@@ -130,3 +130,9 @@
 }
 .home-tile-title { font-size: calc(32rpx * var(--ui-scale)); font-weight: 700; color: #1b4332; }
 .home-foot { text-align: center; padding: 16rpx; color: #2d6a4f; }
+.moments-offscreen { position: fixed; left: -4000px; top: 0; width: 750px; height: 1200px; }
+.moments-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 40; background: rgba(0,0,0,0.55); display: flex; align-items: flex-end; justify-content: center; }
+.moments-sheet { width: 100%; max-height: 88vh; overflow: auto; background: #fff; border-radius: 24rpx 24rpx 0 0; padding: 24rpx 24rpx 40rpx; box-sizing: border-box; }
+.moments-img { width: 100%; display: block; border-radius: 16rpx; }
+.moments-hint { margin: 16rpx 8rpx; }
+.moments-sheet .btn { margin-top: 16rpx; }
