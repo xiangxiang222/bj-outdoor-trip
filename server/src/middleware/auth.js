@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const config = require("../config");
 const { getDb } = require("../db");
@@ -94,4 +95,17 @@ function bearer(req) {
   return (req.query && req.query.token) || "";
 }
 
-module.exports = { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide };
+function authBot(req, res, next) {
+  const expected = String(process.env.BOT_INGEST_TOKEN || "").trim();
+  if (!expected) return res.status(503).json({ ok: false, message: "采集接口未开启" });
+  const header = String((req.headers && req.headers.authorization) || "");
+  const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+  const left = Buffer.from(token);
+  const right = Buffer.from(expected);
+  if (!token || left.length !== right.length || !crypto.timingSafeEqual(left, right)) {
+    return res.status(401).json({ ok: false, message: "采集密钥无效" });
+  }
+  next();
+}
+
+module.exports = { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide, authBot };

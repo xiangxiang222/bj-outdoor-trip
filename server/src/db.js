@@ -760,6 +760,14 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "routes", "bounty_paid_at", "TEXT");
   addColumnIfMissing(db, "routes", "bounty_schedule_id", "INTEGER");
   addColumnIfMissing(db, "routes", "i18n_json", "TEXT");
+  addColumnIfMissing(db, "routes", "source", "TEXT DEFAULT ''");
+  addColumnIfMissing(db, "routes", "source_url", "TEXT DEFAULT ''");
+  addColumnIfMissing(db, "routes", "source_key", "TEXT DEFAULT ''");
+  addColumnIfMissing(db, "routes", "suggested_price", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "routes", "photo_sources_json", "TEXT DEFAULT '[]'");
+  db.exec(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_routes_source_key ON routes(source_key) WHERE IFNULL(source_key,'') != ''"
+  );
   db.exec(`
     CREATE TABLE IF NOT EXISTS user_notices (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -157,7 +157,8 @@ function reviewApply(routeId, { action, note, adminId } = {}) {
   const db = getDb();
   const row = db.prepare("SELECT * FROM routes WHERE id=?").get(routeId);
   if (!row) fail(404, "线路不存在");
-  if (!Number(row.submitted_by || 0)) fail(400, "官方线路请用上下架，不必走申请审批");
+  const fromBot = row.source === "bot";
+  if (!Number(row.submitted_by || 0) && !fromBot) fail(400, "官方线路请用上下架，不必走申请审批");
   const act = String(action || "").trim();
   if (act !== "approve" && act !== "reject") fail(400, "请选择通过或驳回");
   if (reviewOf(row) === "approved" && act === "approve") fail(400, "该申请已通过");
@@ -269,7 +270,21 @@ function adminFields(row) {
     bountyAmount: Number(row.bounty_amount || 0),
     bountyStatus: row.bounty_status || "",
     bountyPaidAt: row.bounty_paid_at || "",
+    source: row.source || "",
+    sourceUrl: row.source_url || "",
+    sourceKey: row.source_key || "",
+    suggestedPrice: Number(row.suggested_price || 0),
+    photoSources: safeJson(row.photo_sources_json),
   };
+}
+
+function safeJson(text) {
+  try {
+    const parsed = JSON.parse(text || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 module.exports = {
