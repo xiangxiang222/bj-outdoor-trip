@@ -1076,6 +1076,51 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   border-radius: 12px;
 }
 .moments-sheet p { margin: 10px 4px 0; }
+.poster-pick { display: flex; flex-direction: column; }
+.poster-pick-title { margin: 4px 4px 0; font-weight: 650; }
+.poster-pick-hint { margin: 4px 4px 8px; color: var(--muted); font-size: calc(13px * var(--ui-scale)); }
+.poster-pick-limit { margin: 0 4px 8px; color: #8c3038; font-size: calc(13px * var(--ui-scale)); }
+.poster-pick-list { overflow: auto; max-height: 52vh; display: flex; flex-direction: column; gap: 8px; }
+.poster-pick-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid #eee;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.poster-pick-row.on { border-color: #1a1a1a; }
+.poster-pick-mark {
+  width: 18px;
+  height: 18px;
+  border: 1.6px solid #1a1a1a;
+  border-radius: 5px;
+  box-sizing: border-box;
+  flex: none;
+  position: relative;
+}
+.poster-pick-row.on .poster-pick-mark { background: #1a1a1a; }
+.poster-pick-row.on .poster-pick-mark::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 7px;
+  height: 4px;
+  border-left: 1.6px solid #fff;
+  border-bottom: 1.6px solid #fff;
+  transform: rotate(-45deg);
+}
+.poster-pick-copy { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.poster-pick-copy strong { font-weight: 650; }
+.poster-pick-copy em { font-style: normal; color: var(--muted); font-size: calc(12px * var(--ui-scale)); }
+.poster-pick .btn:disabled { opacity: 0.45; cursor: default; }
 .share-card .share-qr {
   display: block;
   width: 180px;

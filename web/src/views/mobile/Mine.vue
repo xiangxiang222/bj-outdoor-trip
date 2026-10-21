@@ -175,6 +175,38 @@
       </button>
     </div>
 
+    <div v-if="posterPick" class="moments-mask" @click.self="posterPick = false">
+      <div class="moments-sheet poster-pick" role="dialog" aria-label="选择团">
+        <p class="poster-pick-title">选择要放进海报的团</p>
+        <p class="poster-pick-hint">最多选 6 个团</p>
+        <p v-if="posterLimit" class="poster-pick-limit">一张海报最多放 6 个团</p>
+        <p v-if="posterLoading" class="muted">正在加载</p>
+        <p v-else-if="!posterTrips.length" class="muted">还没有可以做成海报的团</p>
+        <div v-else class="poster-pick-list">
+          <button
+            v-for="item in posterTrips"
+            :key="item.id"
+            type="button"
+            class="poster-pick-row"
+            :class="{ on: item.on }"
+            @click="togglePoster(item)"
+          >
+            <i class="poster-pick-mark"></i>
+            <span class="poster-pick-copy">
+              <strong>{{ item.title }}</strong>
+              <em>{{ item.when }}</em>
+            </span>
+          </button>
+        </div>
+        <div class="share-actions">
+          <button class="btn" type="button" :disabled="!posterChosen" @click="makePoster">
+            生成海报{{ posterCount ? " · " + posterCount : "" }}
+          </button>
+          <button class="btn ghost" type="button" @click="posterPick = false">关闭</button>
+        </div>
+      </div>
+    </div>
+
     <div v-if="momentsOpen" class="moments-mask" @click.self="momentsOpen = false">
       <div class="moments-sheet" role="dialog" aria-label="朋友圈海报">
         <img v-if="momentsUrl" :src="momentsUrl" alt="朋友圈海报" />
@@ -231,7 +263,15 @@ const picks = ref([]);
 const momentsOpen = ref(false);
 const momentsUrl = ref("");
 const momentsEmpty = ref(false);
+const posterPick = ref(false);
+const posterTrips = ref([]);
+const posterLoading = ref(false);
+const posterLimit = ref(false);
+let posterRows = [];
 let momentsCanvas = null;
+const WEEK = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+const posterChosen = computed(() => posterTrips.value.some((row) => row.on));
+const posterCount = computed(() => posterTrips.value.filter((row) => row.on).length);
 
 const campusShort = computed(() => {
   const u = store.profile;
@@ -325,14 +365,60 @@ async function onFile(e) {
   const up = await http.post("/upload", body);
   await saveAvatar(up.data.url);
 }
+function posterWhen(row) {
+  const iso = String(row.startDate || "").slice(0, 10);
+  const d = new Date(`${iso}T00:00:00`);
+  const meet = String(row.meetupPoint || "").trim();
+  if (Number.isNaN(d.getTime())) return [iso, meet].filter(Boolean).join(" · ");
+  const md = `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")} ${WEEK[d.getDay()]}`;
+  return meet ? `${md} · ${meet}` : md;
+}
+function posterId(row, index) {
+  return row.id != null ? String(row.id) : `i${index}`;
+}
 async function openPoster() {
+  posterPick.value = true;
+  posterLoading.value = true;
+  posterLimit.value = false;
+  posterTrips.value = [];
+  posterRows = [];
+  try {
+    const rows = (await http.get("/schedules", { params: { channel: "trip" } })).data || [];
+    const list = processFeed(rows, { channel: "trip", sort: "soon" })
+      .filter((row) => row?.route && String(row.route.title || "").trim() && row.startDate);
+    posterRows = list;
+    posterTrips.value = list.map((row, index) => ({
+      id: posterId(row, index),
+      title: row.route.title,
+      when: posterWhen(row),
+      on: false,
+    }));
+  } catch {
+    posterPick.value = false;
+  } finally {
+    posterLoading.value = false;
+  }
+}
+function togglePoster(item) {
+  const onCount = posterTrips.value.filter((row) => row.on).length;
+  if (!item.on && onCount >= 6) {
+    posterLimit.value = true;
+    return;
+  }
+  posterLimit.value = false;
+  posterTrips.value = posterTrips.value.map((row) => (row.id === item.id ? { ...row, on: !row.on } : row));
+}
+async function makePoster() {
+  const chosen = new Set(posterTrips.value.filter((row) => row.on).map((row) => row.id));
+  const rows = posterRows.filter((row, index) => chosen.has(posterId(row, index)));
+  if (!rows.length) return;
+  posterPick.value = false;
   momentsOpen.value = true;
   momentsUrl.value = "";
   momentsEmpty.value = false;
   momentsCanvas = null;
   try {
-    const rows = (await http.get("/schedules", { params: { channel: "trip" } })).data || [];
-    const model = buildLineup(processFeed(rows, { channel: "trip", sort: "soon" }));
+    const model = buildLineup(rows);
     if (!model.count) {
       momentsEmpty.value = true;
       return;

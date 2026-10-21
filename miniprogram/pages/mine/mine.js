@@ -4,6 +4,25 @@ const { processFeed } = require("../../utils/feed-list");
 const { buildLineup, drawMomentsPoster } = require("../../utils/moments-poster");
 const appearance = require("../../utils/appearance");
 const app = getApp();
+const POSTER_WEEK = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+function posterKey(row, index) {
+  return row && row.id != null ? String(row.id) : "i" + index;
+}
+
+function posterItem(row, index) {
+  const iso = String(row.startDate || "").slice(0, 10);
+  const d = new Date(iso + "T00:00:00");
+  const ok = !Number.isNaN(d.getTime());
+  return {
+    id: posterKey(row, index),
+    title: row.route.title,
+    md: ok ? (d.getMonth() + 1) + "." + String(d.getDate()).padStart(2, "0") : iso,
+    week: ok ? POSTER_WEEK[d.getDay()] : "",
+    meet: String(row.meetupPoint || "").trim(),
+    on: false,
+  };
+}
 
 function uploadAvatar(filePath) {
   return new Promise((resolve, reject) => {
@@ -45,6 +64,10 @@ Page({
     iconBase: (app && app.globalData && app.globalData.baseUrl ? app.globalData.baseUrl : "") + "/static/mine/",
     momentsOpen: false,
     momentsPath: "",
+    posterPick: false,
+    posterReady: false,
+    posterTrips: [],
+    posterCount: 0,
     dark: false,
     statusBarHeight: 20,
     navBarHeight: 44,
@@ -217,20 +240,52 @@ Page({
     wx.navigateTo({ url });
   },
   openPoster() {
-    wx.showLoading({ title: "正在生成海报" });
+    this._posterRows = [];
+    this.setData({ posterPick: true, posterReady: false, posterTrips: [], posterCount: 0 });
     request("/schedules?channel=trip")
       .then((res) => {
         const groups = processFeed(res.data || [], { channel: "trip", sort: "soon" });
-        const model = buildLineup(groups, {});
-        if (!model.count) {
-          wx.hideLoading();
-          wx.showToast({ title: "还没有可以做成海报的团", icon: "none" });
-          return;
-        }
-        return drawMomentsPoster(this, model).then((path) => {
-          wx.hideLoading();
-          this.setData({ momentsOpen: true, momentsPath: path });
-        });
+        const rows = groups.filter((row) => row && row.route && String(row.route.title || "").trim() && row.startDate);
+        this._posterRows = rows;
+        this.setData({ posterReady: true, posterTrips: rows.map((row, index) => posterItem(row, index)) });
+      })
+      .catch(() => {
+        this.setData({ posterPick: false });
+        wx.showToast({ title: "海报生成失败", icon: "none" });
+      });
+  },
+  togglePoster(e) {
+    const id = String(e.currentTarget.dataset.id || "");
+    const trips = this.data.posterTrips || [];
+    const current = trips.find((item) => item.id === id);
+    if (!current) return;
+    const onCount = trips.filter((item) => item.on).length;
+    if (!current.on && onCount >= 6) {
+      wx.showToast({ title: "一张海报最多放 6 个团", icon: "none" });
+      return;
+    }
+    const next = trips.map((item) => (item.id === id ? Object.assign({}, item, { on: !item.on }) : item));
+    this.setData({ posterTrips: next, posterCount: next.filter((item) => item.on).length });
+  },
+  closePosterPick() {
+    this.setData({ posterPick: false });
+  },
+  makePoster() {
+    const chosen = {};
+    (this.data.posterTrips || []).forEach((item) => {
+      if (item.on) chosen[item.id] = true;
+    });
+    const rows = (this._posterRows || []).filter((row, index) => chosen[posterKey(row, index)]);
+    if (!rows.length) {
+      wx.showToast({ title: "请先选择团", icon: "none" });
+      return;
+    }
+    wx.showLoading({ title: "正在生成海报" });
+    const model = buildLineup(rows, {});
+    drawMomentsPoster(this, model)
+      .then((path) => {
+        wx.hideLoading();
+        this.setData({ posterPick: false, momentsOpen: true, momentsPath: path });
       })
       .catch(() => {
         wx.hideLoading();
