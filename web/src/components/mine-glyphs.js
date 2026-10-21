@@ -28,10 +28,10 @@ export const mineGlyphs = {
     <path d="M11 1.6V20.4M1.9 6.9 11 11.7 20.1 6.9"/>
   `,
   smile: `
-    <path d="M7.4 4h8.4a2.7 2.7 0 0 1 2.7 2.7v4.2a2.7 2.7 0 0 1-2.7 2.7H9.2L5.6 17.4 7.2 13.6H7.4a2.7 2.7 0 0 1-2.7-2.7V6.7A2.7 2.7 0 0 1 7.4 4z"/>
-    <circle cx="8.7" cy="8.1" r="0.75" fill="currentColor" stroke="none"/>
-    <circle cx="13.5" cy="8.1" r="0.75" fill="currentColor" stroke="none"/>
-    <path d="M8.5 10.3q2.6 2.2 5.2 0"/>
+    <path d="M8.4 3.2h5.2a3 3 0 0 1 3 3v4.2a3 3 0 0 1-3 3H9.6L6.2 16.8 7.6 13.4H8.4a3 3 0 0 1-3-3V6.2a3 3 0 0 1 3-3z"/>
+    <circle cx="9.3" cy="7.6" r="0.78" fill="currentColor" stroke="none"/>
+    <circle cx="12.9" cy="7.6" r="0.78" fill="currentColor" stroke="none"/>
+    <path d="M9 9.8q2.1 2 4.2 0"/>
   `,
   yen: `
     <circle cx="11" cy="11" r="8.2"/>

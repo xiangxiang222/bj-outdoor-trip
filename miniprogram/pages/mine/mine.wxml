@@ -117,7 +117,7 @@
         </view>
         <view bindtap="goOrders" data-tab="review">
           <view class="mine-order-ico">
-            <image src="{{iconBase}}order-review.png?v=12" mode="aspectFit" />
+            <image src="{{iconBase}}order-review.png?v=13" mode="aspectFit" />
             <text wx:if="{{hub.reviewCount}}" class="mine-badge">{{hub.reviewCount > 99 ? '99+' : hub.reviewCount}}</text>
           </view>
           <view class="mine-order-name">{{tr.t('待评价', lang)}}</view>
