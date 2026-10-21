@@ -1,6 +1,6 @@
 @import "../../styles/account.wxss";
 page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "Helvetica Neue", sans-serif; }
-.mine-nav { background: #c045ab; color: #fff; padding-bottom: 8rpx; }
+.mine-nav { background: #8534e4; color: #fff; padding-bottom: 8rpx; }
 .mine-nav-bar {
   display: flex;
   align-items: center;
@@ -9,17 +9,17 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
   font-weight: 650;
   line-height: 1;
 }
-.mine-nav.is-dark { background: #9a4584; }
+.mine-nav.is-dark { background: #7231be; }
 .mine-page {
   background-color: #f3f4f6;
-  background-image: linear-gradient(180deg, #c045ab 0, #c045ab 160rpx, #f3f4f6 760rpx);
+  background-image: linear-gradient(180deg, #8534e4 0, #8534e4 160rpx, #f3f4f6 760rpx);
   background-repeat: no-repeat;
   padding-bottom: 24rpx;
   margin-top: -8rpx;
 }
 .mine-page.is-dark {
   background-color: #121214;
-  background-image: linear-gradient(180deg, #9a4584 0, #9a4584 160rpx, #121214 760rpx);
+  background-image: linear-gradient(180deg, #7231be 0, #7231be 160rpx, #121214 760rpx);
   background-repeat: no-repeat;
   color: #f2f2f2;
 }
