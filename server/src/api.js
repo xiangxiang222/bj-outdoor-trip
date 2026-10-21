@@ -210,18 +210,23 @@ const uploadDocx = multer({
   },
 });
 
-const uploadBotVideo = multer({
-  storage: multer.diskStorage({
-    destination: (_req, _file, cb) => cb(null, uploadsDir()),
-    filename: (_req, _file, cb) => cb(null, `botv-${nanoid(10)}.mp4`),
-  }),
-  limits: { fileSize: 32 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    const ext = path.extname(file.originalname || "").toLowerCase();
-    const ok = ext === ".mp4" || ext === ".m4v" || ext === ".mov" || /^video\/(mp4|quicktime)$/i.test(file.mimetype || "");
-    cb(ok ? null : new Error("请上传 mp4 视频"), ok);
-  },
-});
+function videoUploader(prefix) {
+  return multer({
+    storage: multer.diskStorage({
+      destination: (_req, _file, cb) => cb(null, uploadsDir()),
+      filename: (_req, _file, cb) => cb(null, `${prefix}-${nanoid(10)}.mp4`),
+    }),
+    limits: { fileSize: 32 * 1024 * 1024 },
+    fileFilter: (_req, file, cb) => {
+      const ext = path.extname(file.originalname || "").toLowerCase();
+      const ok = ext === ".mp4" || ext === ".m4v" || ext === ".mov" || /^video\/(mp4|quicktime)$/i.test(file.mimetype || "");
+      cb(ok ? null : new Error("请上传 mp4 视频"), ok);
+    },
+  });
+}
+
+const uploadBotVideo = videoUploader("botv");
+const uploadAdminVideo = videoUploader("adminv");
 
 function videoFileOk(filePath) {
   const fh = fs.openSync(filePath, "r");
@@ -232,6 +237,21 @@ function videoFileOk(filePath) {
   } finally {
     fs.closeSync(fh);
   }
+}
+
+function sendVideoUpload(uploader, req, res) {
+  uploader.single("file")(req, res, (err) => {
+    if (err) {
+      const tooBig = err.code === "LIMIT_FILE_SIZE";
+      return res.status(400).json({ ok: false, message: tooBig ? "视频请小于 32MB" : err.message || "上传失败" });
+    }
+    if (!req.file) return res.status(400).json({ ok: false, message: "请上传 mp4 视频" });
+    if (!videoFileOk(req.file.path)) {
+      fs.unlink(req.file.path, () => {});
+      return res.status(400).json({ ok: false, message: "请上传 mp4 视频" });
+    }
+    res.json({ ok: true, data: { url: `/static/uploads/${req.file.filename}` } });
+  });
 }
 
 const uploadImage = multer({
@@ -1829,18 +1849,7 @@ router.post("/upload", authUser, (req, res) => {
 });
 
 router.post("/bot/videos", authBot, (req, res) => {
-  uploadBotVideo.single("file")(req, res, (err) => {
-    if (err) {
-      const tooBig = err.code === "LIMIT_FILE_SIZE";
-      return res.status(400).json({ ok: false, message: tooBig ? "视频请小于 32MB" : err.message || "上传失败" });
-    }
-    if (!req.file) return res.status(400).json({ ok: false, message: "请上传 mp4 视频" });
-    if (!videoFileOk(req.file.path)) {
-      fs.unlink(req.file.path, () => {});
-      return res.status(400).json({ ok: false, message: "请上传 mp4 视频" });
-    }
-    res.json({ ok: true, data: { url: `/static/uploads/${req.file.filename}` } });
-  });
+  sendVideoUpload(uploadBotVideo, req, res);
 });
 
 router.post("/bot/routes", authBot, async (req, res) => {
@@ -2609,6 +2618,10 @@ router.get("/admin/dashboard", authAdmin, requireCap("ops"), (req, res) => {
     .all()
     .map((row) => ({ ...row, revenue: dayMoney.get(Number(row.days)) || 0 }));
   res.json({ ok: true, data: { routeCount, userCount, enrollCount, revenue, pending, byRoute, byDay } });
+});
+
+router.post("/admin/videos", authAdmin, requireCap("ops"), (req, res) => {
+  sendVideoUpload(uploadAdminVideo, req, res);
 });
 
 router.post("/admin/upload", authAdmin, requireCap("photo"), (req, res) => {
