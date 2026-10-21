@@ -1,5 +1,7 @@
 const { request, setAuth, showError } = require("../../utils/request");
 const { maskPhone } = require("../../utils/labels");
+const { processFeed } = require("../../utils/feed-list");
+const { buildLineup, drawMomentsPoster } = require("../../utils/moments-poster");
 const appearance = require("../../utils/appearance");
 const app = getApp();
 
@@ -41,6 +43,8 @@ Page({
     defaults: [],
     picks: [],
     iconBase: (app && app.globalData && app.globalData.baseUrl ? app.globalData.baseUrl : "") + "/static/mine/",
+    momentsOpen: false,
+    momentsPath: "",
     dark: false,
     statusBarHeight: 20,
     navBarHeight: 44,
@@ -211,6 +215,54 @@ Page({
       return;
     }
     wx.navigateTo({ url });
+  },
+  openPoster() {
+    wx.showLoading({ title: "正在生成海报" });
+    request("/schedules?channel=trip")
+      .then((res) => {
+        const groups = processFeed(res.data || [], { channel: "trip", sort: "soon" });
+        const model = buildLineup(groups, {});
+        if (!model.count) {
+          wx.hideLoading();
+          wx.showToast({ title: "还没有可以做成海报的团", icon: "none" });
+          return;
+        }
+        return drawMomentsPoster(this, model).then((path) => {
+          wx.hideLoading();
+          this.setData({ momentsOpen: true, momentsPath: path });
+        });
+      })
+      .catch(() => {
+        wx.hideLoading();
+        wx.showToast({ title: "海报生成失败", icon: "none" });
+      });
+  },
+  shareMoments() {
+    const path = this.data.momentsPath;
+    if (!path) return;
+    if (wx.showShareImageMenu) {
+      wx.showShareImageMenu({
+        path,
+        fail: () => wx.previewImage({ urls: [path] }),
+      });
+      return;
+    }
+    wx.previewImage({ urls: [path] });
+  },
+  saveMoments() {
+    const path = this.data.momentsPath;
+    if (!path) return;
+    wx.saveImageToPhotosAlbum({
+      filePath: path,
+      success: () => wx.showToast({ title: "已保存到相册", icon: "none" }),
+      fail: () => {
+        wx.previewImage({ urls: [path] });
+        wx.showToast({ title: "请长按图片保存", icon: "none" });
+      },
+    });
+  },
+  closeMoments() {
+    this.setData({ momentsOpen: false });
   },
   openMember() {
     if (!app.globalData.token) {
