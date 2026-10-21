@@ -21,6 +21,7 @@ export function filterRoutes(rows, query = {}) {
   const season = text(query.season);
   const region = text(query.region);
   const tag = text(query.tag);
+  const source = text(query.source);
   const days = query.days === "" || query.days == null ? null : Number(query.days);
 
   return list.filter((row) => {
@@ -32,6 +33,9 @@ export function filterRoutes(rows, query = {}) {
     if (season && row.season !== season) return false;
     if (region && !text(row.region).includes(region)) return false;
     if (tag && !(row.tags || []).includes(tag)) return false;
+    if (source === "bot" && row.source !== "bot") return false;
+    if (source === "user" && !row.submittedBy) return false;
+    if (source === "official" && (row.source === "bot" || row.submittedBy)) return false;
     if (q && !haystack(row).includes(q)) return false;
     return true;
   });

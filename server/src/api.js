@@ -7,7 +7,7 @@ const dayjs = require("dayjs");
 const multer = require("multer");
 const { getDb, toRoute } = require("./db");
 const config = require("./config");
-const { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide } = require("./middleware/auth");
+const { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authGuide, authBot } = require("./middleware/auth");
 const { parseIdCard, maskIdCard, lifeStageFromPerson } = require("./services/idcard");
 const { buildDemographics, maskPhone } = require("./services/biz");
 const { code2session, payLive, clientIp, loginLive, getUserPhoneNumber } = require("./services/wechat");
@@ -90,6 +90,7 @@ const {
 } = require("./services/mine-desk");
 const { scheduleRouteI18n } = require("./services/route-i18n");
 const { submitApply, listMine: listRouteApps, reviewApply, adminFields, bountyYuan, applicationView, reviewOf, isListed } = require("./services/route-apply");
+const { ingestRoute, botRoute } = require("./services/route-bot");
 const { noticeCampus, noticeGroup, noticeLeader, noticeTrip, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
 const { submitFeedback, listFeedbacks } = require("./services/feedback");
 const { createCaptcha, codesMatch } = require("./services/captcha");
@@ -1800,6 +1801,22 @@ router.post("/upload", authUser, (req, res) => {
   });
 });
 
+router.post("/bot/routes", authBot, (req, res) => {
+  try {
+    res.json({ ok: true, data: ingestRoute(req.body || {}) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.get("/bot/routes/:id", authBot, (req, res) => {
+  try {
+    res.json({ ok: true, data: botRoute(req.params.id) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
 router.post("/routes/apply", authUser, (req, res) => {
   try {
     const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
@@ -2725,8 +2742,8 @@ router.put("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
   const id = req.params.id;
   const cur = db().prepare("SELECT * FROM routes WHERE id=?").get(id);
   if (!cur) return res.status(404).json({ ok: false, message: "线路不存在" });
-  const keepPending = reviewOf(cur) === "pending" && Number(cur.submitted_by || 0);
-  const status = keepPending ? "pending" : b.status || cur.status;
+  const keepPending = reviewOf(cur) === "pending" && (Number(cur.submitted_by || 0) || cur.source === "bot");
+  const status = keepPending ? "off" : b.status || cur.status;
   db().prepare(
     `UPDATE routes SET title=?, subtitle=?, days=?, distance_km=?, difficulty=?, category=?, region=?, season=?, tags_json=?, cover=?, gallery_json=?, min_group_size=?, description=?, story_json=?, highlights_json=?, itinerary_json=?, fee_include=?, fee_exclude=?, equipment=?, notices=?, meetup_json=?, status=? WHERE id=?`
   ).run(
@@ -2797,8 +2814,8 @@ router.post("/admin/routes/:id/publish", authAdmin, requireCap("ops"), (req, res
   const cur = db().prepare("SELECT * FROM routes WHERE id=?").get(req.params.id);
   if (!cur) return res.status(404).json({ ok: false, message: "线路不存在" });
   const review = reviewOf(cur);
-  if (review === "pending" && Number(cur.submitted_by || 0)) {
-    return res.status(400).json({ ok: false, message: "用户申请待审，请用通过上架" });
+  if (review === "pending") {
+    return res.status(400).json({ ok: false, message: "待审线路请用通过上架" });
   }
   if (review === "rejected") {
     return res.status(400).json({ ok: false, message: "已驳回的申请不能直接上架，请重新通过" });

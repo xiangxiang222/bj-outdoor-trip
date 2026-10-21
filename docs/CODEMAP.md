@@ -95,6 +95,7 @@ Vite 把 `/api`、`/static` 代理到 3780（`web/vite.config.js`）。生产 `n
 | `fallback.js` | 候选团 / 替代团 |
 | `notices.js` | 后台待办：校园/团体/领队认证点开 `/admin/verify`；线路申请点开 `/admin/routes?review=pending&id=` |
 | `route-apply.js` | 用户申请收录线路、后台审批、首次成团奖励 300 元 |
+| `route-bot.js` | 采集机器人入库：待审且下架，同一来源键合并；通过后才上架，不发奖励 |
 | `official-trip.js` | 官方团滚动开团、出行前一天并入未成团并通知、个人发团成团奖 200 元入钱包 |
 | `wallet.js` | 余额账本、微信支付充值、提现到微信零钱、6 位支付密码；返点与成团奖励入账。银行卡接口已关闭 |
 | `share-poster.js` | 分享链接/二维码带推荐码、详情海报 SVG（封面内嵌 data URL） |

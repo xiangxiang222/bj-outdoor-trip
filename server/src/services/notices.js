@@ -100,6 +100,18 @@ function noticeRouteApply(row) {
   });
 }
 
+function noticeBotRoute(row) {
+  if (!row) return null;
+  return pushNotice({
+    kind: "route",
+    title: "机器采集待审",
+    body: `采集「${row.title || "新线路"}」`,
+    href: `/admin/routes?review=pending&id=${row.id}`,
+    refType: "route",
+    refId: row.id,
+  });
+}
+
 function noticeFeedback(row, user) {
   if (!row) return null;
   const who = (user && (user.nickname || user.phone)) || "用户";
@@ -186,6 +198,7 @@ module.exports = {
   noticeCampus,
   noticeGroup,
   noticeRouteApply,
+  noticeBotRoute,
   noticeTrip,
   noticeLeader,
   noticeFeedback,

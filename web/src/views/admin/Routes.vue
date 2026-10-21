@@ -34,10 +34,15 @@
       <el-select v-model="filters.tag" clearable filterable placeholder="标签" class="route-filter">
         <el-option v-for="item in tagOptions" :key="item" :label="item" :value="item" />
       </el-select>
+      <el-select v-model="filters.source" clearable placeholder="来源" class="route-filter">
+        <el-option label="机器采集" value="bot" />
+        <el-option label="用户申请" value="user" />
+        <el-option label="官方" value="official" />
+      </el-select>
       <el-button v-if="filtersOn" link type="primary" @click="resetFilters">清空</el-button>
       <span class="muted route-filter-count">{{ list.length }} / {{ rows.length }}</span>
     </div>
-    <p class="admin-scroll-hint">已下架的线路点「上架」会回到目录，也可以编辑后打开「上架」。用户申请仍在待审，通过后上架。</p>
+    <p class="admin-scroll-hint">已下架的线路点「上架」会回到目录，也可以编辑后打开「上架」。用户申请和机器采集都先待审，通过后才上架。机器采集没有成团奖励。</p>
     <el-table :data="list" stripe row-key="id" :row-class-name="rowClass">
       <el-table-column label="封面" width="88">
         <template #default="{ row }">
@@ -58,7 +63,8 @@
       </el-table-column>
       <el-table-column label="申请人" min-width="160">
         <template #default="{ row }">
-          <span v-if="row.submittedBy">{{ row.applicantName || "用户" }} · {{ row.contactPhone }} / {{ row.contactWechat }}</span>
+          <span v-if="row.source === 'bot'">机器采集</span>
+          <span v-else-if="row.submittedBy">{{ row.applicantName || "用户" }} · {{ row.contactPhone }} / {{ row.contactWechat }}</span>
           <span v-else class="muted">官方</span>
         </template>
       </el-table-column>
@@ -72,8 +78,8 @@
       </el-table-column>
       <el-table-column label="操作" width="320" fixed="right">
         <template #default="{ row }">
-          <el-button v-if="row.submittedBy && row.reviewStatus === 'pending'" size="small" type="success" @click="decide(row, 'approve')">通过</el-button>
-          <el-button v-if="row.submittedBy && row.reviewStatus === 'pending'" size="small" type="danger" @click="decide(row, 'reject')">驳回</el-button>
+          <el-button v-if="needsReview(row)" size="small" type="success" @click="decide(row, 'approve')">通过</el-button>
+          <el-button v-if="needsReview(row)" size="small" type="danger" @click="decide(row, 'reject')">驳回</el-button>
           <el-button size="small" @click="edit(row)">编辑</el-button>
           <el-button size="small" @click="openReview(row)">虚拟评价</el-button>
           <el-button v-if="row.status === 'on'" size="small" type="danger" @click="off(row)">下架</el-button>
@@ -113,7 +119,15 @@
         <el-form-item label="副标题"><el-input v-model="form.subtitle" placeholder="一句话卖点，可空" /></el-form-item>
         <el-form-item label="上架">
           <el-switch v-model="form.status" active-value="on" inactive-value="off" :disabled="pendingApply" />
-          <span class="inline-hint">{{ pendingApply ? "用户申请待审，请用列表的通过 / 驳回，不能直接上架。" : "关掉后用户端不再展示，已有拼团还在。" }}</span>
+          <span class="inline-hint">{{ pendingApply ? "待审，请用列表的通过 / 驳回，不能直接上架。" : "关掉后用户端不再展示，已有拼团还在。" }}</span>
+        </el-form-item>
+        <el-form-item v-if="form.source === 'bot'" label="采集来源">
+          <div>
+            <div v-if="form.sourceUrl">{{ form.sourceUrl }}</div>
+            <div v-if="form.suggestedPrice">建议价 ¥{{ form.suggestedPrice }}，还没写入阶梯价</div>
+            <div v-if="form.reviewNote">上次说明：{{ form.reviewNote }}</div>
+            <div v-for="item in form.photoSources || []" :key="item.url" class="muted">{{ item.caption ? item.caption + " " : "" }}{{ item.url }}</div>
+          </div>
         </el-form-item>
         <el-form-item v-if="form.submittedBy" label="申请人">
           <span>{{ form.applicantName || "用户" }} · {{ form.contactPhone }} / {{ form.contactWechat }}</span>
@@ -390,10 +404,11 @@ const filters = reactive({
   season: "",
   region: "",
   tag: "",
+  source: "",
 });
 const list = computed(() => filterRoutes(rows.value, { ...filters, review: reviewFilter.value }));
 const filtersOn = computed(() =>
-  ["q", "status", "days", "category", "difficulty", "season", "region", "tag"].some((key) => filters[key] !== "" && filters[key] != null)
+  ["q", "status", "days", "category", "difficulty", "season", "region", "tag", "source"].some((key) => filters[key] !== "" && filters[key] != null)
 );
 const dayOptions = computed(() => {
   const seen = new Set([1, 2, 3, 5]);
@@ -423,9 +438,10 @@ function resetFilters() {
   filters.season = "";
   filters.region = "";
   filters.tag = "";
+  filters.source = "";
 }
 const focusId = ref("");
-const pendingApply = computed(() => form.value.reviewStatus === "pending" && Number(form.value.submittedBy || 0));
+const pendingApply = computed(() => needsReview(form.value));
 const globalRefund = ref({ tiers: [], summary: "" });
 const showReview = ref(false);
 const savingReview = ref(false);
@@ -496,8 +512,11 @@ function rowClass({ row }) {
   if (focusId.value && String(row.id) === focusId.value) return "admin-row-focus";
   return "";
 }
+function needsReview(row) {
+  return row && row.reviewStatus === "pending" && (Number(row.submittedBy || 0) > 0 || row.source === "bot");
+}
 function reviewLabel(row) {
-  if (!row.submittedBy) return row.status === "on" ? "上架" : "下架";
+  if (!row.submittedBy && row.source !== "bot") return row.status === "on" ? "上架" : "下架";
   if (row.reviewStatus === "pending") return "待审";
   if (row.reviewStatus === "rejected") return "已驳回";
   return "已通过";
@@ -916,7 +935,8 @@ async function decide(row, action) {
       });
       note = String(res.value || "").trim();
     } else {
-      await ElMessageBox.confirm(`通过「${row.title}」并上架？首次成团后奖励 ¥${row.bountyAmount || 300}。`, "通过申请", { type: "success" });
+      const bounty = row.source === "bot" ? "" : `首次成团后奖励 ¥${row.bountyAmount || 300}。`;
+      await ElMessageBox.confirm(`通过「${row.title}」并上架？${bounty}`, "通过申请", { type: "success" });
     }
     await http.post(`/admin/routes/${row.id}/review`, { action, note });
     ElMessage.success(action === "approve" ? "已通过并上架" : "已驳回");

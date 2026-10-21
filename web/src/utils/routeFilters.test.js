@@ -29,6 +29,7 @@ const rows = [
     tags: ["登山"],
     status: "off",
     reviewStatus: "pending",
+    source: "bot",
   },
 ];
 
@@ -47,5 +48,11 @@ describe("filterRoutes", () => {
   it("matches title, code, region and tags, and ignores empty selects", () => {
     expect(filterRoutes(rows, { q: "r-ht", status: null, days: "", category: null }).map((row) => row.id)).toEqual([2]);
     expect(filterRoutes(rows, { region: "延庆", tag: "登山", difficulty: "进阶", season: "6-9月" }).map((row) => row.id)).toEqual([2]);
+  });
+
+  it("filters machine drafts, user applications and official routes", () => {
+    expect(filterRoutes(rows, { source: "bot" }).map((row) => row.id)).toEqual([2]);
+    expect(filterRoutes(rows, { source: "official" }).map((row) => row.id)).toEqual([1]);
+    expect(filterRoutes([{ ...rows[0], submittedBy: 9, source: "" }], { source: "user" }).map((row) => row.id)).toEqual([1]);
   });
 });
