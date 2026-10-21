@@ -68,6 +68,7 @@ const { eligibilityView, applyEnrollLimit, expandEnrollLimit, resolveEnrollLimit
 const { queryCampuses } = require("./services/campuses");
 const { oversubView, isOversubPending, drawOversub } = require("./services/oversub");
 const { parseVideoInput, videoViews } = require("./services/video");
+const { createVideoSession, videoSessionStatus, writeVideoPart, finishVideoSession, PART_SIZE } = require("./services/video-parts");
 const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
 const { draftRoute } = require("./services/route-draft");
 const { buildRouteTemplate, parseRouteTemplate } = require("./services/route-template");
@@ -1853,6 +1854,47 @@ router.post("/upload", authUser, (req, res) => {
 
 router.post("/bot/videos", authBot, (req, res) => {
   sendVideoUpload(uploadBotVideo, req, res);
+});
+
+const videoPartBody = express.raw({ type: "*/*", limit: PART_SIZE });
+
+router.post("/bot/videos/sessions", authBot, (req, res) => {
+  try {
+    res.json({ ok: true, data: createVideoSession(req.body && req.body.size) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.get("/bot/videos/sessions/:id", authBot, (req, res) => {
+  try {
+    res.json({ ok: true, data: videoSessionStatus(req.params.id) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.post("/bot/videos/sessions/:id/parts/:index", authBot, (req, res) => {
+  videoPartBody(req, res, (err) => {
+    if (err) {
+      const tooBig = err.status === 413 || err.type === "entity.too.large";
+      return res.status(400).json({ ok: false, message: tooBig ? "这一段太大" : "上传失败" });
+    }
+    try {
+      const body = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+      res.json({ ok: true, data: writeVideoPart(req.params.id, req.params.index, body) });
+    } catch (e) {
+      jsonError(res, e);
+    }
+  });
+});
+
+router.post("/bot/videos/sessions/:id/finish", authBot, (req, res) => {
+  try {
+    res.json({ ok: true, data: finishVideoSession(req.params.id) });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 router.post("/bot/routes", authBot, async (req, res) => {
