@@ -64,6 +64,14 @@
     </div>
 
     <template v-if="view === 'trips'">
+    <button v-if="groups.length" class="moments-entry" type="button" @click="openMoments">
+      <span class="moments-entry-copy">
+        <strong>把这批团发到朋友圈</strong>
+        <span>按现在的筛选做成一张海报</span>
+      </span>
+      <span class="moments-entry-go">海报</span>
+    </button>
+
     <div class="chips city-bar">
       <div class="chip" :class="{ on: !city }" @click="city = ''">热门</div>
       <div class="chip" :class="{ on: city === c.name }" v-for="c in home.cities || []" :key="c.name" @click="toggleCity(c.name)">{{ c.name }}</div>
@@ -79,7 +87,6 @@
       <div class="tools">
         <button class="tool-btn" type="button" @click="sort = cycleSort(sort)">{{ sortLabel(sort) }}</button>
         <button class="tool-btn" type="button" @click="fold.extra = !fold.extra">{{ fold.extra ? "收起" : "筛选" }}</button>
-        <button v-if="groups.length" class="tool-btn" type="button" @click="openMoments">朋友圈</button>
         <button class="tool-btn play" type="button" @click="goPublish()">发团</button>
       </div>
     </div>

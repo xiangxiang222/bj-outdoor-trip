@@ -1756,6 +1756,46 @@ html.admin-theme .el-dialog__footer {
   color: var(--ink);
 }
 .feed-toolbar .tools { display: flex; align-items: center; gap: 8px; }
+.moments-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 16px;
+  background: #1c2410;
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.moments-entry-copy { min-width: 0; }
+.moments-entry-copy strong {
+  display: block;
+  font-size: calc(15px * var(--ui-scale));
+  letter-spacing: 0.02em;
+}
+.moments-entry-copy span {
+  display: block;
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: calc(12px * var(--ui-scale));
+}
+.moments-entry-go {
+  flex: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #d6ef4a;
+  color: #1c2410;
+  font-size: calc(13px * var(--ui-scale));
+  font-weight: 700;
+}
+html[data-night="dark"] .moments-entry {
+  border: 1px solid rgba(214, 239, 74, 0.45);
+}
 .tool-btn {
   border: 0;
   background: transparent;
