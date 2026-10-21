@@ -50,11 +50,11 @@
     { "root": "pkg-detail", "name": "detail", "pages": ["detail/detail"] }
   ],
   "window": {
-    "navigationBarBackgroundColor": "#c045ab",
+    "navigationBarBackgroundColor": "#8534e4",
     "navigationBarTitleText": "同行者众",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#c045ab",
-    "backgroundColorTop": "#c045ab",
+    "backgroundColor": "#8534e4",
+    "backgroundColorTop": "#8534e4",
     "backgroundColorBottom": "#f3f4f6",
     "backgroundTextStyle": "light"
   },

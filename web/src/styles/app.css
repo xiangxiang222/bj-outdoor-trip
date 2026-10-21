@@ -13,7 +13,7 @@
   --line: #e7e7eb;
   --shadow: 0 8px 24px rgba(20, 20, 20, 0.06);
   --thu: #642470;
-  --chrome: #c045ab;
+  --chrome: #8534e4;
   --thu-soft: #f3eaf5;
   --pku: #8c3038;
   --night: #161218;
@@ -83,7 +83,7 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   min-height: 100vh;
   margin: 0 auto;
   background-color: #f3f4f6;
-  background-image: linear-gradient(#c045ab 0, #c045ab 200px, #f3f4f6 200px);
+  background-image: linear-gradient(#8534e4 0, #8534e4 200px, #f3f4f6 200px);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -2023,7 +2023,7 @@ html.admin-theme .el-dialog__footer {
 .mine-page {
   margin: -2px 0 0;
   padding: 0 12px 16px;
-  background: #f3f4f6 linear-gradient(180deg, #c045ab 0, #c045ab 88px, #f3f4f6 460px) no-repeat;
+  background: #f3f4f6 linear-gradient(180deg, #8534e4 0, #8534e4 88px, #f3f4f6 460px) no-repeat;
   color: #1a1a1a;
 }
 .mine-head {
@@ -2659,12 +2659,12 @@ html[data-night="dark"] {
 html[data-night="dark"] .mp-phone,
 html[data-night="dark"] .mp-phone.is-account {
   background-color: #1a121c;
-  background-image: linear-gradient(#9a4584 0, #9a4584 200px, #1a121c 200px);
+  background-image: linear-gradient(#7231be 0, #7231be 200px, #1a121c 200px);
   color: #f4f0f5;
 }
 html[data-night="dark"] .mp-status,
 html[data-night="dark"] .mp-nav {
-  background: #9a4584;
+  background: #7231be;
 }
 html[data-night="dark"] .mp-phone.is-account .mp-body,
 html[data-night="dark"] .mp-body {
@@ -2709,7 +2709,7 @@ html[data-night="dark"] .mine-member strong { color: #f4f0f5; }
 html[data-night="dark"] .mine-member span { color: var(--muted); }
 html[data-night="dark"] .mine-avatar { background: var(--thu-soft); color: #f4f0f5; }
 html[data-night="dark"] .mine-page {
-  background: #1a121c linear-gradient(180deg, #9a4584 0, #9a4584 88px, #1a121c 460px) no-repeat;
+  background: #1a121c linear-gradient(180deg, #7231be 0, #7231be 88px, #1a121c 460px) no-repeat;
   color: #f4f0f5;
 }
 html[data-night="dark"] .mine-play { background: #1c1c1e; }

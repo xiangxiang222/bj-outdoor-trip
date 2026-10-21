@@ -190,7 +190,7 @@ function applyChrome(look) {
   const dark = isDark(look);
   wx.setNavigationBarColor({
     frontColor: "#ffffff",
-    backgroundColor: dark ? "#9a4584" : "#c045ab",
+    backgroundColor: dark ? "#7231be" : "#8534e4",
     fail() {},
   });
   wx.setTabBarStyle({
@@ -199,7 +199,7 @@ function applyChrome(look) {
     backgroundColor: dark ? "#1c1c1e" : "#ffffff",
     fail() {},
   });
-  const chrome = dark ? "#9a4584" : "#c045ab";
+  const chrome = dark ? "#7231be" : "#8534e4";
   wx.setBackgroundColor({
     backgroundColor: chrome,
     backgroundColorTop: chrome,
