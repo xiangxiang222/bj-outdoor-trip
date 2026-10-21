@@ -89,6 +89,9 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-cam { width: 40rpx; height: 28rpx; margin-bottom: 4rpx; border: 3rpx solid currentColor; border-radius: 6rpx; position: relative; box-sizing: border-box; }
 .mine-cam::before { content: ""; position: absolute; left: 50%; top: 50%; width: 14rpx; height: 14rpx; margin: -7rpx 0 0 -7rpx; border: 3rpx solid currentColor; border-radius: 50%; box-sizing: border-box; }
 .mine-cam::after { content: ""; position: absolute; left: 50%; top: -8rpx; width: 16rpx; height: 8rpx; margin-left: -8rpx; border: 3rpx solid currentColor; border-bottom: 0; border-radius: 6rpx 6rpx 0 0; box-sizing: border-box; }
+.mine-poster { width: 28rpx; height: 36rpx; margin-bottom: 4rpx; border: 3rpx solid currentColor; border-radius: 4rpx; position: relative; box-sizing: border-box; }
+.mine-poster::before { content: ""; position: absolute; left: 4rpx; right: 4rpx; top: 4rpx; height: 12rpx; border: 3rpx solid currentColor; border-radius: 2rpx; box-sizing: border-box; }
+.mine-poster::after { content: ""; position: absolute; left: 4rpx; right: 4rpx; bottom: 6rpx; height: 3rpx; background: currentColor; }
 .mine-member { margin: 0; padding: 8rpx 24rpx 28rpx; border-radius: 0; background: transparent; box-shadow: none; display: flex; justify-content: space-between; align-items: center; color: #1a1a1a; }
 .mine-level { font-size: calc(34rpx * var(--ui-scale)); font-weight: 700; color: #642470; text-decoration: underline; text-underline-offset: 8rpx; }
 .mine-em { font-style: italic; font-weight: 800; }
@@ -113,7 +116,16 @@ page { background-color: #f3f4f6; color: #1a1a1a; font-family: "PingFang SC", "H
 .mine-play text { max-width: 100%; text-align: center; line-height: 1.25; white-space: normal; }
 .mine-page.is-dark .mine-cam,
 .mine-page.is-dark .mine-cam::before,
-.mine-page.is-dark .mine-cam::after { border-color: #f2f2f2; }
+.mine-page.is-dark .mine-cam::after,
+.mine-page.is-dark .mine-poster,
+.mine-page.is-dark .mine-poster::before { border-color: #f2f2f2; }
+.mine-page.is-dark .mine-poster::after { background: #f2f2f2; }
+.moments-offscreen { position: fixed; left: -4000px; top: 0; width: 750px; height: 1200px; }
+.moments-mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 40; background: rgba(0,0,0,0.55); display: flex; align-items: flex-end; justify-content: center; }
+.moments-sheet { width: 100%; max-height: 88vh; overflow: auto; background: #fff; border-radius: 24rpx 24rpx 0 0; padding: 24rpx 24rpx 40rpx; box-sizing: border-box; }
+.moments-img { width: 100%; display: block; border-radius: 16rpx; }
+.moments-hint { margin: 16rpx 8rpx; }
+.moments-sheet .btn { margin-top: 16rpx; }
 .mine-rec { display: flex; flex-wrap: wrap; margin: 0 24rpx 16rpx; gap: 16rpx; }
 .mine-rec > view { width: calc(50% - 8rpx); background: #fff; border-radius: 16rpx; overflow: hidden; padding-bottom: 16rpx; }
 .mine-rec image, .mine-rec-ph { width: 100%; height: 280rpx; display: block; background: #eee; }

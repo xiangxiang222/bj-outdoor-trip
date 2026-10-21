@@ -136,6 +136,10 @@
           <span class="mine-ico"><i class="mine-cam"></i></span>
           <span class="mine-play-name">摄影师申请</span>
         </button>
+        <button type="button" @click="openPoster">
+          <span class="mine-ico"><i class="mine-poster"></i></span>
+          <span class="mine-play-name">生成海报</span>
+        </button>
         <button type="button" @click="goAuth('/m/feedback')">
           <span class="mine-ico"><MineGlyph name="bubble" /></span>
           <span class="mine-play-name">反馈</span>
@@ -171,6 +175,19 @@
       </button>
     </div>
 
+    <div v-if="momentsOpen" class="moments-mask" @click.self="momentsOpen = false">
+      <div class="moments-sheet" role="dialog" aria-label="朋友圈海报">
+        <img v-if="momentsUrl" :src="momentsUrl" alt="朋友圈海报" />
+        <p v-else-if="momentsEmpty" class="muted">还没有可以做成海报的团</p>
+        <p v-else class="muted">正在生成海报</p>
+        <p v-if="momentsUrl" class="muted">长按图片保存，再发到朋友圈</p>
+        <div class="share-actions">
+          <button class="btn" type="button" :disabled="!momentsUrl" @click="savePoster">保存图片</button>
+          <button class="btn ghost" type="button" @click="momentsOpen = false">关闭</button>
+        </div>
+      </div>
+    </div>
+
     <div v-if="picker" class="avatar-mask" @click.self="picker = false">
       <div class="avatar-sheet">
         <p>选择默认头像</p>
@@ -199,7 +216,10 @@ import { useRouter } from "vue-router";
 import http from "@/api/http";
 import MineGlyph from "@/components/MineGlyph.vue";
 import { useUserStore } from "@/stores/user";
+import { processFeed } from "@/utils/feedList";
 import { maskPhone } from "@/utils/labels";
+import { buildLineup, drawLineupPoster } from "@/utils/momentsPoster";
+import { downloadPosterPng } from "@/utils/sharePoster";
 
 const store = useUserStore();
 const router = useRouter();
@@ -208,6 +228,10 @@ const hub = ref({});
 const picker = ref(false);
 const defaults = ref([]);
 const picks = ref([]);
+const momentsOpen = ref(false);
+const momentsUrl = ref("");
+const momentsEmpty = ref(false);
+let momentsCanvas = null;
 
 const campusShort = computed(() => {
   const u = store.profile;
@@ -300,6 +324,28 @@ async function onFile(e) {
   body.append("file", file);
   const up = await http.post("/upload", body);
   await saveAvatar(up.data.url);
+}
+async function openPoster() {
+  momentsOpen.value = true;
+  momentsUrl.value = "";
+  momentsEmpty.value = false;
+  momentsCanvas = null;
+  try {
+    const rows = (await http.get("/schedules", { params: { channel: "trip" } })).data || [];
+    const model = buildLineup(processFeed(rows, { channel: "trip", sort: "soon" }));
+    if (!model.count) {
+      momentsEmpty.value = true;
+      return;
+    }
+    momentsCanvas = await drawLineupPoster(model);
+    momentsUrl.value = momentsCanvas.toDataURL("image/png");
+  } catch {
+    momentsOpen.value = false;
+  }
+}
+async function savePoster() {
+  if (!momentsCanvas) return;
+  await downloadPosterPng(momentsCanvas, "moments-lineup.png");
 }
 function openMember() {
   if (!store.token) {
