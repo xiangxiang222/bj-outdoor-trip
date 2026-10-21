@@ -2,6 +2,7 @@ const { describe, it, beforeEach, afterEach } = require("node:test");
 const assert = require("node:assert/strict");
 const dayjs = require("dayjs");
 const { harness, loginAdmin, loginUser, auth } = require("./http");
+const { ingestRoute, photoQuery } = require("../src/services/route-bot");
 
 const TOKEN = "bot-test-token";
 
@@ -159,5 +160,47 @@ describe("bot route ingest", () => {
     assert.equal(again.body.data.status, "off");
     const looked = await agent.get("/api/bot/routes/jinhaihu").set(botAuth()).expect(200);
     assert.equal(looked.body.data.reviewNote, "图片不够");
+  });
+
+  it("stores a downloaded photo and searches by place when none are given", async () => {
+    assert.equal(photoQuery("门头沟北灵山高山草甸徒步"), "北灵山");
+    const jpeg = Buffer.alloc(9000, 7);
+    jpeg[0] = 0xff;
+    jpeg[1] = 0xd8;
+    jpeg[2] = 0xff;
+    const urls = [];
+    const fetchImpl = async (url) => {
+      urls.push(String(url));
+      if (String(url).includes("baidu.com") || String(url).includes("image.so.com")) {
+        return { ok: true, json: async () => ({ data: [], list: [] }) };
+      }
+      return { ok: true, arrayBuffer: async () => jpeg };
+    };
+
+    const saved = await ingestRoute(
+      body({
+        sourceKey: "photo-lake",
+        photoSources: [{ url: "https://img.example.com/lake.jpg", caption: "湖面" }],
+      }),
+      { fetchImpl }
+    );
+    const row = seed.db.prepare("SELECT cover, gallery_json FROM routes WHERE id=?").get(saved.id);
+    assert.match(row.cover, /^\/static\/uploads\/bot-.+\.jpg$/);
+    assert.equal(JSON.parse(row.gallery_json)[0], row.cover);
+    assert.equal(urls.some((url) => url.includes("127.0.0.1")), false);
+
+    urls.length = 0;
+    const searched = await ingestRoute(
+      body({
+        sourceKey: "photo-beiling",
+        title: "门头沟北灵山高山草甸徒步",
+        photoSources: [{ url: "http://127.0.0.1/secret.jpg" }],
+      }),
+      { fetchImpl }
+    );
+    assert.equal(urls.some((url) => url.includes("127.0.0.1")), false);
+    assert.equal(urls.some((url) => decodeURIComponent(url).includes("北灵山")), true);
+    const empty = seed.db.prepare("SELECT cover FROM routes WHERE id=?").get(searched.id);
+    assert.equal(empty.cover, "");
   });
 });

@@ -9,6 +9,7 @@ const UA = "bj-outdoor-trip/1.0 (route draft; https://github.com/xiangxiang222/b
 const BROWSER_UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
 const MIN_PHOTO_BYTES = 8000;
+const MAX_PHOTO_BYTES = 6 * 1024 * 1024;
 const SEARCH_TIMEOUT_MS = 5000;
 const DOWNLOAD_TIMEOUT_MS = 10000;
 const GENERIC_PLACE_WORDS = new Set([
@@ -376,9 +377,83 @@ async function downloadBuffer(url, destPath, fetchImpl) {
   });
   if (!imgRes.ok) return null;
   const buf = Buffer.from(await imgRes.arrayBuffer());
-  if (buf.length < MIN_PHOTO_BYTES) return null;
+  if (buf.length < MIN_PHOTO_BYTES || buf.length > MAX_PHOTO_BYTES) return null;
   fs.writeFileSync(destPath, buf);
   return destPath;
+}
+
+function isPublicImageUrl(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+  const host = parsed.hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  if (!host || host === "localhost" || host.endsWith(".local") || host.endsWith(".localhost")) return false;
+  if (host.includes(":")) return false;
+  const parts = host.split(".").map((n) => Number(n));
+  if (parts.length === 4 && parts.every((n) => Number.isInteger(n))) {
+    const [a, b] = parts;
+    if (a === 10 || a === 127 || a === 0) return false;
+    if (a === 169 && b === 254) return false;
+    if (a === 192 && b === 168) return false;
+    if (a === 172 && b >= 16 && b <= 31) return false;
+  }
+  return true;
+}
+
+function sniffImageExt(buf) {
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return ".jpg";
+  if (buf.length >= 8 && buf[0] === 0x89 && buf.toString("ascii", 1, 4) === "PNG") return ".png";
+  if (buf.length >= 12 && buf.toString("ascii", 0, 4) === "RIFF" && buf.toString("ascii", 8, 12) === "WEBP") return ".webp";
+  const head = buf.toString("ascii", 0, 6);
+  if (head === "GIF89a" || head === "GIF87a") return ".gif";
+  return "";
+}
+
+async function downloadPhotoList(urls, deps = {}) {
+  if (!deps.fetchImpl && inUnitTest()) return [];
+  const fetchImpl = deps.fetchImpl || globalThis.fetch;
+  const destDir = deps.destDir || path.join(config.publicDir, "static", "uploads");
+  const limit = deps.limit || 8;
+  const prefix = deps.prefix || "bot";
+  fs.mkdirSync(destDir, { recursive: true });
+  const saved = [];
+  const seen = new Set();
+  for (const raw of urls || []) {
+    if (saved.length >= limit) break;
+    const url = String(raw || "").trim();
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    if (url.startsWith("/static/")) {
+      saved.push(url);
+      continue;
+    }
+    if (!isPublicImageUrl(url)) continue;
+    const tmp = path.join(destDir, `${prefix}-${nanoid(10)}.part`);
+    try {
+      const ok = await downloadBuffer(url, tmp, fetchImpl);
+      if (!ok) continue;
+      const buf = fs.readFileSync(tmp);
+      const ext = sniffImageExt(buf);
+      if (!ext) {
+        fs.unlinkSync(tmp);
+        continue;
+      }
+      const name = `${prefix}-${nanoid(10)}${ext}`;
+      fs.renameSync(tmp, path.join(destDir, name));
+      saved.push(`/static/uploads/${name}`);
+    } catch {
+      try {
+        fs.unlinkSync(tmp);
+      } catch {
+        /* already gone */
+      }
+    }
+  }
+  return saved;
 }
 
 async function collectRemotePhotos(input, fetchImpl) {
@@ -495,5 +570,6 @@ module.exports = {
   searchQueries,
   localLibraryPhotos,
   searchAndSavePhotos,
+  downloadPhotoList,
   draftRoute,
 };
