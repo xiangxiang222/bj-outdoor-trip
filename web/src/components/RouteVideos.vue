@@ -12,7 +12,7 @@
             referrerpolicy="strict-origin-when-cross-origin"
           />
         </div>
-        <div v-else-if="v.kind === 'video'" class="video-frame">
+        <div v-else-if="v.kind === 'video'" class="video-file">
           <video :src="v.embedUrl" controls playsinline />
         </div>
         <a v-else class="video-link" :href="v.url" target="_blank" rel="noreferrer">打开{{ v.label || "视频" }}观看</a>
