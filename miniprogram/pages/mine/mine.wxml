@@ -175,7 +175,7 @@
 </view>
 <canvas type="2d" id="momentsCanvas" class="moments-offscreen"></canvas>
 <view class="moments-mask" wx:if="{{posterPick}}" catchtap="closePosterPick">
-  <view class="moments-sheet poster-pick" catchtap="noop">
+  <view class="moments-sheet poster-pick {{posterCoverBar ? 'cover-bar' : 'above-tab'}}" catchtap="noop">
     <view class="poster-pick-title">{{tr.t('选择要放进海报的团', lang)}}</view>
     <view class="muted poster-pick-hint">{{tr.t('最多选 6 个团', lang)}}</view>
     <view class="poster-tools">
@@ -187,7 +187,7 @@
     <picker wx:if="{{posterRange=='date'}}" mode="date" value="{{posterDate}}" bindchange="onPosterDate">
       <view class="poster-date">{{posterDate || tr.t('选一个出发日期', lang)}}</view>
     </picker>
-    <input class="poster-search" placeholder="{{tr.t('搜索团名、集合点', lang)}}" value="{{posterQuery}}" bindinput="onPosterQuery" confirm-type="search" />
+    <input class="poster-search" style="height:80rpx;" placeholder-class="poster-ph" placeholder-style="color:#8d8d8d;font-size:28rpx;" placeholder="{{tr.t('搜索团名、集合点', lang)}}" value="{{posterQuery}}" bindinput="onPosterQuery" confirm-type="search" />
     <view class="muted poster-pick-empty" wx:if="{{!posterReady}}">{{tr.t('正在加载', lang)}}</view>
     <view class="muted poster-pick-empty" wx:elif="{{!posterTrips.length}}">{{tr.t('还没有可以做成海报的团', lang)}}</view>
     <view class="muted poster-pick-empty" wx:elif="{{posterRange=='date' && !posterDate}}">{{tr.t('选一个出发日期', lang)}}</view>
@@ -206,11 +206,11 @@
   </view>
 </view>
 <view class="moments-mask" wx:if="{{momentsOpen}}" catchtap="closeMoments">
-  <view class="moments-sheet" catchtap="noop">
+  <view class="moments-sheet {{posterCoverBar ? 'cover-bar' : 'above-tab'}}" catchtap="noop">
     <scroll-view scroll-y class="moments-scroll" enhanced show-scrollbar="{{false}}">
       <image class="moments-img" src="{{momentsPath}}" mode="widthFix" show-menu-by-longpress />
-      <view class="muted moments-hint">{{tr.t('长按图片保存，再发到朋友圈', lang)}}</view>
     </scroll-view>
+    <view class="muted moments-hint">{{tr.t('长按图片保存，再发到朋友圈', lang)}}</view>
     <view class="btn" bindtap="shareMoments">{{tr.t('发到朋友圈', lang)}}</view>
     <view class="btn ghost" bindtap="saveMoments">{{tr.t('保存图片', lang)}}</view>
     <view class="btn ghost" bindtap="closeMoments">{{tr.t('关闭', lang)}}</view>

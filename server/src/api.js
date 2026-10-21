@@ -14,6 +14,7 @@ const { code2session, payLive, clientIp, loginLive, getUserPhoneNumber } = requi
 const { verifyIdentity } = require("./services/id-verify");
 const { issueSmsCode, smsLive } = require("./services/sms");
 const { buildSchedulePoster } = require("./services/share-poster");
+const { createPosterLineup, lineupSchedules } = require("./services/poster-lineup");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
 const { resolveJoinCode, joinLockView } = require("./services/joinCode");
@@ -1612,6 +1613,27 @@ router.get("/schedules", (req, res) => {
   if (city) rows = rows.filter((s) => s.city === city);
   if (tag) rows = rows.filter((s) => (s.playTags || []).some((t) => t.name === tag || String(t.id) === String(tag)));
   res.json({ ok: true, data: rows });
+});
+
+router.post("/poster-lineups", async (req, res) => {
+  try {
+    const data = await createPosterLineup((req.body || {}).ids, req);
+    res.json({ ok: true, data });
+  } catch (e) {
+    res.status(e.status || 500).json({ ok: false, message: e.message || "海报码生成失败" });
+  }
+});
+
+router.get("/poster-lineups/:code", (req, res) => {
+  const found = lineupSchedules(req.params.code);
+  if (!found) return res.status(404).json({ ok: false, message: "找不到这批团" });
+  res.json({
+    ok: true,
+    data: {
+      code: found.code,
+      trips: found.rows.map((sch) => scheduleView(sch, req, { feed: true })),
+    },
+  });
 });
 
 router.get("/schedules/:id", optionalUser, async (req, res) => {

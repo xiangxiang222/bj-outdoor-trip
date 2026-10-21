@@ -1064,6 +1064,7 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 }
 .moments-sheet {
   width: min(420px, 100%);
+  height: min(92vh, calc(100vh - 24px));
   max-height: min(92vh, calc(100vh - 24px));
   overflow: hidden;
   display: flex;
@@ -1104,17 +1105,22 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   box-sizing: border-box;
   border: 1px solid #eee;
   border-radius: 12px;
+  min-height: 44px;
+  line-height: 22px;
   padding: 10px 12px;
   font: inherit;
   margin: 0 0 8px;
   background: #fff;
   color: inherit;
+  flex: none;
 }
-.poster-pick-title { margin: 4px 4px 0; font-weight: 650; }
-.poster-pick-hint { margin: 4px 4px 8px; color: var(--muted); font-size: calc(13px * var(--ui-scale)); }
-.poster-pick-limit { margin: 0 4px 8px; color: #8c3038; font-size: calc(13px * var(--ui-scale)); }
-.poster-pick-list { overflow: auto; min-height: 0; flex: 1; max-height: 46vh; display: flex; flex-direction: column; gap: 8px; overscroll-behavior: contain; }
-.poster-pick .share-actions { flex: none; }
+.poster-pick-title { margin: 4px 4px 0; font-weight: 650; flex: none; }
+.poster-pick-hint { margin: 4px 4px 8px; color: var(--muted); font-size: calc(13px * var(--ui-scale)); flex: none; }
+.poster-pick-limit { margin: 0 4px 8px; color: #8c3038; font-size: calc(13px * var(--ui-scale)); flex: none; }
+.poster-tools { flex: none; }
+.poster-pick-list { overflow: auto; min-height: 0; flex: 1; display: flex; flex-direction: column; gap: 8px; overscroll-behavior: contain; }
+.moments-sheet .share-actions { flex: none; }
+.moments-hint { flex: none; margin: 8px 4px 0; }
 .poster-pick-row {
   display: flex;
   align-items: center;

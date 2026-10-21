@@ -63,6 +63,21 @@ function posterItem(row, index) {
   };
 }
 
+function writePosterQr(dataUrl) {
+  const matched = String(dataUrl || "").match(/^data:image\/\w+;base64,(.+)$/);
+  if (!matched || !wx.env || !wx.env.USER_DATA_PATH) return Promise.resolve("");
+  const filePath = wx.env.USER_DATA_PATH + "/poster-lineup-qr.png";
+  return new Promise((resolve) => {
+    wx.getFileSystemManager().writeFile({
+      filePath,
+      data: matched[1],
+      encoding: "base64",
+      success: () => resolve(filePath),
+      fail: () => resolve(""),
+    });
+  });
+}
+
 function uploadAvatar(filePath) {
   return new Promise((resolve, reject) => {
     wx.uploadFile({
@@ -111,6 +126,7 @@ Page({
     posterRange: "all",
     posterDate: "",
     posterQuery: "",
+    posterCoverBar: false,
     dark: false,
     statusBarHeight: 20,
     navBarHeight: 44,
@@ -146,6 +162,24 @@ Page({
     });
     this.loadHub();
     this.loadPicks();
+    if (this.data.posterPick || this.data.momentsOpen) this.posterChrome({});
+  },
+  onHide() {
+    this.showTabBar();
+  },
+  onUnload() {
+    this.showTabBar();
+  },
+  showTabBar() {
+    const bar = typeof this.getTabBar === "function" ? this.getTabBar() : null;
+    if (bar) bar.setData({ hidden: false });
+  },
+  posterChrome(patch) {
+    const next = Object.assign({ posterPick: this.data.posterPick, momentsOpen: this.data.momentsOpen }, patch || {});
+    const open = !!(next.posterPick || next.momentsOpen);
+    const bar = typeof this.getTabBar === "function" ? this.getTabBar() : null;
+    if (bar) bar.setData({ hidden: open });
+    this.setData(Object.assign({ posterCoverBar: open && !!bar }, patch || {}));
   },
   async loadHub() {
     if (!app.globalData.token) {
@@ -284,7 +318,7 @@ Page({
   },
   openPoster() {
     this._posterRows = [];
-    this.setData({
+    this.posterChrome({
       posterPick: true,
       posterReady: false,
       posterTrips: [],
@@ -307,7 +341,7 @@ Page({
         });
       })
       .catch(() => {
-        this.setData({ posterPick: false });
+        this.posterChrome({ posterPick: false });
         wx.showToast({ title: "海报生成失败", icon: "none" });
       });
   },
@@ -350,7 +384,7 @@ Page({
     });
   },
   closePosterPick() {
-    this.setData({ posterPick: false });
+    this.posterChrome({ posterPick: false });
   },
   makePoster() {
     const chosen = {};
@@ -363,11 +397,19 @@ Page({
       return;
     }
     wx.showLoading({ title: "正在生成海报" });
-    const model = buildLineup(rows, {});
-    drawMomentsPoster(this, model)
+    const ids = rows.slice(0, 6).map((row) => Number(row.id)).filter((id) => id > 0);
+    const qrTask = ids.length
+      ? request("/poster-lineups", "POST", { ids }).then((res) => writePosterQr(res.data && res.data.qr)).catch(() => "")
+      : Promise.resolve("");
+    qrTask
+      .then((qr) => {
+        const model = buildLineup(rows, {});
+        if (qr) model.qr = qr;
+        return drawMomentsPoster(this, model);
+      })
       .then((path) => {
         wx.hideLoading();
-        this.setData({ posterPick: false, momentsOpen: true, momentsPath: path });
+        this.posterChrome({ posterPick: false, momentsOpen: true, momentsPath: path });
       })
       .catch(() => {
         wx.hideLoading();
@@ -399,7 +441,7 @@ Page({
     });
   },
   closeMoments() {
-    this.setData({ momentsOpen: false });
+    this.posterChrome({ momentsOpen: false });
   },
   openMember() {
     if (!app.globalData.token) {
