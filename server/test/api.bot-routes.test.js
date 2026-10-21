@@ -222,4 +222,37 @@ describe("bot route ingest", () => {
     const looked = await agent.get("/api/bot/routes/photo-lake").set(botAuth()).expect(200);
     assert.equal(looked.body.data.reviewNote, "封面换成湖面实景");
   });
+
+  it("stores one uploaded mp4 on the draft and keeps it when omitted", async () => {
+    const mp4 = Buffer.alloc(32);
+    mp4.write("ftyp", 4, "ascii");
+    const denied = await agent.post("/api/bot/videos").attach("file", mp4, "spot.mp4").expect(401);
+    assert.match(denied.body.message, /密钥/);
+    await agent.post("/api/bot/videos").set(botAuth()).attach("file", Buffer.from("hello"), "note.txt").expect(400);
+
+    const up = await agent.post("/api/bot/videos").set(botAuth()).attach("file", mp4, "spot.mp4").expect(200);
+    assert.match(up.body.data.url, /^\/static\/uploads\/botv-.+\.mp4$/);
+
+    const created = await agent
+      .post("/api/bot/routes")
+      .set(botAuth())
+      .send(body({ sourceKey: "video-lake", videos: [up.body.data.url] }))
+      .expect(200);
+    assert.deepEqual(created.body.data.videos, [up.body.data.url]);
+
+    const again = await agent
+      .post("/api/bot/routes")
+      .set(botAuth())
+      .send(body({ sourceKey: "video-lake", title: "金海湖环湖补记" }))
+      .expect(200);
+    assert.equal(again.body.data.id, created.body.data.id);
+    assert.deepEqual(again.body.data.videos, [up.body.data.url]);
+
+    const bad = await agent
+      .post("/api/bot/routes")
+      .set(botAuth())
+      .send(body({ sourceKey: "video-lake", videos: ["https://example.com/a.mp4"] }))
+      .expect(400);
+    assert.match(bad.body.message, /上传/);
+  });
 });

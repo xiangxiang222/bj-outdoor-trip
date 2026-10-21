@@ -126,7 +126,14 @@
             <div v-if="form.sourceUrl">{{ form.sourceUrl }}</div>
             <div v-if="form.suggestedPrice">建议价 ¥{{ form.suggestedPrice }}，还没写入阶梯价</div>
             <div v-if="form.reviewNote">上次说明：{{ form.reviewNote }}</div>
-            <div class="muted">封面只用机器人上报的图片。驳回意见它能读到，改完会按同一条再上报。</div>
+            <div class="muted">封面和视频都只用机器人上报的文件。驳回意见它能读到，改完会按同一条再上报。</div>
+            <video
+              v-if="form.videos && form.videos.length"
+              :src="form.videos[0].embedUrl || form.videos[0].url || form.videos[0]"
+              controls
+              playsinline
+              style="width:100%;max-width:420px;margin-top:8px;border-radius:8px;background:#000"
+            />
             <div v-for="item in form.photoSources || []" :key="item.url" class="muted">{{ item.caption ? item.caption + " " : "" }}{{ item.url }}</div>
           </div>
         </el-form-item>

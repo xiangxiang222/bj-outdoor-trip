@@ -30,6 +30,23 @@ function localPhoto(value) {
   return url.startsWith("/static/") ? url : "";
 }
 
+function localVideo(value) {
+  const url = clip(typeof value === "string" ? value : value && (value.url || value.src), 300).split("?")[0];
+  if (!url.startsWith("/static/") || url.includes("..")) return "";
+  if (!/\.(mp4|webm|m4v)(\?|$)/i.test(url)) return "";
+  return url;
+}
+
+function videosOf(body) {
+  if (!body || (body.videos == null && body.video == null && body.videoUrl == null)) return undefined;
+  const raw = body.videos ?? body.video ?? body.videoUrl;
+  const list = Array.isArray(raw) ? raw : raw ? [raw] : [];
+  if (!list.length) return [];
+  const url = localVideo(list[0]);
+  if (!url) fail(400, "视频请先上传，使用返回的 /static/ 地址");
+  return [url];
+}
+
 function sourceKeyOf(body, title, region) {
   const explicit = clip(body.sourceKey || body.source_key, 80);
   if (explicit) return explicit;
@@ -172,6 +189,14 @@ function viewOf(row, extra = {}) {
     photoSources: Array.isArray(photos) ? photos : [],
     reviewNote: row.review_note || "",
     reviewedAt: row.reviewed_at || "",
+    videos: (() => {
+      try {
+        const parsed = JSON.parse(row.videos_json || "[]");
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    })(),
     ...extra,
   };
 }
@@ -273,6 +298,16 @@ async function ingestRoute(body, deps) {
   if (existing && reviewOf(existing) === "approved") {
     return viewOf(existing, { updated: false, message: "已通过，未覆盖" });
   }
+  const incomingVideos = videosOf(body);
+  let videos = incomingVideos;
+  if (videos === undefined) {
+    try {
+      const parsed = JSON.parse((existing && existing.videos_json) || "[]");
+      videos = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      videos = [];
+    }
+  }
   const photos = await attachBotPhotos(draft, deps);
   if (photos.cover) {
     draft.cover = photos.cover;
@@ -284,6 +319,7 @@ async function ingestRoute(body, deps) {
   let id = existing && existing.id;
   if (existing) writeDraft(db, existing.id, draft, { reopen });
   else id = insertDraft(db, draft);
+  db.prepare("UPDATE routes SET videos_json=? WHERE id=?").run(JSON.stringify(videos || []), id);
   const row = db.prepare("SELECT * FROM routes WHERE id=?").get(id);
   scheduleRouteI18n(id);
   if (reopen) noticeBotRoute(row);
