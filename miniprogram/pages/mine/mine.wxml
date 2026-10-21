@@ -174,6 +174,25 @@
   </view>
 </view>
 <canvas type="2d" id="momentsCanvas" class="moments-offscreen"></canvas>
+<view class="moments-mask" wx:if="{{posterPick}}" catchtap="closePosterPick">
+  <view class="moments-sheet poster-pick" catchtap="noop">
+    <view class="poster-pick-title">{{tr.t('选择要放进海报的团', lang)}}</view>
+    <view class="muted poster-pick-hint">{{tr.t('最多选 6 个团', lang)}}</view>
+    <view class="muted poster-pick-empty" wx:if="{{!posterReady}}">{{tr.t('正在加载', lang)}}</view>
+    <view class="muted poster-pick-empty" wx:elif="{{!posterTrips.length}}">{{tr.t('还没有可以做成海报的团', lang)}}</view>
+    <view wx:else class="poster-pick-list">
+      <view class="poster-pick-row{{item.on ? ' on' : ''}}" wx:for="{{posterTrips}}" wx:key="id" bindtap="togglePoster" data-id="{{item.id}}">
+        <view class="poster-pick-mark"></view>
+        <view class="poster-pick-copy">
+          <text class="poster-pick-name">{{tr.t(item.title, lang)}}</text>
+          <text class="poster-pick-when">{{item.md}} {{tr.t(item.week, lang)}}<text wx:if="{{item.meet}}"> · {{tr.t(item.meet, lang)}}</text></text>
+        </view>
+      </view>
+    </view>
+    <view class="btn" bindtap="makePoster">{{tr.t('生成海报', lang)}}{{posterCount ? ' · ' + posterCount : ''}}</view>
+    <view class="btn ghost" bindtap="closePosterPick">{{tr.t('关闭', lang)}}</view>
+  </view>
+</view>
 <view class="moments-mask" wx:if="{{momentsOpen}}" catchtap="closeMoments">
   <view class="moments-sheet" catchtap="noop">
     <image class="moments-img" src="{{momentsPath}}" mode="widthFix" show-menu-by-longpress />
