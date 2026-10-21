@@ -1801,9 +1801,9 @@ router.post("/upload", authUser, (req, res) => {
   });
 });
 
-router.post("/bot/routes", authBot, (req, res) => {
+router.post("/bot/routes", authBot, async (req, res) => {
   try {
-    res.json({ ok: true, data: ingestRoute(req.body || {}) });
+    res.json({ ok: true, data: await ingestRoute(req.body || {}) });
   } catch (e) {
     jsonError(res, e);
   }

@@ -4,6 +4,7 @@ const { normalizeItinerary } = require("./story");
 const { reviewOf } = require("./route-apply");
 const { noticeBotRoute } = require("./notices");
 const { scheduleRouteI18n } = require("./route-i18n");
+const { downloadPhotoList, searchAndSavePhotos } = require("./route-draft");
 
 const CATEGORIES = ["长城", "登山", "山水", "玩水", "文化", "草原", "海滨"];
 
@@ -82,6 +83,52 @@ function tagsOf(body) {
     .slice(0, 8);
 }
 
+function photoQuery(title) {
+  const cleaned = String(title || "")
+    .replace(/（[^）]*）|\([^)]*\)/g, "")
+    .replace(/一日游|两日游|二日游|三日游|多日游/g, "")
+    .replace(/^(北京市|北京|河北省|河北|张家口市|张家口|门头沟|延庆|怀柔|密云|平谷|昌平|房山)/, "")
+    .replace(/高山草甸|草甸|徒步|穿越|环线|环穿|自驾|秋色|彩林|溪谷|峡谷|冬季|踏冰|赏花|轻穿越|原始森林|四季花海|山脊|风景区|北线|一日|两日/g, "")
+    .replace(/游$/, "")
+    .replace(/\s+/g, "")
+    .trim();
+  return cleaned.length >= 2 ? cleaned : String(title || "").trim();
+}
+
+async function attachBotPhotos(draft, deps = {}) {
+  const remote = [];
+  for (const item of draft.photoSources || []) {
+    if (item && item.url) remote.push(item.url);
+  }
+  const download = deps.downloadPhotos || downloadPhotoList;
+  let saved = [];
+  try {
+    saved = await download(remote, deps);
+  } catch {
+    saved = [];
+  }
+  if (!Array.isArray(saved)) saved = [];
+  saved = saved.filter((url) => String(url).startsWith("/static/"));
+  const target = remote.length ? Math.min(8, Math.max(4, remote.length)) : 4;
+  if (saved.length < target) {
+    const search = deps.searchPhotos || searchAndSavePhotos;
+    try {
+      const more = await search(
+        { title: photoQuery(draft.title), region: draft.region, category: draft.category },
+        deps
+      );
+      for (const url of more || []) {
+        if (saved.length >= target) break;
+        if (String(url).startsWith("/static/") && !saved.includes(url)) saved.push(url);
+      }
+    } catch {
+      /* 搜图失败就留已经下到的 */
+    }
+  }
+  saved = saved.slice(0, 8);
+  return { cover: saved[0] || "", gallery: saved };
+}
+
 function draftOf(body) {
   const input = body || {};
   const title = clip(input.title, 40);
@@ -158,7 +205,7 @@ function viewOf(row, extra = {}) {
 
 function writeDraft(db, id, draft, { reopen }) {
   db.prepare(
-    `UPDATE routes SET title=?, subtitle=?, days=?, distance_km=?, difficulty=?, category=?, region=?, season=?, tags_json=?, cover=?, min_group_size=?, description=?, highlights_json=?, itinerary_json=?, fee_include=?, fee_exclude=?, equipment=?, notices=?, meetup_json=?, status='off', source='bot', source_url=?, source_key=?, suggested_price=?, photo_sources_json=?${
+    `UPDATE routes SET title=?, subtitle=?, days=?, distance_km=?, difficulty=?, category=?, region=?, season=?, tags_json=?, cover=?, gallery_json=?, min_group_size=?, description=?, highlights_json=?, itinerary_json=?, fee_include=?, fee_exclude=?, equipment=?, notices=?, meetup_json=?, status='off', source='bot', source_url=?, source_key=?, suggested_price=?, photo_sources_json=?${
       reopen ? ", review_status='pending'" : ""
     } WHERE id=?`
   ).run(
@@ -172,6 +219,7 @@ function writeDraft(db, id, draft, { reopen }) {
     draft.season,
     JSON.stringify(draft.tags),
     draft.cover,
+    JSON.stringify(draft.gallery || []),
     draft.minGroupSize,
     draft.description,
     JSON.stringify(draft.highlights),
@@ -207,7 +255,7 @@ function insertDraft(db, draft) {
       draft.season,
       JSON.stringify(draft.tags),
       draft.cover,
-      "[]",
+      JSON.stringify(draft.gallery || []),
       draft.minGroupSize,
       draft.description,
       JSON.stringify(draft.highlights),
@@ -230,13 +278,34 @@ function insertDraft(db, draft) {
   return Number(info.lastInsertRowid);
 }
 
-function ingestRoute(body) {
+function keepStoredPhotos(draft, existing) {
+  if (!existing || !String(existing.cover || "").startsWith("/static/")) {
+    draft.gallery = [];
+    return;
+  }
+  draft.cover = existing.cover;
+  try {
+    const gallery = JSON.parse(existing.gallery_json || "[]");
+    draft.gallery = Array.isArray(gallery) ? gallery : [];
+  } catch {
+    draft.gallery = [];
+  }
+}
+
+async function ingestRoute(body, deps) {
   const draft = draftOf(body);
   const db = getDb();
   const existing = db.prepare("SELECT * FROM routes WHERE source_key=?").get(draft.sourceKey);
   if (existing && existing.source !== "bot") fail(409, "来源键已被占用");
   if (existing && reviewOf(existing) === "approved") {
     return viewOf(existing, { updated: false, message: "已通过，未覆盖" });
+  }
+  const photos = await attachBotPhotos(draft, deps);
+  if (photos.cover) {
+    draft.cover = photos.cover;
+    draft.gallery = photos.gallery;
+  } else {
+    keepStoredPhotos(draft, existing);
   }
   const reopen = !existing || reviewOf(existing) === "rejected";
   let id = existing && existing.id;
@@ -251,6 +320,34 @@ function ingestRoute(body) {
   });
 }
 
+async function fillMissingBotPhotos(deps) {
+  const db = getDb();
+  const rows = db
+    .prepare(
+      "SELECT id, title, region, category, photo_sources_json FROM routes WHERE source='bot' AND IFNULL(cover,'')='' AND IFNULL(review_status,'pending')!='approved'"
+    )
+    .all();
+  let filled = 0;
+  for (const row of rows) {
+    let sources = [];
+    try {
+      sources = JSON.parse(row.photo_sources_json || "[]");
+    } catch {
+      sources = [];
+    }
+    const photos = await attachBotPhotos(
+      { title: row.title, region: row.region, category: row.category, photoSources: sources },
+      deps
+    );
+    if (!photos.cover) continue;
+    const info = db
+      .prepare("UPDATE routes SET cover=?, gallery_json=? WHERE id=? AND IFNULL(cover,'')=''")
+      .run(photos.cover, JSON.stringify(photos.gallery), row.id);
+    if (info.changes) filled += 1;
+  }
+  return filled;
+}
+
 function botRoute(idOrKey) {
   const db = getDb();
   const key = clip(idOrKey, 200);
@@ -261,4 +358,4 @@ function botRoute(idOrKey) {
   return viewOf(row);
 }
 
-module.exports = { ingestRoute, botRoute };
+module.exports = { ingestRoute, botRoute, fillMissingBotPhotos, photoQuery };

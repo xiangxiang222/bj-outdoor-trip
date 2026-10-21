@@ -126,6 +126,7 @@
             <div v-if="form.sourceUrl">{{ form.sourceUrl }}</div>
             <div v-if="form.suggestedPrice">建议价 ¥{{ form.suggestedPrice }}，还没写入阶梯价</div>
             <div v-if="form.reviewNote">上次说明：{{ form.reviewNote }}</div>
+            <div class="muted">封面和相册用采集到的图片。没给图时按景点名补上，这里可以换。</div>
             <div v-for="item in form.photoSources || []" :key="item.url" class="muted">{{ item.caption ? item.caption + " " : "" }}{{ item.url }}</div>
           </div>
         </el-form-item>

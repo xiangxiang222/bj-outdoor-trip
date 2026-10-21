@@ -105,7 +105,7 @@ User 1──n Favorite / PointsLedger / Review
 - `status`：`on` 上架 / `off` 下架（删除接口实际为下架）
 - `submitted_by` / `contact_phone` / `contact_wechat`：用户申请收录时写入。官方线路和机器稿为空，不发成团奖励
 - `review_status`：用户申请和机器采集为 `pending` → 后台 `approved` / `rejected`。官方线路默认 `approved`。公开目录要同时 `status=on` 且 `review_status=approved`
-- `source`：`bot` 为采集入库，其余为空。`source_url` `source_key` 用来源去重。`suggested_price` 只给审核看，不写入阶梯价。`photo_sources_json` 记外链图片，审核前不当封面
+- `source`：`bot` 为采集入库，其余为空。`source_url` `source_key` 用来源去重。`suggested_price` 只给审核看，不写入阶梯价。`photo_sources_json` 记外链。能下载的图存进封面和相册；没有图则按景点名搜索补上
 - `bounty_status` / `bounty_amount`：申请时 `pending` + 300 元；该线首次真实成团后记 `payments.scene=route_bounty` 并标 `paid`。发团（`POST /trips`）不走这条奖励
 - 图文：封面、相册、亮点、行程、费用含/不含、装备、须知、集合点。后台新增线路不再收视频链接。已有线路上的视频仍可在 H5 播放，小程序只复制链接。
 - `GET /routes` 会排除「只被同城局排期引用」的线路，避免掼蛋局出现在山野目录；也排除未过审申请和下架线路。已有测试线路在服务启动时下架一次（`settings.demo_routes_hidden`），数据保留，后台可再上架。详情页用实拍和文字：亮点、行程、费用含与不含，图文最多 6 张，不把价格和集合点做进图片。
