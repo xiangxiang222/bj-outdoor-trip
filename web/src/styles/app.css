@@ -1054,20 +1054,30 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 .moments-mask {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: 80;
   background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: flex-end;
   justify-content: center;
   padding: 16px;
+  overscroll-behavior: none;
 }
 .moments-sheet {
   width: min(420px, 100%);
-  max-height: 88vh;
-  overflow: auto;
+  max-height: min(92vh, calc(100vh - 24px));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: #fff;
   border-radius: 18px;
   padding: 12px 12px 16px;
+}
+.moments-scroll {
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .moments-sheet img {
   display: block;
@@ -1077,10 +1087,34 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 }
 .moments-sheet p { margin: 10px 4px 0; }
 .poster-pick { display: flex; flex-direction: column; }
+.poster-tools { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.poster-tools button {
+  border: 1px solid #eee;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: calc(13px * var(--ui-scale));
+  color: inherit;
+  cursor: pointer;
+}
+.poster-tools button.on { border-color: #1a1a1a; background: #1a1a1a; color: #fff; }
+.poster-search, .poster-date {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font: inherit;
+  margin: 0 0 8px;
+  background: #fff;
+  color: inherit;
+}
 .poster-pick-title { margin: 4px 4px 0; font-weight: 650; }
 .poster-pick-hint { margin: 4px 4px 8px; color: var(--muted); font-size: calc(13px * var(--ui-scale)); }
 .poster-pick-limit { margin: 0 4px 8px; color: #8c3038; font-size: calc(13px * var(--ui-scale)); }
-.poster-pick-list { overflow: auto; max-height: 52vh; display: flex; flex-direction: column; gap: 8px; }
+.poster-pick-list { overflow: auto; min-height: 0; flex: 1; max-height: 46vh; display: flex; flex-direction: column; gap: 8px; overscroll-behavior: contain; }
+.poster-pick .share-actions { flex: none; }
 .poster-pick-row {
   display: flex;
   align-items: center;

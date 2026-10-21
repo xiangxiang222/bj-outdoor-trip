@@ -10,6 +10,43 @@ function posterKey(row, index) {
   return row && row.id != null ? String(row.id) : "i" + index;
 }
 
+function posterBlob(row) {
+  const route = (row && row.route) || {};
+  return [route.title, route.subtitle, route.category, route.region, route.difficulty, row && row.meetupPoint, row && row.city].filter(Boolean).join(" ");
+}
+
+function fuzzyHit(text, query) {
+  const hay = String(text || "").toLowerCase().replace(/\s+/g, "");
+  const needle = String(query || "").trim().toLowerCase().replace(/\s+/g, "");
+  if (!needle) return true;
+  let at = 0;
+  for (let i = 0; i < hay.length && at < needle.length; i += 1) {
+    if (hay[i] === needle[at]) at += 1;
+  }
+  return at === needle.length;
+}
+
+function dayStamp(offset) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + offset);
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return d.getFullYear() + "-" + month + "-" + day;
+}
+
+function inPosterRange(iso, range, picked) {
+  if (!range || range === "all") return true;
+  if (range === "date") return Boolean(picked) && iso === picked;
+  const start = dayStamp(0);
+  const end = dayStamp(range === "week" ? 6 : 29);
+  return iso >= start && iso <= end;
+}
+
+function posterShown(trips, range, date, query) {
+  return (trips || []).filter((item) => inPosterRange(item.date, range, date) && fuzzyHit(item.blob, query));
+}
+
 function posterItem(row, index) {
   const iso = String(row.startDate || "").slice(0, 10);
   const d = new Date(iso + "T00:00:00");
@@ -17,6 +54,8 @@ function posterItem(row, index) {
   return {
     id: posterKey(row, index),
     title: row.route.title,
+    date: iso,
+    blob: posterBlob(row),
     md: ok ? (d.getMonth() + 1) + "." + String(d.getDate()).padStart(2, "0") : iso,
     week: ok ? POSTER_WEEK[d.getDay()] : "",
     meet: String(row.meetupPoint || "").trim(),
@@ -67,7 +106,11 @@ Page({
     posterPick: false,
     posterReady: false,
     posterTrips: [],
+    posterShown: [],
     posterCount: 0,
+    posterRange: "all",
+    posterDate: "",
+    posterQuery: "",
     dark: false,
     statusBarHeight: 20,
     navBarHeight: 44,
@@ -241,18 +284,53 @@ Page({
   },
   openPoster() {
     this._posterRows = [];
-    this.setData({ posterPick: true, posterReady: false, posterTrips: [], posterCount: 0 });
+    this.setData({
+      posterPick: true,
+      posterReady: false,
+      posterTrips: [],
+      posterShown: [],
+      posterCount: 0,
+      posterRange: "all",
+      posterDate: "",
+      posterQuery: "",
+    });
     request("/schedules?channel=trip")
       .then((res) => {
         const groups = processFeed(res.data || [], { channel: "trip", sort: "soon" });
         const rows = groups.filter((row) => row && row.route && String(row.route.title || "").trim() && row.startDate);
         this._posterRows = rows;
-        this.setData({ posterReady: true, posterTrips: rows.map((row, index) => posterItem(row, index)) });
+        const trips = rows.map((row, index) => posterItem(row, index));
+        this.setData({
+          posterReady: true,
+          posterTrips: trips,
+          posterShown: posterShown(trips, "all", "", ""),
+        });
       })
       .catch(() => {
         this.setData({ posterPick: false });
         wx.showToast({ title: "海报生成失败", icon: "none" });
       });
+  },
+  setPosterRange(e) {
+    const range = (e.currentTarget.dataset && e.currentTarget.dataset.range) || "all";
+    this.setData({
+      posterRange: range,
+      posterShown: posterShown(this.data.posterTrips, range, this.data.posterDate, this.data.posterQuery),
+    });
+  },
+  onPosterDate(e) {
+    const date = (e.detail && e.detail.value) || "";
+    this.setData({
+      posterDate: date,
+      posterShown: posterShown(this.data.posterTrips, this.data.posterRange, date, this.data.posterQuery),
+    });
+  },
+  onPosterQuery(e) {
+    const query = (e.detail && e.detail.value) || "";
+    this.setData({
+      posterQuery: query,
+      posterShown: posterShown(this.data.posterTrips, this.data.posterRange, this.data.posterDate, query),
+    });
   },
   togglePoster(e) {
     const id = String(e.currentTarget.dataset.id || "");
@@ -265,7 +343,11 @@ Page({
       return;
     }
     const next = trips.map((item) => (item.id === id ? Object.assign({}, item, { on: !item.on }) : item));
-    this.setData({ posterTrips: next, posterCount: next.filter((item) => item.on).length });
+    this.setData({
+      posterTrips: next,
+      posterShown: posterShown(next, this.data.posterRange, this.data.posterDate, this.data.posterQuery),
+      posterCount: next.filter((item) => item.on).length,
+    });
   },
   closePosterPick() {
     this.setData({ posterPick: false });
