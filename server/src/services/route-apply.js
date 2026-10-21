@@ -162,7 +162,8 @@ function reviewApply(routeId, { action, note, adminId } = {}) {
   const act = String(action || "").trim();
   if (act !== "approve" && act !== "reject") fail(400, "请选择通过或驳回");
   if (reviewOf(row) === "approved" && act === "approve") fail(400, "该申请已通过");
-  const trimmed = String(note || "").trim().slice(0, 200);
+  const trimmed = String(note || "").trim().slice(0, fromBot ? 500 : 200);
+  if (fromBot && act === "reject" && !trimmed) fail(400, "请填写给机器人的修改意见");
   if (act === "reject" && reviewOf(row) === "rejected") fail(400, "该申请已驳回");
   const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
   if (act === "approve") {
@@ -179,7 +180,7 @@ function reviewApply(routeId, { action, note, adminId } = {}) {
   } else {
     db.prepare(
       "UPDATE routes SET status='off', review_status='rejected', review_note=?, reviewed_at=?, bounty_status='' WHERE id=?"
-    ).run(trimmed || "未通过", now, row.id);
+    ).run(fromBot ? trimmed : trimmed || "未通过", now, row.id);
     sendSms({
       phone: row.contact_phone,
       scene: "route",
