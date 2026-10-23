@@ -1062,6 +1062,10 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   padding: 16px;
   overscroll-behavior: none;
 }
+.mp-phone .moments-mask {
+  position: absolute;
+  z-index: 30;
+}
 .moments-sheet {
   width: min(420px, 100%);
   height: min(92vh, calc(100vh - 24px));
@@ -1072,6 +1076,10 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   background: #fff;
   border-radius: 18px;
   padding: 12px 12px 16px;
+}
+.mp-phone .moments-sheet {
+  height: 100%;
+  max-height: 100%;
 }
 .moments-scroll {
   overflow: auto;
@@ -1088,10 +1096,13 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
 }
 .moments-sheet p { margin: 10px 4px 0; }
 .poster-pick { display: flex; flex-direction: column; }
-.poster-tools { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.poster-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex: none; }
+.poster-count { flex: none; padding: 3px 8px; border-radius: 999px; background: #f3eaf5; color: #642470; font-size: calc(12px * var(--ui-scale)); font-weight: 650; }
+.poster-count.on { background: #8c3038; color: #fff; }
+.poster-tools { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; flex: none; }
 .poster-tools button {
-  border: 1px solid #eee;
-  background: #fff;
+  border: 0;
+  background: #f4f4f6;
   border-radius: 999px;
   padding: 6px 12px;
   font: inherit;
@@ -1099,25 +1110,42 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   color: inherit;
   cursor: pointer;
 }
-.poster-tools button.on { border-color: #1a1a1a; background: #1a1a1a; color: #fff; }
+.poster-tools button.on { background: #1a1a1a; color: #fff; }
 .poster-search, .poster-date {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #eee;
+  border: 0;
   border-radius: 12px;
   min-height: 44px;
   line-height: 22px;
   padding: 10px 12px;
   font: inherit;
   margin: 0 0 8px;
-  background: #fff;
+  background: #f4f4f6;
   color: inherit;
   flex: none;
 }
-.poster-pick-title { margin: 4px 4px 0; font-weight: 650; flex: none; }
-.poster-pick-hint { margin: 4px 4px 8px; color: var(--muted); font-size: calc(13px * var(--ui-scale)); flex: none; }
-.poster-pick-limit { margin: 0 4px 8px; color: #8c3038; font-size: calc(13px * var(--ui-scale)); flex: none; }
-.poster-tools { flex: none; }
+.poster-pick-title { margin: 4px 0 0; font-weight: 650; flex: 1; min-width: 0; }
+.poster-pick-hint { margin: 4px 0 8px; color: var(--muted); font-size: calc(13px * var(--ui-scale)); flex: none; }
+.poster-pick-limit { margin: 0 0 8px; color: #8c3038; font-size: calc(13px * var(--ui-scale)); flex: none; }
+.poster-pick-empty { flex: none; margin: 12px 0 8px; }
+.poster-picked { display: flex; flex-wrap: wrap; gap: 8px; flex: none; margin: 0 0 8px; }
+.poster-picked-chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: #f3eaf5;
+  color: #642470;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: calc(12px * var(--ui-scale));
+  font-weight: 650;
+  cursor: pointer;
+}
+.poster-picked-chip i { font-style: normal; color: #8c3038; }
 .poster-pick-list { overflow: auto; min-height: 0; flex: 1; display: flex; flex-direction: column; gap: 8px; overscroll-behavior: contain; }
 .moments-sheet .share-actions { flex: none; }
 .moments-hint { flex: none; margin: 8px 4px 0; }
@@ -1127,39 +1155,69 @@ button, input, textarea, select { font-family: inherit; font-size: inherit; }
   gap: 10px;
   width: 100%;
   text-align: left;
-  border: 1px solid #eee;
-  background: #fff;
-  border-radius: 12px;
+  border: 1px solid transparent;
+  background: #f7f7f8;
+  border-radius: 14px;
   padding: 10px 12px;
   font: inherit;
   color: inherit;
   cursor: pointer;
 }
-.poster-pick-row.on { border-color: #1a1a1a; }
+.poster-pick-row.on { background: #fdf6f6; border-color: #e7c8cb; }
+.poster-date-mark {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #f3eaf5;
+  color: #642470;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.poster-date-mark b { font-size: calc(16px * var(--ui-scale)); line-height: 1.05; }
+.poster-date-mark small { font-size: calc(10px * var(--ui-scale)); line-height: 1.2; }
+.poster-pick-row.on .poster-date-mark { background: #8c3038; color: #fff; }
 .poster-pick-mark {
-  width: 18px;
-  height: 18px;
-  border: 1.6px solid #1a1a1a;
-  border-radius: 5px;
+  width: 20px;
+  height: 20px;
+  border: 1.6px solid #d0d0d4;
+  border-radius: 50%;
   box-sizing: border-box;
   flex: none;
   position: relative;
+  background: #fff;
 }
-.poster-pick-row.on .poster-pick-mark { background: #1a1a1a; }
+.poster-pick-row.on .poster-pick-mark { background: #8c3038; border-color: #8c3038; }
 .poster-pick-row.on .poster-pick-mark::after {
   content: "";
   position: absolute;
-  left: 4px;
-  top: 4px;
-  width: 7px;
-  height: 4px;
-  border-left: 1.6px solid #fff;
+  left: 6px;
+  top: 3px;
+  width: 5px;
+  height: 8px;
+  border-right: 1.6px solid #fff;
   border-bottom: 1.6px solid #fff;
-  transform: rotate(-45deg);
+  transform: rotate(45deg);
 }
-.poster-pick-copy { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.poster-pick-copy strong { font-weight: 650; }
-.poster-pick-copy em { font-style: normal; color: var(--muted); font-size: calc(12px * var(--ui-scale)); }
+.poster-pick-copy { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.poster-pick-copy strong { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.poster-pick-copy em { font-style: normal; color: var(--muted); font-size: calc(12px * var(--ui-scale)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.poster-pager { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.poster-page-btn {
+  min-width: 88px;
+  border: 1px solid #ececef;
+  background: #fff;
+  color: #1a1a1a;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: calc(13px * var(--ui-scale));
+  cursor: pointer;
+}
+.poster-page-btn:disabled { color: #c4c4c8; background: #f6f6f7; cursor: default; }
+.poster-page-num { font-weight: 650; font-variant-numeric: tabular-nums; }
 .poster-pick .btn:disabled { opacity: 0.45; cursor: default; }
 .share-card .share-qr {
   display: block;
