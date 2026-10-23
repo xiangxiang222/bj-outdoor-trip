@@ -102,9 +102,6 @@
       <label class="check-row"><input type="checkbox" v-model="form.memberPriceOn" /> 适用会员价</label>
       <label class="check-row"><input type="checkbox" v-model="form.studentPriceOn" /> 适用学生价</label>
       <label class="check-row"><input type="checkbox" v-model="form.oversub" /> 报超会抽（车位不够才抽）</label>
-      <p v-if="form.organizerType === 'campus' && form.offerType === 'free'" class="muted">高校免费团会默认打开抽签：先报名待确认，人数超过座位才抽签决定出行人。</p>
-      <CampusAudienceFields v-model="form" :profile="store.profile" />
-      <p class="muted">勾选报超会抽后，先报名待确认；人数超过座位才抽签，未超过则全部确认。</p>
       <label v-if="form.offerType !== 'free'">现价（可空，早鸟/特惠将按折扣算）</label>
       <input v-if="form.offerType !== 'free'" class="input" type="number" v-model.number="form.offerPrice" />
       <label>出发日期</label>
@@ -116,7 +113,7 @@
         <option value="campus">高校开团（先报名，出行前付款）</option>
       </select>
       <label v-if="form.organizerType === 'company'">公司名称</label>
-      <label v-if="form.organizerType === 'campus'">学校名称</label>
+      <label v-if="form.organizerType === 'campus'">发起学校</label>
       <input
         v-if="form.organizerType === 'company'"
         class="input"
@@ -130,6 +127,14 @@
         title="选择学校"
         placeholder="例如：北京大学"
       />
+      <p v-if="form.organizerType === 'campus'" class="muted">写在团上，表示哪个学校在组织，不限制谁能报名。</p>
+      <label class="check-row"><input type="checkbox" v-model="form.studentOnly" /> 仅师生</label>
+      <label class="check-row"><input type="checkbox" v-model="form.alumniOk" /> 允许已认证校友</label>
+      <p v-if="form.organizerType === 'campus' && form.offerType === 'free'" class="muted">高校免费团会默认打开抽签，并且只让发起学校的师生报名。报名范围里如果另外写了学校，就以报名范围为准。</p>
+      <label>报名范围</label>
+      <CampusTargetList v-model="form.campusTargets" />
+      <p class="muted">谁可以报名。留空表示不限学校，也可以和发起学校不同。两所学校都有同名学院时，要分开加。</p>
+      <GenderRatioFields v-if="form.organizerType === 'campus'" v-model="form.genderRatio" :targets="form.campusTargets" />
       <label>大巴车型</label>
       <select class="select" v-model="form.busTypeId">
         <option v-for="b in buses" :key="b.id" :value="b.id">{{ b.name }}（{{ b.seats }}座）</option>
@@ -151,15 +156,6 @@
       <textarea class="input" v-model="form.notes" rows="2" />
     </template>
 
-    <label>抽奖</label>
-    <select class="select" v-model="form.lotteryMode">
-      <option value="off">不开抽奖</option>
-      <option value="pre">报名前抽奖</option>
-      <option value="enroll">报名后抽奖</option>
-      <option value="both">报名前和报名后都抽</option>
-    </select>
-    <p class="muted">中奖后立刻看到奖品和中奖率，跟团结束后才能领奖。奖品可在后台再改。</p>
-
     <label class="check-row"><input type="checkbox" v-model="form.privateJoin" /> 口令团（报名要口令）</label>
     <p class="muted">列表会显示「口令团」。把口令发给要来的人；不填则自动生成 6 位。</p>
     <input v-if="form.privateJoin" class="input" v-model="form.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" />
@@ -178,8 +174,10 @@ import { requireLogin } from "@/utils/auth";
 import { OFFER_TYPES } from "@/utils/offer";
 import { ACTIVITY_KINDS } from "@/utils/activityKind";
 import { todayYmd } from "@/utils/trips";
-import CampusAudienceFields from "@/components/CampusAudienceFields.vue";
+import CampusTargetList from "@/components/CampusTargetList.vue";
 import CampusNamePicker from "@/components/CampusNamePicker.vue";
+import GenderRatioFields from "@/components/GenderRatioFields.vue";
+import { applyCampusPublish, emptyGenderRatio } from "@/utils/genderRatio";
 
 const route = useRoute();
 const router = useRouter();
@@ -218,8 +216,10 @@ const form = ref({
   offerPrice: null,
   memberPriceOn: true,
   studentPriceOn: true,
+  studentOnly: false,
   alumniOk: false,
   oversub: false,
+  genderRatio: emptyGenderRatio(),
   campusScope: "open",
   campusSchool: store.profile?.school || "",
   campusCollege: store.profile?.college || "",
@@ -250,7 +250,7 @@ const kindPlaceholder = computed(() => {
 
 watch(
   () => [form.value.organizerType, form.value.offerType, form.value.companyName],
-  ([type, offer, name], prev = []) => {
+  ([type, offer], prev = []) => {
     if (type === "campus" && !form.value.companyName && store.profile?.school) {
       form.value.companyName = store.profile.school;
     }
@@ -261,9 +261,7 @@ watch(
     const isCampusFree = type === "campus" && offer === "free";
     if (isCampusFree && !wasCampusFree) {
       form.value.oversub = true;
-      if (form.value.campusScope === "open") form.value.campusScope = "school";
-      const school = name || form.value.companyName || store.profile?.school || "";
-      if (school && !String(form.value.campusSchool || "").trim()) form.value.campusSchool = school;
+      form.value.studentOnly = true;
     }
   }
 );
@@ -366,11 +364,7 @@ async function submit() {
       loading.value = false;
       return;
     }
-    if (payload.organizerType === "campus" && payload.offerType === "free") {
-      payload.oversub = true;
-      if (payload.campusScope === "open") payload.campusScope = "school";
-      if (!String(payload.campusSchool || "").trim()) payload.campusSchool = payload.companyName || "";
-    }
+    applyCampusPublish(payload);
     const res = await http.post("/trips", payload);
     router.push("/m/schedule/" + res.data.id + "?posted=1");
   } catch (e) {

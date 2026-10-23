@@ -1,1 +1,105 @@
 @import "../../styles/account.wxss";
+
+.pub-intro {
+  margin: 16rpx 24rpx 0;
+  color: #8d8d8d;
+  font-size: calc(24rpx * var(--ui-scale));
+  line-height: 1.5;
+}
+.pub-card {
+  margin: 16rpx;
+  padding: 8rpx 8rpx 20rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  border: 1px solid #f0f0f0;
+}
+.pub-h {
+  padding: 20rpx 16rpx 4rpx;
+  font-size: calc(32rpx * var(--ui-scale));
+  font-weight: 700;
+}
+.pub-label {
+  margin: 16rpx 16rpx 0;
+  color: #8d8d8d;
+  font-size: calc(24rpx * var(--ui-scale));
+}
+.pub-field,
+.pub-pick {
+  margin: 10rpx 16rpx 0;
+  padding: 20rpx 22rpx;
+  background: #f7f7f8;
+  border-radius: 16rpx;
+  color: #1a1a1a;
+  font-size: calc(28rpx * var(--ui-scale));
+}
+.pub-area { min-height: 140rpx; width: auto; }
+.pub-note {
+  margin: 10rpx 16rpx 0;
+  color: #8d8d8d;
+  font-size: calc(24rpx * var(--ui-scale));
+  line-height: 1.5;
+}
+.pub-row { display: flex; gap: 8rpx; }
+.pub-col { flex: 1; min-width: 0; }
+.pub-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin: 12rpx 16rpx 0;
+  padding: 18rpx 8rpx;
+  font-size: calc(28rpx * var(--ui-scale));
+}
+.pub-mark {
+  flex: none;
+  min-width: 72rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  background: #f4f4f6;
+  color: #8d8d8d;
+  text-align: center;
+  font-size: calc(24rpx * var(--ui-scale));
+  font-weight: 700;
+}
+.pub-mark.on { background: #8c3038; color: #fff; }
+.target-card {
+  margin: 12rpx 16rpx 0;
+  padding: 8rpx 0 12rpx;
+  border: 1px solid #f0d4d6;
+  border-radius: 18rpx;
+  background: #fffdfd;
+}
+.pub-link {
+  margin: 12rpx 16rpx 0;
+  color: #8c3038;
+  font-size: calc(26rpx * var(--ui-scale));
+  font-weight: 700;
+}
+.pub-link.add { display: inline-block; }
+.ratio-block {
+  margin: 12rpx 16rpx 0;
+  padding: 4rpx 0 12rpx;
+  border: 1px solid #f0d4d6;
+  border-radius: 18rpx;
+}
+.ratio-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin: 8rpx 16rpx 0;
+  font-size: calc(26rpx * var(--ui-scale));
+}
+.ratio-name { font-weight: 700; margin-right: 8rpx; }
+.ratio-num { min-width: 36rpx; text-align: center; font-weight: 700; }
+.ratio-step {
+  width: 48rpx;
+  height: 48rpx;
+  line-height: 48rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  background: #f7f7f8;
+  color: #1a1a1a;
+  font-weight: 700;
+}
+.kind-grid { display: flex; flex-wrap: wrap; }

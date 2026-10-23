@@ -132,6 +132,7 @@
           </div>
           <p class="muted" v-if="s.oversub?.enabled">{{ s.oversub.copy }}</p>
           <p class="muted" v-if="s.eligibility?.enabled">{{ s.eligibility.label }}{{ s.eligibility.alumniOk ? " 已认证师生或校友可报" : " 已认证学生可报" }}</p>
+          <p class="muted" v-if="s.genderRatio?.on">{{ s.genderRatio.label }}</p>
           <p v-if="s.eligibility?.enabled && !s.eligibility.canEnroll" class="muted" style="color:var(--clay)">
             {{ s.eligibility.reason }}
             <router-link to="/m/student">去校园认证</router-link>

@@ -66,6 +66,7 @@ const { startTrip, openCheckin, markCheckin, unmarkCheckin, confirmCheckin, trip
 const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
 const { eligibilityView, applyEnrollLimit, expandEnrollLimit, resolveEnrollLimit } = require("./services/eligibility");
+const { genderRatioPublic, saveGenderRatio } = require("./services/gender-ratio");
 const { queryCampuses } = require("./services/campuses");
 const { oversubView, isOversubPending, drawOversub } = require("./services/oversub");
 const { parseVideoInput, videoViews } = require("./services/video");
@@ -595,6 +596,7 @@ function scheduleView(sch, req, opts = {}) {
     reviewStatus: sch.review_status || "approved",
     combo: light ? null : comboView(sch, viewer),
     eligibility: light && !feed ? null : eligibilityView(sch, viewer),
+    ...(light ? {} : { genderRatio: genderRatioPublic(sch) }),
     oversub: light && !feed ? null : oversubView(sch),
     refundPolicy: light ? null : refundPolicyView(route, sch),
     ...joinLockView(sch, req),
@@ -659,6 +661,8 @@ function applyScheduleExtras(id, body, route, user) {
       heatMode,
       id
     );
+  const organizerType = body.organizerType || body.organizer_type || db().prepare("SELECT organizer_type FROM schedules WHERE id=?").get(id)?.organizer_type;
+  saveGenderRatio(id, body, limit.targets, organizerType);
 }
 
 router.get("/meta", (req, res) => {
@@ -3112,7 +3116,8 @@ router.put("/admin/schedules/:id/limit", authAdmin, requireCap("ops"), (req, res
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
   try {
     const body = req.body || {};
-    applyEnrollLimit(sch.id, body);
+    const limit = applyEnrollLimit(sch.id, body);
+    saveGenderRatio(sch.id, body, limit.targets, sch.organizer_type);
     const min = Math.round(Number(body.minGroupSize));
     if (Number.isFinite(min) && min >= 1) {
       db().prepare("UPDATE schedules SET min_group_size=? WHERE id=?").run(Math.min(80, min), sch.id);

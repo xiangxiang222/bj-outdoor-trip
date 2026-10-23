@@ -1,7 +1,8 @@
 const { request, showError } = require("../../utils/request");
 const { OFFER_TYPES } = require("../../utils/offer");
 const { KINDS } = require("../../utils/activity-kind");
-const { openCampusPick, joinNames, emptyTarget, patchTarget } = require("../../utils/campus");
+const { openCampusPick, emptyTarget, patchTarget } = require("../../utils/campus");
+const { syncGenderRatio, payload: genderPayload } = require("../../utils/gender-ratio");
 
 const MEETUPS = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
 const DAYS = [1, 2, 3, "multi"];
@@ -57,9 +58,6 @@ Page({
     cityNames: DISTRICTS,
     cityIndex: 2,
     errors: {},
-    scopeLabels: ["不限制学校学院", "仅已认证师生", "仅本学院", "仅本校", "本校跨学院", "跨学校"],
-    scopeKeys: ["open", "certified", "college", "school", "colleges", "schools"],
-    scopeIndex: 0,
     form: {
       title: "",
       city: "",
@@ -80,15 +78,15 @@ Page({
       description: "",
       videoUrls: "",
       comboRule: { require: "student_or_group", school: "" },
+      studentOnly: false,
       alumniOk: false,
       oversub: false,
-      campusScope: "open",
-      campusSchool: "",
-      campusCollege: "",
-      schools: "",
-      colleges: "",
       campusTargets: [],
-      lotteryMode: "off",
+      genderRatioOn: false,
+      overallMale: 1,
+      overallFemale: 1,
+      genderSchools: [],
+      genderColleges: [],
       privateJoin: false,
       joinCode: "",
     },
@@ -126,8 +124,6 @@ Page({
       "form.meetupTime": asActivity ? "19:30" : this.data.form.meetupTime,
       "form.meetupPoint": asActivity ? "" : MEETUPS[0],
       "form.city": asActivity ? "朝阳" : "",
-      "form.campusSchool": user.school || "",
-      "form.campusCollege": user.college || "",
       "form.companyName": this.data.form.companyName || user.companyName || user.school || "",
     });
     this.boot();
@@ -208,55 +204,20 @@ Page({
       onPick: (names) => this.setData({ "form.comboRule.school": names[0] || "" }),
     });
   },
-  pickCampusSchool() {
-    openCampusPick({
-      kind: "school",
-      title: "选择学校",
-      selected: this.data.form.campusSchool,
-      onPick: (names) => {
-        const patch = { "form.campusSchool": names[0] || "", "form.campusCollege": "" };
-        if (this.data.form.campusScope === "colleges") patch["form.colleges"] = "";
-        this.setData(patch);
-      },
-    });
-  },
-  pickCampusCollege() {
-    if (!this.data.form.campusSchool) {
-      this.setData({ "errors.campus": "请先选择学校" });
-      return;
-    }
-    this.setData({ "errors.campus": "" });
-    openCampusPick({
-      kind: "college",
-      school: this.data.form.campusSchool,
-      title: "选择学院",
-      selected: this.data.form.campusCollege,
-      onPick: (names) => this.setData({ "form.campusCollege": names[0] || "" }),
-    });
-  },
-  pickColleges() {
-    if (!this.data.form.campusSchool) {
-      this.setData({ "errors.campus": "请先选择学校" });
-      return;
-    }
-    this.setData({ "errors.campus": "" });
-    openCampusPick({
-      kind: "college",
-      school: this.data.form.campusSchool,
-      multiple: true,
-      title: "选择学院",
-      selected: this.data.form.colleges,
-      onPick: (names) => this.setData({ "form.colleges": joinNames(names) }),
-    });
+  refreshGender(targets) {
+    const next = syncGenderRatio(this.data.form, targets);
+    this.setData({ "form.genderSchools": next.genderSchools, "form.genderColleges": next.genderColleges });
   },
   addCampusTarget() {
     const campusTargets = (this.data.form.campusTargets || []).concat([emptyTarget()]);
     this.setData({ "form.campusTargets": campusTargets });
+    this.refreshGender(campusTargets);
   },
   removeCampusTarget(e) {
     const i = Number(e.currentTarget.dataset.i);
     const campusTargets = (this.data.form.campusTargets || []).filter((_, idx) => idx !== i);
     this.setData({ "form.campusTargets": campusTargets });
+    this.refreshGender(campusTargets);
   },
   pickTargetSchool(e) {
     const i = Number(e.currentTarget.dataset.i);
@@ -265,7 +226,11 @@ Page({
       kind: "school",
       title: "选择学校",
       selected: row.school,
-      onPick: (names) => this.setData({ "form.campusTargets": patchTarget(this.data.form.campusTargets, i, "school", names[0] || "") }),
+      onPick: (names) => {
+        const campusTargets = patchTarget(this.data.form.campusTargets, i, "school", names[0] || "");
+        this.setData({ "form.campusTargets": campusTargets });
+        this.refreshGender(campusTargets);
+      },
     });
   },
   pickTargetCollege(e) {
@@ -281,7 +246,11 @@ Page({
       school: row.school,
       title: "选择学院",
       selected: row.college,
-      onPick: (names) => this.setData({ "form.campusTargets": patchTarget(this.data.form.campusTargets, i, "college", names[0] || "") }),
+      onPick: (names) => {
+        const campusTargets = patchTarget(this.data.form.campusTargets, i, "college", names[0] || "");
+        this.setData({ "form.campusTargets": campusTargets });
+        this.refreshGender(campusTargets);
+      },
     });
   },
   pickTargetMajor(e) {
@@ -309,8 +278,51 @@ Page({
       onPick: (names) => this.setData({ "form.companyName": names[0] || "" }),
     });
   },
+  toggleStudentOnly() {
+    this.setData({ "form.studentOnly": !this.data.form.studentOnly });
+  },
   toggleAlumniOk() {
     this.setData({ "form.alumniOk": !this.data.form.alumniOk });
+  },
+  toggleGender() {
+    this.setData({ "form.genderRatioOn": !this.data.form.genderRatioOn });
+  },
+  toggleGenderRow(e) {
+    const bucket = e.currentTarget.dataset.bucket;
+    const i = Number(e.currentTarget.dataset.i);
+    const key = bucket === "college" ? "genderColleges" : "genderSchools";
+    const rows = (this.data.form[key] || []).slice();
+    if (!rows[i]) return;
+    rows[i] = Object.assign({}, rows[i], { on: !rows[i].on });
+    this.setData({ ["form." + key]: rows });
+  },
+  stepRatio(e) {
+    const bucket = e.currentTarget.dataset.bucket;
+    const side = e.currentTarget.dataset.side;
+    const dir = Number(e.currentTarget.dataset.dir);
+    const form = this.data.form;
+    if (bucket === "overall") {
+      const key = side === "female" ? "overallFemale" : "overallMale";
+      const other = key === "overallFemale" ? Number(form.overallMale) : Number(form.overallFemale);
+      let next = Number(form[key]) + dir;
+      if (next < 0) next = 0;
+      if (next > 99) next = 99;
+      if (next === 0 && other === 0) return;
+      this.setData({ ["form." + key]: next });
+      return;
+    }
+    const key = bucket === "college" ? "genderColleges" : "genderSchools";
+    const i = Number(e.currentTarget.dataset.i);
+    const rows = (form[key] || []).slice();
+    const row = rows[i];
+    if (!row) return;
+    const other = side === "female" ? Number(row.male) : Number(row.female);
+    let next = Number(row[side]) + dir;
+    if (next < 0) next = 0;
+    if (next > 99) next = 99;
+    if (next === 0 && other === 0) return;
+    rows[i] = Object.assign({}, row, { [side]: next });
+    this.setData({ ["form." + key]: rows });
   },
   toggleOversub() {
     this.setData({ "form.oversub": !this.data.form.oversub });
@@ -330,31 +342,7 @@ Page({
   applyCampusFree() {
     const form = this.data.form || {};
     if (form.organizerType !== "campus" || form.offerType !== "free") return;
-    const school = form.campusSchool || form.companyName || "";
-    this.setData({
-      "form.oversub": true,
-      "form.campusScope": form.campusScope === "open" ? "school" : form.campusScope,
-      "form.campusSchool": school,
-      scopeIndex: form.campusScope === "open" ? 3 : this.data.scopeIndex,
-    });
-  },
-  setScope(e) {
-    const i = Number(e.detail.value);
-    const scope = this.data.scopeKeys[i] || "open";
-    const user = getApp().globalData.user || {};
-    const patch = { scopeIndex: i, "form.campusScope": scope };
-    if (!this.data.form.campusSchool && (user.school || this.data.form.companyName)) {
-      patch["form.campusSchool"] = user.school || this.data.form.companyName;
-    }
-    if (!this.data.form.campusCollege && user.college) patch["form.campusCollege"] = user.college;
-    if (scope === "colleges" && user.college && !this.data.form.colleges) patch["form.colleges"] = user.college;
-    if (scope === "schools") {
-      const targets = this.data.form.campusTargets || [];
-      if (!targets.length) {
-        patch["form.campusTargets"] = [emptyTarget(this.data.form.campusSchool || user.school, "", "")];
-      }
-    }
-    this.setData(patch);
+    this.setData({ "form.oversub": true, "form.studentOnly": true });
   },
   setCompanyName(e) {
     this.setData({ "form.companyName": e.detail.value, "errors.companyName": "" });
@@ -401,9 +389,15 @@ Page({
     this.setData({ errors: {} });
     if (form.organizerType === "campus" && form.offerType === "free") {
       form.oversub = true;
-      if (form.campusScope === "open") form.campusScope = "school";
-      if (!String(form.campusSchool || "").trim()) form.campusSchool = form.companyName || "";
+      form.studentOnly = true;
     }
+    delete form.campusScope;
+    delete form.campusSchool;
+    delete form.campusCollege;
+    delete form.schools;
+    delete form.colleges;
+    delete form.lotteryMode;
+    form.genderRatio = genderPayload(form);
     try {
       wx.showLoading({ title: "提交中", mask: true });
       const res = await request("/trips", "POST", {

@@ -1,140 +1,241 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="pad muted">{{tr.t(form.channel=='activity' ? '提交后需审核，通过后出现在活动 Tab。' : '填写线路与出发信息，提交后需管理员审核才会出现在首页。', lang)}}</view>
+<view class="pub-intro">{{tr.t(form.channel=='activity' ? '提交后需审核，通过后出现在活动 Tab。' : '选好线路和谁能上车，提交后管理员通过才会出现在首页。', lang)}}</view>
 
-<view class="label">{{tr.t('类型', lang)}}</view>
-<picker mode="selector" range="{{channelLabels}}" value="{{channelIndex}}" bindchange="setChannel">
-  <view class="input">{{tr.t(channelLabels[channelIndex], lang)}}</view>
-</picker>
+<view class="pub-card">
+  <view class="pub-h">{{tr.t('类型', lang)}}</view>
+  <picker mode="selector" range="{{channelLabels}}" value="{{channelIndex}}" bindchange="setChannel">
+    <view class="pub-pick">{{tr.t(channelLabels[channelIndex], lang)}}</view>
+  </picker>
+</view>
 
 <block wx:if="{{form.channel=='activity'}}">
-  <view class="label">{{tr.t('玩法', lang)}}</view>
-  <view class="kind-grid">
-    <view class="act-kind {{form.activityKind==item.key?'on':''}}" wx:for="{{kinds}}" wx:key="key" bindtap="pickKind" data-key="{{item.key}}">
-      <view class="emoji">{{tr.t(item.emoji, lang)}}</view>
-      <view>{{tr.t(item.label, lang)}}</view>
+  <view class="pub-card">
+    <view class="pub-h">{{tr.t('玩法', lang)}}</view>
+    <view class="kind-grid">
+      <view class="act-kind {{form.activityKind==item.key?'on':''}}" wx:for="{{kinds}}" wx:key="key" bindtap="pickKind" data-key="{{item.key}}">
+        <view class="emoji">{{tr.t(item.emoji, lang)}}</view>
+        <view>{{tr.t(item.label, lang)}}</view>
+      </view>
     </view>
+    <view class="pub-label">{{tr.t('标题', lang)}}</view>
+    <input class="pub-field" placeholder="{{tr.t('标题，例如周五夜掼蛋', lang)}}" value="{{form.title}}" bindinput="setField" data-k="title" />
+    <view class="field-error" wx:if="{{errors.title}}">{{tr.t(errors.title, lang)}}</view>
+    <view class="pub-label">{{tr.t('地点', lang)}}</view>
+    <input class="pub-field" placeholder="{{tr.t('地点，例如三里屯太古里', lang)}}" value="{{form.meetupPoint}}" bindinput="setField" data-k="meetupPoint" />
+    <view class="field-error" wx:if="{{errors.meetupPoint}}">{{tr.t(errors.meetupPoint, lang)}}</view>
+    <view class="pub-label">{{tr.t('城区', lang)}}</view>
+    <picker mode="selector" range="{{cityNames}}" value="{{cityIndex}}" bindchange="setCityPick">
+      <view class="pub-pick">{{tr.t(form.city || '选择城区', lang)}}</view>
+    </picker>
+    <view class="pub-row">
+      <view class="pub-col">
+        <view class="pub-label">{{tr.t('日期', lang)}}</view>
+        <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
+          <view class="pub-pick">{{tr.t(dateLabels[dateIndex], lang)}}</view>
+        </picker>
+      </view>
+      <view class="pub-col">
+        <view class="pub-label">{{tr.t('时间', lang)}}</view>
+        <picker mode="time" value="{{form.meetupTime}}" bindchange="setMeetupTime">
+          <view class="pub-pick">{{form.meetupTime}}</view>
+        </picker>
+      </view>
+    </view>
+    <view class="pub-row">
+      <view class="pub-col">
+        <view class="pub-label">{{tr.t('最少几人成局', lang)}}</view>
+        <input class="pub-field" type="number" placeholder="{{tr.t('最少几人成局', lang)}}" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
+      </view>
+      <view class="pub-col">
+        <view class="pub-label">{{tr.t('人数上限', lang)}}</view>
+        <input class="pub-field" type="number" placeholder="{{tr.t('人数上限', lang)}}" value="{{form.maxSeats}}" bindinput="setField" data-k="maxSeats" />
+      </view>
+    </view>
+    <view class="pub-label">{{tr.t('费用（元，0 为免费）', lang)}}</view>
+    <input class="pub-field" type="number" placeholder="{{tr.t('费用（元，0 为免费）', lang)}}" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
+    <view class="pub-label">{{tr.t('介绍', lang)}}</view>
+    <textarea class="pub-field pub-area" placeholder="{{tr.t('介绍：带什么、几点开始、怎么找人', lang)}}" value="{{form.description}}" bindinput="setField" data-k="description" />
   </view>
-  <view class="label">{{tr.t('标题', lang)}}</view>
-  <input class="input" placeholder="{{tr.t('标题，例如周五夜掼蛋', lang)}}" value="{{form.title}}" bindinput="setField" data-k="title" />
-  <view class="field-error" wx:if="{{errors.title}}">{{tr.t(errors.title, lang)}}</view>
-  <view class="label">{{tr.t('地点', lang)}}</view>
-  <input class="input" placeholder="{{tr.t('地点，例如三里屯太古里', lang)}}" value="{{form.meetupPoint}}" bindinput="setField" data-k="meetupPoint" />
-  <view class="field-error" wx:if="{{errors.meetupPoint}}">{{tr.t(errors.meetupPoint, lang)}}</view>
-  <view class="label">{{tr.t('城区', lang)}}</view>
-  <picker mode="selector" range="{{cityNames}}" value="{{cityIndex}}" bindchange="setCityPick">
-    <view class="input">{{tr.t(form.city || '选择城区', lang)}}</view>
-  </picker>
-  <view class="label">{{tr.t('日期', lang)}}</view>
-  <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
-    <view class="input">{{tr.t(dateLabels[dateIndex], lang)}}</view>
-  </picker>
-  <view class="label">{{tr.t('时间', lang)}}</view>
-  <picker mode="time" value="{{form.meetupTime}}" bindchange="setMeetupTime">
-    <view class="input">{{form.meetupTime}}</view>
-  </picker>
-  <view class="label">{{tr.t('最少几人成局', lang)}}</view>
-  <input class="input" type="number" placeholder="{{tr.t('最少几人成局', lang)}}" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
-  <view class="label">{{tr.t('人数上限', lang)}}</view>
-  <input class="input" type="number" placeholder="{{tr.t('人数上限', lang)}}" value="{{form.maxSeats}}" bindinput="setField" data-k="maxSeats" />
-  <view class="label">{{tr.t('费用（元，0 为免费）', lang)}}</view>
-  <input class="input" type="number" placeholder="{{tr.t('费用（元，0 为免费）', lang)}}" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
-  <view class="label">{{tr.t('介绍', lang)}}</view>
-  <textarea class="input" placeholder="{{tr.t('介绍：带什么、几点开始、怎么找人', lang)}}" value="{{form.description}}" bindinput="setField" data-k="description" />
 </block>
 
 <block wx:else>
-  <view class="label">{{tr.t('线路标题', lang)}}</view>
-  <input class="input" placeholder="{{tr.t('线路标题', lang)}}" value="{{form.title}}" bindinput="setField" data-k="title" />
-  <view class="field-error" wx:if="{{errors.title}}">{{tr.t(errors.title, lang)}}</view>
-  <view class="label">{{tr.t('城市', lang)}}</view>
-  <picker mode="selector" range="{{cityNames}}" value="{{cityIndex}}" bindchange="setCityPick">
-    <view class="input">{{tr.t(form.city || '选择城区', lang)}}</view>
-  </picker>
-  <view class="label">{{tr.t('天数', lang)}}</view>
-  <picker mode="selector" range="{{dayLabels}}" value="{{dayIndex}}" bindchange="setDay">
-    <view class="input">{{tr.t(dayLabels[dayIndex], lang)}}</view>
-  </picker>
-  <view class="label">{{tr.t('想怎么玩', lang)}}</view>
-  <view class="chips">
-    <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}};opacity:{{item.on?1:0.4}}" bindtap="toggleTag" data-id="{{item.id}}">{{tr.t(item.name, lang)}}</view>
-  </view>
-  <view class="label">{{tr.t('团型', lang)}}</view>
-  <picker mode="selector" range="{{offerLabels}}" value="{{offerIndex}}" bindchange="setOffer">
-    <view class="input">{{tr.t(offerLabels[offerIndex], lang)}}</view>
-  </picker>
-  <view class="card" wx:if="{{form.offerType=='combo'}}">
-    <view class="pad muted">{{tr.t('组合团只对学生或已认证学生组织开放。', lang)}}</view>
-    <picker range="{{comboRequireLabels}}" value="{{comboRequireIndex}}" bindchange="setComboRequire">
-      <view class="input">{{tr.t('另一半身份：', lang)}}{{tr.t(comboRequireLabels[comboRequireIndex], lang)}}</view>
-    </picker>
-    <view class="input" bindtap="pickComboSchool">{{tr.t(form.comboRule.school || '另一半学校（可空）', lang)}}</view>
-  </view>
-  <view class="label">{{tr.t('原价（元）', lang)}}</view>
-  <input class="input" type="number" placeholder="{{tr.t('原价（元）', lang)}}" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
-  <view class="pad" bindtap="toggleAlumniOk">{{tr.t(form.alumniOk ? '☑' : '☐', lang)}} {{tr.t('允许已认证校友', lang)}}</view>
-  <view class="pad" bindtap="toggleOversub">{{tr.t(form.oversub ? '☑' : '☐', lang)}} {{tr.t('报超会抽（车位不够才抽）', lang)}}</view>
-  <view class="label">{{tr.t('校园范围', lang)}}</view>
-  <picker mode="selector" range="{{scopeLabels}}" value="{{scopeIndex}}" bindchange="setScope">
-    <view class="input">{{tr.t(scopeLabels[scopeIndex], lang)}}</view>
-  </picker>
-  <view wx:if="{{form.campusScope=='college' || form.campusScope=='school' || form.campusScope=='colleges'}}" class="input" bindtap="pickCampusSchool">{{tr.t(form.campusSchool || '学校全称', lang)}}</view>
-  <view wx:if="{{form.campusScope=='college'}}" class="input" bindtap="pickCampusCollege">{{tr.t(form.campusCollege || (form.campusSchool ? '可选，搜索该校学院' : '请先选择学校'), lang)}}</view>
-  <view wx:if="{{form.campusScope=='colleges'}}" class="input" bindtap="pickColleges">{{tr.t(form.colleges || (form.campusSchool ? '开放学院，可多选该校学院' : '请先选择学校'), lang)}}</view>
-  <block wx:if="{{form.campusScope=='schools'}}">
-    <view class="card" wx:for="{{form.campusTargets}}" wx:key="index">
-      <view class="input" bindtap="pickTargetSchool" data-i="{{index}}">{{tr.t(item.school || '选学校', lang)}}</view>
-      <view class="input" bindtap="pickTargetCollege" data-i="{{index}}">{{tr.t(item.college || (item.school ? '学院可空' : '请先选学校'), lang)}}</view>
-      <view class="input" bindtap="pickTargetMajor" data-i="{{index}}">{{tr.t(item.major || (item.college ? '专业可空' : '请先选学院'), lang)}}</view>
-      <view class="btn ghost" bindtap="removeCampusTarget" data-i="{{index}}">{{tr.t('删除这组', lang)}}</view>
+  <view class="pub-card">
+    <view class="pub-h">{{tr.t('线路', lang)}}</view>
+    <view class="pub-label">{{tr.t('线路标题', lang)}}</view>
+    <input class="pub-field" placeholder="{{tr.t('线路标题', lang)}}" value="{{form.title}}" bindinput="setField" data-k="title" />
+    <view class="field-error" wx:if="{{errors.title}}">{{tr.t(errors.title, lang)}}</view>
+    <view class="pub-row">
+      <view class="pub-col">
+        <view class="pub-label">{{tr.t('城市', lang)}}</view>
+        <picker mode="selector" range="{{cityNames}}" value="{{cityIndex}}" bindchange="setCityPick">
+          <view class="pub-pick">{{tr.t(form.city || '选择城区', lang)}}</view>
+        </picker>
+      </view>
+      <view class="pub-col">
+        <view class="pub-label">{{tr.t('天数', lang)}}</view>
+        <picker mode="selector" range="{{dayLabels}}" value="{{dayIndex}}" bindchange="setDay">
+          <view class="pub-pick">{{tr.t(dayLabels[dayIndex], lang)}}</view>
+        </picker>
+      </view>
     </view>
-    <view class="btn ghost" bindtap="addCampusTarget">{{tr.t('添加学校-学院-专业', lang)}}</view>
-  </block>
-  <view class="field-error" wx:if="{{errors.campus}}">{{tr.t(errors.campus, lang)}}</view>
-  <view class="label">{{tr.t('出发日期', lang)}}</view>
-  <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
-    <view class="input">{{tr.t(dateLabels[dateIndex], lang)}}</view>
-  </picker>
-  <view class="label">{{tr.t('组织类型', lang)}}</view>
-  <picker mode="selector" range="{{organizerLabels}}" value="{{organizerIndex}}" bindchange="setOrganizer">
-    <view class="input">{{tr.t(organizerLabels[organizerIndex], lang)}}</view>
-  </picker>
-  <view class="label" wx:if="{{form.organizerType === 'company'}}">{{tr.t('公司名称', lang)}}</view>
-  <input
-    wx:if="{{form.organizerType === 'company'}}"
-    class="input"
-    placeholder="{{tr.t('公司名称（公司开团必填）', lang)}}"
-    value="{{form.companyName}}"
-    bindinput="setCompanyName"
-  />
-  <view class="field-error" wx:if="{{errors.companyName}}">{{tr.t(errors.companyName, lang)}}</view>
-  <view class="label" wx:if="{{form.organizerType === 'campus'}}">{{tr.t('学校', lang)}}</view>
-  <view
-    wx:if="{{form.organizerType === 'campus'}}"
-    class="input"
-    bindtap="pickCompanySchool"
-  >{{tr.t(form.companyName || '学校名称（高校开团必填）', lang)}}</view>
-  <view class="label">{{tr.t('车型', lang)}}</view>
-  <picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">
-    <view class="input">{{tr.t(busNames[busIndex], lang)}}</view>
-  </picker>
-  <view class="label">{{tr.t('最低成团人数', lang)}}</view>
-  <input class="input" type="number" placeholder="{{tr.t('最低成团人数', lang)}}" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
-  <view class="label">{{tr.t('集合点', lang)}}</view>
-  <picker mode="selector" range="{{meetupNames}}" value="{{meetupIndex}}" bindchange="setMeetup">
-    <view class="input">{{tr.t(meetupNames[meetupIndex], lang)}}</view>
-  </picker>
-  <view class="label">{{tr.t('集合时间', lang)}}</view>
-  <picker mode="time" value="{{form.meetupTime}}" bindchange="setMeetupTime">
-    <view class="input">{{form.meetupTime}}</view>
-  </picker>
-  <view class="label">{{tr.t('介绍', lang)}}</view>
-  <textarea class="input" placeholder="{{tr.t('介绍', lang)}}" value="{{form.description}}" bindinput="setField" data-k="description" />
-  <view class="label">{{tr.t('视频链接', lang)}}</view>
-  <textarea class="input" placeholder="{{tr.t('一行一条 B 站链接，如 https://www.bilibili.com/video/BVxxxx', lang)}}" value="{{form.videoUrls}}" bindinput="setField" data-k="videoUrls" />
-  <view class="muted pad" style="padding-top:0">{{tr.t('线路页会嵌播放器。请粘贴含 BV 号的完整链接。', lang)}}</view>
+    <view class="pub-label">{{tr.t('想怎么玩', lang)}}</view>
+    <view class="chips">
+      <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}};opacity:{{item.on?1:0.4}}" bindtap="toggleTag" data-id="{{item.id}}">{{tr.t(item.name, lang)}}</view>
+    </view>
+    <view class="pub-label">{{tr.t('团型', lang)}}</view>
+    <picker mode="selector" range="{{offerLabels}}" value="{{offerIndex}}" bindchange="setOffer">
+      <view class="pub-pick">{{tr.t(offerLabels[offerIndex], lang)}}</view>
+    </picker>
+    <view class="pub-note" wx:if="{{form.offerType=='combo'}}">{{tr.t('组合团只对学生或已认证学生组织开放。', lang)}}</view>
+    <picker wx:if="{{form.offerType=='combo'}}" range="{{comboRequireLabels}}" value="{{comboRequireIndex}}" bindchange="setComboRequire">
+      <view class="pub-pick">{{tr.t('另一半身份：', lang)}}{{tr.t(comboRequireLabels[comboRequireIndex], lang)}}</view>
+    </picker>
+    <view wx:if="{{form.offerType=='combo'}}" class="pub-pick" bindtap="pickComboSchool">{{tr.t(form.comboRule.school || '另一半学校（可空）', lang)}}</view>
+    <view class="pub-label">{{tr.t('原价（元）', lang)}}</view>
+    <input class="pub-field" type="number" placeholder="{{tr.t('原价（元）', lang)}}" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
+    <view class="pub-label">{{tr.t('介绍', lang)}}</view>
+    <textarea class="pub-field pub-area" placeholder="{{tr.t('介绍', lang)}}" value="{{form.description}}" bindinput="setField" data-k="description" />
+    <view class="pub-label">{{tr.t('视频链接', lang)}}</view>
+    <textarea class="pub-field pub-area" placeholder="{{tr.t('一行一条 B 站链接，如 https://www.bilibili.com/video/BVxxxx', lang)}}" value="{{form.videoUrls}}" bindinput="setField" data-k="videoUrls" />
+  </view>
+
+  <view class="pub-card">
+    <view class="pub-h">{{tr.t('出发', lang)}}</view>
+    <view class="pub-label">{{tr.t('出发日期', lang)}}</view>
+    <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
+      <view class="pub-pick">{{tr.t(dateLabels[dateIndex], lang)}}</view>
+    </picker>
+    <view class="pub-label">{{tr.t('组织类型', lang)}}</view>
+    <picker mode="selector" range="{{organizerLabels}}" value="{{organizerIndex}}" bindchange="setOrganizer">
+      <view class="pub-pick">{{tr.t(organizerLabels[organizerIndex], lang)}}</view>
+    </picker>
+    <view class="pub-label" wx:if="{{form.organizerType === 'company'}}">{{tr.t('公司名称', lang)}}</view>
+    <input
+      wx:if="{{form.organizerType === 'company'}}"
+      class="pub-field"
+      placeholder="{{tr.t('公司名称（公司开团必填）', lang)}}"
+      value="{{form.companyName}}"
+      bindinput="setCompanyName"
+    />
+    <view class="pub-label" wx:if="{{form.organizerType === 'campus'}}">{{tr.t('发起学校', lang)}}</view>
+    <view wx:if="{{form.organizerType === 'campus'}}" class="pub-pick" bindtap="pickCompanySchool">{{tr.t(form.companyName || '选择学校', lang)}}</view>
+    <view class="pub-note" wx:if="{{form.organizerType === 'campus'}}">{{tr.t('写在团上，表示哪个学校在组织，不限制谁能报名。', lang)}}</view>
+    <view class="field-error" wx:if="{{errors.companyName}}">{{tr.t(errors.companyName, lang)}}</view>
+    <view class="pub-label">{{tr.t('车型', lang)}}</view>
+    <picker mode="selector" range="{{busNames}}" value="{{busIndex}}" bindchange="setBus">
+      <view class="pub-pick">{{tr.t(busNames[busIndex], lang)}}</view>
+    </picker>
+    <view class="pub-label">{{tr.t('最低成团人数', lang)}}</view>
+    <input class="pub-field" type="number" placeholder="{{tr.t('最低成团人数', lang)}}" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
+    <view class="pub-row">
+      <view class="pub-col">
+        <view class="pub-label">{{tr.t('集合点', lang)}}</view>
+        <picker mode="selector" range="{{meetupNames}}" value="{{meetupIndex}}" bindchange="setMeetup">
+          <view class="pub-pick">{{tr.t(meetupNames[meetupIndex], lang)}}</view>
+        </picker>
+      </view>
+      <view class="pub-col">
+        <view class="pub-label">{{tr.t('集合时间', lang)}}</view>
+        <picker mode="time" value="{{form.meetupTime}}" bindchange="setMeetupTime">
+          <view class="pub-pick">{{form.meetupTime}}</view>
+        </picker>
+      </view>
+    </view>
+  </view>
+
+  <view class="pub-card">
+    <view class="pub-h">{{tr.t('谁能报名', lang)}}</view>
+    <view class="pub-switch" bindtap="toggleStudentOnly">
+      <text>{{tr.t('仅师生', lang)}}</text>
+      <text class="pub-mark {{form.studentOnly?'on':''}}">{{form.studentOnly ? '开' : '关'}}</text>
+    </view>
+    <view class="pub-switch" bindtap="toggleAlumniOk">
+      <text>{{tr.t('允许已认证校友', lang)}}</text>
+      <text class="pub-mark {{form.alumniOk?'on':''}}">{{form.alumniOk ? '开' : '关'}}</text>
+    </view>
+    <view class="pub-switch" bindtap="toggleOversub">
+      <text>{{tr.t('报超会抽（车位不够才抽）', lang)}}</text>
+      <text class="pub-mark {{form.oversub?'on':''}}">{{form.oversub ? '开' : '关'}}</text>
+    </view>
+    <view class="pub-note" wx:if="{{form.organizerType=='campus' && form.offerType=='free'}}">{{tr.t('免费团如果报名范围留空，默认只让发起学校的师生报名。', lang)}}</view>
+    <view class="pub-label">{{tr.t('报名范围', lang)}}</view>
+    <view class="pub-note">{{tr.t('谁可以报名。留空表示不限学校，也可以和发起学校不同。', lang)}}</view>
+    <view class="target-card" wx:for="{{form.campusTargets}}" wx:key="index">
+      <view class="pub-pick" bindtap="pickTargetSchool" data-i="{{index}}">{{tr.t(item.school || '选学校', lang)}}</view>
+      <view class="pub-pick" bindtap="pickTargetCollege" data-i="{{index}}">{{tr.t(item.college || (item.school ? '学院可空' : '请先选学校'), lang)}}</view>
+      <view class="pub-pick" bindtap="pickTargetMajor" data-i="{{index}}">{{tr.t(item.major || (item.college ? '专业可空' : '请先选学院'), lang)}}</view>
+      <view class="pub-link" bindtap="removeCampusTarget" data-i="{{index}}">{{tr.t('删除这组', lang)}}</view>
+    </view>
+    <view class="pub-link add" bindtap="addCampusTarget">{{tr.t('添加学校-学院-专业', lang)}}</view>
+    <view class="field-error" wx:if="{{errors.campus}}">{{tr.t(errors.campus, lang)}}</view>
+  </view>
+
+  <view class="pub-card" wx:if="{{form.organizerType=='campus'}}">
+    <view class="pub-h">{{tr.t('男女比例', lang)}}</view>
+    <view class="pub-switch" bindtap="toggleGender">
+      <text>{{tr.t('限制男女比例', lang)}}</text>
+      <text class="pub-mark {{form.genderRatioOn?'on':''}}">{{form.genderRatioOn ? '开' : '关'}}</text>
+    </view>
+    <view class="pub-note">{{tr.t('按这趟车的座位算。1 比 1、30 座，就是男生和女生最多各 15 人。', lang)}}</view>
+    <block wx:if="{{form.genderRatioOn}}">
+      <view class="ratio-line">
+        <text class="ratio-name">{{tr.t('全团', lang)}}</text>
+        <text>{{tr.t('男', lang)}}</text>
+        <view class="ratio-step" data-bucket="overall" data-side="male" data-dir="-1" bindtap="stepRatio">－</view>
+        <text class="ratio-num">{{form.overallMale}}</text>
+        <view class="ratio-step" data-bucket="overall" data-side="male" data-dir="1" bindtap="stepRatio">＋</view>
+        <text>:</text>
+        <text>{{tr.t('女', lang)}}</text>
+        <view class="ratio-step" data-bucket="overall" data-side="female" data-dir="-1" bindtap="stepRatio">－</view>
+        <text class="ratio-num">{{form.overallFemale}}</text>
+        <view class="ratio-step" data-bucket="overall" data-side="female" data-dir="1" bindtap="stepRatio">＋</view>
+      </view>
+      <view class="ratio-block" wx:for="{{form.genderSchools}}" wx:key="school">
+        <view class="pub-switch" data-bucket="school" data-i="{{index}}" bindtap="toggleGenderRow">
+          <text>{{item.school}}</text>
+          <text class="pub-mark {{item.on?'on':''}}">{{item.on ? '开' : '关'}}</text>
+        </view>
+        <view class="ratio-line" wx:if="{{item.on}}">
+          <text>{{tr.t('男', lang)}}</text>
+          <view class="ratio-step" data-bucket="school" data-i="{{index}}" data-side="male" data-dir="-1" bindtap="stepRatio">－</view>
+          <text class="ratio-num">{{item.male}}</text>
+          <view class="ratio-step" data-bucket="school" data-i="{{index}}" data-side="male" data-dir="1" bindtap="stepRatio">＋</view>
+          <text>:</text>
+          <text>{{tr.t('女', lang)}}</text>
+          <view class="ratio-step" data-bucket="school" data-i="{{index}}" data-side="female" data-dir="-1" bindtap="stepRatio">－</view>
+          <text class="ratio-num">{{item.female}}</text>
+          <view class="ratio-step" data-bucket="school" data-i="{{index}}" data-side="female" data-dir="1" bindtap="stepRatio">＋</view>
+        </view>
+      </view>
+      <view class="ratio-block" wx:for="{{form.genderColleges}}" wx:key="index">
+        <view class="pub-switch" data-bucket="college" data-i="{{index}}" bindtap="toggleGenderRow">
+          <text>{{item.school}} · {{item.college}}</text>
+          <text class="pub-mark {{item.on?'on':''}}">{{item.on ? '开' : '关'}}</text>
+        </view>
+        <view class="ratio-line" wx:if="{{item.on}}">
+          <text>{{tr.t('男', lang)}}</text>
+          <view class="ratio-step" data-bucket="college" data-i="{{index}}" data-side="male" data-dir="-1" bindtap="stepRatio">－</view>
+          <text class="ratio-num">{{item.male}}</text>
+          <view class="ratio-step" data-bucket="college" data-i="{{index}}" data-side="male" data-dir="1" bindtap="stepRatio">＋</view>
+          <text>:</text>
+          <text>{{tr.t('女', lang)}}</text>
+          <view class="ratio-step" data-bucket="college" data-i="{{index}}" data-side="female" data-dir="-1" bindtap="stepRatio">－</view>
+          <text class="ratio-num">{{item.female}}</text>
+          <view class="ratio-step" data-bucket="college" data-i="{{index}}" data-side="female" data-dir="1" bindtap="stepRatio">＋</view>
+        </view>
+      </view>
+      <view class="pub-note" wx:if="{{!form.genderSchools.length && !form.genderColleges.length}}">{{tr.t('报名范围里有两所以上学校，或同一学校有两个以上学院时，可以再单独限制。', lang)}}</view>
+    </block>
+  </view>
 </block>
-<view class="pad" bindtap="togglePrivateJoin">{{tr.t(form.privateJoin ? '☑' : '☐', lang)}} {{tr.t('口令团（报名要口令）', lang)}}</view>
-<input wx:if="{{form.privateJoin}}" class="input" placeholder="{{tr.t('入团口令 4～16 字，可空则自动生成', lang)}}" value="{{form.joinCode}}" bindinput="setField" data-k="joinCode" maxlength="16" />
+
+<view class="pub-card">
+  <view class="pub-switch" bindtap="togglePrivateJoin">
+    <text>{{tr.t('口令团（报名要口令）', lang)}}</text>
+    <text class="pub-mark {{form.privateJoin?'on':''}}">{{form.privateJoin ? '开' : '关'}}</text>
+  </view>
+  <input wx:if="{{form.privateJoin}}" class="pub-field" placeholder="{{tr.t('入团口令 4～16 字，可空则自动生成', lang)}}" value="{{form.joinCode}}" bindinput="setField" data-k="joinCode" maxlength="16" />
+</view>
 <view id="submit-error" class="field-error" wx:if="{{errors.form}}">{{tr.t(errors.form, lang)}}</view>
-<view class="btn" bindtap="submit">{{tr.t('提交审核', lang)}}</view>
+<view class="btn clay" bindtap="submit">{{tr.t('提交审核', lang)}}</view>
