@@ -462,10 +462,8 @@ function scheduleView(sch, req, opts = {}) {
   const live = enrolledCount(sch.id);
   const realLive = realEnrolledCount(sch.id);
   const virtualLive = virtualEnrolledCount(sch.id);
-  const shown = req.adminId ? live : realLive;
-  const enrolled = sch.status === "cancelled"
-    ? (req.adminId ? enrolledCount(sch.id, true) : realEnrolledCount(sch.id, true))
-    : shown;
+  const shown = live;
+  const enrolled = sch.status === "cancelled" ? enrolledCount(sch.id, true) : shown;
   const people = Math.max(shown || enrolled, 1);
   const quote = light && !card && !feed ? null : quoteForSchedule(sch, realLive || sch.min_group_size, null);
   const offer = offerMeta(sch.offer_type);
@@ -1640,18 +1638,18 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
   const includeCancelled = sch.status === "cancelled";
-  const hideVirtual = req.adminId ? "" : " AND IFNULL(u.is_virtual,0)=0";
+  const chainSelect =
+    "SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.pay_amount,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar,IFNULL(u.is_virtual,0) AS is_virtual";
   const chainSql = includeCancelled
-    ? `SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.pay_amount,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar
-       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=?${hideVirtual} ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3 END, e.id`
-    : `SELECT e.id,e.user_id,e.traveler_name,e.gender,e.pay_status,e.pay_amount,e.traveler_type,e.status,e.seat_no,e.created_at,e.birthday,e.id_card,u.avatar
-       FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? AND e.status!='cancelled'${hideVirtual} ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3 END, e.id`;
+    ? `${chainSelect} FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3 END, e.id`
+    : `${chainSelect} FROM enrollments e LEFT JOIN users u ON u.id=e.user_id WHERE e.schedule_id=? AND e.status!='cancelled' ORDER BY CASE e.status WHEN 'joined' THEN 0 WHEN 'applied' THEN 1 WHEN 'waitlist' THEN 2 ELSE 3 END, e.id`;
   const paidMap = collectedMapForSchedule(sch.id);
   const chain = db()
     .prepare(chainSql)
     .all(sch.id)
     .map((e, i) => {
       const item = chainItem(e, i, req, { paidAmount: paidMap[e.id] || 0, payAmount: e.pay_amount });
+      if (Number(e.is_virtual)) item.canPay = false;
       if (item.canPay) item.payShareToken = ensurePayShareToken(e.id);
       return item;
     });
@@ -1707,7 +1705,7 @@ router.get("/share/:token", (req, res) => {
 });
 
 router.get("/schedules/:id/seats", optionalUser, (req, res) => {
-  const data = scheduleSeats(req.params.id);
+  const data = scheduleSeats(req.params.id, { includeVirtual: true });
   if (!data) return res.status(404).json({ ok: false, message: "排期不存在" });
   data.seats = data.seats.map((seat) => ({
     ...seat,

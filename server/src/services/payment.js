@@ -375,6 +375,10 @@ function loadEnrollmentForPay(enrollmentId, token) {
   if (en.pay_status === "paid") fail(400, "该报名已支付");
   if (en.pay_status === "company_pending") fail(400, "公司团请由开团方统一支付");
   if (en.pay_status === "refunded") fail(400, "该报名已退款");
+  const owner = en.user_id
+    ? db.prepare("SELECT IFNULL(is_virtual,0) AS is_virtual FROM users WHERE id=?").get(en.user_id)
+    : null;
+  if (owner && Number(owner.is_virtual)) fail(400, "该报名不能支付");
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(en.schedule_id);
   if (!sch || sch.status === "cancelled") fail(400, "该拼团已解散");
   if (!Number(en.pay_amount || 0)) {
