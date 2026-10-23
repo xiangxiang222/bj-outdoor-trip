@@ -186,8 +186,29 @@ describe("social homepage leaders referral virtual fallback", () => {
     }
     const pub = await agent.get(`/api/schedules/${seed.individualScheduleId}`).expect(200);
     assert.equal(pub.body.data.virtualEnrolled, undefined);
-    assert.equal(pub.body.data.enrolled, 0);
-    assert.equal(pub.body.data.chain.length, 0);
+    assert.equal(pub.body.data.enrolled, 6);
+    assert.equal(pub.body.data.chain.length, 6);
+    const chainBlob = JSON.stringify(pub.body.data.chain);
+    assert.ok(
+      pub.body.data.chain.every(
+        (row) => row.name && /\*/.test(row.name) && row.canPay === false && !row.payShareToken && row.seatNo
+      )
+    );
+    for (const row of rows) {
+      assert.equal(chainBlob.includes(row.traveler_phone), false);
+      assert.equal(chainBlob.includes(row.id_card), false);
+    }
+    const seats = await agent.get(`/api/schedules/${seed.individualScheduleId}/seats`).expect(200);
+    const occupied = seats.body.data.seats.filter((seat) => seat.occupant);
+    assert.equal(occupied.length, 6);
+    assert.ok(occupied.every((seat) => seat.occupant.name && seat.occupant.initial && seat.occupant.userId));
+    const payer = await loginUser(agent);
+    const denied = await agent
+      .post("/api/pay/for-enrollment")
+      .set(auth(payer))
+      .send({ enrollmentId: pub.body.data.chain[0].enrollmentId })
+      .expect(400);
+    assert.match(denied.body.message, /不能支付/);
     const lowered = await agent
       .post("/api/admin/virtual-users")
       .set(auth(admin))
