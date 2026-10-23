@@ -181,7 +181,10 @@
           <el-input-number v-model="form.distanceKm" :min="0" :max="3000" />
           <span class="inline-hint">公里，可空。</span>
         </el-form-item>
-        <el-form-item label="成团人数"><el-input-number v-model="form.minGroupSize" :min="1" :max="80" /></el-form-item>
+        <el-form-item label="成团人数">
+          <el-input-number v-model="form.minGroupSize" :min="1" :max="80" />
+          <div class="muted">保存后，还没出发的团按这个人数重新判断是否成团。只算真实报名。</div>
+        </el-form-item>
         <el-form-item label="标签">
           <el-select v-model="form.tags" class="field-select" multiple filterable allow-create default-first-option placeholder="可多选，也可自己打字新建">
             <el-option v-for="t in tagOptions" :key="t" :label="t" :value="t" />

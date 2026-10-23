@@ -136,6 +136,8 @@ const {
   resolveStoredMedia,
   quoteForSchedule,
   maybeMatchGuide,
+  syncFormation,
+  alignOpenSchedulesMinGroup,
   addPoints,
   attachAssetHost,
 } = require("./services/helpers");
@@ -2901,6 +2903,7 @@ router.put("/admin/routes/:id", authAdmin, requireCap("ops"), (req, res) => {
   );
   scheduleRouteI18n(id);
   saveRouteVideos(id, b);
+  alignOpenSchedulesMinGroup(id, b.minGroupSize);
   if (b.priceTiers) {
     db().prepare("DELETE FROM route_price_tiers WHERE route_id=?").run(id);
     b.priceTiers.forEach((t) => {
@@ -3108,7 +3111,13 @@ router.put("/admin/schedules/:id/limit", authAdmin, requireCap("ops"), (req, res
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(req.params.id);
   if (!sch) return res.status(404).json({ ok: false, message: "排期不存在" });
   try {
-    applyEnrollLimit(sch.id, req.body || {});
+    const body = req.body || {};
+    applyEnrollLimit(sch.id, body);
+    const min = Math.round(Number(body.minGroupSize));
+    if (Number.isFinite(min) && min >= 1) {
+      db().prepare("UPDATE schedules SET min_group_size=? WHERE id=?").run(Math.min(80, min), sch.id);
+      syncFormation(sch.id);
+    }
     res.json({ ok: true, data: scheduleView(db().prepare("SELECT * FROM schedules WHERE id=?").get(sch.id), req) });
   } catch (e) {
     jsonError(res, e);
