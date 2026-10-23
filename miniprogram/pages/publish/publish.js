@@ -50,9 +50,13 @@ Page({
     buses: [],
     busNames: [],
     busIndex: 0,
+    routes: [],
+    routeTitles: [],
+    routeIndex: 0,
+    routeLabel: "选择已有线路",
     meetupNames: MEETUPS,
     meetupIndex: 0,
-    organizerLabels: ["个人开团（先报名，出行前付款）", "公司开团（先报名，最后统一支付）", "高校开团（先报名，出行前付款）"],
+    organizerLabels: ["个人开团", "公司开团", "高校开团"],
     organizerKeys: ["individual", "company", "campus"],
     organizerIndex: 0,
     cityNames: DISTRICTS,
@@ -67,6 +71,7 @@ Page({
       playTagIds: [],
       offerType: "full",
       originPrice: 199,
+      routeId: "",
       startDate: "",
       organizerType: "individual",
       companyName: "",
@@ -89,6 +94,7 @@ Page({
       genderColleges: [],
       privateJoin: false,
       joinCode: "",
+      notes: "",
     },
   },
   onLoad(q) {
@@ -130,14 +136,20 @@ Page({
   },
   async boot() {
     try {
-      const [tagRes, busRes] = await Promise.all([request("/play-tags"), request("/buses")]);
+      const jobs = [request("/play-tags"), request("/buses")];
+      if (this.data.form.channel !== "activity") jobs.push(request("/routes"));
+      const [tagRes, busRes, routeRes] = await Promise.all(jobs);
       const tags = (tagRes.data || []).map((t) => Object.assign({}, t, { on: false }));
       const buses = busRes.data || [];
+      const routes = (routeRes && routeRes.data) || [];
       this.setData({
         tags,
         buses,
         busNames: buses.map((b) => b.name),
         "form.busTypeId": buses[0] ? buses[0].id : "",
+        routes,
+        routeTitles: routes.map((r) => r.title),
+        routeLabel: routes.length ? "选择已有线路" : "暂无可选线路",
       });
     } catch (e) {
       showError("加载失败", e);
@@ -302,6 +314,7 @@ Page({
     const dir = Number(e.currentTarget.dataset.dir);
     const form = this.data.form;
     if (bucket === "overall") {
+      if (!form.genderRatioOn) this.setData({ "form.genderRatioOn": true });
       const key = side === "female" ? "overallFemale" : "overallMale";
       const other = key === "overallFemale" ? Number(form.overallMale) : Number(form.overallFemale);
       let next = Number(form[key]) + dir;
@@ -355,6 +368,31 @@ Page({
     const i = Number(e.detail.value);
     this.setData({ meetupIndex: i, "form.meetupPoint": this.data.meetupNames[i] });
   },
+  async setRoute(e) {
+    const i = Number(e.detail.value);
+    const route = (this.data.routes || [])[i];
+    if (!route) return;
+    let meetupNames = MEETUPS.slice();
+    let minGroup = this.data.form.minGroupSize;
+    try {
+      const detail = await request("/routes/" + route.id);
+      const points = ((detail.data && detail.data.meetupPoints) || []).map((p) => p.name).filter(Boolean);
+      if (points.length) meetupNames = points;
+      if (detail.data && detail.data.minGroupSize) minGroup = detail.data.minGroupSize;
+    } catch (err) {
+      showError("加载线路失败", err);
+    }
+    this.setData({
+      routeIndex: i,
+      routeLabel: route.title,
+      meetupNames,
+      meetupIndex: 0,
+      "form.routeId": route.id,
+      "form.meetupPoint": meetupNames[0],
+      "form.minGroupSize": minGroup,
+      "errors.routeId": "",
+    });
+  },
   toggleTag(e) {
     const id = Number(e.currentTarget.dataset.id);
     const tags = this.data.tags.map((t) => (t.id === id ? Object.assign({}, t, { on: !t.on }) : t));
@@ -367,11 +405,11 @@ Page({
   },
   async submit() {
     const form = Object.assign({}, this.data.form);
-    if (!String(form.title || "").trim()) {
-      this.blockSubmit("title", "请填写标题");
-      return;
-    }
     if (form.channel === "activity") {
+      if (!String(form.title || "").trim()) {
+        this.blockSubmit("title", "请填写标题");
+        return;
+      }
       form.days = 1;
       form.organizerType = "individual";
       form.offerType = Number(form.originPrice) > 0 ? form.offerType || "full" : "free";
@@ -379,34 +417,63 @@ Page({
         this.blockSubmit("meetupPoint", "请填写地点");
         return;
       }
-    } else if (form.organizerType === "company" && !String(form.companyName || "").trim()) {
+      this.setData({ errors: {} });
+      try {
+        wx.showLoading({ title: "提交中", mask: true });
+        const res = await request("/trips", "POST", {
+          ...form,
+          originPrice: Number(form.originPrice),
+          minGroupSize: Number(form.minGroupSize),
+          maxSeats: Number(form.maxSeats) || 12,
+        });
+        wx.hideLoading();
+        wx.redirectTo({ url: "/pages/schedule/schedule?id=" + res.data.id + "&posted=1" });
+      } catch (e) {
+        wx.hideLoading({ complete: () => showError("提交失败", e) });
+      }
+      return;
+    }
+    if (!form.routeId) {
+      this.blockSubmit("routeId", "请选择线路");
+      return;
+    }
+    if (form.organizerType === "company" && !String(form.companyName || "").trim()) {
       this.blockSubmit("companyName", "公司开团请填写公司名称");
       return;
-    } else if (form.organizerType === "campus" && !String(form.companyName || "").trim()) {
+    }
+    if (form.organizerType === "campus" && !String(form.companyName || "").trim()) {
       this.blockSubmit("companyName", "高校开团请填写学校");
       return;
     }
     this.setData({ errors: {} });
-    if (form.organizerType === "campus" && form.offerType === "free") {
+    const campus = form.organizerType === "campus";
+    if (campus && form.offerType === "free") {
       form.oversub = true;
       form.studentOnly = true;
     }
-    delete form.campusScope;
-    delete form.campusSchool;
-    delete form.campusCollege;
-    delete form.schools;
-    delete form.colleges;
-    delete form.lotteryMode;
-    form.genderRatio = genderPayload(form);
+    const body = {
+      routeId: form.routeId,
+      startDate: form.startDate,
+      organizerType: form.organizerType,
+      companyName: campus || form.organizerType === "company" ? form.companyName : "",
+      busTypeId: form.busTypeId,
+      minGroupSize: Number(form.minGroupSize),
+      meetupPoint: form.meetupPoint,
+      meetupTime: form.meetupTime,
+      offerType: form.offerType,
+      notes: form.notes || "",
+      studentOnly: campus ? !!form.studentOnly : false,
+      alumniOk: campus ? !!form.alumniOk : false,
+      oversub: campus ? !!form.oversub : false,
+      campusTargets: campus ? form.campusTargets : [],
+      genderRatio: genderPayload(form),
+      privateJoin: !!form.privateJoin,
+      joinCode: form.joinCode || "",
+    };
+    if (form.offerType === "combo") body.comboRule = form.comboRule;
     try {
       wx.showLoading({ title: "提交中", mask: true });
-      const res = await request("/trips", "POST", {
-        ...form,
-        videos: form.videoUrls,
-        originPrice: Number(form.originPrice),
-        minGroupSize: Number(form.minGroupSize),
-        maxSeats: Number(form.maxSeats) || 12,
-      });
+      const res = await request("/schedules", "POST", body);
       wx.hideLoading();
       wx.redirectTo({ url: "/pages/schedule/schedule?id=" + res.data.id + "&posted=1" });
     } catch (e) {

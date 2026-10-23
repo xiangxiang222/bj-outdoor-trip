@@ -1,43 +1,52 @@
 <template>
   <div class="gender-ratio">
-    <label class="gender-check">
-      <input type="checkbox" :checked="model.on" @change="model = { ...model, on: $event.target.checked }" />
+    <div class="gender-head">
+      <el-switch :model-value="!!model.on" @change="setOn" />
       <span>限制男女比例</span>
-    </label>
-    <p class="gender-note">按这趟车的座位算。1 比 1、30 座，就是男生和女生最多各 15 人。关掉时不能填。</p>
-    <template v-if="model.on">
+    </div>
+    <p class="gender-note">打开后按座位算出名额。1 比 1、30 座，男生和女生最多各 15 人。</p>
+    <div class="ratio-box">
+      <strong>全团</strong>
       <div class="ratio-line">
-        <strong>全团</strong>
         <span>男</span>
-        <input class="ratio-num" type="number" min="0" max="99" :value="model.overall.male" @input="setOverall('male', $event.target.value)" />
-        <span>:</span>
-        <span>女</span>
-        <input class="ratio-num" type="number" min="0" max="99" :value="model.overall.female" @input="setOverall('female', $event.target.value)" />
+        <el-input-number :model-value="model.overall.male" :min="0" :max="99" :disabled="!model.on" @change="setOverall('male', $event)" />
       </div>
+      <div class="ratio-line">
+        <span>女</span>
+        <el-input-number :model-value="model.overall.female" :min="0" :max="99" :disabled="!model.on" @change="setOverall('female', $event)" />
+      </div>
+    </div>
+    <template v-if="model.on">
       <div v-for="(row, i) in model.schools" :key="'s' + row.school" class="ratio-block">
-        <label class="gender-check">
-          <input type="checkbox" :checked="row.on" @change="setRow('schools', i, { on: $event.target.checked })" />
+        <div class="gender-head">
+          <el-switch :model-value="!!row.on" @change="setRow('schools', i, { on: $event })" />
           <span>{{ row.school }}</span>
-        </label>
-        <div v-if="row.on" class="ratio-line">
-          <span>男</span>
-          <input class="ratio-num" type="number" min="0" max="99" :value="row.male" @input="setRow('schools', i, { male: $event.target.value })" />
-          <span>:</span>
-          <span>女</span>
-          <input class="ratio-num" type="number" min="0" max="99" :value="row.female" @input="setRow('schools', i, { female: $event.target.value })" />
+        </div>
+        <div v-if="row.on" class="ratio-box">
+          <div class="ratio-line">
+            <span>男</span>
+            <el-input-number :model-value="row.male" :min="0" :max="99" @change="setRow('schools', i, { male: $event })" />
+          </div>
+          <div class="ratio-line">
+            <span>女</span>
+            <el-input-number :model-value="row.female" :min="0" :max="99" @change="setRow('schools', i, { female: $event })" />
+          </div>
         </div>
       </div>
       <div v-for="(row, i) in model.colleges" :key="'c' + row.school + row.college" class="ratio-block">
-        <label class="gender-check">
-          <input type="checkbox" :checked="row.on" @change="setRow('colleges', i, { on: $event.target.checked })" />
+        <div class="gender-head">
+          <el-switch :model-value="!!row.on" @change="setRow('colleges', i, { on: $event })" />
           <span>{{ row.school }} · {{ row.college }}</span>
-        </label>
-        <div v-if="row.on" class="ratio-line">
-          <span>男</span>
-          <input class="ratio-num" type="number" min="0" max="99" :value="row.male" @input="setRow('colleges', i, { male: $event.target.value })" />
-          <span>:</span>
-          <span>女</span>
-          <input class="ratio-num" type="number" min="0" max="99" :value="row.female" @input="setRow('colleges', i, { female: $event.target.value })" />
+        </div>
+        <div v-if="row.on" class="ratio-box">
+          <div class="ratio-line">
+            <span>男</span>
+            <el-input-number :model-value="row.male" :min="0" :max="99" @change="setRow('colleges', i, { male: $event })" />
+          </div>
+          <div class="ratio-line">
+            <span>女</span>
+            <el-input-number :model-value="row.female" :min="0" :max="99" @change="setRow('colleges', i, { female: $event })" />
+          </div>
         </div>
       </div>
       <p v-if="!model.schools.length && !model.colleges.length" class="gender-note">报名范围里有两所以上学校，或同一学校有两个以上学院时，可以再单独限制。</p>
@@ -57,16 +66,27 @@ const props = defineProps({
 watch(
   () => JSON.stringify(props.targets || []),
   () => {
-    model.value = syncGenderRatio(model.value, props.targets);
+    const next = syncGenderRatio(model.value, props.targets);
+    next.on = !!(model.value && model.value.on);
+    model.value = next;
   },
   { immediate: true }
 );
 
+function setOn(on) {
+  const next = syncGenderRatio(model.value, props.targets);
+  next.on = !!on;
+  model.value = next;
+}
+
 function setOverall(side, value) {
-  model.value = syncGenderRatio(
-    { ...model.value, overall: { ...model.value.overall, [side]: value } },
-    props.targets
-  );
+  const overall = { ...(model.value.overall || { male: 1, female: 1 }) };
+  const nextValue = value == null || value === "" ? 0 : Number(value);
+  const other = side === "male" ? overall.female : overall.male;
+  overall[side] = nextValue === 0 && Number(other) === 0 ? 1 : nextValue;
+  const next = syncGenderRatio({ ...model.value, overall }, props.targets);
+  next.on = true;
+  model.value = next;
 }
 
 function setRow(key, index, patch) {
@@ -77,11 +97,11 @@ function setRow(key, index, patch) {
 </script>
 
 <style scoped>
-.gender-ratio { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-.gender-check { display: flex; align-items: flex-start; gap: 8px; font-weight: 600; }
-.gender-check input { margin-top: 3px; }
+.gender-ratio { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.gender-head { display: flex; align-items: center; gap: 10px; font-weight: 600; }
 .gender-note { margin: 0; color: #8d8d8d; font-size: 13px; line-height: 1.5; font-weight: 400; }
-.ratio-block { padding: 8px 10px; border: 1px solid #f0d4d6; border-radius: 12px; background: #fff; }
-.ratio-line { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.ratio-num { width: 72px; padding: 6px 8px; border: 1px solid #e6dfd2; border-radius: 8px; background: #fff; }
+.ratio-block { padding: 10px 12px; border: 1px solid #f0d4d6; border-radius: 12px; background: #fff; }
+.ratio-box { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.ratio-line { display: flex; align-items: center; gap: 8px; }
+.ratio-line :deep(.el-input-number) { width: 120px; }
 </style>

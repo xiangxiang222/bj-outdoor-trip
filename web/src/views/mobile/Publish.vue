@@ -1,12 +1,5 @@
 <template>
   <div>
-    <p class="muted">{{ isActivity ? "提交后需管理员审核，通过后出现在活动 Tab。" : "提交后需管理员审核。规则在「我的」右上角「客服」。可按关键词先匹配已有线路。" }}</p>
-    <label>类型</label>
-    <select class="select" v-model="form.channel">
-      <option value="trip">户外线路（上首页）</option>
-      <option value="activity">同城局（上活动 Tab）</option>
-    </select>
-
     <template v-if="isActivity">
       <label>玩法</label>
       <div class="act-kinds">
@@ -47,121 +40,84 @@
     </template>
 
     <template v-else>
-      <label>匹配已有线路</label>
-      <input class="input" v-model="keyword" placeholder="输入关键词，点下方选用" @input="searchRoutes" />
-      <div class="chips" v-if="hits.length">
-        <div class="chip" v-for="r in hits" :key="r.id" @click="applyMatchedRoute(r)">{{ r.title }}</div>
+      <div class="sheet">
+        <div class="row"><span>线路</span>
+          <select class="select" v-model.number="form.routeId" @change="onRoute">
+            <option :value="0">{{ routes.length ? "选择已有线路" : "暂无可选线路" }}</option>
+            <option v-for="r in routes" :key="r.id" :value="r.id">{{ r.title }}</option>
+          </select>
+        </div>
+        <div class="row"><span>日期</span><input class="input" type="date" v-model="form.startDate" /></div>
+        <div class="row"><span>类型</span>
+          <select class="select" v-model="form.organizerType">
+            <option value="individual">个人开团</option>
+            <option value="company">公司开团</option>
+            <option value="campus">高校开团</option>
+          </select>
+        </div>
+        <div class="row" v-if="form.organizerType === 'company'"><span>公司名称</span><input class="input" v-model="form.companyName" placeholder="公司全称" /></div>
+        <div class="row" v-if="form.organizerType === 'campus'"><span>发起学校</span>
+          <CampusNamePicker v-model="form.companyName" kind="school" title="选择学校" placeholder="例如：北京大学" />
+        </div>
+        <p v-if="form.organizerType === 'campus'" class="hint">写在团上，表示哪个学校在组织，不限制谁能报名。</p>
+        <div class="row"><span>车型</span>
+          <select class="select" v-model="form.busTypeId">
+            <option v-for="b in buses" :key="b.id" :value="b.id">{{ b.name }}（{{ b.seats }}座）</option>
+          </select>
+        </div>
+        <div class="row"><span>成团人数</span><input class="input" type="number" v-model.number="form.minGroupSize" /></div>
+        <div class="row"><span>集合点</span>
+          <select class="select" v-model="form.meetupPoint">
+            <option v-for="m in meetups" :key="m" :value="m">{{ m }}</option>
+          </select>
+        </div>
+        <div class="row"><span>集合时间</span><input class="input" type="time" v-model="form.meetupTime" /></div>
+        <div class="row"><span>团型</span>
+          <select class="select" v-model="form.offerType">
+            <option v-for="o in offers" :key="o.key" :value="o.key">{{ o.label }}</option>
+          </select>
+        </div>
+        <div v-if="form.offerType === 'combo'" class="combo">
+          <p class="hint">组合团只对学生或已认证学生组织开放。</p>
+          <div class="row"><span>另一半身份</span>
+            <select class="select" v-model="form.comboRule.require">
+              <option value="student_or_group">学生或学生组织</option>
+              <option value="student">仅已认证学生</option>
+              <option value="group">仅已认证学生组织</option>
+            </select>
+          </div>
+          <div class="row"><span>另一半学校</span>
+            <CampusNamePicker v-model="form.comboRule.school" kind="school" title="选择学校" placeholder="可空" />
+          </div>
+        </div>
+        <template v-if="form.organizerType === 'campus'">
+          <div class="row"><span>仅师生</span><el-switch v-model="form.studentOnly" /></div>
+          <div class="row"><span>允许校友</span><el-switch v-model="form.alumniOk" /></div>
+          <div class="row"><span>超额抽签</span><el-switch v-model="form.oversub" /></div>
+          <p class="hint">报名超过座位时抽签确认出行人，没超过就全部确认。</p>
+          <p v-if="form.offerType === 'free'" class="hint">免费团如果报名范围留空，默认只让发起学校的师生报名。</p>
+          <div class="scope">
+            <div class="scope-h"><span>报名范围</span></div>
+            <p class="hint">谁可以报名。留空表示不限学校，也可以和发起学校不同。</p>
+            <CampusTargetList v-model="form.campusTargets" />
+          </div>
+          <div class="scope">
+            <GenderRatioFields v-model="form.genderRatio" :targets="form.campusTargets" />
+          </div>
+        </template>
+        <div class="row"><span>口令团</span><el-switch v-model="form.privateJoin" /></div>
+        <div class="row" v-if="form.privateJoin"><span>入团口令</span><input class="input" v-model="form.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" /></div>
+        <div class="note"><span>备注</span><textarea class="input" v-model="form.notes" rows="2" placeholder="选填" /></div>
       </div>
-      <label>线路标题</label>
-      <input class="input" v-model="form.title" placeholder="例如：慕田峪长城一日" />
-      <label>副标题</label>
-      <input class="input" v-model="form.subtitle" />
-      <label>封面</label>
-      <input class="input" type="file" accept="image/*" @change="onCover" />
-      <img v-if="form.cover" :src="form.cover" alt="" class="cover-preview" />
-      <label>天数</label>
-      <select class="select" v-model="form.days">
-        <option :value="1">1 日</option>
-        <option :value="2">2 日</option>
-        <option :value="3">3 日</option>
-        <option value="multi">多日</option>
-      </select>
-      <label>城市</label>
-      <select class="select" v-model="form.city">
-        <option value="">选择城区</option>
-        <option v-for="name in districts" :key="name" :value="name">{{ name }}</option>
-      </select>
-      <label>想怎么玩</label>
-      <div class="chips">
-        <div
-          class="play-tag"
-          v-for="t in tags"
-          :key="t.id"
-          :class="{ on: form.playTagIds.includes(t.id) }"
-          :style="{ background: t.color, opacity: form.playTagIds.includes(t.id) ? 1 : 0.45 }"
-          @click="toggleTag(t.id)"
-        >{{ t.name }}</div>
-      </div>
-      <label>团型</label>
-      <select class="select" v-model="form.offerType">
-        <option v-for="o in offers" :key="o.key" :value="o.key">{{ o.label }}</option>
-      </select>
-      <div v-if="form.offerType === 'combo'" class="card"><div class="pad">
-        <p class="muted">组合团目前只对学生或已认证的学生组织开放。写下对另一半的要求，报名的人会看到。</p>
-        <label>另一半身份</label>
-        <select class="select" v-model="form.comboRule.require">
-          <option value="student_or_group">学生或学生组织</option>
-          <option value="student">仅已认证学生</option>
-          <option value="group">仅已认证学生组织</option>
-        </select>
-        <label>另一半学校（可空）</label>
-        <CampusNamePicker v-model="form.comboRule.school" kind="school" title="选择学校" placeholder="可选，例如北京大学" />
-      </div></div>
-      <label>原价（元）</label>
-      <input class="input" type="number" v-model.number="form.originPrice" />
-      <label class="check-row"><input type="checkbox" v-model="form.memberPriceOn" /> 适用会员价</label>
-      <label class="check-row"><input type="checkbox" v-model="form.studentPriceOn" /> 适用学生价</label>
-      <label class="check-row"><input type="checkbox" v-model="form.oversub" /> 报超会抽（车位不够才抽）</label>
-      <label v-if="form.offerType !== 'free'">现价（可空，早鸟/特惠将按折扣算）</label>
-      <input v-if="form.offerType !== 'free'" class="input" type="number" v-model.number="form.offerPrice" />
-      <label>出发日期</label>
-      <input class="input" type="date" v-model="form.startDate" />
-      <label>组织类型</label>
-      <select class="select" v-model="form.organizerType">
-        <option value="individual">个人开团（先报名，出行前付款）</option>
-        <option value="company">公司开团（先报名，最后统一支付）</option>
-        <option value="campus">高校开团（先报名，出行前付款）</option>
-      </select>
-      <label v-if="form.organizerType === 'company'">公司名称</label>
-      <label v-if="form.organizerType === 'campus'">发起学校</label>
-      <input
-        v-if="form.organizerType === 'company'"
-        class="input"
-        v-model="form.companyName"
-        placeholder="公司全称"
-      />
-      <CampusNamePicker
-        v-if="form.organizerType === 'campus'"
-        v-model="form.companyName"
-        kind="school"
-        title="选择学校"
-        placeholder="例如：北京大学"
-      />
-      <p v-if="form.organizerType === 'campus'" class="muted">写在团上，表示哪个学校在组织，不限制谁能报名。</p>
-      <label class="check-row"><input type="checkbox" v-model="form.studentOnly" /> 仅师生</label>
-      <label class="check-row"><input type="checkbox" v-model="form.alumniOk" /> 允许已认证校友</label>
-      <p v-if="form.organizerType === 'campus' && form.offerType === 'free'" class="muted">高校免费团会默认打开抽签，并且只让发起学校的师生报名。报名范围里如果另外写了学校，就以报名范围为准。</p>
-      <label>报名范围</label>
-      <CampusTargetList v-model="form.campusTargets" />
-      <p class="muted">谁可以报名。留空表示不限学校，也可以和发起学校不同。两所学校都有同名学院时，要分开加。</p>
-      <GenderRatioFields v-if="form.organizerType === 'campus'" v-model="form.genderRatio" :targets="form.campusTargets" />
-      <label>大巴车型</label>
-      <select class="select" v-model="form.busTypeId">
-        <option v-for="b in buses" :key="b.id" :value="b.id">{{ b.name }}（{{ b.seats }}座）</option>
-      </select>
-      <label>最低成团人数</label>
-      <input class="input" type="number" v-model.number="form.minGroupSize" />
-      <label>集合点</label>
-      <select class="select" v-model="form.meetupPoint">
-        <option v-for="m in meetups" :key="m" :value="m">{{ m }}</option>
-      </select>
-      <label>集合时间</label>
-      <input class="input" type="time" v-model="form.meetupTime" />
-      <label>介绍</label>
-      <textarea class="input" v-model="form.description" rows="4" />
-      <label>视频链接</label>
-      <textarea class="input" v-model="form.videoUrls" rows="3" placeholder="一行一条。支持 B 站分享链接，如 https://www.bilibili.com/video/BVxxxx" />
-      <p class="muted">线路页会直接嵌播放器。请粘贴含 BV 号的完整链接。</p>
-      <label>备注</label>
-      <textarea class="input" v-model="form.notes" rows="2" />
     </template>
 
-    <label class="check-row"><input type="checkbox" v-model="form.privateJoin" /> 口令团（报名要口令）</label>
-    <p class="muted">列表会显示「口令团」。把口令发给要来的人；不填则自动生成 6 位。</p>
-    <input v-if="form.privateJoin" class="input" v-model="form.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" />
+    <template v-if="isActivity">
+      <div class="row switch-line"><span>口令团</span><el-switch v-model="form.privateJoin" /></div>
+      <input v-if="form.privateJoin" class="input" v-model="form.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" />
+    </template>
 
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
-    <button class="btn block" :disabled="loading" @click="submit">{{ loading ? "提交中…" : "提交审核" }}</button>
+    <button class="btn block" :disabled="loading" @click="submit">{{ loading ? "提交中…" : (isActivity ? "提交审核" : "发布") }}</button>
   </div>
 </template>
 
@@ -182,16 +138,15 @@ import { applyCampusPublish, emptyGenderRatio } from "@/utils/genderRatio";
 const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
-const tags = ref([]);
 const buses = ref([]);
 const err = ref("");
 const loading = ref(false);
 const offers = OFFER_TYPES;
-const meetups = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
+const defaultMeetups = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
+const meetups = ref(defaultMeetups.slice());
+const routes = ref([]);
 const districts = ["东城", "西城", "朝阳", "海淀", "丰台", "石景山", "通州", "顺义", "昌平", "大兴", "房山", "门头沟", "怀柔", "平谷", "密云", "延庆"];
 const kinds = ACTIVITY_KINDS;
-const keyword = ref("");
-const hits = ref([]);
 
 function tomorrow() {
   const d = new Date();
@@ -211,6 +166,7 @@ const form = ref({
   days: 1,
   city: startAsActivity ? "朝阳" : "",
   playTagIds: [],
+  routeId: 0,
   offerType: startAsActivity ? "free" : "full",
   originPrice: startAsActivity ? 0 : 199,
   offerPrice: null,
@@ -226,13 +182,13 @@ const form = ref({
   schools: "",
   colleges: "",
   campusTargets: [],
-  startDate: route.query.date || (startAsActivity ? tomorrow() : ""),
+  startDate: route.query.date || tomorrow(),
   organizerType: "individual",
   companyName: store.profile?.companyName || "",
   busTypeId: "",
   minGroupSize: startAsActivity ? 4 : 10,
   maxSeats: 12,
-  meetupPoint: startAsActivity ? "" : meetups[0],
+  meetupPoint: startAsActivity ? "" : defaultMeetups[0],
   meetupTime: startAsActivity ? "19:30" : "07:30",
   description: "",
   videoUrls: "",
@@ -277,9 +233,9 @@ watch(
       form.value.city = form.value.city || "朝阳";
       form.value.startDate = form.value.startDate || tomorrow();
       form.value.activityKind = form.value.activityKind || "掼蛋";
-      if (meetups.includes(form.value.meetupPoint)) form.value.meetupPoint = "";
+      if (meetups.value.includes(form.value.meetupPoint)) form.value.meetupPoint = "";
     } else if (!form.value.meetupPoint) {
-      form.value.meetupPoint = meetups[0];
+      form.value.meetupPoint = meetups.value[0];
       form.value.meetupTime = "07:30";
     }
   }
@@ -287,11 +243,29 @@ watch(
 
 onMounted(async () => {
   if (!requireLogin(store, router, route)) return;
-  const [tagRes, busRes] = await Promise.all([http.get("/play-tags"), http.get("/buses")]);
-  tags.value = tagRes.data || [];
+  const jobs = [http.get("/buses")];
+  if (!startAsActivity) jobs.push(http.get("/routes"));
+  const [busRes, routeRes] = await Promise.all(jobs);
   buses.value = busRes.data || [];
   form.value.busTypeId = buses.value[0]?.id || "";
+  routes.value = routeRes?.data || [];
 });
+
+async function onRoute() {
+  const id = Number(form.value.routeId);
+  if (!id) return;
+  try {
+    const detail = (await http.get("/routes/" + id)).data || {};
+    const points = (detail.meetupPoints || []).map((p) => p.name).filter(Boolean);
+    if (points.length) {
+      meetups.value = points;
+      form.value.meetupPoint = points[0];
+    }
+    if (detail.minGroupSize) form.value.minGroupSize = detail.minGroupSize;
+  } catch (ex) {
+    err.value = ex.message;
+  }
+}
 
 function pickKind(key) {
   const prev = form.value.activityKind;
@@ -299,53 +273,11 @@ function pickKind(key) {
   if (!form.value.title || form.value.title === prev) form.value.title = key;
 }
 
-async function searchRoutes() {
-  const q = keyword.value.trim();
-  if (!q) {
-    hits.value = [];
-    return;
-  }
-  try {
-    hits.value = ((await http.get("/routes", { params: { q } })).data || []).slice(0, 8);
-  } catch {
-    hits.value = [];
-  }
-}
-function applyMatchedRoute(r) {
-  form.value.title = r.title || form.value.title;
-  form.value.subtitle = r.subtitle || "";
-  form.value.cover = r.cover || "";
-  form.value.days = r.days || 1;
-  form.value.city = r.region || form.value.city;
-  form.value.originPrice = r.fromPrice || form.value.originPrice;
-  keyword.value = r.title;
-  hits.value = [];
-}
-function toggleTag(id) {
-  const ids = form.value.playTagIds;
-  form.value.playTagIds = ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
-}
-
-async function onCover(e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  const data = new FormData();
-  data.append("file", file);
-  try {
-    const res = await http.post("/upload", data);
-    form.value.cover = res.data.url;
-  } catch (ex) {
-    err.value = ex.message;
-  }
-}
-
 async function submit() {
   err.value = "";
   loading.value = true;
   try {
     const payload = { ...form.value };
-    payload.videos = payload.videoUrls;
-    delete payload.videoUrls;
     if (payload.channel === "activity") {
       payload.days = 1;
       payload.offerType = Number(payload.originPrice) > 0 ? payload.offerType || "full" : "free";
@@ -355,17 +287,46 @@ async function submit() {
         loading.value = false;
         return;
       }
-    } else if (payload.organizerType === "company" && !String(payload.companyName || "").trim()) {
+      const res = await http.post("/trips", payload);
+      router.push("/m/schedule/" + res.data.id + "?posted=1");
+      return;
+    }
+    if (!payload.routeId) {
+      err.value = "请选择线路";
+      loading.value = false;
+      return;
+    }
+    if (payload.organizerType === "company" && !String(payload.companyName || "").trim()) {
       err.value = "公司开团请填写公司名称";
       loading.value = false;
       return;
-    } else if (payload.organizerType === "campus" && !String(payload.companyName || "").trim()) {
+    }
+    if (payload.organizerType === "campus" && !String(payload.companyName || "").trim()) {
       err.value = "高校开团请填写学校";
       loading.value = false;
       return;
     }
     applyCampusPublish(payload);
-    const res = await http.post("/trips", payload);
+    const res = await http.post("/schedules", {
+      routeId: Number(payload.routeId),
+      startDate: payload.startDate,
+      organizerType: payload.organizerType,
+      companyName: payload.companyName,
+      busTypeId: payload.busTypeId,
+      minGroupSize: Number(payload.minGroupSize),
+      meetupPoint: payload.meetupPoint,
+      meetupTime: payload.meetupTime,
+      offerType: payload.offerType,
+      notes: payload.notes,
+      studentOnly: payload.studentOnly,
+      alumniOk: payload.alumniOk,
+      oversub: payload.oversub,
+      campusTargets: payload.campusTargets,
+      genderRatio: payload.genderRatio,
+      privateJoin: payload.privateJoin,
+      joinCode: payload.joinCode,
+      comboRule: payload.offerType === "combo" ? payload.comboRule : undefined,
+    });
     router.push("/m/schedule/" + res.data.id + "?posted=1");
   } catch (e) {
     err.value = e.message;
@@ -376,5 +337,15 @@ async function submit() {
 </script>
 
 <style scoped>
-.cover-preview { width: 100%; height: 140px; object-fit: cover; border-radius: 12px; margin-bottom: 8px; }
+.sheet { margin-top: 8px; background: #fff; border: 1px solid #f0e8e8; border-radius: 18px; overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 8px 14px; border-bottom: 1px solid #f4f4f5; }
+.row > span { width: 84px; flex: none; color: #3a3a3a; }
+.row :deep(.el-switch) { margin-left: auto; }
+.row .input, .row .select { flex: 1; margin: 0; text-align: right; background: transparent; border: 0; }
+.hint { margin: 0; padding: 0 14px 10px; color: #8d8d8d; font-size: 13px; line-height: 1.5; }
+.scope { padding: 12px 14px 4px; }
+.scope-h { font-weight: 700; margin-bottom: 4px; }
+.note { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px 16px; }
+.note .input { margin: 0; }
+.switch-line { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
 </style>

@@ -165,23 +165,25 @@
             <el-option label="全价团" value="full" />
           </el-select>
         </el-form-item>
-        <el-form-item label="仅师生">
-          <el-switch v-model="neu.studentOnly" />
-        </el-form-item>
-        <el-form-item label="允许校友">
-          <el-switch v-model="neu.alumniOk" />
-        </el-form-item>
-        <el-form-item label="报超会抽">
-          <el-switch v-model="neu.oversub" />
-          <span v-if="neu.organizerType === 'campus' && neu.offerType === 'free'" class="muted" style="margin-left:8px">高校免费团默认开启：先报名待确认，超过座位才抽签</span>
-        </el-form-item>
+        <template v-if="neu.organizerType === 'campus'">
+          <el-form-item label="仅师生">
+            <el-switch v-model="neu.studentOnly" />
+          </el-form-item>
+          <el-form-item label="允许校友">
+            <el-switch v-model="neu.alumniOk" />
+          </el-form-item>
+          <el-form-item label="超额抽签">
+            <el-switch v-model="neu.oversub" />
+            <span v-if="neu.offerType === 'free'" class="muted" style="margin-left:8px">免费团默认开启：报名超过座位才抽签确认，未超过则全部确认</span>
+          </el-form-item>
+        </template>
         <el-form-item label="口令团">
           <el-switch v-model="neu.privateJoin" />
         </el-form-item>
         <el-form-item v-if="neu.privateJoin" label="入团口令">
           <el-input v-model="neu.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" />
         </el-form-item>
-        <el-form-item label="报名范围">
+        <el-form-item v-if="neu.organizerType === 'campus'" label="报名范围">
           <AdminCampusTargetList v-model="neu.campusTargets" />
           <p class="muted" style="margin:6px 0 0">谁可以报名。留空表示不限学校，也可以和发起学校不同。高校免费团如果这里留空，默认只让发起学校的师生报名。</p>
         </el-form-item>
@@ -298,29 +300,31 @@
     </el-dialog>
 
     <el-dialog v-model="showLimit" title="报名限制" width="720px">
-      <p v-if="cur">「{{ cur.route?.title }} {{ cur.startDate }}」可限制师生/校友，或在报名超过座位时抽签确认出行人。</p>
+      <p v-if="cur">「{{ cur.route?.title }} {{ cur.startDate }}」{{ cur.organizerType === 'campus' ? '可以改成团人数，也可以限制师生、报名范围和男女比例。' : '可以改成团人数。师生、报名范围和男女比例只在高校开团里设置。' }}</p>
       <el-form label-width="100px">
         <el-form-item label="成团人数">
           <el-input-number v-model="limitForm.minGroupSize" :min="1" :max="80" />
           <p class="muted" style="margin:6px 0 0">只算真实报名。改完后如果已经够人数，这个团会标成已成团。</p>
         </el-form-item>
-        <el-form-item label="仅师生">
-          <el-switch v-model="limitForm.studentOnly" />
-        </el-form-item>
-        <el-form-item label="允许校友">
-          <el-switch v-model="limitForm.alumniOk" />
-        </el-form-item>
-        <el-form-item label="报超会抽">
-          <el-switch v-model="limitForm.oversub" />
-        </el-form-item>
-        <el-form-item label="报名范围">
-          <AdminCampusTargetList v-model="limitForm.campusTargets" />
-          <p class="muted" style="margin:6px 0 0">谁可以报名。留空表示不限学校。发起学校只表示谁在组织。</p>
-        </el-form-item>
-        <el-form-item v-if="cur && cur.organizerType === 'campus'" label="男女比例">
-          <GenderRatioFields v-model="limitForm.genderRatio" :targets="limitForm.campusTargets" />
-        </el-form-item>
-        <p class="muted">报超会抽：先报名待确认。人数超过座位才抽签，未超过则全部确认。不要对外说「抽名额」。</p>
+        <template v-if="cur && cur.organizerType === 'campus'">
+          <el-form-item label="仅师生">
+            <el-switch v-model="limitForm.studentOnly" />
+          </el-form-item>
+          <el-form-item label="允许校友">
+            <el-switch v-model="limitForm.alumniOk" />
+          </el-form-item>
+          <el-form-item label="超额抽签">
+            <el-switch v-model="limitForm.oversub" />
+          </el-form-item>
+          <el-form-item label="报名范围">
+            <AdminCampusTargetList v-model="limitForm.campusTargets" />
+            <p class="muted" style="margin:6px 0 0">谁可以报名。留空表示不限学校。发起学校只表示谁在组织。</p>
+          </el-form-item>
+          <el-form-item label="男女比例">
+            <GenderRatioFields v-model="limitForm.genderRatio" :targets="limitForm.campusTargets" />
+          </el-form-item>
+          <p class="muted">超额抽签：先报名待确认。人数超过座位才抽签，未超过则全部确认。</p>
+        </template>
       </el-form>
       <template #footer>
         <el-button @click="showLimit = false">取消</el-button>
@@ -899,10 +903,14 @@ async function review(row, status) {
   }
 }
 async function create() {
+  const campus = neu.value.organizerType === "campus";
   const payload = {
     ...neu.value,
-    campusTargets: normalizeCampusTargets(neu.value.campusTargets),
-    genderRatio: neu.value.organizerType === "campus" ? genderRatioPayload(neu.value.genderRatio) : { on: false },
+    studentOnly: campus ? neu.value.studentOnly : false,
+    alumniOk: campus ? neu.value.alumniOk : false,
+    oversub: campus ? neu.value.oversub : false,
+    campusTargets: campus ? normalizeCampusTargets(neu.value.campusTargets) : [],
+    genderRatio: campus ? genderRatioPayload(neu.value.genderRatio) : { on: false },
   };
   delete payload.schools;
   delete payload.colleges;

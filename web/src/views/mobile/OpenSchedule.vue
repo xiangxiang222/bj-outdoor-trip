@@ -44,14 +44,17 @@
       <option value="free">免费团</option>
       <option value="full">全价团</option>
     </select>
-    <label class="check-row"><input type="checkbox" v-model="form.studentOnly" /> 仅师生</label>
-    <label class="check-row"><input type="checkbox" v-model="form.alumniOk" /> 允许已认证校友</label>
-    <label class="check-row"><input type="checkbox" v-model="form.oversub" /> 报超会抽（车位不够才抽）</label>
-    <p v-if="form.organizerType === 'campus' && form.offerType === 'free'" class="muted">高校免费团会默认打开抽签。报名范围留空时，默认只让发起学校的师生报名。</p>
-    <label>报名范围</label>
-    <CampusTargetList v-model="form.campusTargets" />
-    <p class="muted">谁可以报名。留空表示不限学校，也可以和发起学校不同。</p>
-    <GenderRatioFields v-if="form.organizerType === 'campus'" v-model="form.genderRatio" :targets="form.campusTargets" />
+    <template v-if="form.organizerType === 'campus'">
+      <div class="row"><span>仅师生</span><el-switch v-model="form.studentOnly" /></div>
+      <div class="row"><span>允许校友</span><el-switch v-model="form.alumniOk" /></div>
+      <div class="row"><span>超额抽签</span><el-switch v-model="form.oversub" /></div>
+      <p class="muted">报名超过座位时抽签确认出行人，没超过就全部确认。</p>
+      <p v-if="form.offerType === 'free'" class="muted">免费团如果报名范围留空，默认只让发起学校的师生报名。</p>
+      <label>报名范围</label>
+      <CampusTargetList v-model="form.campusTargets" />
+      <p class="muted">谁可以报名。留空表示不限学校，也可以和发起学校不同。</p>
+      <GenderRatioFields v-model="form.genderRatio" :targets="form.campusTargets" />
+    </template>
     <label class="check-row"><input type="checkbox" v-model="form.privateJoin" /> 口令团（报名要口令）</label>
     <p class="muted">列表会显示「口令团」。把口令发给要来的人；不填则自动生成 6 位。</p>
     <input v-if="form.privateJoin" class="input" v-model="form.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" />
@@ -160,3 +163,7 @@ async function submit() {
   }
 }
 </script>
+
+<style scoped>
+.row { display: flex; align-items: center; justify-content: space-between; min-height: 44px; gap: 12px; }
+</style>
