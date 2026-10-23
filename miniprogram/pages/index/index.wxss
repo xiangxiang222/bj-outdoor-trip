@@ -130,6 +130,29 @@
 }
 .home-tile-title { font-size: calc(32rpx * var(--ui-scale)); font-weight: 700; color: #1b4332; }
 .home-foot { text-align: center; padding: 16rpx; color: #2d6a4f; }
+.publish-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin: 0 16rpx 16rpx;
+  padding: 22rpx 24rpx;
+  border-radius: 24rpx;
+  background: #fff;
+  border: 2rpx solid #f0d4d6;
+}
+.publish-entry-copy { min-width: 0; }
+.publish-entry-title { font-size: calc(32rpx * var(--ui-scale)); font-weight: 700; color: #1a1a1a; }
+.publish-entry-sub { margin-top: 6rpx; color: #8d8d8d; font-size: calc(24rpx * var(--ui-scale)); }
+.publish-entry-go {
+  flex-shrink: 0;
+  padding: 12rpx 24rpx;
+  border-radius: 999rpx;
+  background: #8c3038;
+  color: #fff;
+  font-size: calc(26rpx * var(--ui-scale));
+  font-weight: 700;
+}
 .moments-entry {
   display: flex;
   align-items: center;

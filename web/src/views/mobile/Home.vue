@@ -79,7 +79,6 @@
       <div class="tools">
         <button class="tool-btn" type="button" @click="sort = cycleSort(sort)">{{ sortLabel(sort) }}</button>
         <button class="tool-btn" type="button" @click="fold.extra = !fold.extra">{{ fold.extra ? "收起" : "筛选" }}</button>
-        <button class="tool-btn play" type="button" @click="goPublish()">发团</button>
       </div>
     </div>
 
@@ -133,6 +132,13 @@
       </span>
     </div>
 
+    <button class="publish-entry" type="button" @click="goPublish()">
+      <span class="publish-entry-copy">
+        <strong>发个团去玩吧</strong>
+        <span>选条线路，过审就能喊人上车</span>
+      </span>
+      <span class="publish-entry-go">走起</span>
+    </button>
     <article class="feed-card" v-for="s in groups" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
       <div class="feed-cover">
         <img v-if="coverOf(s)" :src="coverOf(s)" :alt="s.route?.title || ''" loading="lazy" decoding="async" />

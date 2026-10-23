@@ -1963,6 +1963,43 @@ html[data-night="dark"] .moments-entry {
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
 }
+.publish-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 14px 14px;
+  border: 1px solid #f0d4d6;
+  border-radius: 16px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+.publish-entry-copy { min-width: 0; }
+.publish-entry-copy strong {
+  display: block;
+  font-size: calc(16px * var(--ui-scale));
+}
+.publish-entry-copy span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: calc(13px * var(--ui-scale));
+}
+.publish-entry-go {
+  flex: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #8c3038;
+  color: #fff;
+  font-size: calc(13px * var(--ui-scale));
+  font-weight: 700;
+}
 .feed-card {
   display: grid;
   grid-template-columns: 108px 1fr;
