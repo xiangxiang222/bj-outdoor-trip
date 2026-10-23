@@ -175,8 +175,11 @@
 </view>
 <canvas type="2d" id="momentsCanvas" class="moments-offscreen"></canvas>
 <view class="moments-mask" wx:if="{{posterPick}}" catchtap="closePosterPick">
-  <view class="moments-sheet poster-pick {{posterCoverBar ? 'cover-bar' : 'above-tab'}}" catchtap="noop">
-    <view class="poster-pick-title">{{tr.t('选择要放进海报的团', lang)}}</view>
+  <view class="moments-sheet poster-pick {{posterCoverBar ? 'cover-bar' : 'above-tab'}} {{dark ? 'is-dark' : ''}}" catchtap="noop">
+    <view class="poster-head">
+      <view class="poster-pick-title">{{tr.t('选择要放进海报的团', lang)}}</view>
+      <view class="poster-count {{posterCount ? 'on' : ''}}">{{tr.t('已选', lang)}} {{posterCount}}/6</view>
+    </view>
     <view class="muted poster-pick-hint">{{tr.t('最多选 6 个团', lang)}}</view>
     <view class="poster-tools">
       <view class="poster-chip {{posterRange=='all' ? 'on' : ''}}" data-range="all" bindtap="setPosterRange">{{tr.t('全部', lang)}}</view>
@@ -188,19 +191,34 @@
       <view class="poster-date">{{posterDate || tr.t('选一个出发日期', lang)}}</view>
     </picker>
     <input class="poster-search" style="height:80rpx;" placeholder-class="poster-ph" placeholder-style="color:#8d8d8d;font-size:28rpx;" placeholder="{{tr.t('搜索团名、集合点', lang)}}" value="{{posterQuery}}" bindinput="onPosterQuery" confirm-type="search" />
+    <view wx:if="{{posterPicked.length}}" class="poster-picked">
+      <view class="poster-picked-chip" wx:for="{{posterPicked}}" wx:key="id" bindtap="togglePoster" data-id="{{item.id}}">
+        <text class="poster-picked-name">{{item.md}}</text>
+        <text class="poster-picked-x">×</text>
+      </view>
+    </view>
     <view class="muted poster-pick-empty" wx:if="{{!posterReady}}">{{tr.t('正在加载', lang)}}</view>
     <view class="muted poster-pick-empty" wx:elif="{{!posterTrips.length}}">{{tr.t('还没有可以做成海报的团', lang)}}</view>
     <view class="muted poster-pick-empty" wx:elif="{{posterRange=='date' && !posterDate}}">{{tr.t('选一个出发日期', lang)}}</view>
-    <view class="muted poster-pick-empty" wx:elif="{{!posterShown.length}}">{{tr.t('没有符合条件的团', lang)}}</view>
+    <view class="muted poster-pick-empty" wx:elif="{{!posterTotal}}">{{tr.t('没有符合条件的团', lang)}}</view>
     <scroll-view wx:else scroll-y class="poster-pick-list" enhanced show-scrollbar="{{false}}">
       <view class="poster-pick-row{{item.on ? ' on' : ''}}" wx:for="{{posterShown}}" wx:key="id" bindtap="togglePoster" data-id="{{item.id}}">
-        <view class="poster-pick-mark"></view>
+        <view class="poster-date-mark">
+          <text class="poster-date-day">{{item.day}}</text>
+          <text class="poster-date-md">{{item.md}}</text>
+        </view>
         <view class="poster-pick-copy">
           <text class="poster-pick-name">{{tr.t(item.title, lang)}}</text>
-          <text class="poster-pick-when">{{item.md}} {{tr.t(item.week, lang)}}<text wx:if="{{item.meet}}"> · {{tr.t(item.meet, lang)}}</text></text>
+          <text class="poster-pick-when">{{tr.t(item.week, lang)}}<text wx:if="{{item.meet}}"> · {{tr.t(item.meet, lang)}}</text></text>
         </view>
+        <view class="poster-pick-mark"></view>
       </view>
     </scroll-view>
+    <view class="poster-pager" wx:if="{{posterPages > 1}}">
+      <view class="poster-page-btn {{posterPage<=1 ? 'off' : ''}}" data-dir="-1" bindtap="shiftPosterPage">{{tr.t('上一页', lang)}}</view>
+      <text class="poster-page-num">{{posterPage}} / {{posterPages}}</text>
+      <view class="poster-page-btn {{posterPage>=posterPages ? 'off' : ''}}" data-dir="1" bindtap="shiftPosterPage">{{tr.t('下一页', lang)}}</view>
+    </view>
     <view class="btn" bindtap="makePoster">{{tr.t('生成海报', lang)}}{{posterCount ? ' · ' + posterCount : ''}}</view>
     <view class="btn ghost" bindtap="closePosterPick">{{tr.t('关闭', lang)}}</view>
   </view>

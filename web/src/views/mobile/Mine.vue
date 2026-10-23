@@ -177,7 +177,10 @@
 
     <div v-if="posterPick" class="moments-mask" @click.self="posterPick = false" @touchmove.self.prevent>
       <div class="moments-sheet poster-pick" role="dialog" aria-label="选择团">
-        <p class="poster-pick-title">选择要放进海报的团</p>
+        <div class="poster-head">
+          <p class="poster-pick-title">选择要放进海报的团</p>
+          <span class="poster-count" :class="{ on: posterCount }">已选 {{ posterCount }}/6</span>
+        </div>
         <p class="poster-pick-hint">最多选 6 个团</p>
         <div class="poster-tools">
           <button type="button" :class="{ on: posterRange === 'all' }" @click="posterRange = 'all'">全部</button>
@@ -187,11 +190,17 @@
         </div>
         <input v-if="posterRange === 'date'" v-model="posterDate" class="poster-date" type="date" />
         <input v-model="posterQuery" class="poster-search" type="search" placeholder="搜索团名、集合点" />
+        <div v-if="posterPicked.length" class="poster-picked">
+          <button v-for="item in posterPicked" :key="item.id" type="button" class="poster-picked-chip" :title="item.md + ' ' + item.title" @click="togglePoster(item)">
+            <span>{{ item.md }}</span>
+            <i>×</i>
+          </button>
+        </div>
         <p v-if="posterLimit" class="poster-pick-limit">一张海报最多放 6 个团</p>
-        <p v-if="posterLoading" class="muted">正在加载</p>
-        <p v-else-if="!posterTrips.length" class="muted">还没有可以做成海报的团</p>
-        <p v-else-if="posterRange === 'date' && !posterDate" class="muted">选一个出发日期</p>
-        <p v-else-if="!posterView.length" class="muted">没有符合条件的团</p>
+        <p v-if="posterLoading" class="muted poster-pick-empty">正在加载</p>
+        <p v-else-if="!posterTrips.length" class="muted poster-pick-empty">还没有可以做成海报的团</p>
+        <p v-else-if="posterRange === 'date' && !posterDate" class="muted poster-pick-empty">选一个出发日期</p>
+        <p v-else-if="!posterFiltered.length" class="muted poster-pick-empty">没有符合条件的团</p>
         <div v-else class="poster-pick-list">
           <button
             v-for="item in posterView"
@@ -201,12 +210,21 @@
             :class="{ on: item.on }"
             @click="togglePoster(item)"
           >
-            <i class="poster-pick-mark"></i>
+            <span class="poster-date-mark">
+              <b>{{ item.day }}</b>
+              <small>{{ item.md }}</small>
+            </span>
             <span class="poster-pick-copy">
               <strong>{{ item.title }}</strong>
-              <em>{{ item.when }}</em>
+              <em>{{ item.meet ? item.week + " · " + item.meet : item.week }}</em>
             </span>
+            <i class="poster-pick-mark"></i>
           </button>
+        </div>
+        <div v-if="posterPages > 1" class="poster-pager">
+          <button type="button" class="poster-page-btn" :disabled="posterPageSafe <= 1" @click="posterPage = posterPageSafe - 1">上一页</button>
+          <span class="poster-page-num">{{ posterPageSafe }} / {{ posterPages }}</span>
+          <button type="button" class="poster-page-btn" :disabled="posterPageSafe >= posterPages" @click="posterPage = posterPageSafe + 1">下一页</button>
         </div>
         <div class="share-actions">
           <button class="btn" type="button" :disabled="!posterChosen" @click="makePoster">
@@ -282,12 +300,25 @@ const posterLimit = ref(false);
 const posterRange = ref("all");
 const posterDate = ref("");
 const posterQuery = ref("");
+const posterPage = ref(1);
+const POSTER_PAGE_SIZE = 6;
 let posterRows = [];
 let momentsCanvas = null;
 const WEEK = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 const posterChosen = computed(() => posterTrips.value.some((row) => row.on));
 const posterCount = computed(() => posterTrips.value.filter((row) => row.on).length);
-const posterView = computed(() => posterTrips.value.filter((item) => inPosterRange(item.date, posterRange.value, posterDate.value) && fuzzyHit(item.blob, posterQuery.value)));
+const posterPicked = computed(() => posterTrips.value.filter((row) => row.on));
+const posterFiltered = computed(() => posterTrips.value.filter((item) => inPosterRange(item.date, posterRange.value, posterDate.value) && fuzzyHit(item.blob, posterQuery.value)));
+const posterPages = computed(() => (posterFiltered.value.length ? Math.ceil(posterFiltered.value.length / POSTER_PAGE_SIZE) : 0));
+const posterPageSafe = computed(() => (posterPages.value ? Math.min(posterPage.value, posterPages.value) : 1));
+const posterView = computed(() => {
+  const start = (posterPageSafe.value - 1) * POSTER_PAGE_SIZE;
+  return posterFiltered.value.slice(start, start + POSTER_PAGE_SIZE);
+});
+
+watch([posterRange, posterDate, posterQuery], () => {
+  posterPage.value = 1;
+});
 
 watch([posterPick, momentsOpen], ([picking, open]) => {
   document.body.style.overflow = picking || open ? "hidden" : "";
@@ -415,13 +446,14 @@ function inPosterRange(iso, range, picked) {
   const end = dayStamp(range === "week" ? 6 : 29);
   return iso >= start && iso <= end;
 }
-function posterWhen(row) {
+function posterParts(row) {
   const iso = String(row.startDate || "").slice(0, 10);
   const d = new Date(`${iso}T00:00:00`);
   const meet = String(row.meetupPoint || "").trim();
-  if (Number.isNaN(d.getTime())) return [iso, meet].filter(Boolean).join(" · ");
-  const md = `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")} ${WEEK[d.getDay()]}`;
-  return meet ? `${md} · ${meet}` : md;
+  if (Number.isNaN(d.getTime())) return { date: iso, md: iso, day: "", week: "", meet, when: [iso, meet].filter(Boolean).join(" · ") };
+  const md = `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, "0")}`;
+  const week = WEEK[d.getDay()];
+  return { date: iso, md, day: String(d.getDate()), week, meet, when: meet ? `${md} ${week} · ${meet}` : `${md} ${week}` };
 }
 function posterId(row, index) {
   return row.id != null ? String(row.id) : `i${index}`;
@@ -433,6 +465,7 @@ async function openPoster() {
   posterRange.value = "all";
   posterDate.value = "";
   posterQuery.value = "";
+  posterPage.value = 1;
   posterTrips.value = [];
   posterRows = [];
   try {
@@ -443,10 +476,9 @@ async function openPoster() {
     posterTrips.value = list.map((row, index) => ({
       id: posterId(row, index),
       title: row.route.title,
-      when: posterWhen(row),
-      date: String(row.startDate || "").slice(0, 10),
       blob: posterBlob(row),
       on: false,
+      ...posterParts(row),
     }));
   } catch {
     posterPick.value = false;

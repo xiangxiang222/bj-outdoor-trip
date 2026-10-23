@@ -43,8 +43,26 @@ function inPosterRange(iso, range, picked) {
   return iso >= start && iso <= end;
 }
 
+const POSTER_PAGE_SIZE = 6;
+
 function posterShown(trips, range, date, query) {
   return (trips || []).filter((item) => inPosterRange(item.date, range, date) && fuzzyHit(item.blob, query));
+}
+
+function posterViewState(trips, range, date, query, page) {
+  const all = posterShown(trips, range, date, query);
+  const pages = all.length ? Math.ceil(all.length / POSTER_PAGE_SIZE) : 0;
+  const safe = pages ? Math.min(Math.max(1, Number(page) || 1), pages) : 1;
+  const start = (safe - 1) * POSTER_PAGE_SIZE;
+  const picked = (trips || []).filter((item) => item.on);
+  return {
+    posterShown: all.slice(start, start + POSTER_PAGE_SIZE),
+    posterPage: safe,
+    posterPages: pages,
+    posterTotal: all.length,
+    posterPicked: picked,
+    posterCount: picked.length,
+  };
 }
 
 function posterItem(row, index) {
@@ -57,6 +75,7 @@ function posterItem(row, index) {
     date: iso,
     blob: posterBlob(row),
     md: ok ? (d.getMonth() + 1) + "." + String(d.getDate()).padStart(2, "0") : iso,
+    day: ok ? String(d.getDate()) : "",
     week: ok ? POSTER_WEEK[d.getDay()] : "",
     meet: String(row.meetupPoint || "").trim(),
     on: false,
@@ -122,6 +141,10 @@ Page({
     posterReady: false,
     posterTrips: [],
     posterShown: [],
+    posterPicked: [],
+    posterPage: 1,
+    posterPages: 0,
+    posterTotal: 0,
     posterCount: 0,
     posterRange: "all",
     posterDate: "",
@@ -323,6 +346,10 @@ Page({
       posterReady: false,
       posterTrips: [],
       posterShown: [],
+      posterPicked: [],
+      posterPage: 1,
+      posterPages: 0,
+      posterTotal: 0,
       posterCount: 0,
       posterRange: "all",
       posterDate: "",
@@ -334,11 +361,10 @@ Page({
         const rows = groups.filter((row) => row && row.route && String(row.route.title || "").trim() && row.startDate);
         this._posterRows = rows;
         const trips = rows.map((row, index) => posterItem(row, index));
-        this.setData({
+        this.setData(Object.assign({
           posterReady: true,
           posterTrips: trips,
-          posterShown: posterShown(trips, "all", "", ""),
-        });
+        }, posterViewState(trips, "all", "", "", 1)));
       })
       .catch(() => {
         this.posterChrome({ posterPick: false });
@@ -347,24 +373,28 @@ Page({
   },
   setPosterRange(e) {
     const range = (e.currentTarget.dataset && e.currentTarget.dataset.range) || "all";
-    this.setData({
+    this.setData(Object.assign({
       posterRange: range,
-      posterShown: posterShown(this.data.posterTrips, range, this.data.posterDate, this.data.posterQuery),
-    });
+    }, posterViewState(this.data.posterTrips, range, this.data.posterDate, this.data.posterQuery, 1)));
   },
   onPosterDate(e) {
     const date = (e.detail && e.detail.value) || "";
-    this.setData({
+    this.setData(Object.assign({
       posterDate: date,
-      posterShown: posterShown(this.data.posterTrips, this.data.posterRange, date, this.data.posterQuery),
-    });
+    }, posterViewState(this.data.posterTrips, this.data.posterRange, date, this.data.posterQuery, 1)));
   },
   onPosterQuery(e) {
     const query = (e.detail && e.detail.value) || "";
-    this.setData({
+    this.setData(Object.assign({
       posterQuery: query,
-      posterShown: posterShown(this.data.posterTrips, this.data.posterRange, this.data.posterDate, query),
-    });
+    }, posterViewState(this.data.posterTrips, this.data.posterRange, this.data.posterDate, query, 1)));
+  },
+  shiftPosterPage(e) {
+    const dir = Number(e.currentTarget.dataset.dir);
+    if (!dir) return;
+    const page = this.data.posterPage + dir;
+    if (page < 1 || page > this.data.posterPages) return;
+    this.setData(posterViewState(this.data.posterTrips, this.data.posterRange, this.data.posterDate, this.data.posterQuery, page));
   },
   togglePoster(e) {
     const id = String(e.currentTarget.dataset.id || "");
@@ -377,11 +407,9 @@ Page({
       return;
     }
     const next = trips.map((item) => (item.id === id ? Object.assign({}, item, { on: !item.on }) : item));
-    this.setData({
+    this.setData(Object.assign({
       posterTrips: next,
-      posterShown: posterShown(next, this.data.posterRange, this.data.posterDate, this.data.posterQuery),
-      posterCount: next.filter((item) => item.on).length,
-    });
+    }, posterViewState(next, this.data.posterRange, this.data.posterDate, this.data.posterQuery, this.data.posterPage)));
   },
   closePosterPick() {
     this.posterChrome({ posterPick: false });
