@@ -153,7 +153,7 @@ const subtitle = computed(() => {
     signin: "连续签到，积分直接入账",
     orders: "待出发、待评价和全部报名",
     order: "集合、费用和订单号",
-    publish: "提交后需管理员审核",
+    publish: route.query.channel === "activity" ? "提交后需管理员审核，通过后出现在活动 Tab。" : "选一条已经通过的线路，填好这场出发就能发团。",
     "route-apply": "通过后出现在线路目录",
     feedback: "体验问题、活动与领队",
   };

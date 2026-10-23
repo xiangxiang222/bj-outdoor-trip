@@ -78,6 +78,10 @@ export function applyCampusPublish(payload) {
   delete payload.lotteryMode;
   if (payload.organizerType !== "campus") {
     delete payload.genderRatio;
+    payload.studentOnly = false;
+    payload.alumniOk = false;
+    payload.oversub = false;
+    payload.campusTargets = [];
     return payload;
   }
   payload.genderRatio = genderRatioPayload(payload.genderRatio);
