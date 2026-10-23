@@ -39,7 +39,7 @@
       </el-table-column>
       <el-table-column label="状态" width="130">
         <template #default="{ row }">
-          {{ scheduleStatusText(row.status) }}
+          {{ scheduleStatusText(row.status === 'recruiting' && row.guaranteed ? 'confirmed' : row.status) }}
           <span v-if="row.startedAt && row.status !== 'cancelled'"> · 已开团</span>
           <span v-if="row.reviewStatus === 'pending'" style="color:#c77d3a"> · 待审</span>
           <span v-else-if="row.reviewStatus === 'rejected'" style="color:#bc4749"> · 驳回</span>
@@ -295,6 +295,10 @@
     <el-dialog v-model="showLimit" title="报名限制" width="720px">
       <p v-if="cur">「{{ cur.route?.title }} {{ cur.startDate }}」可限制师生/校友，或在报名超过座位时抽签确认出行人。</p>
       <el-form label-width="100px">
+        <el-form-item label="成团人数">
+          <el-input-number v-model="limitForm.minGroupSize" :min="1" :max="80" />
+          <p class="muted" style="margin:6px 0 0">只算真实报名。改完后如果已经够人数，这个团会标成已成团。</p>
+        </el-form-item>
         <el-form-item label="仅师生">
           <el-switch v-model="limitForm.studentOnly" />
         </el-form-item>
@@ -415,7 +419,7 @@ const checkinTitle = computed(() => {
 const showLimit = ref(false);
 const savingLimit = ref(false);
 const drawingId = ref(0);
-const limitForm = ref({ studentOnly: false, alumniOk: false, oversub: false, campusTargets: [] });
+const limitForm = ref({ minGroupSize: 2, studentOnly: false, alumniOk: false, oversub: false, campusTargets: [] });
 const showVirtual = ref(false);
 const virtualCount = ref(0);
 const heatAuto = ref(true);
@@ -471,6 +475,7 @@ watch(
 function openLimit(row) {
   cur.value = row;
   limitForm.value = {
+    minGroupSize: Number(row.minGroupSize || 2),
     studentOnly: !!row.eligibility?.studentOnly,
     alumniOk: !!row.eligibility?.alumniOk,
     oversub: !!row.oversub?.enabled,
@@ -482,6 +487,7 @@ async function saveLimit() {
   savingLimit.value = true;
   try {
     await http.put(`/admin/schedules/${cur.value.id}/limit`, {
+      minGroupSize: limitForm.value.minGroupSize,
       studentOnly: limitForm.value.studentOnly,
       alumniOk: limitForm.value.alumniOk,
       oversub: limitForm.value.oversub,

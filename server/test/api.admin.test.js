@@ -335,4 +335,78 @@ describe("admin API", () => {
       .send({ routeId: seed.routeId, startDate: "2099-01-01", busTypeId: "nope" })
       .expect(400);
   });
+
+  it("marks a trip formed when the min group drops to the real headcount", async () => {
+    const schId = seed.individualScheduleId;
+    seed.db.prepare("UPDATE schedules SET min_group_size=10, status='recruiting', guide_id=NULL WHERE id=?").run(schId);
+    const other = Number(
+      seed.db.prepare("INSERT INTO users (phone,nickname,is_virtual) VALUES (?,?,0)").run("13900001111", "同行乙").lastInsertRowid
+    );
+    const virtual = Number(
+      seed.db.prepare("INSERT INTO users (phone,nickname,is_virtual) VALUES (?,?,1)").run("13900001112", "虚拟丙").lastInsertRowid
+    );
+    const insert = seed.db.prepare(
+      "INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,pay_status,pay_amount,status) VALUES (?,?,?,?,?,?,?)"
+    );
+    insert.run(schId, seed.userId, "林北野", "13800138000", "unpaid", 199, "joined");
+    insert.run(schId, virtual, "虚拟丙", "13900001112", "unpaid", 199, "joined");
+    const still = await agent
+      .put(`/api/admin/schedules/${schId}/limit`)
+      .set(auth(adminToken))
+      .send({ minGroupSize: 2, studentOnly: false, alumniOk: false, oversub: false, campusTargets: [] })
+      .expect(200);
+    assert.equal(still.body.data.minGroupSize, 2);
+    assert.equal(still.body.data.status, "recruiting");
+    assert.equal(still.body.data.guaranteed, false);
+    insert.run(schId, other, "同行乙", "13900001111", "unpaid", 199, "joined");
+    seed.db.prepare("UPDATE schedules SET min_group_size=10, status='recruiting', guide_id=NULL WHERE id=?").run(schId);
+    const saved = await agent
+      .put(`/api/admin/schedules/${schId}/limit`)
+      .set(auth(adminToken))
+      .send({ minGroupSize: 2, studentOnly: false, alumniOk: false, oversub: false, campusTargets: [] })
+      .expect(200);
+    assert.equal(saved.body.data.status, "confirmed");
+    assert.equal(saved.body.data.guaranteed, true);
+    const raised = await agent
+      .put(`/api/admin/schedules/${schId}/limit`)
+      .set(auth(adminToken))
+      .send({ minGroupSize: 8, studentOnly: false, alumniOk: false, oversub: false, campusTargets: [] })
+      .expect(200);
+    assert.equal(raised.body.data.status, "recruiting");
+    assert.equal(raised.body.data.guaranteed, false);
+
+    const route = seed.db.prepare("SELECT * FROM routes WHERE id=?").get(seed.routeId);
+    const formed = await agent
+      .put(`/api/admin/routes/${seed.routeId}`)
+      .set(auth(adminToken))
+      .send({
+        title: route.title,
+        subtitle: route.subtitle,
+        days: route.days,
+        distanceKm: route.distance_km,
+        difficulty: route.difficulty,
+        category: route.category,
+        region: route.region,
+        season: route.season,
+        tags: JSON.parse(route.tags_json || "[]"),
+        cover: route.cover,
+        gallery: JSON.parse(route.gallery_json || "[]"),
+        minGroupSize: 2,
+        description: route.description,
+        highlights: JSON.parse(route.highlights_json || "[]"),
+        itinerary: JSON.parse(route.itinerary_json || "[]"),
+        feeInclude: route.fee_include,
+        feeExclude: route.fee_exclude,
+        equipment: route.equipment,
+        notices: route.notices,
+        meetupPoints: JSON.parse(route.meetup_json || "[]"),
+        status: route.status,
+      })
+      .expect(200);
+    assert.equal(formed.status, 200);
+    const again = await agent.get(`/api/admin/schedules/${schId}`).set(auth(adminToken)).expect(200);
+    assert.equal(again.body.data.minGroupSize, 2);
+    assert.equal(again.body.data.status, "confirmed");
+    assert.equal(again.body.data.guaranteed, true);
+  });
 });

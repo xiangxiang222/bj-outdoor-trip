@@ -194,6 +194,48 @@ function maybeMatchGuide(scheduleId) {
   return db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
 }
 
+function syncFormation(scheduleId) {
+  const db = getDb();
+  const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
+  if (!sch || sch.status === "cancelled" || sch.status === "finished" || sch.completed_at) return sch;
+  const n = realEnrolledCount(scheduleId);
+  const need = Number(sch.min_group_size || 0);
+  const met = need > 0 && n >= need;
+  if (met && sch.status === "recruiting") {
+    if (sch.guide_id) db.prepare("UPDATE schedules SET status='confirmed' WHERE id=?").run(sch.id);
+    return maybeMatchGuide(scheduleId);
+  }
+  if (!met && sch.status === "confirmed" && !sch.started_at) {
+    if (sch.guide_id) {
+      db.prepare("UPDATE guides SET status='idle' WHERE id=? AND status='assigned'").run(sch.guide_id);
+    }
+    db.prepare("UPDATE schedules SET guide_id=NULL, status='recruiting' WHERE id=?").run(sch.id);
+    return db.prepare("SELECT * FROM schedules WHERE id=?").get(sch.id);
+  }
+  return sch;
+}
+
+function alignOpenSchedulesMinGroup(routeId, minGroup) {
+  const n = Math.round(Number(minGroup));
+  if (!Number.isFinite(n) || n < 1) return [];
+  const today = dayjs().format("YYYY-MM-DD");
+  const rows = getDb()
+    .prepare(
+      `SELECT id, min_group_size FROM schedules
+       WHERE route_id=? AND status IN ('recruiting','confirmed')
+         AND IFNULL(started_at,'')='' AND IFNULL(completed_at,'')=''
+         AND start_date>=?`
+    )
+    .all(routeId, today);
+  for (const row of rows) {
+    if (Number(row.min_group_size) !== n) {
+      getDb().prepare("UPDATE schedules SET min_group_size=? WHERE id=?").run(n, row.id);
+    }
+    syncFormation(row.id);
+  }
+  return rows.map((row) => row.id);
+}
+
 function addPoints(userId, delta, reason, refType, refId) {
   const db = getDb();
   const user = db.prepare("SELECT points FROM users WHERE id=?").get(userId);
@@ -315,6 +357,8 @@ module.exports = {
   loadRouteBundle,
   quoteForSchedule,
   maybeMatchGuide,
+  syncFormation,
+  alignOpenSchedulesMinGroup,
   addPoints,
   attachAssetHost,
   publicMediaUrl,
