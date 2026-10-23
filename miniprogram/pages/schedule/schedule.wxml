@@ -125,6 +125,7 @@
     </view>
     <view class="muted" wx:if="{{s.oversub.enabled}}">{{tr.t(s.oversub.copy, lang)}}</view>
     <view class="muted" wx:if="{{s.eligibility.enabled}}">{{tr.t(s.eligibility.label, lang)}}{{tr.t(s.eligibility.alumniOk ? ' 已认证师生或校友可报' : ' 已认证学生可报', lang)}}</view>
+    <view class="muted" wx:if="{{s.genderRatio && s.genderRatio.on}}">{{tr.t(s.genderRatio.label, lang)}}</view>
     <view class="muted" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" style="color:#bc4749">{{tr.t(s.eligibility.reason, lang)}}</view>
     <view class="btn ghost" wx:if="{{s.eligibility.enabled && !s.eligibility.canEnroll}}" bindtap="goStudent">{{tr.t('去校园认证', lang)}}</view>
     <view class="muted" wx:if="{{s.reviewStatus=='pending'}}" style="color:#c77d3a">{{tr.t('本团正在审核，通过后才会出现在', lang)}}{{tr.t(isActivity ? '活动页' : '首页', lang)}}。</view>

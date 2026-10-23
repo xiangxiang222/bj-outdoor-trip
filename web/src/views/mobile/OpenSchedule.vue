@@ -10,7 +10,7 @@
       <option value="campus">高校开团（先报名，出行前付款）</option>
     </select>
       <label v-if="form.organizerType === 'company'">公司名称</label>
-      <label v-if="form.organizerType === 'campus'">学校名称</label>
+      <label v-if="form.organizerType === 'campus'">发起学校</label>
       <input
         v-if="form.organizerType === 'company'"
         class="input"
@@ -24,6 +24,7 @@
         title="选择学校"
         placeholder="例如：北京大学"
       />
+      <p v-if="form.organizerType === 'campus'" class="muted">写在团上，表示哪个学校在组织，不限制谁能报名。</p>
     <label>大巴车型</label>
     <select class="select" v-model="form.busTypeId">
       <option v-for="b in buses" :key="b.id" :value="b.id">{{ b.name }}（{{ b.seats }}座）</option>
@@ -43,9 +44,14 @@
       <option value="free">免费团</option>
       <option value="full">全价团</option>
     </select>
+    <label class="check-row"><input type="checkbox" v-model="form.studentOnly" /> 仅师生</label>
+    <label class="check-row"><input type="checkbox" v-model="form.alumniOk" /> 允许已认证校友</label>
     <label class="check-row"><input type="checkbox" v-model="form.oversub" /> 报超会抽（车位不够才抽）</label>
-    <p v-if="form.organizerType === 'campus' && form.offerType === 'free'" class="muted">高校免费团会默认打开抽签：先报名待确认，人数超过座位才抽签。</p>
-    <CampusAudienceFields v-model="form" :profile="store.profile" />
+    <p v-if="form.organizerType === 'campus' && form.offerType === 'free'" class="muted">高校免费团会默认打开抽签。报名范围留空时，默认只让发起学校的师生报名。</p>
+    <label>报名范围</label>
+    <CampusTargetList v-model="form.campusTargets" />
+    <p class="muted">谁可以报名。留空表示不限学校，也可以和发起学校不同。</p>
+    <GenderRatioFields v-if="form.organizerType === 'campus'" v-model="form.genderRatio" :targets="form.campusTargets" />
     <label class="check-row"><input type="checkbox" v-model="form.privateJoin" /> 口令团（报名要口令）</label>
     <p class="muted">列表会显示「口令团」。把口令发给要来的人；不填则自动生成 6 位。</p>
     <input v-if="form.privateJoin" class="input" v-model="form.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" />
@@ -66,8 +72,10 @@ import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
-import CampusAudienceFields from "@/components/CampusAudienceFields.vue";
+import CampusTargetList from "@/components/CampusTargetList.vue";
 import CampusNamePicker from "@/components/CampusNamePicker.vue";
+import GenderRatioFields from "@/components/GenderRatioFields.vue";
+import { applyCampusPublish, emptyGenderRatio } from "@/utils/genderRatio";
 
 const route = useRoute();
 const router = useRouter();
@@ -89,6 +97,7 @@ const form = ref({
   playTagIds: [],
   studentOnly: false,
   alumniOk: false,
+  genderRatio: emptyGenderRatio(),
   oversub: false,
   campusScope: "open",
   campusSchool: store.profile?.school || "",
@@ -102,7 +111,7 @@ const form = ref({
 
 watch(
   () => [form.value.organizerType, form.value.offerType, form.value.companyName],
-  ([type, offer, name], prev = []) => {
+  ([type, offer], prev = []) => {
     if (type === "campus" && !form.value.companyName && store.profile?.school) {
       form.value.companyName = store.profile.school;
     }
@@ -113,9 +122,7 @@ watch(
     const isCampusFree = type === "campus" && offer === "free";
     if (isCampusFree && !wasCampusFree) {
       form.value.oversub = true;
-      if (form.value.campusScope === "open") form.value.campusScope = "school";
-      const school = name || form.value.companyName || store.profile?.school || "";
-      if (school && !String(form.value.campusSchool || "").trim()) form.value.campusSchool = school;
+      form.value.studentOnly = true;
     }
   }
 );
@@ -145,12 +152,7 @@ async function submit() {
     return;
   }
   try {
-    const payload = { ...form.value };
-    if (payload.organizerType === "campus" && payload.offerType === "free") {
-      payload.oversub = true;
-      if (payload.campusScope === "open") payload.campusScope = "school";
-      if (!String(payload.campusSchool || "").trim()) payload.campusSchool = payload.companyName || "";
-    }
+    const payload = applyCampusPublish({ ...form.value });
     const res = await http.post("/schedules", { routeId: Number(route.params.id), ...payload });
     router.push("/m/schedule/" + res.data.id);
   } catch (e) {

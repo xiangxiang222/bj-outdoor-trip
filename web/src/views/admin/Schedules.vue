@@ -139,8 +139,9 @@
         <el-form-item v-if="neu.organizerType === 'company'" label="公司名">
           <el-input v-model="neu.companyName" placeholder="公司全称" />
         </el-form-item>
-        <el-form-item v-if="neu.organizerType === 'campus'" label="学校名">
+        <el-form-item v-if="neu.organizerType === 'campus'" label="发起学校">
           <CampusCatalogSelect v-model="neu.companyName" kind="school" placeholder="例如：北京大学" />
+          <p class="muted" style="margin:6px 0 0">写在团上，表示哪个学校在组织，不限制谁能报名。</p>
         </el-form-item>
         <el-form-item label="车型">
           <el-select v-model="neu.busTypeId">
@@ -182,6 +183,10 @@
         </el-form-item>
         <el-form-item label="报名范围">
           <AdminCampusTargetList v-model="neu.campusTargets" />
+          <p class="muted" style="margin:6px 0 0">谁可以报名。留空表示不限学校，也可以和发起学校不同。高校免费团如果这里留空，默认只让发起学校的师生报名。</p>
+        </el-form-item>
+        <el-form-item v-if="neu.organizerType === 'campus'" label="男女比例">
+          <GenderRatioFields v-model="neu.genderRatio" :targets="neu.campusTargets" />
         </el-form-item>
         <el-form-item label="虚拟报名">
           <el-input-number v-model="neu.virtualCount" :min="0" :max="80" />
@@ -310,6 +315,10 @@
         </el-form-item>
         <el-form-item label="报名范围">
           <AdminCampusTargetList v-model="limitForm.campusTargets" />
+          <p class="muted" style="margin:6px 0 0">谁可以报名。留空表示不限学校。发起学校只表示谁在组织。</p>
+        </el-form-item>
+        <el-form-item v-if="cur && cur.organizerType === 'campus'" label="男女比例">
+          <GenderRatioFields v-model="limitForm.genderRatio" :targets="limitForm.campusTargets" />
         </el-form-item>
         <p class="muted">报超会抽：先报名待确认。人数超过座位才抽签，未超过则全部确认。不要对外说「抽名额」。</p>
       </el-form>
@@ -379,7 +388,9 @@ import http from "@/api/http";
 import { hasCap } from "@/utils/staff";
 import CampusCatalogSelect from "@/components/admin/CampusCatalogSelect.vue";
 import AdminCampusTargetList from "@/components/admin/CampusTargetList.vue";
-import { emptyCampusTarget, normalizeCampusTargets } from "@/utils/campusTargets";
+import GenderRatioFields from "@/components/GenderRatioFields.vue";
+import { normalizeCampusTargets } from "@/utils/campusTargets";
+import { emptyGenderRatio, genderRatioPayload } from "@/utils/genderRatio";
 const route = useRoute();
 const $router = useRouter();
 const me = ref({ caps: [] });
@@ -419,7 +430,7 @@ const checkinTitle = computed(() => {
 const showLimit = ref(false);
 const savingLimit = ref(false);
 const drawingId = ref(0);
-const limitForm = ref({ minGroupSize: 2, studentOnly: false, alumniOk: false, oversub: false, campusTargets: [] });
+const limitForm = ref({ minGroupSize: 2, studentOnly: false, alumniOk: false, oversub: false, campusTargets: [], genderRatio: emptyGenderRatio() });
 const showVirtual = ref(false);
 const virtualCount = ref(0);
 const heatAuto = ref(true);
@@ -457,29 +468,36 @@ const neu = ref({
   campusTargets: [],
   virtualCount: 0,
   lotteryMode: "off",
+  genderRatio: emptyGenderRatio(),
 });
 watch(
-  () => [neu.value.organizerType, neu.value.offerType, neu.value.companyName],
-  ([type, offer, name], prev = []) => {
+  () => [neu.value.organizerType, neu.value.offerType],
+  ([type, offer], prev = []) => {
     const wasCampusFree = prev[0] === "campus" && prev[1] === "free";
     const isCampusFree = type === "campus" && offer === "free";
     if (isCampusFree && !wasCampusFree) {
       neu.value.oversub = true;
       neu.value.studentOnly = true;
-      if (name && !neu.value.campusTargets.length) neu.value.campusTargets = [emptyCampusTarget(name)];
-    } else if (isCampusFree && name && !neu.value.campusTargets.length) {
-      neu.value.campusTargets = [emptyCampusTarget(name)];
     }
   }
 );
-function openLimit(row) {
+async function openLimit(row) {
   cur.value = row;
+  const detail = (await http.get(`/admin/schedules/${row.id}`)).data || row;
+  cur.value = { ...row, ...detail };
+  const saved = detail.genderRatio || {};
   limitForm.value = {
-    minGroupSize: Number(row.minGroupSize || 2),
-    studentOnly: !!row.eligibility?.studentOnly,
-    alumniOk: !!row.eligibility?.alumniOk,
-    oversub: !!row.oversub?.enabled,
-    campusTargets: normalizeCampusTargets(row.eligibility?.targets || []),
+    minGroupSize: Number(detail.minGroupSize || 2),
+    studentOnly: !!detail.eligibility?.studentOnly,
+    alumniOk: !!detail.eligibility?.alumniOk,
+    oversub: !!detail.oversub?.enabled,
+    campusTargets: normalizeCampusTargets(detail.eligibility?.targets || []),
+    genderRatio: {
+      on: !!saved.on,
+      overall: saved.overall || { male: 1, female: 1 },
+      schools: (saved.schools || []).map((item) => ({ ...item, on: true })),
+      colleges: (saved.colleges || []).map((item) => ({ ...item, on: true })),
+    },
   };
   showLimit.value = true;
 }
@@ -492,6 +510,7 @@ async function saveLimit() {
       alumniOk: limitForm.value.alumniOk,
       oversub: limitForm.value.oversub,
       campusTargets: normalizeCampusTargets(limitForm.value.campusTargets),
+      ...(cur.value?.organizerType === "campus" ? { genderRatio: genderRatioPayload(limitForm.value.genderRatio) } : {}),
     });
     showLimit.value = false;
     ElMessage.success("报名限制已更新");
@@ -880,7 +899,11 @@ async function review(row, status) {
   }
 }
 async function create() {
-  const payload = { ...neu.value, campusTargets: normalizeCampusTargets(neu.value.campusTargets) };
+  const payload = {
+    ...neu.value,
+    campusTargets: normalizeCampusTargets(neu.value.campusTargets),
+    genderRatio: neu.value.organizerType === "campus" ? genderRatioPayload(neu.value.genderRatio) : { on: false },
+  };
   delete payload.schools;
   delete payload.colleges;
   const res = await http.post("/admin/schedules", payload);

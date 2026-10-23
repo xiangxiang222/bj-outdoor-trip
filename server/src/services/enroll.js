@@ -18,6 +18,7 @@ const {
 const config = require("../config");
 const { assertComboEnroll, parseComboWant } = require("./combo");
 const { assertEnrollLimit } = require("./eligibility");
+const { assertGenderRatio } = require("./gender-ratio");
 const { resolveSupplies } = require("./supplies");
 const { isOversubPending } = require("./oversub");
 const { assertJoinCode } = require("./joinCode");
@@ -166,6 +167,7 @@ function enrollUser({
       .prepare("SELECT id FROM enrollments WHERE schedule_id=? AND upper(id_card)=? AND status!='cancelled'")
       .get(sch.id, parsed.idCard);
     if (exist) fail(400, "该身份证已在本团报名");
+    assertGenderRatio(sch, user, parsed.gender);
   }
 
   const role = isActivity
