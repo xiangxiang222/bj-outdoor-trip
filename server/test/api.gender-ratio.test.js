@@ -48,6 +48,7 @@ describe("campus gender ratio", () => {
       })
       .expect(200);
     assert.equal(saved.body.data.genderRatio.on, true);
+    assert.equal(saved.body.data.genderRatio.overall, null);
     assert.equal(saved.body.data.genderRatio.schools[0].school, "北京大学");
 
     const token = await loginUser(agent);

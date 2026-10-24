@@ -88,6 +88,7 @@ Page({
       oversub: false,
       campusTargets: [],
       genderRatioOn: false,
+      schoolRatioOn: false,
       overallMale: 50,
       overallFemale: 50,
       genderSchools: [],
@@ -218,7 +219,14 @@ Page({
   },
   refreshGender(targets) {
     const next = syncGenderRatio(this.data.form, targets);
-    this.setData({ "form.genderSchools": next.genderSchools, "form.genderColleges": next.genderColleges });
+    const schoolRatioOn = (next.genderSchools || []).some((row) => row.on);
+    const patch = {
+      "form.genderSchools": next.genderSchools,
+      "form.genderColleges": [],
+      "form.schoolRatioOn": schoolRatioOn,
+    };
+    if (schoolRatioOn) patch["form.genderRatioOn"] = false;
+    this.setData(patch);
   },
   addCampusTarget() {
     const campusTargets = (this.data.form.campusTargets || []).concat([emptyTarget()]);
@@ -297,12 +305,27 @@ Page({
     this.setData({ "form.alumniOk": !this.data.form.alumniOk });
   },
   toggleGender() {
+    if (this.data.form.schoolRatioOn) return;
     this.setData({ "form.genderRatioOn": !this.data.form.genderRatioOn });
+  },
+  toggleSchoolRatio(e) {
+    if (this.data.form.genderRatioOn) return;
+    const school = e.currentTarget.dataset.school;
+    const rows = (this.data.form.genderSchools || []).map((row) => (
+      row.school === school ? Object.assign({}, row, { on: !row.on }) : row
+    ));
+    const schoolRatioOn = rows.some((row) => row.on);
+    this.setData({
+      "form.genderSchools": rows,
+      "form.schoolRatioOn": schoolRatioOn,
+      "form.genderRatioOn": schoolRatioOn ? false : this.data.form.genderRatioOn,
+    });
   },
   setRatio(e) {
     const value = Math.min(100, Math.max(0, Math.round(Number(e.detail.value) || 0)));
     const bucket = e.currentTarget.dataset.bucket;
     if (bucket === "overall") {
+      if (this.data.form.schoolRatioOn) return;
       this.setData({
         "form.genderRatioOn": true,
         "form.overallMale": value,
@@ -310,12 +333,16 @@ Page({
       });
       return;
     }
-    const key = bucket === "college" ? "genderColleges" : "genderSchools";
-    const i = Number(e.currentTarget.dataset.i);
-    const rows = (this.data.form[key] || []).slice();
-    if (!rows[i]) return;
-    rows[i] = Object.assign({}, rows[i], { on: true, share: value, male: value, female: 100 - value });
-    this.setData({ "form.genderRatioOn": true, ["form." + key]: rows });
+    if (this.data.form.genderRatioOn) return;
+    const school = e.currentTarget.dataset.school;
+    const rows = (this.data.form.genderSchools || []).map((row) => (
+      row.school === school ? Object.assign({}, row, { on: true, share: value, male: value, female: 100 - value }) : row
+    ));
+    this.setData({
+      "form.genderSchools": rows,
+      "form.schoolRatioOn": true,
+      "form.genderRatioOn": false,
+    });
   },
   toggleOversub() {
     this.setData({ "form.oversub": !this.data.form.oversub });

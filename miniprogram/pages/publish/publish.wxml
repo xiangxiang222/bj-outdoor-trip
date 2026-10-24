@@ -170,18 +170,40 @@
           <text class="sv {{item.major ? '' : 'ph'}}">{{item.major || tr.t(item.college ? '专业，可空' : '请先选学院', lang)}}</text>
           <text class="chev">›</text>
         </view>
+        <block wx:if="{{item.school}}">
+          <block wx:for="{{form.genderSchools}}" wx:for-item="ratio" wx:key="school">
+            <block wx:if="{{ratio.school == item.school}}">
+              <view class="scope-line" catchtap="toggleSchoolRatio" data-school="{{ratio.school}}">
+                <text class="sk ratio-label">{{tr.t('男女比例', lang)}}</text>
+                <view class="sw {{ratio.on && !form.genderRatioOn ? 'on' : ''}} {{form.genderRatioOn ? 'locked' : ''}}"><view class="knob"></view></view>
+              </view>
+              <view class="scope-slider" wx:if="{{ratio.on && !form.genderRatioOn}}">
+                <view class="ratio-figures">
+                  <view class="ratio-fig">
+                    <text class="ratio-unit">{{tr.t('男生', lang)}}</text>
+                    <text class="ratio-num">{{ratio.share}}</text>
+                  </view>
+                  <view class="ratio-fig end">
+                    <text class="ratio-unit">{{tr.t('女生', lang)}}</text>
+                    <text class="ratio-num">{{100 - ratio.share}}</text>
+                  </view>
+                </view>
+                <slider min="0" max="100" value="{{ratio.share}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" bindchange="setRatio" bindchanging="setRatio" data-bucket="school" data-school="{{ratio.school}}" />
+              </view>
+            </block>
+          </block>
+        </block>
         <view class="scope-del" catchtap="removeCampusTarget" data-i="{{index}}">{{tr.t('删除', lang)}}</view>
       </view>
       <view class="field-error in" wx:if="{{errors.campus}}">{{tr.t(errors.campus, lang)}}</view>
     </view>
 
     <view class="line" bindtap="toggleGender">
-      <text class="k wide">{{tr.t('男女比例', lang)}}</text>
-      <view class="sw {{form.genderRatioOn ? 'on' : ''}}"><view class="knob"></view></view>
+      <text class="k wide">{{tr.t('全团', lang)}}</text>
+      <view class="sw {{form.genderRatioOn && !form.schoolRatioOn ? 'on' : ''}} {{form.schoolRatioOn ? 'locked' : ''}}"><view class="knob"></view></view>
     </view>
-    <view class="ratio-lead">{{tr.t('男生名额按 100 计。', lang)}}</view>
-    <view class="ratio-card {{form.genderRatioOn ? '' : 'dim'}}">
-      <text class="ratio-kicker">{{tr.t('全团', lang)}}</text>
+    <view class="ratio-lead">{{tr.t(form.schoolRatioOn ? '已按学校设置，不能再设全团。' : (form.genderRatioOn ? '已按全团设置。学校不再单独设置。' : '男生名额按 100 计。'), lang)}}</view>
+    <view class="ratio-card {{form.genderRatioOn && !form.schoolRatioOn ? '' : 'dim'}}">
       <view class="ratio-figures">
         <view class="ratio-fig">
           <text class="ratio-unit">{{tr.t('男生', lang)}}</text>
@@ -192,38 +214,8 @@
           <text class="ratio-num">{{100 - form.overallMale}}</text>
         </view>
       </view>
-      <slider min="0" max="100" value="{{form.overallMale}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" disabled="{{!form.genderRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="overall" />
+      <slider min="0" max="100" value="{{form.overallMale}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" disabled="{{!form.genderRatioOn || form.schoolRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="overall" />
     </view>
-    <view class="ratio-card {{form.genderRatioOn ? '' : 'dim'}}" wx:for="{{form.genderSchools}}" wx:key="school">
-      <text class="ratio-kicker">{{item.school}}</text>
-      <view class="ratio-figures">
-        <view class="ratio-fig">
-          <text class="ratio-unit">{{tr.t('男生', lang)}}</text>
-          <text class="ratio-num">{{item.share}}</text>
-        </view>
-        <view class="ratio-fig end">
-          <text class="ratio-unit">{{tr.t('女生', lang)}}</text>
-          <text class="ratio-num">{{100 - item.share}}</text>
-        </view>
-      </view>
-      <slider min="0" max="100" value="{{item.share}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" disabled="{{!form.genderRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="school" data-i="{{index}}" />
-    </view>
-    <view class="ratio-card {{form.genderRatioOn ? '' : 'dim'}}" wx:for="{{form.genderColleges}}" wx:key="index">
-      <text class="ratio-kicker">{{item.college}}</text>
-      <text class="ratio-meta">{{item.school}}</text>
-      <view class="ratio-figures">
-        <view class="ratio-fig">
-          <text class="ratio-unit">{{tr.t('男生', lang)}}</text>
-          <text class="ratio-num">{{item.share}}</text>
-        </view>
-        <view class="ratio-fig end">
-          <text class="ratio-unit">{{tr.t('女生', lang)}}</text>
-          <text class="ratio-num">{{100 - item.share}}</text>
-        </view>
-      </view>
-      <slider min="0" max="100" value="{{item.share}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" disabled="{{!form.genderRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="college" data-i="{{index}}" />
-    </view>
-    <view class="ratio-lead foot" wx:if="{{form.genderSchools.length || form.genderColleges.length}}">{{tr.t('全团限制始终生效。学校与学院可另行设置。', lang)}}</view>
   </block>
 
   <view class="line" bindtap="togglePrivateJoin">

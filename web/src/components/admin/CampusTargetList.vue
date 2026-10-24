@@ -1,30 +1,33 @@
 <template>
   <div class="admin-campus-targets">
-    <div v-for="(row, i) in model" :key="i" class="admin-campus-target-row">
-      <CampusCatalogSelect
-        :model-value="row.school"
-        kind="school"
-        placeholder="学校"
-        @update:model-value="setSchool(i, $event)"
-      />
-      <CampusCatalogSelect
-        :model-value="row.college"
-        kind="college"
-        :school="row.school"
-        :disabled="!row.school"
-        :placeholder="row.school ? '学院可空' : '请先选学校'"
-        @update:model-value="setCollege(i, $event)"
-      />
-      <CampusCatalogSelect
-        :model-value="row.major"
-        kind="major"
-        :school="row.school"
-        :college="row.college"
-        :disabled="!row.college"
-        :placeholder="row.college ? '专业可空' : '请先选学院'"
-        @update:model-value="setMajor(i, $event)"
-      />
-      <el-button @click="remove(i)">删除</el-button>
+    <div v-for="(row, i) in model" :key="i" class="admin-campus-target">
+      <div class="admin-campus-target-row">
+        <CampusCatalogSelect
+          :model-value="row.school"
+          kind="school"
+          placeholder="学校"
+          @update:model-value="setSchool(i, $event)"
+        />
+        <CampusCatalogSelect
+          :model-value="row.college"
+          kind="college"
+          :school="row.school"
+          :disabled="!row.school"
+          :placeholder="row.school ? '学院可空' : '请先选学校'"
+          @update:model-value="setCollege(i, $event)"
+        />
+        <CampusCatalogSelect
+          :model-value="row.major"
+          kind="major"
+          :school="row.school"
+          :college="row.college"
+          :disabled="!row.college"
+          :placeholder="row.college ? '专业可空' : '请先选学院'"
+          @update:model-value="setMajor(i, $event)"
+        />
+        <el-button @click="remove(i)">删除</el-button>
+      </div>
+      <SchoolRatioControl v-if="row.school" v-model="ratio" :school="row.school" />
     </div>
     <el-button @click="add">添加学校-学院-专业</el-button>
     <p class="muted" style="margin:8px 0 0">每条是一组绑定关系。两校都有计算机学院时，要分别添加，不会混成同一个学院名。</p>
@@ -33,9 +36,12 @@
 
 <script setup>
 import CampusCatalogSelect from "@/components/admin/CampusCatalogSelect.vue";
+import SchoolRatioControl from "@/components/SchoolRatioControl.vue";
 import { emptyCampusTarget } from "@/utils/campusTargets";
+import { emptyGenderRatio } from "@/utils/genderRatio";
 
 const model = defineModel({ type: Array, default: () => [] });
+const ratio = defineModel("ratio", { type: Object, default: () => emptyGenderRatio() });
 
 function setSchool(i, school) {
   const next = model.value.slice();
@@ -67,11 +73,11 @@ function remove(i) {
 </script>
 
 <style scoped>
+.admin-campus-target { margin-bottom: 14px; }
 .admin-campus-target-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr auto;
   gap: 8px;
-  margin-bottom: 8px;
   align-items: center;
 }
 </style>

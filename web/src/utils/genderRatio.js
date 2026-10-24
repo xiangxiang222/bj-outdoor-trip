@@ -37,49 +37,77 @@ export function maleShare(male, female) {
   return Math.min(100, Math.max(0, Math.round((100 * m) / total)));
 }
 
+export function schoolNames(targets) {
+  const schools = [];
+  for (const raw of targets || []) {
+    const school = String((raw && raw.school) || "").trim();
+    if (school && !schools.includes(school)) schools.push(school);
+  }
+  return schools;
+}
+
 export function syncGenderRatio(current, targets) {
   const base = current && typeof current === "object" ? current : emptyGenderRatio();
-  const overall = { male: num(base.overall && base.overall.male, 1), female: num(base.overall && base.overall.female, 1) };
-  const groups = groupsFromTargets(targets);
+  const overall = { male: num(base.overall && base.overall.male, 50), female: num(base.overall && base.overall.female, 50) };
   const prevSchools = new Map((base.schools || []).map((row) => [row.school, row]));
-  const schools = groups.schools.map((school) => {
+  const schools = schoolNames(targets).map((school) => {
     const prev = prevSchools.get(school);
-    if (!prev) return { school, on: true, male: overall.male, female: overall.female };
-    return { school, on: true, male: num(prev.male, overall.male), female: num(prev.female, overall.female) };
+    if (!prev) return { school, on: false, male: 50, female: 50 };
+    return { school, on: !!prev.on, male: num(prev.male, 50), female: num(prev.female, 50) };
   });
-  const prevColleges = new Map((base.colleges || []).map((row) => [`${row.school}\0${row.college}`, row]));
-  const colleges = groups.colleges.map((row) => {
-    const prev = prevColleges.get(`${row.school}\0${row.college}`);
-    if (!prev) return { school: row.school, college: row.college, on: true, male: overall.male, female: overall.female };
-    return {
-      school: row.school,
-      college: row.college,
-      on: true,
-      male: num(prev.male, overall.male),
-      female: num(prev.female, overall.female),
-    };
-  });
-  return { on: !!base.on, overall, schools, colleges };
+  const schoolMode = schools.some((row) => row.on);
+  return { on: schoolMode ? false : !!base.on, overall, schools, colleges: [] };
+}
+
+export function setSchoolRatioOn(model, school, on) {
+  const name = String(school || "").trim();
+  const current = model && typeof model === "object" ? model : emptyGenderRatio();
+  if (!name) return current;
+  const schools = (current.schools || []).slice();
+  const index = schools.findIndex((row) => row.school === name);
+  if (index < 0) schools.push({ school: name, on: !!on, male: 50, female: 50 });
+  else schools[index] = { ...schools[index], on: !!on };
+  const schoolMode = schools.some((row) => row.on);
+  return { ...current, on: schoolMode ? false : !!current.on, schools, colleges: [] };
+}
+
+export function setSchoolShare(model, school, share) {
+  const name = String(school || "").trim();
+  const current = model && typeof model === "object" ? model : emptyGenderRatio();
+  const male = Math.min(100, Math.max(0, Math.round(Number(share) || 0)));
+  const schools = (current.schools || []).slice();
+  const index = schools.findIndex((row) => row.school === name);
+  const next = { school: name, on: true, male, female: 100 - male };
+  if (index < 0) schools.push(next);
+  else schools[index] = { ...schools[index], ...next };
+  return { ...current, on: false, schools, colleges: [] };
 }
 
 export function genderRatioPayload(model) {
   const ratio = model || emptyGenderRatio();
+  const schools = (ratio.schools || []).filter((row) => row && row.on && String(row.school || "").trim());
+  if (schools.length) {
+    return {
+      on: true,
+      schools: schools.map((row) => {
+        const male = maleShare(row.male, row.female);
+        return { school: row.school, male, female: 100 - male };
+      }),
+      colleges: [],
+    };
+  }
   if (!ratio.on) return { on: false };
-  return {
-    on: true,
-    overall: (() => {
-      const male = maleShare(ratio.overall && ratio.overall.male, ratio.overall && ratio.overall.female);
-      return { male, female: 100 - male };
-    })(),
-    schools: (ratio.schools || []).map((row) => {
-      const male = maleShare(row.male, row.female);
-      return { school: row.school, male, female: 100 - male };
-    }),
-    colleges: (ratio.colleges || []).map((row) => {
-      const male = maleShare(row.male, row.female);
-      return { school: row.school, college: row.college, male, female: 100 - male };
-    }),
-  };
+  const male = maleShare(ratio.overall && ratio.overall.male, ratio.overall && ratio.overall.female);
+  return { on: true, overall: { male, female: 100 - male }, schools: [], colleges: [] };
+}
+
+export function genderRatioFromSaved(saved) {
+  const src = saved || {};
+  const schools = (src.schools || [])
+    .map((item) => ({ school: item.school, on: true, male: item.male, female: item.female }))
+    .filter((item) => item.school);
+  const overall = src.overall && src.overall.male != null ? src.overall : { male: 50, female: 50 };
+  return { on: !!src.on && !schools.length, overall, schools, colleges: [] };
 }
 
 export function applyCampusPublish(payload) {

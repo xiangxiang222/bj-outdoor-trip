@@ -184,7 +184,7 @@
           <el-input v-model="neu.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" />
         </el-form-item>
         <el-form-item v-if="neu.organizerType === 'campus'" label="报名范围">
-          <AdminCampusTargetList v-model="neu.campusTargets" />
+          <AdminCampusTargetList v-model="neu.campusTargets" v-model:ratio="neu.genderRatio" />
           <p class="muted" style="margin:6px 0 0">谁可以报名。留空表示不限学校，也可以和发起学校不同。高校免费团如果这里留空，默认只让发起学校的师生报名。</p>
         </el-form-item>
         <el-form-item v-if="neu.organizerType === 'campus'" label="男女比例">
@@ -317,7 +317,7 @@
             <el-switch v-model="limitForm.oversub" />
           </el-form-item>
           <el-form-item label="报名范围">
-            <AdminCampusTargetList v-model="limitForm.campusTargets" />
+            <AdminCampusTargetList v-model="limitForm.campusTargets" v-model:ratio="limitForm.genderRatio" />
             <p class="muted" style="margin:6px 0 0">谁可以报名。留空表示不限学校。发起学校只表示谁在组织。</p>
           </el-form-item>
           <el-form-item label="男女比例">
@@ -394,7 +394,7 @@ import CampusCatalogSelect from "@/components/admin/CampusCatalogSelect.vue";
 import AdminCampusTargetList from "@/components/admin/CampusTargetList.vue";
 import GenderRatioFields from "@/components/GenderRatioFields.vue";
 import { normalizeCampusTargets } from "@/utils/campusTargets";
-import { emptyGenderRatio, genderRatioPayload } from "@/utils/genderRatio";
+import { emptyGenderRatio, genderRatioFromSaved, genderRatioPayload } from "@/utils/genderRatio";
 const route = useRoute();
 const $router = useRouter();
 const me = ref({ caps: [] });
@@ -496,12 +496,7 @@ async function openLimit(row) {
     alumniOk: !!detail.eligibility?.alumniOk,
     oversub: !!detail.oversub?.enabled,
     campusTargets: normalizeCampusTargets(detail.eligibility?.targets || []),
-    genderRatio: {
-      on: !!saved.on,
-      overall: saved.overall || { male: 1, female: 1 },
-      schools: (saved.schools || []).map((item) => ({ ...item, on: true })),
-      colleges: (saved.colleges || []).map((item) => ({ ...item, on: true })),
-    },
+    genderRatio: genderRatioFromSaved(saved),
   };
   showLimit.value = true;
 }
