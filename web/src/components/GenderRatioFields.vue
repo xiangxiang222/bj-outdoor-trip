@@ -98,10 +98,18 @@ function setRowPercent(key, index, value) {
 .gender-head { display: flex; align-items: center; gap: 10px; font-weight: 600; }
 .gender-note { margin: 0; color: #8d8d8d; font-size: 13px; line-height: 1.5; font-weight: 400; }
 .ratio-slider, .ratio-block { width: 100%; }
-.ratio-block { padding: 8px 12px 0; border: 1px solid #f0d4d6; border-radius: 12px; background: #fff; }
+.ratio-block { padding: 8px 12px 0; border: 1px solid #d9d9d9; border-radius: 12px; background: rgba(0, 0, 0, 0.03); }
 .ratio-cap { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13px; }
 .ratio-cap strong { font-size: 14px; }
 .ratio-slider :deep(.el-slider),
-.ratio-block :deep(.el-slider) { --el-slider-main-bg-color: #8c3038; --el-slider-runway-bg-color: #f3c1c6; }
+.ratio-block :deep(.el-slider) {
+  --el-slider-main-bg-color: rgba(0, 0, 0, 0.35);
+  --el-slider-runway-bg-color: rgba(0, 0, 0, 0.10);
+}
+.ratio-slider :deep(.el-slider__button),
+.ratio-block :deep(.el-slider__button) {
+  border-color: rgba(0, 0, 0, 0.28);
+  background: rgba(255, 255, 255, 0.92);
+}
 .off { opacity: 0.45; }
 </style>

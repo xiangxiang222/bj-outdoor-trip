@@ -186,7 +186,7 @@
         <text class="ratio-name">{{tr.t('全团', lang)}}</text>
         <text>女 {{100 - form.overallMale}}</text>
       </view>
-      <slider min="0" max="100" value="{{form.overallMale}}" activeColor="#8c3038" backgroundColor="#f3c1c6" block-size="24" disabled="{{!form.genderRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="overall" />
+      <slider min="0" max="100" value="{{form.overallMale}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" disabled="{{!form.genderRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="overall" />
     </view>
     <view class="ratio-block {{form.genderRatioOn ? '' : 'dim'}}" wx:for="{{form.genderSchools}}" wx:key="school">
       <view class="ratio-cap">
@@ -194,7 +194,7 @@
         <text class="ratio-name">{{item.school}}</text>
         <text>女 {{100 - item.share}}</text>
       </view>
-      <slider min="0" max="100" value="{{item.share}}" activeColor="#8c3038" backgroundColor="#f3c1c6" block-size="24" disabled="{{!form.genderRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="school" data-i="{{index}}" />
+      <slider min="0" max="100" value="{{item.share}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" disabled="{{!form.genderRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="school" data-i="{{index}}" />
     </view>
     <view class="ratio-block {{form.genderRatioOn ? '' : 'dim'}}" wx:for="{{form.genderColleges}}" wx:key="index">
       <view class="ratio-cap">
@@ -202,7 +202,7 @@
         <text class="ratio-name">{{item.school}} · {{item.college}}</text>
         <text>女 {{100 - item.share}}</text>
       </view>
-      <slider min="0" max="100" value="{{item.share}}" activeColor="#8c3038" backgroundColor="#f3c1c6" block-size="24" disabled="{{!form.genderRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="college" data-i="{{index}}" />
+      <slider min="0" max="100" value="{{item.share}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" disabled="{{!form.genderRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="college" data-i="{{index}}" />
     </view>
     <view class="hint">{{tr.t('全团始终要满足。两所以上学校时，每所学校再单独拖一条；同一学校有两个以上学院时，每个学院再单独拖一条。', lang)}}</view>
   </block>
