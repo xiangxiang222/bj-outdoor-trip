@@ -38,6 +38,17 @@ function syncGenderRatio(current, targets) {
   return { genderSchools, genderColleges: [] };
 }
 
+function genderRowsFor(targets, schools) {
+  const bySchool = {};
+  (schools || []).forEach((row) => {
+    if (row && row.school) bySchool[row.school] = row;
+  });
+  return (targets || []).map((row) => {
+    const school = String((row && row.school) || "").trim();
+    return (school && bySchool[school]) || null;
+  });
+}
+
 function payload(form) {
   if (form.organizerType !== "campus" || form.channel === "activity") return { on: false };
   const schools = (form.genderSchools || []).filter((row) => row && row.on && row.school);
@@ -56,4 +67,4 @@ function payload(form) {
   return { on: true, overall: { male, female: 100 - male }, schools: [], colleges: [] };
 }
 
-module.exports = { syncGenderRatio, payload };
+module.exports = { syncGenderRatio, genderRowsFor, payload };
