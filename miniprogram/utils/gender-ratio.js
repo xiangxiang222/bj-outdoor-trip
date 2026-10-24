@@ -23,7 +23,15 @@ function groupsFromTargets(targets) {
 function num(value, fallback) {
   const n = Math.round(Number(value));
   if (!isFinite(n)) return fallback;
-  return Math.min(99, Math.max(0, n));
+  return Math.min(100, Math.max(0, n));
+}
+
+function maleShare(male, female) {
+  const m = num(male, 50);
+  const f = num(female, 50);
+  const total = m + f;
+  if (!total) return 50;
+  return Math.min(100, Math.max(0, Math.round((100 * m) / total)));
 }
 
 function syncGenderRatio(current, targets) {
@@ -39,8 +47,9 @@ function syncGenderRatio(current, targets) {
   });
   const genderSchools = groups.schools.map((school) => {
     const prev = prevSchools[school];
-    if (!prev) return { school, on: false, male: overall.male, female: overall.female };
-    return { school, on: !!prev.on, male: num(prev.male, overall.male), female: num(prev.female, overall.female) };
+    if (!prev) return { school, on: true, male: overall.male, female: overall.female, share: maleShare(overall.male, overall.female) };
+    const share = maleShare(prev.male, prev.female);
+    return { school, on: true, male: share, female: 100 - share, share };
   });
   const prevColleges = {};
   (base.genderColleges || []).forEach((row) => {
@@ -48,14 +57,12 @@ function syncGenderRatio(current, targets) {
   });
   const genderColleges = groups.colleges.map((row) => {
     const prev = prevColleges[row.school + "\0" + row.college];
-    if (!prev) return { school: row.school, college: row.college, on: false, male: overall.male, female: overall.female };
-    return {
-      school: row.school,
-      college: row.college,
-      on: !!prev.on,
-      male: num(prev.male, overall.male),
-      female: num(prev.female, overall.female),
-    };
+    if (!prev) {
+      const share = maleShare(overall.male, overall.female);
+      return { school: row.school, college: row.college, on: true, male: share, female: 100 - share, share };
+    }
+    const share = maleShare(prev.male, prev.female);
+    return { school: row.school, college: row.college, on: true, male: share, female: 100 - share, share };
   });
   return { genderSchools, genderColleges };
 }
@@ -64,13 +71,15 @@ function payload(form) {
   if (form.organizerType !== "campus" || form.channel === "activity" || !form.genderRatioOn) return { on: false };
   return {
     on: true,
-    overall: { male: num(form.overallMale, 1), female: num(form.overallFemale, 1) },
-    schools: (form.genderSchools || [])
-      .filter((row) => row.on)
-      .map((row) => ({ school: row.school, male: num(row.male, 1), female: num(row.female, 1) })),
-    colleges: (form.genderColleges || [])
-      .filter((row) => row.on)
-      .map((row) => ({ school: row.school, college: row.college, male: num(row.male, 1), female: num(row.female, 1) })),
+    overall: { male: maleShare(form.overallMale, form.overallFemale), female: 100 - maleShare(form.overallMale, form.overallFemale) },
+    schools: (form.genderSchools || []).map((row) => {
+      const male = maleShare(row.male, row.female);
+      return { school: row.school, male, female: 100 - male };
+    }),
+    colleges: (form.genderColleges || []).map((row) => {
+      const male = maleShare(row.male, row.female);
+      return { school: row.school, college: row.college, male, female: 100 - male };
+    }),
   };
 }
 

@@ -14,8 +14,8 @@ function off() {
 function pair(male, female) {
   const m = Math.round(Number(male));
   const f = Math.round(Number(female));
-  if (!Number.isInteger(m) || !Number.isInteger(f) || m < 0 || f < 0 || m > 99 || f > 99 || m + f < 1) {
-    fail(400, "男女比例请填 0 到 99 的整数，不能两边都是 0");
+  if (!Number.isInteger(m) || !Number.isInteger(f) || m < 0 || f < 0 || m > 100 || f > 100 || m + f < 1) {
+    fail(400, "男女比例请填 0 到 100 的整数，不能两边都是 0");
   }
   return { male: m, female: f };
 }

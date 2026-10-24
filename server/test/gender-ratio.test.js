@@ -8,6 +8,8 @@ describe("gender ratio", () => {
     assert.deepEqual(caps(30, 2, 1), { male: 20, female: 10 });
     assert.deepEqual(caps(31, 1, 1), { male: 15, female: 16 });
     assert.deepEqual(caps(10, 0, 1), { male: 0, female: 10 });
+    assert.deepEqual(caps(30, 50, 50), { male: 15, female: 15 });
+    assert.deepEqual(caps(30, 100, 0), { male: 30, female: 0 });
   });
 
   it("offers school rows only for two or more schools, and college rows only when a school has two colleges", () => {

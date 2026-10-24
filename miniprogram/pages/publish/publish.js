@@ -88,8 +88,8 @@ Page({
       oversub: false,
       campusTargets: [],
       genderRatioOn: false,
-      overallMale: 1,
-      overallFemale: 1,
+      overallMale: 50,
+      overallFemale: 50,
       genderSchools: [],
       genderColleges: [],
       privateJoin: false,
@@ -299,43 +299,23 @@ Page({
   toggleGender() {
     this.setData({ "form.genderRatioOn": !this.data.form.genderRatioOn });
   },
-  toggleGenderRow(e) {
+  setRatio(e) {
+    const value = Math.min(100, Math.max(0, Math.round(Number(e.detail.value) || 0)));
     const bucket = e.currentTarget.dataset.bucket;
-    const i = Number(e.currentTarget.dataset.i);
-    const key = bucket === "college" ? "genderColleges" : "genderSchools";
-    const rows = (this.data.form[key] || []).slice();
-    if (!rows[i]) return;
-    rows[i] = Object.assign({}, rows[i], { on: !rows[i].on });
-    this.setData({ ["form." + key]: rows });
-  },
-  stepRatio(e) {
-    const bucket = e.currentTarget.dataset.bucket;
-    const side = e.currentTarget.dataset.side;
-    const dir = Number(e.currentTarget.dataset.dir);
-    const form = this.data.form;
     if (bucket === "overall") {
-      if (!form.genderRatioOn) this.setData({ "form.genderRatioOn": true });
-      const key = side === "female" ? "overallFemale" : "overallMale";
-      const other = key === "overallFemale" ? Number(form.overallMale) : Number(form.overallFemale);
-      let next = Number(form[key]) + dir;
-      if (next < 0) next = 0;
-      if (next > 99) next = 99;
-      if (next === 0 && other === 0) return;
-      this.setData({ ["form." + key]: next });
+      this.setData({
+        "form.genderRatioOn": true,
+        "form.overallMale": value,
+        "form.overallFemale": 100 - value,
+      });
       return;
     }
     const key = bucket === "college" ? "genderColleges" : "genderSchools";
     const i = Number(e.currentTarget.dataset.i);
-    const rows = (form[key] || []).slice();
-    const row = rows[i];
-    if (!row) return;
-    const other = side === "female" ? Number(row.male) : Number(row.female);
-    let next = Number(row[side]) + dir;
-    if (next < 0) next = 0;
-    if (next > 99) next = 99;
-    if (next === 0 && other === 0) return;
-    rows[i] = Object.assign({}, row, { [side]: next });
-    this.setData({ ["form." + key]: rows });
+    const rows = (this.data.form[key] || []).slice();
+    if (!rows[i]) return;
+    rows[i] = Object.assign({}, rows[i], { on: true, share: value, male: value, female: 100 - value });
+    this.setData({ "form.genderRatioOn": true, ["form." + key]: rows });
   },
   toggleOversub() {
     this.setData({ "form.oversub": !this.data.form.oversub });

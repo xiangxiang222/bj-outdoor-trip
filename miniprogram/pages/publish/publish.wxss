@@ -202,15 +202,10 @@
   font-size: calc(26rpx * var(--ui-scale));
   font-weight: 700;
 }
-.ratio {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12rpx;
-  padding: 8rpx 28rpx 20rpx;
-  font-size: calc(26rpx * var(--ui-scale));
-}
-.ratio-pair { display: flex; align-items: center; gap: 12rpx; }
+.ratio-slider, .ratio-block { padding: 4rpx 28rpx 8rpx; }
+.ratio-block { margin: 0 28rpx 16rpx; padding: 12rpx 16rpx 4rpx; border: 1px solid #f0d4d6; border-radius: 20rpx; }
+.ratio-cap { display: flex; align-items: baseline; justify-content: space-between; font-size: calc(26rpx * var(--ui-scale)); }
+.ratio-slider.dim, .ratio-block.dim { opacity: 0.45; }
 .ratio.dim { opacity: 0.45; }
 .ratio-name { font-weight: 700; }
 .colon { font-weight: 700; }
@@ -233,7 +228,7 @@
   font-weight: 600;
 }
 .num { min-width: 48rpx; text-align: center; font-weight: 700; }
-.ratio-block { margin: 0 28rpx 16rpx; border: 1px solid #f0d4d6; border-radius: 20rpx; overflow: hidden; }
+.ratio-block { margin: 0 28rpx 16rpx; border: 1px solid #f0d4d6; border-radius: 20rpx; }
 .note-block { padding: 20rpx 28rpx 24rpx; }
 .note {
   width: auto;
