@@ -1,5 +1,5 @@
 export function emptyGenderRatio() {
-  return { on: false, overall: { male: 1, female: 1 }, schools: [], colleges: [] };
+  return { on: false, overall: { male: 50, female: 50 }, schools: [], colleges: [] };
 }
 
 export function groupsFromTargets(targets) {
@@ -26,7 +26,15 @@ export function groupsFromTargets(targets) {
 function num(value, fallback = 1) {
   const n = Math.round(Number(value));
   if (!Number.isFinite(n)) return fallback;
-  return Math.min(99, Math.max(0, n));
+  return Math.min(100, Math.max(0, n));
+}
+
+export function maleShare(male, female) {
+  const m = num(male, 50);
+  const f = num(female, 50);
+  const total = m + f;
+  if (!total) return 50;
+  return Math.min(100, Math.max(0, Math.round((100 * m) / total)));
 }
 
 export function syncGenderRatio(current, targets) {
@@ -36,17 +44,17 @@ export function syncGenderRatio(current, targets) {
   const prevSchools = new Map((base.schools || []).map((row) => [row.school, row]));
   const schools = groups.schools.map((school) => {
     const prev = prevSchools.get(school);
-    if (!prev) return { school, on: false, male: overall.male, female: overall.female };
-    return { school, on: prev.on !== false, male: num(prev.male, overall.male), female: num(prev.female, overall.female) };
+    if (!prev) return { school, on: true, male: overall.male, female: overall.female };
+    return { school, on: true, male: num(prev.male, overall.male), female: num(prev.female, overall.female) };
   });
   const prevColleges = new Map((base.colleges || []).map((row) => [`${row.school}\0${row.college}`, row]));
   const colleges = groups.colleges.map((row) => {
     const prev = prevColleges.get(`${row.school}\0${row.college}`);
-    if (!prev) return { school: row.school, college: row.college, on: false, male: overall.male, female: overall.female };
+    if (!prev) return { school: row.school, college: row.college, on: true, male: overall.male, female: overall.female };
     return {
       school: row.school,
       college: row.college,
-      on: prev.on !== false,
+      on: true,
       male: num(prev.male, overall.male),
       female: num(prev.female, overall.female),
     };
@@ -59,13 +67,18 @@ export function genderRatioPayload(model) {
   if (!ratio.on) return { on: false };
   return {
     on: true,
-    overall: { male: num(ratio.overall && ratio.overall.male, 1), female: num(ratio.overall && ratio.overall.female, 1) },
-    schools: (ratio.schools || [])
-      .filter((row) => row.on)
-      .map((row) => ({ school: row.school, male: num(row.male, 1), female: num(row.female, 1) })),
-    colleges: (ratio.colleges || [])
-      .filter((row) => row.on)
-      .map((row) => ({ school: row.school, college: row.college, male: num(row.male, 1), female: num(row.female, 1) })),
+    overall: (() => {
+      const male = maleShare(ratio.overall && ratio.overall.male, ratio.overall && ratio.overall.female);
+      return { male, female: 100 - male };
+    })(),
+    schools: (ratio.schools || []).map((row) => {
+      const male = maleShare(row.male, row.female);
+      return { school: row.school, male, female: 100 - male };
+    }),
+    colleges: (ratio.colleges || []).map((row) => {
+      const male = maleShare(row.male, row.female);
+      return { school: row.school, college: row.college, male, female: 100 - male };
+    }),
   };
 }
 

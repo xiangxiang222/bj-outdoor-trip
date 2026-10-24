@@ -87,6 +87,8 @@
   "男女比例": "Gender balance",
   "限制男女比例": "Limit the gender balance",
   "按这趟车的座位算。1 比 1、30 座，就是男生和女生最多各 15 人。": "Counted against the bus seats. 1:1 on 30 seats means at most 15 men and 15 women.",
+  "一共 100。滑块往右，男生占得更多；往左，女生占得更多。50 是对半。": "The bar is 100. Drag right for more men, left for more women. 50 is even.",
+  "全团始终要满足。两所以上学校时，每所学校再单独拖一条；同一学校有两个以上学院时，每个学院再单独拖一条。": "The whole trip always counts. Two or more schools each get a bar. Two or more colleges at one school each get a bar.",
   "全团": "Whole trip",
   "男": "Men",
   "女": "Women",

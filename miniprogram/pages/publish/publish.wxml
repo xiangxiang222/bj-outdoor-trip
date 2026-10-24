@@ -179,77 +179,32 @@
       <text class="k wide">{{tr.t('男女比例', lang)}}</text>
       <view class="sw {{form.genderRatioOn ? 'on' : ''}}"><view class="knob"></view></view>
     </view>
-    <view class="hint">{{tr.t('按这趟车的座位算。1 比 1、30 座，就是男生和女生最多各 15 人。', lang)}}</view>
-    <view class="ratio {{form.genderRatioOn ? '' : 'dim'}}">
-      <text class="ratio-name">{{tr.t('全团', lang)}}</text>
-      <view class="ratio-pair">
-        <text>{{tr.t('男', lang)}}</text>
-        <view class="stepper">
-          <view class="step" catchtap="stepRatio" data-bucket="overall" data-side="male" data-dir="-1">−</view>
-          <text class="num">{{form.overallMale}}</text>
-          <view class="step" catchtap="stepRatio" data-bucket="overall" data-side="male" data-dir="1">+</view>
-        </view>
+    <view class="hint">{{tr.t('一共 100。滑块往右，男生占得更多；往左，女生占得更多。50 是对半。', lang)}}</view>
+    <view class="ratio-slider {{form.genderRatioOn ? '' : 'dim'}}">
+      <view class="ratio-cap">
+        <text>男 {{form.overallMale}}</text>
+        <text class="ratio-name">{{tr.t('全团', lang)}}</text>
+        <text>女 {{100 - form.overallMale}}</text>
       </view>
-      <view class="ratio-pair">
-        <text>{{tr.t('女', lang)}}</text>
-        <view class="stepper">
-          <view class="step" catchtap="stepRatio" data-bucket="overall" data-side="female" data-dir="-1">−</view>
-          <text class="num">{{form.overallFemale}}</text>
-          <view class="step" catchtap="stepRatio" data-bucket="overall" data-side="female" data-dir="1">+</view>
-        </view>
-      </view>
+      <slider min="0" max="100" value="{{form.overallMale}}" activeColor="#8c3038" backgroundColor="#f3c1c6" block-size="24" disabled="{{!form.genderRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="overall" />
     </view>
-    <block wx:if="{{form.genderRatioOn}}">
-      <view class="ratio-block" wx:for="{{form.genderSchools}}" wx:key="school">
-        <view class="line" data-bucket="school" data-i="{{index}}" bindtap="toggleGenderRow">
-          <text class="k wide">{{item.school}}</text>
-          <view class="sw {{item.on ? 'on' : ''}}"><view class="knob"></view></view>
-        </view>
-        <view class="ratio" wx:if="{{item.on}}">
-          <view class="ratio-pair">
-            <text>{{tr.t('男', lang)}}</text>
-            <view class="stepper">
-              <view class="step" catchtap="stepRatio" data-bucket="school" data-i="{{index}}" data-side="male" data-dir="-1">−</view>
-              <text class="num">{{item.male}}</text>
-              <view class="step" catchtap="stepRatio" data-bucket="school" data-i="{{index}}" data-side="male" data-dir="1">+</view>
-            </view>
-          </view>
-          <view class="ratio-pair">
-            <text>{{tr.t('女', lang)}}</text>
-            <view class="stepper">
-              <view class="step" catchtap="stepRatio" data-bucket="school" data-i="{{index}}" data-side="female" data-dir="-1">−</view>
-              <text class="num">{{item.female}}</text>
-              <view class="step" catchtap="stepRatio" data-bucket="school" data-i="{{index}}" data-side="female" data-dir="1">+</view>
-            </view>
-          </view>
-        </view>
+    <view class="ratio-block {{form.genderRatioOn ? '' : 'dim'}}" wx:for="{{form.genderSchools}}" wx:key="school">
+      <view class="ratio-cap">
+        <text>男 {{item.share}}</text>
+        <text class="ratio-name">{{item.school}}</text>
+        <text>女 {{100 - item.share}}</text>
       </view>
-      <view class="ratio-block" wx:for="{{form.genderColleges}}" wx:key="index">
-        <view class="line" data-bucket="college" data-i="{{index}}" bindtap="toggleGenderRow">
-          <text class="k wide">{{item.school}} · {{item.college}}</text>
-          <view class="sw {{item.on ? 'on' : ''}}"><view class="knob"></view></view>
-        </view>
-        <view class="ratio" wx:if="{{item.on}}">
-          <view class="ratio-pair">
-            <text>{{tr.t('男', lang)}}</text>
-            <view class="stepper">
-              <view class="step" catchtap="stepRatio" data-bucket="college" data-i="{{index}}" data-side="male" data-dir="-1">−</view>
-              <text class="num">{{item.male}}</text>
-              <view class="step" catchtap="stepRatio" data-bucket="college" data-i="{{index}}" data-side="male" data-dir="1">+</view>
-            </view>
-          </view>
-          <view class="ratio-pair">
-            <text>{{tr.t('女', lang)}}</text>
-            <view class="stepper">
-              <view class="step" catchtap="stepRatio" data-bucket="college" data-i="{{index}}" data-side="female" data-dir="-1">−</view>
-              <text class="num">{{item.female}}</text>
-              <view class="step" catchtap="stepRatio" data-bucket="college" data-i="{{index}}" data-side="female" data-dir="1">+</view>
-            </view>
-          </view>
-        </view>
+      <slider min="0" max="100" value="{{item.share}}" activeColor="#8c3038" backgroundColor="#f3c1c6" block-size="24" disabled="{{!form.genderRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="school" data-i="{{index}}" />
+    </view>
+    <view class="ratio-block {{form.genderRatioOn ? '' : 'dim'}}" wx:for="{{form.genderColleges}}" wx:key="index">
+      <view class="ratio-cap">
+        <text>男 {{item.share}}</text>
+        <text class="ratio-name">{{item.school}} · {{item.college}}</text>
+        <text>女 {{100 - item.share}}</text>
       </view>
-      <view class="hint" wx:if="{{!form.genderSchools.length && !form.genderColleges.length}}">{{tr.t('报名范围里有两所以上学校，或同一学校有两个以上学院时，可以再单独限制。', lang)}}</view>
-    </block>
+      <slider min="0" max="100" value="{{item.share}}" activeColor="#8c3038" backgroundColor="#f3c1c6" block-size="24" disabled="{{!form.genderRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="college" data-i="{{index}}" />
+    </view>
+    <view class="hint">{{tr.t('全团始终要满足。两所以上学校时，每所学校再单独拖一条；同一学校有两个以上学院时，每个学院再单独拖一条。', lang)}}</view>
   </block>
 
   <view class="line" bindtap="togglePrivateJoin">
