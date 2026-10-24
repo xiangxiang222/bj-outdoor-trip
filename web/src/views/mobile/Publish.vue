@@ -99,7 +99,7 @@
           <div class="scope">
             <div class="scope-h"><span>报名范围</span></div>
             <p class="hint">谁可以报名。留空表示不限学校，也可以和发起学校不同。</p>
-            <CampusTargetList v-model="form.campusTargets" />
+            <CampusTargetList v-model="form.campusTargets" v-model:ratio="form.genderRatio" />
           </div>
           <div class="scope">
             <GenderRatioFields v-model="form.genderRatio" :targets="form.campusTargets" />

@@ -1,23 +1,11 @@
 function groupsFromTargets(targets) {
   const schools = [];
-  const collegesBySchool = {};
   (targets || []).forEach((raw) => {
     const school = String((raw && raw.school) || "").trim();
-    if (!school) return;
-    if (schools.indexOf(school) < 0) schools.push(school);
-    const college = String(raw.college || "").trim();
-    if (!college) return;
-    const list = collegesBySchool[school] || [];
-    if (list.indexOf(college) < 0) list.push(college);
-    collegesBySchool[school] = list;
+    if (!school || schools.indexOf(school) >= 0) return;
+    schools.push(school);
   });
-  const collegeRows = [];
-  Object.keys(collegesBySchool).forEach((school) => {
-    const colleges = collegesBySchool[school];
-    if (colleges.length < 2) return;
-    colleges.forEach((college) => collegeRows.push({ school, college }));
-  });
-  return { schools: schools.length >= 2 ? schools : [], colleges: collegeRows };
+  return { schools };
 }
 
 function num(value, fallback) {
@@ -36,10 +24,6 @@ function maleShare(male, female) {
 
 function syncGenderRatio(current, targets) {
   const base = current || {};
-  const overall = {
-    male: num(base.overallMale, 1),
-    female: num(base.overallFemale, 1),
-  };
   const groups = groupsFromTargets(targets);
   const prevSchools = {};
   (base.genderSchools || []).forEach((row) => {
@@ -47,40 +31,29 @@ function syncGenderRatio(current, targets) {
   });
   const genderSchools = groups.schools.map((school) => {
     const prev = prevSchools[school];
-    if (!prev) return { school, on: true, male: overall.male, female: overall.female, share: maleShare(overall.male, overall.female) };
+    if (!prev) return { school, on: false, male: 50, female: 50, share: 50 };
     const share = maleShare(prev.male, prev.female);
-    return { school, on: true, male: share, female: 100 - share, share };
+    return { school, on: !!prev.on, male: share, female: 100 - share, share };
   });
-  const prevColleges = {};
-  (base.genderColleges || []).forEach((row) => {
-    prevColleges[row.school + "\0" + row.college] = row;
-  });
-  const genderColleges = groups.colleges.map((row) => {
-    const prev = prevColleges[row.school + "\0" + row.college];
-    if (!prev) {
-      const share = maleShare(overall.male, overall.female);
-      return { school: row.school, college: row.college, on: true, male: share, female: 100 - share, share };
-    }
-    const share = maleShare(prev.male, prev.female);
-    return { school: row.school, college: row.college, on: true, male: share, female: 100 - share, share };
-  });
-  return { genderSchools, genderColleges };
+  return { genderSchools, genderColleges: [] };
 }
 
 function payload(form) {
-  if (form.organizerType !== "campus" || form.channel === "activity" || !form.genderRatioOn) return { on: false };
-  return {
-    on: true,
-    overall: { male: maleShare(form.overallMale, form.overallFemale), female: 100 - maleShare(form.overallMale, form.overallFemale) },
-    schools: (form.genderSchools || []).map((row) => {
-      const male = maleShare(row.male, row.female);
-      return { school: row.school, male, female: 100 - male };
-    }),
-    colleges: (form.genderColleges || []).map((row) => {
-      const male = maleShare(row.male, row.female);
-      return { school: row.school, college: row.college, male, female: 100 - male };
-    }),
-  };
+  if (form.organizerType !== "campus" || form.channel === "activity") return { on: false };
+  const schools = (form.genderSchools || []).filter((row) => row && row.on && row.school);
+  if (schools.length) {
+    return {
+      on: true,
+      schools: schools.map((row) => {
+        const male = maleShare(row.male, row.female);
+        return { school: row.school, male, female: 100 - male };
+      }),
+      colleges: [],
+    };
+  }
+  if (!form.genderRatioOn) return { on: false };
+  const male = maleShare(form.overallMale, form.overallFemale);
+  return { on: true, overall: { male, female: 100 - male }, schools: [], colleges: [] };
 }
 
 module.exports = { syncGenderRatio, payload };

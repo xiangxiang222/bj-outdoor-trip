@@ -1,12 +1,11 @@
 <template>
   <div class="gender-ratio">
     <div class="gender-head">
-      <el-switch :model-value="!!model.on" @change="setOn" />
-      <span>限制男女比例</span>
+      <el-switch :model-value="!!model.on && !schoolMode" :disabled="schoolMode" @change="setOn" />
+      <span>全团</span>
     </div>
-    <p class="gender-note">男生名额按 100 计。</p>
-    <div class="ratio-card" :class="{ off: !model.on }">
-      <div class="ratio-kicker">全团</div>
+    <p class="gender-note">{{ note }}</p>
+    <div class="ratio-card" :class="{ off: !model.on || schoolMode }">
       <div class="ratio-figures">
         <div class="ratio-fig"><span>男生</span><strong>{{ share(model.overall) }}</strong></div>
         <div class="ratio-fig end"><span>女生</span><strong>{{ 100 - share(model.overall) }}</strong></div>
@@ -15,34 +14,16 @@
         :model-value="share(model.overall)"
         :min="0"
         :max="100"
-        :disabled="!model.on"
+        :disabled="!model.on || schoolMode"
         :format-tooltip="tip"
         @input="setOverallPercent"
       />
     </div>
-    <div v-for="(row, i) in model.schools" :key="'s' + row.school" class="ratio-card" :class="{ off: !model.on }">
-      <div class="ratio-kicker">{{ row.school }}</div>
-      <div class="ratio-figures">
-        <div class="ratio-fig"><span>男生</span><strong>{{ share(row) }}</strong></div>
-        <div class="ratio-fig end"><span>女生</span><strong>{{ 100 - share(row) }}</strong></div>
-      </div>
-      <el-slider :model-value="share(row)" :min="0" :max="100" :disabled="!model.on" :format-tooltip="tip" @input="setRowPercent('schools', i, $event)" />
-    </div>
-    <div v-for="(row, i) in model.colleges" :key="'c' + row.school + row.college" class="ratio-card" :class="{ off: !model.on }">
-      <div class="ratio-kicker">{{ row.college }}</div>
-      <div class="ratio-meta">{{ row.school }}</div>
-      <div class="ratio-figures">
-        <div class="ratio-fig"><span>男生</span><strong>{{ share(row) }}</strong></div>
-        <div class="ratio-fig end"><span>女生</span><strong>{{ 100 - share(row) }}</strong></div>
-      </div>
-      <el-slider :model-value="share(row)" :min="0" :max="100" :disabled="!model.on" :format-tooltip="tip" @input="setRowPercent('colleges', i, $event)" />
-    </div>
-    <p v-if="(model.schools && model.schools.length) || (model.colleges && model.colleges.length)" class="gender-note">全团限制始终生效。学校与学院可另行设置。</p>
   </div>
 </template>
 
 <script setup>
-import { watch } from "vue";
+import { computed, watch } from "vue";
 import { maleShare, syncGenderRatio } from "@/utils/genderRatio";
 
 const model = defineModel({ type: Object, required: true });
@@ -53,12 +34,17 @@ const props = defineProps({
 watch(
   () => JSON.stringify(props.targets || []),
   () => {
-    const next = syncGenderRatio(model.value, props.targets);
-    next.on = !!(model.value && model.value.on);
-    model.value = next;
+    model.value = syncGenderRatio(model.value, props.targets);
   },
   { immediate: true }
 );
+
+const schoolMode = computed(() => ((model.value && model.value.schools) || []).some((row) => row.on));
+const note = computed(() => {
+  if (schoolMode.value) return "已按学校设置，不能再设全团。";
+  if (model.value && model.value.on) return "已按全团设置。学校不再单独设置。";
+  return "男生名额按 100 计。";
+});
 
 function share(row) {
   const src = row || {};
@@ -75,22 +61,17 @@ function pair(value) {
 }
 
 function setOn(on) {
+  if (schoolMode.value) return;
   const next = syncGenderRatio(model.value, props.targets);
   next.on = !!on;
   model.value = next;
 }
 
 function setOverallPercent(value) {
+  if (schoolMode.value) return;
   const next = syncGenderRatio({ ...model.value, overall: pair(value) }, props.targets);
   next.on = true;
   model.value = next;
-}
-
-function setRowPercent(key, index, value) {
-  const rows = (model.value[key] || []).slice();
-  const current = rows[index] || {};
-  rows[index] = { ...current, ...pair(value), on: true };
-  model.value = { ...model.value, on: true, [key]: rows };
 }
 </script>
 

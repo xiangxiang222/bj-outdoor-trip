@@ -25,7 +25,7 @@ describe("gender ratio", () => {
     ]);
   });
 
-  it("drops a school ratio when the trip only names one school", () => {
+  it("uses a school ratio instead of the whole trip, even for one school", () => {
     const rule = normalize(
       {
         on: true,
@@ -35,11 +35,12 @@ describe("gender ratio", () => {
       [{ school: "北京大学", college: "" }]
     );
     assert.equal(rule.on, true);
-    assert.deepEqual(rule.schools, []);
-    assert.equal(rule.label, "男女比例 全团 1:1");
+    assert.equal(rule.overall, null);
+    assert.deepEqual(rule.schools, [{ school: "北京大学", male: 0, female: 1 }]);
+    assert.equal(rule.label, "男女比例 北京大学 0:1");
   });
 
-  it("keeps a college ratio for the colleges that were actually opened", () => {
+  it("ignores college ratios and keeps the whole-trip ratio", () => {
     const rule = normalize(
       {
         on: true,
@@ -54,7 +55,8 @@ describe("gender ratio", () => {
         { school: "北京大学", college: "光华管理学院" },
       ]
     );
-    assert.equal(rule.colleges.length, 1);
-    assert.equal(rule.colleges[0].college, "信息学院");
+    assert.deepEqual(rule.colleges, []);
+    assert.deepEqual(rule.overall, { male: 1, female: 2 });
+    assert.equal(rule.label, "男女比例 全团 1:2");
   });
 });

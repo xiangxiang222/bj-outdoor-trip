@@ -51,7 +51,7 @@
       <p class="muted">报名超过座位时抽签确认出行人，没超过就全部确认。</p>
       <p v-if="form.offerType === 'free'" class="muted">免费团如果报名范围留空，默认只让发起学校的师生报名。</p>
       <label>报名范围</label>
-      <CampusTargetList v-model="form.campusTargets" />
+      <CampusTargetList v-model="form.campusTargets" v-model:ratio="form.genderRatio" />
       <p class="muted">谁可以报名。留空表示不限学校，也可以和发起学校不同。</p>
       <GenderRatioFields v-model="form.genderRatio" :targets="form.campusTargets" />
     </template>

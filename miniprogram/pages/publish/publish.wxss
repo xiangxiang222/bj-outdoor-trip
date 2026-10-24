@@ -161,6 +161,7 @@
   flex: none;
 }
 .sw.on { background: #8c3038; }
+.sw.locked { opacity: 0.35; }
 .knob {
   width: 46rpx;
   height: 46rpx;
@@ -194,6 +195,9 @@
   border-bottom: 1px solid #eeeeee;
 }
 .sk { width: 88rpx; color: #8d8d8d; font-size: calc(26rpx * var(--ui-scale)); }
+.ratio-label { width: auto; color: #1c1c1e; font-weight: 600; }
+.scope-line .sw { margin-left: auto; }
+.scope-slider { padding: 4rpx 20rpx 8rpx; }
 .sv { flex: 1; text-align: right; font-size: calc(28rpx * var(--ui-scale)); }
 .scope-del {
   padding: 18rpx 20rpx;

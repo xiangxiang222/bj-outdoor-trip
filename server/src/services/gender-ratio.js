@@ -20,6 +20,15 @@ function pair(male, female) {
   return { male: m, female: f };
 }
 
+function namedSchools(targets) {
+  const schools = [];
+  for (const raw of targets || []) {
+    const school = String(raw && raw.school || "").trim();
+    if (school && !schools.includes(school)) schools.push(school);
+  }
+  return schools;
+}
+
 function groupsFromTargets(targets) {
   const schools = [];
   const collegesBySchool = new Map();
@@ -45,24 +54,21 @@ function normalize(body, targets) {
   const src = body && typeof body === "object" ? body : {};
   const on = src.on === true || src.on === 1 || src.on === "1" || src.on === "true";
   if (!on) return off();
-  const overall = pair(src.overall && src.overall.male != null ? src.overall.male : src.male != null ? src.male : 1, src.overall && src.overall.female != null ? src.overall.female : src.female != null ? src.female : 1);
-  const allowed = groupsFromTargets(targets);
+  const allowed = new Set(namedSchools(targets));
   const schools = [];
   for (const row of Array.isArray(src.schools) ? src.schools : []) {
     if (!row || row.on === false) continue;
     const school = String(row.school || "").trim();
-    if (!allowed.schools.includes(school)) continue;
+    if (!allowed.has(school)) continue;
     schools.push({ school, ...pair(row.male, row.female) });
   }
-  const colleges = [];
-  for (const row of Array.isArray(src.colleges) ? src.colleges : []) {
-    if (!row || row.on === false) continue;
-    const school = String(row.school || "").trim();
-    const college = String(row.college || "").trim();
-    if (!allowed.colleges.some((item) => item.school === school && item.college === college)) continue;
-    colleges.push({ school, college, ...pair(row.male, row.female) });
+  if (schools.length) {
+    const rule = { on: true, overall: null, schools, colleges: [] };
+    rule.label = labelOf(rule);
+    return rule;
   }
-  const rule = { on: true, overall, schools, colleges };
+  const overall = pair(src.overall && src.overall.male != null ? src.overall.male : src.male != null ? src.male : 1, src.overall && src.overall.female != null ? src.overall.female : src.female != null ? src.female : 1);
+  const rule = { on: true, overall, schools: [], colleges: [] };
   rule.label = labelOf(rule);
   return rule;
 }
@@ -78,11 +84,12 @@ function caps(seats, male, female) {
 }
 
 function labelOf(rule) {
-  if (!rule || !rule.on || !rule.overall) return "";
-  const bits = [`全团 ${rule.overall.male}:${rule.overall.female}`];
-  for (const row of rule.schools || []) bits.push(`${row.school} ${row.male}:${row.female}`);
-  for (const row of rule.colleges || []) bits.push(`${row.school}${row.college} ${row.male}:${row.female}`);
-  return `男女比例 ${bits.join("，")}`;
+  if (!rule || !rule.on) return "";
+  if ((rule.schools || []).length) {
+    return `男女比例 ${(rule.schools || []).map((row) => `${row.school} ${row.male}:${row.female}`).join("，")}`;
+  }
+  if (!rule.overall) return "";
+  return `男女比例 全团 ${rule.overall.male}:${rule.overall.female}`;
 }
 
 function readRule(raw) {
@@ -97,20 +104,14 @@ function readRule(raw) {
       return off();
     }
   }
-  if (!data || !data.on || !data.overall) return off();
+  if (!data || !data.on) return off();
   try {
-    const overall = pair(data.overall.male, data.overall.female);
     const schools = (Array.isArray(data.schools) ? data.schools : [])
       .map((row) => ({ school: String(row.school || "").trim(), ...pair(row.male, row.female) }))
       .filter((row) => row.school);
-    const colleges = (Array.isArray(data.colleges) ? data.colleges : [])
-      .map((row) => ({
-        school: String(row.school || "").trim(),
-        college: String(row.college || "").trim(),
-        ...pair(row.male, row.female),
-      }))
-      .filter((row) => row.school && row.college);
-    const rule = { on: true, overall, schools, colleges };
+    const overall = schools.length || !data.overall ? null : pair(data.overall.male, data.overall.female);
+    if (!overall && !schools.length) return off();
+    const rule = { on: true, overall, schools, colleges: [] };
     rule.label = labelOf(rule);
     return rule;
   } catch {
@@ -164,12 +165,6 @@ function bestSchoolRule(rules, school) {
     .sort((a, b) => String(b.school).length - String(a.school).length)[0];
 }
 
-function bestCollegeRule(rules, school, college) {
-  return (rules || [])
-    .filter((row) => schoolMatches(school, [row.school]) && schoolMatches(college, [row.college]))
-    .sort((a, b) => String(b.college).length - String(a.college).length)[0];
-}
-
 function assertGenderRatio(schedule, user, gender) {
   if (!schedule || schedule.channel === "activity") return;
   if (user && Number(user.is_virtual) === 1) return;
@@ -178,19 +173,15 @@ function assertGenderRatio(schedule, user, gender) {
   if (gender !== "male" && gender !== "female") fail(400, "这个团限制了男女比例，请填写身份证");
   const seats = Number(schedule.max_seats) || 0;
   const rows = roster(schedule.id);
-  assertBucket(rows, gender, rule.overall, seats, "全团");
-  const schoolRule = bestSchoolRule(rule.schools, user && user.school);
-  if (schoolRule) {
-    const mine = rows.filter((row) => schoolMatches(row.school, [schoolRule.school]));
-    assertBucket(mine, gender, schoolRule, seats, schoolRule.school);
+  if ((rule.schools || []).length) {
+    const schoolRule = bestSchoolRule(rule.schools, user && user.school);
+    if (schoolRule) {
+      const mine = rows.filter((row) => schoolMatches(row.school, [schoolRule.school]));
+      assertBucket(mine, gender, schoolRule, seats, schoolRule.school);
+    }
+    return;
   }
-  const collegeRule = bestCollegeRule(rule.colleges, user && user.school, user && user.college);
-  if (collegeRule) {
-    const mine = rows.filter(
-      (row) => schoolMatches(row.school, [collegeRule.school]) && schoolMatches(row.college, [collegeRule.college])
-    );
-    assertBucket(mine, gender, collegeRule, seats, `${collegeRule.school}${collegeRule.college}`);
-  }
+  if (rule.overall) assertBucket(rows, gender, rule.overall, seats, "全团");
 }
 
 module.exports = {
