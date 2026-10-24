@@ -4,12 +4,12 @@
       <el-switch :model-value="!!model.on" @change="setOn" />
       <span>限制男女比例</span>
     </div>
-    <p class="gender-note">一共 100。滑块往右，男生占得更多；往左，女生占得更多。50 是对半。30 座、滑到 50，男生和女生最多各 15 人。</p>
-    <div class="ratio-slider" :class="{ off: !model.on }">
-      <div class="ratio-cap">
-        <span>男 {{ share(model.overall) }}</span>
-        <strong>全团</strong>
-        <span>女 {{ 100 - share(model.overall) }}</span>
+    <p class="gender-note">男生名额按 100 计。</p>
+    <div class="ratio-card" :class="{ off: !model.on }">
+      <div class="ratio-kicker">全团</div>
+      <div class="ratio-figures">
+        <div class="ratio-fig"><span>男生</span><strong>{{ share(model.overall) }}</strong></div>
+        <div class="ratio-fig end"><span>女生</span><strong>{{ 100 - share(model.overall) }}</strong></div>
       </div>
       <el-slider
         :model-value="share(model.overall)"
@@ -20,23 +20,24 @@
         @input="setOverallPercent"
       />
     </div>
-    <div v-for="(row, i) in model.schools" :key="'s' + row.school" class="ratio-block" :class="{ off: !model.on }">
-      <div class="ratio-cap">
-        <span>男 {{ share(row) }}</span>
-        <strong>{{ row.school }}</strong>
-        <span>女 {{ 100 - share(row) }}</span>
+    <div v-for="(row, i) in model.schools" :key="'s' + row.school" class="ratio-card" :class="{ off: !model.on }">
+      <div class="ratio-kicker">{{ row.school }}</div>
+      <div class="ratio-figures">
+        <div class="ratio-fig"><span>男生</span><strong>{{ share(row) }}</strong></div>
+        <div class="ratio-fig end"><span>女生</span><strong>{{ 100 - share(row) }}</strong></div>
       </div>
       <el-slider :model-value="share(row)" :min="0" :max="100" :disabled="!model.on" :format-tooltip="tip" @input="setRowPercent('schools', i, $event)" />
     </div>
-    <div v-for="(row, i) in model.colleges" :key="'c' + row.school + row.college" class="ratio-block" :class="{ off: !model.on }">
-      <div class="ratio-cap">
-        <span>男 {{ share(row) }}</span>
-        <strong>{{ row.school }} · {{ row.college }}</strong>
-        <span>女 {{ 100 - share(row) }}</span>
+    <div v-for="(row, i) in model.colleges" :key="'c' + row.school + row.college" class="ratio-card" :class="{ off: !model.on }">
+      <div class="ratio-kicker">{{ row.college }}</div>
+      <div class="ratio-meta">{{ row.school }}</div>
+      <div class="ratio-figures">
+        <div class="ratio-fig"><span>男生</span><strong>{{ share(row) }}</strong></div>
+        <div class="ratio-fig end"><span>女生</span><strong>{{ 100 - share(row) }}</strong></div>
       </div>
       <el-slider :model-value="share(row)" :min="0" :max="100" :disabled="!model.on" :format-tooltip="tip" @input="setRowPercent('colleges', i, $event)" />
     </div>
-    <p class="gender-note">全团始终要满足。两所以上学校时，每所学校再单独拖一条；同一学校有两个以上学院时，每个学院再单独拖一条。</p>
+    <p v-if="(model.schools && model.schools.length) || (model.colleges && model.colleges.length)" class="gender-note">全团限制始终生效。学校与学院可另行设置。</p>
   </div>
 </template>
 
@@ -65,7 +66,7 @@ function share(row) {
 }
 
 function tip(value) {
-  return `男 ${value} · 女 ${100 - value}`;
+  return `男生 ${value}，女生 ${100 - value}`;
 }
 
 function pair(value) {
@@ -96,18 +97,20 @@ function setRowPercent(key, index, value) {
 <style scoped>
 .gender-ratio { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 .gender-head { display: flex; align-items: center; gap: 10px; font-weight: 600; }
-.gender-note { margin: 0; color: #8d8d8d; font-size: 13px; line-height: 1.5; font-weight: 400; }
-.ratio-slider, .ratio-block { width: 100%; }
-.ratio-block { padding: 8px 12px 0; border: 1px solid #d9d9d9; border-radius: 12px; background: rgba(0, 0, 0, 0.03); }
-.ratio-cap { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13px; }
-.ratio-cap strong { font-size: 14px; }
-.ratio-slider :deep(.el-slider),
-.ratio-block :deep(.el-slider) {
+.gender-note { margin: 0; color: #8e8e93; font-size: 13px; line-height: 1.45; font-weight: 400; }
+.ratio-card { padding: 14px 14px 2px; border: 1px solid #d9d9d9; border-radius: 12px; background: rgba(0, 0, 0, 0.03); }
+.ratio-kicker { color: #1c1c1e; font-size: 15px; font-weight: 600; line-height: 1.3; }
+.ratio-meta { margin-top: 2px; color: #8e8e93; font-size: 12px; }
+.ratio-figures { display: flex; justify-content: space-between; margin-top: 12px; }
+.ratio-fig { display: flex; flex-direction: column; gap: 2px; }
+.ratio-fig.end { align-items: flex-end; }
+.ratio-fig span { color: #8e8e93; font-size: 12px; font-weight: 400; }
+.ratio-fig strong { color: #1c1c1e; font-size: 28px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.ratio-card :deep(.el-slider) {
   --el-slider-main-bg-color: rgba(0, 0, 0, 0.35);
   --el-slider-runway-bg-color: rgba(0, 0, 0, 0.10);
 }
-.ratio-slider :deep(.el-slider__button),
-.ratio-block :deep(.el-slider__button) {
+.ratio-card :deep(.el-slider__button) {
   border-color: rgba(0, 0, 0, 0.28);
   background: rgba(255, 255, 255, 0.92);
 }
