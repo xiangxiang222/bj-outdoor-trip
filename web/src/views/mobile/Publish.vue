@@ -101,9 +101,7 @@
             <p class="hint">谁可以报名。留空表示不限学校，也可以和发起学校不同。</p>
             <CampusTargetList v-model="form.campusTargets" v-model:ratio="form.genderRatio" />
           </div>
-          <div class="scope">
-            <GenderRatioFields v-model="form.genderRatio" :targets="form.campusTargets" />
-          </div>
+          <GenderRatioFields class="gender-in-card" v-model="form.genderRatio" :targets="form.campusTargets" />
         </template>
         <div class="row"><span>口令团</span><el-switch v-model="form.privateJoin" /></div>
         <div class="row" v-if="form.privateJoin"><span>入团口令</span><input class="input" v-model="form.joinCode" maxlength="16" placeholder="4～16 个字，可空则自动生成" /></div>
@@ -344,6 +342,7 @@ async function submit() {
 .row .input, .row .select { flex: 1; margin: 0; text-align: right; background: transparent; border: 0; }
 .hint { margin: 0; padding: 0 14px 10px; color: #8d8d8d; font-size: 13px; line-height: 1.5; }
 .scope { padding: 12px 14px 4px; }
+.gender-in-card { padding: 4px 14px 8px; }
 .scope-h { font-weight: 700; margin-bottom: 4px; }
 .note { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px 16px; }
 .note .input { margin: 0; }

@@ -198,23 +198,28 @@
       <view class="field-error in" wx:if="{{errors.campus}}">{{tr.t(errors.campus, lang)}}</view>
     </view>
 
-    <view class="line" bindtap="toggleGender">
-      <text class="k wide">{{tr.t('全团', lang)}}</text>
-      <view class="sw {{form.genderRatioOn && !form.schoolRatioOn ? 'on' : ''}} {{form.schoolRatioOn ? 'locked' : ''}}"><view class="knob"></view></view>
-    </view>
-    <view class="ratio-lead">{{tr.t(form.schoolRatioOn ? '已按学校设置，不能再设全团。' : (form.genderRatioOn ? '已按全团设置。学校不再单独设置。' : '男生名额按 100 计。'), lang)}}</view>
-    <view class="ratio-card {{form.genderRatioOn && !form.schoolRatioOn ? '' : 'dim'}}">
-      <view class="ratio-figures">
-        <view class="ratio-fig">
-          <text class="ratio-unit">{{tr.t('男生', lang)}}</text>
-          <text class="ratio-num">{{form.overallMale}}</text>
+    <view class="ratio-block">
+      <view class="line" bindtap="toggleGender">
+        <view class="ratio-copy">
+          <text class="ratio-title">{{tr.t('男女比例', lang)}}</text>
+          <text class="ratio-sub">{{tr.t(form.schoolRatioOn ? '已按学校设置' : (form.genderRatioOn ? '按全团计算' : '不限制'), lang)}}</text>
         </view>
-        <view class="ratio-fig end">
-          <text class="ratio-unit">{{tr.t('女生', lang)}}</text>
-          <text class="ratio-num">{{100 - form.overallMale}}</text>
-        </view>
+        <view class="sw {{form.genderRatioOn && !form.schoolRatioOn ? 'on' : ''}} {{form.schoolRatioOn ? 'locked' : ''}}"><view class="knob"></view></view>
       </view>
-      <slider min="0" max="100" value="{{form.overallMale}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" disabled="{{!form.genderRatioOn || form.schoolRatioOn}}" bindchange="setRatio" bindchanging="setRatio" data-bucket="overall" />
+      <view class="ratio-panel" wx:if="{{form.genderRatioOn && !form.schoolRatioOn}}">
+        <view class="ratio-figures">
+          <view class="ratio-fig">
+            <text class="ratio-unit">{{tr.t('男生', lang)}}</text>
+            <text class="ratio-num">{{form.overallMale}}</text>
+          </view>
+          <view class="ratio-fig end">
+            <text class="ratio-unit">{{tr.t('女生', lang)}}</text>
+            <text class="ratio-num">{{100 - form.overallMale}}</text>
+          </view>
+        </view>
+        <slider min="0" max="100" value="{{form.overallMale}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" bindchange="setRatio" bindchanging="setRatio" data-bucket="overall" />
+        <text class="ratio-foot">{{tr.t('男生和女生合计 100。学校不再单独设置。', lang)}}</text>
+      </view>
     </view>
   </block>
 

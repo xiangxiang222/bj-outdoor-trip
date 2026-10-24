@@ -187,7 +187,7 @@
           <AdminCampusTargetList v-model="neu.campusTargets" v-model:ratio="neu.genderRatio" />
           <p class="muted" style="margin:6px 0 0">谁可以报名。留空表示不限学校，也可以和发起学校不同。高校免费团如果这里留空，默认只让发起学校的师生报名。</p>
         </el-form-item>
-        <el-form-item v-if="neu.organizerType === 'campus'" label="男女比例">
+        <el-form-item v-if="neu.organizerType === 'campus'" label-width="0px">
           <GenderRatioFields v-model="neu.genderRatio" :targets="neu.campusTargets" />
         </el-form-item>
         <el-form-item label="虚拟报名">
@@ -320,7 +320,7 @@
             <AdminCampusTargetList v-model="limitForm.campusTargets" v-model:ratio="limitForm.genderRatio" />
             <p class="muted" style="margin:6px 0 0">谁可以报名。留空表示不限学校。发起学校只表示谁在组织。</p>
           </el-form-item>
-          <el-form-item label="男女比例">
+          <el-form-item label-width="0px">
             <GenderRatioFields v-model="limitForm.genderRatio" :targets="limitForm.campusTargets" />
           </el-form-item>
           <p class="muted">超额抽签：先报名待确认。人数超过座位才抽签，未超过则全部确认。</p>

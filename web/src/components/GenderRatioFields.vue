@@ -1,11 +1,13 @@
 <template>
   <div class="gender-ratio">
     <div class="gender-head">
+      <div class="gender-copy">
+        <span>男女比例</span>
+        <small>{{ note }}</small>
+      </div>
       <el-switch :model-value="!!model.on && !schoolMode" :disabled="schoolMode" @change="setOn" />
-      <span>全团</span>
     </div>
-    <p class="gender-note">{{ note }}</p>
-    <div class="ratio-card" :class="{ off: !model.on || schoolMode }">
+    <div v-if="model.on && !schoolMode" class="ratio-panel">
       <div class="ratio-figures">
         <div class="ratio-fig"><span>男生</span><strong>{{ share(model.overall) }}</strong></div>
         <div class="ratio-fig end"><span>女生</span><strong>{{ 100 - share(model.overall) }}</strong></div>
@@ -14,10 +16,10 @@
         :model-value="share(model.overall)"
         :min="0"
         :max="100"
-        :disabled="!model.on || schoolMode"
         :format-tooltip="tip"
         @input="setOverallPercent"
       />
+      <p class="gender-foot">男生和女生合计 100。学校不再单独设置。</p>
     </div>
   </div>
 </template>
@@ -41,9 +43,9 @@ watch(
 
 const schoolMode = computed(() => ((model.value && model.value.schools) || []).some((row) => row.on));
 const note = computed(() => {
-  if (schoolMode.value) return "已按学校设置，不能再设全团。";
-  if (model.value && model.value.on) return "已按全团设置。学校不再单独设置。";
-  return "男生名额按 100 计。";
+  if (schoolMode.value) return "已按学校设置";
+  if (model.value && model.value.on) return "按全团计算";
+  return "不限制";
 });
 
 function share(row) {
@@ -76,24 +78,24 @@ function setOverallPercent(value) {
 </script>
 
 <style scoped>
-.gender-ratio { display: flex; flex-direction: column; gap: 10px; width: 100%; }
-.gender-head { display: flex; align-items: center; gap: 10px; font-weight: 600; }
-.gender-note { margin: 0; color: #8e8e93; font-size: 13px; line-height: 1.45; font-weight: 400; }
-.ratio-card { padding: 14px 14px 2px; border: 1px solid #d9d9d9; border-radius: 12px; background: rgba(0, 0, 0, 0.03); }
-.ratio-kicker { color: #1c1c1e; font-size: 15px; font-weight: 600; line-height: 1.3; }
-.ratio-meta { margin-top: 2px; color: #8e8e93; font-size: 12px; }
-.ratio-figures { display: flex; justify-content: space-between; margin-top: 12px; }
+.gender-ratio { width: 100%; }
+.gender-head { display: flex; align-items: center; gap: 12px; min-height: 52px; }
+.gender-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.gender-copy span { color: #1c1c1e; font-weight: 600; }
+.gender-copy small { color: #8e8e93; font-size: 12px; font-weight: 400; line-height: 1.3; }
+.ratio-panel { padding-bottom: 8px; }
+.ratio-figures { display: flex; justify-content: space-between; }
 .ratio-fig { display: flex; flex-direction: column; gap: 2px; }
 .ratio-fig.end { align-items: flex-end; }
 .ratio-fig span { color: #8e8e93; font-size: 12px; font-weight: 400; }
 .ratio-fig strong { color: #1c1c1e; font-size: 28px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.ratio-card :deep(.el-slider) {
+.gender-foot { margin: 0; color: #8e8e93; font-size: 12px; line-height: 1.4; }
+.ratio-panel :deep(.el-slider) {
   --el-slider-main-bg-color: rgba(0, 0, 0, 0.35);
   --el-slider-runway-bg-color: rgba(0, 0, 0, 0.10);
 }
-.ratio-card :deep(.el-slider__button) {
+.ratio-panel :deep(.el-slider__button) {
   border-color: rgba(0, 0, 0, 0.28);
   background: rgba(255, 255, 255, 0.92);
 }
-.off { opacity: 0.45; }
 </style>
