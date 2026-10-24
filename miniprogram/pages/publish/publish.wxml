@@ -171,27 +171,23 @@
           <text class="chev">›</text>
         </view>
         <block wx:if="{{item.school}}">
-          <block wx:for="{{form.genderSchools}}" wx:for-item="ratio" wx:key="school">
-            <block wx:if="{{ratio.school == item.school}}">
-              <view class="scope-line" catchtap="toggleSchoolRatio" data-school="{{ratio.school}}">
-                <text class="sk ratio-label">{{tr.t('男女比例', lang)}}</text>
-                <view class="sw {{ratio.on && !form.genderRatioOn ? 'on' : ''}} {{form.genderRatioOn ? 'locked' : ''}}"><view class="knob"></view></view>
+          <view class="scope-line" catchtap="toggleSchoolRatio" data-school="{{item.school}}">
+            <text class="sk ratio-label">{{tr.t('男女比例', lang)}}</text>
+            <view class="sw {{form.genderRows[index].on && !form.genderRatioOn ? 'on' : ''}} {{form.genderRatioOn ? 'locked' : ''}}"><view class="knob"></view></view>
+          </view>
+          <view class="scope-slider" wx:if="{{form.genderRows[index].on && !form.genderRatioOn}}">
+            <view class="ratio-figures">
+              <view class="ratio-fig">
+                <text class="ratio-unit">{{tr.t('男生', lang)}}</text>
+                <text class="ratio-num">{{form.genderRows[index].share}}</text>
               </view>
-              <view class="scope-slider" wx:if="{{ratio.on && !form.genderRatioOn}}">
-                <view class="ratio-figures">
-                  <view class="ratio-fig">
-                    <text class="ratio-unit">{{tr.t('男生', lang)}}</text>
-                    <text class="ratio-num">{{ratio.share}}</text>
-                  </view>
-                  <view class="ratio-fig end">
-                    <text class="ratio-unit">{{tr.t('女生', lang)}}</text>
-                    <text class="ratio-num">{{100 - ratio.share}}</text>
-                  </view>
-                </view>
-                <slider min="0" max="100" value="{{ratio.share}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" bindchange="setRatio" bindchanging="setRatio" data-bucket="school" data-school="{{ratio.school}}" />
+              <view class="ratio-fig end">
+                <text class="ratio-unit">{{tr.t('女生', lang)}}</text>
+                <text class="ratio-num">{{100 - form.genderRows[index].share}}</text>
               </view>
-            </block>
-          </block>
+            </view>
+            <slider min="0" max="100" value="{{form.genderRows[index].share}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" bindchange="setRatio" bindchanging="setRatio" data-bucket="school" data-school="{{item.school}}" />
+          </view>
         </block>
         <view class="scope-del" catchtap="removeCampusTarget" data-i="{{index}}">{{tr.t('删除', lang)}}</view>
       </view>

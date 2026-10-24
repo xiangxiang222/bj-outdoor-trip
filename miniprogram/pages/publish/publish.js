@@ -2,7 +2,7 @@ const { request, showError } = require("../../utils/request");
 const { OFFER_TYPES } = require("../../utils/offer");
 const { KINDS } = require("../../utils/activity-kind");
 const { openCampusPick, emptyTarget, patchTarget } = require("../../utils/campus");
-const { syncGenderRatio, payload: genderPayload } = require("../../utils/gender-ratio");
+const { syncGenderRatio, genderRowsFor, payload: genderPayload } = require("../../utils/gender-ratio");
 
 const MEETUPS = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
 const DAYS = [1, 2, 3, "multi"];
@@ -92,6 +92,7 @@ Page({
       overallMale: 50,
       overallFemale: 50,
       genderSchools: [],
+      genderRows: [],
       genderColleges: [],
       privateJoin: false,
       joinCode: "",
@@ -217,26 +218,29 @@ Page({
       onPick: (names) => this.setData({ "form.comboRule.school": names[0] || "" }),
     });
   },
-  refreshGender(targets) {
-    const next = syncGenderRatio(this.data.form, targets);
-    const schoolRatioOn = (next.genderSchools || []).some((row) => row.on);
+  writeGender(targets, schools) {
+    const schoolRatioOn = (schools || []).some((row) => row && row.on);
     const patch = {
-      "form.genderSchools": next.genderSchools,
+      "form.campusTargets": targets,
+      "form.genderSchools": schools,
+      "form.genderRows": genderRowsFor(targets, schools),
       "form.genderColleges": [],
       "form.schoolRatioOn": schoolRatioOn,
     };
     if (schoolRatioOn) patch["form.genderRatioOn"] = false;
     this.setData(patch);
   },
+  refreshGender(targets) {
+    const next = syncGenderRatio(this.data.form, targets);
+    this.writeGender(targets, next.genderSchools);
+  },
   addCampusTarget() {
     const campusTargets = (this.data.form.campusTargets || []).concat([emptyTarget()]);
-    this.setData({ "form.campusTargets": campusTargets });
     this.refreshGender(campusTargets);
   },
   removeCampusTarget(e) {
     const i = Number(e.currentTarget.dataset.i);
     const campusTargets = (this.data.form.campusTargets || []).filter((_, idx) => idx !== i);
-    this.setData({ "form.campusTargets": campusTargets });
     this.refreshGender(campusTargets);
   },
   pickTargetSchool(e) {
@@ -248,7 +252,6 @@ Page({
       selected: row.school,
       onPick: (names) => {
         const campusTargets = patchTarget(this.data.form.campusTargets, i, "school", names[0] || "");
-        this.setData({ "form.campusTargets": campusTargets });
         this.refreshGender(campusTargets);
       },
     });
@@ -268,7 +271,6 @@ Page({
       selected: row.college,
       onPick: (names) => {
         const campusTargets = patchTarget(this.data.form.campusTargets, i, "college", names[0] || "");
-        this.setData({ "form.campusTargets": campusTargets });
         this.refreshGender(campusTargets);
       },
     });
@@ -314,12 +316,7 @@ Page({
     const rows = (this.data.form.genderSchools || []).map((row) => (
       row.school === school ? Object.assign({}, row, { on: !row.on }) : row
     ));
-    const schoolRatioOn = rows.some((row) => row.on);
-    this.setData({
-      "form.genderSchools": rows,
-      "form.schoolRatioOn": schoolRatioOn,
-      "form.genderRatioOn": schoolRatioOn ? false : this.data.form.genderRatioOn,
-    });
+    this.writeGender(this.data.form.campusTargets, rows);
   },
   setRatio(e) {
     const value = Math.min(100, Math.max(0, Math.round(Number(e.detail.value) || 0)));
@@ -338,11 +335,7 @@ Page({
     const rows = (this.data.form.genderSchools || []).map((row) => (
       row.school === school ? Object.assign({}, row, { on: true, share: value, male: value, female: 100 - value }) : row
     ));
-    this.setData({
-      "form.genderSchools": rows,
-      "form.schoolRatioOn": true,
-      "form.genderRatioOn": false,
-    });
+    this.writeGender(this.data.form.campusTargets, rows);
   },
   toggleOversub() {
     this.setData({ "form.oversub": !this.data.form.oversub });
