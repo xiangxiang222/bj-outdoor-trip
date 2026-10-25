@@ -56,7 +56,7 @@
             <span>积分</span>
           </button>
           <button type="button" @click="goAuth('/m/signin')">
-            <b>{{ hub.signedToday ? "已签到" : "去签" }}</b>
+            <b>{{ hub.signedToday ? "已签到" : "未签到" }}</b>
             <span>签到</span>
           </button>
           <button class="mine-more" type="button" @click="goAuth('/m/wallet')">更多</button>
