@@ -22,6 +22,9 @@ page { background-color: #f3f4f6; }
 .row { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 32rpx; border-bottom: 1rpx solid #f0f1f3; }
 .row:last-child { border-bottom: 0; }
 .hint { font-size: calc(24rpx * var(--ui-scale)); line-height: 1.5; }
+.rules { margin-top: 8rpx; }
+.rule-title { margin-top: 20rpx; color: #1c1c1e; font-weight: 700; font-size: calc(28rpx * var(--ui-scale)); }
+.rule-body { margin-top: 6rpx; color: #3a3a3a; font-size: calc(26rpx * var(--ui-scale)); line-height: 1.5; }
 .amt { font-weight: 600; }
 .amt.in { color: #8c3038; }
 .sec, .faq-label { margin: 28rpx 32rpx 12rpx; font-size: calc(24rpx * var(--ui-scale)); }
