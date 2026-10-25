@@ -39,8 +39,18 @@
       <input type="number" value="{{withdrawAmount}}" bindinput="setWithdraw" />
       <text class="all" bindtap="fillAll">{{tr.t('全部提现', lang)}}</text>
     </view>
-    <view class="hint">{{tr.t('可提现', lang)}} {{tr.t(rule.available, lang)}} {{tr.t('元。单笔上限 2000 元，不限次数。', lang)}}</view>
     <view class="hint" wx:if="{{!data.pinSet}}" bindtap="go" data-url="/pages/wallet-pin/wallet-pin">{{tr.t('请先设置 6 位支付密码。', lang)}}</view>
+    <view class="rules">
+      <view class="rule-title">{{tr.t('可提现额度', lang)}}</view>
+      <view class="rule-body">{{tr.t('当前账户余额全部可提现，不设最低提现金额。微信零钱按整数元记账。因微信商家转账到零钱单笔上限 2000 元，超过 2000 元时可连续分笔，每笔提交后立即处理。', lang)}}</view>
+      <view class="rule-body">{{tr.t('当前可提现', lang)}} {{tr.t(rule.available, lang)}} {{tr.t('元。', lang)}}</view>
+      <view class="rule-title">{{tr.t('每日提现次数', lang)}}</view>
+      <view class="rule-body">{{tr.t('不限制次数，可随时申请。', lang)}}</view>
+      <view class="rule-title">{{tr.t('提现时间', lang)}}</view>
+      <view class="rule-body">{{tr.t('每天 00:00–23:59（北京时间），全天可申请。', lang)}}</view>
+      <view class="rule-title">{{tr.t('到账时间', lang)}}</view>
+      <view class="rule-body">{{tr.t('提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。', lang)}}</view>
+    </view>
   </view>
   <view class="cash-btn" bindtap="askPin">{{tr.t('提现', lang)}}</view>
   <view class="cash-btn ghost" bindtap="backHome">{{tr.t('返回', lang)}}</view>

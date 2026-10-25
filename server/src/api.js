@@ -11,6 +11,7 @@ const { signUser, signAdmin, signGuide, authUser, optionalUser, authAdmin, authG
 const { parseIdCard, maskIdCard, lifeStageFromPerson } = require("./services/idcard");
 const { buildDemographics, maskPhone } = require("./services/biz");
 const { code2session, payLive, clientIp, loginLive, getUserPhoneNumber } = require("./services/wechat");
+const { assertTextSafe, assertTexts, assertImageFile } = require("./services/content-security");
 const { verifyIdentity } = require("./services/id-verify");
 const { issueSmsCode, smsLive } = require("./services/sms");
 const { buildSchedulePoster } = require("./services/share-poster");
@@ -325,6 +326,11 @@ function userPublic(u, req) {
 
 function jsonError(res, e) {
   res.status(e.status || 500).json({ ok: false, message: e.message, ...(e.extra || {}) });
+}
+
+function openidOf(userId) {
+  const row = db().prepare("SELECT wechat_openid FROM users WHERE id=?").get(userId);
+  return (row && row.wechat_openid) || "";
 }
 
 function mapRoute(row, req, extra) {
@@ -928,6 +934,7 @@ router.post("/auth/wechat", optionalUser, async (req, res) => {
     }
     let user = db().prepare("SELECT * FROM users WHERE wechat_openid=? AND deleted_at IS NULL").get(sess.openid);
     if (!user) {
+      await assertTextSafe(sess.openid, nickname, 1);
       const info = db()
         .prepare("INSERT INTO users (nickname,avatar,wechat_openid,wechat_unionid) VALUES (?,?,?,?)")
         .run(nickname || "微信用户", avatar || "", sess.openid, sess.unionid || "");
@@ -1198,8 +1205,13 @@ router.get("/avatars/defaults", (req, res) => {
   res.json({ ok: true, data: defaultAvatars(req) });
 });
 
-router.put("/me", authUser, (req, res) => {
+router.put("/me", authUser, async (req, res) => {
   const { nickname, gender, birthday, idCard, companyName, avatar } = req.body || {};
+  try {
+    await assertTextSafe(openidOf(req.userId), nickname, 1);
+  } catch (e) {
+    return jsonError(res, e);
+  }
   let nextAvatar;
   if (avatar !== undefined) {
     nextAvatar = acceptedAvatar(avatar);
@@ -1300,17 +1312,22 @@ router.post("/me/student", authUser, (req, res) => {
   });
 });
 
-router.post("/me/group", authUser, (req, res) => {
+router.post("/me/group", authUser, async (req, res) => {
   const name = String((req.body || {}).name || (req.body || {}).groupName || "").trim();
   const kind = String((req.body || {}).kind || (req.body || {}).groupKind || "组织").trim();
   if (!name) return res.status(400).json({ ok: false, message: "请填写团体名称" });
+  try {
+    await assertTexts(openidOf(req.userId), 1, [name, kind]);
+  } catch (e) {
+    return jsonError(res, e);
+  }
   db().prepare("UPDATE users SET group_name=?, group_kind=?, group_status='pending' WHERE id=?").run(name, kind, req.userId);
   const next = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
   noticeGroup(next);
   res.json({ ok: true, data: userPublic(next, req), message: "已提交团体认证，待后台审核" });
 });
 
-router.post("/me/leader", authUser, (req, res) => {
+router.post("/me/leader", authUser, async (req, res) => {
   const body = req.body || {};
   const name = String(body.name || body.leaderName || "").trim();
   const intro = String(body.intro || body.leaderIntro || "").trim();
@@ -1318,6 +1335,11 @@ router.post("/me/leader", authUser, (req, res) => {
   if (name.length < 2 || name.length > 20) return res.status(400).json({ ok: false, message: "请填写 2～20 字真实姓名" });
   if (!Number.isFinite(years) || years < 0 || years > 40) return res.status(400).json({ ok: false, message: "请填写 0～40 的带队年限" });
   if (intro.length < 8 || intro.length > 300) return res.status(400).json({ ok: false, message: "请用 8～300 字介绍带队经历" });
+  try {
+    await assertTexts(openidOf(req.userId), 1, [name, intro]);
+  } catch (e) {
+    return jsonError(res, e);
+  }
   const current = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
   if (!current || current.deleted_at) return res.status(401).json({ ok: false, message: "请先登录" });
   if (isLeader(current)) return res.status(400).json({ ok: false, message: "你已是领队，无需重复申请" });
@@ -1329,8 +1351,9 @@ router.post("/me/leader", authUser, (req, res) => {
   res.json({ ok: true, data: userPublic(next, req), message: "已提交领队申请，待后台审核" });
 });
 
-router.post("/feedback", authUser, (req, res) => {
+router.post("/feedback", authUser, async (req, res) => {
   try {
+    await assertTextSafe(openidOf(req.userId), (req.body || {}).content, 2);
     const data = submitFeedback(req.userId, req.body || {});
     res.json({ ok: true, data, message: "已收到，谢谢反馈" });
   } catch (e) {
@@ -1779,8 +1802,13 @@ router.get("/schedules/:id/poster", optionalUser, async (req, res) => {
   }
 });
 
-router.post("/schedules", authUser, (req, res) => {
+router.post("/schedules", authUser, async (req, res) => {
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+  try {
+    await assertTextSafe(user && user.wechat_openid, (req.body || {}).notes, 4);
+  } catch (e) {
+    return jsonError(res, e);
+  }
   if (offerMeta((req.body || {}).offerType || (req.body || {}).offer_type).key === "combo") {
     try {
       assertCanOpenCombo(user);
@@ -1841,6 +1869,7 @@ router.post("/schedules", authUser, (req, res) => {
 function dissolveHandler(actor) {
   return async (req, res) => {
     try {
+      if (actor !== "admin") await assertTextSafe(openidOf(req.userId), (req.body || {}).reason, 2);
       const data = await dissolveSchedule(req.params.id, {
         reason: (req.body || {}).reason,
         actor,
@@ -1871,9 +1900,15 @@ router.put("/schedules/:id/limit", authUser, (req, res) => {
 });
 
 router.post("/upload", authUser, (req, res) => {
-  uploadImage.single("file")(req, res, (err) => {
+  uploadImage.single("file")(req, res, async (err) => {
     if (err) return res.status(400).json({ ok: false, message: err.message || "上传失败" });
     if (!req.file) return res.status(400).json({ ok: false, message: "请选择图片" });
+    try {
+      await assertImageFile(req.file.path);
+    } catch (e) {
+      fs.unlink(req.file.path, () => {});
+      return jsonError(res, e);
+    }
     res.json({ ok: true, data: { url: `/static/uploads/${req.file.filename}` } });
   });
 });
@@ -1947,10 +1982,12 @@ router.get("/bot/routes/:id", authBot, (req, res) => {
   }
 });
 
-router.post("/routes/apply", authUser, (req, res) => {
+router.post("/routes/apply", authUser, async (req, res) => {
   try {
     const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
-    const data = submitApply(user, req.body || {});
+    const body = req.body || {};
+    await assertTexts(user && user.wechat_openid, 3, [body.title, body.subtitle, body.description, body.region, body.city]);
+    const data = submitApply(user, body);
     res.json({
       ok: true,
       data: {
@@ -1965,9 +2002,14 @@ router.post("/routes/apply", authUser, (req, res) => {
   }
 });
 
-router.post("/trips", authUser, (req, res) => {
+router.post("/trips", authUser, async (req, res) => {
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
   const b = req.body || {};
+  try {
+    await assertTexts(user && user.wechat_openid, 4, [b.title, b.subtitle, b.description, b.notes, b.notices]);
+  } catch (e) {
+    return jsonError(res, e);
+  }
   if (offerMeta(b.offerType || b.offer_type).key === "combo") {
     try {
       assertCanOpenCombo(user);
@@ -2363,8 +2405,9 @@ router.get("/schedules/:id/reviews", (req, res) => {
   res.json({ ok: true, data: listReviews({ scheduleId: sch.id }) });
 });
 
-router.post("/reviews", authUser, (req, res) => {
+router.post("/reviews", authUser, async (req, res) => {
   try {
+    await assertTextSafe(openidOf(req.userId), (req.body || {}).content, 2);
     const data = createReview(req.userId, req.body || {});
     res.json({ ok: true, data });
   } catch (e) {

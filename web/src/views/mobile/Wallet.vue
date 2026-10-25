@@ -41,8 +41,18 @@
           <input v-model="withdrawAmount" inputmode="numeric" />
           <button type="button" class="wal-all" @click="fillAll">全部提现</button>
         </div>
-        <p class="muted">可提现 {{ rule.available }} 元。单笔上限 2000 元，不限次数。</p>
         <p v-if="!data.pinSet" class="muted">请先<a href="#" @click.prevent="router.push('/m/wallet/pin')">设置 6 位支付密码</a>。</p>
+        <div class="wal-rules">
+          <p class="rule-title">可提现额度</p>
+          <p>当前账户余额全部可提现，不设最低提现金额。微信零钱按整数元记账。因微信商家转账到零钱单笔上限 2000 元，超过 2000 元时可连续分笔，每笔提交后立即处理。</p>
+          <p>当前可提现 {{ rule.available }} 元。</p>
+          <p class="rule-title">每日提现次数</p>
+          <p>不限制次数，可随时申请。</p>
+          <p class="rule-title">提现时间</p>
+          <p>每天 00:00–23:59（北京时间），全天可申请。</p>
+          <p class="rule-title">到账时间</p>
+          <p>提交成功后实时转入微信零钱。如遇系统延迟，最迟 24 小时内到账。</p>
+        </div>
       </div>
       <button class="btn clay block" type="button" :disabled="busy" @click="askPin">提现</button>
       <button class="btn ghost block" type="button" @click="backHome">返回</button>
@@ -337,7 +347,7 @@ async function doWithdraw() {
 </script>
 
 <style scoped>
-.wallet-page { padding-bottom: 24px; }
+.wallet-page { padding-bottom: 96px; }
 .wal-card, .wal-panel, .wal-slip { background: #fff; border-radius: 16px; padding: 20px 16px; margin-bottom: 12px; }
 .wal-balance { font-size: calc(48px * var(--ui-scale)); font-weight: 700; line-height: 1.1; letter-spacing: -1px; }
 .wal-actions { display: flex; gap: 12px; margin-top: 20px; }
@@ -351,6 +361,9 @@ async function doWithdraw() {
 .wal-chips button { border: 0; background: #f3f4f6; border-radius: 999px; padding: 8px 14px; font: inherit; }
 .wal-chips button.on { background: #f3e8ea; color: var(--pku); }
 .wal-line { display: flex; justify-content: space-between; margin-bottom: 16px; }
+.wal-rules { margin-top: 8px; }
+.wal-rules .rule-title { margin: 14px 0 0; color: #1c1c1e; font-weight: 700; }
+.wal-rules p { margin: 6px 0 0; color: #3a3a3a; line-height: 1.5; }
 .wal-note { margin: 0 4px 8px; }
 .wal-more, .wal-forget { border: 0; background: transparent; color: var(--pku); font: inherit; display: block; margin: 8px auto; }
 .cell small { display: block; font-weight: 400; }
