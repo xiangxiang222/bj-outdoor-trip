@@ -158,11 +158,13 @@
           <div class="row muted"><span>已报 {{ s.enrolled }}/{{ s.maxSeats }} · 成团 {{ s.minGroupSize }} 人</span><span>当前约 ¥{{ s.quote.price }}</span></div>
         </div>
       </div>
-      <p class="muted" v-if="!route.schedules?.length">暂无排期，可以自己开一团。</p>
+      <LoadRow v-if="schedulesReady === false" />
+      <p class="muted" v-else-if="!route.schedules?.length">暂无排期，可以自己开一团。</p>
     </template>
 
     <div class="h2">出行评价 <span v-if="reviews.count" class="muted">{{ reviews.avg }} 分 · {{ reviews.count }} 条</span></div>
-    <div class="card" v-if="reviews.list?.length">
+    <LoadRow v-if="!reviewsReady && !reviews.list?.length" />
+    <div class="card" v-else-if="reviews.list?.length">
       <div class="pad review-item" v-for="rv in reviews.list" :key="rv.id">
         <div class="row">
           <strong>{{ rv.name }}</strong>
@@ -221,10 +223,13 @@ import RouteStory from "@/components/RouteStory.vue";
 import RouteVideos from "@/components/RouteVideos.vue";
 import LivePulse from "@/components/LivePulse.vue";
 import TripKind from "@/components/TripKind.vue";
+import LoadRow from "@/components/LoadRow.vue";
 
 const props = defineProps({
   route: { type: Object, default: null },
   reviews: { type: Object, default: () => ({ list: [], count: 0, avg: 0 }) },
+  reviewsReady: { type: Boolean, default: false },
+  schedulesReady: { type: Boolean, default: true },
   faqs: { type: Array, default: () => [] },
   embedded: { type: Boolean, default: false },
 });

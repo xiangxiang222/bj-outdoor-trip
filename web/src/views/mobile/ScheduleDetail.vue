@@ -1,5 +1,7 @@
 <template>
-  <div v-if="s" class="trip-detail">
+  <LoadRow v-if="!pageReady" />
+  <p v-else-if="!s" class="muted pad">加载失败</p>
+  <div v-else class="trip-detail">
     <div class="card offer-card" style="border-radius:0;margin:0">
       <div class="offer-hero" v-if="gallery.length" @click="previewHero">
         <img :src="gallery[heroIndex]" :alt="s.route.title" />
@@ -329,7 +331,8 @@
       </div>
 
       <div id="trip-reviews" class="h2">本团评价 <span v-if="reviews.count" class="muted">{{ reviews.avg }} 分 · {{ reviews.count }} 条</span></div>
-      <div class="card" v-if="reviews.list?.length">
+      <LoadRow v-if="!reviewsReady && !reviews.list?.length" />
+      <div class="card" v-else-if="reviews.list?.length">
         <div class="pad review-item" v-for="rv in reviews.list" :key="rv.id">
           <div class="row">
             <strong>{{ rv.name }}</strong>
@@ -348,10 +351,13 @@
     </div>
 
     <div v-show="tab === 'route'" class="trip-pane">
+      <LoadRow v-if="!routeDetail && !s.route" />
       <RouteProfile
+        v-else
         embedded
         :route="routeDetail || s.route"
         :reviews="routeReviews"
+        :reviews-ready="routeReviewsReady"
         @fav="favRoute"
       />
     </div>
@@ -492,6 +498,7 @@ import WeatherChart from "@/components/WeatherChart.vue";
 import PayHelpers from "@/components/PayHelpers.vue";
 import GoodsTabs from "@/components/GoodsTabs.vue";
 import RouteProfile from "@/components/RouteProfile.vue";
+import LoadRow from "@/components/LoadRow.vue";
 import LivePulse from "@/components/LivePulse.vue";
 import CampusNamePicker from "@/components/CampusNamePicker.vue";
 import TripKind from "@/components/TripKind.vue";
@@ -501,6 +508,7 @@ const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const s = ref(null);
+const pageReady = ref(false);
 const tab = ref(normalizeTab(route.query.tab));
 const isActivity = computed(() => s.value?.channel === "activity");
 const refundCopy = computed(() => s.value?.refundPolicy || cancelPolicy.value);
@@ -607,8 +615,10 @@ watch(addCollege, (next, prev) => {
 const expanding = ref(false);
 const weather = ref(null);
 const reviews = ref({ list: [], count: 0, avg: 0 });
+const reviewsReady = ref(false);
 const routeDetail = ref(null);
 const routeReviews = ref({ list: [], count: 0, avg: 0 });
+const routeReviewsReady = ref(false);
 const cancelPolicy = ref({ summary: "", items: [] });
 const commonRules = ref({ title: "", summary: "", sections: [] });
 const waiverText = ref("");
@@ -741,8 +751,16 @@ function scrollTabsToTop() {
 }
 
 async function load() {
-  if (store.token) await store.fetchMe().catch(() => {});
-  s.value = (await http.get("/schedules/" + route.params.id)).data;
+  reviewsReady.value = false;
+  routeReviewsReady.value = false;
+  try {
+    if (store.token) await store.fetchMe().catch(() => {});
+    s.value = (await http.get("/schedules/" + route.params.id)).data;
+  } catch {
+    pageReady.value = true;
+    return;
+  }
+  pageReady.value = true;
   heroIndex.value = 0;
   fallbackIds.value = (s.value.myEnrollment?.fallbacks || []).map((f) => f.id);
   autoAlt.value = !!s.value.myEnrollment?.autoAlt;
@@ -767,6 +785,8 @@ async function load() {
     reviews.value = (await http.get("/schedules/" + route.params.id + "/reviews")).data;
   } catch {
     reviews.value = { list: [], count: 0, avg: 0 };
+  } finally {
+    reviewsReady.value = true;
   }
   try {
     const meta = (await http.get("/meta")).data;
@@ -788,7 +808,11 @@ async function load() {
       routeReviews.value = (await http.get("/routes/" + s.value.routeId + "/reviews")).data;
     } catch {
       routeReviews.value = { list: [], count: 0, avg: 0 };
+    } finally {
+      routeReviewsReady.value = true;
     }
+  } else {
+    routeReviewsReady.value = true;
   }
 }
 

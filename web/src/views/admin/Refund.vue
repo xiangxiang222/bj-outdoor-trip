@@ -9,9 +9,11 @@
     </div>
     <p class="muted">默认所有线路使用这里的比例。某一条线要不同规则，去「线路管理」关掉「使用全局退费规则」。</p>
     <p v-if="summary" class="muted">{{ summary }}</p>
-    <el-card shadow="never">
-      <RefundRulesEditor v-model="tiers" />
-    </el-card>
+    <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
+      <el-card v-if="!loading" shadow="never">
+        <RefundRulesEditor v-model="tiers" />
+      </el-card>
+    </div>
   </div>
 </template>
 
@@ -25,17 +27,23 @@ const tiers = ref([]);
 const defaults = ref([]);
 const summary = ref("");
 const saving = ref(false);
+const loading = ref(true);
 
 function cloneTiers(list) {
   return (list || []).map((t) => ({ minDays: t.minDays, percent: t.percent }));
 }
 
 async function load() {
-  const res = await http.get("/admin/refund-rules");
-  const data = res.data || {};
-  tiers.value = cloneTiers(data.tiers);
-  defaults.value = cloneTiers(data.defaults);
-  summary.value = data.summary || "";
+  loading.value = true;
+  try {
+    const res = await http.get("/admin/refund-rules");
+    const data = res.data || {};
+    tiers.value = cloneTiers(data.tiers);
+    defaults.value = cloneTiers(data.defaults);
+    summary.value = data.summary || "";
+  } finally {
+    loading.value = false;
+  }
 }
 
 onMounted(load);

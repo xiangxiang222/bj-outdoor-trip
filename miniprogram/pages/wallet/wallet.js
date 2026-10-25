@@ -60,6 +60,7 @@ Page({
     recordTab: "success",
     recordGroups: [],
     receipt: { title: "", hint: "", amount: 0, method: "" },
+    walletReady: false,
   },
   onShow() {
     if (this.data.mode === "done") return;
@@ -89,9 +90,10 @@ Page({
         shownBills: this.billsOf(data, this.data.showAllBills),
         recordGroups: this.groupsOf(data, this.data.recordTab),
         msg: "",
+        walletReady: true,
       });
     } catch (e) {
-      this.setData({ msg: e.message || "加载失败" });
+      this.setData({ msg: e.message || "加载失败", walletReady: true });
     }
   },
   title(text) {

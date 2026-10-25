@@ -13,8 +13,9 @@
   <view class="chip {{tag==''?'on':''}}" bindtap="setTag" data-c="">{{tr.t('全部玩法', lang)}}</view>
   <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}}" bindtap="setTag" data-c="{{item.name}}">{{tr.t(item.name, lang)}}</view>
 </view>
-<view wx:if="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>
-<view wx:if="{{!list.length && !err}}" class="muted pad">{{tr.t(q || days || tag ? '没有匹配的线路' : '正式线路正在整理，发布后会出现在这里。', lang)}}</view>
+<load-row wx:if="{{loading && !list.length}}" />
+<view wx:elif="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>
+<view wx:elif="{{!list.length}}" class="muted pad">{{tr.t(q || days || tag ? '没有匹配的线路' : '正式线路正在整理，发布后会出现在这里。', lang)}}</view>
 <view class="card" bindtap="goApply">
   <view class="pad">
     <view class="title">{{tr.t('申请收录线路', lang)}}</view>

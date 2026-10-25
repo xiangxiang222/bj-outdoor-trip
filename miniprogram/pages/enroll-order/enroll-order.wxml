@@ -1,5 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
+<load-row wx:if="{{!order}}" />
 <block wx:if="{{order}}">
   <view class="od-hero">
     <view class="od-hero-title">{{tr.t(badge, lang)}}</view>

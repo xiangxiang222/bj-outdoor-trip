@@ -8,12 +8,13 @@
       </div>
     </div>
     <p class="admin-scroll-hint">校园、团体和领队认证请到「认证审批」。这里只管会员、积分和账号。</p>
-    <div class="virtual-pool">
+    <div class="virtual-pool" v-if="!loading">
       <span>虚拟用户池 {{ pool.total }} 人，空闲 {{ pool.idle }}，正在占座 {{ pool.busy }}。上限 2000，各团自动热度从这里抽人。</span>
       <el-input-number v-model="poolCount" :min="1" :max="200" />
       <el-button type="success" :loading="growingPool" @click="growPool">生成虚拟用户</el-button>
     </div>
-    <el-table :data="list" stripe row-key="id" :row-class-name="rowClass">
+    <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
+    <el-table :data="list" stripe row-key="id" :row-class-name="rowClass" :empty-text="loading ? ' ' : '暂无数据'">
       <el-table-column prop="nickname" label="昵称" min-width="120" />
       <el-table-column prop="phone" label="手机" width="130" />
       <el-table-column label="类型" width="80">
@@ -47,6 +48,7 @@
         </template>
       </el-table-column>
     </el-table>
+    </div>
 
     <el-dialog v-model="showLevel" title="修改会员等级" width="420px">
       <p class="muted">{{ levelRow?.nickname }} 当前 {{ levelRow?.membership?.code }} {{ levelRow?.membership?.name }}，成长值 {{ levelRow?.membership?.growth || 0 }}</p>
@@ -103,6 +105,7 @@ const pointsForm = ref({ delta: 10, reason: "" });
 const pool = ref({ total: 0, idle: 0, busy: 0 });
 const poolCount = ref(20);
 const growingPool = ref(false);
+const loading = ref(true);
 
 onMounted(syncFromRoute);
 watch(() => [route.query.pending, route.query.userId], syncFromRoute);
@@ -132,19 +135,24 @@ function rowClass({ row }) {
 }
 
 async function load() {
-  list.value = (await http.get("/admin/users", { params: { q: q.value } })).data;
+  loading.value = true;
   try {
-    pool.value = (await http.get("/admin/virtual-users/pool")).data || pool.value;
-  } catch {
-    /* ignore */
+    list.value = (await http.get("/admin/users", { params: { q: q.value } })).data || [];
+    try {
+      pool.value = (await http.get("/admin/virtual-users/pool")).data || pool.value;
+    } catch {
+      /* ignore */
+    }
+    if (focusId.value && !list.value.some((u) => String(u.id) === focusId.value)) {
+      list.value = (await http.get("/admin/users", { params: { q: q.value } })).data || [];
+    }
+    await nextTick();
+    if (!focusId.value) return;
+    const el = document.querySelector(".admin-row-focus");
+    if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+  } finally {
+    loading.value = false;
   }
-  if (focusId.value && !list.value.some((u) => String(u.id) === focusId.value)) {
-    list.value = (await http.get("/admin/users", { params: { q: q.value } })).data;
-  }
-  await nextTick();
-  if (!focusId.value) return;
-  const el = document.querySelector(".admin-row-focus");
-  if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
 }
 
 async function growPool() {

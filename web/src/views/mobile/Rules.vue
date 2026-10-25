@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <LoadRow v-if="!ready" />
+  <div v-else>
     <div class="card">
       <div class="pad">
         <strong>{{ rules.title || "各线路公共规则" }}</strong>
@@ -27,13 +28,19 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 
 const rules = ref({ title: "", summary: "", sections: [] });
 const faqs = ref([]);
+const ready = ref(false);
 
 onMounted(async () => {
-  const meta = (await http.get("/meta")).data || {};
-  rules.value = meta.commonRules || rules.value;
-  faqs.value = meta.faqs || [];
+  try {
+    const meta = (await http.get("/meta")).data || {};
+    rules.value = meta.commonRules || rules.value;
+    faqs.value = meta.faqs || [];
+  } finally {
+    ready.value = true;
+  }
 });
 </script>

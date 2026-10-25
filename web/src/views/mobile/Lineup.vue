@@ -21,7 +21,7 @@
         </p>
       </div>
     </article>
-    <div v-if="!ready" class="card"><div class="pad muted">正在加载</div></div>
+    <LoadRow v-if="!ready" />
     <div v-else-if="!trips.length" class="card"><div class="pad">这批团已经结束或不存在</div></div>
   </div>
 </template>
@@ -31,6 +31,7 @@ import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import http from "@/api/http";
 import TripKind from "@/components/TripKind.vue";
+import LoadRow from "@/components/LoadRow.vue";
 import { boardedLine, coverMark, coverOf, feedWhen, hostName, isFreeOffer, taglineOf } from "@/utils/feedCard";
 import { processFeed } from "@/utils/feedList";
 

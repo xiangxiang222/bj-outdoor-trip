@@ -72,6 +72,9 @@
     ]
   },
   "navigateToMiniProgramAppIdList": ["wx308bd2aeb83d3345", "wx7564fd5313d24844"],
+  "usingComponents": {
+    "load-row": "/components/load-row/load-row"
+  },
   "style": "v2",
   "lazyCodeLoading": "requiredComponents",
   "networkTimeout": {

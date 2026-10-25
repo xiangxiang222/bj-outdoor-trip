@@ -1,5 +1,6 @@
 <template>
-  <div class="od-page" v-if="order">
+  <LoadRow v-if="!ready" />
+  <div class="od-page" v-else-if="order">
     <div class="od-hero">
       <h2>{{ badge.label }}</h2>
       <p>{{ hint }}</p>
@@ -73,6 +74,7 @@
 import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 import { showAfterActions, todayYmd } from "@/utils/trips";
 import { canReorder, maskTravelerPhone, orderBadge, orderHint, orderMoney, orderNo, orderShop, orderSpec, payMethodLabel, placedLabel, priceLines } from "@/utils/orderView";
 
@@ -80,6 +82,7 @@ const pageRoute = useRoute();
 const router = useRouter();
 const order = ref(null);
 const err = ref("");
+const ready = ref(false);
 const msg = ref("");
 const cancelling = ref(false);
 const submitting = ref(false);
@@ -112,6 +115,8 @@ async function load() {
   } catch (e) {
     order.value = null;
     err.value = e.message || "订单打不开";
+  } finally {
+    ready.value = true;
   }
 }
 function goPay() {

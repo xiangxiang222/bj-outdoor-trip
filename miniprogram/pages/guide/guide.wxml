@@ -1,6 +1,7 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view wx:if="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>
+<load-row wx:if="{{!g && !err}}" />
+<view wx:elif="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>
 <view wx:elif="{{g}}">
   <view class="card">
     <view class="pad guide-row">

@@ -151,6 +151,7 @@ Page({
     posterQuery: "",
     posterCoverBar: false,
     dark: false,
+    hubReady: false,
     statusBarHeight: 20,
     navBarHeight: 44,
   },
@@ -206,14 +207,14 @@ Page({
   },
   async loadHub() {
     if (!app.globalData.token) {
-      this.setData({ coupon: null, hub: { balance: 0, departCount: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, reviewCount: 0, refundCount: 0, unreadCount: 0, couponCount: 0, couponExpireHint: "" } });
+      this.setData({ coupon: null, hubReady: true, hub: { balance: 0, departCount: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, reviewCount: 0, refundCount: 0, unreadCount: 0, couponCount: 0, couponExpireHint: "" } });
       return;
     }
     try {
       const res = await request("/me/wallet");
-      this.setData({ hub: res.data || {} });
+      this.setData({ hub: res.data || {}, hubReady: true });
     } catch {
-      this.setData({ hub: { balance: (app.globalData.user && app.globalData.user.walletBalance) || 0, departCount: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, reviewCount: 0, refundCount: 0, unreadCount: 0, couponCount: 0, couponExpireHint: "" } });
+      this.setData({ hubReady: true, hub: { balance: (app.globalData.user && app.globalData.user.walletBalance) || 0, departCount: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, reviewCount: 0, refundCount: 0, unreadCount: 0, couponCount: 0, couponExpireHint: "" } });
     }
     try {
       const me = await request("/me");

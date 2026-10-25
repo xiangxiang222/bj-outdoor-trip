@@ -1,7 +1,8 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
 
-<block wx:if="{{mode=='done'}}">
+<load-row wx:if="{{!walletReady && mode!='done'}}" />
+<block wx:elif="{{mode=='done'}}">
   <view class="done">
     <view class="check">✓</view>
     <view class="done-title">{{tr.t(receipt.title, lang)}}</view>

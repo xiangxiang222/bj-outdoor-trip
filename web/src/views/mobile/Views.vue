@@ -7,7 +7,8 @@
         <div class="muted">{{ r.region }} · {{ r.seenAt }}</div>
       </div>
     </div>
-    <div v-if="!list.length" class="card">
+    <LoadRow v-if="loading" />
+    <div v-else-if="!list.length" class="card">
       <div class="pad">
         <p style="margin-top:0">还没有看过的线路。打开一条线路后会出现在这里。</p>
         <p class="muted" style="margin-bottom:0">已经下架的线路不会留在这里。</p>
@@ -22,13 +23,19 @@ import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
+import LoadRow from "@/components/LoadRow.vue";
 
 const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const list = ref([]);
+const loading = ref(true);
 onMounted(async () => {
   if (!requireLogin(store, router, route)) return;
-  list.value = (await http.get("/me/views")).data || [];
+  try {
+    list.value = (await http.get("/me/views")).data || [];
+  } finally {
+    loading.value = false;
+  }
 });
 </script>

@@ -57,20 +57,24 @@
     </view>
     <view class="mine-stats">
       <view bindtap="go" data-url="/pages/wallet/wallet">
-        <view class="mine-stat-num">{{tr.t(hub.balance, lang)}}</view>
+        <view class="mine-stat-num" wx:if="{{hubReady}}">{{tr.t(hub.balance, lang)}}</view>
+        <view class="mine-stat-num" wx:else><view class="spinner"></view></view>
         <view class="mine-stat-name">{{tr.t('余额', lang)}}</view>
       </view>
       <view bindtap="go" data-url="/pages/coupons/coupons">
-        <view class="mine-stat-num">{{tr.t(hub.couponCount, lang)}}</view>
+        <view class="mine-stat-num" wx:if="{{hubReady}}">{{tr.t(hub.couponCount, lang)}}</view>
+        <view class="mine-stat-num" wx:else><view class="spinner"></view></view>
         <view class="mine-stat-name">{{tr.t('优惠券', lang)}}</view>
         <view class="mine-expire" wx:if="{{hub.couponExpireHint}}">{{tr.t(hub.couponExpireHint, lang)}}</view>
       </view>
       <view bindtap="go" data-url="/pages/signin/signin">
-        <view class="mine-stat-num">{{tr.t(hub.points != null ? hub.points : user.points, lang)}}</view>
+        <view class="mine-stat-num" wx:if="{{hubReady}}">{{tr.t(hub.points != null ? hub.points : user.points, lang)}}</view>
+        <view class="mine-stat-num" wx:else><view class="spinner"></view></view>
         <view class="mine-stat-name">{{tr.t('积分', lang)}}</view>
       </view>
       <view bindtap="go" data-url="/pages/signin/signin">
-        <view class="mine-stat-num">{{hub.signedToday ? tr.t('已签到', lang) : tr.t('未签到', lang)}}</view>
+        <view class="mine-stat-num" wx:if="{{hubReady}}">{{hub.signedToday ? tr.t('已签到', lang) : tr.t('未签到', lang)}}</view>
+        <view class="mine-stat-num" wx:else><view class="spinner"></view></view>
         <view class="mine-stat-name">{{tr.t('签到', lang)}}</view>
       </view>
       <view class="mine-more" bindtap="go" data-url="/pages/wallet/wallet">{{tr.t('更多', lang)}}</view>
@@ -81,15 +85,18 @@
     <view class="mine-links">
       <view bindtap="go" data-url="/pages/views/views">
         <text>{{tr.t('足迹', lang)}}</text>
-        <text class="mine-link-num">{{hub.viewCount || 0}}</text>
+        <text class="mine-link-num" wx:if="{{hubReady}}">{{hub.viewCount || 0}}</text>
+        <view class="spinner" wx:else></view>
       </view>
       <view bindtap="go" data-url="/pages/favorites/favorites">
         <text>{{tr.t('收藏', lang)}}</text>
-        <text class="mine-link-num">{{hub.favoriteCount || 0}}</text>
+        <text class="mine-link-num" wx:if="{{hubReady}}">{{hub.favoriteCount || 0}}</text>
+        <view class="spinner" wx:else></view>
       </view>
       <view bindtap="go" data-url="/pages/follows/follows">
         <text>{{tr.t('关注', lang)}}</text>
-        <text class="mine-link-num">{{hub.followCount || 0}}</text>
+        <text class="mine-link-num" wx:if="{{hubReady}}">{{hub.followCount || 0}}</text>
+        <view class="spinner" wx:else></view>
       </view>
     </view>
     <view class="mine-order-row">

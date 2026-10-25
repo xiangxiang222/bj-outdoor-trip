@@ -19,9 +19,7 @@
     </view>
   </view>
 </view>
-<view wx:if="{{!ready}}" class="card">
-  <view class="pad muted">{{tr.t('正在加载', lang)}}</view>
-</view>
+<load-row wx:if="{{!ready}}" />
 <view wx:elif="{{missing}}" class="card">
   <view class="pad">{{tr.t('这批团已经结束或不存在', lang)}}</view>
 </view>

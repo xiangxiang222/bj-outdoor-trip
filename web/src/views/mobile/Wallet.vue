@@ -1,6 +1,7 @@
 <template>
   <div class="wallet-page">
-    <template v-if="mode === 'done'">
+    <LoadRow v-if="!walletReady && mode !== 'done'" />
+    <template v-else-if="mode === 'done'">
       <div class="wal-done">
         <div class="wal-check">✓</div>
         <strong>{{ receipt.title }}</strong>
@@ -162,6 +163,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from "vue";
+import LoadRow from "@/components/LoadRow.vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
@@ -173,6 +175,7 @@ const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const data = ref({ bills: [], withdrawals: [] });
+const walletReady = ref(false);
 const rule = ref({ available: 0 });
 const mode = ref("");
 const topupAmount = ref("100");
@@ -235,12 +238,16 @@ onMounted(async () => {
 });
 
 async function load() {
-  data.value = (await http.get("/me/wallet")).data || { bills: [], withdrawals: [] };
-  const got = data.value.withdrawRule || {};
-  const balance = Number(data.value.balance || 0);
-  rule.value = { available: got.available != null ? Number(got.available) : Math.min(balance, 2000) };
-  if (store.profile) {
-    store.setAuth(store.token, { ...store.profile, walletBalance: data.value.balance, walletPinSet: data.value.pinSet });
+  try {
+    data.value = (await http.get("/me/wallet")).data || { bills: [], withdrawals: [] };
+    const got = data.value.withdrawRule || {};
+    const balance = Number(data.value.balance || 0);
+    rule.value = { available: got.available != null ? Number(got.available) : Math.min(balance, 2000) };
+    if (store.profile) {
+      store.setAuth(store.token, { ...store.profile, walletBalance: data.value.balance, walletPinSet: data.value.pinSet });
+    }
+  } finally {
+    walletReady.value = true;
   }
 }
 

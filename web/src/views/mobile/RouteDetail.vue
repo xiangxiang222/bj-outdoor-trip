@@ -8,7 +8,8 @@
       <button class="btn ghost block" type="button" @click="back">返回</button>
     </div>
   </div>
-  <div v-else-if="r">
+  <LoadRow v-else-if="!r" />
+  <div v-else>
     <div v-if="r.reviewStatus === 'pending'" class="card">
       <div class="pad">
         <p style="margin-top:0;color:var(--leaf)">已提交审核，通过后会出现在线路目录。</p>
@@ -24,6 +25,7 @@
     <RouteProfile
       :route="r"
       :reviews="reviews"
+      :reviews-ready="reviewsReady"
       :faqs="faqs"
       @fav="fav"
       @share="share"
@@ -41,6 +43,7 @@
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import RouteProfile from "@/components/RouteProfile.vue";
+import LoadRow from "@/components/LoadRow.vue";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 
@@ -50,6 +53,7 @@ const store = useUserStore();
 const r = ref(null);
 const missing = ref(false);
 const reviews = ref({ list: [], count: 0, avg: 0 });
+const reviewsReady = ref(false);
 const faqs = ref([]);
 const copied = ref(false);
 const favMsg = ref("");
@@ -65,6 +69,8 @@ onMounted(async () => {
     reviews.value = (await http.get("/routes/" + pageRoute.params.id + "/reviews")).data;
   } catch {
     reviews.value = { list: [], count: 0, avg: 0 };
+  } finally {
+    reviewsReady.value = true;
   }
   try {
     faqs.value = ((await http.get("/meta")).data || {}).faqs || [];

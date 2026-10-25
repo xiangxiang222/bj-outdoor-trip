@@ -43,20 +43,24 @@
         </div>
         <div class="mine-stats">
           <button type="button" @click="goAuth('/m/wallet')">
-            <b>{{ hub.balance ?? store.profile.walletBalance ?? 0 }}</b>
+            <b v-if="hubReady">{{ hub.balance ?? store.profile.walletBalance ?? 0 }}</b>
+            <span v-else class="spinner" aria-hidden="true"></span>
             <span>余额</span>
           </button>
           <button type="button" @click="goAuth('/m/coupons')">
-            <b>{{ hub.couponCount || coupons.length || 0 }}</b>
+            <b v-if="hubReady">{{ hub.couponCount || coupons.length || 0 }}</b>
+            <span v-else class="spinner" aria-hidden="true"></span>
             <span>优惠券</span>
             <em v-if="hub.couponExpireHint">{{ hub.couponExpireHint }}</em>
           </button>
           <button type="button" @click="goAuth('/m/signin')">
-            <b>{{ hub.points ?? store.profile.points ?? 0 }}</b>
+            <b v-if="hubReady">{{ hub.points ?? store.profile.points ?? 0 }}</b>
+            <span v-else class="spinner" aria-hidden="true"></span>
             <span>积分</span>
           </button>
           <button type="button" @click="goAuth('/m/signin')">
-            <b>{{ hub.signedToday ? "已签到" : "未签到" }}</b>
+            <b v-if="hubReady">{{ hub.signedToday ? "已签到" : "未签到" }}</b>
+            <span v-else class="spinner" aria-hidden="true"></span>
             <span>签到</span>
           </button>
           <button class="mine-more" type="button" @click="goAuth('/m/wallet')">更多</button>
@@ -67,15 +71,18 @@
         <div class="mine-links">
           <button type="button" @click="goAuth('/m/views')">
             <span>足迹</span>
-            <b>{{ hub.viewCount || 0 }}</b>
+            <b v-if="hubReady">{{ hub.viewCount || 0 }}</b>
+            <span v-else class="spinner" aria-hidden="true"></span>
           </button>
           <button type="button" @click="goAuth('/m/favorites')">
             <span>收藏</span>
-            <b>{{ hub.favoriteCount || 0 }}</b>
+            <b v-if="hubReady">{{ hub.favoriteCount || 0 }}</b>
+            <span v-else class="spinner" aria-hidden="true"></span>
           </button>
           <button type="button" @click="goAuth('/m/follows')">
             <span>关注</span>
-            <b>{{ hub.followCount || 0 }}</b>
+            <b v-if="hubReady">{{ hub.followCount || 0 }}</b>
+            <span v-else class="spinner" aria-hidden="true"></span>
           </button>
         </div>
         <div class="mine-order-row">
@@ -287,6 +294,7 @@ const store = useUserStore();
 const router = useRouter();
 const coupons = ref([]);
 const hub = ref({});
+const hubReady = ref(false);
 const picker = ref(false);
 const defaults = ref([]);
 const picks = ref([]);
@@ -354,7 +362,10 @@ onMounted(() => {
 
 async function load() {
   await store.fetchMe().catch(() => {});
-  if (!store.token) return;
+  if (!store.token) {
+    hubReady.value = true;
+    return;
+  }
   try {
     const rows = (await http.get("/me/coupons")).data || [];
     coupons.value = rows.filter((c) => c.status === "unused");
@@ -365,6 +376,8 @@ async function load() {
     hub.value = (await http.get("/me/wallet")).data || {};
   } catch {
     hub.value = {};
+  } finally {
+    hubReady.value = true;
   }
 }
 

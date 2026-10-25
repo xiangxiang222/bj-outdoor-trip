@@ -1,6 +1,7 @@
 <template>
   <div>
-    <div v-if="!list.length" class="card"><div class="pad muted">还没有优惠券。公开券可扫码领取，定向券由后台发放到账。</div></div>
+    <LoadRow v-if="loading" />
+    <div v-else-if="!list.length" class="card"><div class="pad muted">还没有优惠券。公开券可扫码领取，定向券由后台发放到账。</div></div>
     <div class="card" v-for="c in list" :key="c.id" @click="open(c)">
       <div class="pad">
         <div class="row">
@@ -27,11 +28,13 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import { couponCountdown } from "@/utils/couponTime";
+import LoadRow from "@/components/LoadRow.vue";
 
 const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const list = ref([]);
+const loading = ref(true);
 const now = ref(Date.now());
 let timer;
 
@@ -44,6 +47,8 @@ onMounted(async () => {
     list.value = (await http.get("/me/coupons")).data || [];
   } catch {
     list.value = [];
+  } finally {
+    loading.value = false;
   }
 });
 onUnmounted(() => clearInterval(timer));

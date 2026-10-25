@@ -1,5 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
+<load-row wx:if="{{!order}}" />
 <view class="card" wx:if="{{order}}">
   <view class="pad title">{{tr.t(order.title, lang)}}</view>
   <view class="pad muted" wx:if="{{order.startDate}}">{{tr.t(order.startDate, lang)}} {{tr.t('出发', lang)}}</view>

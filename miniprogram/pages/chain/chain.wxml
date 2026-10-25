@@ -3,6 +3,7 @@
 <view class="chips">
   <view class="offer-chip publish" bindtap="goPublish">{{tr.t('发团', lang)}}</view>
 </view>
+<load-row wx:if="{{loading && !list.length}}" />
 <view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
   <view class="pad">
     <view class="row">

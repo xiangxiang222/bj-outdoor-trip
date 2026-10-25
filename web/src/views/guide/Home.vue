@@ -18,7 +18,8 @@
         <div class="muted">{{ s.enrolled }}/{{ s.maxSeats }} · {{ s.meetupPoint }} {{ s.meetupTime }}<template v-if="s.startedAt"> · 已开团</template></div>
       </div>
     </div>
-    <p v-if="!list.length" class="muted">暂无已分配行程。人数成团后会自动匹配。</p>
+    <LoadRow v-if="loading" />
+    <p v-else-if="!list.length" class="muted">暂无已分配行程。人数成团后会自动匹配。</p>
   </div>
 </template>
 
@@ -26,17 +27,21 @@
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 
 const router = useRouter();
 const me = ref({});
 const list = ref([]);
+const loading = ref(true);
 
 onMounted(async () => {
   try {
     me.value = (await http.get("/guide/me")).data;
-    list.value = (await http.get("/guide/schedules")).data;
+    list.value = (await http.get("/guide/schedules")).data || [];
   } catch {
     out();
+  } finally {
+    loading.value = false;
   }
 });
 

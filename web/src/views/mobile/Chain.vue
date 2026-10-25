@@ -7,6 +7,7 @@
       <div class="chip" :class="{ on: type === 'individual' }" @click="type = 'individual'">个人拼团</div>
       <div class="offer-chip publish" @click="$router.push('/m/publish')">发团</div>
     </div>
+    <LoadRow v-if="loading && !list.length" />
     <div class="card" v-for="s in filtered" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
       <div class="pad">
         <div class="row">
@@ -42,11 +43,17 @@
 import { computed, onMounted, ref } from "vue";
 import http from "@/api/http";
 import { hostName } from "@/utils/feedCard";
+import LoadRow from "@/components/LoadRow.vue";
 import { matchesHost } from "@/utils/feedList";
 const list = ref([]);
+const loading = ref(true);
 const type = ref("");
 const filtered = computed(() => (type.value ? list.value.filter((s) => matchesHost(s, { hostKind: type.value })) : list.value));
 onMounted(async () => {
-  list.value = (await http.get("/schedules")).data;
+  try {
+    list.value = (await http.get("/schedules")).data || [];
+  } finally {
+    loading.value = false;
+  }
 });
 </script>

@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <LoadRow v-if="!ready" />
+  <div v-else>
     <p class="muted">报名后可查看本团出行构成，方便判断是否适合一起走。</p>
     <div ref="g1" style="height:240px"></div>
     <div ref="g2" style="height:240px"></div>
@@ -8,10 +9,11 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import * as echarts from "echarts";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 import { readLook, SIZES } from "@/utils/appearance";
 
 const px = (n) => Math.round(n * (SIZES[readLook().size] || 1));
@@ -20,9 +22,18 @@ const route = useRoute();
 const g1 = ref();
 const g2 = ref();
 const g3 = ref();
+const ready = ref(false);
 
 onMounted(async () => {
-  const d = (await http.get(`/schedules/${route.params.id}/demographics`)).data;
+  let d;
+  try {
+    d = (await http.get(`/schedules/${route.params.id}/demographics`)).data;
+  } catch {
+    d = null;
+  }
+  ready.value = true;
+  if (!d) return;
+  await nextTick();
   echarts.init(g1.value).setOption({
     title: { text: "男女比例", left: "center", textStyle: { fontSize: px(14) } },
     tooltip: { trigger: "item" },

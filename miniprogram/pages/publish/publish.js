@@ -53,7 +53,7 @@ Page({
     routes: [],
     routeTitles: [],
     routeIndex: 0,
-    routeLabel: "选择已有线路",
+    routeLabel: "正在加载",
     meetupNames: MEETUPS,
     meetupIndex: 0,
     organizerLabels: ["个人开团", "公司开团", "高校开团"],
@@ -154,6 +154,7 @@ Page({
         routeLabel: routes.length ? "选择已有线路" : "暂无可选线路",
       });
     } catch (e) {
+      if (this.data.routeLabel === "正在加载") this.setData({ routeLabel: "暂无可选线路" });
       showError("加载失败", e);
     }
   },

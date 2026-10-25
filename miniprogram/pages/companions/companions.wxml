@@ -10,7 +10,8 @@
     <view class="muted" wx:if="{{item.emergencyName || item.emergencyPhone}}">{{tr.t('紧急联系人', lang)}} {{tr.t(item.emergencyName, lang)}} {{item.emergencyPhone}}</view>
   </view>
 </view>
-<view class="pad muted" wx:if="{{!list.length}}">{{tr.t('报名时点「存为常用」，下次可以点一下带入。', lang)}}</view>
+<load-row wx:if="{{loading}}" />
+<view class="pad muted" wx:elif="{{!list.length}}">{{tr.t('报名时点「存为常用」，下次可以点一下带入。', lang)}}</view>
 <view class="card">
   <view class="pad">
     <view class="label">{{tr.t('姓名', lang)}}</view>

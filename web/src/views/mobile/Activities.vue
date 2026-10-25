@@ -26,7 +26,7 @@
     </div>
 
     <div class="feed-toolbar">
-      <div class="hint">本周 {{ weekCount }} 场 · 共 {{ list.length }} 场</div>
+      <div class="hint">{{ loaded ? `本周 ${weekCount} 场 · 共 ${list.length} 场` : "正在加载" }}</div>
       <div class="tools">
         <button class="tool-btn" type="button" @click="sort = cycleSort(sort)">{{ sortLabel(sort) }}</button>
         <button class="tool-btn play" type="button" @click="goPublish()">发起</button>
@@ -58,7 +58,8 @@
       </div>
     </article>
 
-    <div v-if="!list.length" class="card act-empty">
+    <LoadRow v-if="!loaded" />
+    <div v-else-if="!list.length" class="card act-empty">
       <div class="pad">
         <strong>{{ kind ? `还没有「${kind}」局` : "还没有同城局" }}</strong>
         <p class="muted">发起一局，审核通过后会出现在这里。户外团请回首页发团。</p>
@@ -76,10 +77,12 @@ import { useUserStore } from "@/stores/user";
 import { ACTIVITY_KINDS, activityKindOf, filterActivities, isThisWeek } from "@/utils/activityKind";
 import { boardedLine, coverMark, coverOf, feedWhen, hostName, taglineOf } from "@/utils/feedCard";
 import { cycleSort, processFeed, sortLabel } from "@/utils/feedList";
+import LoadRow from "@/components/LoadRow.vue";
 
 const router = useRouter();
 const store = useUserStore();
 const rows = ref([]);
+const loaded = ref(false);
 const kind = ref("");
 const query = ref("");
 const sort = ref("soon");
@@ -100,7 +103,11 @@ const picked = computed(() => {
 });
 
 onMounted(async () => {
-  rows.value = (await http.get("/schedules", { params: { channel: "activity" } }).catch(() => ({ data: [] }))).data || [];
+  try {
+    rows.value = (await http.get("/schedules", { params: { channel: "activity" } }).catch(() => ({ data: [] }))).data || [];
+  } finally {
+    loaded.value = true;
+  }
 });
 
 function kindOf(s) {

@@ -64,6 +64,10 @@ Page({
     seatRows: [],
     weather: null,
     reviews: { list: [], count: 0, avg: 0 },
+    reviewsReady: false,
+    seatsReady: false,
+    routeReviewsReady: false,
+    loadErr: "",
     packing: [],
     cancelSummary: "",
     refundHint: "",
@@ -124,6 +128,7 @@ Page({
   },
   onShow() { this.load(); },
   load() {
+    this.setData({ reviewsReady: false, routeReviewsReady: false, seatsReady: false, loadErr: "" });
     request("/schedules/" + this.data.id).then((r) => {
       const s = r.data;
       if (s && s.chain) {
@@ -195,12 +200,12 @@ Page({
           });
         }).catch(() => {});
       }
-    });
+    }).catch(() => this.setData({ loadErr: "加载失败" }));
   },
   loadExtras() {
     request("/schedules/" + this.data.id + "/seats").then((r) => {
       if (this.data.isActivity) {
-        this.setData({ seatRows: [] });
+        this.setData({ seatRows: [], seatsReady: true });
         return;
       }
       const seats = (r.data && r.data.seats) || [];
@@ -210,8 +215,8 @@ Page({
         if (!last || last.row !== seat.row) groups.push({ row: seat.row, seats: [seat] });
         else last.seats.push(seat);
       });
-      this.setData({ seatRows: groups });
-    }).catch(() => {});
+      this.setData({ seatRows: groups, seatsReady: true });
+    }).catch(() => this.setData({ seatsReady: true }));
     request("/schedules/" + this.data.id + "/reviews").then((r) => {
       const data = (r && r.data) || {};
       const list = (data.list || []).map((row) => Object.assign({}, row, { stars: starText(row.rating) }));
@@ -220,8 +225,9 @@ Page({
         reviews: { list, count: data.count || 0, avg: data.avg || 0 },
         reviewQuote: quote.text,
         reviewQuoteVirtual: quote.virtual,
+        reviewsReady: true,
       });
-    }).catch(() => {});
+    }).catch(() => this.setData({ reviewsReady: true }));
     request("/meta").then((r) => {
       const data = (r && r.data) || {};
       const patch = {
@@ -240,7 +246,10 @@ Page({
   },
   loadRoute(routeId) {
     routeId = routeId || (this.data.s && (this.data.s.routeId || (this.data.s.route && this.data.s.route.id)));
-    if (!routeId) return;
+    if (!routeId) {
+      this.setData({ routeReviewsReady: true });
+      return;
+    }
     request("/routes/" + routeId).then((r) => {
       const route = r.data || {};
       delete route.schedules;
@@ -256,8 +265,8 @@ Page({
     request("/routes/" + routeId + "/reviews").then((r) => {
       const data = (r && r.data) || {};
       const list = (data.list || []).map((row) => Object.assign({}, row, { stars: starText(row.rating) }));
-      this.setData({ routeReviews: { list, count: data.count || 0, avg: data.avg || 0 } });
-    }).catch(() => {});
+      this.setData({ routeReviews: { list, count: data.count || 0, avg: data.avg || 0 }, routeReviewsReady: true });
+    }).catch(() => this.setData({ routeReviewsReady: true }));
   },
   setTab(e) {
     const tab = e.currentTarget.dataset.tab;

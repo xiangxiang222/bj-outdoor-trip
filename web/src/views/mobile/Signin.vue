@@ -1,5 +1,6 @@
 <template>
-  <div class="sg-page" v-if="state">
+  <LoadRow v-if="!ready" />
+  <div class="sg-page" v-else-if="state">
     <div class="sg-card">
       <div class="sg-top">
         <div>
@@ -34,6 +35,7 @@
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 
@@ -41,6 +43,7 @@ const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const state = ref(null);
+const ready = ref(false);
 const result = ref(null);
 
 onMounted(load);
@@ -51,6 +54,8 @@ async function load() {
     state.value = (await http.get("/me/signin")).data;
   } catch {
     state.value = null;
+  } finally {
+    ready.value = true;
   }
 }
 

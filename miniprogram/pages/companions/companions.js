@@ -1,7 +1,7 @@
 const { request } = require("../../utils/request");
 const app = getApp();
 Page({
-  data: { list: [], name: "", phone: "", emergencyName: "", emergencyPhone: "", msg: "", errors: {} },
+  data: { list: [], name: "", phone: "", emergencyName: "", emergencyPhone: "", msg: "", errors: {}, loading: true },
   onShow() {
     if (!app.globalData.token) {
       wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/companions/companions") });
@@ -10,7 +10,7 @@ Page({
     this.load();
   },
   load() {
-    request("/me/companions").then((r) => this.setData({ list: r.data || [] })).catch(() => {});
+    request("/me/companions").then((r) => this.setData({ list: r.data || [], loading: false })).catch(() => this.setData({ loading: false }));
   },
   setName(e) { this.setData({ name: e.detail.value, "errors.name": "" }); },
   setPhone(e) { this.setData({ phone: e.detail.value, "errors.phone": "" }); },

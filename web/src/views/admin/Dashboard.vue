@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
     <h2>数据看板</h2>
     <div class="kpi">
       <div class="card"><div class="muted">线路</div><div class="n">{{ d.routeCount }}</div></div>
@@ -21,7 +21,7 @@
       </el-col>
     </el-row>
     <div class="card admin-dash-table">
-      <el-table :data="d.byRoute" stripe>
+      <el-table :data="d.byRoute" stripe :empty-text="loading ? ' ' : '暂无数据'">
         <el-table-column prop="title" label="线路" />
         <el-table-column prop="days" label="天数" width="80" />
         <el-table-column prop="people" label="报名人数" width="120" />
@@ -42,9 +42,18 @@ const px = (n) => Math.round(n * (SIZES[readLook().size] || 1));
 const d = reactive({ routeCount: 0, userCount: 0, enrollCount: 0, revenue: 0, pending: 0, byRoute: [], byDay: [] });
 const bar = ref();
 const pie = ref();
+const loading = ref(true);
 
 onMounted(async () => {
-  const res = await http.get("/admin/dashboard");
+  let res;
+  try {
+    res = await http.get("/admin/dashboard");
+  } catch {
+    res = null;
+  } finally {
+    loading.value = false;
+  }
+  if (!res) return;
   Object.assign(d, res.data);
   echarts.init(bar.value).setOption({
     title: { text: "各线路人数 / 收入", textStyle: { fontSize: px(16) } },

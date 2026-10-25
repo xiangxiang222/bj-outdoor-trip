@@ -4,7 +4,8 @@
       <h2>抽奖</h2>
     </div>
     <p class="muted">按团配置转盘、时机和指定中奖。保存后可关页，用「查看」看奖品详情和中奖人。未配置的团前台用平台默认奖池。也可从「拼团与成本」点抽奖跳到这里。</p>
-    <el-table :data="list" stripe>
+    <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
+    <el-table :data="list" stripe :empty-text="loading ? ' ' : '暂无数据'">
       <el-table-column label="行程" min-width="200">
         <template #default="{ row }">{{ row.routeTitle || "行程" }} {{ row.startDate }}</template>
       </el-table-column>
@@ -28,6 +29,7 @@
         </template>
       </el-table-column>
     </el-table>
+    </div>
     <LotteryEditor v-model="showEditor" :schedule="cur" @saved="load" />
 
     <el-dialog v-model="showView" class="lottery-view-dialog" :title="viewTitle" width="960px" top="6vh">
@@ -118,6 +120,7 @@ import LotteryEditor from "@/components/admin/LotteryEditor.vue";
 
 const route = useRoute();
 const list = ref([]);
+const loading = ref(true);
 const showEditor = ref(false);
 const showView = ref(false);
 const cur = ref(null);
@@ -207,11 +210,16 @@ async function view(row) {
 }
 
 async function load() {
-  list.value = (await http.get("/admin/lotteries")).data || [];
-  const preset = Number(route.query.scheduleId || 0);
-  if (!preset) return;
-  const hit = list.value.find((row) => Number(row.scheduleId) === preset);
-  if (hit && hit.status !== "cancelled") open(hit);
+  loading.value = true;
+  try {
+    list.value = (await http.get("/admin/lotteries")).data || [];
+    const preset = Number(route.query.scheduleId || 0);
+    if (!preset) return;
+    const hit = list.value.find((row) => Number(row.scheduleId) === preset);
+    if (hit && hit.status !== "cancelled") open(hit);
+  } finally {
+    loading.value = false;
+  }
 }
 
 onMounted(async () => {

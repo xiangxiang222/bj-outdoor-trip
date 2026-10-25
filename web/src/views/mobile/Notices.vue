@@ -12,7 +12,8 @@
       </span>
       <i>{{ n.unread ? "未读" : "" }}</i>
     </button>
-    <p v-if="!list.length" class="muted">成团、集合点变更、审核结果和退款到账会出现在这里。</p>
+    <LoadRow v-if="loading" />
+    <p v-else-if="!list.length" class="muted">成团、集合点变更、审核结果和退款到账会出现在这里。</p>
   </div>
 </template>
 
@@ -22,20 +23,26 @@ import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
+import LoadRow from "@/components/LoadRow.vue";
 
 const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const list = ref([]);
 const unread = ref(0);
+const loading = ref(true);
 
 onMounted(load);
 
 async function load() {
   if (!requireLogin(store, router, route)) return;
-  const res = await http.get("/me/notices");
-  list.value = res.data || [];
-  unread.value = res.unread || 0;
+  try {
+    const res = await http.get("/me/notices");
+    list.value = res.data || [];
+    unread.value = res.unread || 0;
+  } finally {
+    loading.value = false;
+  }
 }
 
 async function readAll() {

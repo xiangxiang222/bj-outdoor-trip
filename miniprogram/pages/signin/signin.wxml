@@ -1,4 +1,5 @@
 <wxs src="../../utils/locale.wxs" module="tr" />
+<load-row wx:if="{{!state}}" />
 <view class="sg-page" wx:if="{{state}}">
   <view class="sg-card">
     <view class="sg-top">

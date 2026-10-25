@@ -1,13 +1,13 @@
 const { request } = require("../../utils/request");
 const app = getApp();
 Page({
-  data: { list: [] },
+  data: { list: [], loading: true },
   onShow() {
     if (!app.globalData.token) {
       wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/follows/follows") });
       return;
     }
-    request("/me/follows").then((r) => this.setData({ list: r.data || [] })).catch(() => {});
+    request("/me/follows").then((r) => this.setData({ list: r.data || [], loading: false })).catch(() => this.setData({ loading: false }));
   },
   open(e) {
     wx.navigateTo({ url: "/pages/user/user?id=" + e.currentTarget.dataset.id });

@@ -17,16 +17,23 @@
         </div>
       </div>
     </div>
-    <p class="muted" v-if="!list.length">暂无在岗导游。</p>
+    <LoadRow v-if="loading" />
+    <p class="muted" v-else-if="!list.length">暂无在岗导游。</p>
   </div>
 </template>
 
 <script setup>
 import { onMounted, ref } from "vue";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 
 const list = ref([]);
+const loading = ref(true);
 onMounted(async () => {
-  list.value = (await http.get("/guides")).data || [];
+  try {
+    list.value = (await http.get("/guides")).data || [];
+  } finally {
+    loading.value = false;
+  }
 });
 </script>

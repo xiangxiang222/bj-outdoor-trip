@@ -1,5 +1,6 @@
 <template>
-  <div v-if="data" class="pay-page">
+  <LoadRow v-if="!ready" />
+  <div v-else-if="data" class="pay-page">
     <div class="pay-hero">
       <div class="muted">{{ data.isOwner ? "已占座，请支付团费" : "帮付团费 · " + data.travelerName }}</div>
       <strong class="pay-title">{{ data.title }}</strong>
@@ -69,6 +70,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import { setChrome } from "@/utils/pageChrome";
@@ -81,6 +83,7 @@ const router = useRouter();
 const store = useUserStore();
 const data = ref(null);
 const err = ref("");
+const ready = ref(false);
 const msg = ref("");
 const ok = ref(false);
 const paying = ref(false);
@@ -114,6 +117,8 @@ async function load() {
     setChrome("支付", next.isOwner ? "自己付、代付或分担" : "代付或分担");
   } catch (e) {
     err.value = e.message || "付款分享不存在";
+  } finally {
+    ready.value = true;
   }
 }
 

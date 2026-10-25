@@ -10,7 +10,8 @@
         <p v-if="c.emergencyName || c.emergencyPhone" class="muted">紧急联系人 {{ c.emergencyName }} {{ c.emergencyPhone }}</p>
       </div>
     </div>
-    <p v-if="!list.length" class="muted">报名时点「存为常用」，下次可以点一下带入。</p>
+    <LoadRow v-if="loading" />
+    <p v-else-if="!list.length" class="muted">报名时点「存为常用」，下次可以点一下带入。</p>
     <div class="card">
       <div class="pad">
         <div class="h2" style="margin-top:0">{{ form.id ? "修改报名人" : "新增报名人" }}</div>
@@ -31,11 +32,13 @@ import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
+import LoadRow from "@/components/LoadRow.vue";
 
 const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const list = ref([]);
+const loading = ref(true);
 const msg = ref("");
 const form = ref({ id: 0, name: "", phone: "", emergencyName: "", emergencyPhone: "" });
 
@@ -43,7 +46,11 @@ onMounted(load);
 
 async function load() {
   if (!requireLogin(store, router, route)) return;
-  list.value = (await http.get("/me/companions")).data || [];
+  try {
+    list.value = (await http.get("/me/companions")).data || [];
+  } finally {
+    loading.value = false;
+  }
 }
 
 async function save() {

@@ -1,5 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
+<load-row wx:if="{{!data}}" />
 <view class="card" wx:if="{{data}}" style="background:#1b4332;color:#fff">
   <view class="pad">
     <view class="muted" style="color:#fff;opacity:.85">{{tr.t(data.universal ? '通用优惠券' : '本团优惠券', lang)}}</view>

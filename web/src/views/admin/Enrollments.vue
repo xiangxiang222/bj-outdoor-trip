@@ -19,7 +19,8 @@
       </div>
     </div>
     <p class="admin-scroll-hint">表格较宽时可左右滑动，操作在最右侧。</p>
-    <el-table :data="list" stripe>
+    <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
+    <el-table :data="list" stripe :empty-text="loading ? ' ' : '暂无数据'">
       <el-table-column prop="title" label="线路" min-width="160" />
       <el-table-column prop="start_date" label="日期" width="120" />
       <el-table-column prop="traveler_name" label="姓名" width="100" />
@@ -48,6 +49,7 @@
         </template>
       </el-table-column>
     </el-table>
+    </div>
   </div>
 </template>
 
@@ -59,6 +61,7 @@ import { genderText, payStatusText } from "@/utils/labels";
 import { hasCap } from "@/utils/staff";
 
 const list = ref([]);
+const loading = ref(true);
 const q = ref("");
 const payStatus = ref("");
 const status = ref("");
@@ -68,16 +71,21 @@ const canOps = computed(() => hasCap(me.value, "ops"));
 onMounted(load);
 
 async function load() {
+  loading.value = true;
   try {
-    me.value = (await http.get("/admin/me")).data;
-  } catch {
-    me.value = { caps: [] };
+    try {
+      me.value = (await http.get("/admin/me")).data;
+    } catch {
+      me.value = { caps: [] };
+    }
+    list.value = (
+      await http.get("/admin/enrollments", {
+        params: { q: q.value, payStatus: payStatus.value, status: status.value },
+      })
+    ).data || [];
+  } finally {
+    loading.value = false;
   }
-  list.value = (
-    await http.get("/admin/enrollments", {
-      params: { q: q.value, payStatus: payStatus.value, status: status.value },
-    })
-  ).data;
 }
 
 async function cancel(row) {

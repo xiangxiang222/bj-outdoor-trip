@@ -1,5 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
+<load-row wx:if="{{!card}}" />
 <view class="hero" wx:if="{{card}}">
   <view class="codes">
     <text wx:for="{{card.levels}}" wx:key="level" class="code {{focus.level === item.level ? 'on' : ''}}" data-level="{{item.level}}" bindtap="focusLevel">{{tr.t(item.code, lang)}}</text>

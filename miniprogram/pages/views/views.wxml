@@ -7,7 +7,8 @@
     <view class="muted">{{tr.t(item.region, lang)}} · {{tr.t(item.seenAt, lang)}}</view>
   </view>
 </view>
-<view class="card" wx:if="{{!list.length}}">
+<load-row wx:if="{{loading}}" />
+<view class="card" wx:elif="{{!list.length}}">
   <view class="pad">
     <view>{{tr.t('还没有看过的线路。打开一条线路后会出现在这里。', lang)}}</view>
     <view class="muted">{{tr.t('已经下架的线路不会留在这里。', lang)}}</view>

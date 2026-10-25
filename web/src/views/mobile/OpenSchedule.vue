@@ -1,5 +1,6 @@
 <template>
-  <div v-if="routeInfo">
+  <LoadRow v-if="!routeInfo" />
+  <div v-else>
     <p>为「{{ routeInfo.title }}」发布一个可报名日期，可分享到微信群召集报名。</p>
     <label>出发日期</label>
     <input class="input" type="date" v-model="form.startDate" />
@@ -73,6 +74,7 @@
 import { onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import CampusTargetList from "@/components/CampusTargetList.vue";

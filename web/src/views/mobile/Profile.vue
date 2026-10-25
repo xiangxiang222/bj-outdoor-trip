@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <LoadRow v-if="!profileReady" />
+  <div v-else>
     <p class="muted">核对姓名和身份证号是否为同一人。证件号仅本人可见，展示时脱敏。</p>
     <div class="cell-group">
       <div class="cell"><span>姓名</span><i>{{ store.profile?.nickname || "未填" }}</i></div>
@@ -33,6 +34,7 @@ import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import { setChrome } from "@/utils/pageChrome";
 import { genderText, maskPhone } from "@/utils/labels";
+import LoadRow from "@/components/LoadRow.vue";
 
 const store = useUserStore();
 const route = useRoute();
@@ -42,11 +44,13 @@ const idCard = ref("");
 const nameError = ref("");
 const idError = ref("");
 const saving = ref(false);
+const profileReady = ref(!!store.profile?.id);
 
 onMounted(async () => {
   setChrome("实名信息", "选填");
   if (!requireLogin(store, router, route)) return;
   await store.fetchMe().catch(() => {});
+  profileReady.value = true;
 });
 
 async function submit() {
