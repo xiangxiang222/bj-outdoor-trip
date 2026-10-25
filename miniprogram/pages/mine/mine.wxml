@@ -70,7 +70,7 @@
         <view class="mine-stat-name">{{tr.t('积分', lang)}}</view>
       </view>
       <view bindtap="go" data-url="/pages/signin/signin">
-        <view class="mine-stat-num">{{hub.signedToday ? tr.t('已签到', lang) : tr.t('去签', lang)}}</view>
+        <view class="mine-stat-num">{{hub.signedToday ? tr.t('已签到', lang) : tr.t('未签到', lang)}}</view>
         <view class="mine-stat-name">{{tr.t('签到', lang)}}</view>
       </view>
       <view class="mine-more" bindtap="go" data-url="/pages/wallet/wallet">{{tr.t('更多', lang)}}</view>
