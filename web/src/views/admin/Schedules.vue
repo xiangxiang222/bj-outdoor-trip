@@ -276,7 +276,7 @@
           <el-button :loading="openingCheckin" @click="openCheckinRound">发起签到</el-button>
         </template>
       </div>
-      <el-table :data="checkinData?.roster || []" stripe size="small" max-height="360">
+      <el-table v-loading="checkinLoading" element-loading-text="加载中…" :data="checkinData?.roster || []" stripe size="small" max-height="360" :empty-text="checkinLoading ? ' ' : '暂无数据'">
         <el-table-column prop="seatNo" label="座" width="60" />
         <el-table-column prop="name" label="姓名" width="100" />
         <el-table-column prop="phone" label="手机" width="130" />
@@ -422,6 +422,7 @@ const startingTrip = ref(false);
 const closingTrip = ref(false);
 const openingCheckin = ref(false);
 const confirmingCheckin = ref(false);
+const checkinLoading = ref(false);
 const markingId = ref(0);
 const checkinOpen = computed(() => checkinData.value?.checkin?.openSession || null);
 const checkinStops = computed(() => checkinData.value?.checkin?.stops || []);
@@ -680,11 +681,15 @@ async function openTrip(row) {
 
 async function openCheckinDlg(row) {
   cur.value = row;
+  checkinData.value = null;
   showCheckin.value = true;
+  checkinLoading.value = true;
   try {
     await loadCheckin(row.id);
   } catch (e) {
     ElMessage.error(e.message || "签到名单加载失败");
+  } finally {
+    checkinLoading.value = false;
   }
 }
 

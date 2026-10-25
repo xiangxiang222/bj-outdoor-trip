@@ -1,5 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../utils/locale.wxs" module="tr" />
+<load-row wx:if="{{!r.title && !err}}" />
 <view wx:if="{{err}}" class="route-miss">
   <view class="route-miss-card">
     <view class="route-miss-mark">线</view>
@@ -175,7 +176,8 @@
 </view>
 <view class="pad" wx:if="{{r.title}}">
   <view class="title">{{tr.t('出行评价', lang)}} <text class="muted" wx:if="{{reviews.count}}">{{tr.t(reviews.avg, lang)}}{{tr.t('分 ·', lang)}} {{tr.t(reviews.count, lang)}}{{tr.t('条', lang)}}</text></view>
-  <view wx:if="{{!reviews.list.length}}" class="muted">{{tr.t('还没有评价。报名后可在「我的报名」写下体验。', lang)}}</view>
+  <load-row wx:if="{{!reviewsReady && !reviews.list.length}}" />
+  <view wx:elif="{{!reviews.list.length}}" class="muted">{{tr.t('还没有评价。报名后可在「我的报名」写下体验。', lang)}}</view>
   <view class="card" wx:for="{{reviews.list}}" wx:key="id">
     <view class="pad">
       <view class="row"><text>{{tr.t(item.name, lang)}}</text><text wx:if="{{item.virtual}}" class="review-virtual">{{tr.t('虚拟用户', lang)}}</text><text class="stars">{{tr.t(item.stars, lang)}}</text></view>

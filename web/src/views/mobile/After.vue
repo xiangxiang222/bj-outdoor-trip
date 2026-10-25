@@ -1,5 +1,6 @@
 <template>
-  <div v-if="s">
+  <LoadRow v-if="!s && !msg" />
+  <div v-else-if="s">
     <div class="card"><div class="pad">
       <strong>{{ s.title }}</strong>
       <p class="muted">{{ s.startDate }} · 交过费即可在行程结束后抽奖，不必签到。行程由导游或管理员统一结束后，可以评价和参加评选。</p>
@@ -81,6 +82,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import LotteryWheel from "@/components/LotteryWheel.vue";

@@ -49,7 +49,8 @@
         </div>
       </article>
 
-      <div v-if="!list.length" class="card">
+      <LoadRow v-if="loading" />
+      <div v-else-if="!list.length" class="card">
         <div class="pad">
           <strong>还没有报名</strong>
           <p class="muted">去首页报一个山野团，或去活动页约一局。</p>
@@ -97,6 +98,7 @@ import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { deskTrips, showAfterActions, todayYmd } from "@/utils/trips";
+import LoadRow from "@/components/LoadRow.vue";
 import { canReorder, matchOrderQuery, matchOrderTime, orderBadge, orderMoney, orderShop, orderSpec, orderTimePresets } from "@/utils/orderView";
 
 const store = useUserStore();
@@ -130,6 +132,7 @@ function normalizeTab(raw) {
 
 const tab = ref(normalizeTab(pageRoute.query.tab) || "depart");
 const ready = ref(false);
+const loading = ref(true);
 const presets = computed(() => orderTimePresets());
 const presetCells = computed(() => presets.value.quick.concat(presets.value.years, moreYears.value ? presets.value.extra : []));
 const filterOn = computed(() => Boolean(applied.value.preset || applied.value.start || applied.value.end));
@@ -159,15 +162,21 @@ watch(
 async function load() {
   if (!store.token) {
     list.value = [];
+    loading.value = false;
     return;
   }
-  list.value = (await http.get("/orders")).data || [];
-  if (!ready.value) {
-    ready.value = true;
-    if (normalizeTab(pageRoute.query.tab)) tab.value = normalizeTab(pageRoute.query.tab);
-    else pickDefault();
+  loading.value = true;
+  try {
+    list.value = (await http.get("/orders")).data || [];
+    if (!ready.value) {
+      ready.value = true;
+      if (normalizeTab(pageRoute.query.tab)) tab.value = normalizeTab(pageRoute.query.tab);
+      else pickDefault();
+    }
+    nextTick(revealTab);
+  } finally {
+    loading.value = false;
   }
-  nextTick(revealTab);
 }
 function revealTab() {
   const scroller = document.querySelector(".od-tabs");

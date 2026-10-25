@@ -43,7 +43,7 @@
       <div class="sheet">
         <div class="row"><span>线路</span>
           <select class="select" v-model.number="form.routeId" @change="onRoute">
-            <option :value="0">{{ routes.length ? "选择已有线路" : "暂无可选线路" }}</option>
+            <option :value="0">{{ routesReady ? (routes.length ? "选择已有线路" : "暂无可选线路") : "正在加载" }}</option>
             <option v-for="r in routes" :key="r.id" :value="r.id">{{ r.title }}</option>
           </select>
         </div>
@@ -143,6 +143,7 @@ const offers = OFFER_TYPES;
 const defaultMeetups = ["东直门东方银座C口", "西直门凯德mall北门外", "国贸桥下大巴停靠点", "丽泽桥西南角"];
 const meetups = ref(defaultMeetups.slice());
 const routes = ref([]);
+const routesReady = ref(false);
 const districts = ["东城", "西城", "朝阳", "海淀", "丰台", "石景山", "通州", "顺义", "昌平", "大兴", "房山", "门头沟", "怀柔", "平谷", "密云", "延庆"];
 const kinds = ACTIVITY_KINDS;
 
@@ -241,12 +242,16 @@ watch(
 
 onMounted(async () => {
   if (!requireLogin(store, router, route)) return;
-  const jobs = [http.get("/buses")];
-  if (!startAsActivity) jobs.push(http.get("/routes"));
-  const [busRes, routeRes] = await Promise.all(jobs);
-  buses.value = busRes.data || [];
-  form.value.busTypeId = buses.value[0]?.id || "";
-  routes.value = routeRes?.data || [];
+  try {
+    const jobs = [http.get("/buses")];
+    if (!startAsActivity) jobs.push(http.get("/routes"));
+    const [busRes, routeRes] = await Promise.all(jobs);
+    buses.value = busRes.data || [];
+    form.value.busTypeId = buses.value[0]?.id || "";
+    routes.value = routeRes?.data || [];
+  } finally {
+    routesReady.value = true;
+  }
 });
 
 async function onRoute() {

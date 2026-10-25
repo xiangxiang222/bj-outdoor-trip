@@ -1,5 +1,7 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
+<load-row wx:if="{{!ready}}" />
+<block wx:else>
 <view class="notice">{{tr.t('核对姓名和身份证号是否为同一人。证件号仅本人可见，展示时脱敏。', lang)}}</view>
 <view class="list">
   <view class="row"><text>{{tr.t('昵称', lang)}}</text><text class="val">{{tr.t(user.nickname || '未填', lang)}}</text></view>
@@ -23,3 +25,4 @@
 <view class="field-error" wx:if="{{errors.name}}">{{tr.t(errors.name, lang)}}</view>
 <view class="field-error" wx:if="{{errors.idCard}}">{{tr.t(errors.idCard, lang)}}</view>
 <view class="save" bindtap="save">{{tr.t(verifying ? '正在核验…' : '提交核验', lang)}}</view>
+</block>

@@ -71,7 +71,8 @@
   <view class="goods-tab {{tab=='rules'?'on':''}}" bindtap="setTab" data-tab="rules">{{tr.t('须知', lang)}}</view>
 </view>
 
-<view class="pad load-row" wx:if="{{!s}}"><view class="spinner"></view><text class="muted">{{tr.t('正在打开…', lang)}}</text></view>
+<load-row wx:if="{{!s && !loadErr}}" />
+<view class="pad muted" wx:elif="{{!s}}">{{tr.t(loadErr, lang)}}</view>
 <block wx:elif="{{tab=='trip'}}">
 <view class="pad title" wx:if="{{highlights.length}}">{{tr.t('这一天的看点', lang)}}</view>
 <view class="card" wx:if="{{highlights.length}}">
@@ -174,8 +175,10 @@
   </view>
 </view>
 <block wx:if="{{!isActivity}}">
+<load-row wx:if="{{!seatsReady}}" />
+<block wx:elif="{{seatRows.length}}">
 <view class="pad title">{{tr.t('座位图', lang)}}</view>
-<view class="seat-map" wx:if="{{seatRows.length}}">
+<view class="seat-map">
   <view class="seat-front">{{tr.t('车头', lang)}}</view>
   <view class="seat-row" wx:for="{{seatRows}}" wx:key="row">
     <block wx:for="{{item.seats}}" wx:for-item="seat" wx:key="no">
@@ -188,6 +191,7 @@
     </block>
   </view>
 </view>
+</block>
 </block>
 <view class="card" wx:if="{{s.myEnrollment}}">
   <view class="pad title">{{tr.t('报名后', lang)}}</view>
@@ -239,7 +243,8 @@
   <text wx:elif="{{!isActivity || !isFree}}" class="{{item.payStatus=='paid' ? 'pay-paid' : 'muted'}}"> {{tr.t(item.payText, lang)}}</text>
 </view>
 <view id="trip-reviews" class="pad title">{{tr.t('本团评价', lang)}} <text class="muted" wx:if="{{reviews.count}}">{{tr.t(reviews.avg, lang)}}{{tr.t('分 ·', lang)}} {{tr.t(reviews.count, lang)}}{{tr.t('条', lang)}}</text></view>
-<view class="pad muted" wx:if="{{!reviews.list.length}}">{{tr.t('还没有评价。', lang)}}</view>
+<load-row wx:if="{{!reviewsReady && !reviews.list.length}}" />
+<view class="pad muted" wx:elif="{{reviewsReady && !reviews.list.length}}">{{tr.t('还没有评价。', lang)}}</view>
 <view class="card" wx:for="{{reviews.list}}" wx:key="id">
   <view class="pad">
     <view class="row"><text>{{tr.t(item.name, lang)}}</text><text wx:if="{{item.virtual}}" class="review-virtual">{{tr.t('虚拟用户', lang)}}</text><text class="stars">{{tr.t(item.stars, lang)}}</text></view>
@@ -269,6 +274,8 @@
 </block>
 
 <block wx:elif="{{tab=='route'}}">
+  <load-row wx:if="{{!routeDetail.title}}" />
+  <block wx:else>
   <view class="pad" wx:if="{{routeDetail.title}}">
     <view class="title">{{tr.t(routeDetail.title, lang)}}</view>
     <view class="muted">{{tr.t(routeDetail.subtitle, lang)}}</view>
@@ -336,7 +343,8 @@
     <view wx:if="{{!routeDetail.packingList || !routeDetail.packingList.length}}" class="muted">{{tr.t(routeDetail.equipment || '详见装备说明。', lang)}}</view>
   </view>
   <view class="pad title">{{tr.t('出行评价', lang)}} <text class="muted" wx:if="{{routeReviews.count}}">{{tr.t(routeReviews.avg, lang)}}{{tr.t('分 ·', lang)}} {{tr.t(routeReviews.count, lang)}}{{tr.t('条', lang)}}</text></view>
-  <view class="pad muted" wx:if="{{!routeReviews.list.length}}">{{tr.t('还没有评价。', lang)}}</view>
+  <load-row wx:if="{{!routeReviewsReady && !routeReviews.list.length}}" />
+  <view class="pad muted" wx:elif="{{routeReviewsReady && !routeReviews.list.length}}">{{tr.t('还没有评价。', lang)}}</view>
   <view class="card" wx:for="{{routeReviews.list}}" wx:key="id">
     <view class="pad">
       <view class="row"><text>{{tr.t(item.name, lang)}}</text><text wx:if="{{item.virtual}}" class="review-virtual">{{tr.t('虚拟用户', lang)}}</text><text class="stars">{{tr.t(item.stars, lang)}}</text></view>
@@ -344,6 +352,7 @@
       <view class="muted">{{tr.t(item.createdAt, lang)}}</view>
     </view>
   </view>
+  </block>
 </block>
 
 <block wx:else>

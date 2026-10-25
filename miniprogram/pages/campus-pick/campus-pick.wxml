@@ -5,7 +5,8 @@
 <view class="campus-pick-list">
   <view class="campus-pick-row custom" wx:if="{{custom}}" bindtap="useCustom">{{tr.t('使用「', lang)}}{{tr.t(custom, lang)}}」</view>
   <view class="campus-pick-row {{item.on ? 'on' : ''}}" wx:for="{{list}}" wx:key="name" data-name="{{item.name}}" bindtap="toggle">{{tr.t(item.name, lang)}}</view>
-  <view class="pad muted" wx:if="{{!loading && !list.length && !custom}}">{{tr.t(emptyHint, lang)}}</view>
+  <load-row wx:if="{{loading && !list.length && !custom}}" />
+  <view class="pad muted" wx:elif="{{!loading && !list.length && !custom}}">{{tr.t(emptyHint, lang)}}</view>
 </view>
 <view class="campus-pick-foot">
   <view class="btn ghost campus-pick-btn" bindtap="prev" wx:if="{{page > 1}}">{{tr.t('上一页', lang)}}</view>

@@ -31,7 +31,8 @@
               <span>{{ n.body }}</span>
               <small>{{ n.createdAt }}</small>
             </button>
-            <p v-if="!notices.length" class="muted" style="margin:12px 8px">暂无消息</p>
+            <p v-if="!noticesReady && !notices.length" class="muted" style="margin:12px 8px">加载中…</p>
+            <p v-else-if="!notices.length" class="muted" style="margin:12px 8px">暂无消息</p>
           </div>
         </div>
         <el-dropdown trigger="click" @command="onUserCommand">
@@ -100,6 +101,7 @@ const me = ref({
 });
 me.value.caps = capsOf(me.value.role);
 const notices = ref([]);
+const noticesReady = ref(false);
 const unread = ref(0);
 const showNotices = ref(false);
 let noticeTimer = 0;
@@ -116,6 +118,8 @@ async function loadNotices() {
     unread.value = Number(res.data?.unread || 0);
   } catch {
     /* 登录失效时由 /admin/me 处理 */
+  } finally {
+    noticesReady.value = true;
   }
 }
 

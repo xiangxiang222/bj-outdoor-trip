@@ -4,15 +4,15 @@ const { decorateFeed } = require("../../utils/feed-card");
 const { cycleSort, processFeed, sortLabel } = require("../../utils/feed-list");
 
 Page({
-  data: { rows: [], list: [], kinds: KINDS, kind: "", weekCount: 0, query: "", sort: "soon", sortText: "即将出发", picked: [] },
+  data: { rows: [], list: [], kinds: KINDS, kind: "", weekCount: 0, query: "", sort: "soon", sortText: "即将出发", picked: [], loading: true },
   onShow() {
     request("/schedules?channel=activity")
       .then((r) => {
         const rows = ((r && r.data) || []).map((s) => decorateFeed(decorate(s), "activity"));
-        this.setData({ rows, weekCount: processFeed(rows, { channel: "activity" }).filter((s) => isThisWeek(s.startDate)).length });
+        this.setData({ rows, weekCount: processFeed(rows, { channel: "activity" }).filter((s) => isThisWeek(s.startDate)).length, loading: false });
         this.apply();
       })
-      .catch(() => this.setData({ rows: [], list: [], weekCount: 0 }));
+      .catch(() => this.setData({ rows: [], list: [], weekCount: 0, loading: false }));
   },
   apply() {
     const kind = this.data.kind;

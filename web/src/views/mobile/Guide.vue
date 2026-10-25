@@ -1,5 +1,6 @@
 <template>
-  <div v-if="g">
+  <LoadRow v-if="!ready" />
+  <div v-else-if="g">
     <div class="card">
       <div class="pad guide-row">
         <div class="guide-face" style="width:64px;height:64px;font-size: calc(22px * var(--ui-scale))">
@@ -47,11 +48,13 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 import { genderText } from "@/utils/labels";
 
 const route = useRoute();
 const g = ref(null);
 const err = ref("");
+const ready = ref(false);
 const specialtyList = computed(() =>
   String(g.value?.specialties || "")
     .split(/[,，、]/)
@@ -64,6 +67,8 @@ onMounted(async () => {
     g.value = (await http.get("/guides/" + route.params.id)).data;
   } catch (e) {
     err.value = e.message || "导游不存在";
+  } finally {
+    ready.value = true;
   }
 });
 </script>

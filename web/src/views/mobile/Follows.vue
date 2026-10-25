@@ -10,7 +10,8 @@
         <p v-else class="muted" style="margin:6px 0 0">还没有即将出发的团</p>
       </div>
     </div>
-    <p v-if="!list.length" class="muted">在别人的主页点「关注」。对方再发团时，消息里会提醒你。</p>
+    <LoadRow v-if="loading" />
+    <p v-else-if="!list.length" class="muted">在别人的主页点「关注」。对方再发团时，消息里会提醒你。</p>
   </div>
 </template>
 
@@ -20,14 +21,20 @@ import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
+import LoadRow from "@/components/LoadRow.vue";
 
 const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const list = ref([]);
+const loading = ref(true);
 onMounted(async () => {
   if (!requireLogin(store, router, route)) return;
-  list.value = (await http.get("/me/follows")).data || [];
+  try {
+    list.value = (await http.get("/me/follows")).data || [];
+  } finally {
+    loading.value = false;
+  }
 });
 async function unfollow(p) {
   await http.delete("/me/follows/" + p.id);

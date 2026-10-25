@@ -1,5 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
+<load-row wx:if="{{!data}}" />
 <block wx:if="{{data}}">
   <view class="pay-hero">
     <view class="muted" wx:if="{{data.isOwner}}">{{tr.t('已占座，请支付团费', lang)}}</view>

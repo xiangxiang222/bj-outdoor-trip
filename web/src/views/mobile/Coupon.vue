@@ -1,5 +1,6 @@
 <template>
-  <div v-if="data">
+  <LoadRow v-if="!ready" />
+  <div v-else-if="data">
     <div class="card" style="background:linear-gradient(135deg,#1b4332,#40916c);color:#fff">
       <div class="pad">
         <div class="muted" style="opacity:.85">{{ data.universal ? "通用优惠券" : "本团优惠券" }}</div>
@@ -37,6 +38,7 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import { couponCountdown } from "@/utils/couponTime";
@@ -46,6 +48,7 @@ const router = useRouter();
 const store = useUserStore();
 const data = ref(null);
 const err = ref("");
+const ready = ref(false);
 const loading = ref(false);
 const now = ref(Date.now());
 let timer;
@@ -103,6 +106,8 @@ async function load() {
       return;
     }
     err.value = e.message || "优惠券不存在";
+  } finally {
+    ready.value = true;
   }
 }
 

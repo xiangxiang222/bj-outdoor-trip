@@ -11,4 +11,6 @@
     </view>
   </view>
 </view>
-<view wx:if="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>
+<load-row wx:if="{{loading}}" />
+<view wx:elif="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>
+<view wx:elif="{{!list.length}}" class="muted pad">{{tr.t('暂无在岗导游。', lang)}}</view>

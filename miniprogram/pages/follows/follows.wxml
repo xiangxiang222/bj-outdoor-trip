@@ -10,4 +10,5 @@
     <view class="muted" wx:else>{{tr.t('还没有即将出发的团', lang)}}</view>
   </view>
 </view>
-<view class="pad muted" wx:if="{{!list.length}}">{{tr.t('在别人的主页点「关注」。对方再发团时，消息里会提醒你。', lang)}}</view>
+<load-row wx:if="{{loading}}" />
+<view class="pad muted" wx:elif="{{!list.length}}">{{tr.t('在别人的主页点「关注」。对方再发团时，消息里会提醒你。', lang)}}</view>

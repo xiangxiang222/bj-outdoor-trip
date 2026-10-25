@@ -1,5 +1,6 @@
 <template>
-  <div v-if="s">
+  <LoadRow v-if="!s" />
+  <div v-else>
     <div class="card">
       <div class="pad">
         <strong>{{ s.route.title }}</strong>
@@ -114,6 +115,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 import WeatherChart from "@/components/WeatherChart.vue";
 import { telHref } from "@/utils/phone";
 

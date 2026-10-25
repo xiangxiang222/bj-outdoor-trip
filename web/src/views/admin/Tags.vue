@@ -5,7 +5,8 @@
       <el-button type="success" @click="open">新增标签</el-button>
     </div>
     <p class="muted">首页「想怎么玩」展示这些标签。发团时可勾选，审核通过后出现在行程标题后。</p>
-    <el-table :data="list" stripe>
+    <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
+    <el-table :data="list" stripe :empty-text="loading ? ' ' : '暂无数据'">
       <el-table-column label="颜色" width="80">
         <template #default="{ row }">
           <span class="dot" :style="{ background: row.color }" />
@@ -24,6 +25,7 @@
         </template>
       </el-table-column>
     </el-table>
+    </div>
 
     <el-dialog v-model="show" :title="form.id ? '编辑标签' : '新增标签'" width="480px" align-center :close-on-click-modal="false">
       <el-form label-width="80px">
@@ -50,11 +52,17 @@ import { ElMessage } from "element-plus";
 import http from "@/api/http";
 
 const list = ref([]);
+const loading = ref(true);
 const show = ref(false);
 const form = ref({});
 
 async function load() {
-  list.value = (await http.get("/admin/play-tags")).data;
+  loading.value = true;
+  try {
+    list.value = (await http.get("/admin/play-tags")).data || [];
+  } finally {
+    loading.value = false;
+  }
 }
 onMounted(load);
 

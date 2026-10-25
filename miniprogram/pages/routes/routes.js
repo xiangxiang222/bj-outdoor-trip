@@ -10,6 +10,7 @@ Page({
     tags: [],
     q: "",
     err: "",
+    loading: true,
   },
   onShow() {
     const filter = getApp().globalData.routeFilter;
@@ -41,12 +42,17 @@ Page({
     this.search();
   },
   async search() {
-    const { list, err } = await loadRouteCatalog({
-      q: this.data.q || "",
-      days: this.data.days,
-      tag: this.data.tag,
-    });
-    this.setData({ list, err });
+    this.setData({ loading: true });
+    try {
+      const { list, err } = await loadRouteCatalog({
+        q: this.data.q || "",
+        days: this.data.days,
+        tag: this.data.tag,
+      });
+      this.setData({ list, err, loading: false });
+    } catch (e) {
+      this.setData({ err: (e && e.message) || "加载失败", loading: false });
+    }
   },
   go(e) {
     wx.navigateTo({ url: detailUrl(e.currentTarget.dataset.id) });

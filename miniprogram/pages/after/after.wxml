@@ -1,5 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
+<load-row wx:if="{{!s}}" />
 <view class="card" wx:if="{{s}}"><view class="pad">
   <view class="title">{{tr.t(s.title, lang)}}</view>
   <view class="muted">{{tr.t(s.startDate, lang)}} {{tr.t('· 行程由导游或管理员统一结束后，可以评价和参加评选。', lang)}}</view>

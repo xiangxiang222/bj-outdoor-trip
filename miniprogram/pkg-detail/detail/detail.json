@@ -1,1 +1,1 @@
-{"navigationBarTitleText": "线路详情", "enableShareAppMessage": true, "enableShareTimeline": true, "usingComponents": {"live-pulse": "/components/live-pulse/live-pulse"}}
+{"navigationBarTitleText": "线路详情", "enableShareAppMessage": true, "enableShareTimeline": true, "usingComponents": {"live-pulse": "/components/live-pulse/live-pulse", "load-row": "/components/load-row/load-row"}}

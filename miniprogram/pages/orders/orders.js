@@ -26,6 +26,7 @@ Page({
     list: [],
     shown: [],
     emptyAll: false,
+    loading: true,
     sheet: false,
     moreYears: false,
     quick: [],
@@ -49,7 +50,7 @@ Page({
     const time = orderTimePresets();
     this.setData({ quick: time.quick, years: time.years, extra: time.extra });
     if (!app.globalData.token) {
-      this.setData({ loggedIn: false, list: [], shown: [] });
+      this.setData({ loggedIn: false, list: [], shown: [], loading: false });
       return;
     }
     this.setData({ loggedIn: true });
@@ -76,7 +77,7 @@ Page({
         this.data.holdTab = false;
         this.paint();
       })
-      .catch(() => this.setData({ list: [], shown: [], emptyAll: true }));
+      .catch(() => this.setData({ list: [], shown: [], emptyAll: true, loading: false }));
   },
   paint() {
     const split = deskTrips(this.data.list);
@@ -97,6 +98,7 @@ Page({
       list: this.data.list,
       shown,
       emptyAll: !this.data.list.length,
+      loading: false,
       filterOn: Boolean(this.data.preset || this.data.start || this.data.end),
     });
   },

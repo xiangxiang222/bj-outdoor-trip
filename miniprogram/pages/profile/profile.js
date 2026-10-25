@@ -3,9 +3,10 @@ const { genderText, maskPhone } = require("../../utils/labels");
 const app = getApp();
 
 Page({
-  data: { user: {}, idCard: "", realName: "", gender: "", phone: "", verifying: false, errors: {} },
+  data: { user: {}, idCard: "", realName: "", gender: "", phone: "", verifying: false, errors: {}, ready: false },
   onShow() {
-    this.fill(app.globalData.user || {});
+    const cached = app.globalData.user;
+    if (cached && (cached.id || cached.nickname)) this.fill(cached);
     if (!app.globalData.token) {
       wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/profile/profile") });
       return;
@@ -15,13 +16,17 @@ Page({
         setAuth(app.globalData.token, res.data);
         this.fill(res.data);
       })
-      .catch((e) => showError("加载失败", e));
+      .catch((e) => {
+        this.setData({ ready: true });
+        showError("加载失败", e);
+      });
   },
   fill(user) {
     this.setData({
       user,
       gender: genderText(user.gender) || "待补充",
       phone: maskPhone(user.phone),
+      ready: true,
     });
   },
   setName(e) {

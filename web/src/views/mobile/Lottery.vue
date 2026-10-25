@@ -1,5 +1,6 @@
 <template>
-  <div class="lottery-page">
+  <LoadRow v-if="!ready" />
+  <div v-else class="lottery-page">
     <template v-if="!scheduleId && trips.length">
       <div class="h2">本团抽奖</div>
       <div class="card" v-for="t in trips" :key="t.scheduleId" @click="$router.push('/m/lottery?scheduleId=' + t.scheduleId)">
@@ -57,6 +58,7 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import LotteryWheel from "@/components/LotteryWheel.vue";
+import LoadRow from "@/components/LoadRow.vue";
 
 const store = useUserStore();
 const route = useRoute();
@@ -77,6 +79,7 @@ const msg = ref("");
 const ok = ref(false);
 const spinning = ref(false);
 const claiming = ref(false);
+const ready = ref(false);
 const scheduleId = computed(() => Number(route.query.scheduleId || 0));
 const trips = computed(() => state.value.trips || []);
 const canDraw = computed(() => !!(state.value.canPre || state.value.canPost));
@@ -113,6 +116,8 @@ async function load() {
     state.value = (await http.get("/lottery", { params: { scheduleId: scheduleId.value || 0 } })).data;
   } catch {
     state.value = { pre: null, post: null, canPre: false, canPost: false, canClaim: false, prizes: [], title: "活动抽奖", spinSeconds: 5 };
+  } finally {
+    ready.value = true;
   }
 }
 

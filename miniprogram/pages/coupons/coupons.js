@@ -2,7 +2,7 @@ const { request } = require("../../utils/request");
 const { withCountdown } = require("../../utils/coupon-time");
 const app = getApp();
 Page({
-  data: { list: [] },
+  data: { list: [], loading: true },
   onShow() {
     if (!app.globalData.token) {
       wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/coupons/coupons") });
@@ -19,8 +19,8 @@ Page({
   },
   load() {
     request("/me/coupons")
-      .then((r) => this.setData({ list: withCountdown(r.data || []) }))
-      .catch(() => this.setData({ list: [] }));
+      .then((r) => this.setData({ list: withCountdown(r.data || []), loading: false }))
+      .catch(() => this.setData({ list: [], loading: false }));
   },
   tick() {
     this.setData({ list: withCountdown(this.data.list) });

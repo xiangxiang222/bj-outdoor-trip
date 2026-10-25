@@ -7,7 +7,8 @@
     <view class="muted">{{tr.t(item.subtitle, lang)}}</view>
   </view>
 </view>
-<view class="card" wx:if="{{!list.length}}">
+<load-row wx:if="{{loading}}" />
+<view class="card" wx:elif="{{!list.length}}">
   <view class="pad">
     <view>{{tr.t('还没有收藏，去线路详情点收藏', lang)}}</view>
     <view class="muted">{{tr.t('已经下架的线路不会留在这里。', lang)}}</view>

@@ -1,0 +1,13 @@
+.pad { padding: 24rpx; }
+.load-row { display: flex; align-items: center; justify-content: center; gap: 16rpx; }
+.spinner {
+  width: 36rpx;
+  height: 36rpx;
+  border: 4rpx solid #eceee8;
+  border-top-color: #2d6a4f;
+  border-radius: 50%;
+  animation: load-spin 0.8s linear infinite;
+  flex: none;
+}
+.muted { color: #7a7d74; font-size: 26rpx; }
+@keyframes load-spin { to { transform: rotate(360deg); } }

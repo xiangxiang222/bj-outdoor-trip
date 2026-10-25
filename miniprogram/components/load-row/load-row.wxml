@@ -1,0 +1,5 @@
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="pad load-row">
+  <view class="spinner"></view>
+  <text class="muted">{{tr.t('正在加载', lang)}}</text>
+</view>

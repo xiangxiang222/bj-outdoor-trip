@@ -1,5 +1,7 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
+<load-row wx:if="{{!ready}}" />
+<block wx:else>
 <view class="pad title">{{tr.t('性别', lang)}}</view>
 <canvas type="2d" id="genderPie" class="pie"></canvas>
 <view class="legend">
@@ -24,3 +26,4 @@
   <view class="progress"><view class="bar" style="width:{{item.pct}}%"></view></view>
 </view>
 <view class="pad muted" wx:if="{{!hometown.length}}">{{tr.t('暂无报名数据', lang)}}</view>
+</block>

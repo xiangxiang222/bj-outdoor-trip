@@ -1,11 +1,11 @@
 const { request } = require("../../utils/request");
 const { hostName } = require("../../utils/feed-card");
 Page({
-  data: { list: [] },
+  data: { list: [], loading: true },
   onShow() {
     request("/schedules")
-      .then((r) => this.setData({ list: (r.data || []).map((s) => Object.assign({}, s, { host: hostName(s) })) }))
-      .catch(() => this.setData({ list: [] }));
+      .then((r) => this.setData({ list: (r.data || []).map((s) => Object.assign({}, s, { host: hostName(s) })), loading: false }))
+      .catch(() => this.setData({ list: [], loading: false }));
   },
   go(e) { wx.navigateTo({ url: "/pages/schedule/schedule?id=" + e.currentTarget.dataset.id }); },
   goGuide(e) {

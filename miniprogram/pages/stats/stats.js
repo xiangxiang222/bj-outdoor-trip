@@ -68,7 +68,7 @@ function paint(id, slices, donut) {
 }
 
 Page({
-  data: { gender: [], age: [], hometown: [] },
+  data: { gender: [], age: [], hometown: [], ready: false },
   async onLoad(q) {
     try {
       const d = (await request("/schedules/" + q.id + "/demographics")).data;
@@ -80,6 +80,7 @@ Page({
           gender,
           age,
           hometown: (d.hometown || []).map((x) => ({ ...x, pct: Math.round((x.value / max) * 100) })),
+          ready: true,
         },
         () => {
           wx.nextTick(() => {
@@ -89,6 +90,7 @@ Page({
         }
       );
     } catch (e) {
+      this.setData({ ready: true });
       showError("画像加载失败", e);
     }
   },

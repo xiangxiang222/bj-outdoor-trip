@@ -1,5 +1,7 @@
 <template>
-  <div v-if="card" class="member-page">
+  <LoadRow v-if="!card && !memberChecked" />
+  <p v-else-if="!card" class="muted pad">加载失败</p>
+  <div v-else class="member-page">
     <div class="member-hero">
       <div class="member-codes">
         <button v-for="item in card.levels" :key="item.level" type="button" :class="{ on: focus?.level === item.level }" @click="focus = item">
@@ -33,11 +35,13 @@ import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import { setChrome } from "@/utils/pageChrome";
+import LoadRow from "@/components/LoadRow.vue";
 
 const store = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const focus = ref(null);
+const memberChecked = ref(!!store.profile?.membership);
 
 const card = computed(() => store.profile?.membership || null);
 const nextLevel = computed(() => (card.value?.levels || []).find((item) => item.level === (focus.value?.level || 0) + 1) || null);
@@ -70,6 +74,7 @@ onMounted(async () => {
   setChrome("会员中心", "按出行成长");
   if (!requireLogin(store, router, route)) return;
   await store.fetchMe().catch(() => {});
+  memberChecked.value = true;
   focus.value = card.value?.levels?.find((item) => item.current) || card.value?.levels?.[0] || null;
 });
 </script>

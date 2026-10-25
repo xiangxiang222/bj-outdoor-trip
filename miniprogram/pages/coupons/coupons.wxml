@@ -1,6 +1,7 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="card" wx:if="{{!list.length}}"><view class="pad muted">{{tr.t('还没有优惠券', lang)}}</view></view>
+<load-row wx:if="{{loading}}" />
+<view class="card" wx:elif="{{!list.length}}"><view class="pad muted">{{tr.t('还没有优惠券', lang)}}</view></view>
 <view class="card" wx:for="{{list}}" wx:key="id" bindtap="open" data-code="{{item.campaignCode}}" data-status="{{item.status}}" data-schedule="{{item.scheduleId}}">
   <view class="pad">
     <view class="title">{{tr.t(item.label, lang)}}</view>

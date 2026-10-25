@@ -31,7 +31,8 @@
         </div>
       </div>
     </div>
-    <p class="muted" v-if="ready && !list.length">{{ q || days || tag ? "没有匹配的线路" : "正式线路正在整理，发布后会出现在这里。" }}</p>
+    <LoadRow v-if="loading && !list.length" />
+    <p class="muted" v-else-if="ready && !list.length">{{ q || days || tag ? "没有匹配的线路" : "正式线路正在整理，发布后会出现在这里。" }}</p>
     <button class="btn ghost block" type="button" style="margin-top:12px" @click="$router.push('/m/route-apply')">没有想走的线？申请收录</button>
   </div>
 </template>
@@ -39,6 +40,7 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 
 const props = defineProps({
   q: { type: String, default: "" },
@@ -50,18 +52,22 @@ const days = ref(0);
 const tag = ref("");
 const tags = ref([]);
 const ready = ref(false);
+const loading = ref(true);
 
 async function load() {
   const params = {};
   if (days.value) params.days = days.value;
   if (tag.value) params.tag = tag.value;
   if (props.q) params.q = props.q;
+  loading.value = true;
   try {
     list.value = (await http.get("/routes", { params })).data || [];
   } catch {
     list.value = [];
+  } finally {
+    loading.value = false;
+    ready.value = true;
   }
-  ready.value = true;
 }
 
 function setDays(n) {

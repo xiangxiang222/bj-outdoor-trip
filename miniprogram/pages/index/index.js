@@ -42,6 +42,7 @@ Page({
     routeTags: [],
     routeList: [],
     routeErr: "",
+    routeLoading: false,
     loading: true,
   },
   onLoad() {
@@ -159,6 +160,7 @@ Page({
     this.loadRoutes();
   },
   async loadRoutes() {
+    if (!this.data.routeList.length) this.setData({ routeLoading: true });
     if (!this.data.routeTags.length) {
       try {
         const tagsRes = await request("/play-tags");
@@ -167,12 +169,16 @@ Page({
         this.setData({ routeTags: this.data.home.tags || [] });
       }
     }
-    const { list, err } = await loadRouteCatalog({
-      q: String(this.data.query || "").trim(),
-      days: this.data.routeDays,
-      tag: this.data.routeTag,
-    });
-    this.setData({ routeList: list, routeErr: err });
+    try {
+      const { list, err } = await loadRouteCatalog({
+        q: String(this.data.query || "").trim(),
+        days: this.data.routeDays,
+        tag: this.data.routeTag,
+      });
+      this.setData({ routeList: list, routeErr: err, routeLoading: false });
+    } catch (e) {
+      this.setData({ routeErr: (e && e.message) || "加载失败", routeLoading: false });
+    }
   },
   goRoute(e) {
     wx.navigateTo({ url: detailUrl(e.currentTarget.dataset.id) });

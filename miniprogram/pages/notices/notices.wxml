@@ -11,4 +11,5 @@
     <view class="muted">{{tr.t(item.createdAt, lang)}}</view>
   </view>
 </view>
-<view class="pad muted" wx:if="{{!list.length}}">{{tr.t('成团、集合点变更、审核结果和退款到账会出现在这里。', lang)}}</view>
+<load-row wx:if="{{loading}}" />
+<view class="pad muted" wx:elif="{{!list.length}}">{{tr.t('成团、集合点变更、审核结果和退款到账会出现在这里。', lang)}}</view>

@@ -8,6 +8,7 @@ Page({
     faqs: [],
     openFaq: 0,
     openRule: -1,
+    ready: false,
   },
   onShow() {
     request("/meta")
@@ -18,9 +19,10 @@ Page({
           contacts: d.contacts || {},
           rules: d.commonRules || { title: "", summary: "", sections: [] },
           faqs: d.faqs || [],
+          ready: true,
         });
       })
-      .catch(() => {});
+      .catch(() => this.setData({ ready: true }));
   },
   copy(e) {
     const text = e.currentTarget.dataset.text;

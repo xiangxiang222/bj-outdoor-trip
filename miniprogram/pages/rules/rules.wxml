@@ -1,5 +1,7 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
+<load-row wx:if="{{!ready}}" />
+<block wx:else>
 <view class="card">
   <view class="pad">
     <view class="title">{{tr.t(rules.title, lang)}}</view>
@@ -19,3 +21,4 @@
     <view class="muted">{{tr.t(item.a, lang)}}</view>
   </view>
 </view>
+</block>

@@ -10,7 +10,8 @@
       </el-radio-group>
     </div>
     <p class="admin-scroll-hint">消息点进来会高亮对应申请。通过或拒绝后这条待办会消失。</p>
-    <el-table :data="items" stripe row-key="key" :row-class-name="rowClass">
+    <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
+    <el-table :data="items" stripe row-key="key" :row-class-name="rowClass" :empty-text="loading ? ' ' : '暂无数据'">
       <el-table-column label="类型" width="110">
         <template #default="{ row }">{{ row.kind === "leader" ? "领队" : row.kind === "group" ? "团体" : row.user.campusKind === "alumni" ? "校友" : "师生" }}</template>
       </el-table-column>
@@ -41,7 +42,8 @@
         </template>
       </el-table-column>
     </el-table>
-    <p v-if="!items.length" class="muted" style="margin-top:16px">暂无待审认证</p>
+    </div>
+    <p v-if="!loading && !items.length" class="muted" style="margin-top:16px">暂无待审认证</p>
   </div>
 </template>
 
@@ -54,6 +56,7 @@ import http from "@/api/http";
 const route = useRoute();
 const router = useRouter();
 const items = ref([]);
+const loading = ref(true);
 const kind = ref("");
 const focusId = ref("");
 
@@ -106,16 +109,21 @@ function toItems(users, filter) {
 }
 
 async function load() {
-  const pending = kind.value || "any";
-  let users = (await http.get("/admin/users", { params: { pending } })).data || [];
-  if (focusId.value && !users.some((u) => String(u.id) === focusId.value)) {
-    users = (await http.get("/admin/users", { params: { q: "" } })).data || [];
+  loading.value = true;
+  try {
+    const pending = kind.value || "any";
+    let users = (await http.get("/admin/users", { params: { pending } })).data || [];
+    if (focusId.value && !users.some((u) => String(u.id) === focusId.value)) {
+      users = (await http.get("/admin/users", { params: { q: "" } })).data || [];
+    }
+    items.value = toItems(users, kind.value);
+    await nextTick();
+    if (!focusId.value) return;
+    const el = document.querySelector(".admin-row-focus");
+    if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+  } finally {
+    loading.value = false;
   }
-  items.value = toItems(users, kind.value);
-  await nextTick();
-  if (!focusId.value) return;
-  const el = document.querySelector(".admin-row-focus");
-  if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
 }
 
 async function decide(row, action) {

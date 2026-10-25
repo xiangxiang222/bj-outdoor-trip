@@ -43,7 +43,8 @@
       <span class="muted route-filter-count">{{ list.length }} / {{ rows.length }}</span>
     </div>
     <p class="admin-scroll-hint">已下架的线路点「上架」会回到目录，也可以编辑后打开「上架」。用户申请和机器采集都先待审，通过后才上架。机器采集没有成团奖励。</p>
-    <el-table :data="list" stripe row-key="id" :row-class-name="rowClass">
+    <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
+    <el-table :data="list" stripe row-key="id" :row-class-name="rowClass" :empty-text="loading ? ' ' : '暂无数据'">
       <el-table-column label="封面" width="88">
         <template #default="{ row }">
           <el-image v-if="row.cover" :src="row.cover" fit="cover" style="width:64px;height:40px;border-radius:6px" />
@@ -87,7 +88,8 @@
         </template>
       </el-table-column>
     </el-table>
-    <p v-if="!list.length" class="muted" style="margin-top:16px">没有符合筛选的线路</p>
+    </div>
+    <p v-if="!loading && !list.length" class="muted" style="margin-top:16px">没有符合筛选的线路</p>
 
     <el-dialog v-model="show" :title="form.id ? '编辑线路' : '新增线路'" width="880px" top="4vh" align-center :close-on-click-modal="false">
       <el-form label-width="100px">
@@ -414,6 +416,7 @@ function nextKey() {
 const route = useRoute();
 const router = useRouter();
 const rows = ref([]);
+const loading = ref(true);
 const buses = ref([]);
 const show = ref(false);
 const form = ref({});
@@ -515,16 +518,21 @@ function cloneTiers(list) {
 }
 
 async function load() {
-  rows.value = (await http.get("/admin/routes")).data;
+  loading.value = true;
   try {
-    globalRefund.value = (await http.get("/admin/refund-rules")).data || { tiers: [], summary: "" };
-  } catch {
-    globalRefund.value = { tiers: [], summary: "" };
+    rows.value = (await http.get("/admin/routes")).data || [];
+    try {
+      globalRefund.value = (await http.get("/admin/refund-rules")).data || { tiers: [], summary: "" };
+    } catch {
+      globalRefund.value = { tiers: [], summary: "" };
+    }
+    await nextTick();
+    if (!focusId.value) return;
+    const el = document.querySelector(".admin-row-focus");
+    if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+  } finally {
+    loading.value = false;
   }
-  await nextTick();
-  if (!focusId.value) return;
-  const el = document.querySelector(".admin-row-focus");
-  if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
 }
 async function loadBuses() {
   buses.value = (await http.get("/buses")).data || [];

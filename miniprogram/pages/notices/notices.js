@@ -23,13 +23,13 @@ function openHref(href) {
 }
 
 Page({
-  data: { list: [], unread: 0 },
+  data: { list: [], unread: 0, loading: true },
   onShow() {
     if (!app.globalData.token) {
       wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/notices/notices") });
       return;
     }
-    request("/me/notices").then((r) => this.setData({ list: r.data || [], unread: r.unread || 0 })).catch(() => {});
+    request("/me/notices").then((r) => this.setData({ list: r.data || [], unread: r.unread || 0, loading: false })).catch(() => this.setData({ loading: false }));
   },
   readAll() {
     request("/me/notices/read-all", "POST").then((r) => this.setData({ list: r.data || [], unread: 0 })).catch(() => {});

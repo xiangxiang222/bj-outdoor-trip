@@ -144,7 +144,8 @@
     <view class="chip {{routeTag==''?'on':''}}" bindtap="setRouteTag" data-c="">{{tr.t('全部玩法', lang)}}</view>
     <view class="play-tag" wx:for="{{routeTags}}" wx:key="id" style="background:{{item.color}};opacity:{{routeTag==item.name || routeTag=='' ? 1 : 0.45}}" bindtap="setRouteTag" data-c="{{item.name}}">{{tr.t(item.name, lang)}}</view>
   </scroll-view>
-  <view wx:if="{{routeErr}}" class="muted pad">{{tr.t(routeErr, lang)}}</view>
+  <load-row wx:if="{{routeLoading && !routeList.length}}" />
+  <view wx:elif="{{routeErr}}" class="muted pad">{{tr.t(routeErr, lang)}}</view>
   <view class="card" wx:for="{{routeList}}" wx:key="id" bindtap="goRoute" data-id="{{item.id}}">
     <image class="cover" src="{{item.cover}}" mode="aspectFill" />
     <view class="pad">
@@ -156,7 +157,7 @@
       </view>
     </view>
   </view>
-  <view wx:if="{{!routeList.length}}" class="muted pad">{{tr.t('没有匹配的线路', lang)}}</view>
+  <view wx:if="{{!routeLoading && !routeList.length && !routeErr}}" class="muted pad">{{tr.t('没有匹配的线路', lang)}}</view>
   <view class="card" bindtap="goRouteApply">
     <view class="pad">
       <view class="title">{{tr.t('申请收录线路', lang)}}</view>

@@ -100,7 +100,7 @@ function shapeRoute(raw) {
 }
 
 Page({
-  data: { r: {}, fromPrice: 0, id: "", err: "", reviews: { list: [], count: 0, avg: 0 }, faqs: [] },
+  data: { r: {}, fromPrice: 0, id: "", err: "", reviews: { list: [], count: 0, avg: 0 }, reviewsReady: false, faqs: [] },
   onLoad(q) {
     this.setData({ id: q.id, r: {}, err: "" });
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
@@ -134,9 +134,9 @@ Page({
       const res = await request("/routes/" + this.data.id + "/reviews");
       const data = res.data || {};
       const list = (data.list || []).map((row) => Object.assign({}, row, { stars: starText(row.rating) }));
-      this.setData({ reviews: { list, count: data.count || 0, avg: data.avg || 0 } });
+      this.setData({ reviews: { list, count: data.count || 0, avg: data.avg || 0 }, reviewsReady: true });
     } catch (err) {
-      this.setData({ reviews: { list: [], count: 0, avg: 0 } });
+      this.setData({ reviews: { list: [], count: 0, avg: 0 }, reviewsReady: true });
     }
   },
   jump(e) {

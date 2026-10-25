@@ -9,7 +9,8 @@
       </el-radio-group>
     </div>
     <p class="admin-scroll-hint">用户提交后会出现在右上角消息里，点开定位到这一条。</p>
-    <el-table :data="items" stripe row-key="id" :row-class-name="rowClass">
+    <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
+    <el-table :data="items" stripe row-key="id" :row-class-name="rowClass" :empty-text="loading ? ' ' : '暂无数据'">
       <el-table-column label="分类" width="140">
         <template #default="{ row }">{{ row.channelLabel }}</template>
       </el-table-column>
@@ -36,7 +37,8 @@
       </el-table-column>
       <el-table-column prop="createdAt" label="时间" width="170" />
     </el-table>
-    <p v-if="!items.length" class="muted" style="margin-top:16px">还没有反馈</p>
+    </div>
+    <p v-if="!loading && !items.length" class="muted" style="margin-top:16px">还没有反馈</p>
   </div>
 </template>
 
@@ -48,6 +50,7 @@ import http from "@/api/http";
 const route = useRoute();
 const router = useRouter();
 const items = ref([]);
+const loading = ref(true);
 const channel = ref("");
 const focusId = ref("");
 
@@ -72,11 +75,16 @@ function rowClass({ row }) {
 }
 
 async function load() {
-  const params = channel.value ? { channel: channel.value } : {};
-  items.value = (await http.get("/admin/feedbacks", { params })).data || [];
-  await nextTick();
-  if (!focusId.value) return;
-  const el = document.querySelector(".admin-row-focus");
-  if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+  loading.value = true;
+  try {
+    const params = channel.value ? { channel: channel.value } : {};
+    items.value = (await http.get("/admin/feedbacks", { params })).data || [];
+    await nextTick();
+    if (!focusId.value) return;
+    const el = document.querySelector(".admin-row-focus");
+    if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+  } finally {
+    loading.value = false;
+  }
 }
 </script>

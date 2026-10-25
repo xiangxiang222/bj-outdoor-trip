@@ -5,7 +5,8 @@
       <el-button type="success" @click="open">发行优惠券</el-button>
     </div>
     <p class="muted">可发指定团或通用券。类型含几折、直减、免费。公开、会员可指定必领；定向发放只选人，张数按已选人数，高校名单和按条件发放放在「发放」里。指定的人发行后立刻入账。领取后可限时。默认与会员/学生价取低。公司团不可用。</p>
-    <el-table :data="list" stripe>
+    <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
+    <el-table :data="list" stripe :empty-text="loading ? ' ' : '暂无数据'">
       <el-table-column prop="code" label="口令" width="110" />
       <el-table-column prop="name" label="名称" min-width="140" />
       <el-table-column label="行程" min-width="180">
@@ -40,6 +41,7 @@
         </template>
       </el-table-column>
     </el-table>
+    </div>
 
     <el-dialog v-model="showCreate" class="coupon-dialog" title="发行优惠券" width="640px">
       <el-form label-width="120px">
@@ -198,6 +200,7 @@ import PeoplePicker from "@/components/admin/PeoplePicker.vue";
 
 const route = useRoute();
 const list = ref([]);
+const loading = ref(true);
 const trips = ref([]);
 const showCreate = ref(false);
 const showShare = ref(false);
@@ -271,8 +274,13 @@ async function loadCampusSchools() {
 }
 
 async function load() {
-  const q = route.query.scheduleId ? { scheduleId: route.query.scheduleId } : {};
-  list.value = (await http.get("/admin/coupons", { params: q })).data;
+  loading.value = true;
+  try {
+    const q = route.query.scheduleId ? { scheduleId: route.query.scheduleId } : {};
+    list.value = (await http.get("/admin/coupons", { params: q })).data || [];
+  } finally {
+    loading.value = false;
+  }
 }
 
 onMounted(async () => {

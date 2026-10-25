@@ -61,7 +61,8 @@
     </view>
   </view>
 
-  <view class="card" wx:if="{{emptyAll}}">
+  <load-row wx:if="{{loading}}" />
+  <view class="card" wx:elif="{{emptyAll}}">
     <view class="pad">
       <view class="title">{{tr.t('还没有报名。', lang)}}</view>
       <view class="muted">{{tr.t('去首页报一个山野团，或去活动页约一局。', lang)}}</view>

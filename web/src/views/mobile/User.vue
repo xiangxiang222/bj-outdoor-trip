@@ -1,5 +1,7 @@
 <template>
-  <div v-if="u">
+  <LoadRow v-if="!ready" />
+  <p v-else-if="err" class="muted pad">{{ err }}</p>
+  <div v-else-if="u">
     <div class="card">
       <div class="pad guide-row">
         <div class="guide-face" style="width:64px;height:64px;font-size: calc(22px * var(--ui-scale))">
@@ -74,7 +76,6 @@
     <p class="muted">公开资料不含手机号与精确年龄，仅展示年龄段。</p>
     <p v-if="msg" class="muted">{{ msg }}</p>
   </div>
-  <p v-else-if="err" class="muted">{{ err }}</p>
 </template>
 
 <script setup>
@@ -83,6 +84,7 @@ import { useRoute } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { genderText } from "@/utils/labels";
+import LoadRow from "@/components/LoadRow.vue";
 
 const ALBUM_MAX = 24;
 const PICK_MAX = 9;
@@ -91,6 +93,7 @@ const route = useRoute();
 const store = useUserStore();
 const u = ref(null);
 const err = ref("");
+const ready = ref(false);
 const msg = ref("");
 const uploading = ref(false);
 const previewIndex = ref(null);
@@ -122,6 +125,8 @@ async function load() {
   } catch (e) {
     u.value = null;
     err.value = e.message || "用户不存在";
+  } finally {
+    ready.value = true;
   }
 }
 

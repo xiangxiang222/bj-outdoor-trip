@@ -25,6 +25,8 @@
       <a class="svc-tile" href="#rules" @click.prevent="jumpRules">平台规则</a>
     </div>
 
+    <LoadRow v-if="!ready" />
+    <template v-else>
     <div class="h2">关注我们</div>
     <div class="follow-grid">
       <button class="follow-card" type="button" v-for="a in accounts" :key="a.platform" @click="copy(a.id, a.platform)">
@@ -71,6 +73,7 @@
         <i>{{ openRule === i ? "–" : "+" }}</i>
       </button>
     </div>
+    </template>
   </div>
 </template>
 
@@ -78,6 +81,7 @@
 import { onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 
 const route = useRoute();
 const accounts = ref([]);
@@ -87,14 +91,19 @@ const faqs = ref([]);
 const copied = ref("");
 const openFaq = ref(0);
 const openRule = ref(-1);
+const ready = ref(false);
 
 onMounted(async () => {
-  const meta = (await http.get("/meta")).data || {};
-  accounts.value = meta.officialAccounts || [];
-  contacts.value = meta.contacts || {};
-  rules.value = meta.commonRules || rules.value;
-  faqs.value = meta.faqs || [];
-  applyHash();
+  try {
+    const meta = (await http.get("/meta")).data || {};
+    accounts.value = meta.officialAccounts || [];
+    contacts.value = meta.contacts || {};
+    rules.value = meta.commonRules || rules.value;
+    faqs.value = meta.faqs || [];
+    applyHash();
+  } finally {
+    ready.value = true;
+  }
 });
 
 watch(() => route.hash, applyHash);

@@ -8,7 +8,8 @@
       </div>
     </div>
     <p class="muted">超级管理员可管全部后台账号。运营管线路、拼团、报名和会员。领队管现场车辆座位。摄影可看团和名单、上传照片。表格较宽时可左右滑动。</p>
-    <el-table :data="list" stripe>
+    <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
+    <el-table :data="list" stripe :empty-text="loading ? ' ' : '暂无数据'">
       <el-table-column prop="username" label="账号" width="140" />
       <el-table-column prop="name" label="姓名" width="140" />
       <el-table-column label="角色" width="100">
@@ -29,6 +30,7 @@
         </template>
       </el-table-column>
     </el-table>
+    </div>
 
     <el-dialog v-model="showForm" :title="form.id ? '编辑账号' : '新增账号'" width="460px">
       <el-form label-width="90px">
@@ -80,6 +82,7 @@ import http from "@/api/http";
 import { ROLE_OPTIONS, roleLabel } from "@/utils/staff";
 
 const list = ref([]);
+const loading = ref(true);
 const me = ref({ id: 0, role: "admin" });
 const showForm = ref(false);
 const showReset = ref(false);
@@ -93,11 +96,14 @@ const pwd = ref({ oldPassword: "", newPassword: "" });
 onMounted(load);
 
 async function load() {
+  loading.value = true;
   try {
     me.value = (await http.get("/admin/me")).data;
-    list.value = (await http.get("/admin/staff")).data;
+    list.value = (await http.get("/admin/staff")).data || [];
   } catch (e) {
     ElMessage.error(e.message || "无权查看管理员列表");
+  } finally {
+    loading.value = false;
   }
 }
 

@@ -1,5 +1,6 @@
 <template>
-  <div v-if="t">
+  <LoadRow v-if="!t && !err" />
+  <div v-else-if="t">
     <div class="card">
       <div class="pad guide-row">
         <div class="guide-face" style="width:64px;height:64px;font-size: calc(22px * var(--ui-scale))">
@@ -90,6 +91,7 @@
 import { onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import http from "@/api/http";
+import LoadRow from "@/components/LoadRow.vue";
 import { genderText, insuranceText, payStatusText } from "@/utils/labels";
 import { telHref } from "@/utils/phone";
 
