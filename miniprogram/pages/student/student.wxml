@@ -1,6 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="pad muted">{{tr.t('认证时请上传学生证或校友证。学校、学院、专业可从北京高校名单里选，也可以不填。通过后可走学生价；部分团只对本院、本校或指定学校学院开放。校友不享受学生价。', lang)}}</view>
+<view class="campus-cert-head"><view class="section-kicker">YOUNG HEARTS, SHARED JOURNEYS</view><view class="section-title">{{tr.t('让青春，一起出发', lang)}}</view><view class="muted">{{tr.t('完成校园认证，解锁学生价与专属同行。', lang)}}</view><view class="campus-cert-benefits"><text>{{tr.t('学生专属价', lang)}}</text><text>{{tr.t('跨校同行', lang)}}</text><text>{{tr.t('学院专属团', lang)}}</text></view></view><view class="cert-policy">{{tr.t('上传学生证或校友证供审核。完善学校、学院和专业，可匹配相应报名范围；校友不享受学生价。', lang)}}</view>
 <view class="pad" wx:if="{{certified}}" style="color:#2d6a4f">{{tr.t('已认证', lang)}}{{tr.t(kindLabel, lang)}}{{tr.t(placeText, lang)}}</view>
 <view class="pad muted" wx:elif="{{rejected}}">{{tr.t('上次未通过，可修改后再次提交。', lang)}}</view>
 

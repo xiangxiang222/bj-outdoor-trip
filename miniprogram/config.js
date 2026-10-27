@@ -16,6 +16,7 @@ function getBaseUrl() {
 
 module.exports = {
   baseUrl: getBaseUrl(),
+  mediaBaseUrl: getBaseUrl() + "/static/miniprogram",
   devtoolsUrl: DEVTOOLS_URL,
   phoneUrl: LOCAL_PHONE_URL,
   prodUrl: PROD_URL,

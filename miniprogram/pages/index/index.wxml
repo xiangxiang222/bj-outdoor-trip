@@ -1,38 +1,54 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="brand-box">
-  <swiper class="brand-hero" style="height:360rpx" autoplay circular interval="4000" bindchange="onHeroChange">
-    <swiper-item wx:for="{{home.brand.slides}}" wx:key="title" style="height:360rpx" bindtap="goSlide" data-id="{{item.routeId}}">
-      <image class="brand-img" style="width:100%;height:360rpx" src="{{item.url}}" mode="aspectFill" />
+<view class="brand-box {{textMode ? 'is-text-mode' : ''}}">
+  <swiper class="brand-hero" autoplay circular interval="6000" bindchange="onHeroChange">
+    <swiper-item wx:for="{{home.brand.slides}}" wx:key="title" bindtap="goSlide" data-id="{{item.routeId}}">
+      <image class="brand-img" src="{{item.url}}" mode="aspectFill" />
     </swiper-item>
+    <swiper-item wx:if="{{!home.brand.slides.length}}"><image class="brand-img" src="{{mediaBase}}/covers/R01.jpg" mode="aspectFill" /></swiper-item>
   </swiper>
+  <view class="hero-shade"></view>
+  <view class="home-brand" style="padding-top:{{statusBarHeight + 12}}px">
+    <image class="home-brand-logo" src="{{mediaBase}}/logo.jpg" mode="aspectFit" />
+    <view><view class="home-brand-name">{{tr.t('同行者众', lang)}}</view><view class="home-brand-en">TOGETHER, INTO THE WILD</view></view>
+  </view>
   <view class="brand-cap" bindtap="goCurrentSlide">
-    <view class="home-kicker">{{tr.t(home.brand.lead || '在山野，遇见爱', lang)}}</view>
+    <view class="home-eyebrow">{{tr.t('离城市近一点 · 离自然更近一点', lang)}}</view>
+    <view class="home-kicker">{{tr.t('在山野，遇见爱', lang)}}</view>
+    <view class="home-lead">{{tr.t('和同频的人，一起出发。', lang)}}</view>
   </view>
+  <view class="hero-counter" wx:if="{{home.brand.slides.length}}">0{{heroIndex + 1}} <text>/ 0{{home.brand.slides.length}}</text></view>
 </view>
-<live-pulse scope="home"></live-pulse>
-<view class="campus-card">
-  <view>
-    <view class="campus-title">{{tr.t('学生认证后走学生价', lang)}}</view>
-    <view class="muted">{{tr.t('部分团仅限高校，周末进山先看好集合点。', lang)}}</view>
-  </view>
-  <view class="campus-cta" bindtap="goStudent">{{tr.t('去认证', lang)}}</view>
+
+<view class="discovery-card">
+  <view class="search-card-top"><text class="departure-city">{{tr.t('北京出发', lang)}}</text><text class="search-card-hint">{{tr.t('下一站，去哪里', lang)}}</text></view>
+  <view class="search-input-row"><view class="search-line-icon"></view><input class="feed-search" placeholder="{{tr.t(searchHint, lang)}}" value="{{query}}" bindinput="onQuery" bindconfirm="explore" confirm-type="search" /></view>
+  <view class="search-context"><text>{{tr.t('周边短途', lang)}}</text><text>{{tr.t('高校跨校 · 跨学院', lang)}}</text><text>{{tr.t('企业团队', lang)}}</text></view>
+  <view class="btn search-cta" bindtap="explore">{{tr.t('发现我的下一程', lang)}}<text> →</text></view>
+  <view class="search-trust">{{tr.t('正规线路 · 透明费用 · 专业领队', lang)}}</view>
 </view>
+
+<view class="quick-entries">
+  <view class="quick-entry" bindtap="showRoutes"><view class="quick-icon route"><view></view></view><text>{{tr.t('精选线路', lang)}}</text><text class="quick-note">{{tr.t('山野灵感', lang)}}</text></view>
+  <view class="quick-entry" bindtap="goPublish" data-kind="campus"><view class="quick-icon campus"><view></view></view><text>{{tr.t('高校同行', lang)}}</text><text class="quick-note">{{tr.t('跨校跨学院', lang)}}</text></view>
+  <view class="quick-entry" bindtap="goPublish" data-kind="company"><view class="quick-icon company"><view></view></view><text>{{tr.t('企业团建', lang)}}</text><text class="quick-note">{{tr.t('一起凝聚', lang)}}</text></view>
+  <view class="quick-entry" bindtap="goStudent"><view class="quick-icon pass"><view></view></view><text>{{tr.t('校园认证', lang)}}</text><text class="quick-note">{{tr.t('解锁学生价', lang)}}</text></view>
+</view>
+
 <view class="trip-hint" wx:if="{{upcoming}}" bindtap="goUpcoming">
-  <view>
-    <text class="muted">{{tr.t('即将出行', lang)}}</text>
-    <text class="trip-hint-title"> {{tr.t(upcoming.startDate, lang)}} · {{tr.t(upcoming.title, lang)}}</text>
-  </view>
-  <text class="muted">{{tr.t('行程 ›', lang)}}</text>
+  <view><view class="muted">{{tr.t('下一段旅程，已在路上', lang)}}</view><view class="trip-hint-title">{{tr.t(upcoming.startDate, lang)}} · {{tr.t(upcoming.title, lang)}}</view></view>
+  <text class="trip-hint-arrow">›</text>
 </view>
-
-<input class="feed-search" placeholder="{{tr.t(searchHint, lang)}}" value="{{query}}" bindinput="onQuery" confirm-type="search" />
-
+<view class="campus-card" bindtap="quickHost" data-kind="campus">
+  <view class="campus-badge">{{tr.t('校', lang)}}</view>
+  <view class="campus-card-copy"><view class="campus-title">{{tr.t('青春同行，不止同校', lang)}}</view><view class="muted">{{tr.t('发现跨校与跨学院的旅程', lang)}}</view></view>
+  <view class="campus-cta">{{tr.t('看校园团', lang)}} ›</view>
+</view>
+<view class="explore-heading" id="explore"><view><view class="section-kicker">FIND YOUR NEXT JOURNEY</view><view class="section-title">{{tr.t('总有一程，心之所向', lang)}}</view></view></view>
 <view class="home-seg">
-  <view class="home-seg-btn {{view=='trips'?'on':''}}" bindtap="setView" data-view="trips">{{tr.t('团', lang)}}</view>
-  <view class="home-seg-btn {{view=='routes'?'on':''}}" bindtap="setView" data-view="routes">{{tr.t('线路', lang)}}</view>
+  <view class="home-seg-btn {{view=='trips'?'on':''}}" bindtap="setView" data-view="trips">{{tr.t('即将出发', lang)}}</view>
+  <view class="home-seg-btn {{view=='routes'?'on':''}}" bindtap="setView" data-view="routes">{{tr.t('精选线路', lang)}}</view>
 </view>
-
 <block wx:if="{{view=='trips'}}">
 <scroll-view scroll-x class="city-bar">
   <view class="chip {{!city?'on':''}}" bindtap="clearCity">{{tr.t('热门', lang)}}</view>
@@ -43,7 +59,7 @@
   <view class="chip {{tag==item.name?'on':''}}" wx:for="{{home.tags}}" wx:key="id" bindtap="setTag" data-name="{{item.name}}">{{tr.t(item.name, lang)}}</view>
 </scroll-view>
 <view class="feed-toolbar">
-  <view class="hint">{{tr.t('看看最近都在忙什么', lang)}}</view>
+  <view class="hint">{{tr.t('找到同频的旅伴', lang)}}</view>
   <view class="tools">
     <view class="tool-btn" bindtap="cycleSort">{{tr.t(sortText, lang)}}</view>
     <view class="tool-btn" bindtap="toggleFold" data-key="extra">{{tr.t(fold.extra ? '收起' : '筛选', lang)}}</view>
@@ -93,10 +109,10 @@
 
 <view class="publish-entry" bindtap="goPublish">
   <view class="publish-entry-copy">
-    <view class="publish-entry-title">{{tr.t('发个团去玩吧', lang)}}</view>
-    <view class="publish-entry-sub">{{tr.t('选条线路，过审就能喊人上车', lang)}}</view>
+    <view class="publish-entry-title">{{tr.t('这一程，由你发起', lang)}}</view>
+    <view class="publish-entry-sub">{{tr.t('个人 · 企业 · 高校，一站式发团', lang)}}</view>
   </view>
-  <view class="publish-entry-go">{{tr.t('走起', lang)}}</view>
+  <view class="publish-entry-go">{{tr.t('发起组团', lang)}}</view>
 </view>
 <view class="feed-card" wx:for="{{groups}}" wx:key="id" bindtap="goGroup" data-id="{{item.id}}">
   <view class="feed-cover">

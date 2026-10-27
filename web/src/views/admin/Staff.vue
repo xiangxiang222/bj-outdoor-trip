@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="row">
-      <h2>管理员</h2>
+      <h2>团队与权限</h2>
       <div>
         <el-button @click="openPwd">修改我的密码</el-button>
         <el-button type="success" @click="openCreate">新增账号</el-button>

@@ -11,6 +11,7 @@
     "dev": "concurrently -n server,web -c green,cyan \"npm run dev:server\" \"npm run dev:web\"",
     "start": "node server/src/index.js",
     "build": "npm run build --prefix web",
+    "check:miniprogram": "node scripts/check-mini-package.mjs",
     "test": "npm run test --prefix server && npm run test --prefix web",
     "test:coverage": "npm run test:coverage --prefix server && npm run test --prefix web",
     "test:e2e": "node scripts/e2e.js",

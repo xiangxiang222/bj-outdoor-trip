@@ -9,7 +9,7 @@
   min-height: 88rpx;
   line-height: 88rpx;
   padding: 0 24rpx;
-  color: #2d6a4f;
+  color: #725793;
 }
 .login-nav-title {
   flex: 1;

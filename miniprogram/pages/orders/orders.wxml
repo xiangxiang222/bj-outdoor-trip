@@ -1,5 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
+<view class="page-heading"><view class="section-kicker">YOUR NEXT CHAPTER</view><view class="section-title">{{tr.t('我的每一程', lang)}}</view><view class="muted">{{tr.t('从期待出发，到回味山野，所有同行都在这里。', lang)}}</view></view>
 <view class="card" wx:if="{{!loggedIn}}">
   <view class="pad">
     <view class="title">{{tr.t('登录后看出行计划', lang)}}</view>

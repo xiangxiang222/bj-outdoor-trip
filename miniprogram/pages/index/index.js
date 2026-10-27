@@ -1,6 +1,6 @@
 const { request } = require("../../utils/request");
 const { OFFER_TYPES, buildCalendar } = require("../../utils/offer");
-const { detailUrl } = require("../../utils/media");
+const { detailUrl, normalizeLegacyMedia } = require("../../utils/media");
 const { decorateFeed } = require("../../utils/feed-card");
 const { cycleSort, hostFacets, processFeed, sortLabel } = require("../../utils/feed-list");
 const { loadRouteCatalog } = require("../../utils/route-catalog");
@@ -11,6 +11,7 @@ function asList(rows) {
 Page({
   data: {
     heroIndex: 0,
+    statusBarHeight: 24,
     home: { brand: { kicker: "同行者众", lead: "在山野，遇见爱", slides: [] }, cities: [], tags: [], festivals: [], months: [] },
     groups: [],
     allSchedules: [],
@@ -46,7 +47,11 @@ Page({
     loading: true,
   },
   onLoad() {
-    const cached = wx.getStorageSync("bj_home_cache");
+    try {
+      const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
+      this.setData({ statusBarHeight: info.statusBarHeight || 24 });
+    } catch (e) {}
+    const cached = normalizeLegacyMedia(wx.getStorageSync("bj_home_cache"));
     if (cached && cached.home) {
       const allSchedules = asList(cached.schedules);
       this.setData({
@@ -138,8 +143,35 @@ Page({
   },
   onQuery(e) {
     this.setData({ query: e.detail.value || "" });
-    if (this.data.view === "routes") this.loadRoutes();
+    clearTimeout(this._searchTimer);
+    if (this.data.view === "routes") this._searchTimer = setTimeout(() => this.loadRoutes(), 250);
     else this.applyGroups();
+  },
+  onUnload() { clearTimeout(this._searchTimer); },
+  explore() { wx.pageScrollTo({ selector: "#explore", duration: 300 }); },
+  showRoutes() {
+    this.setView({ currentTarget: { dataset: { view: "routes" } } });
+    this.explore();
+  },
+  quickHost(e) {
+    clearTimeout(this._searchTimer);
+    this.setData({
+      view: "trips",
+      hostKind: e.currentTarget.dataset.kind || "",
+      "fold.extra": true,
+      query: "",
+      city: "",
+      date: "",
+      tag: "",
+      offerFilter: "",
+      festivalKey: "",
+      monthPicked: false,
+      companyName: "",
+      school: "",
+      searchHint: "搜线路、城区、主理人",
+    });
+    this.applyGroups();
+    this.explore();
   },
   setView(e) {
     const view = e.currentTarget.dataset.view || "trips";
@@ -298,13 +330,15 @@ Page({
     if (!Number.isInteger(id) || id <= 0) return;
     wx.navigateTo({ url: detailUrl(id) });
   },
-  goPublish() {
+  goPublish(e) {
+    const kind = e && e.currentTarget && e.currentTarget.dataset.kind;
+    const url = "/pages/publish/publish" + (kind ? "?organizer=" + encodeURIComponent(kind) : "");
     const app = getApp();
     if (!app.globalData.token) {
-      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/publish/publish") });
+      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(url) });
       return;
     }
-    wx.navigateTo({ url: "/pages/publish/publish" });
+    wx.navigateTo({ url });
   },
   goRouteApply() {
     const app = getApp();

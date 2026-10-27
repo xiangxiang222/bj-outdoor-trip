@@ -1,5 +1,5 @@
 <template>
-  <div class="mp-phone" :class="{ 'is-account': accountTone, 'is-mine': route.name === 'mine', 'is-look-font': route.name === 'look-font' }">
+  <div class="mp-phone" :class="{ 'is-account': accountTone, 'is-home': isHome, 'is-mine': route.name === 'mine', 'is-look-font': route.name === 'look-font' }">
     <div class="mp-status" :class="{ 'is-home': isHome }">
       <router-link to="/m" class="brand-lockup" aria-label="同行者众 首页">
         <span class="brand-mark-frame" aria-hidden="true">
@@ -10,7 +10,16 @@
           <span v-if="isHome" class="brand-tagline">在山野，遇见爱</span>
         </span>
       </router-link>
-      <span class="mp-capsule">微信小程序演示</span>
+      <nav class="desktop-nav" aria-label="主导航">
+        <router-link to="/m" :class="{ selected: isHome }">发现山野</router-link>
+        <router-link to="/m/activities">同城相遇</router-link>
+        <router-link to="/m/orders">我的行程</router-link>
+        <router-link to="/m/mine">会员与我的</router-link>
+      </nav>
+      <div class="header-actions">
+        <router-link class="header-help" to="/m/official" aria-label="联系客服"><TravelIcon name="headset" /><span>旅行顾问</span></router-link>
+        <router-link class="header-publish" to="/m/publish"><span>＋</span> 发起旅行</router-link>
+      </div>
     </div>
     <div v-if="!isHome && route.name !== 'mine'" class="mp-nav">
       <button v-if="showBack" class="nav-back" type="button" aria-label="返回" @click="goBack">‹</button>
@@ -19,9 +28,9 @@
         <div class="sub">{{ subtitle }}</div>
       </div>
     </div>
-    <div class="mp-body">
+    <main ref="scrollBody" class="mp-body" :class="{ 'is-detail': ['route', 'schedule'].includes(route.name) }">
       <router-view />
-    </div>
+    </main>
     <a class="icp-foot" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">京ICP备2026060284号-2</a>
     <nav class="mp-tab">
       <router-link to="/m" :class="{ active: $route.path === '/m' }">
@@ -57,22 +66,29 @@
 </template>
 
 <script setup>
-import { computed, onMounted, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import { chromeTitle, chromeSubtitle, clearChrome } from "@/utils/pageChrome";
 import { applyLook, readLook } from "@/utils/appearance";
+import TravelIcon from "@/components/TravelIcon.vue";
 
 const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
+const scrollBody = ref(null);
+const media = window.matchMedia("(prefers-color-scheme: dark)");
+const updateLook = () => applyLook(readLook());
 onMounted(() => {
-  store.fetchMeta();
+  store.fetchMeta().catch(() => {});
   applyLook(readLook());
-  const media = window.matchMedia("(prefers-color-scheme: dark)");
-  media.addEventListener?.("change", () => applyLook(readLook()));
+  media.addEventListener?.("change", updateLook);
 });
-watch(() => route.path, () => clearChrome());
+onUnmounted(() => media.removeEventListener?.("change", updateLook));
+watch(() => route.path, () => {
+  clearChrome();
+  if (scrollBody.value) scrollBody.value.scrollTop = 0;
+});
 
 const tabNames = new Set(["home", "activities", "orders", "mine"]);
 const isHome = computed(() => route.name === "home");
@@ -143,7 +159,7 @@ const title = computed(() => {
 const subtitle = computed(() => {
   const map = {
     home: "在山野，遇见爱",
-    activities: "掼蛋、跑步、看电影，户外请走首页",
+    activities: "把熟悉的城市，过成新的相遇",
     official: "加微信、看规则、找客服",
     rules: "加微信、看规则、找客服",
     student: "认证后可走学生价",
@@ -151,7 +167,7 @@ const subtitle = computed(() => {
     "photo-apply": "免个人团费，一个团一位",
     mine: "账号、权益与客服",
     signin: "连续签到，积分直接入账",
-    orders: "待出发、待评价和全部报名",
+    orders: "每一次出发，都在这里",
     order: "集合、费用和订单号",
     publish: route.query.channel === "activity" ? "提交后需管理员审核，通过后出现在活动 Tab。" : "选一条已经通过的线路，填好这场出发就能发团。",
     "route-apply": "通过后出现在线路目录",

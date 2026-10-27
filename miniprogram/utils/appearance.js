@@ -153,14 +153,14 @@ function pageStyle(look, freezeScale) {
   const scale = freezeScale ? 1 : (SIZES[look.size] || 1);
   const vars = dark
     ? "--bg:#121214;--card:#1c1c1e;--ink:#f2f2f2;--muted:#9a9a9a;--line:#2c2c2e;"
-    : "--bg:#f5f6f3;--card:#ffffff;--ink:#141414;--muted:#7a7d74;--line:#eceee8;";
+    : "--bg:#f6f5f8;--card:#ffffff;--ink:#24222a;--muted:#8a8692;--line:#eeecf2;";
   const media = look.textMode ? "none" : "block";
   const grid = look.textMode ? "none" : "grid";
   const hero = look.textMode ? "0px" : "360rpx";
   const font = FONTS[look.font] || FONTS.system;
   const wash = dark
     ? "overflow-x:hidden;width:100%;background-color:#121214;background-image:none;"
-    : "overflow-x:hidden;width:100%;background-color:#f3f4f6;background-image:none;";
+    : "overflow-x:hidden;width:100%;background-color:#f6f5f8;background-image:none;";
   return vars + "--ui-scale:" + scale + ";--media:" + media + ";--media-grid:" + grid + ";--hero-h:" + hero + ";" + wash + "color:var(--ink);font-family:" + font + ";";
 }
 
@@ -174,8 +174,10 @@ function paint(page, look) {
     lookStyle: pageStyle(prefs, freezeScale),
     previewScale: SIZES[prefs.size] || 1,
     lang: prefs.lang,
+    textMode: prefs.textMode,
   });
   refreshTabBar(prefs);
+  applyChrome(prefs);
 }
 
 function refreshTabBar(look) {
@@ -188,22 +190,25 @@ function refreshTabBar(look) {
 
 function applyChrome(look) {
   const dark = isDark(look);
+  const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+  const active = pages.length ? pages[pages.length - 1].route : "";
+  const profile = !dark && active === "pages/mine/mine";
   wx.setNavigationBarColor({
-    frontColor: "#ffffff",
-    backgroundColor: dark ? "#7231be" : "#8534e4",
+    frontColor: profile ? "#000000" : "#ffffff",
+    backgroundColor: profile ? "#fcf9ff" : dark ? "#352442" : "#5b3b8c",
     fail() {},
   });
   wx.setTabBarStyle({
-    color: dark ? "#9a9a9a" : "#7a7d74",
-    selectedColor: dark ? "#f2f2f2" : "#141414",
+    color: dark ? "#9a9a9a" : "#8a8692",
+    selectedColor: dark ? "#f2f2f2" : "#5b3b8c",
     backgroundColor: dark ? "#1c1c1e" : "#ffffff",
     fail() {},
   });
-  const chrome = dark ? "#7231be" : "#8534e4";
+  const chrome = profile ? "#fcf9ff" : dark ? "#352442" : "#5b3b8c";
   wx.setBackgroundColor({
     backgroundColor: chrome,
     backgroundColorTop: chrome,
-    backgroundColorBottom: dark ? "#121214" : "#f3f4f6",
+    backgroundColorBottom: dark ? "#121214" : profile ? "#f7f8fa" : "#f6f5f8",
     fail() {},
   });
   wx.setBackgroundTextStyle({ textStyle: "light", fail() {} });

@@ -1,6 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="muted pad" style="padding-bottom:0">{{tr.t('官方线路看实拍、行程和费用。有排期就能报，没有可以自己开一团。', lang)}}</view>
+<view class="page-heading"><view class="section-kicker">CURATED OUTDOOR JOURNEYS</view><view class="section-title">{{tr.t('把周末，还给山野', lang)}}</view><view class="muted">{{tr.t('从一日轻徒步，到多日深度探索。找到适合自己的出发方式。', lang)}}</view></view>
 <input class="input" placeholder="{{tr.t('搜索长城 / 十渡 / 坝上', lang)}}" value="{{q}}" bindconfirm="onSearch" />
 <view class="chips">
   <view class="chip {{days==0?'on':''}}" bindtap="setDays" data-d="0">{{tr.t('全部天数', lang)}}</view>
@@ -22,9 +22,10 @@
     <view class="muted">{{tr.t('留下联系方式，通过后会出现在线路目录', lang)}}</view>
   </view>
 </view>
-<view class="card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
+<view class="card route-card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
   <image class="cover" src="{{item.cover}}" mode="aspectFill" />
   <view class="pad">
+    <view class="route-eyebrow">{{tr.t(item.region, lang)}} · {{item.days}}{{tr.t('天山野之旅', lang)}}</view>
     <view class="title">{{tr.t(item.title, lang)}}</view>
     <view class="muted">{{tr.t(item.region, lang)}} · {{tr.t(item.days, lang)}}{{tr.t('日 ·', lang)}} {{tr.t(item.difficulty, lang)}}</view>
     <view class="price">

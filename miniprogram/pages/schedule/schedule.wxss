@@ -6,14 +6,14 @@
   justify-content: space-between;
   margin-top: 12rpx;
   padding: 20rpx 24rpx;
-  border: 1px solid #2d6a4f;
+  border: 1px solid #725793;
   border-radius: 16rpx;
   background: #eef6f1;
-  color: #1b4332;
+  color: #5b3b8c;
 }
 .role-open-name { font-size: calc(30rpx * var(--ui-scale)); font-weight: 650; }
 .role-open-sub { margin-top: 4rpx; color: #52796f; font-size: calc(24rpx * var(--ui-scale)); }
-.role-open-go { color: #2d6a4f; font-size: calc(40rpx * var(--ui-scale)); line-height: 1; }
+.role-open-go { color: #725793; font-size: calc(40rpx * var(--ui-scale)); line-height: 1; }
 .hero-swipe { margin: 0; }
 .offer-hero .hero-swipe,
 .offer-hero .cover { height: 480rpx; }
@@ -30,12 +30,12 @@
 .offer-quote-score { color: #d46b08; font-weight: 700; flex: none; }
 .offer-quote-text { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .offer-quote-n { flex: none; color: #ad8b66; font-size: calc(24rpx * var(--ui-scale)); }
-.offer-guaranteed { margin-top: 16rpx; color: #2d6a4f; }
+.offer-guaranteed { margin-top: 16rpx; color: #725793; }
 .offer-point { display: flex; gap: 12rpx; margin-bottom: 12rpx; }
-.offer-point-n { width: 36rpx; height: 36rpx; border-radius: 50%; background: #1b4332; color: #fff; text-align: center; line-height: 36rpx; font-size: calc(22rpx * var(--ui-scale)); flex: none; }
+.offer-point-n { width: 36rpx; height: 36rpx; border-radius: 50%; background: #5b3b8c; color: #fff; text-align: center; line-height: 36rpx; font-size: calc(22rpx * var(--ui-scale)); flex: none; }
 .day-stop { display: flex; gap: 16rpx; }
-.day-time { width: 120rpx; flex: none; color: #2d6a4f; font-size: calc(24rpx * var(--ui-scale)); font-weight: 650; }
-.day-body { flex: 1; border-left: 4rpx solid #d8f3dc; padding: 0 0 24rpx 16rpx; }
+.day-time { width: 120rpx; flex: none; color: #725793; font-size: calc(24rpx * var(--ui-scale)); font-weight: 650; }
+.day-body { flex: 1; border-left: 4rpx solid #e6ddf0; padding: 0 0 24rpx 16rpx; }
 .day-photo { width: 100%; height: 200rpx; margin-top: 12rpx; border-radius: 12rpx; }
 .fee-k { font-weight: 700; }
 .goods-tabs {

@@ -1,0 +1,490 @@
+/* Operations shares the travel brand while keeping dense business tasks legible. */
+html.admin-theme,
+html.admin-theme body,
+html:has(.guide-shell),
+html:has(.guide-shell) body,
+html:has(.guide-login),
+html:has(.guide-login) body,
+.ops-shell,
+.ops-login,
+.guide-shell,
+.guide-login {
+  --ops-purple: #5b3b8c;
+  --ops-purple-dark: #442968;
+  --ops-soft: #efeaf7;
+  --ops-ink: #27232e;
+  --ops-muted: #8b8493;
+  --ops-line: #eeebf1;
+  --ops-canvas: #f7f6f9;
+  --admin-red: #5b3b8c;
+  --admin-red-dark: #442968;
+  --admin-canvas: #f7f6f9;
+  --admin-line: #eeebf1;
+  --thu: #5b3b8c;
+  --thu-soft: #efeaf7;
+  --leaf: #5b3b8c;
+  --forest: #442968;
+  --clay: #c26350;
+  --ink: #27232e;
+  --muted: #8b8493;
+  --line: #eeebf1;
+  --el-color-primary: #5b3b8c;
+  --el-color-primary-dark-2: #442968;
+  --el-color-primary-light-3: #8971ad;
+  --el-color-primary-light-5: #ad9bc7;
+  --el-color-primary-light-7: #d1c7e1;
+  --el-color-primary-light-8: #e4dcec;
+  --el-color-primary-light-9: #f4f0f9;
+  --el-border-radius-base: 8px;
+  --el-border-color: #e7e2ed;
+  --el-font-size-base: 13px;
+  color: var(--ops-ink);
+  -webkit-font-smoothing: antialiased;
+}
+.ops-shell *, .ops-login *, .guide-shell *, .guide-login *,
+.ops-shell *::before, .ops-shell *::after, .ops-login *::before, .ops-login *::after,
+.guide-shell *::before, .guide-shell *::after, .guide-login *::before, .guide-login *::after { letter-spacing: 0 !important; }
+.admin-shell.ops-shell { display: flex; flex-direction: row; min-width: 0; background: var(--ops-canvas); height: 100dvh; }
+html.admin-theme body, body:has(.guide-shell), body:has(.guide-login) { background: #f7f6f9; }
+.ops-workspace { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.ops-shell .admin-side { display: flex; flex-direction: column; width: 224px; flex: 0 0 224px; padding: 0 15px 16px; border-right: 1px solid var(--ops-line); background: #fff; }
+.ops-shell .ops-side-brand { display: flex; align-items: center; gap: 10px; padding: 28px 8px 22px; color: var(--ops-ink); }
+.ops-brand-image { display: flex; align-items: center; width: 39px; height: 39px; border-radius: 11px; background: #f5f1f8; overflow: hidden; }
+.ops-brand-image img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.ops-side-brand strong { display: block; font-size: 20px; letter-spacing: 1px; font-weight: 650; }
+.ops-side-brand small { display: block; margin-top: 4px; font-size: 10px; letter-spacing: 2px; color: #95889e; }
+.ops-brand-dot { width: 5px; height: 5px; margin-left: auto; background: #b8a1ce; border-radius: 50%; }
+.ops-console-label { display: flex; justify-content: space-between; margin: 0 9px 12px; padding-bottom: 18px; border-bottom: 1px solid var(--ops-line); font-size: 11px; color: #9b92a5; }
+.ops-console-label span { font-size: 8px; letter-spacing: 1px; }
+.ops-shell .admin-nav-label { padding: 16px 13px 10px; font-size: 10px; color: #a69bad; letter-spacing: 1px; }
+.ops-shell .admin-nav-group { padding-bottom: 0; }
+.ops-shell .admin-side nav a { display: flex; align-items: center; gap: 13px; margin: 3px 0; padding: 11px 14px; border-radius: 9px; color: #77707f; font-size: 13px; transition: background .18s, color .18s; }
+.ops-shell .admin-side nav a .ops-icon { width: 18px; height: 18px; }
+.ops-shell .admin-side nav a:hover { color: var(--ops-purple); background: #f8f5fb; }
+.ops-shell .admin-side nav a.router-link-exact-active { color: var(--ops-purple); background: var(--ops-soft); font-weight: 600; }
+.ops-shell .admin-side nav a.router-link-exact-active::before { display: none; }
+.ops-nav-count { margin-left: auto; font-size: 10px; background: #dacdeb; border-radius: 5px; padding: 2px 5px; }
+.ops-side-bottom { margin-top: auto; padding-top: 26px; }
+.ops-side-mountain { min-height: 124px; padding: 18px 14px; display: flex; align-items: flex-end; position: relative; border-radius: 12px; overflow: hidden; color: white; background: linear-gradient(180deg, rgba(36,27,46,.02), rgba(36,27,46,.78)), url('/static/photos/mutianyu_06.jpg') center 48% / cover; }
+.ops-side-mountain span { font-size: 10px; line-height: 1.9; color: #f0eaf5; }
+.ops-side-mountain strong { font-size: 12px; color: #fff; font-weight: 500; }
+.ops-side-foot { display: block; padding-top: 15px; text-align: center; color: #b1a7b9; font-size: 9px; letter-spacing: 1px; }
+.ops-shell .admin-top { height: 76px; padding: 0 34px; background: #fff; color: var(--ops-ink); box-shadow: none; border-bottom: 1px solid var(--ops-line); z-index: 20; }
+.ops-top-left { display: flex; align-items: center; gap: 12px; }
+.ops-breadcrumb { display: flex; align-items: center; gap: 14px; font-size: 12px; color: #9d94a5; }
+.ops-breadcrumb .ops-icon { width: 11px; height: 11px; color: #c6bdcf; }
+.ops-breadcrumb strong { font-weight: 500; color: #4a4154; }
+.ops-shell .admin-top-tools { gap: 22px; }
+.ops-shell .admin-jump { display: flex; gap: 5px; align-items: center; font-size: 11px; color: #918799; }
+.ops-shell .admin-jump .ops-icon { width: 13px; height: 13px; transform: rotate(-35deg); }
+.ops-shell .admin-jump:hover { color: var(--ops-purple); }
+.ops-shell .admin-bell { display: flex; align-items: center; justify-content: center; width: 34px; height: 36px; padding: 0; background: #fff; border: 0; color: #6f657b; border-radius: 9px; }
+.ops-shell .admin-bell:hover { background: var(--ops-soft); }
+.ops-shell .admin-bell i { top: 0; right: -3px; background: #a77baa; font-size: 9px; min-width: 14px; height: 14px; line-height: 14px; }
+.ops-shell .admin-user { align-items: center; color: var(--ops-ink); gap: 9px; font-size: 12px; }
+.ops-user-avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--ops-purple); background: #ede6f6; font-size: 14px; }
+.ops-user-meta { display: block; line-height: 1.5; }
+.ops-shell .admin-user small { display: block; font-size: 9px; color: #a095aa; }
+.ops-shell .admin-user > .ops-icon { width: 12px; height: 12px; color: #b1a5bc; margin-left: 5px; }
+.ops-shell .admin-notice-panel { border-radius: 14px; border: 1px solid var(--ops-line); padding: 13px; box-shadow: 0 12px 44px #33233d16; max-width: calc(100vw - 32px); }
+.ops-shell .admin-notice-head { font-size: 13px; color: var(--ops-ink); padding-bottom: 16px; }
+.ops-shell .admin-notice-head small { font-size: 10px; font-weight: 400; color: #a093ad; margin-left: 6px; }
+.ops-shell .admin-notice-readall { font-size: 11px; }
+.ops-shell .admin-notice-item { background: #faf9fc; border-radius: 9px; padding: 13px; }
+.ops-shell .admin-notice-item.unread { background: var(--ops-soft); }
+.ops-shell .admin-notice-item b { font-size: 12px; font-weight: 600; color: #51445f; }
+.ops-shell .admin-notice-item span, .ops-shell .admin-notice-item small { font-size: 11px; color: #92869d; line-height: 1.7; }
+.ops-notice-empty { text-align: center; padding: 30px 10px; color: #a394b0; font-size: 12px; }
+.ops-notice-empty small { font-size: 10px; }
+.ops-shell .admin-main { padding: 30px 34px 18px; background: var(--ops-canvas); }
+.ops-shell .admin-page { padding: 26px; border: 1px solid #f0ecf3; border-radius: 16px; box-shadow: 0 3px 12px #3e264804; min-height: calc(100% - 36px); }
+.ops-shell .admin-page.dash { padding: 0; background: transparent; border: 0; box-shadow: none; }
+.ops-main-footer { text-align: center; margin: 22px 0 0; font-size: 10px; color: #b8aebf; letter-spacing: 1px; }
+.ops-shell h2 { font-size: 20px; font-weight: 600; color: #342b40; letter-spacing: .3px; }
+.ops-shell .admin-page > div > .row:first-child { gap: 18px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+.ops-shell .admin-scroll-hint, .ops-shell .admin-page > div > .muted { color: #a093ad; font-size: 11px; line-height: 1.9; margin-bottom: 20px; }
+.ops-shell .el-table { --el-table-header-bg-color: #f8f6fb; --el-table-header-text-color: #92839f; --el-table-border-color: #f1edf5; --el-table-row-hover-bg-color: #f8f5fc; --el-fill-color-lighter: #fdfcfe; border-radius: 10px; overflow: hidden; font-size: 12px; color: #675b73; }
+.ops-shell .el-table th.el-table-fixed-column--left { background: #f8f6fb; }
+.ops-shell .el-table th.el-table__cell { height: 48px; font-weight: 500; }
+.ops-shell .el-table td.el-table__cell { padding: 13px 0; }
+.ops-shell .el-table .cell { line-height: 1.75; padding-left: 14px; padding-right: 14px; }
+.ops-shell .ops-table-title { font-size: 12px; font-weight: 550; color: #685175; }
+.ops-table-sub { color: #af9cba; font-size: 10px; line-height: 1.8; }
+.ops-table-sub .el-button { font-size: 10px !important; padding: 0; min-height: 0; line-height: 1.8; }
+.ops-table-number { font-size: 15px; font-weight: 500; color: #89639c; }
+.ops-status-pill { display: inline-flex; align-items: center; color: #997eaa; background: #f3eef7; border-radius: 5px; padding: 2px 7px; font-size: 10px; }
+.ops-status-pill.pending { color: #ba9560; background: #fff6e9; }
+.ops-status-pill.done { color: #8b6a9b; background: #eae2f2; }
+.ops-status-pill.cancelled { color: #b5a7bb; background: #f4f1f5; }
+.ops-review-buttons { margin-top: 6px; }
+.ops-review-buttons .el-button { font-size: 10px; }
+.ops-schedule-row-actions { display: flex; align-items: center; gap: 7px; }
+.ops-schedule-row-actions .el-button { margin: 0; border-color: #e8dfed; color: #a081af; }
+.ops-schedule-row-actions > .el-button { background: #f5f0f9; color: #896399; }
+.ops-schedule-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #f9f6fc; border: 1px solid #f0e9f5; border-radius: 11px; padding: 20px 0; margin: 5px 0 22px; }
+.ops-schedule-summary > div { padding-left: 24px; border-right: 1px solid #eae1f0; }
+.ops-schedule-summary > div:last-child { border: 0; }
+.ops-schedule-summary span { display: block; color: #ab93b9; font-size: 10px; margin-bottom: 9px; }
+.ops-schedule-summary strong { color: #866295; font-size: 26px; font-weight: 500; }
+.ops-schedule-filters { display: flex; gap: 12px; align-items: center; margin: 0 0 20px; }
+.ops-schedule-filters > .el-select { max-width: 155px; }
+.ops-schedule-search { max-width: 335px; }
+.ops-filter-result { font-size: 10px; color: #b09abb; margin-left: auto; white-space: nowrap; }
+.ops-schedule-mobile-list { display: flex; flex-direction: column; gap: 11px; min-height: 170px; }
+.ops-schedule-mobile-card { background: #fff; border: 1px solid #eee9f2; border-radius: 11px; padding: 15px; }
+.ops-mobile-card-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.ops-mobile-card-heading > div { min-width: 0; }
+.ops-mobile-card-heading strong { display: block; font-size: 12px; color: #685175; font-weight: 600; line-height: 1.7; }
+.ops-mobile-card-heading > div > span { display: block; color: #a995b4; font-size: 9px; margin-top: 3px; line-height: 1.7; }
+.ops-mobile-card-heading > .ops-status-pill { flex-shrink: 0; white-space: nowrap; }
+.ops-mobile-card-facts { display: flex; align-items: center; gap: 11px; flex-wrap: wrap; margin-top: 12px; padding: 10px 0; border-top: 1px solid #f4f0f6; border-bottom: 1px solid #f4f0f6; color: #a48daf; font-size: 9px; }
+.ops-mobile-card-facts span { display: inline-flex; align-items: center; gap: 4px; }
+.ops-mobile-card-facts .ops-icon { width: 12px; height: 12px; }
+.ops-mobile-review { display: flex; justify-content: space-between; align-items: center; color: #b08c58; background: #fff8ed; border-radius: 6px; padding: 6px 9px; margin: 9px 0; font-size: 10px; }
+.ops-mobile-review .el-button { margin: 0; padding: 4px 5px; min-height: auto; font-size: 9px; }
+.ops-mobile-review.is-rejected { color: #b86f5f; background: #fff3ef; }
+.ops-mobile-card-summary { display: grid; grid-template-columns: 1fr 1.2fr; gap: 10px; padding: 13px 0; }
+.ops-mobile-card-summary > div > span { display: block; margin-bottom: 5px; color: #ae9ab9; font-size: 9px; }
+.ops-mobile-card-summary strong { display: block; font-weight: 550; color: #795d8b; font-size: 12px; overflow-wrap: anywhere; }
+.ops-mobile-card-summary strong small { display: inline; color: #b09abd; font-weight: 400; font-size: 9px; }
+.ops-mobile-card-summary > div > small { display: block; color: #b09abd; font-size: 9px; margin-top: 4px; line-height: 1.6; }
+.ops-mobile-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid #f4f0f6; padding-top: 11px; }
+.ops-mobile-card-foot > span { color: #a38bad; font-size: 9px; min-width: 0; overflow-wrap: anywhere; line-height: 1.7; }
+.ops-mobile-card-foot .ops-schedule-row-actions { flex-shrink: 0; }
+.ops-shell .el-table .el-button { border-radius: 6px; font-size: 11px; }
+.ops-shell .el-button { border-radius: 8px; box-shadow: none; font-size: 12px; }
+.ops-shell .el-input__wrapper, .ops-shell .el-select__wrapper { box-shadow: 0 0 0 1px #eae4ef inset; border-radius: 8px; min-height: 34px; }
+.ops-shell .el-button--danger.is-plain { --el-button-bg-color: #fff8f6; --el-button-border-color: #f1d9d2; --el-button-text-color: #b26955; }
+html.admin-theme .el-button--success, .ops-shell .el-button--success { --el-button-bg-color: #5b3b8c; --el-button-border-color: #5b3b8c; --el-button-hover-bg-color: #705196; --el-button-hover-border-color: #705196; --el-button-active-bg-color: #442968; --el-button-active-border-color: #442968; }
+html.admin-theme .el-dialog { border-radius: 16px; padding: 24px; box-shadow: 0 20px 100px #24133325; max-width: calc(100vw - 24px); }
+html.admin-theme .el-dialog__title { font-size: 18px; font-weight: 600; color: #3b2c48; }
+html.admin-theme .el-dialog__body { padding-top: 18px; }
+html.admin-theme .el-dialog__footer { border-color: #eee8f3; padding-top: 20px; }
+html.admin-theme .el-form-item__label { color: #8b7c98; font-size: 12px; }
+.ops-shell .admin-alert { display: flex; align-items: center; gap: 10px; border-radius: 10px; padding: 13px 17px; border-color: #f3e4cb; background: #fffaf1; color: #ac8850; margin: 18px 0; font-size: 12px; }
+.ops-shell .admin-alert a { margin-left: auto; font-weight: 500; }
+.ops-menu-toggle, .ops-nav-scrim { display: none; }
+
+/* Dashboard uses cumulative API metrics; comparisons are never fabricated. */
+.ops-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 23px; }
+.ops-page-heading h2 { margin: 0 0 8px !important; font-size: 24px; }
+.ops-page-heading p { font-size: 11px; color: #a093ad; margin: 0; }
+.ops-refresh { display: flex; align-items: center; gap: 7px; border: 1px solid #e8e1ed; background: #fff; padding: 9px 14px; border-radius: 8px; font-size: 11px; color: #84718f; cursor: pointer; }
+.ops-refresh .ops-icon { width: 13px; height: 13px; }
+.ops-welcome { border-radius: 15px; padding: 25px 30px; display: flex; align-items: center; justify-content: space-between; gap: 22px; background: linear-gradient(90deg, #eee6f6 0, #eee6f6ee 45%, #e7dced00 100%), url('/static/photos/mutianyu_06.jpg') right 46% / cover; min-height: 152px; overflow: hidden; }
+.ops-eyebrow { display: block; color: #a18ab5; font-size: 9px; letter-spacing: 2.7px; margin-bottom: 10px; }
+.ops-welcome h3 { margin: 0; font-weight: 550; font-size: 23px; letter-spacing: 1px; color: #593b74; }
+.ops-welcome p { margin: 10px 0 0; font-size: 11px; color: #9982ad; }
+.ops-welcome .ops-welcome-action { flex: 0 0 auto; color: #fff; background: #5b3b8c; border-radius: 30px; padding: 12px 19px; font-size: 11px; display: flex; gap: 12px; align-items: center; }
+.ops-welcome .ops-welcome-action .ops-icon { width: 15px; height: 15px; }
+.ops-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin: 22px 0; }
+.ops-metric { position: relative; background: #fff; border: 1px solid #f0ebf5; border-radius: 13px; padding: 21px 23px; min-height: 132px; }
+.ops-metric-label { color: #9c8da7; font-size: 11px; display: block; }
+.ops-metric-icon { position: absolute; right: 20px; top: 18px; width: 31px; height: 31px; background: #f5f1f9; color: #9b85b2; display: grid; place-items: center; border-radius: 9px; }
+.ops-metric-icon .ops-icon { width: 17px; height: 17px; }
+.ops-metric strong { display: block; color: #4a355c; font-size: 30px; font-family: 'Helvetica Neue', 'PingFang SC', sans-serif; font-weight: 550; line-height: 1.1; margin: 16px 0 9px; letter-spacing: -.5px; }
+.ops-metric small { font-size: 9px; color: #b5a8be; }
+.ops-charts { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr); gap: 20px; }
+.ops-panel { background: #fff; border: 1px solid #f0ebf5; border-radius: 14px; min-width: 0; overflow: hidden; }
+.ops-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px 5px; gap: 12px; }
+.ops-panel-head h3 { font-size: 14px; color: #51405f; margin: 0; font-weight: 550; }
+.ops-panel-head small, .ops-panel-head > a { color: #ab9cb8; font-size: 10px; }
+.ops-panel-head p { font-size: 10px; color: #b4a5bf; margin: 7px 0 0; }
+.ops-chart { width: 100%; height: 276px; }
+.ops-panel .ops-empty { height: 276px; }
+.ops-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #b2a0be; text-align: center; padding: 30px; font-size: 12px; }
+.ops-empty .ops-icon { width: 34px; height: 34px; margin-bottom: 5px; color: #c6b5d4; }
+.ops-empty p { margin: 0; }
+.ops-empty small { color: #b8a9c3; font-size: 10px; }
+.ops-route-performance { margin-top: 20px; }
+.ops-route-performance .ops-panel-head { padding-bottom: 20px; }
+.ops-route-performance .el-table { border-radius: 0; }
+.ops-ranking { display: inline-grid; place-items: center; width: 23px; height: 23px; border-radius: 6px; background: #f3eff8; color: #967cae; font-size: 10px; }
+.ops-ranking.is-top { color: #674385; background: #e8dff2; }
+.ops-error { margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-radius: 10px; font-size: 12px; color: #ac725f; background: #fff3ed; }
+.ops-error button { border: 0; background: transparent; font: inherit; color: inherit; cursor: pointer; text-decoration: underline; }
+
+/* Two login surfaces keep their own semantics and do not leak into the user app. */
+.admin-login.ops-login { min-height: 100dvh; display: grid; grid-template-columns: 1.12fr 1fr; background: #f8f6fa; padding: 0; }
+.admin-login.ops-login::before { display: none; }
+.ops-login-visual { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 100dvh; padding: 52px 65px 72px; color: #fff; background: linear-gradient(180deg, #33243b22, #33243b9c), url('/static/photos/mutianyu_06.jpg') 45% center / cover; }
+.ops-login-visual .ops-side-brand { display: flex; align-items: center; gap: 13px; }
+.ops-login-visual .ops-side-brand strong { color: #fff; }
+.ops-login-visual .ops-side-brand small { color: #ffffffb0; }
+.ops-login-visual .ops-brand-image { width: 43px; height: 43px; background: #fff; }
+.ops-login-visual h1 { font-size: 43px; font-weight: 400; letter-spacing: 3px; line-height: 1.6; margin: 0 0 20px; }
+.ops-login-visual p { color: #ffffffad; font-size: 12px; letter-spacing: 2px; line-height: 2; }
+.ops-login-visual .ops-eyebrow { color: #ffffffa0; font-size: 10px; }
+.ops-login-form-wrap { display: flex; align-items: center; justify-content: center; padding: 50px; }
+.ops-login .admin-login-card { margin: 0; padding: 0; width: 330px; max-width: 100%; box-shadow: none; background: transparent; border: 0; border-radius: 0; }
+.ops-login .admin-login-card h2 { color: #4c355e; font-size: 28px; font-weight: 550; margin: 0 0 10px; }
+.ops-login-sub { margin: 0 0 36px; color: #ab9bb6; font-size: 12px; }
+.ops-login label, .guide-login label { display: block; color: #8a759a; margin-bottom: 9px; font-size: 12px; }
+.ops-login .el-input { margin-bottom: 22px; }
+.ops-login .el-input__wrapper { background: #fff; min-height: 46px; border-radius: 9px; box-shadow: 0 0 0 1px #eae1ef inset; }
+.ops-login .admin-login-btn { display: block; width: 100%; height: 46px; border-radius: 25px; margin-top: 8px; font-size: 13px; background: #5b3b8c; border-color: #5b3b8c; }
+.ops-login .admin-login-hint { color: #baa9c6; font-size: 10px; margin-top: 18px; }
+.ops-login .admin-login-err { color: #ba7864; font-size: 12px; line-height: 1.7; }
+.ops-login-links { display: flex; justify-content: space-between; padding-top: 36px; font-size: 11px; color: #a694b3; }
+
+/* Guide layouts prioritize single-handed use and field attendance checks. */
+.guide-shell { display: flex; flex-direction: column; min-height: 100dvh; height: 100dvh; max-width: 760px; margin: 0 auto; background: #f6f4f8; color: #302735; }
+.guide-topbar { display: flex; justify-content: space-between; align-items: center; padding: 18px 25px; border-bottom: 1px solid #eee8f2; background: #fff; flex-shrink: 0; }
+.guide-brand { display: flex; align-items: center; gap: 10px; }
+.guide-brand img { width: 34px; height: 34px; border-radius: 10px; object-fit: contain; }
+.guide-brand strong { display: block; font-size: 16px; font-weight: 600; letter-spacing: 1px; color: #473351; }
+.guide-brand small { display: block; font-size: 8px; color: #b09bbd; letter-spacing: 1.5px; margin-top: 2px; }
+.guide-role-label { font-size: 10px; color: #9672aa; background: #f1ebf7; border-radius: 5px; padding: 5px 8px; }
+.guide-page-nav { display: flex; align-items: center; gap: 12px; padding: 23px 25px 17px; flex-shrink: 0; }
+.guide-page-nav h1 { margin: 0; font-size: 23px; font-weight: 550; color: #493451; }
+.guide-page-nav p { margin: 5px 0 0; font-size: 10px; color: #ac98b8; }
+.guide-back { width: 34px; height: 34px; border: 1px solid #e6ddec; background: #fff; color: #997aab; border-radius: 50%; cursor: pointer; }
+.guide-back .ops-icon { width: 15px; height: 15px; transform: rotate(180deg); }
+.guide-body { flex: 1; min-height: 0; padding: 0 24px 36px; overflow-y: auto; scroll-behavior: smooth; }
+.guide-shell .card { border-radius: 14px; border: 1px solid #f0eaf4; background: #fff; box-shadow: none; overflow: hidden; margin-bottom: 15px; }
+.guide-shell .pad { padding: 20px; }
+.guide-shell .muted { color: #a994b5; font-size: 11px; line-height: 1.9; }
+.guide-shell .h2 { color: #63466f; font-size: 14px; font-weight: 600; margin: 25px 0 13px; }
+.guide-shell .btn, .guide-login .btn { border-radius: 30px; padding: 12px 18px; background: #5b3b8c; border: 1px solid #5b3b8c; color: #fff; font-size: 12px; min-height: 42px; box-shadow: none; cursor: pointer; }
+.guide-shell .btn.ghost { background: #fff; color: #9473a6; border: 1px solid #e8dfee; }
+.guide-shell .btn:disabled, .guide-login .btn:disabled { opacity: .45; cursor: wait; }
+.guide-shell .block, .guide-login .block { display: block; width: 100%; text-align: center; }
+.guide-shell .input, .guide-login .input { border: 1px solid #e8dfed; background: #faf8fc; border-radius: 9px; padding: 12px 13px; color: #594366; min-height: 44px; outline-color: #ae94c2; font-size: 12px; }
+.guide-shell label { color: #a18baf; font-size: 11px; }
+.guide-shell .tag { background: #f1ebf7; color: #9471a9; border: 0; border-radius: 5px; padding: 4px 7px; font-size: 10px; }
+.guide-greeting { position: relative; padding: 26px; border-radius: 15px; color: #fff; background: linear-gradient(90deg,#51405eea,#51405e45),url('/static/photos/mutianyu_06.jpg') center 50% / cover; }
+.guide-greeting .ops-eyebrow { color: #e1d0eb; font-size: 8px; }
+.guide-greeting h2 { font-size: 23px; font-weight: 500; margin: 0; color: #fff; }
+.guide-greeting p { color: #eee0f4b0; font-size: 11px; margin: 10px 0 0; }
+.guide-greeting-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.guide-logout { border: 0; background: #ffffff14; border-radius: 50%; width: 30px; height: 30px; color: #fff; cursor: pointer; }
+.guide-logout .ops-icon { width: 13px; height: 13px; }
+.guide-counts { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 25px; border-top: 1px solid #ffffff24; padding-top: 18px; }
+.guide-counts strong { display: block; font-size: 23px; font-weight: 500; margin-bottom: 5px; }
+.guide-counts span { font-size: 10px; color: #eee0f4b0; }
+.guide-tabs { display: flex; gap: 20px; border-bottom: 1px solid #e8dfed; margin: 24px 0 18px; overflow-x: auto; }
+.guide-tabs button { color: #b099bf; font-size: 12px; background: transparent; border: 0; padding: 10px 0 13px; position: relative; cursor: pointer; white-space: nowrap; }
+.guide-tabs button.on { color: #62406f; font-weight: 600; }
+.guide-tabs button.on::after { content: ''; height: 3px; width: 20px; background: #76508d; position: absolute; bottom: 0; border-radius: 5px; left: calc(50% - 10px); }
+.guide-tabs button small { font-size: 9px; margin-left: 4px; opacity: .65; }
+.guide-trip-card { display: block; padding: 17px 18px; background: #fff; border-radius: 13px; border: 1px solid #f0eaf4; margin-bottom: 12px; }
+.guide-trip-date { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #b09abf; margin-bottom: 12px; }
+.guide-trip-date > span:first-child { display: flex; align-items: center; gap: 7px; }
+.guide-trip-date .ops-icon { width: 14px; height: 14px; }
+.guide-trip-status { color: #987da9; background: #f6f1f9; border-radius: 5px; padding: 4px 7px; font-size: 9px; }
+.guide-trip-status.active { color: #6b4489; background: #e9dff1; }
+.guide-trip-content { display: flex; gap: 14px; align-items: center; }
+.guide-trip-cover { width: 80px; height: 86px; object-fit: cover; border-radius: 9px; flex-shrink: 0; background: #eee7f4; }
+.guide-trip-info { flex: 1; min-width: 0; }
+.guide-trip-info h3 { margin: 0 0 9px; color: #5a4167; font-size: 14px; font-weight: 550; line-height: 1.55; }
+.guide-trip-info p { display: flex; align-items: center; gap: 5px; color: #ad98ba; font-size: 10px; margin: 6px 0 0; }
+.guide-trip-info .ops-icon { width: 12px; height: 12px; }
+.guide-trip-content > .ops-icon { width: 14px; height: 14px; color: #c1afcc; }
+.guide-trip-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 15px; padding-top: 13px; border-top: 1px solid #f2ecf6; font-size: 10px; color: #ad97bb; }
+.guide-trip-bottom strong { font-size: 13px; color: #876397; font-weight: 550; }
+.guide-detail-hero { padding: 24px; border-radius: 15px; background: #eae0f2; margin-bottom: 17px; }
+.guide-detail-hero .ops-eyebrow { font-size: 8px; }
+.guide-detail-hero h2 { color: #593d6b; font-size: 22px; font-weight: 550; margin: 8px 0 19px; line-height: 1.55; }
+.guide-detail-facts { display: flex; flex-wrap: wrap; gap: 14px; font-size: 10px; color: #9a7dab; }
+.guide-detail-facts > span { display: flex; align-items: center; gap: 5px; }
+.guide-detail-facts .ops-icon { width: 13px; height: 13px; }
+.guide-detail-status { display: flex; justify-content: space-between; align-items: center; padding-top: 17px; margin-top: 18px; border-top: 1px solid #d9cce4; font-size: 11px; color: #91709f; }
+.guide-detail-status strong { color: #654278; font-weight: 600; }
+.guide-quicknav { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 18px; }
+.guide-quicknav button { display: flex; justify-content: center; align-items: center; gap: 7px; min-height: 42px; border: 1px solid #e9dfee; background: #fff; border-radius: 9px; font-size: 11px; color: #9271a3; cursor: pointer; }
+.guide-quicknav .ops-icon { width: 15px; height: 15px; }
+.guide-attendance-counts { display: flex; gap: 34px; padding: 0 0 19px; margin-bottom: 17px; border-bottom: 1px solid #f1eaf5; }
+.guide-attendance-counts strong { color: #77518d; font-size: 27px; font-weight: 500; }
+.guide-attendance-counts span { color: #b09abd; font-size: 10px; display: block; margin-top: 5px; }
+.guide-shell .weather { background: #f5f1fa; border: 0; border-radius: 11px; color: #8a719c; padding: 16px; }
+.guide-shell .weather strong { font-size: 11px; font-weight: 500; }
+.guide-shell .weather p { margin-bottom: 0; font-size: 11px; line-height: 1.8; }
+.guide-shell .seat-map { padding: 18px 0; }
+.guide-shell .seat { width: 43px; height: 43px; background: #fff; border-color: #e7ddeb; color: #b499c2; border-radius: 8px; }
+.guide-shell .seat.taken { background: #eee4f5; color: #9471a4; }
+.guide-shell .seat.locked { background: #ece9ee; color: #b0a6b4; cursor: pointer; }
+.guide-shell .seat.on { background: #795295; border-color: #795295; color: #fff; }
+.guide-seat-legend { display: flex; justify-content: center; gap: 14px; margin: 0 0 12px; font-size: 9px; color: #b19cbd; }
+.guide-seat-legend span { display: flex; align-items: center; gap: 4px; }
+.guide-seat-legend i { width: 10px; height: 10px; border: 1px solid #e7ddeb; border-radius: 3px; background: #fff; }
+.guide-seat-legend .taken { background: #eee4f5; }
+.guide-seat-legend .locked { background: #ece9ee; }
+.guide-roster-controls { display: flex; gap: 10px; margin-bottom: 13px; }
+.guide-roster-controls .input { flex: 1; min-width: 0; font-size: 11px; }
+.guide-roster-controls select.input { max-width: 113px; }
+.guide-shell .chain-item { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 9px; align-items: center; padding: 16px 18px; border-bottom: 1px solid #f2ebf5; }
+.guide-shell .chain-item:last-of-type { border-bottom: 0; }
+.guide-seat-number { background: #f5f0f9; border-radius: 7px; width: 27px; height: 29px; display: grid; place-items: center; color: #a386b5; font-size: 10px; }
+.guide-shell .chain-item .btn { min-height: 34px; min-width: 51px; font-size: 10px; }
+.guide-shell .chain-item .btn .ops-icon { width: 11px; height: 11px; margin-right: 3px; }
+.guide-shell .trip-kv { font-size: 12px; padding: 13px 0; }
+.guide-shell .trip-kv strong { font-weight: 500; color: #8b6a9e; }
+.guide-shell #transport .btn.ghost { margin-top: 18px; }
+.guide-shell #transport label { margin-top: 14px; margin-bottom: 7px; }
+.guide-shell #transport .trip-actions { margin-top: 17px; }
+.guide-shell .weather { margin-bottom: 22px; }
+.guide-shell .traveler-name { color: #876099; font-size: 12px; text-decoration: none; }
+.guide-shell .chain-item .tel-link { font-size: 10px; }
+.guide-contact-line { font-size: 10px; line-height: 1.6; color: #ac94bb; margin-top: 4px; }
+.guide-shell .chain-item .muted { font-size: 9px; }
+.guide-section-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 0 18px; }
+.guide-section-heading h3 { margin: 0; color: #63466f; font-weight: 600; font-size: 14px; }
+.guide-section-heading p { margin: 6px 0 0; color: #b09abd; font-size: 10px; line-height: 1.7; }
+.guide-section-heading > .ops-icon { color: #a589b6; }
+.guide-subsection-heading { margin-top: 26px; margin-bottom: 13px; }
+.guide-schedule > #attendance, .guide-schedule > #transport, .guide-schedule > #roster { scroll-margin-top: 20px; }
+.guide-attendance-progress { height: 4px; border-radius: 3px; overflow: hidden; background: #f1ebf5; }
+.guide-attendance-progress i { display: block; height: 100%; border-radius: inherit; background: #8a65a0; transition: width .2s ease; }
+.guide-round-active { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; padding: 15px; background: #f7f3fa; border-radius: 10px; }
+.guide-round-active > div { display: flex; flex-direction: column; gap: 4px; }
+.guide-round-active .ops-eyebrow { font-size: 7px; margin: 0; }
+.guide-round-active strong { color: #634a75; font-size: 12px; }
+.guide-round-active small { font-size: 9px; color: #ad9ab9; }
+.guide-round-active .btn { flex-shrink: 0; padding: 10px 13px; font-size: 10px; }
+.guide-start-checkin { display: flex; gap: 9px; margin-top: 10px; }
+.guide-start-checkin .input { flex: 1; min-width: 0; }
+.guide-start-checkin .btn { flex-shrink: 0; }
+.guide-checkin-history { margin-top: 21px; }
+.guide-checkin-history h4 { margin: 0 0 8px; color: #9c86ab; font-size: 10px; font-weight: 500; }
+.guide-checkin-history > div { display: flex; align-items: center; gap: 7px; padding: 8px 0; color: #856c94; font-size: 10px; border-top: 1px solid #f3eef6; }
+.guide-checkin-history .ops-icon { width: 13px; height: 13px; color: #8e6a9f; }
+.guide-checkin-history small { margin-left: auto; color: #b09dbc; font-size: 9px; }
+.guide-roster-controls { align-items: center; }
+.guide-search { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; background: #fff; border: 1px solid #e8dfed; border-radius: 9px; min-height: 44px; padding: 0 12px; color: #ae99ba; }
+.guide-search > .ops-icon { width: 16px; height: 16px; }
+.guide-search input { outline: 0; border: 0; width: 100%; min-width: 0; background: transparent; color: #60496e; font-size: 11px; }
+.guide-search input::placeholder { color: #bbaac5; }
+.guide-shell .guide-roster-controls > .input { min-height: 44px; padding: 8px 10px; font-size: 10px; }
+.guide-roster .guide-roster-empty { min-height: 190px; }
+.guide-roster-empty > .ops-icon { width: 28px; height: 28px; color: #b9a4c6; }
+.guide-roster-empty p { margin: 0; font-size: 12px; color: #9076a0; }
+.guide-roster-empty small { color: #b19dbc; font-size: 10px; }
+.guide-trip-command { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 22px 0 2px; padding: 20px; border: 1px solid #e9dfef; border-radius: 13px; background: #f0e9f5; }
+.guide-trip-command > div { display: flex; flex-direction: column; gap: 4px; }
+.guide-trip-command .ops-eyebrow { margin: 0; font-size: 7px; }
+.guide-trip-command strong { color: #614373; font-size: 13px; }
+.guide-trip-command small { color: #a48ab2; font-size: 9px; }
+.guide-trip-command .btn { white-space: nowrap; min-width: 100px; }
+.guide-trip-command.is-finish { border-color: #ece5ef; background: #fff; }
+.guide-finish-note { display: flex; gap: 11px; align-items: center; margin: 20px 0 0; padding: 16px; border-radius: 11px; background: #f2eef5; color: #785f88; font-size: 11px; }
+.guide-finish-note .ops-icon { width: 19px; height: 19px; }
+.guide-finish-note small { display: block; margin-top: 4px; color: #a38db1; font-size: 9px; }
+.guide-empty { display: flex; align-items: center; flex-direction: column; padding: 47px 20px 56px; text-align: center; color: #9e86ad; }
+.guide-empty > .ops-icon { width: 34px; height: 34px; color: #b8a5c3; margin-bottom: 17px; }
+.guide-empty p { font-size: 13px; color: #80638f; margin: 0 0 8px; }
+.guide-empty small { max-width: 280px; color: #b09bbc; font-size: 10px; line-height: 1.9; }
+.guide-empty > a { display: inline-flex; align-items: center; gap: 6px; border-radius: 22px; background: #5b3b8c; color: #fff; font-size: 10px; padding: 9px 14px; margin-top: 20px; }
+.guide-empty > a .ops-icon { width: 12px; height: 12px; }
+.guide-trip-placeholder { display: grid; place-items: center; color: #ad92bc; }
+.guide-trip-placeholder .ops-icon { width: 25px; height: 25px; }
+.guide-footnote { text-align: center; color: #bdafc6; font-size: 9px; letter-spacing: 1px; padding: 22px 0 4px; }
+.guide-message { background: #eae1f1; color: #8a659d !important; padding: 12px 15px; border-radius: 10px; font-size: 11px !important; line-height: 1.8; margin: 14px 0; }
+.guide-login { max-width: 760px; min-height: 100dvh; margin: 0 auto; padding: 0 0 32px; background: #f7f4fa; }
+.guide-login-hero { padding: 35px 30px 82px; min-height: 330px; background: linear-gradient(180deg,#41304a30,#41304a99),url('/static/photos/mutianyu_06.jpg') center / cover; color: #fff; }
+.guide-login-hero .guide-brand strong { color: #fff; }
+.guide-login-hero .guide-brand small { color: #ffffffa0; }
+.guide-login-hero .guide-brand img { background: white; }
+.guide-login-hero h1 { margin: 50px 0 10px; font-size: 31px; font-weight: 450; letter-spacing: 2px; }
+.guide-login-hero p { font-size: 11px; color: #ffffffb0; }
+.guide-login-form { position: relative; margin: -40px 25px 0; background: #fff; border-radius: 17px; padding: 29px 26px; box-shadow: 0 8px 30px #69437f06; }
+.guide-login-form h2 { font-size: 20px; font-weight: 550; color: #654477; margin: 0 0 10px; }
+.guide-login-form > p { font-size: 11px; color: #b299c1; line-height: 1.9; margin: 0 0 25px; }
+.guide-login .input { display: block; width: 100%; margin-bottom: 22px; }
+.guide-captcha-row { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; }
+.guide-captcha-row .input { min-width: 0; flex: 1; margin: 0; }
+.guide-captcha-button { padding: 0; background: #f5effa; border: 1px solid #eae0ef; border-radius: 8px; height: 44px; overflow: hidden; cursor: pointer; min-width: 100px; }
+.guide-captcha-button img { display: block; height: 100%; }
+.guide-captcha-button span { font-size: 10px; color: #b39ac4; padding: 9px; }
+.guide-login .guide-login-hint { margin-top: 17px; color: #b6a2c1; font-size: 10px; }
+.guide-login .guide-login-error { color: #b9796d; font-size: 11px; margin: 12px 0 0; }
+.guide-login-foot { display: flex; justify-content: space-between; padding: 28px 30px; font-size: 10px; color: #ad96bc; }
+.ops-refresh:disabled { opacity: .5; cursor: wait; }
+.ops-shell button:focus-visible, .guide-shell button:focus-visible, .guide-shell a:focus-visible { outline: 2px solid #a98ac1; outline-offset: 3px; }
+@media (min-width: 960px) {
+  .guide-shell, .guide-login { max-width: 720px; border-left: 1px solid #e6ddec; border-right: 1px solid #e6ddec; }
+  .guide-body { padding-right: 32px; padding-left: 32px; }
+  .guide-topbar { padding-right: 32px; padding-left: 32px; }
+  .guide-page-nav { padding: 27px 32px 20px; }
+}
+@media (max-width: 1200px) {
+  .ops-shell .admin-side { width: 202px; flex-basis: 202px; padding-right: 12px; padding-left: 12px; }
+  .ops-shell .admin-main { padding: 25px 22px 18px; }
+  .ops-shell .admin-top { padding: 0 24px; }
+  .ops-metric { padding: 20px 17px; }
+  .ops-metric-icon { right: 15px; }
+  .ops-metric strong { font-size: 26px; }
+  .ops-charts { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+  .ops-shell .admin-page > div > .row:first-child { align-items: flex-start; }
+}
+@media (max-width: 800px) {
+  .ops-shell .admin-side { position: fixed; top: 0; bottom: 0; left: 0; z-index: 50; transform: translateX(-100%); transition: transform .2s ease; width: 224px; }
+  .ops-shell .admin-side.is-open { transform: translateX(0); }
+  .ops-menu-toggle { display: grid; place-items: center; background: #fff; border: 0; color: #8f75a2; padding: 5px; cursor: pointer; }
+  .ops-nav-scrim { display: block; position: fixed; inset: 0; border: 0; background: #2b183757; z-index: 40; }
+  .ops-shell .admin-top { height: 62px; padding: 0 18px; gap: 9px; }
+  .ops-shell .admin-top-tools { gap: 15px; }
+  .ops-shell .admin-jump { display: none; }
+  .ops-breadcrumb { gap: 7px; font-size: 10px; }
+  .ops-breadcrumb > span { display: none; }
+  .ops-breadcrumb > .ops-icon { display: none; }
+  .ops-shell .admin-main { padding: 22px 18px; }
+  .ops-shell .admin-page { padding: 19px 16px; }
+  .ops-page-heading h2 { font-size: 22px; }
+  .ops-welcome { padding: 24px; }
+  .ops-welcome h3 { font-size: 19px; }
+  .ops-welcome .ops-welcome-action { padding: 10px 13px; font-size: 10px; }
+  .ops-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+  .ops-charts { grid-template-columns: minmax(0, 1fr); gap: 15px; }
+  .ops-login-visual { padding: 40px 30px; }
+  .ops-login-visual h1 { font-size: 32px; }
+  .ops-login-form-wrap { padding: 35px 25px; }
+  .ops-schedule-summary > div { padding-left: 16px; }
+  .ops-schedule-summary strong { font-size: 23px; }
+  .ops-schedule-filters { flex-wrap: wrap; gap: 10px; }
+  .ops-schedule-search { max-width: none; width: 100%; }
+  .ops-schedule-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 16px; padding: 15px 0; }
+  .ops-schedule-summary > div:nth-child(2) { border-right: 0; }
+  .ops-schedule-summary > div:nth-child(3), .ops-schedule-summary > div:nth-child(4) { padding-top: 10px; border-top: 1px solid #eae1f0; }
+  .ops-schedule-row-actions .el-button { padding-left: 8px; padding-right: 8px; }
+}
+@media (max-width: 560px) {
+  .ops-shell .admin-user > .ops-icon, .ops-user-meta { display: none; }
+  .ops-shell .admin-top-tools { gap: 13px; }
+  .ops-shell .admin-notice-panel { position: fixed; top: 65px; right: 14px; width: calc(100vw - 28px); }
+  .ops-welcome { display: block; background-position: 70% center; }
+  .ops-welcome h3 { max-width: 210px; line-height: 1.6; }
+  .ops-welcome p { max-width: 220px; line-height: 1.9; }
+  .ops-welcome .ops-welcome-action { display: inline-flex; margin-top: 18px; }
+  .ops-metric { padding: 17px; }
+  .ops-metric-icon { width: 25px; height: 25px; top: 14px; }
+  .ops-metric-label { font-size: 10px; }
+  .ops-metric strong { font-size: 25px; }
+  .ops-metric small { font-size: 8px; }
+  .admin-login.ops-login { display: block; }
+  .ops-login-visual { min-height: 310px; padding: 25px 28px 35px; }
+  .ops-login-visual h1 { font-size: 27px; margin-bottom: 5px; line-height: 1.5; }
+  .ops-login-visual p { font-size: 10px; margin-bottom: 0; }
+  .ops-login-form-wrap { padding-top: 38px; padding-bottom: 40px; }
+  .ops-login .admin-login-card h2 { font-size: 23px; }
+  .ops-login-sub { margin-bottom: 28px; }
+  .guide-topbar { padding: 15px 20px; }
+  .guide-page-nav { padding: 23px 20px 17px; }
+  .guide-body { padding-right: 18px; padding-left: 18px; }
+  .guide-trip-cover { width: 70px; height: 81px; }
+  .guide-trip-info h3 { font-size: 13px; }
+  .guide-detail-hero { padding: 22px 20px; }
+  .guide-detail-hero h2 { font-size: 20px; }
+  .guide-detail-facts { gap: 10px; }
+  .guide-shell .pad { padding: 18px; }
+  .guide-shell .chain-item { padding: 14px; }
+  .guide-round-active { display: block; }
+  .guide-round-active .btn { width: 100%; margin-top: 13px; }
+  .guide-start-checkin { align-items: stretch; flex-direction: column; }
+  .guide-roster-controls { align-items: stretch; flex-direction: column; }
+  .guide-shell .guide-roster-controls > .input { width: 100%; }
+  .guide-trip-command { align-items: stretch; flex-direction: column; }
+  .guide-trip-command .btn { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ops-shell *, .guide-shell * { scroll-behavior: auto; transition: none !important; }
+}

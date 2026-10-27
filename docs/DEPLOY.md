@@ -97,3 +97,11 @@ GitHub Secret 用的可以是同一把私钥，也可以是上面那种「只给
 | 功能分支已推但线上没变 | 只有 `main` 会触发 Deploy；先合并 PR |
 
 线上进程：PM2 名 `beiyexing`，目录 `/var/www/beiyexing`。部署脚本不会在已有数据库上执行 `npm run seed`。
+
+## 小程序图片与包体积
+
+封面、详情相册、品牌图和账户图标统一放在 `server/public/static/miniprogram/`，通过 `https://togetherbetter.cn/static/miniprogram/` 加载。底部导航图标保留在小程序的 `images/ui/`，其余图片不要再放回小程序目录。
+
+更新账户图标后用 `node scripts/build-mine-icons.mjs` 生成服务端 PNG。图片会随日常 GitHub Actions 部署；仅需发布图片时，可在本机运行 `bash scripts/deploy-miniprogram-media.sh`，它只增量同步此静态目录，不重启进程，不安装依赖，不读写数据库或环境变量，也不删除旧版本资源。
+
+上传小程序前运行 `npm run check:miniprogram` 检查主包、分包源文件体积与本地资源引用。该检查为本地估算，最终大小以微信开发者工具上传统计为准。首次切换后重新编译再上传；微信公众平台的服务器域名中，`request` 和 `downloadFile` 应包含现有 HTTPS 域名 `https://togetherbetter.cn`，供接口、图片预览及海报下载使用。

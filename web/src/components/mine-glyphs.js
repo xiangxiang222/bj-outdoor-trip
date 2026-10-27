@@ -1,50 +1,19 @@
-/** 线宽 2。网页上摄影师申请的相机是 1.6px 描边，这条线宽栅格化后才和它一样粗。小程序位图按 1.5 画，缩到 44rpx 后和相机的 3rpx 描边一样粗。viewBox 22。 */
+/** One 24-unit grid and 1.7-unit rounded stroke for web and mini-program icons. */
 export const mineGlyphs = {
-  headset: `
-    <path d="M7.2 12.2V9.3a3.8 3.8 0 0 1 7.6 0v2.9"/>
-    <rect x="3.2" y="10.4" width="4" height="6.2" rx="1.15"/>
-    <rect x="14.8" y="10.4" width="4" height="6.2" rx="1.15"/>
-  `,
-  hex: `
-    <polygon points="11,1.7 19.7,6.7 19.7,15.3 11,20.3 2.3,15.3 2.3,6.7"/>
-    <path d="M6.3 9.3h9.4M6.3 12.7h9.4"/>
-  `,
-  bubble: `
-    <path d="M6.2 4.6h9.2a2.6 2.6 0 0 1 2.6 2.6v4.6a2.6 2.6 0 0 1-2.6 2.6H9.2L5.2 18.2 6.4 14.4H6.2a2.6 2.6 0 0 1-2.6-2.6V7.2a2.6 2.6 0 0 1 2.6-2.6z"/>
-  `,
-  card: `
-    <rect x="1.3" y="4.4" width="19.4" height="13" rx="2"/>
-    <path d="M2.6 8.6h16.8"/>
-    <rect x="3.5" y="11.1" width="5" height="2.7" rx="0.6"/>
-  `,
-  people: `
-    <circle cx="15.7" cy="5.8" r="2"/>
-    <path d="M12.9 11.5a2.9 2.9 0 0 1 5.6 0"/>
-    <circle cx="8" cy="8.3" r="2.75"/>
-    <path d="M2.7 16.9a5.35 5.35 0 0 1 10.7 0"/>
-  `,
-  cube: `
-    <polygon points="11,1.6 20.1,6.9 20.1,15.1 11,20.4 1.9,15.1 1.9,6.9"/>
-    <path d="M11 1.6V20.4M1.9 6.9 11 11.7 20.1 6.9"/>
-  `,
-  smile: `
-    <path d="M6.4 1.6h8.8a3.4 3.4 0 0 1 3.4 3.4v6.8a3.4 3.4 0 0 1-3.4 3.4H9.6L5.2 20.2 7.2 15.2H6.4a3.4 3.4 0 0 1-3.4-3.4V5a3.4 3.4 0 0 1 3.4-3.4z"/>
-    <circle cx="8.6" cy="7.6" r="0.7" fill="currentColor" stroke="none"/>
-    <circle cx="13" cy="7.6" r="0.7" fill="currentColor" stroke="none"/>
-    <path d="M8.2 10.2q2.6 2.4 5.2 0"/>
-  `,
-  yen: `
-    <circle cx="11" cy="11" r="8.2"/>
-    <path d="M7.3 6.7 11 10.8 14.7 6.7M11 10.8v5.5M7.5 11.7h7M7.5 14h7"/>
-  `,
-  cap: `
-    <polygon points="11,2.6 20,8.2 11,12.8 2,8.2"/>
-    <path d="M8.1 14.2h5.8v3.1a1.2 1.2 0 0 1-1.2 1.2h-3.4a1.2 1.2 0 0 1-1.2-1.2z"/>
-    <path d="M17.2 8.4v4.6"/>
-    <circle cx="17.2" cy="14.1" r="0.85" fill="currentColor" stroke="none"/>
-  `,
-  peak: `
-    <circle cx="11" cy="11" r="8.2"/>
-    <polygon points="11,5.5 6.3,15.4 15.7,15.4"/>
-  `,
+  headset: '<path d="M4 13v-2a8 8 0 0 1 16 0v2M20 16v1a4 4 0 0 1-4 4h-2"/><rect x="2.5" y="11" width="4" height="7" rx="2"/><rect x="17.5" y="11" width="4" height="7" rx="2"/><path d="M12 21h2"/>',
+  settings: '<rect x="3" y="3" width="6.5" height="6.5" rx="1.5"/><rect x="3" y="14.5" width="6.5" height="6.5" rx="1.5"/><rect x="14.5" y="14.5" width="6.5" height="6.5" rx="1.5"/><rect x="14.7" y="3.2" width="6.1" height="6.1" rx="1.3" transform="rotate(45 17.75 6.25)"/>',
+  message: '<path d="M8 19.5 4 22v-5a7.6 7.6 0 0 1-1.5-4.6V11A8.5 8.5 0 0 1 11 2.5h2a8.5 8.5 0 0 1 8.5 8.5v1a8.5 8.5 0 0 1-8.5 8.5h-2a9.3 9.3 0 0 1-3-.5"/><path d="M7.5 11.5h.01M12 11.5h.01M16.5 11.5h.01" stroke-width="2.6"/>',
+  card: '<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M6.5 15.5h4"/>',
+  people: '<circle cx="9" cy="7.5" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 11a3 3 0 1 0-1-5.8M18 14a5 5 0 0 1 3 4.6V20"/>',
+  backpack: '<path d="M9 6V5a3 3 0 0 1 6 0v1M5 11v7.5A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V11a7 7 0 0 0-14 0Z"/><path d="M9 9h6M8.5 15a1.5 1.5 0 0 1 1.5-1.5h4a1.5 1.5 0 0 1 1.5 1.5v3h-7Z"/>',
+  review: '<path d="M8 19 4 22v-5a3 3 0 0 1-1-2.2V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3Z"/><path d="M8 9h.01M15 9h.01" stroke-width="2.4"/><path d="M8 13a5 5 0 0 0 7 0"/>',
+  cap: '<path d="m2 8 10-5 10 5-10 5L2 8ZM6 10v6c3.5 2.7 8.5 2.7 12 0v-6M22 8v7"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="m16.5 7.5-3 6-6 3 3-6 6-3ZM10.5 10.5l3 3"/>',
+  camera: '<path d="M8 6 9.5 3.5h5L16 6h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"/><circle cx="12" cy="12.5" r="4"/><path d="M17.5 9h.01" stroke-width="2.4"/>',
+  poster: '<rect x="4" y="2.5" width="16" height="19" rx="2.5"/><rect x="7" y="5.5" width="10" height="9" rx="1"/><path d="m7.5 13 3-3 2.5 2 1.5-1.5 2.5 2M8 18h8"/><path d="M14.5 8h.01" stroke-width="2.2"/>',
+  feedback: '<path d="M18 15v1a3 3 0 0 1-3 3H8l-4 3v-5a3 3 0 0 1-1-2.2V6a3 3 0 0 1 3-3h7M12 14l-4 1 1-4L18 2a1.8 1.8 0 0 1 2.5 2.5L12 14ZM16 4l3 3"/>',
+  route: '<circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M5 8.5v7a3 3 0 0 0 3 3h2a3 3 0 0 0 0-6h-.5a3 3 0 0 1 0-6H16a3 3 0 0 1 3 3v6"/>',
+  publish: '<path d="M13 3H6a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-7M8 10h4M8 15h7M18.5 2v7M15 5.5h7"/>',
+  crown: '<path d="m3 6 4.5 4L12 4l4.5 6L21 6l-2 12H5L3 6ZM6 21h12"/>',
+  chevron: '<path d="m9 5 7 7-7 7"/>',
 };

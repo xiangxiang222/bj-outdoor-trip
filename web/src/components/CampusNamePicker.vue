@@ -4,7 +4,7 @@
       <span v-if="label">{{ label }}</span>
       <span v-else class="muted">{{ placeholder }}</span>
     </button>
-    <Teleport to=".mp-phone">
+      <Teleport to="body">
       <div v-if="show" class="campus-sheet-mask" @click.self="close">
         <div class="campus-sheet" role="dialog">
           <div class="campus-sheet-head">
@@ -187,7 +187,7 @@ function confirm() {
 </style>
 <style>
 .campus-sheet-mask {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 120;
   background: rgba(0,0,0,.45);

@@ -48,30 +48,59 @@
     "pages/campus-pick/campus-pick"
   ],
   "subPackages": [
-    { "root": "pkg-detail", "name": "detail", "pages": ["detail/detail"] }
+    {
+      "root": "pkg-detail",
+      "name": "detail",
+      "pages": [
+        "detail/detail"
+      ]
+    }
   ],
   "window": {
-    "navigationBarBackgroundColor": "#8534e4",
+    "navigationBarBackgroundColor": "#5b3b8c",
     "navigationBarTitleText": "同行者众",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#8534e4",
-    "backgroundColorTop": "#8534e4",
-    "backgroundColorBottom": "#f3f4f6",
+    "backgroundColor": "#f6f5f8",
+    "backgroundColorTop": "#5b3b8c",
+    "backgroundColorBottom": "#f6f5f8",
     "backgroundTextStyle": "light"
   },
   "tabBar": {
     "custom": true,
-    "color": "#7a7d74",
-    "selectedColor": "#141414",
+    "color": "#8a8692",
+    "selectedColor": "#5b3b8c",
     "backgroundColor": "#ffffff",
     "list": [
-      { "pagePath": "pages/index/index", "text": "首页", "iconPath": "images/home.png", "selectedIconPath": "images/home-on.png" },
-      { "pagePath": "pages/activities/activities", "text": "活动", "iconPath": "images/activities.png", "selectedIconPath": "images/activities-on.png" },
-      { "pagePath": "pages/orders/orders", "text": "行程", "iconPath": "images/trips.png", "selectedIconPath": "images/trips-on.png" },
-      { "pagePath": "pages/mine/mine", "text": "我的", "iconPath": "images/mine.png", "selectedIconPath": "images/mine-on.png" }
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "images/ui/home.png",
+        "selectedIconPath": "images/ui/home-on.png"
+      },
+      {
+        "pagePath": "pages/activities/activities",
+        "text": "活动",
+        "iconPath": "images/ui/activities.png",
+        "selectedIconPath": "images/ui/activities-on.png"
+      },
+      {
+        "pagePath": "pages/orders/orders",
+        "text": "行程",
+        "iconPath": "images/ui/trips.png",
+        "selectedIconPath": "images/ui/trips-on.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的",
+        "iconPath": "images/ui/mine.png",
+        "selectedIconPath": "images/ui/mine-on.png"
+      }
     ]
   },
-  "navigateToMiniProgramAppIdList": ["wx308bd2aeb83d3345", "wx7564fd5313d24844"],
+  "navigateToMiniProgramAppIdList": [
+    "wx308bd2aeb83d3345",
+    "wx7564fd5313d24844"
+  ],
   "usingComponents": {
     "load-row": "/components/load-row/load-row"
   },

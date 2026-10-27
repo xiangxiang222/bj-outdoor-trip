@@ -1,57 +1,36 @@
 <template>
-  <div class="mine-page">
+  <div class="mine-page mine-retail">
     <template v-if="store.token && store.profile">
-      <div class="mine-head">
-        <div class="mine-user">
-          <button class="mine-avatar" type="button" @click="openAvatar">
-            <img v-if="store.profile.avatar" :src="store.profile.avatar" alt="" />
-            <span v-else>{{ (store.profile.nickname || "友").slice(0, 1) }}</span>
-          </button>
-          <div class="mine-user-main">
-            <button type="button" class="mine-name-hit" @click="$router.push('/m/user/' + store.profile.id)">
-              <div class="mine-name">{{ store.profile.nickname }}</div>
-            </button>
-            <div class="mine-tags">
-              <button v-if="store.profile.membership" class="mine-lv" type="button" @click="openMember">{{ store.profile.membership.code }}</button>
-              <button class="mine-chip" type="button" @click="openMember">会员 ›</button>
-            </div>
-          </div>
-        </div>
-        <div class="mine-tools">
-          <button class="mine-tool" type="button" @click="$router.push('/m/official')">
-            <span class="mine-tool-ico"><MineGlyph name="headset" /></span>
-            <span>客服</span>
-          </button>
-          <button class="mine-tool" type="button" @click="goAuth('/m/settings')">
-            <span class="mine-tool-ico"><MineGlyph name="hex" /></span>
-            <span>设置</span>
-          </button>
-          <button class="mine-tool" type="button" @click="goAuth('/m/notices')">
-            <span class="mine-tool-ico">
-              <MineGlyph name="bubble" />
-              <em v-if="hub.unreadCount" class="mine-badge">{{ hub.unreadCount > 9 ? "9+" : hub.unreadCount }}</em>
-            </span>
-            <span>消息</span>
-          </button>
+      <div class="account-toolbar">
+        <button class="account-member-pill" type="button" @click="openMember"><MineGlyph name="crown" /><span>同行会员</span><MineGlyph name="chevron" /></button>
+        <div class="account-tools">
+          <button type="button" @click="$router.push('/m/official')"><MineGlyph name="headset" /><span>客服</span></button>
+          <button type="button" @click="goAuth('/m/notices')"><span class="account-icon"><MineGlyph name="message" /><em v-if="hub.unreadCount" class="account-badge">{{ hub.unreadCount > 9 ? '9+' : hub.unreadCount }}</em></span><span>消息</span></button>
+          <button type="button" @click="goAuth('/m/settings')"><MineGlyph name="settings" /><span>设置</span></button>
         </div>
       </div>
 
-      <div class="mine-sheet">
-        <div class="mine-sheet-head">
-          <button type="button" @click="goAuth('/m/wallet')">我的钱包 ›</button>
-          <button class="mine-member-banner" type="button" @click="openMember">会员中心 ›</button>
+      <section class="account-card account-overview" aria-label="我的账号与权益">
+        <div class="account-profile-row">
+          <button class="account-avatar" type="button" aria-label="更换头像" @click="openAvatar">
+            <img v-if="store.profile.avatar" :src="store.profile.avatar" alt="" />
+            <span v-else>{{ (store.profile.nickname || "友").slice(0, 1) }}</span>
+          </button>
+          <div class="account-identity">
+            <button type="button" class="account-name" @click="$router.push('/m/user/' + store.profile.id)">{{ store.profile.nickname }}</button>
+            <button class="account-tier" type="button" @click="openMember"><MineGlyph name="crown" /><span>{{ store.profile.membership?.name || '注册会员' }}</span><small v-if="store.profile.membership?.code">{{ store.profile.membership.code }}</small></button>
+          </div>
         </div>
-        <div class="mine-stats">
+        <div class="account-stats">
           <button type="button" @click="goAuth('/m/wallet')">
             <b v-if="hubReady">{{ hub.balance ?? store.profile.walletBalance ?? 0 }}</b>
             <span v-else class="spinner" aria-hidden="true"></span>
-            <span>余额</span>
+            <span>余额<span class="account-unit"> / 元</span></span>
           </button>
           <button type="button" @click="goAuth('/m/coupons')">
-            <b v-if="hubReady">{{ hub.couponCount || coupons.length || 0 }}</b>
+            <b v-if="hubReady">{{ hub.couponCount ?? coupons.length ?? 0 }}</b>
             <span v-else class="spinner" aria-hidden="true"></span>
             <span>优惠券</span>
-            <em v-if="hub.couponExpireHint">{{ hub.couponExpireHint }}</em>
           </button>
           <button type="button" @click="goAuth('/m/signin')">
             <b v-if="hubReady">{{ hub.points ?? store.profile.points ?? 0 }}</b>
@@ -59,16 +38,17 @@
             <span>积分</span>
           </button>
           <button type="button" @click="goAuth('/m/signin')">
-            <b v-if="hubReady">{{ hub.signedToday ? "已签到" : "未签到" }}</b>
+            <b v-if="hubReady" class="account-sign">{{ hub.signedToday ? "已签到" : "未签到" }}</b>
             <span v-else class="spinner" aria-hidden="true"></span>
-            <span>签到</span>
+            <span>每日签到</span>
           </button>
-          <button class="mine-more" type="button" @click="goAuth('/m/wallet')">更多</button>
         </div>
-      </div>
+        <button v-if="hub.couponExpireHint" class="account-expiring" type="button" @click="goAuth('/m/coupons')"><span>{{ hub.couponExpireHint }}</span><MineGlyph name="chevron" /></button>
+        <button class="account-benefits" type="button" @click="openMember"><span class="account-benefits-copy"><span class="account-benefits-title"><MineGlyph name="crown" /><span>同行会员</span></span><span class="account-benefits-detail"><template v-if="store.profile.membership?.perks?.length"><span v-for="(perk, i) in store.profile.membership.perks.slice(0, 2)" :key="i" class="account-perk">{{ perk }}</span></template><template v-else>{{ memberPerks }}</template></span></span><span class="account-benefits-more">会员中心<MineGlyph name="chevron" /></span></button>
+      </section>
 
-      <div class="mine-orders">
-        <div class="mine-links">
+      <section class="account-card account-orders" aria-label="我的行程">
+        <div class="account-history">
           <button type="button" @click="goAuth('/m/views')">
             <span>足迹</span>
             <b v-if="hubReady">{{ hub.viewCount || 0 }}</b>
@@ -85,73 +65,65 @@
             <span v-else class="spinner" aria-hidden="true"></span>
           </button>
         </div>
-        <div class="mine-order-row">
-          <div class="mine-shortcuts">
+        <div class="account-order-row">
+          <div class="account-shortcuts">
             <button type="button" @click="goOrders('unpaid')">
-              <span class="mine-order-ico">
+              <span class="account-icon">
                 <MineGlyph name="card" />
-                <em v-if="hub.unpaidCount" class="mine-badge">{{ hub.unpaidCount > 99 ? "99+" : hub.unpaidCount }}</em>
+                <em v-if="hub.unpaidCount" class="account-badge">{{ hub.unpaidCount > 99 ? "99+" : hub.unpaidCount }}</em>
               </span>
               <span>待付款</span>
             </button>
             <button type="button" @click="goOrders('recruiting')">
-              <span class="mine-order-ico">
+              <span class="account-icon">
                 <MineGlyph name="people" />
-                <em v-if="hub.recruitingCount" class="mine-badge">{{ hub.recruitingCount > 99 ? "99+" : hub.recruitingCount }}</em>
+                <em v-if="hub.recruitingCount" class="account-badge">{{ hub.recruitingCount > 99 ? "99+" : hub.recruitingCount }}</em>
               </span>
               <span>待成团</span>
             </button>
             <button type="button" @click="goOrders('depart')">
-              <span class="mine-order-ico">
-                <MineGlyph name="cube" />
-                <em v-if="hub.departCount" class="mine-badge">{{ hub.departCount > 99 ? "99+" : hub.departCount }}</em>
+              <span class="account-icon">
+                <MineGlyph name="backpack" />
+                <em v-if="hub.departCount" class="account-badge">{{ hub.departCount > 99 ? "99+" : hub.departCount }}</em>
               </span>
               <span>待出行</span>
             </button>
             <button type="button" @click="goOrders('review')">
-              <span class="mine-order-ico">
-                <MineGlyph name="smile" />
-                <em v-if="hub.reviewCount" class="mine-badge">{{ hub.reviewCount > 99 ? "99+" : hub.reviewCount }}</em>
+              <span class="account-icon">
+                <MineGlyph name="review" />
+                <em v-if="hub.reviewCount" class="account-badge">{{ hub.reviewCount > 99 ? "99+" : hub.reviewCount }}</em>
               </span>
               <span>待评价</span>
             </button>
-            <button type="button" @click="goOrders('refund')">
-              <span class="mine-order-ico">
-                <MineGlyph name="yen" />
-                <em v-if="hub.refundCount" class="mine-badge">{{ hub.refundCount > 99 ? "99+" : hub.refundCount }}</em>
-              </span>
-              <span>已退款</span>
-            </button>
           </div>
-          <button class="mine-all" type="button" @click="goOrders('all')">
-            <span class="mine-order-ico"><i class="mine-all-ico"></i></span>
-            <span>全部</span>
+          <button class="account-all" type="button" @click="goOrders('all')">
+            <b>全部</b><span class="account-circle-arrow"><MineGlyph name="chevron" /></span>
           </button>
         </div>
-      </div>
+      </section>
 
-      <div class="mine-play">
+      <section class="account-card account-services" aria-label="出行与服务">
+        <h2>出行与服务</h2>
+        <div class="account-create">
+          <button type="button" @click="goAuth('/m/route-apply')"><span class="account-create-icon"><MineGlyph name="route" /></span><span class="account-create-copy"><b>线路收录</b><small>申请审核后上线</small></span><MineGlyph name="chevron" /></button>
+          <button type="button" @click="goAuth('/m/publish')"><span class="account-create-icon"><MineGlyph name="publish" /></span><span class="account-create-copy"><b>发起行程</b><small>高校 · 企业 · 好友</small></span><MineGlyph name="chevron" /></button>
+        </div>
+        <div class="account-service-grid">
         <button type="button" @click="goAuth('/m/student')">
-          <span class="mine-ico"><MineGlyph name="cap" /></span>
-          <span class="mine-play-name">{{ campusShort }}</span>
+          <span class="account-service-icon"><MineGlyph name="cap" /></span><span>{{ campusShort }}</span>
         </button>
         <button type="button" @click="goAuth('/m/leader')">
-          <span class="mine-ico"><MineGlyph name="peak" /></span>
-          <span class="mine-play-name">{{ leaderShort }}</span>
+          <span class="account-service-icon"><MineGlyph name="compass" /></span><span>{{ leaderShort }}</span>
         </button>
         <button type="button" @click="goAuth('/m/photo-apply')">
-          <span class="mine-ico"><i class="mine-cam"></i></span>
-          <span class="mine-play-name">摄影师申请</span>
+          <span class="account-service-icon"><MineGlyph name="camera" /></span><span>摄影师申请</span>
         </button>
         <button type="button" @click="openPoster">
-          <span class="mine-ico"><i class="mine-poster"></i></span>
-          <span class="mine-play-name">生成海报</span>
+          <span class="account-service-icon"><MineGlyph name="poster" /></span><span>生成海报</span>
         </button>
-        <button type="button" @click="goAuth('/m/feedback')">
-          <span class="mine-ico"><MineGlyph name="bubble" /></span>
-          <span class="mine-play-name">反馈</span>
-        </button>
-      </div>
+        </div>
+        <button class="account-feedback" type="button" @click="goAuth('/m/feedback')"><MineGlyph name="feedback" /><span>意见反馈</span><small>让下一次出行更好</small><MineGlyph name="chevron" /></button>
+      </section>
     </template>
 
     <div v-else class="card">
@@ -172,7 +144,7 @@
       </button>
     </div>
 
-    <p class="cell-label">服务</p>
+    <p class="cell-label">更多服务</p>
     <div class="cell-group">
       <button class="cell" type="button" @click="goAuth('/m/group')">
         <span>{{ groupLabel }}</span><i>›</i>
@@ -284,9 +256,9 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import http from "@/api/http";
 import MineGlyph from "@/components/MineGlyph.vue";
+import "@/styles/mine-account.css";
 import { useUserStore } from "@/stores/user";
 import { processFeed } from "@/utils/feedList";
-import { maskPhone } from "@/utils/labels";
 import { buildLineup, drawLineupPoster } from "@/utils/momentsPoster";
 import { downloadPosterPng } from "@/utils/sharePoster";
 
@@ -295,6 +267,7 @@ const router = useRouter();
 const coupons = ref([]);
 const hub = ref({});
 const hubReady = ref(false);
+const memberPerks = computed(() => store.profile?.membership?.perks?.slice(0, 2).join(" · ") || "出行积累成长，解锁更多权益");
 const picker = ref(false);
 const defaults = ref([]);
 const picks = ref([]);
