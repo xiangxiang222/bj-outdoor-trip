@@ -8,7 +8,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "长城",
     "region": "北京怀柔",
-    "cover": "/images/covers/R01.jpg",
+    "cover": "/static/miniprogram/covers/R01.jpg",
     "fromPrice": 199,
     "memberFromPrice": 183,
     "season": "3-11月",
@@ -56,52 +56,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R01.jpg",
+        "thumb": "/static/miniprogram/covers/R01.jpg",
         "src": "/static/photos/mutianyuLift.jpg",
         "origin": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/CABLE_CAR_TO_THE_GREAT_WALL_BEIJING_CHINA_OCT_2013_%288802166369%29.jpg/1280px-CABLE_CAR_TO_THE_GREAT_WALL_BEIJING_CHINA_OCT_2013_%288802166369%29.jpg"
       },
       {
-        "thumb": "/pkg-detail/gallery/R01_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R01_02.jpg",
         "src": "/static/photos/mutianyu.jpg",
         "origin": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Grande_Muraille_de_Chine_Mutianyu_en_2015.jpg/1280px-Grande_Muraille_de_Chine_Mutianyu_en_2015.jpg"
       },
       {
-        "thumb": "/pkg-detail/gallery/R01_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R01_03.jpg",
         "src": "/static/photos/mutianyu2.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/The%20Mutianyu%20section%20of%20the%20Great%20Wall%20of%20China.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R01_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R01_04.jpg",
         "src": "/static/photos/mutianyu3.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Mutianyu%20Great%20Wall%20(6222519140).jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R01_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R01_05.jpg",
         "src": "/static/photos/mutianyu4.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Great%20wall%20of%20china-mutianyu%204.JPG?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R01_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R01_06.jpg",
         "src": "/static/photos/mutianyu5.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/67052-The-Great-Wall%2C%20Mutianyu.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R01_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R01_07.jpg",
         "src": "/static/photos/mutianyu_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R01_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R01_08.jpg",
         "src": "/static/photos/mutianyu_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R01_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R01_09.jpg",
         "src": "/static/photos/mutianyu_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R01_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R01_10.jpg",
         "src": "/static/photos/mutianyu_04.jpg",
         "origin": ""
       }
@@ -140,7 +140,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "长城",
     "region": "北京延庆 / 昌平",
-    "cover": "/images/covers/R02.jpg",
+    "cover": "/static/miniprogram/covers/R02.jpg",
     "fromPrice": 189,
     "memberFromPrice": 174,
     "season": "四季",
@@ -182,52 +182,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R02.jpg",
+        "thumb": "/static/miniprogram/covers/R02.jpg",
         "src": "/static/photos/juyong.jpg",
         "origin": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Juyongguanfromnorth.jpg/1280px-Juyongguanfromnorth.jpg"
       },
       {
-        "thumb": "/pkg-detail/gallery/R02_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R02_02.jpg",
         "src": "/static/photos/juyong_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R02_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R02_03.jpg",
         "src": "/static/photos/juyong_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R02_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R02_04.jpg",
         "src": "/static/photos/juyong_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R02_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R02_05.jpg",
         "src": "/static/photos/juyong_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R02_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R02_06.jpg",
         "src": "/static/photos/juyong_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R02_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R02_07.jpg",
         "src": "/static/photos/juyong_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R02_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R02_08.jpg",
         "src": "/static/photos/juyong_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R02_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R02_09.jpg",
         "src": "/static/photos/juyong_08.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R02_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R02_10.jpg",
         "src": "/static/photos/juyong_09.jpg",
         "origin": ""
       }
@@ -266,7 +266,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "长城",
     "region": "北京怀柔",
-    "cover": "/images/covers/R03.jpg",
+    "cover": "/static/miniprogram/covers/R03.jpg",
     "fromPrice": 219,
     "memberFromPrice": 201,
     "season": "4-11月",
@@ -309,52 +309,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R03.jpg",
+        "thumb": "/static/miniprogram/covers/R03.jpg",
         "src": "/static/photos/wall3.jpg",
         "origin": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Lakeside_Great_Wall.jpg/1280px-Lakeside_Great_Wall.jpg"
       },
       {
-        "thumb": "/pkg-detail/gallery/R03_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R03_02.jpg",
         "src": "/static/photos/huanghua1.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E9%BB%84%E8%8A%B1%E5%9F%8E%E9%95%BF%E5%9F%8E.jpeg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R03_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R03_03.jpg",
         "src": "/static/photos/huanghua2.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Great%20Wall%20of%20China%20at%20Huanghuacheng%20(west)%20Summer%2035.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R03_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R03_04.jpg",
         "src": "/static/photos/huanghua3.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Great%20Wall%20of%20China%20at%20Huanghuacheng%20(west)%20Summer%2022.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R03_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R03_05.jpg",
         "src": "/static/photos/huanghuaWinter.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Great%20Wall%20of%20China%20at%20Huanghuacheng%20(west)%20Winter%2016.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R03_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R03_06.jpg",
         "src": "/static/photos/huanghua_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R03_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R03_07.jpg",
         "src": "/static/photos/huanghua_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R03_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R03_08.jpg",
         "src": "/static/photos/huanghua_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R03_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R03_09.jpg",
         "src": "/static/photos/huanghua_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R03_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R03_10.jpg",
         "src": "/static/photos/huanghua_05.jpg",
         "origin": ""
       }
@@ -393,7 +393,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "长城",
     "region": "北京密云",
-    "cover": "/images/covers/R04.jpg",
+    "cover": "/static/miniprogram/covers/R04.jpg",
     "fromPrice": 268,
     "memberFromPrice": 247,
     "season": "四季",
@@ -436,52 +436,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R04.jpg",
+        "thumb": "/static/miniprogram/covers/R04.jpg",
         "src": "/static/photos/gubei.jpg",
         "origin": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Gubei_Water_Town_17.jpg/1280px-Gubei_Water_Town_17.jpg"
       },
       {
-        "thumb": "/pkg-detail/gallery/R04_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R04_02.jpg",
         "src": "/static/photos/gubeiView.jpg",
         "origin": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Gubei_water_village_from_Simatai_Great_Wall_in_Beijing_-_panoramio.jpg/1280px-Gubei_water_village_from_Simatai_Great_Wall_in_Beijing_-_panoramio.jpg"
       },
       {
-        "thumb": "/pkg-detail/gallery/R04_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R04_03.jpg",
         "src": "/static/photos/gubei_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R04_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R04_04.jpg",
         "src": "/static/photos/gubei_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R04_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R04_05.jpg",
         "src": "/static/photos/gubei_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R04_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R04_06.jpg",
         "src": "/static/photos/gubei_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R04_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R04_07.jpg",
         "src": "/static/photos/gubei_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R04_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R04_08.jpg",
         "src": "/static/photos/gubei_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R04_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R04_09.jpg",
         "src": "/static/photos/gubei_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R04_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R04_10.jpg",
         "src": "/static/photos/gubei_08.jpg",
         "origin": ""
       }
@@ -520,7 +520,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "玩水",
     "region": "北京房山",
-    "cover": "/images/covers/R05.jpg",
+    "cover": "/static/miniprogram/covers/R05.jpg",
     "fromPrice": 219,
     "memberFromPrice": 201,
     "season": "6-9月",
@@ -563,52 +563,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R05.jpg",
+        "thumb": "/static/miniprogram/covers/R05.jpg",
         "src": "/static/photos/shiduJuma.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E5%8D%81%E6%B8%A1%E6%8B%92%E9%A9%AC%E6%B2%B3.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R05_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R05_02.jpg",
         "src": "/static/photos/shiduBend.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E5%8D%81%E4%BA%8C%E6%B8%A1%2C%E6%8B%92%E9%A9%AC%E6%B2%B3%E5%9C%A8%E8%BF%99%E9%87%8C%E8%BD%AC%E4%BA%86%E4%B8%AA%E5%BC%AF%20-%20Juma%20River%20Big%20Bend%20at%20the%20Twelfth%20Ferry%20-%202011.04%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R05_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R05_03.jpg",
         "src": "/static/photos/shidu_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R05_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R05_04.jpg",
         "src": "/static/photos/shidu_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R05_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R05_05.jpg",
         "src": "/static/photos/shidu_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R05_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R05_06.jpg",
         "src": "/static/photos/shidu_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R05_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R05_07.jpg",
         "src": "/static/photos/shidu_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R05_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R05_08.jpg",
         "src": "/static/photos/shidu_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R05_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R05_09.jpg",
         "src": "/static/photos/shidu_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R05_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R05_10.jpg",
         "src": "/static/photos/shidu_08.jpg",
         "origin": ""
       }
@@ -647,7 +647,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "登山",
     "region": "北京门头沟",
-    "cover": "/images/covers/R06.jpg",
+    "cover": "/static/miniprogram/covers/R06.jpg",
     "fromPrice": 239,
     "memberFromPrice": 220,
     "season": "6-10月",
@@ -690,52 +690,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R06.jpg",
+        "thumb": "/static/miniprogram/covers/R06.jpg",
         "src": "/static/photos/lingshan.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E7%81%B5%E5%B1%B1%E7%BE%8E%E6%99%AF%20-%20Scenery%20of%20Lingshan%20Mountain%20-%202016.08%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R06_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R06_02.jpg",
         "src": "/static/photos/lingshan_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R06_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R06_03.jpg",
         "src": "/static/photos/lingshan_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R06_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R06_04.jpg",
         "src": "/static/photos/lingshan_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R06_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R06_05.jpg",
         "src": "/static/photos/lingshan_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R06_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R06_06.jpg",
         "src": "/static/photos/lingshan_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R06_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R06_07.jpg",
         "src": "/static/photos/lingshan_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R06_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R06_08.jpg",
         "src": "/static/photos/lingshan_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R06_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R06_09.jpg",
         "src": "/static/photos/lingshan_09.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R06_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R06_10.jpg",
         "src": "/static/photos/lingshan_10.jpg",
         "origin": ""
       }
@@ -774,7 +774,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "登山",
     "region": "北京门头沟",
-    "cover": "/images/covers/R07.jpg",
+    "cover": "/static/miniprogram/covers/R07.jpg",
     "fromPrice": 229,
     "memberFromPrice": 211,
     "season": "5-10月",
@@ -812,52 +812,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R07.jpg",
+        "thumb": "/static/miniprogram/covers/R07.jpg",
         "src": "/static/photos/baihuaMeadow.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E7%99%BE%E8%8A%B1%E5%B1%B1%E5%8C%97%E8%8D%89%E7%94%B8%20-%20North%20Meadows%20of%20Baihua%20Mountain%20-%202012.08%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R07_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R07_02.jpg",
         "src": "/static/photos/baihuaSunrise.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E6%97%A5%E5%87%BA%E7%99%BE%E8%8A%B1%E5%B1%B1%20-%20Sunrise%20at%20Baihua%20Mountain%20-%202012.08%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R07_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R07_03.jpg",
         "src": "/static/photos/baihuaTrail.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E7%99%BB%E5%B1%B1%E6%AD%A5%E9%81%93%20-%20Baihua%20Mountain%20Trail%20-%202012.08%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R07_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R07_04.jpg",
         "src": "/static/photos/baihuaGate.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E7%99%BE%E8%8A%B1%E5%B1%B1%E5%8C%97%E9%97%A8%20-%20North%20Entrance%20of%20Baihua%20Mountain%20Geoarea%20-%202012.08%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R07_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R07_05.jpg",
         "src": "/static/photos/baihua_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R07_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R07_06.jpg",
         "src": "/static/photos/baihua_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R07_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R07_07.jpg",
         "src": "/static/photos/baihua_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R07_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R07_08.jpg",
         "src": "/static/photos/baihua_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R07_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R07_09.jpg",
         "src": "/static/photos/baihua_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R07_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R07_10.jpg",
         "src": "/static/photos/baihua_06.jpg",
         "origin": ""
       }
@@ -896,7 +896,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "登山",
     "region": "北京海淀",
-    "cover": "/images/covers/R08.jpg",
+    "cover": "/static/miniprogram/covers/R08.jpg",
     "fromPrice": 159,
     "memberFromPrice": 146,
     "season": "3-11月",
@@ -934,52 +934,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R08.jpg",
+        "thumb": "/static/miniprogram/covers/R08.jpg",
         "src": "/static/photos/fenghuang1.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Fenghuangling%2C%20Beijing%202703.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R08_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R08_02.jpg",
         "src": "/static/photos/fenghuang2.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E5%87%A4%E5%87%B0%E5%B2%AD.JPG?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R08_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R08_03.jpg",
         "src": "/static/photos/fenghuang_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R08_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R08_04.jpg",
         "src": "/static/photos/fenghuang_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R08_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R08_05.jpg",
         "src": "/static/photos/fenghuang_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R08_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R08_06.jpg",
         "src": "/static/photos/fenghuang_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R08_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R08_07.jpg",
         "src": "/static/photos/fenghuang_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R08_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R08_08.jpg",
         "src": "/static/photos/fenghuang_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R08_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R08_09.jpg",
         "src": "/static/photos/fenghuang_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R08_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R08_10.jpg",
         "src": "/static/photos/fenghuang_08.jpg",
         "origin": ""
       }
@@ -1018,7 +1018,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "北京延庆",
-    "cover": "/images/covers/R09.jpg",
+    "cover": "/static/miniprogram/covers/R09.jpg",
     "fromPrice": 199,
     "memberFromPrice": 183,
     "season": "4-10月",
@@ -1056,52 +1056,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R09.jpg",
+        "thumb": "/static/miniprogram/covers/R09.jpg",
         "src": "/static/photos/longqing1.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E9%BE%99%E5%BA%86%E5%B3%A120160628-2.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R09_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R09_02.jpg",
         "src": "/static/photos/longqingBoat.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E6%B3%9B%E8%88%9F%E9%BE%99%E5%BA%86%E5%B3%A1%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R09_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R09_03.jpg",
         "src": "/static/photos/longqingCable.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Cable%20car%20longqing%20gorge.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R09_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R09_04.jpg",
         "src": "/static/photos/longqingView.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E9%BE%99%E5%BA%86%E5%B3%A1%E9%A3%8E%E5%85%89%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R09_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R09_05.jpg",
         "src": "/static/photos/longqing_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R09_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R09_06.jpg",
         "src": "/static/photos/longqing_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R09_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R09_07.jpg",
         "src": "/static/photos/longqing_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R09_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R09_08.jpg",
         "src": "/static/photos/longqing_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R09_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R09_09.jpg",
         "src": "/static/photos/longqing_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R09_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R09_10.jpg",
         "src": "/static/photos/longqing_06.jpg",
         "origin": ""
       }
@@ -1140,7 +1140,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "北京平谷",
-    "cover": "/images/covers/R10.jpg",
+    "cover": "/static/miniprogram/covers/R10.jpg",
     "fromPrice": 189,
     "memberFromPrice": 174,
     "season": "4-11月",
@@ -1178,12 +1178,12 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R10.jpg",
+        "thumb": "/static/miniprogram/covers/R10.jpg",
         "src": "/static/photos/tianyunGlass.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Glass%20platform%20at%20Tianyun%20Mountain.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R10_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R10_02.jpg",
         "src": "/static/photos/tianyunBridge.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Glass%20bridge%20at%20Tianyun%20Mountain.jpg?width=1280"
       }
@@ -1222,7 +1222,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "文化",
     "region": "北京房山",
-    "cover": "/images/covers/R11.jpg",
+    "cover": "/static/miniprogram/covers/R11.jpg",
     "fromPrice": 179,
     "memberFromPrice": 165,
     "season": "3-11月",
@@ -1265,7 +1265,7 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R11.jpg",
+        "thumb": "/static/miniprogram/covers/R11.jpg",
         "src": "/static/photos/shangfangCave.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E4%B8%8A%E6%96%B9%E5%B1%B1%E4%BA%91%E6%B0%B4%E6%B4%9E.jpg?width=1280"
       }
@@ -1304,7 +1304,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "北京怀柔",
-    "cover": "/images/covers/R12.jpg",
+    "cover": "/static/miniprogram/covers/R12.jpg",
     "fromPrice": 199,
     "memberFromPrice": 183,
     "season": "4-10月",
@@ -1347,52 +1347,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R12.jpg",
+        "thumb": "/static/miniprogram/covers/R12.jpg",
         "src": "/static/photos/yanqiDam.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Yanqi%20Lake%20from%20the%20southern%20dam%20(20201027163020).jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R12_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R12_02.jpg",
         "src": "/static/photos/qinglongAerial.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E8%87%AA%E7%83%BD%E7%81%AB%E5%8F%B0%E7%9C%8B%E9%BE%99%E5%B3%A1%E6%B9%96%E9%B8%9F%E7%9E%B0%E5%9B%BE%20(A%20bird's-eye-perspective%20of%20Longxia%20(Dragon%20Valley)%20Lake%20from%20a%20fort%20in%20Qinglongxia%20(Black%20Dragon%20Valley))%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R12_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R12_03.jpg",
         "src": "/static/photos/qinglong_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R12_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R12_04.jpg",
         "src": "/static/photos/qinglong_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R12_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R12_05.jpg",
         "src": "/static/photos/qinglong_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R12_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R12_06.jpg",
         "src": "/static/photos/qinglong_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R12_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R12_07.jpg",
         "src": "/static/photos/qinglong_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R12_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R12_08.jpg",
         "src": "/static/photos/qinglong_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R12_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R12_09.jpg",
         "src": "/static/photos/qinglong_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R12_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R12_10.jpg",
         "src": "/static/photos/qinglong_09.jpg",
         "origin": ""
       }
@@ -1431,7 +1431,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "北京密云",
-    "cover": "/images/covers/R13.jpg",
+    "cover": "/static/miniprogram/covers/R13.jpg",
     "fromPrice": 209,
     "memberFromPrice": 192,
     "season": "5-10月",
@@ -1474,52 +1474,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R13.jpg",
+        "thumb": "/static/miniprogram/covers/R13.jpg",
         "src": "/static/photos/taoyuan1.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E6%A1%83%E6%BA%90%E4%BB%99%E8%B0%B7%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R13_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R13_02.jpg",
         "src": "/static/photos/taoyuan2.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E6%A1%83%E6%BA%90%E4%BB%99%E8%B0%B7%EF%BC%8C%E5%8D%97%E5%B1%B1%E5%9B%9E%E8%B7%AF%EF%BC%8C%E8%BF%9C%E7%9C%BA%E5%AF%86%E4%BA%91%E6%B0%B4%E5%BA%93%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R13_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R13_03.jpg",
         "src": "/static/photos/taoyuan3.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E6%A1%83%E6%BA%90%E4%BB%99%E8%B0%B7%EF%BC%8C%E4%B8%8B%E5%B1%B1%E6%97%B6%E5%81%B6%E9%81%87%E5%BD%A9%E8%99%B9%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R13_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R13_04.jpg",
         "src": "/static/photos/taoyuan4.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E6%A1%83%E6%BA%90%E4%BB%99%E8%B0%B7%20-%20Taoyuan%20Fairy%20Valley%20-%202012.03%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R13_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R13_05.jpg",
         "src": "/static/photos/miyunRes.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Miyun%20Reservoir%202019.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R13_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R13_06.jpg",
         "src": "/static/photos/taoyuan_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R13_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R13_07.jpg",
         "src": "/static/photos/taoyuan_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R13_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R13_08.jpg",
         "src": "/static/photos/taoyuan_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R13_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R13_09.jpg",
         "src": "/static/photos/taoyuan_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R13_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R13_10.jpg",
         "src": "/static/photos/taoyuan_05.jpg",
         "origin": ""
       }
@@ -1558,7 +1558,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "北京平谷",
-    "cover": "/images/covers/R14.jpg",
+    "cover": "/static/miniprogram/covers/R14.jpg",
     "fromPrice": 199,
     "memberFromPrice": 183,
     "season": "4-11月",
@@ -1600,17 +1600,17 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R14.jpg",
+        "thumb": "/static/miniprogram/covers/R14.jpg",
         "src": "/static/photos/jingdong.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Jingdongdaxiagu.JPG?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R14_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R14_02.jpg",
         "src": "/static/photos/shilinxiaUfo.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/UFO%20platform%20Pinggu.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R14_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R14_03.jpg",
         "src": "/static/photos/haiziPinggu.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Haizi%20Reservoir%20in%20Pinggu%20Beijing.jpg?width=1280"
       }
@@ -1649,7 +1649,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "文化",
     "region": "北京门头沟",
-    "cover": "/images/covers/R15.jpg",
+    "cover": "/static/miniprogram/covers/R15.jpg",
     "fromPrice": 169,
     "memberFromPrice": 155,
     "season": "4-10月",
@@ -1692,52 +1692,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R15.jpg",
+        "thumb": "/static/miniprogram/covers/R15.jpg",
         "src": "/static/photos/miaofengGold.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E9%87%91%E9%A1%B6%E5%A6%99%E5%B3%B0%E5%B1%B1%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R15_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R15_02.jpg",
         "src": "/static/photos/miaofeng.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E5%A6%99%E5%B3%B0%E5%B1%B1.JPG?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R15_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R15_03.jpg",
         "src": "/static/photos/miaofengView.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E4%BF%AF%E7%9E%B0%E9%87%91%E9%A1%B6%E5%A6%99%E5%B3%B0%E5%B1%B1%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R15_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R15_04.jpg",
         "src": "/static/photos/miaofengGate.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E9%87%91%E9%A1%B6%E5%A6%99%E5%B3%B0%E5%B1%B1%E9%97%A8%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R15_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R15_05.jpg",
         "src": "/static/photos/miaofeng_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R15_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R15_06.jpg",
         "src": "/static/photos/miaofeng_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R15_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R15_07.jpg",
         "src": "/static/photos/miaofeng_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R15_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R15_08.jpg",
         "src": "/static/photos/miaofeng_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R15_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R15_09.jpg",
         "src": "/static/photos/miaofeng_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R15_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R15_10.jpg",
         "src": "/static/photos/miaofeng_06.jpg",
         "origin": ""
       }
@@ -1776,7 +1776,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "长城",
     "region": "北京怀柔 / 密云",
-    "cover": "/images/covers/R16.jpg",
+    "cover": "/static/miniprogram/covers/R16.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459,
     "season": "4-11月",
@@ -1819,52 +1819,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R16.jpg",
+        "thumb": "/static/miniprogram/covers/R16.jpg",
         "src": "/static/photos/simatai.jpg",
         "origin": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Simatai_section_of_the_Great_Wall.jpg/1280px-Simatai_section_of_the_Great_Wall.jpg"
       },
       {
-        "thumb": "/pkg-detail/gallery/R16_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R16_02.jpg",
         "src": "/static/photos/mutianyuLift.jpg",
         "origin": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/CABLE_CAR_TO_THE_GREAT_WALL_BEIJING_CHINA_OCT_2013_%288802166369%29.jpg/1280px-CABLE_CAR_TO_THE_GREAT_WALL_BEIJING_CHINA_OCT_2013_%288802166369%29.jpg"
       },
       {
-        "thumb": "/pkg-detail/gallery/R16_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R16_03.jpg",
         "src": "/static/photos/mutianyu.jpg",
         "origin": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Grande_Muraille_de_Chine_Mutianyu_en_2015.jpg/1280px-Grande_Muraille_de_Chine_Mutianyu_en_2015.jpg"
       },
       {
-        "thumb": "/pkg-detail/gallery/R16_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R16_04.jpg",
         "src": "/static/photos/mutianyu2.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/The%20Mutianyu%20section%20of%20the%20Great%20Wall%20of%20China.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R16_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R16_05.jpg",
         "src": "/static/photos/mutianyu3.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Mutianyu%20Great%20Wall%20(6222519140).jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R16_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R16_06.jpg",
         "src": "/static/photos/mutianyu4.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Great%20wall%20of%20china-mutianyu%204.JPG?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R16_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R16_07.jpg",
         "src": "/static/photos/mutianyu5.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/67052-The-Great-Wall%2C%20Mutianyu.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R16_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R16_08.jpg",
         "src": "/static/photos/mutianyu_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R16_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R16_09.jpg",
         "src": "/static/photos/mutianyu_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R16_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R16_10.jpg",
         "src": "/static/photos/mutianyu_03.jpg",
         "origin": ""
       }
@@ -1903,7 +1903,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "北京房山 / 河北涞水",
-    "cover": "/images/covers/R17.jpg",
+    "cover": "/static/miniprogram/covers/R17.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459,
     "season": "4-10月",
@@ -1941,52 +1941,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R17.jpg",
+        "thumb": "/static/miniprogram/covers/R17.jpg",
         "src": "/static/photos/yesanpo.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Yesanpuo.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R17_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R17_02.jpg",
         "src": "/static/photos/yesanpo_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R17_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R17_03.jpg",
         "src": "/static/photos/yesanpo_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R17_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R17_04.jpg",
         "src": "/static/photos/yesanpo_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R17_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R17_05.jpg",
         "src": "/static/photos/yesanpo_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R17_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R17_06.jpg",
         "src": "/static/photos/yesanpo_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R17_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R17_07.jpg",
         "src": "/static/photos/yesanpo_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R17_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R17_08.jpg",
         "src": "/static/photos/yesanpo_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R17_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R17_09.jpg",
         "src": "/static/photos/yesanpo_08.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R17_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R17_10.jpg",
         "src": "/static/photos/yesanpo_09.jpg",
         "origin": ""
       }
@@ -2025,7 +2025,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "登山",
     "region": "北京密云 / 河北兴隆",
-    "cover": "/images/covers/R18.jpg",
+    "cover": "/static/miniprogram/covers/R18.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459,
     "season": "6-9月",
@@ -2058,52 +2058,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R18.jpg",
+        "thumb": "/static/miniprogram/covers/R18.jpg",
         "src": "/static/photos/wulingPeak.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E9%9B%BE%E7%81%B5%E5%B1%B1%E9%A1%B6%E5%B3%B0%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R18_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R18_02.jpg",
         "src": "/static/photos/wulingAutumn.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E9%9B%BE%E7%81%B5%E5%B1%B1%E7%A7%8B%E6%99%AF%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R18_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R18_03.jpg",
         "src": "/static/photos/wulingCable.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E9%9B%BE%E7%81%B5%E5%B1%B1%20%E7%BC%86%E8%BD%A6%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R18_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R18_04.jpg",
         "src": "/static/photos/wulingView.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E9%9B%BE%E7%81%B5%E5%B1%B1%20-%20panoramio%20-%20Tiger%40%E8%A5%BF%E5%8C%97.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R18_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R18_05.jpg",
         "src": "/static/photos/wuling_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R18_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R18_06.jpg",
         "src": "/static/photos/wuling_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R18_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R18_07.jpg",
         "src": "/static/photos/wuling_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R18_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R18_08.jpg",
         "src": "/static/photos/wuling_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R18_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R18_09.jpg",
         "src": "/static/photos/wuling_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R18_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R18_10.jpg",
         "src": "/static/photos/wuling_06.jpg",
         "origin": ""
       }
@@ -2142,7 +2142,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "文化",
     "region": "北京门头沟",
-    "cover": "/images/covers/R19.jpg",
+    "cover": "/static/miniprogram/covers/R19.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459,
     "season": "4-11月",
@@ -2180,52 +2180,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R19.jpg",
+        "thumb": "/static/miniprogram/covers/R19.jpg",
         "src": "/static/photos/cuandi1.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Cuandixia%20Village.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R19_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R19_02.jpg",
         "src": "/static/photos/cuandi2.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E7%88%A8%E5%BA%95%E4%B8%8B%E6%9D%91-20240503.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R19_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R19_03.jpg",
         "src": "/static/photos/cuandiPanorama.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E7%88%A8%E5%BA%95%E4%B8%8B%E6%9D%91%E5%85%A8%E6%99%AF%20-%20Panorama%20of%20Cuandixia%20Village%20-%202011.10%20-%20panoramio.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R19_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R19_04.jpg",
         "src": "/static/photos/cuandi_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R19_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R19_05.jpg",
         "src": "/static/photos/cuandi_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R19_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R19_06.jpg",
         "src": "/static/photos/cuandi_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R19_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R19_07.jpg",
         "src": "/static/photos/cuandi_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R19_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R19_08.jpg",
         "src": "/static/photos/cuandi_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R19_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R19_09.jpg",
         "src": "/static/photos/cuandi_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R19_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R19_10.jpg",
         "src": "/static/photos/cuandi_07.jpg",
         "origin": ""
       }
@@ -2264,7 +2264,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "长城",
     "region": "河北滦平 / 北京密云",
-    "cover": "/images/covers/R20.jpg",
+    "cover": "/static/miniprogram/covers/R20.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459,
     "season": "4-10月",
@@ -2302,52 +2302,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R20.jpg",
+        "thumb": "/static/miniprogram/covers/R20.jpg",
         "src": "/static/photos/jinshan.jpg",
         "origin": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/20090529_Great_Wall_8185.jpg/1280px-20090529_Great_Wall_8185.jpg"
       },
       {
-        "thumb": "/pkg-detail/gallery/R20_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R20_02.jpg",
         "src": "/static/photos/jinshan5.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Great%20Wall%20of%20China%20at%20Jinshanling%205.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R20_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R20_03.jpg",
         "src": "/static/photos/jinshanling_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R20_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R20_04.jpg",
         "src": "/static/photos/jinshanling_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R20_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R20_05.jpg",
         "src": "/static/photos/jinshanling_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R20_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R20_06.jpg",
         "src": "/static/photos/jinshanling_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R20_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R20_07.jpg",
         "src": "/static/photos/jinshanling_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R20_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R20_08.jpg",
         "src": "/static/photos/jinshanling_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R20_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R20_09.jpg",
         "src": "/static/photos/jinshanling_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R20_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R20_10.jpg",
         "src": "/static/photos/jinshanling_08.jpg",
         "origin": ""
       }
@@ -2386,7 +2386,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "河北保定涞源",
-    "cover": "/images/covers/R21.jpg",
+    "cover": "/static/miniprogram/covers/R21.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459,
     "season": "5-10月",
@@ -2419,52 +2419,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R21.jpg",
+        "thumb": "/static/miniprogram/covers/R21.jpg",
         "src": "/static/photos/taihang1.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/TaihangMountain.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R21_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R21_02.jpg",
         "src": "/static/photos/taihang3.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/TaihangMountain3.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R21_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R21_03.jpg",
         "src": "/static/photos/taihang7.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/TaihangMountain7.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R21_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R21_04.jpg",
         "src": "/static/photos/baishiWall.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E7%99%BD%E7%9F%B3%E5%B1%B1%E9%95%BF%E5%9F%8E.JPG?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R21_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R21_05.jpg",
         "src": "/static/photos/baishi_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R21_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R21_06.jpg",
         "src": "/static/photos/baishi_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R21_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R21_07.jpg",
         "src": "/static/photos/baishi_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R21_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R21_08.jpg",
         "src": "/static/photos/baishi_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R21_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R21_09.jpg",
         "src": "/static/photos/baishi_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R21_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R21_10.jpg",
         "src": "/static/photos/baishi_06.jpg",
         "origin": ""
       }
@@ -2503,7 +2503,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "文化",
     "region": "河北承德",
-    "cover": "/images/covers/R22.jpg",
+    "cover": "/static/miniprogram/covers/R22.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459,
     "season": "4-10月",
@@ -2536,52 +2536,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R22.jpg",
+        "thumb": "/static/miniprogram/covers/R22.jpg",
         "src": "/static/photos/chengdeResort.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Chengde%20Mountain%20Resort%201.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R22_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R22_02.jpg",
         "src": "/static/photos/chengdePagoda.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Chengde%20Mountain%20Resort%2C%20Pagoda.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R22_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R22_03.jpg",
         "src": "/static/photos/chengdeJinshan.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/%E9%81%BF%E6%9A%91%E5%B1%B1%E5%BA%84%E5%B0%8F%E9%87%91%E5%B1%B1.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R22_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R22_04.jpg",
         "src": "/static/photos/chengde_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R22_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R22_05.jpg",
         "src": "/static/photos/chengde_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R22_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R22_06.jpg",
         "src": "/static/photos/chengde_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R22_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R22_07.jpg",
         "src": "/static/photos/chengde_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R22_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R22_08.jpg",
         "src": "/static/photos/chengde_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R22_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R22_09.jpg",
         "src": "/static/photos/chengde_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R22_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R22_10.jpg",
         "src": "/static/photos/chengde_07.jpg",
         "origin": ""
       }
@@ -2620,7 +2620,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "长城",
     "region": "天津蓟州",
-    "cover": "/images/covers/R23.jpg",
+    "cover": "/static/miniprogram/covers/R23.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459,
     "season": "4-11月",
@@ -2653,52 +2653,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R23.jpg",
+        "thumb": "/static/miniprogram/covers/R23.jpg",
         "src": "/static/photos/panshan.jpg",
         "origin": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/%E7%9B%98%E5%B1%B1_-_Mount_Panshan_-_2015.10_-_panoramio.jpg/1280px-%E7%9B%98%E5%B1%B1_-_Mount_Panshan_-_2015.10_-_panoramio.jpg"
       },
       {
-        "thumb": "/pkg-detail/gallery/R23_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R23_02.jpg",
         "src": "/static/photos/panshan_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R23_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R23_03.jpg",
         "src": "/static/photos/panshan_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R23_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R23_04.jpg",
         "src": "/static/photos/panshan_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R23_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R23_05.jpg",
         "src": "/static/photos/panshan_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R23_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R23_06.jpg",
         "src": "/static/photos/panshan_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R23_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R23_07.jpg",
         "src": "/static/photos/panshan_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R23_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R23_08.jpg",
         "src": "/static/photos/panshan_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R23_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R23_09.jpg",
         "src": "/static/photos/panshan_08.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R23_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R23_10.jpg",
         "src": "/static/photos/panshan_09.jpg",
         "origin": ""
       }
@@ -2737,7 +2737,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "草原",
     "region": "内蒙古赤峰 / 河北围场",
-    "cover": "/images/covers/R24.jpg",
+    "cover": "/static/miniprogram/covers/R24.jpg",
     "fromPrice": 899,
     "memberFromPrice": 827,
     "season": "6-9月",
@@ -2775,52 +2775,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R24.jpg",
+        "thumb": "/static/miniprogram/covers/R24.jpg",
         "src": "/static/photos/ulanbutong.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/P8050566WuLanBuTong.JPG?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R24_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R24_02.jpg",
         "src": "/static/photos/ulanbutong_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R24_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R24_03.jpg",
         "src": "/static/photos/ulanbutong_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R24_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R24_04.jpg",
         "src": "/static/photos/ulanbutong_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R24_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R24_05.jpg",
         "src": "/static/photos/ulanbutong_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R24_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R24_06.jpg",
         "src": "/static/photos/ulanbutong_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R24_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R24_07.jpg",
         "src": "/static/photos/ulanbutong_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R24_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R24_08.jpg",
         "src": "/static/photos/ulanbutong_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R24_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R24_09.jpg",
         "src": "/static/photos/ulanbutong_08.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R24_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R24_10.jpg",
         "src": "/static/photos/ulanbutong_09.jpg",
         "origin": ""
       }
@@ -2859,7 +2859,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "草原",
     "region": "河北承德围场",
-    "cover": "/images/covers/R25.jpg",
+    "cover": "/static/miniprogram/covers/R25.jpg",
     "fromPrice": 899,
     "memberFromPrice": 827,
     "season": "6-10月",
@@ -2897,52 +2897,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R25.jpg",
+        "thumb": "/static/miniprogram/covers/R25.jpg",
         "src": "/static/photos/saihanba.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Saihanba%20park.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R25_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R25_02.jpg",
         "src": "/static/photos/saihanba_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R25_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R25_03.jpg",
         "src": "/static/photos/saihanba_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R25_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R25_04.jpg",
         "src": "/static/photos/saihanba_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R25_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R25_05.jpg",
         "src": "/static/photos/saihanba_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R25_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R25_06.jpg",
         "src": "/static/photos/saihanba_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R25_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R25_07.jpg",
         "src": "/static/photos/saihanba_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R25_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R25_08.jpg",
         "src": "/static/photos/saihanba_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R25_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R25_09.jpg",
         "src": "/static/photos/saihanba_08.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R25_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R25_10.jpg",
         "src": "/static/photos/saihanba_09.jpg",
         "origin": ""
       }
@@ -2981,7 +2981,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "河北涞水 / 北京房山",
-    "cover": "/images/covers/R26.jpg",
+    "cover": "/static/miniprogram/covers/R26.jpg",
     "fromPrice": 899,
     "memberFromPrice": 827,
     "season": "5-10月",
@@ -3019,52 +3019,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R26.jpg",
+        "thumb": "/static/miniprogram/covers/R26.jpg",
         "src": "/static/photos/yesanpo.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Yesanpuo.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R26_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R26_02.jpg",
         "src": "/static/photos/yesanpo_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R26_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R26_03.jpg",
         "src": "/static/photos/yesanpo_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R26_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R26_04.jpg",
         "src": "/static/photos/yesanpo_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R26_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R26_05.jpg",
         "src": "/static/photos/yesanpo_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R26_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R26_06.jpg",
         "src": "/static/photos/yesanpo_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R26_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R26_07.jpg",
         "src": "/static/photos/yesanpo_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R26_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R26_08.jpg",
         "src": "/static/photos/yesanpo_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R26_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R26_09.jpg",
         "src": "/static/photos/yesanpo_08.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R26_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R26_10.jpg",
         "src": "/static/photos/yesanpo_09.jpg",
         "origin": ""
       }
@@ -3103,7 +3103,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "海滨",
     "region": "河北秦皇岛",
-    "cover": "/images/covers/R27.jpg",
+    "cover": "/static/miniprogram/covers/R27.jpg",
     "fromPrice": 899,
     "memberFromPrice": 827,
     "season": "6-9月",
@@ -3141,52 +3141,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R27.jpg",
+        "thumb": "/static/miniprogram/covers/R27.jpg",
         "src": "/static/photos/beidaihe.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Beidaihe%20panorama%20from%20the%20south.jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R27_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R27_02.jpg",
         "src": "/static/photos/beidaihe_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R27_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R27_03.jpg",
         "src": "/static/photos/beidaihe_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R27_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R27_04.jpg",
         "src": "/static/photos/beidaihe_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R27_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R27_05.jpg",
         "src": "/static/photos/beidaihe_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R27_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R27_06.jpg",
         "src": "/static/photos/beidaihe_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R27_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R27_07.jpg",
         "src": "/static/photos/beidaihe_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R27_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R27_08.jpg",
         "src": "/static/photos/beidaihe_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R27_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R27_09.jpg",
         "src": "/static/photos/beidaihe_08.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R27_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R27_10.jpg",
         "src": "/static/photos/beidaihe_09.jpg",
         "origin": ""
       }
@@ -3225,7 +3225,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "草原",
     "region": "内蒙古 / 河北承德",
-    "cover": "/images/covers/R28.jpg",
+    "cover": "/static/miniprogram/covers/R28.jpg",
     "fromPrice": 1899,
     "memberFromPrice": 1747,
     "season": "6-9月",
@@ -3273,52 +3273,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R28.jpg",
+        "thumb": "/static/miniprogram/covers/R28.jpg",
         "src": "/static/photos/ulanbutong.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/P8050566WuLanBuTong.JPG?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R28_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R28_02.jpg",
         "src": "/static/photos/ulanbutong_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R28_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R28_03.jpg",
         "src": "/static/photos/ulanbutong_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R28_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R28_04.jpg",
         "src": "/static/photos/ulanbutong_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R28_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R28_05.jpg",
         "src": "/static/photos/ulanbutong_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R28_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R28_06.jpg",
         "src": "/static/photos/ulanbutong_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R28_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R28_07.jpg",
         "src": "/static/photos/ulanbutong_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R28_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R28_08.jpg",
         "src": "/static/photos/ulanbutong_07.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R28_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R28_09.jpg",
         "src": "/static/photos/ulanbutong_08.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R28_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R28_10.jpg",
         "src": "/static/photos/ulanbutong_09.jpg",
         "origin": ""
       }
@@ -3357,7 +3357,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "文化",
     "region": "山西忻州 / 大同",
-    "cover": "/images/covers/R29.jpg",
+    "cover": "/static/miniprogram/covers/R29.jpg",
     "fromPrice": 1899,
     "memberFromPrice": 1747,
     "season": "5-10月",
@@ -3400,52 +3400,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R29.jpg",
+        "thumb": "/static/miniprogram/covers/R29.jpg",
         "src": "/static/photos/wutai.jpg",
         "origin": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Wutai_shan_Chorten.jpg/1280px-Wutai_shan_Chorten.jpg"
       },
       {
-        "thumb": "/pkg-detail/gallery/R29_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R29_02.jpg",
         "src": "/static/photos/wutaiMount.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Mount%20Wutai.JPG?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R29_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R29_03.jpg",
         "src": "/static/photos/wutai_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R29_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R29_04.jpg",
         "src": "/static/photos/wutai_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R29_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R29_05.jpg",
         "src": "/static/photos/wutai_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R29_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R29_06.jpg",
         "src": "/static/photos/wutai_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R29_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R29_07.jpg",
         "src": "/static/photos/wutai_08.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R29_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R29_08.jpg",
         "src": "/static/photos/wutai_09.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R29_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R29_09.jpg",
         "src": "/static/photos/wutai_10.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R29_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R29_10.jpg",
         "src": "/static/photos/wutai_12.jpg",
         "origin": ""
       }
@@ -3484,7 +3484,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "草原",
     "region": "河北张家口",
-    "cover": "/images/covers/R30.jpg",
+    "cover": "/static/miniprogram/covers/R30.jpg",
     "fromPrice": 1899,
     "memberFromPrice": 1747,
     "season": "6-10月",
@@ -3532,52 +3532,52 @@ module.exports = [
     ],
     "gallery": [
       {
-        "thumb": "/images/covers/R30.jpg",
+        "thumb": "/static/miniprogram/covers/R30.jpg",
         "src": "/static/photos/zhangbeiSkyline.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Zhangbei%20Grass%20Skyline%20from%20the%20ferris%20wheel%20(20210731135013).jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R30_02.jpg",
+        "thumb": "/static/miniprogram/gallery/R30_02.jpg",
         "src": "/static/photos/zhangbeiWheel.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Ferris%20wheel%20at%20Zhangbei%20Grass%20Skyline%20(20210731130447).jpg?width=1280"
       },
       {
-        "thumb": "/pkg-detail/gallery/R30_03.jpg",
+        "thumb": "/static/miniprogram/gallery/R30_03.jpg",
         "src": "/static/photos/zhangbei_01.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R30_04.jpg",
+        "thumb": "/static/miniprogram/gallery/R30_04.jpg",
         "src": "/static/photos/zhangbei_02.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R30_05.jpg",
+        "thumb": "/static/miniprogram/gallery/R30_05.jpg",
         "src": "/static/photos/zhangbei_03.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R30_06.jpg",
+        "thumb": "/static/miniprogram/gallery/R30_06.jpg",
         "src": "/static/photos/zhangbei_04.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R30_07.jpg",
+        "thumb": "/static/miniprogram/gallery/R30_07.jpg",
         "src": "/static/photos/zhangbei_05.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R30_08.jpg",
+        "thumb": "/static/miniprogram/gallery/R30_08.jpg",
         "src": "/static/photos/zhangbei_06.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R30_09.jpg",
+        "thumb": "/static/miniprogram/gallery/R30_09.jpg",
         "src": "/static/photos/zhangbei_08.jpg",
         "origin": ""
       },
       {
-        "thumb": "/pkg-detail/gallery/R30_10.jpg",
+        "thumb": "/static/miniprogram/gallery/R30_10.jpg",
         "src": "/static/photos/chongliAutumn1.jpg",
         "origin": "https://commons.wikimedia.org/wiki/Special:FilePath/Golden%20forests%20at%20Chongli%20%E5%B4%87%E7%A4%BC%E9%87%91%E7%A7%8B%20(8181833932).jpg?width=1280"
       }

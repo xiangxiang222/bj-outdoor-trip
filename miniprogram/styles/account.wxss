@@ -1,7 +1,7 @@
 page {
-  background-color: #f3f4f6;
-  color: #111111;
+  background-color: #f6f5f8;
+  color: #24222a;
   font-family: "PingFang SC", "Helvetica Neue", "Noto Sans SC", sans-serif;
 }
-.title { font-weight: 600; color: #111111; }
-.muted { color: #8d8d8d; font-weight: 400; }
+.title { font-weight: 600; color: #24222a; }
+.muted { color: #8a8692; font-weight: 400; }

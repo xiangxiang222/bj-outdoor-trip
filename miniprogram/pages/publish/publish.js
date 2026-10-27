@@ -16,16 +16,16 @@ function pad(n) {
   return n < 10 ? "0" + n : String(n);
 }
 function formatDate(d) {
-  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  const shanghai = new Date(d.getTime() + 8 * 60 * 60 * 1000);
+  return shanghai.getUTCFullYear() + "-" + pad(shanghai.getUTCMonth() + 1) + "-" + pad(shanghai.getUTCDate());
 }
 function buildDates(count) {
   const start = new Date();
-  start.setHours(0, 0, 0, 0);
   const out = [];
   for (let i = 0; i < count; i += 1) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    out.push({ value: formatDate(d), label: formatDate(d) + " 周" + WEEKDAY[d.getDay()] });
+    const d = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
+    const weekday = new Date(d.getTime() + 8 * 60 * 60 * 1000).getUTCDay();
+    out.push({ value: formatDate(d), label: formatDate(d) + " 周" + WEEKDAY[weekday] });
   }
   return out;
 }
@@ -62,6 +62,7 @@ Page({
     cityNames: DISTRICTS,
     cityIndex: 2,
     errors: {},
+    submitting: false,
     form: {
       title: "",
       city: "",
@@ -101,8 +102,12 @@ Page({
   },
   onLoad(q) {
     const app = getApp();
+    const organizer = ["individual", "company", "campus"].includes(q.organizer) ? q.organizer : "";
+    const publishQuery = ["organizer", "routeId", "id", "date", "channel", "kind", "title"]
+      .filter((key) => q[key]).map((key) => key + "=" + encodeURIComponent(q[key])).join("&");
+    const publishUrl = "/pages/publish/publish" + (publishQuery ? "?" + publishQuery : "");
     if (!app.globalData.token) {
-      wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/publish/publish") });
+      wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(publishUrl) });
       return;
     }
     const dates = buildDates(60);
@@ -112,19 +117,24 @@ Page({
       if (i >= 0) dateIndex = i;
     }
     const kind = q.kind ? decodeURIComponent(q.kind) : "";
+    const organizerIndex = organizer ? ["individual", "company", "campus"].indexOf(organizer) : 0;
     const title = q.title ? decodeURIComponent(q.title) : "";
     const asActivity = q.channel === "activity" || KINDS.some((k) => k.key === kind || k.key === title);
     const activityKind = KINDS.some((k) => k.key === kind) ? kind : KINDS.some((k) => k.key === title) ? title : "掼蛋";
     const user = app.globalData.user || {};
+    this._organizerNames = { individual: "", company: user.companyName || "", campus: user.school || "" };
+    this._initialRouteId = Number(q.routeId || q.id) || 0;
     this.setData({
       dates,
       dateLabels: dates.map((d) => d.label),
       dateIndex,
+      organizerIndex,
       channelIndex: asActivity ? 1 : 0,
       "form.startDate": dates[dateIndex].value,
       "form.channel": asActivity ? "activity" : "trip",
       "form.activityKind": activityKind,
       "form.title": title && !KINDS.some((k) => k.key === title) ? title : asActivity ? activityKind : title,
+      "form.organizerType": organizer || this.data.form.organizerType,
       "form.offerType": asActivity ? "free" : this.data.form.offerType,
       "form.originPrice": asActivity ? 0 : this.data.form.originPrice,
       "form.minGroupSize": asActivity ? 4 : this.data.form.minGroupSize,
@@ -132,7 +142,7 @@ Page({
       "form.meetupTime": asActivity ? "19:30" : this.data.form.meetupTime,
       "form.meetupPoint": asActivity ? "" : MEETUPS[0],
       "form.city": asActivity ? "朝阳" : "",
-      "form.companyName": this.data.form.companyName || user.companyName || user.school || "",
+      "form.companyName": this._organizerNames[organizer || "individual"],
     });
     this.boot();
   },
@@ -153,6 +163,11 @@ Page({
         routeTitles: routes.map((r) => r.title),
         routeLabel: routes.length ? "选择已有线路" : "暂无可选线路",
       });
+      if (this._initialRouteId) {
+        const routeIndex = routes.findIndex((route) => Number(route.id) === this._initialRouteId);
+        if (routeIndex >= 0) await this.setRoute({ detail: { value: routeIndex } });
+        this._initialRouteId = 0;
+      }
     } catch (e) {
       if (this.data.routeLabel === "正在加载") this.setData({ routeLabel: "暂无可选线路" });
       showError("加载失败", e);
@@ -350,7 +365,10 @@ Page({
   },
   setOrganizer(e) {
     const i = Number(e.detail.value);
-    this.setData({ organizerIndex: i, "form.organizerType": this.data.organizerKeys[i] || "individual" });
+    const next = this.data.organizerKeys[i] || "individual";
+    this._organizerNames = this._organizerNames || {};
+    this._organizerNames[this.data.form.organizerType] = this.data.form.companyName || "";
+    this.setData({ organizerIndex: i, "form.organizerType": next, "form.companyName": this._organizerNames[next] || "", "errors.companyName": "" });
     this.applyCampusFree();
   },
   applyCampusFree() {
@@ -405,7 +423,51 @@ Page({
     this.setData(patch, () => wx.pageScrollTo({ selector: "#submit-error", duration: 200 }));
   },
   async submit() {
+    if (this.data.submitting) return;
     const form = Object.assign({}, this.data.form);
+    const minimum = Number(form.minGroupSize);
+    if (!Number.isInteger(minimum) || minimum < 1) {
+      this.blockSubmit("minGroupSize", "成团人数请填写大于 0 的整数");
+      return;
+    }
+    if (!form.startDate || !/^\d{4}-\d{2}-\d{2}$/.test(form.startDate) || form.startDate < formatDate(new Date())) {
+      this.blockSubmit("startDate", "请选择今天或以后的出发日期");
+      return;
+    }
+    if (form.privateJoin && form.joinCode && (form.joinCode.trim().length < 4 || form.joinCode.trim().length > 16)) {
+      this.blockSubmit("joinCode", "入团口令需要 4～16 个字");
+      return;
+    }
+    if (form.channel === "activity") {
+      const maxSeats = Number(form.maxSeats);
+      const price = Number(form.originPrice);
+      if (!Number.isInteger(maxSeats) || maxSeats < minimum) {
+        this.blockSubmit("maxSeats", "人数上限不能低于成团人数");
+        return;
+      }
+      if (form.originPrice == null || String(form.originPrice).trim() === "" || !Number.isFinite(price) || price < 0) {
+        this.blockSubmit("originPrice", "请填写有效费用，免费活动填 0");
+        return;
+      }
+    } else {
+      const bus = this.data.buses.find((item) => String(item.id) === String(form.busTypeId));
+      if (!bus) {
+        this.blockSubmit("busTypeId", "请选择出行车型");
+        return;
+      }
+      if (minimum > Number(bus.seats)) {
+        this.blockSubmit("minGroupSize", "成团人数不能超过所选车型的座位数");
+        return;
+      }
+      if (form.organizerType === "campus" && (form.campusTargets || []).some((target) => !String(target.school || "").trim())) {
+        this.blockSubmit("campus", "请为每个招募范围选择学校，或删除空白范围");
+        return;
+      }
+      if (form.organizerType === "campus" && (form.campusTargets || []).some((target) => String(target.major || "").trim() && !String(target.college || "").trim())) {
+        this.blockSubmit("campus", "限定专业时，请先选择该专业所属的学院");
+        return;
+      }
+    }
     if (form.channel === "activity") {
       if (!String(form.title || "").trim()) {
         this.blockSubmit("title", "请填写标题");
@@ -420,6 +482,7 @@ Page({
       }
       this.setData({ errors: {} });
       try {
+        this.setData({ submitting: true });
         wx.showLoading({ title: "提交中", mask: true });
         const res = await request("/trips", "POST", {
           ...form,
@@ -431,6 +494,8 @@ Page({
         wx.redirectTo({ url: "/pages/schedule/schedule?id=" + res.data.id + "&posted=1" });
       } catch (e) {
         wx.hideLoading({ complete: () => showError("提交失败", e) });
+      } finally {
+        this.setData({ submitting: false });
       }
       return;
     }
@@ -473,12 +538,15 @@ Page({
     };
     if (form.offerType === "combo") body.comboRule = form.comboRule;
     try {
+      this.setData({ submitting: true });
       wx.showLoading({ title: "提交中", mask: true });
       const res = await request("/schedules", "POST", body);
       wx.hideLoading();
       wx.redirectTo({ url: "/pages/schedule/schedule?id=" + res.data.id + "&posted=1" });
     } catch (e) {
       wx.hideLoading({ complete: () => showError("提交失败", e) });
+    } finally {
+      this.setData({ submitting: false });
     }
   },
 });

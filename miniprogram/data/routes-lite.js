@@ -8,7 +8,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "长城",
     "region": "北京怀柔",
-    "cover": "/images/covers/R01.jpg",
+    "cover": "/static/miniprogram/covers/R01.jpg",
     "fromPrice": 199,
     "memberFromPrice": 183
   },
@@ -21,7 +21,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "长城",
     "region": "北京延庆 / 昌平",
-    "cover": "/images/covers/R02.jpg",
+    "cover": "/static/miniprogram/covers/R02.jpg",
     "fromPrice": 189,
     "memberFromPrice": 174
   },
@@ -34,7 +34,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "长城",
     "region": "北京怀柔",
-    "cover": "/images/covers/R03.jpg",
+    "cover": "/static/miniprogram/covers/R03.jpg",
     "fromPrice": 219,
     "memberFromPrice": 201
   },
@@ -47,7 +47,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "长城",
     "region": "北京密云",
-    "cover": "/images/covers/R04.jpg",
+    "cover": "/static/miniprogram/covers/R04.jpg",
     "fromPrice": 268,
     "memberFromPrice": 247
   },
@@ -60,7 +60,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "玩水",
     "region": "北京房山",
-    "cover": "/images/covers/R05.jpg",
+    "cover": "/static/miniprogram/covers/R05.jpg",
     "fromPrice": 219,
     "memberFromPrice": 201
   },
@@ -73,7 +73,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "登山",
     "region": "北京门头沟",
-    "cover": "/images/covers/R06.jpg",
+    "cover": "/static/miniprogram/covers/R06.jpg",
     "fromPrice": 239,
     "memberFromPrice": 220
   },
@@ -86,7 +86,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "登山",
     "region": "北京门头沟",
-    "cover": "/images/covers/R07.jpg",
+    "cover": "/static/miniprogram/covers/R07.jpg",
     "fromPrice": 229,
     "memberFromPrice": 211
   },
@@ -99,7 +99,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "登山",
     "region": "北京海淀",
-    "cover": "/images/covers/R08.jpg",
+    "cover": "/static/miniprogram/covers/R08.jpg",
     "fromPrice": 159,
     "memberFromPrice": 146
   },
@@ -112,7 +112,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "北京延庆",
-    "cover": "/images/covers/R09.jpg",
+    "cover": "/static/miniprogram/covers/R09.jpg",
     "fromPrice": 199,
     "memberFromPrice": 183
   },
@@ -125,7 +125,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "北京平谷",
-    "cover": "/images/covers/R10.jpg",
+    "cover": "/static/miniprogram/covers/R10.jpg",
     "fromPrice": 189,
     "memberFromPrice": 174
   },
@@ -138,7 +138,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "文化",
     "region": "北京房山",
-    "cover": "/images/covers/R11.jpg",
+    "cover": "/static/miniprogram/covers/R11.jpg",
     "fromPrice": 179,
     "memberFromPrice": 165
   },
@@ -151,7 +151,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "北京怀柔",
-    "cover": "/images/covers/R12.jpg",
+    "cover": "/static/miniprogram/covers/R12.jpg",
     "fromPrice": 199,
     "memberFromPrice": 183
   },
@@ -164,7 +164,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "北京密云",
-    "cover": "/images/covers/R13.jpg",
+    "cover": "/static/miniprogram/covers/R13.jpg",
     "fromPrice": 209,
     "memberFromPrice": 192
   },
@@ -177,7 +177,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "北京平谷",
-    "cover": "/images/covers/R14.jpg",
+    "cover": "/static/miniprogram/covers/R14.jpg",
     "fromPrice": 199,
     "memberFromPrice": 183
   },
@@ -190,7 +190,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "文化",
     "region": "北京门头沟",
-    "cover": "/images/covers/R15.jpg",
+    "cover": "/static/miniprogram/covers/R15.jpg",
     "fromPrice": 169,
     "memberFromPrice": 155
   },
@@ -203,7 +203,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "长城",
     "region": "北京怀柔 / 密云",
-    "cover": "/images/covers/R16.jpg",
+    "cover": "/static/miniprogram/covers/R16.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459
   },
@@ -216,7 +216,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "北京房山 / 河北涞水",
-    "cover": "/images/covers/R17.jpg",
+    "cover": "/static/miniprogram/covers/R17.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459
   },
@@ -229,7 +229,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "登山",
     "region": "北京密云 / 河北兴隆",
-    "cover": "/images/covers/R18.jpg",
+    "cover": "/static/miniprogram/covers/R18.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459
   },
@@ -242,7 +242,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "文化",
     "region": "北京门头沟",
-    "cover": "/images/covers/R19.jpg",
+    "cover": "/static/miniprogram/covers/R19.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459
   },
@@ -255,7 +255,7 @@ module.exports = [
     "difficulty": "进阶",
     "category": "长城",
     "region": "河北滦平 / 北京密云",
-    "cover": "/images/covers/R20.jpg",
+    "cover": "/static/miniprogram/covers/R20.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459
   },
@@ -268,7 +268,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "河北保定涞源",
-    "cover": "/images/covers/R21.jpg",
+    "cover": "/static/miniprogram/covers/R21.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459
   },
@@ -281,7 +281,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "文化",
     "region": "河北承德",
-    "cover": "/images/covers/R22.jpg",
+    "cover": "/static/miniprogram/covers/R22.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459
   },
@@ -294,7 +294,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "长城",
     "region": "天津蓟州",
-    "cover": "/images/covers/R23.jpg",
+    "cover": "/static/miniprogram/covers/R23.jpg",
     "fromPrice": 499,
     "memberFromPrice": 459
   },
@@ -307,7 +307,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "草原",
     "region": "内蒙古赤峰 / 河北围场",
-    "cover": "/images/covers/R24.jpg",
+    "cover": "/static/miniprogram/covers/R24.jpg",
     "fromPrice": 899,
     "memberFromPrice": 827
   },
@@ -320,7 +320,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "草原",
     "region": "河北承德围场",
-    "cover": "/images/covers/R25.jpg",
+    "cover": "/static/miniprogram/covers/R25.jpg",
     "fromPrice": 899,
     "memberFromPrice": 827
   },
@@ -333,7 +333,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "山水",
     "region": "河北涞水 / 北京房山",
-    "cover": "/images/covers/R26.jpg",
+    "cover": "/static/miniprogram/covers/R26.jpg",
     "fromPrice": 899,
     "memberFromPrice": 827
   },
@@ -346,7 +346,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "海滨",
     "region": "河北秦皇岛",
-    "cover": "/images/covers/R27.jpg",
+    "cover": "/static/miniprogram/covers/R27.jpg",
     "fromPrice": 899,
     "memberFromPrice": 827
   },
@@ -359,7 +359,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "草原",
     "region": "内蒙古 / 河北承德",
-    "cover": "/images/covers/R28.jpg",
+    "cover": "/static/miniprogram/covers/R28.jpg",
     "fromPrice": 1899,
     "memberFromPrice": 1747
   },
@@ -372,7 +372,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "文化",
     "region": "山西忻州 / 大同",
-    "cover": "/images/covers/R29.jpg",
+    "cover": "/static/miniprogram/covers/R29.jpg",
     "fromPrice": 1899,
     "memberFromPrice": 1747
   },
@@ -385,7 +385,7 @@ module.exports = [
     "difficulty": "休闲",
     "category": "草原",
     "region": "河北张家口",
-    "cover": "/images/covers/R30.jpg",
+    "cover": "/static/miniprogram/covers/R30.jpg",
     "fromPrice": 1899,
     "memberFromPrice": 1747
   }

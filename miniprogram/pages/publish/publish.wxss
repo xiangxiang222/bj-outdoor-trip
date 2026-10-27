@@ -1,13 +1,19 @@
 @import "../../styles/account.wxss";
 
-.pub-intro {
-  margin: 16rpx 24rpx 0;
-  color: #8d8d8d;
-  font-size: calc(24rpx * var(--ui-scale));
-  line-height: 1.5;
-}
+.pub-page-head { padding: 34rpx 32rpx 22rpx; }
+.pub-page-head .section-title { margin-top: 10rpx; font-size: calc(42rpx * var(--ui-scale)); }
+.pub-lead { color: #8a8390; font-size: calc(23rpx * var(--ui-scale)); margin-top: 12rpx; line-height: 1.55; }
+.pub-steps { display: flex; align-items: center; justify-content: space-between; margin-top: 28rpx; }
+.pub-step { display: flex; align-items: center; gap: 8rpx; color: #a29ba9; font-size: calc(19rpx * var(--ui-scale)); white-space: nowrap; }
+.pub-step text { display: flex; align-items: center; justify-content: center; width: 38rpx; height: 38rpx; border-radius: 50%; color: #928d98; background: #ece9f0; font-size: 17rpx; }
+.pub-step.on { color: #5b3b8c; font-weight: 600; }
+.pub-step.on text { color: #fff; background: #5b3b8c; }
+.pub-step-line { flex: 1; min-width: 14rpx; height: 1rpx; background: #e6e2ea; margin: 0 8rpx; }
+.pub-intro { margin: 20rpx 28rpx 14rpx; color: #82778d; padding: 18rpx 22rpx; border-radius: 16rpx; background: #efeaf7; font-size: calc(23rpx * var(--ui-scale)); line-height: 1.55; }
+
+
 .pub-card {
-  margin: 16rpx;
+  margin: 18rpx 28rpx 26rpx;
   padding: 8rpx 8rpx 20rpx;
   background: #fff;
   border-radius: 24rpx;
@@ -61,17 +67,17 @@
   font-size: calc(24rpx * var(--ui-scale));
   font-weight: 700;
 }
-.pub-mark.on { background: #8c3038; color: #fff; }
+.pub-mark.on { background: #5b3b8c; color: #fff; }
 .target-card {
   margin: 12rpx 16rpx 0;
   padding: 8rpx 0 12rpx;
-  border: 1px solid #f0d4d6;
+  border: 1px solid #e8e1f0;
   border-radius: 18rpx;
-  background: #fffdfd;
+  background: #fff;
 }
 .pub-link {
   margin: 12rpx 16rpx 0;
-  color: #8c3038;
+  color: #5b3b8c;
   font-size: calc(26rpx * var(--ui-scale));
   font-weight: 700;
 }
@@ -99,10 +105,10 @@
 }
 .kind-grid { display: flex; flex-wrap: wrap; }
 .sheet {
-  margin: 16rpx;
+  margin: 16rpx 28rpx 28rpx;
   background: #fff;
   border-radius: 28rpx;
-  border: 1px solid #f0e8e8;
+  border: 1px solid #eeebf1;
   overflow: hidden;
 }
 .line {
@@ -155,7 +161,7 @@
   background: #e7e7ec;
   flex: none;
 }
-.sw.on { background: #8c3038; }
+.sw.on { background: #725495; }
 .sw.locked { opacity: 0.35; }
 .knob {
   width: 46rpx;
@@ -174,10 +180,10 @@
   font-size: calc(28rpx * var(--ui-scale));
   font-weight: 700;
 }
-.add { color: #8c3038; font-weight: 700; font-size: calc(26rpx * var(--ui-scale)); }
+.add { color: #5b3b8c; font-weight: 600; font-size: calc(24rpx * var(--ui-scale)); }
 .scope-card {
   margin: 16rpx 28rpx 0;
-  border: 1px solid #d9d9d9;
+  border: 1px solid #e5e0e9;
   border-radius: 20rpx;
   overflow: hidden;
   background: #fff;
@@ -196,7 +202,7 @@
 .sv { flex: 1; text-align: right; font-size: calc(28rpx * var(--ui-scale)); }
 .scope-del {
   padding: 18rpx 20rpx;
-  color: #8c3038;
+  color: #7f638e;
   text-align: right;
   font-size: calc(26rpx * var(--ui-scale));
   font-weight: 700;
@@ -240,7 +246,7 @@
   height: 64rpx;
   line-height: 64rpx;
   text-align: center;
-  color: #8c3038;
+  color: #5b3b8c;
   font-size: 36rpx;
   font-weight: 600;
 }
@@ -255,4 +261,11 @@
   border-radius: 16rpx;
   font-size: calc(28rpx * var(--ui-scale));
 }
-.btn { margin: 8rpx 16rpx 32rpx; }
+.scope-empty { margin: 0 28rpx 20rpx; padding: 20rpx; border-radius: 12rpx; background: #f7f5f9; color: #62576c; font-size: calc(24rpx * var(--ui-scale)); }
+.scope-empty text { display: block; margin-top: 4rpx; color: #a099a7; font-size: calc(21rpx * var(--ui-scale)); }
+.btn { margin: 8rpx 28rpx 36rpx; }
+
+.pub-confirm { margin: 0 28rpx 24rpx; padding: 26rpx; border: 1rpx solid #e9e1f1; border-radius: 24rpx; background: #f0ebf7; color: #5b3b8c; font-size: calc(25rpx * var(--ui-scale)); }
+.pub-confirm > view { font-weight: 600; margin-bottom: 12rpx; }
+.pub-confirm text { display: block; color: #8b7b9b; font-size: calc(23rpx * var(--ui-scale)); line-height: 1.7; }
+.pub-review-note { text-align: center; font-size: calc(22rpx * var(--ui-scale)); color: #a095aa; margin: 0 32rpx 18rpx; }

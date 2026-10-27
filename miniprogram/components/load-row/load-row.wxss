@@ -4,7 +4,7 @@
   width: 36rpx;
   height: 36rpx;
   border: 4rpx solid #eceee8;
-  border-top-color: #2d6a4f;
+  border-top-color: #725793;
   border-radius: 50%;
   animation: load-spin 0.8s linear infinite;
   flex: none;

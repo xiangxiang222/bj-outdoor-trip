@@ -6,6 +6,7 @@ import "element-plus/dist/index.css";
 import App from "./App.vue";
 import router from "./router";
 import "./styles/app.css";
+import "./styles/journey.css";
 import { applyLook } from "./utils/appearance";
 import { startLocale } from "./utils/apply-locale";
 

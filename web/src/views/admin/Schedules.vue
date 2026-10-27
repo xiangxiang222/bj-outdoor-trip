@@ -1,103 +1,57 @@
 <template>
   <div>
     <div class="row">
-      <h2>拼团排期、成本与解散</h2>
+      <h2>发团与排期</h2>
       <div class="admin-schedules-actions">
         <el-checkbox v-model="showCancelled" :disabled="!cancelledCount && !showCancelled">
           显示已解散<span v-if="cancelledCount">（{{ cancelledCount }}）</span>
         </el-checkbox>
-        <el-button v-if="canOps" type="danger" plain :disabled="!activeCount" @click="openDissolveAll">解散全部拼团（{{ activeCount }}）</el-button>
-        <el-button v-if="canOps" @click="syncOfficial">补齐官方团</el-button>
-        <el-button v-if="canOps" type="success" @click="open">发布拼团</el-button>
+        <el-dropdown v-if="canOps" trigger="click"><el-button>批量工具 ⌄</el-button><template #dropdown><el-dropdown-menu><el-dropdown-item @click="syncOfficial">同步官方团排期</el-dropdown-item><el-dropdown-item divided :disabled="!activeCount" @click="openDissolveAll"><span style="color:#bf7564">解散全部拼团（{{ activeCount }}）</span></el-dropdown-item></el-dropdown-menu></template></el-dropdown>
+        <el-button v-if="canOps" type="success" @click="open">＋ 发布新团</el-button>
       </div>
     </div>
-    <p class="admin-scroll-hint">表格较宽时可左右滑动。线路、出发和审批钉在左侧，其余操作在最右侧。上架线路会自动滚动开官方团；出行前一天，同集合点未成团的会并入官方团。</p>
-    <el-table
-      v-loading="listLoading"
-      element-loading-text="加载中…"
-      :data="visibleList"
-      stripe
-      :fit="false"
-      class="admin-schedules-table"
-      :empty-text="listLoading ? '加载中…' : emptyText"
-    >
-      <el-table-column prop="route.title" label="线路" width="168" fixed="left" />
-      <el-table-column prop="startDate" label="出发" width="112" fixed="left" />
-      <el-table-column label="审批" width="156" fixed="left">
-        <template #default="{ row }">
-          <div v-if="canOps && row.reviewStatus === 'pending'" class="admin-review-ops">
-            <el-button size="small" type="success" :loading="reviewing.id === row.id && reviewing.status === 'approved'" :disabled="reviewing.id === row.id" @click="review(row, 'approved')">通过</el-button>
-            <el-button size="small" type="warning" :loading="reviewing.id === row.id && reviewing.status === 'rejected'" :disabled="reviewing.id === row.id" @click="review(row, 'rejected')">驳回</el-button>
-          </div>
-          <span v-else-if="row.reviewStatus === 'pending'">待审</span>
-          <span v-else-if="row.reviewStatus === 'rejected'" style="color:#bc4749">已驳回</span>
-          <span v-else class="muted">—</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="组织" width="90">
-        <template #default="{ row }">{{ organizerTypeText(row.organizerType, true) }}</template>
-      </el-table-column>
-      <el-table-column label="状态" width="130">
-        <template #default="{ row }">
-          {{ scheduleStatusText(row.status === 'recruiting' && row.guaranteed ? 'confirmed' : row.status) }}
-          <span v-if="row.startedAt && row.status !== 'cancelled'"> · 已开团</span>
-          <span v-if="row.reviewStatus === 'pending'" style="color:#c77d3a"> · 待审</span>
-          <span v-else-if="row.reviewStatus === 'rejected'" style="color:#bc4749"> · 驳回</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="车型" width="120">
-        <template #default="{ row }">{{ row.bus?.name }}</template>
-      </el-table-column>
-      <el-table-column label="报名限制" width="140">
-        <template #default="{ row }">{{ [row.eligibility?.label, row.oversub?.enabled ? row.oversub.label : ""].filter(Boolean).join(" · ") || "—" }}</template>
-      </el-table-column>
-      <el-table-column label="口令" width="120">
-        <template #default="{ row }">{{ row.private ? row.joinCode || row.privateLabel || "口令团" : "—" }}</template>
-      </el-table-column>
-      <el-table-column label="人数" width="130">
-        <template #default="{ row }">
-          {{ row.enrolled }}/{{ row.maxSeats }}
-          <span v-if="row.virtualEnrolled" class="muted"> 虚{{ row.virtualEnrolled }}</span>
-          <span v-if="row.oversub?.applied" class="muted"> +{{ row.oversub.applied }}待确认</span>
-          <span v-if="row.waitlistCount" class="muted"> +{{ row.waitlistCount }}候</span>
-        </template>
-      </el-table-column>
-      <el-table-column v-if="canOps" prop="revenue" label="收入" width="80" />
-      <el-table-column v-if="canOps" prop="cost" label="成本" width="80" />
-      <el-table-column v-if="canOps" prop="profit" label="利润" width="80" />
-      <el-table-column label="导游" width="110">
-        <template #default="{ row }">
-          <el-button v-if="row.guide" link type="primary" @click="openGuide(row)">{{ row.guide.name }}</el-button>
-          <span v-else>未匹配</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" min-width="760">
-        <template #default="{ row }">
-          <div class="admin-table-ops">
-            <el-button v-if="canOps" size="small" @click="cost(row)">成本</el-button>
-            <el-button v-if="canField" size="small" @click="openTrip(row)">车辆座位</el-button>
-            <el-button v-if="canField" size="small" :disabled="row.status === 'cancelled'" @click="openCheckinDlg(row)">开团签到</el-button>
-            <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openVirtual(row)">虚拟</el-button>
-            <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="openReview(row)">虚拟评价</el-button>
-            <el-button v-if="canOps" size="small" @click="openLimit(row)">限制</el-button>
-            <el-button
-              v-if="canOps && row.oversub?.enabled && !row.oversub?.drawn"
-              size="small"
-              type="warning"
-              :disabled="row.status === 'cancelled' || drawingId === row.id"
-              @click="confirmDraw(row)"
-            >确认出行名单</el-button>
-            <el-button size="small" @click="demo(row)">画像</el-button>
-            <el-button v-if="canOps" size="small" type="success" :disabled="row.status === 'cancelled'" @click="settle(row)">结算</el-button>
-            <el-button v-if="canOps" size="small" @click="openSplit(row)">分账</el-button>
-            <el-button v-if="canOps" size="small" :disabled="row.status === 'cancelled'" @click="$router.push('/admin/lottery?scheduleId=' + row.id)">抽奖</el-button>
-            <el-button v-if="canOps" size="small" :disabled="row.organizerType === 'company' || row.status === 'cancelled'" @click="$router.push('/admin/coupons?scheduleId=' + row.id)">优惠券</el-button>
-            <el-button v-if="canOps" size="small" type="danger" :disabled="row.status === 'cancelled'" @click="openDissolve(row)">解散</el-button>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column width="48" class-name="admin-table-gutter" />
+    <p class="admin-scroll-hint">统一管理高校、公司和个人发团。先核对待审申请，再安排车辆、导游与出行服务；费用和结算可在每个团的「更多操作」中处理。</p>
+    <div class="ops-schedule-summary">
+      <div><span>未解散的团</span><strong>{{ activeCount }}</strong></div><div><span>发团申请待审</span><strong>{{ pendingReviewCount }}</strong></div><div><span>正在招募的团</span><strong>{{ recruitingCount }}</strong></div><div><span>已取消的团</span><strong>{{ cancelledCount }}</strong></div>
+    </div>
+    <div class="ops-schedule-filters">
+      <el-input v-model="scheduleQuery" clearable placeholder="搜索线路、发起人、公司或出发日期" class="ops-schedule-search" />
+      <el-select v-model="scheduleState" clearable placeholder="全部状态"><el-option label="等待审批" value="pending" /><el-option label="招募中" value="recruiting" /><el-option label="已成团" value="confirmed" /><el-option label="带团中" value="started" /><el-option label="已结束" value="completed" /></el-select>
+      <span class="ops-filter-result">共 {{ visibleList.length }} 个团</span>
+    </div>
+    <el-table v-if="!compactTable" v-loading="listLoading" element-loading-text="正在同步发团计划" :data="visibleList" class="admin-schedules-table" :empty-text="listLoading ? '加载中…' : emptyText">
+      <el-table-column label="线路与组织" min-width="210" :fixed="compactTable ? false : 'left'"><template #default="{ row }"><strong class="ops-table-title">{{ row.route?.title }}</strong><div class="ops-table-sub">{{ organizerTypeText(row.organizerType, true) }}<template v-if="row.companyName || row.organizerName"> · {{ row.companyName || row.organizerName }}</template></div></template></el-table-column>
+      <el-table-column label="出发与集合" width="130"><template #default="{ row }"><span>{{ row.startDate }}</span><div class="ops-table-sub">{{ row.meetupTime }} · {{ row.meetupPoint }}</div></template></el-table-column>
+      <el-table-column label="当前进度" width="155"><template #default="{ row }">
+        <span class="ops-status-pill" :class="{ pending: row.reviewStatus === 'pending', done: row.guaranteed || row.status === 'confirmed', cancelled: row.status === 'cancelled' }">{{ row.completedAt ? '已结束' : row.startedAt && row.status !== 'cancelled' ? '带团中' : scheduleStatusText(row.status === 'recruiting' && row.guaranteed ? 'confirmed' : row.status) }}</span>
+        <div v-if="canOps && row.reviewStatus === 'pending'" class="admin-review-ops ops-review-buttons"><el-button size="small" link type="primary" :loading="reviewing.id === row.id && reviewing.status === 'approved'" :disabled="reviewing.id === row.id" @click="review(row, 'approved')">通过申请</el-button><el-button size="small" link type="danger" :loading="reviewing.id === row.id && reviewing.status === 'rejected'" :disabled="reviewing.id === row.id" @click="review(row, 'rejected')">驳回</el-button></div><div v-else-if="row.reviewStatus === 'pending'" class="ops-table-sub">等待运营审核</div><div v-else-if="row.reviewStatus === 'rejected'" class="ops-table-sub">发团申请已驳回</div>
+      </template></el-table-column>
+      <el-table-column label="报名与座位" width="130"><template #default="{ row }"><strong class="ops-table-number">{{ row.enrolled }}</strong><span class="ops-table-sub"> / {{ row.maxSeats }} 人</span><div class="ops-table-sub" v-if="row.virtualEnrolled">含 {{ row.virtualEnrolled }} 位虚拟占座</div><div class="ops-table-sub" v-if="row.oversub?.applied || row.waitlistCount"><template v-if="row.oversub?.applied">{{ row.oversub.applied }} 位待确认 </template><template v-if="row.waitlistCount">{{ row.waitlistCount }} 位候补</template></div></template></el-table-column>
+      <el-table-column label="接待安排" width="130"><template #default="{ row }"><span>{{ row.bus?.name || '车辆待确认' }}</span><div class="ops-table-sub"><el-button v-if="row.guide" link type="primary" @click="openGuide(row)">导游 · {{ row.guide.name }}</el-button><span v-else>导游待匹配</span></div></template></el-table-column>
+      <el-table-column label="报名范围" width="155"><template #default="{ row }"><span>{{ row.eligibility?.label || '公开报名' }}</span><div class="ops-table-sub" v-if="row.private">口令 · {{ row.joinCode || row.privateLabel || '口令团' }}</div><div class="ops-table-sub" v-if="row.oversub?.enabled">{{ row.oversub.label }}</div></template></el-table-column>
+      <el-table-column v-if="canOps" label="经营情况" width="140" align="right"><template #default="{ row }"><span>实收 ¥{{ money(row.revenue) }}</span><div class="ops-table-sub">成本 ¥{{ money(row.cost) }}</div><div class="ops-table-sub">利润 ¥{{ money(row.profit) }}</div></template></el-table-column>
+      <el-table-column label="操作" width="205" :fixed="compactTable ? false : 'right'"><template #default="{ row }"><div class="ops-schedule-row-actions">
+        <el-button v-if="canField" size="small" :disabled="row.status === 'cancelled'" @click="openCheckinDlg(row)">带团服务</el-button><el-button v-else-if="canOps" size="small" @click="cost(row)">经营成本</el-button>
+        <el-dropdown trigger="click"><el-button size="small">更多操作 <span aria-hidden="true" style="margin-left:5px">⌄</span></el-button><template #dropdown><el-dropdown-menu>
+          <el-dropdown-item v-if="canOps" @click="cost(row)">费用与成本</el-dropdown-item><el-dropdown-item v-if="canField" @click="openTrip(row)">车辆与座位</el-dropdown-item><el-dropdown-item @click="demo(row)">查看本团画像</el-dropdown-item><el-dropdown-item v-if="canOps && row.oversub?.enabled && !row.oversub?.drawn" :disabled="row.status === 'cancelled' || drawingId === row.id" @click="confirmDraw(row)">确认出行名单</el-dropdown-item>
+          <el-dropdown-item v-if="canOps" divided :disabled="row.organizerType !== 'company' || row.status === 'cancelled' || settlingId === row.id" @click="settle(row)">企业团挂账结算</el-dropdown-item><el-dropdown-item v-if="canOps" @click="openSplit(row)">查看分账</el-dropdown-item><el-dropdown-item v-if="canOps" @click="openLimit(row)">报名范围与限制</el-dropdown-item>
+          <el-dropdown-item v-if="canOps" divided :disabled="row.status === 'cancelled'" @click="$router.push('/admin/lottery?scheduleId=' + row.id)">活动抽奖</el-dropdown-item><el-dropdown-item v-if="canOps" :disabled="row.organizerType === 'company' || row.status === 'cancelled'" @click="$router.push('/admin/coupons?scheduleId=' + row.id)">优惠券</el-dropdown-item><el-dropdown-item v-if="canOps" :disabled="row.status === 'cancelled'" @click="openVirtual(row)">虚拟占座</el-dropdown-item><el-dropdown-item v-if="canOps" :disabled="row.status === 'cancelled'" @click="openReview(row)">虚拟评价</el-dropdown-item><el-dropdown-item v-if="canOps" divided :disabled="row.status === 'cancelled'" @click="openDissolve(row)"><span style="color:#bf7564">解散本团</span></el-dropdown-item>
+        </el-dropdown-menu></template></el-dropdown>
+      </div></template></el-table-column>
     </el-table>
+    <div v-else v-loading="listLoading" class="ops-schedule-mobile-list" element-loading-text="正在同步发团计划">
+      <div v-for="row in visibleList" :key="row.id" class="ops-schedule-mobile-card">
+        <div class="ops-mobile-card-heading"><div><strong>{{ row.route?.title }}</strong><span>{{ organizerTypeText(row.organizerType, true) }}<template v-if="row.companyName || row.organizerName"> · {{ row.companyName || row.organizerName }}</template></span></div><span class="ops-status-pill" :class="{ pending: row.reviewStatus === 'pending', done: row.guaranteed || row.status === 'confirmed', cancelled: row.status === 'cancelled' }">{{ row.completedAt ? '已结束' : row.startedAt && row.status !== 'cancelled' ? '带团中' : scheduleStatusText(row.status === 'recruiting' && row.guaranteed ? 'confirmed' : row.status) }}</span></div>
+        <div class="ops-mobile-card-facts"><span><OperationsIcon name="calendar" />{{ row.startDate }}</span><span><OperationsIcon name="pin" />{{ row.meetupPoint }}</span><span><OperationsIcon name="clock" />{{ row.meetupTime }}</span></div>
+        <div v-if="canOps && row.reviewStatus === 'pending'" class="ops-mobile-review"><span>发团申请待审核</span><div><el-button size="small" link type="primary" :loading="reviewing.id === row.id && reviewing.status === 'approved'" :disabled="reviewing.id === row.id" @click="review(row, 'approved')">通过申请</el-button><el-button size="small" link type="danger" :loading="reviewing.id === row.id && reviewing.status === 'rejected'" :disabled="reviewing.id === row.id" @click="review(row, 'rejected')">驳回</el-button></div></div>
+        <div v-else-if="row.reviewStatus === 'pending'" class="ops-mobile-review"><span>等待运营审核</span></div><div v-else-if="row.reviewStatus === 'rejected'" class="ops-mobile-review is-rejected"><span>发团申请已驳回</span></div>
+        <div class="ops-mobile-card-summary"><div><span>报名进度</span><strong>{{ row.enrolled }}<small> / {{ row.maxSeats }} 人</small></strong><small v-if="row.waitlistCount">候补 {{ row.waitlistCount }} 人</small></div><div><span>车辆与导游</span><strong>{{ row.bus?.name || '车辆待确认' }}</strong><small>{{ row.guide ? `导游 · ${row.guide.name}` : '导游待匹配' }}</small></div><div v-if="canOps"><span>经营情况</span><strong>¥{{ money(row.revenue) }}<small> 实收</small></strong><small>成本 ¥{{ money(row.cost) }} · 利润 ¥{{ money(row.profit) }}</small></div></div>
+        <div class="ops-mobile-card-foot"><span>{{ row.eligibility?.label || '公开报名' }}<template v-if="row.private"> · 口令 {{ row.joinCode || row.privateLabel || '口令团' }}</template></span><div class="ops-schedule-row-actions"><el-button v-if="canField" size="small" :disabled="row.status === 'cancelled'" @click="openCheckinDlg(row)">带团服务</el-button><el-button v-else-if="canOps" size="small" @click="cost(row)">经营成本</el-button><el-dropdown trigger="click"><el-button size="small">更多操作 <span aria-hidden="true" style="margin-left:5px">⌄</span></el-button><template #dropdown><el-dropdown-menu>
+          <el-dropdown-item v-if="canOps" @click="cost(row)">费用与成本</el-dropdown-item><el-dropdown-item v-if="canField" @click="openTrip(row)">车辆与座位</el-dropdown-item><el-dropdown-item @click="demo(row)">查看本团画像</el-dropdown-item><el-dropdown-item v-if="canOps && row.oversub?.enabled && !row.oversub?.drawn" :disabled="row.status === 'cancelled' || drawingId === row.id" @click="confirmDraw(row)">确认出行名单</el-dropdown-item><el-dropdown-item v-if="canOps" divided :disabled="row.organizerType !== 'company' || row.status === 'cancelled' || settlingId === row.id" @click="settle(row)">企业团挂账结算</el-dropdown-item><el-dropdown-item v-if="canOps" @click="openSplit(row)">查看分账</el-dropdown-item><el-dropdown-item v-if="canOps" @click="openLimit(row)">报名范围与限制</el-dropdown-item><el-dropdown-item v-if="canOps" divided :disabled="row.status === 'cancelled'" @click="$router.push('/admin/lottery?scheduleId=' + row.id)">活动抽奖</el-dropdown-item><el-dropdown-item v-if="canOps" :disabled="row.organizerType === 'company' || row.status === 'cancelled'" @click="$router.push('/admin/coupons?scheduleId=' + row.id)">优惠券</el-dropdown-item><el-dropdown-item v-if="canOps" :disabled="row.status === 'cancelled'" @click="openVirtual(row)">虚拟占座</el-dropdown-item><el-dropdown-item v-if="canOps" :disabled="row.status === 'cancelled'" @click="openReview(row)">虚拟评价</el-dropdown-item><el-dropdown-item v-if="canOps" divided :disabled="row.status === 'cancelled'" @click="openDissolve(row)"><span style="color:#bf7564">解散本团</span></el-dropdown-item>
+        </el-dropdown-menu></template></el-dropdown></div></div>
+      </div>
+      <div v-if="!listLoading && !visibleList.length" class="ops-empty"><OperationsIcon name="calendar" /><p>{{ emptyText }}</p></div>
+    </div>
 
     <el-dialog v-model="showCost" title="活动成本" width="480px">
       <el-form label-width="90px" v-if="cur">
@@ -383,7 +337,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import * as echarts from "echarts";
 import { ElMessage, ElMessageBox } from "element-plus";
@@ -393,6 +347,7 @@ import { hasCap } from "@/utils/staff";
 import CampusCatalogSelect from "@/components/admin/CampusCatalogSelect.vue";
 import AdminCampusTargetList from "@/components/admin/CampusTargetList.vue";
 import GenderRatioFields from "@/components/GenderRatioFields.vue";
+import OperationsIcon from "@/components/OperationsIcon.vue";
 import { normalizeCampusTargets } from "@/utils/campusTargets";
 import { emptyGenderRatio, genderRatioFromSaved, genderRatioPayload } from "@/utils/genderRatio";
 const route = useRoute();
@@ -556,10 +511,29 @@ async function load() {
   }
 }
 onMounted(load);
+const scheduleQuery = ref("");
+const scheduleState = ref("");
+const settlingId = ref(0);
+const compactTable = ref(window.innerWidth < 800);
+const onResize = () => { compactTable.value = window.innerWidth < 800; };
+onMounted(() => window.addEventListener("resize", onResize));
+onUnmounted(() => window.removeEventListener("resize", onResize));
+const money = (value) => Number(value || 0).toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+const pendingReviewCount = computed(() => list.value.filter((row) => row.reviewStatus === "pending" && row.status !== "cancelled").length);
 const activeCount = computed(() => list.value.filter((s) => s.status !== "cancelled").length);
+const recruitingCount = computed(() => list.value.filter((s) => s.status === "recruiting" && !s.guaranteed && !s.startedAt && !s.completedAt).length);
 const cancelledCount = computed(() => list.value.filter((s) => s.status === "cancelled").length);
 const visibleList = computed(() => {
-  const rows = showCancelled.value ? list.value : list.value.filter((s) => s.status !== "cancelled");
+  const rows = (showCancelled.value ? list.value : list.value.filter((s) => s.status !== "cancelled")).filter((row) => {
+    const query = scheduleQuery.value.trim().toLowerCase();
+    if (query && ![row.route?.title, row.organizerName, row.companyName, row.startDate].some((value) => String(value || "").toLowerCase().includes(query))) return false;
+    if (scheduleState.value === "pending") return row.reviewStatus === "pending";
+    if (scheduleState.value === "started") return !!row.startedAt && !row.completedAt;
+    if (scheduleState.value === "completed") return !!row.completedAt;
+    if (scheduleState.value === "confirmed") return row.status !== "cancelled" && (row.guaranteed || row.status === "confirmed");
+    if (scheduleState.value === "recruiting") return row.status === "recruiting" && !row.guaranteed && !row.startedAt && !row.completedAt;
+    return true;
+  });
   const focus = Number(route.query.id || 0);
   const pending = [];
   const rest = [];
@@ -576,6 +550,7 @@ const visibleList = computed(() => {
 });
 const emptyText = computed(() => {
   if (listLoading.value) return "加载中…";
+  if (scheduleQuery.value || scheduleState.value) return "没有符合筛选条件的团，请调整关键词或状态";
   if (!showCancelled.value && cancelledCount.value) return "已解散的团已隐藏，打开「显示已解散」可查看";
   return "暂无数据";
 });
@@ -797,14 +772,21 @@ async function saveCost() {
   load();
 }
 async function settle(row) {
-  const res = await http.post(`/admin/schedules/${row.id}/settle`);
-  ElMessage.success(`已结算 ${res.data.count} 人`);
-  load();
-  if (res.data.splits?.length) {
-    splitRows.value = res.data.splits;
-    splitScheduleId.value = row.id;
-    showSplit.value = true;
-  }
+  if (settlingId.value) return;
+  try { await ElMessageBox.confirm(`确认核对「${row.route?.title || "本团"}」的公司挂账，并完成结算吗？`, "结算确认", { confirmButtonText: "确认结算", cancelButtonText: "继续核对", type: "warning" }); }
+  catch { return; }
+  settlingId.value = row.id;
+  try {
+    const res = await http.post(`/admin/schedules/${row.id}/settle`);
+    ElMessage.success(`已结算 ${res.data.count} 人`);
+    await load();
+    if (res.data.splits?.length) {
+      splitRows.value = res.data.splits;
+      splitScheduleId.value = row.id;
+      showSplit.value = true;
+    }
+  } catch (e) { ElMessage.error(e.message || "结算失败，请稍后重试"); }
+  finally { settlingId.value = 0; }
 }
 async function openSplit(row) {
   splitScheduleId.value = row.id;

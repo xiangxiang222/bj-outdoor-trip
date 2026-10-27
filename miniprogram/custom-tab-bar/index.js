@@ -2,10 +2,10 @@ const locale = require("../utils/locale");
 const { SIZES } = require("../utils/appearance");
 
 const TABS = [
-  { pagePath: "/pages/index/index", text: "首页", icon: "/images/home.png", iconOn: "/images/home-on.png" },
-  { pagePath: "/pages/activities/activities", text: "活动", icon: "/images/activities.png", iconOn: "/images/activities-on.png" },
-  { pagePath: "/pages/orders/orders", text: "行程", icon: "/images/trips.png", iconOn: "/images/trips-on.png" },
-  { pagePath: "/pages/mine/mine", text: "我的", icon: "/images/mine.png", iconOn: "/images/mine-on.png" },
+  { pagePath: "/pages/index/index", text: "首页", icon: "/images/ui/home.png", iconOn: "/images/ui/home-on.png" },
+  { pagePath: "/pages/activities/activities", text: "活动", icon: "/images/ui/activities.png", iconOn: "/images/ui/activities-on.png" },
+  { pagePath: "/pages/orders/orders", text: "行程", icon: "/images/ui/trips.png", iconOn: "/images/ui/trips-on.png" },
+  { pagePath: "/pages/mine/mine", text: "我的", icon: "/images/ui/mine.png", iconOn: "/images/ui/mine-on.png" },
 ];
 
 Component({

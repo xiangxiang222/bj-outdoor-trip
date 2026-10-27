@@ -2,10 +2,10 @@ const locale = require("../../utils/locale");
 const { SIZES } = require("../../utils/appearance");
 
 const TABS = [
-  { pagePath: "/pages/index/index", text: "首页", icon: "/images/home.png" },
-  { pagePath: "/pages/activities/activities", text: "活动", icon: "/images/activities.png" },
-  { pagePath: "/pages/orders/orders", text: "行程", icon: "/images/trips.png" },
-  { pagePath: "/pages/mine/mine", text: "我的", icon: "/images/mine.png" },
+  { pagePath: "/pages/index/index", text: "首页", icon: "/images/ui/home.png" },
+  { pagePath: "/pages/activities/activities", text: "活动", icon: "/images/ui/activities.png" },
+  { pagePath: "/pages/orders/orders", text: "行程", icon: "/images/ui/trips.png" },
+  { pagePath: "/pages/mine/mine", text: "我的", icon: "/images/ui/mine.png" },
 ];
 
 Component({

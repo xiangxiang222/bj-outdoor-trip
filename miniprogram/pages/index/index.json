@@ -1,9 +1,10 @@
 {
-    "navigationBarTitleText": "同行者众",
+  "navigationBarTitleText": "同行者众",
   "enablePullDownRefresh": true,
-  "backgroundColorTop": "#8534e4",
+  "backgroundColorTop": "#5b3b8c",
   "backgroundTextStyle": "light",
   "usingComponents": {
     "live-pulse": "/components/live-pulse/live-pulse"
-  }
+  },
+  "navigationStyle": "custom"
 }

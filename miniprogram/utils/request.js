@@ -1,5 +1,6 @@
 const { visitorId } = require("./pulse");
 const { read } = require("./appearance");
+const { normalizeLegacyMedia } = require("./media");
 
 function failMessage(err, baseUrl) {
   const raw = String((err && (err.errMsg || err.message)) || "");
@@ -36,7 +37,7 @@ function request(path, method, data) {
       },
       success(res) {
         if (res.statusCode >= 200 && res.statusCode < 300 && res.data && res.data.ok) {
-          resolve(res.data);
+          resolve(normalizeLegacyMedia(res.data));
           return;
         }
         if (res.statusCode === 401) {

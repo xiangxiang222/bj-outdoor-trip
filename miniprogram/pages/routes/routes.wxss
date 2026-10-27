@@ -1,1 +1,10 @@
-/* inherit */
+.input { border: 0; background: #fff; padding: 22rpx 28rpx; border-radius: 18rpx; margin-top: 0; }
+.chips { padding: 0 22rpx 12rpx; }
+.route-card { margin-bottom: 28rpx; }
+.route-card .cover { height: 390rpx; }
+.route-card .pad { padding: 24rpx 28rpx 28rpx; }
+.route-eyebrow { color: #9a88a9; font-size: calc(20rpx * var(--ui-scale)); letter-spacing: 2rpx; margin-bottom: 10rpx; }
+.route-card .title { font-size: calc(33rpx * var(--ui-scale)); }
+.route-card .muted { margin-top: 10rpx; }
+.route-card .price { margin-top: 18rpx; font-size: calc(35rpx * var(--ui-scale)); }
+.route-card .price-origin { font-size: calc(23rpx * var(--ui-scale)); }

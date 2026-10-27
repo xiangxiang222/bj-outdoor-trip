@@ -275,7 +275,7 @@ Page({
     wx.navigateTo({ url });
   },
   open() {
-    wx.navigateTo({ url: "/pages/open/open?id=" + this.data.id });
+    wx.navigateTo({ url: "/pages/publish/publish?routeId=" + this.data.id });
   },
   onShareAppMessage() {
     const r = this.data.r || {};

@@ -1,7 +1,12 @@
 {
   "description": "同行者众 · 北京周边短途游",
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      { "type": "folder", "value": "images/covers" },
+      { "type": "folder", "value": "images/mine-icons" },
+      { "type": "folder", "value": "pkg-detail/gallery" },
+      { "type": "folder", "value": "data" }
+    ],
     "include": []
   },
   "setting": {

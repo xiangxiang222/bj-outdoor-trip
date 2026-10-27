@@ -158,7 +158,7 @@
   </view>
 </view>
 <button class="btn" wx:if="{{r.title}}" open-type="share">{{tr.t('分享到微信', lang)}}</button>
-<view class="btn ghost" wx:if="{{r.title && r.reviewStatus!='pending' && r.reviewStatus!='rejected'}}" bindtap="open">{{tr.t('发布排期', lang)}}</view>
+<view class="btn ghost" wx:if="{{r.title && r.reviewStatus!='pending' && r.reviewStatus!='rejected'}}" bindtap="open">{{tr.t('选这条线路发团', lang)}}</view>
 
 <view class="pad" wx:if="{{r.title}}">
   <view class="title">{{tr.t('装备清单', lang)}}</view>

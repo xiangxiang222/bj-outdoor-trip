@@ -22,7 +22,7 @@
   padding: 28rpx 28rpx 8rpx;
   background: #fff;
   border-radius: 16rpx;
-  border: 1px solid #c6f24a;
+  border: 1px solid #d9cde8;
 }
 .cert-result-title {
   font-weight: 650;
@@ -30,3 +30,12 @@
   margin-bottom: 8rpx;
 }
 .cert-result .btn { margin: 20rpx 0 16rpx; }
+
+.campus-cert-head { padding: 40rpx 32rpx 30rpx; background: linear-gradient(140deg, #e5dcf1, #f4effa); border-radius: 0 0 36rpx 36rpx; }
+.campus-cert-head .section-title { margin: 15rpx 0 12rpx; color: #5b3b8c; }
+.campus-cert-benefits { display: flex; gap: 24rpx; margin-top: 28rpx; color: #886da0; font-size: calc(22rpx * var(--ui-scale)); }
+.campus-cert-benefits text + text { border-left: 1rpx solid #d8c9e6; padding-left: 24rpx; }
+.cert-policy { margin: 26rpx 30rpx 8rpx; color: #a094a9; font-size: calc(22rpx * var(--ui-scale)); line-height: 1.7; }
+.cert-photo { border-radius: 22rpx; }
+.pad { padding: 20rpx 32rpx 8rpx; color: #685a75; font-size: calc(25rpx * var(--ui-scale)); }
+.input { background: #fff; border: 1rpx solid #eeebf2; padding: 22rpx 26rpx; border-radius: 18rpx; }

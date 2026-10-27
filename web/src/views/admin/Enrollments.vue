@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="row">
-      <h2>报名明细</h2>
+      <h2>报名与收款</h2>
       <div class="row" style="gap:8px">
         <el-input v-model="q" placeholder="姓名 / 手机 / 线路" clearable style="width:200px" @keyup.enter="load" />
         <el-select v-model="payStatus" clearable placeholder="支付状态" style="width:140px">
@@ -18,7 +18,7 @@
         <el-button type="success" @click="load">查询</el-button>
       </div>
     </div>
-    <p class="admin-scroll-hint">表格较宽时可左右滑动，操作在最右侧。</p>
+    <p class="admin-scroll-hint">按线路、出行人或支付状态快速核对有效报名与收款情况。取消报名将按现有退费规则处理，请先与出行人确认。</p>
     <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
     <el-table :data="list" stripe :empty-text="loading ? ' ' : '暂无数据'">
       <el-table-column prop="title" label="线路" min-width="160" />

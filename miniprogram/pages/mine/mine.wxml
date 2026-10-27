@@ -1,173 +1,100 @@
-<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}{{posterPick || momentsOpen ? 'overflow:hidden;' : ''}}" />
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}{{dark ? '' : 'background-color:#f7f8fa;'}}{{posterPick || momentsOpen ? 'overflow:hidden;' : ''}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
 <view class="mine-nav {{dark ? 'is-dark' : ''}}" style="padding-top: {{statusBarHeight}}px;">
   <view class="mine-nav-bar" style="height: {{navBarHeight}}px;"></view>
 </view>
 <view class="mine-page {{dark ? 'is-dark' : ''}}" wx:if="{{user}}">
-  <view class="mine-head">
-  <view class="mine-user">
-    <view class="mine-avatar" catchtap="openAvatar">
-      <image wx:if="{{user.avatar}}" src="{{user.avatar}}" mode="aspectFill" />
-      <text wx:else>{{tr.t(nickHead, lang)}}</text>
+  <view class="account-toolbar">
+    <view class="account-member-pill" bindtap="openMember" hover-class="account-tap">
+      <image src="{{iconBase}}crown{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" />
+      <text>{{tr.t('同行会员', lang)}}</text>
+      <image class="account-chevron" src="{{iconBase}}chevron{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" />
     </view>
-    <view class="mine-user-main">
-      <view bindtap="goHome">
-        <view class="title">{{tr.t(user.nickname, lang)}}</view>
-      </view>
-      <view class="mine-tags">
-        <view wx:if="{{user.membership}}" class="mine-lv" catchtap="openMember">{{tr.t(user.membership.code, lang)}}</view>
-        <view class="mine-chip" catchtap="openMember">{{tr.t('会员 ›', lang)}}</view>
-      </view>
+    <view class="account-tools">
+      <view bindtap="goOfficial" hover-class="account-tap"><image src="{{iconBase}}headset{{dark ? '-dark' : ''}}.png" mode="aspectFit" /><text>{{tr.t('客服', lang)}}</text></view>
+      <view bindtap="go" data-url="/pages/notices/notices" hover-class="account-tap"><view class="account-icon"><image src="{{iconBase}}message{{dark ? '-dark' : ''}}.png" mode="aspectFit" /><text wx:if="{{hub.unreadCount}}" class="account-badge">{{hub.unreadCount > 9 ? '9+' : hub.unreadCount}}</text></view><text>{{tr.t('消息', lang)}}</text></view>
+      <view bindtap="go" data-url="/pages/settings/settings" hover-class="account-tap"><image src="{{iconBase}}settings{{dark ? '-dark' : ''}}.png" mode="aspectFit" /><text>{{tr.t('设置', lang)}}</text></view>
     </view>
   </view>
-  <view class="mine-tools {{dark ? 'is-dark' : ''}}">
-    <view class="mine-tool" bindtap="goOfficial">
-      <view class="mine-tool-ico"><image src="{{iconBase}}tool-help.png?v=17" mode="aspectFit" /></view>
-      <text>{{tr.t('客服', lang)}}</text>
-    </view>
-    <view class="mine-tool" bindtap="go" data-url="/pages/settings/settings">
-      <view class="mine-tool-ico"><image src="{{iconBase}}tool-set.png?v=17" mode="aspectFit" /></view>
-      <text>{{tr.t('设置', lang)}}</text>
-    </view>
-    <view class="mine-tool" bindtap="go" data-url="/pages/notices/notices">
-      <view class="mine-tool-ico">
-        <image src="{{iconBase}}tool-msg.png?v=17" mode="aspectFit" />
-        <text wx:if="{{hub.unreadCount}}" class="mine-badge">{{hub.unreadCount > 9 ? '9+' : hub.unreadCount}}</text>
+
+  <view class="account-card account-overview">
+    <view class="account-profile-row">
+      <view class="account-avatar" catchtap="openAvatar" hover-class="account-tap">
+        <image wx:if="{{user.avatar}}" src="{{user.avatar}}" mode="aspectFill" /><text wx:else>{{tr.t(nickHead, lang)}}</text>
       </view>
-      <text>{{tr.t('消息', lang)}}</text>
+      <view class="account-identity">
+        <view class="account-name" bindtap="goHome" hover-class="account-tap">{{tr.t(user.nickname, lang)}}</view>
+        <view class="account-tier" bindtap="openMember" hover-class="account-tap"><image src="{{iconBase}}crown{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" /><text>{{tr.t(user.membership.name || '注册会员', lang)}}</text><text class="account-tier-code">{{user.membership.code || 'V1'}}</text></view>
+      </view>
+    </view>
+    <view class="account-stats">
+      <view bindtap="go" data-url="/pages/wallet/wallet" hover-class="account-tap">
+        <view class="account-stat-value" wx:if="{{hubReady}}">{{hub.balance != null ? hub.balance : user.walletBalance || 0}}</view><view class="account-stat-value" wx:else><view class="spinner"></view></view>
+        <text class="account-stat-label">{{tr.t('余额', lang)}}<text class="account-unit"> / {{tr.t('元', lang)}}</text></text>
+      </view>
+      <view bindtap="go" data-url="/pages/coupons/coupons" hover-class="account-tap">
+        <view class="account-stat-value" wx:if="{{hubReady}}">{{hub.couponCount || 0}}</view><view class="account-stat-value" wx:else><view class="spinner"></view></view>
+        <text class="account-stat-label">{{tr.t('优惠券', lang)}}</text>
+      </view>
+      <view bindtap="go" data-url="/pages/signin/signin" hover-class="account-tap">
+        <view class="account-stat-value" wx:if="{{hubReady}}">{{hub.points != null ? hub.points : user.points || 0}}</view><view class="account-stat-value" wx:else><view class="spinner"></view></view>
+        <text class="account-stat-label">{{tr.t('积分', lang)}}</text>
+      </view>
+      <view bindtap="go" data-url="/pages/signin/signin" hover-class="account-tap">
+        <view class="account-stat-value account-sign" wx:if="{{hubReady}}">{{hub.signedToday ? tr.t('已签到', lang) : tr.t('未签到', lang)}}</view><view class="account-stat-value" wx:else><view class="spinner"></view></view>
+        <text class="account-stat-label">{{tr.t('每日签到', lang)}}</text>
+      </view>
+    </view>
+    <view wx:if="{{hub.couponExpireHint}}" class="account-expiring" bindtap="go" data-url="/pages/coupons/coupons" hover-class="account-tap"><text>{{tr.t(hub.couponExpireHint, lang)}}</text><image src="{{iconBase}}chevron{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" /></view>
+    <view class="account-benefits" bindtap="openMember" hover-class="account-tap">
+      <view class="account-benefits-copy"><view class="account-benefits-title"><image src="{{iconBase}}crown{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" /><text>{{tr.t('同行会员', lang)}}</text></view><view class="account-benefits-detail" wx:if="{{user.membership.perks.length}}"><text class="account-perk">{{tr.t(user.membership.perks[0], lang)}}</text><text class="account-perk" wx:if="{{user.membership.perks[1]}}">{{tr.t(user.membership.perks[1], lang)}}</text></view><text class="account-benefits-detail" wx:else>{{tr.t('出行积累成长，解锁更多权益', lang)}}</text></view>
+      <view class="account-benefits-more"><text>{{tr.t('会员中心', lang)}}</text><image src="{{iconBase}}chevron{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" /></view>
     </view>
   </view>
+
+  <view class="account-card account-orders">
+    <view class="account-history">
+      <view bindtap="go" data-url="/pages/views/views" hover-class="account-tap"><text>{{tr.t('足迹', lang)}}</text><text class="account-count" wx:if="{{hubReady}}">{{hub.viewCount || 0}}</text><view class="spinner" wx:else></view></view>
+      <view bindtap="go" data-url="/pages/favorites/favorites" hover-class="account-tap"><text>{{tr.t('收藏', lang)}}</text><text class="account-count" wx:if="{{hubReady}}">{{hub.favoriteCount || 0}}</text><view class="spinner" wx:else></view></view>
+      <view bindtap="go" data-url="/pages/follows/follows" hover-class="account-tap"><text>{{tr.t('关注', lang)}}</text><text class="account-count" wx:if="{{hubReady}}">{{hub.followCount || 0}}</text><view class="spinner" wx:else></view></view>
+    </view>
+    <view class="account-order-row">
+      <view class="account-shortcuts">
+        <view bindtap="goOrders" data-tab="unpaid" hover-class="account-tap"><view class="account-icon"><image src="{{iconBase}}card{{dark ? '-dark' : ''}}.png" mode="aspectFit" /><text wx:if="{{hub.unpaidCount}}" class="account-badge">{{hub.unpaidCount > 99 ? '99+' : hub.unpaidCount}}</text></view><text>{{tr.t('待付款', lang)}}</text></view>
+        <view bindtap="goOrders" data-tab="recruiting" hover-class="account-tap"><view class="account-icon"><image src="{{iconBase}}people{{dark ? '-dark' : ''}}.png" mode="aspectFit" /><text wx:if="{{hub.recruitingCount}}" class="account-badge">{{hub.recruitingCount > 99 ? '99+' : hub.recruitingCount}}</text></view><text>{{tr.t('待成团', lang)}}</text></view>
+        <view bindtap="goOrders" data-tab="depart" hover-class="account-tap"><view class="account-icon"><image src="{{iconBase}}backpack{{dark ? '-dark' : ''}}.png" mode="aspectFit" /><text wx:if="{{hub.departCount}}" class="account-badge">{{hub.departCount > 99 ? '99+' : hub.departCount}}</text></view><text>{{tr.t('待出行', lang)}}</text></view>
+        <view bindtap="goOrders" data-tab="review" hover-class="account-tap"><view class="account-icon"><image src="{{iconBase}}review{{dark ? '-dark' : ''}}.png" mode="aspectFit" /><text wx:if="{{hub.reviewCount}}" class="account-badge">{{hub.reviewCount > 99 ? '99+' : hub.reviewCount}}</text></view><text>{{tr.t('待评价', lang)}}</text></view>
+      </view>
+      <view class="account-all" bindtap="goOrders" data-tab="all" hover-class="account-tap"><text>{{tr.t('全部', lang)}}</text><view class="account-circle-arrow"><image src="{{iconBase}}chevron{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view></view>
+    </view>
+  </view>
+
+  <view class="account-card account-services">
+    <view class="account-section-title">{{tr.t('出行与服务', lang)}}</view>
+    <view class="account-create">
+      <view bindtap="go" data-url="/pages/route-apply/route-apply" hover-class="account-tap"><view class="account-create-icon"><image src="{{iconBase}}route{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" /></view><view class="account-create-copy"><text>{{tr.t('线路收录', lang)}}</text><text>{{tr.t('申请审核后上线', lang)}}</text></view><image class="account-chevron" src="{{iconBase}}chevron{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view>
+      <view bindtap="go" data-url="/pages/publish/publish" hover-class="account-tap"><view class="account-create-icon"><image src="{{iconBase}}publish{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" /></view><view class="account-create-copy"><text>{{tr.t('发起行程', lang)}}</text><text>{{tr.t('高校 · 企业 · 好友', lang)}}</text></view><image class="account-chevron" src="{{iconBase}}chevron{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view>
+    </view>
+    <view class="account-service-grid">
+      <view bindtap="go" data-url="/pages/student/student" hover-class="account-tap"><view class="account-service-icon"><image src="{{iconBase}}cap{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view><text>{{tr.t(campusLabel, lang)}}</text></view>
+      <view bindtap="go" data-url="/pages/leader/leader" hover-class="account-tap"><view class="account-service-icon"><image src="{{iconBase}}compass{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view><text>{{tr.t(leaderLabel, lang)}}</text></view>
+      <view bindtap="go" data-url="/pages/photo-apply/photo-apply" hover-class="account-tap"><view class="account-service-icon"><image src="{{iconBase}}camera{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view><text>{{tr.t('摄影师申请', lang)}}</text></view>
+      <view bindtap="openPoster" hover-class="account-tap"><view class="account-service-icon"><image src="{{iconBase}}poster{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view><text>{{tr.t('生成海报', lang)}}</text></view>
+    </view>
+    <view class="account-feedback" bindtap="go" data-url="/pages/feedback/feedback" hover-class="account-tap"><image src="{{iconBase}}feedback{{dark ? '-dark' : ''}}.png" mode="aspectFit" /><text>{{tr.t('意见反馈', lang)}}</text><text class="account-feedback-note">{{tr.t('让下一次出行更好', lang)}}</text><image class="account-chevron" src="{{iconBase}}chevron{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view>
   </view>
   <view class="avatar-mask" wx:if="{{picker}}" catchtap="closeAvatar">
     <view class="avatar-sheet" catchtap="noop">
       <view class="avatar-title">{{tr.t('选择默认头像', lang)}}</view>
-      <view class="avatar-grid">
-        <image wx:for="{{defaults}}" wx:key="id" src="{{item.url}}" mode="aspectFill" data-url="{{item.url}}" catchtap="pickDefault" />
-      </view>
+      <view class="avatar-grid"><image wx:for="{{defaults}}" wx:key="id" src="{{item.url}}" mode="aspectFill" data-url="{{item.url}}" catchtap="pickDefault" /></view>
       <view class="avatar-action" bindtap="shoot">{{tr.t('拍照', lang)}}</view>
       <view class="avatar-action" bindtap="album">{{tr.t('从手机相册选择', lang)}}</view>
       <view class="avatar-action cancel" bindtap="closeAvatar">{{tr.t('取消', lang)}}</view>
     </view>
   </view>
-
-  <view class="mine-sheet">
-    <view class="mine-sheet-head">
-      <view bindtap="go" data-url="/pages/wallet/wallet">{{tr.t('我的钱包', lang)}} ›</view>
-      <view class="mine-member-banner" bindtap="openMember">{{tr.t('会员中心 ›', lang)}}</view>
-    </view>
-    <view class="mine-stats">
-      <view bindtap="go" data-url="/pages/wallet/wallet">
-        <view class="mine-stat-num" wx:if="{{hubReady}}">{{tr.t(hub.balance, lang)}}</view>
-        <view class="mine-stat-num" wx:else><view class="spinner"></view></view>
-        <view class="mine-stat-name">{{tr.t('余额', lang)}}</view>
-      </view>
-      <view bindtap="go" data-url="/pages/coupons/coupons">
-        <view class="mine-stat-num" wx:if="{{hubReady}}">{{tr.t(hub.couponCount, lang)}}</view>
-        <view class="mine-stat-num" wx:else><view class="spinner"></view></view>
-        <view class="mine-stat-name">{{tr.t('优惠券', lang)}}</view>
-        <view class="mine-expire" wx:if="{{hub.couponExpireHint}}">{{tr.t(hub.couponExpireHint, lang)}}</view>
-      </view>
-      <view bindtap="go" data-url="/pages/signin/signin">
-        <view class="mine-stat-num" wx:if="{{hubReady}}">{{tr.t(hub.points != null ? hub.points : user.points, lang)}}</view>
-        <view class="mine-stat-num" wx:else><view class="spinner"></view></view>
-        <view class="mine-stat-name">{{tr.t('积分', lang)}}</view>
-      </view>
-      <view bindtap="go" data-url="/pages/signin/signin">
-        <view class="mine-stat-num" wx:if="{{hubReady}}">{{hub.signedToday ? tr.t('已签到', lang) : tr.t('未签到', lang)}}</view>
-        <view class="mine-stat-num" wx:else><view class="spinner"></view></view>
-        <view class="mine-stat-name">{{tr.t('签到', lang)}}</view>
-      </view>
-      <view class="mine-more" bindtap="go" data-url="/pages/wallet/wallet">{{tr.t('更多', lang)}}</view>
-    </view>
-  </view>
-
-  <view class="mine-orders">
-    <view class="mine-links">
-      <view bindtap="go" data-url="/pages/views/views">
-        <text>{{tr.t('足迹', lang)}}</text>
-        <text class="mine-link-num" wx:if="{{hubReady}}">{{hub.viewCount || 0}}</text>
-        <view class="spinner" wx:else></view>
-      </view>
-      <view bindtap="go" data-url="/pages/favorites/favorites">
-        <text>{{tr.t('收藏', lang)}}</text>
-        <text class="mine-link-num" wx:if="{{hubReady}}">{{hub.favoriteCount || 0}}</text>
-        <view class="spinner" wx:else></view>
-      </view>
-      <view bindtap="go" data-url="/pages/follows/follows">
-        <text>{{tr.t('关注', lang)}}</text>
-        <text class="mine-link-num" wx:if="{{hubReady}}">{{hub.followCount || 0}}</text>
-        <view class="spinner" wx:else></view>
-      </view>
-    </view>
-    <view class="mine-order-row">
-      <view class="mine-shortcuts">
-        <view bindtap="goOrders" data-tab="unpaid">
-          <view class="mine-order-ico">
-            <image src="{{iconBase}}order-pay.png?v=17" mode="aspectFit" />
-            <text wx:if="{{hub.unpaidCount}}" class="mine-badge">{{hub.unpaidCount > 99 ? '99+' : hub.unpaidCount}}</text>
-          </view>
-          <view class="mine-order-name">{{tr.t('待付款', lang)}}</view>
-        </view>
-        <view bindtap="goOrders" data-tab="recruiting">
-          <view class="mine-order-ico">
-            <image src="{{iconBase}}order-recruit.png?v=17" mode="aspectFit" />
-            <text wx:if="{{hub.recruitingCount}}" class="mine-badge">{{hub.recruitingCount > 99 ? '99+' : hub.recruitingCount}}</text>
-          </view>
-          <view class="mine-order-name">{{tr.t('待成团', lang)}}</view>
-        </view>
-        <view bindtap="goOrders" data-tab="depart">
-          <view class="mine-order-ico">
-            <image src="{{iconBase}}order-go.png?v=17" mode="aspectFit" />
-            <text wx:if="{{hub.departCount}}" class="mine-badge">{{hub.departCount > 99 ? '99+' : hub.departCount}}</text>
-          </view>
-          <view class="mine-order-name">{{tr.t('待出行', lang)}}</view>
-        </view>
-        <view bindtap="goOrders" data-tab="review">
-          <view class="mine-order-ico">
-            <image src="{{iconBase}}order-review.png?v=17" mode="aspectFit" />
-            <text wx:if="{{hub.reviewCount}}" class="mine-badge">{{hub.reviewCount > 99 ? '99+' : hub.reviewCount}}</text>
-          </view>
-          <view class="mine-order-name">{{tr.t('待评价', lang)}}</view>
-        </view>
-        <view bindtap="goOrders" data-tab="refund">
-          <view class="mine-order-ico">
-            <image src="{{iconBase}}order-refund.png?v=17" mode="aspectFit" />
-            <text wx:if="{{hub.refundCount}}" class="mine-badge">{{hub.refundCount > 99 ? '99+' : hub.refundCount}}</text>
-          </view>
-          <view class="mine-order-name">{{tr.t('已退款', lang)}}</view>
-        </view>
-      </view>
-      <view class="mine-all" bindtap="goOrders" data-tab="all">
-        <view class="mine-all-ico"></view>
-        <text>{{tr.t('全部', lang)}}</text>
-      </view>
-    </view>
-  </view>
-
-  <view class="mine-play">
-    <view bindtap="go" data-url="/pages/student/student">
-      <view class="mine-ico"><image src="{{iconBase}}campus.png?v=17" mode="aspectFit" /></view>
-      <text>{{tr.t(campusLabel, lang)}}</text>
-    </view>
-    <view bindtap="go" data-url="/pages/leader/leader">
-      <view class="mine-ico"><image src="{{iconBase}}leader.png?v=17" mode="aspectFit" /></view>
-      <text>{{tr.t(leaderLabel, lang)}}</text>
-    </view>
-    <view bindtap="go" data-url="/pages/photo-apply/photo-apply">
-      <view class="mine-ico"><view class="mine-cam"></view></view>
-      <text>{{tr.t('摄影师申请', lang)}}</text>
-    </view>
-    <view bindtap="openPoster">
-      <view class="mine-ico"><view class="mine-poster"></view></view>
-      <text>{{tr.t('生成海报', lang)}}</text>
-    </view>
-    <view bindtap="go" data-url="/pages/feedback/feedback">
-      <view class="mine-ico"><image src="{{iconBase}}feedback.png?v=17" mode="aspectFit" /></view>
-      <text>{{tr.t('反馈', lang)}}</text>
-    </view>
-  </view>
 </view>
 
+<view class="guest-welcome" wx:if="{{!user}}"><image src="{{mediaBase}}/covers/R01.jpg" mode="aspectFill" /><view class="guest-welcome-copy"><view class="section-kicker">YOUR JOURNEY STARTS HERE</view><view>{{tr.t('每一程，都值得期待', lang)}}</view><text>{{tr.t('登录后管理行程，解锁你的同行权益', lang)}}</text></view></view>
 <view class="btn" wx:if="{{!user}}" bindtap="login">{{tr.t('登录', lang)}}</view>
 <view class="btn ghost" wx:if="{{!user}}" bindtap="register">{{tr.t('注册', lang)}}</view>
 
@@ -231,7 +158,7 @@
   </view>
 </view>
 <view class="moments-mask" wx:if="{{momentsOpen}}" catchtap="closeMoments">
-  <view class="moments-sheet {{posterCoverBar ? 'cover-bar' : 'above-tab'}}" catchtap="noop">
+  <view class="moments-sheet {{posterCoverBar ? 'cover-bar' : 'above-tab'}} {{dark ? 'is-dark' : ''}}" catchtap="noop">
     <scroll-view scroll-y class="moments-scroll" enhanced show-scrollbar="{{false}}">
       <image class="moments-img" src="{{momentsPath}}" mode="widthFix" show-menu-by-longpress />
     </scroll-view>

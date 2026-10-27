@@ -1,4 +1,4 @@
-const { baseUrl } = require("./config");
+const { baseUrl, mediaBaseUrl } = require("./config");
 
 App({
   globalData: {
@@ -163,7 +163,7 @@ wx.showActionSheet = function (opt) {
 const originPage = Page;
 Page = function (config) {
   const look = appearance.read();
-  config.data = Object.assign({ lookRoot: "16px", lookStyle: "", lang: look.lang }, config.data || {});
+  config.data = Object.assign({ lookRoot: "16px", lookStyle: "", lang: look.lang, mediaBase: mediaBaseUrl }, config.data || {});
   const originLoad = config.onLoad;
   const originShow = config.onShow;
   config.onLoad = function (query) {

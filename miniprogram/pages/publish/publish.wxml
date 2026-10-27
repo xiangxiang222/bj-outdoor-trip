@@ -1,6 +1,11 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="pub-intro">{{tr.t(form.channel=='activity' ? '提交后需审核，通过后出现在活动 Tab。' : '选一条已经通过的线路，填好这场出发就能发团。', lang)}}</view>
+<view class="pub-page-head" wx:if="{{form.channel!='activity'}}">
+  <view class="section-kicker">PLAN A TRIP, BRING PEOPLE TOGETHER</view>
+  <view class="section-title">{{tr.t('发起一场同行', lang)}}</view>
+  <view class="pub-lead">{{tr.t('选好线路与出发时间，再决定由谁发起、谁可以报名。', lang)}}</view>
+</view>
+<view class="pub-intro" wx:if="{{form.channel=='activity'}}">{{tr.t('提交后需审核，通过后出现在活动 Tab。', lang)}}</view>
 
 <block wx:if="{{form.channel=='activity'}}">
   <view class="pub-card">
@@ -74,6 +79,7 @@
       <view class="v">{{tr.t(organizerLabels[organizerIndex], lang)}}<text class="chev">›</text></view>
     </picker>
   </view>
+  <view class="hint host-hint">{{tr.t('个人轻松拼团，公司统一组织出行，高校可自定义跨校、跨学院招募范围。', lang)}}</view>
 
   <view class="line" wx:if="{{form.organizerType=='company'}}">
     <text class="k">{{tr.t('公司名称', lang)}}</text>
@@ -83,7 +89,8 @@
     <text class="k">{{tr.t('发起学校', lang)}}</text>
     <view class="v {{form.companyName ? '' : 'ph'}}">{{tr.t(form.companyName || '选择学校', lang)}}<text class="chev">›</text></view>
   </view>
-  <view class="hint" wx:if="{{form.organizerType=='campus'}}">{{tr.t('写在团上，表示哪个学校在组织，不限制谁能报名。', lang)}}</view>
+  <view class="hint" wx:if="{{form.organizerType=='company'}}">{{tr.t('团上会显示公司名称，方便同事识别。报名人数与结算由发起方统一安排。', lang)}}</view>
+  <view class="hint" wx:if="{{form.organizerType=='campus'}}">{{tr.t('这里填写组织方学校。招募对象可来自本校、其他学校，也可以按学院设置。', lang)}}</view>
   <view class="field-error in" wx:if="{{errors.companyName}}">{{tr.t(errors.companyName, lang)}}</view>
 
   <view class="line">
@@ -151,9 +158,10 @@
     <view class="scope">
       <view class="scope-h">
         <text>{{tr.t('报名范围', lang)}}</text>
-        <text class="add" bindtap="addCampusTarget">{{tr.t('添加学校-学院-专业', lang)}}</text>
+        <text class="add" bindtap="addCampusTarget">＋ {{tr.t('添加招募范围', lang)}}</text>
       </view>
-      <view class="hint flat">{{tr.t('谁可以报名。留空表示不限学校，也可以和发起学校不同。', lang)}}</view>
+      <view class="hint flat">{{tr.t('按学校设定基础范围，还可继续细分到学院与专业。不同学校和学院可同时参与。', lang)}}<text wx:if="{{form.offerType!='free'}}">{{tr.t('留空则按团型规则开放。', lang)}}</text></view>
+      <view class="scope-empty" wx:if="{{!form.campusTargets.length}}">{{tr.t('暂未限定学校或学院', lang)}}<text>{{tr.t(form.offerType=='free' ? '未填写时，默认只对发起学校的师生开放' : '可面向所有符合条件的报名者开放', lang)}}</text></view>
       <view class="scope-card" wx:for="{{form.campusTargets}}" wx:key="index">
         <view class="scope-line" bindtap="pickTargetSchool" data-i="{{index}}">
           <text class="sk">{{tr.t('学校', lang)}}</text>
@@ -186,7 +194,7 @@
                 <text class="ratio-num">{{100 - form.genderRows[index].share}}</text>
               </view>
             </view>
-            <slider min="0" max="100" value="{{form.genderRows[index].share}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" bindchange="setRatio" bindchanging="setRatio" data-bucket="school" data-school="{{item.school}}" />
+            <slider min="0" max="100" value="{{form.genderRows[index].share}}" activeColor="#9874b7" backgroundColor="#ede6f4" block-color="#ffffff" block-size="24" bindchange="setRatio" bindchanging="setRatio" data-bucket="school" data-school="{{item.school}}" />
           </view>
         </block>
         <view class="scope-del" catchtap="removeCampusTarget" data-i="{{index}}">{{tr.t('删除', lang)}}</view>
@@ -213,7 +221,7 @@
             <text class="ratio-num">{{100 - form.overallMale}}</text>
           </view>
         </view>
-        <slider min="0" max="100" value="{{form.overallMale}}" activeColor="rgba(0,0,0,0.35)" backgroundColor="rgba(0,0,0,0.10)" block-color="#ffffff" block-size="24" bindchange="setRatio" bindchanging="setRatio" data-bucket="overall" />
+        <slider min="0" max="100" value="{{form.overallMale}}" activeColor="#9874b7" backgroundColor="#ede6f4" block-color="#ffffff" block-size="24" bindchange="setRatio" bindchanging="setRatio" data-bucket="overall" />
         <text class="ratio-foot">{{tr.t('男生和女生合计 100。学校不再单独设置。', lang)}}</text>
       </view>
     </view>
@@ -235,4 +243,6 @@
 </view>
 
 <view id="submit-error" class="field-error" wx:if="{{errors.form}}">{{tr.t(errors.form, lang)}}</view>
-<view class="btn clay" bindtap="submit">{{tr.t(form.channel=='activity' ? '提交审核' : '发布', lang)}}</view>
+<view class="pub-confirm" wx:if="{{form.channel!='activity' && form.routeId}}"><view>{{tr.t('出发前，再确认一下', lang)}}</view><text>{{routeLabel}}</text><text>{{form.startDate}} · {{form.meetupTime}} · {{form.meetupPoint}}</text><text>{{tr.t(organizerLabels[organizerIndex], lang)}} · {{form.minGroupSize}}{{tr.t('人成团', lang)}}</text></view>
+<view class="pub-review-note">{{tr.t(form.channel=='activity' ? '提交后由平台审核，审核通过后开放报名。' : '发布后即可报名，可分享给同行', lang)}}</view>
+<button class="btn clay" bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}">{{tr.t(submitting ? '正在提交' : (form.channel=='activity' ? '提交审核' : '确认发布'), lang)}}</button>

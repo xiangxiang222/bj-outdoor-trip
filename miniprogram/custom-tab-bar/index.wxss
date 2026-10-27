@@ -10,7 +10,7 @@
   padding-bottom: constant(safe-area-inset-bottom);
   padding-bottom: env(safe-area-inset-bottom);
   background: #fff;
-  border-top: 1rpx solid #eceee8;
+  border-top: 1rpx solid #f0edf4;
   z-index: 100;
 }
 .item {
@@ -21,5 +21,10 @@
   justify-content: center;
   color: #6a6a6a;
 }
-.item.on { color: #141414; font-weight: 600; }
+.item.on { color: #5b3b8c; font-weight: 600; }
 .item image { width: 48rpx; height: 48rpx; margin-bottom: 4rpx; }
+
+.bar { height: calc(112rpx + env(safe-area-inset-bottom)); padding-top: 8rpx; box-shadow: 0 -4rpx 24rpx rgba(52,34,73,.025); }
+.item { position: relative; }
+.item.on { color: #5b3b8c; font-weight: 600; }
+.item.on::before { content: ""; position: absolute; top: -9rpx; width: 34rpx; height: 4rpx; border-radius: 8rpx; background: #5b3b8c; }

@@ -3,7 +3,7 @@
   margin: 16rpx;
   padding: 32rpx 24rpx;
   border-radius: 24rpx;
-  background: linear-gradient(135deg, #1b4332, #40916c);
+  background: linear-gradient(135deg, #5b3b8c, #8e75a8);
   color: #fff;
   text-align: center;
 }
@@ -19,7 +19,7 @@
   border-radius: 20rpx;
   padding: 28rpx 20rpx;
   font-weight: 650;
-  color: #1b4332;
+  color: #5b3b8c;
 }
 .follow-grid { display: flex; flex-wrap: wrap; padding: 0 16rpx 16rpx; gap: 12rpx; }
 .follow-card {

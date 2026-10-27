@@ -5,8 +5,8 @@
   background: #fff;
   font-size: calc(30rpx * var(--ui-scale));
 }
-.campus-pick-row.on { font-weight: 700; color: #1b4332; background: #eef8c8; }
-.campus-pick-row.custom { color: #2d6a4f; }
+.campus-pick-row.on { font-weight: 700; color: #5b3b8c; background: #f0eaf6; }
+.campus-pick-row.custom { color: #725793; }
 .campus-pick-foot {
   display: flex;
   align-items: center;

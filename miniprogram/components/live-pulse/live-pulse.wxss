@@ -35,7 +35,7 @@
   width: 48rpx;
   height: 48rpx;
   border-radius: 50%;
-  background: #d8f3dc;
+  background: #e6ddf0;
   color: #141414;
   text-align: center;
   line-height: 48rpx;

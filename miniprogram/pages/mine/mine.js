@@ -3,8 +3,16 @@ const { maskPhone } = require("../../utils/labels");
 const { processFeed } = require("../../utils/feed-list");
 const { buildLineup, drawMomentsPoster } = require("../../utils/moments-poster");
 const appearance = require("../../utils/appearance");
+const { mediaBaseUrl } = require("../../config");
 const app = getApp();
 const POSTER_WEEK = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+function certificationLabels(user) {
+  return {
+    leaderLabel: user && user.isLeader ? "领队已认证" : user && user.leaderStatus === "pending" ? "申请审核中" : "领队申请",
+    campusLabel: user && user.isAlumni ? "校友已认证" : user && user.isStudent ? "学生已认证" : user && user.studentStatus === "pending" ? "认证审核中" : "校园认证",
+  };
+}
 
 function posterKey(row, index) {
   return row && row.id != null ? String(row.id) : "i" + index;
@@ -134,7 +142,7 @@ Page({
     picker: false,
     defaults: [],
     picks: [],
-    iconBase: (app && app.globalData && app.globalData.baseUrl ? app.globalData.baseUrl : "") + "/static/mine/",
+    iconBase: mediaBaseUrl + "/account-v2/",
     momentsOpen: false,
     momentsPath: "",
     posterPick: false,
@@ -179,10 +187,8 @@ Page({
       user,
       phone: maskPhone(user && user.phone),
       nickHead: user && user.nickname ? user.nickname.slice(0, 1) : "友",
-      leaderLabel: user && user.isLeader ? "领队已认证" : user && user.leaderStatus === "pending" ? "领队申请审核中" : "领队申请",
-      campusLabel: user && user.isAlumni ? "校友已认证" : user && user.isStudent ? "学生已认证" : user && user.studentStatus === "pending" ? "校园认证审核中" : "校园认证",
+      ...certificationLabels(user),
       dark: appearance.isDark(),
-      iconBase: app.globalData.baseUrl + "/static/mine/",
     });
     this.loadHub();
     this.loadPicks();
@@ -221,6 +227,7 @@ Page({
       setAuth(app.globalData.token, me.data);
       this.setData({
         user: me.data,
+        ...certificationLabels(me.data),
         phone: maskPhone(me.data && me.data.phone),
         nickHead: me.data && me.data.nickname ? me.data.nickname.slice(0, 1) : "友",
       });

@@ -1,51 +1,65 @@
 <template>
   <div class="home-page">
-    <div
-      class="brand-hero"
-      :class="{ 'is-link': brandSlideTarget }"
-      :role="brandSlideTarget ? 'link' : undefined"
-      :tabindex="brandSlideTarget ? 0 : undefined"
-      :aria-label="brandSlideTarget ? (brandSlide?.title || '打开线路详情') : undefined"
-      @click="goSlide"
-      @keydown.enter.prevent="goSlide"
-      @keydown.space.prevent="goSlide"
-    >
+    <div class="brand-hero">
       <div
         v-if="brandSlide"
         class="swipe"
         role="img"
         :aria-label="brandSlide.title || '同行者众'"
-        :style="slideBg(brandSlide)"
       >
         <img
           :key="mediaSrc(brandSlide.url)"
-          :src="mediaSrc(brandSlide.url)"
+          :src="heroSource"
           :alt="brandSlide.title || '同行者众'"
           fetchpriority="high"
           decoding="async"
-          @error="onSlideError($event, brandSlide)"
+        @error="onHeroError"
         />
       </div>
       <div class="brand-cap">
-        <div class="home-kicker">{{ brandSlide?.title || home.brand?.lead || "在山野，遇见爱" }}</div>
+        <span class="hero-eyebrow"><TravelIcon name="compass" /> 北京 · 周边山野</span>
+        <h2>周末去山里见</h2>
+        <p>趁着风正好，把一天还给山野。</p>
+        <button class="hero-discover" type="button" @click="discoverTrips">看看本周出发 <TravelIcon name="arrow" /></button>
+        <div class="hero-dots" aria-label="切换山野图片"><button v-for="(photo, i) in fallbackPhotos" :key="photo" type="button" :class="{ selected: heroIndex % fallbackPhotos.length === i }" :aria-label="'第 ' + (i + 1) + ' 张'" :aria-pressed="heroIndex % fallbackPhotos.length === i" @click="heroIndex = i"></button></div>
       </div>
+      <div class="hero-photo-credit"><span>BEIYE · OUTDOOR</span><i></i><span>山野精选</span></div>
     </div>
 
-    <LivePulse scope="home" />
-
     <div class="home-pad">
-    <section class="campus-card">
-      <div>
-        <strong>学生认证后走学生价</strong>
-        <p>部分团仅限高校，周末进山先看好集合点。</p>
+    <form class="discovery-search" @submit.prevent="discoverTrips">
+      <div class="discovery-search-title"><span class="search-caption">给周末，一个好去处</span><span>从北京出发 <TravelIcon name="pin" /></span></div>
+      <div class="discovery-search-fields">
+        <label class="discovery-input"><TravelIcon name="search" /><input v-model="query" type="search" :placeholder="searchHint" aria-label="搜索线路、目的地或发起人" /></label>
+        <label class="discovery-date"><TravelIcon name="calendar" /><input v-model="date" type="date" :min="today" aria-label="出发日期" /><span v-if="!date">出发日期不限</span></label>
+        <button class="btn discovery-submit" type="submit">寻找我的山野 <TravelIcon name="arrow" /></button>
       </div>
-      <router-link
-        v-if="store.profile?.studentStatus !== 'pending' && !store.profile?.isStudent && !store.profile?.isAlumni"
-        class="campus-cta"
-        to="/m/student"
-      >去认证</router-link>
-      <span v-else-if="store.profile?.isStudent || store.profile?.isAlumni" class="muted">已认证{{ store.profile.school ? " · " + store.profile.school : "" }}</span>
-      <router-link v-else-if="store.profile?.studentStatus === 'pending'" class="campus-cta" to="/m/student">审核中</router-link>
+      <div class="search-hot"><span>热门灵感</span><button v-for="word in ['长城', '古北水镇', '徒步', '草原']" :key="word" type="button" @click="searchDestination(word)">{{ word }}</button></div>
+    </form>
+    <div class="journey-shortcuts">
+      <button type="button" @click="setView('routes')"><span><TravelIcon name="mountain" /></span><strong>精选线路</strong><small>去看更大的世界</small></button>
+      <button type="button" @click="goPublish('', 'campus')"><span><TravelIcon name="school" /></span><strong>高校同行</strong><small>跨校 · 跨学院</small></button>
+      <button type="button" @click="goPublish('', 'company')"><span><TravelIcon name="building" /></span><strong>公司团建</strong><small>团队一起出发</small></button>
+      <button type="button" @click="$router.push('/m/guides')"><span><TravelIcon name="compass" /></span><strong>专业领队</strong><small>让旅途更安心</small></button>
+    </div>
+    <section class="destination-section" aria-label="山野出游灵感">
+      <div class="section-heading"><div><span class="section-eyebrow">A LITTLE ESCAPE</span><h2>走出日常，自然会有答案</h2></div><span class="destination-caption">山野灵感</span></div>
+      <div class="destination-grid">
+        <button v-for="place in destinations" :key="place.keyword" class="destination-card" type="button" @click="searchDestination(place.keyword)"><img :src="place.photo" :alt="place.name" loading="lazy" /><span class="destination-shade"></span><span class="destination-tag">{{ place.tag }}</span><span class="destination-copy"><small>{{ place.en }}</small><strong>{{ place.name }}</strong><em>{{ place.copy }}</em></span><TravelIcon name="arrow" /></button>
+      </div>
+    </section>
+    <section class="campus-card">
+      <span class="campus-mark"><TravelIcon name="school" /></span>
+      <div class="campus-copy">
+        <strong>青春同行，不止同校</strong>
+        <p>发现跨校与跨学院的旅程</p>
+        <p>
+          <span v-if="store.profile?.isStudent || store.profile?.isAlumni">已认证{{ store.profile.school ? " · " + store.profile.school : "" }}</span>
+          <router-link v-else-if="store.profile?.studentStatus === 'pending'" to="/m/student">认证进度</router-link>
+          <router-link v-else to="/m/student">校园认证</router-link>
+        </p>
+      </div>
+      <button type="button" class="campus-cta" @click="discoverCampusTrips">看校园团 ›</button>
     </section>
 
     <button v-if="upcoming" class="trip-hint" type="button" @click="$router.push('/m/orders')">
@@ -56,11 +70,9 @@
       <span class="muted">行程 ›</span>
     </button>
 
-    <input class="feed-search" v-model="query" type="search" :placeholder="searchHint" />
-
-    <div class="home-seg" role="tablist" aria-label="团或线路">
-      <button type="button" role="tab" :aria-selected="view === 'trips'" :class="{ on: view === 'trips' }" @click="setView('trips')">团</button>
-      <button type="button" role="tab" :aria-selected="view === 'routes'" :class="{ on: view === 'routes' }" @click="setView('routes')">线路</button>
+    <div ref="feedStart" class="home-seg" role="tablist" aria-label="选择出行方式">
+      <button type="button" role="tab" :aria-selected="view === 'trips'" :class="{ on: view === 'trips' }" @click="setView('trips')">即将出发</button>
+      <button type="button" role="tab" :aria-selected="view === 'routes'" :class="{ on: view === 'routes' }" @click="setView('routes')">精选线路</button>
     </div>
 
     <template v-if="view === 'trips'">
@@ -132,14 +144,7 @@
       </span>
     </div>
 
-    <button class="publish-entry" type="button" @click="goPublish()">
-      <span class="publish-entry-copy">
-        <strong>发个团去玩吧</strong>
-        <span>选条线路，过审就能喊人上车</span>
-      </span>
-      <span class="publish-entry-go">走起</span>
-    </button>
-    <article class="feed-card" v-for="s in groups" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
+    <article class="feed-card" v-for="s in visibleGroups" :key="s.id" @click="$router.push('/m/schedule/' + s.id)">
       <div class="feed-cover">
         <img v-if="coverOf(s)" :src="coverOf(s)" :alt="s.route?.title || ''" loading="lazy" decoding="async" />
         <div v-else class="feed-ph">{{ coverMark(s) }}</div>
@@ -159,6 +164,9 @@
         </p>
       </div>
     </article>
+    <button v-if="groups.length > visibleGroups.length" class="feed-load-more" type="button" @click="visibleFeedCount += 8">
+      继续发现 <span>{{ visibleGroups.length }} / {{ groups.length }}</span>
+    </button>
     <div v-if="loading && !groups.length" class="card"><div class="pad load-row"><span class="spinner"></span><span class="muted">正在加载近期的团…</span></div></div>
     <div v-else-if="!groups.length" class="card">
       <div class="pad">
@@ -174,6 +182,25 @@
 
     <RouteCatalog v-else :q="query" :seed-tag="tag" />
 
+    <section class="organizer-section">
+      <div class="section-heading">
+        <div><span class="section-eyebrow">GATHER YOUR PEOPLE</span><h2>一起出发，也可以一起发团</h2></div>
+        <TravelIcon name="mountain" />
+      </div>
+      <div class="organizer-grid">
+        <button type="button" class="organizer-link campus" @click="goPublish('', 'campus')"><span class="organizer-icon"><TravelIcon name="school" /></span><span><strong>高校发团</strong><small>跨学校 · 跨学院招募</small></span><TravelIcon name="chevron" /></button>
+        <button type="button" class="organizer-link company" @click="goPublish('', 'company')"><span class="organizer-icon"><TravelIcon name="building" /></span><span><strong>公司团建</strong><small>让团队在山野相聚</small></span><TravelIcon name="chevron" /></button>
+      </div>
+    </section>
+    <button class="publish-entry" type="button" @click="goPublish()">
+      <span class="publish-entry-copy">
+        <strong>发个团去玩吧</strong>
+        <span>选条线路，过审就能喊人上车</span>
+      </span>
+      <span class="publish-entry-go">创建行程 <TravelIcon name="arrow" /></span>
+    </button>
+
+
     <p class="home-foot muted">
       <router-link to="/m/official">客服与规则</router-link>
     </p>
@@ -183,27 +210,35 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { OFFER_TYPES } from "@/utils/offer";
-import { mediaSrc, slideBg, slideFallback, slideRouteTarget } from "@/utils/media";
+import { mediaSrc } from "@/utils/media";
 import { boardedLine, coverMark, coverOf, feedWhen, hostName, isFreeOffer, taglineOf } from "@/utils/feedCard";
 import { cycleSort, hostFacets as collectHostFacets, processFeed, sortLabel } from "@/utils/feedList";
 import RouteCatalog from "@/components/RouteCatalog.vue";
-import LivePulse from "@/components/LivePulse.vue";
 import TripKind from "@/components/TripKind.vue";
+import TravelIcon from "@/components/TravelIcon.vue";
 
 const pageRoute = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const schedules = ref([]);
+const feedStart = ref(null);
+const today = new Date().toLocaleDateString('en-CA');
+const destinations = [
+  { keyword: '长城', name: '在长城，追一场山风', en: 'WALK INTO THE WILD', tag: '山脊漫步', copy: '把辽阔，装进周末', photo: '/static/photos/mutianyu.jpg' },
+  { keyword: '山', name: '山深处，有好风景', en: 'FIND YOUR OWN PACE', tag: '山野徒步', copy: '慢下来，听山野说话', photo: '/static/photos/wuling_07.jpg' },
+  { keyword: '海', name: '去海边，等风也等你', en: 'MEET BY THE SEA', tag: '海岸出走', copy: '有些放松，只需一片海', photo: '/static/photos/beidaihe.jpg' },
+];
 const home = ref({ brand: {}, cities: [], tags: [], festivals: [], months: [] });
 const loading = ref(true);
 const city = ref("");
 const date = ref("");
 const tag = ref("");
+const visibleFeedCount = ref(8);
 const monthKey = ref("");
 const monthPicked = ref(false);
 const monthDays = ref([]);
@@ -230,7 +265,8 @@ const brandSlide = computed(() => {
   if (!list.length) return null;
   return list[heroIndex.value % list.length];
 });
-const brandSlideTarget = computed(() => slideRouteTarget(brandSlide.value));
+const fallbackPhotos = ["/static/photos/mutianyu_06.jpg", "/static/photos/wuling_07.jpg", "/static/photos/beidaihe.jpg"];
+const heroSource = computed(() => mediaSrc(brandSlide.value?.url) || fallbackPhotos[heroIndex.value % fallbackPhotos.length]);
 const activeFestival = computed(() => (home.value.festivals || []).find((f) => f.key === festivalKey.value));
 const calendar = computed(() => {
   const days = [];
@@ -266,6 +302,8 @@ const groups = computed(() => {
     school: school.value,
   });
 });
+const visibleGroups = computed(() => groups.value.slice(0, visibleFeedCount.value));
+watch(groups, () => { visibleFeedCount.value = 8; });
 const hostFacets = computed(() => collectHostFacets(schedules.value));
 const picked = computed(() => {
   const rows = [];
@@ -378,19 +416,42 @@ function toggleCompany(name) {
 function toggleSchool(name) {
   school.value = school.value === name ? "" : name;
 }
-function goSlide() {
-  const path = brandSlideTarget.value;
-  if (path) router.push(path);
+function discoverTrips() {
+  feedStart.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-function onSlideError(e, slide) {
-  const fb = slideFallback(slide);
-  if (!fb || e.target.dataset.fallback === "1") return;
+async function discoverCampusTrips() {
+  query.value = "";
+  city.value = "";
+  date.value = "";
+  tag.value = "";
+  offerFilter.value = "";
+  festivalKey.value = "";
+  monthPicked.value = false;
+  companyName.value = "";
+  school.value = "";
+  hostKind.value = "campus";
+  fold.extra = true;
+  setView("trips");
+  await nextTick();
+  discoverTrips();
+}
+function searchDestination(keyword) {
+  query.value = keyword;
+  setView('routes');
+  discoverTrips();
+}
+function onHeroError(e) {
+  if (e.target.dataset.fallback === "1") return;
   e.target.dataset.fallback = "1";
-  e.target.src = fb;
-  if (e.target.parentElement) e.target.parentElement.style.backgroundImage = `url("${fb}")`;
+  e.target.src = "/static/photos/wulingPeak.jpg";
+  if (e.target.parentElement) e.target.parentElement.style.backgroundImage = 'url("/static/photos/wulingPeak.jpg")';
 }
-function goPublish(when) {
-  const path = when ? `/m/publish?date=${when}` : "/m/publish";
+function goPublish(when, organizer) {
+  const params = new URLSearchParams();
+  if (when) params.set("date", when);
+  if (organizer) params.set("type", organizer);
+  const queryString = params.toString();
+  const path = "/m/publish" + (queryString ? `?${queryString}` : "");
   if (!store.token) {
     router.push({ path: "/m/login", query: { redirect: path } });
     return;

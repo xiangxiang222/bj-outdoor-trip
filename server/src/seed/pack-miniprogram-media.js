@@ -7,10 +7,11 @@ const { publicMediaUrl } = require("../services/helpers");
 const ROOT = path.resolve(__dirname, "../../..");
 const PHOTO_DIR = path.join(ROOT, "server/public/static/photos");
 const MP = path.join(ROOT, "miniprogram");
-const COVER_DIR = path.join(MP, "images/covers");
+const MEDIA_DIR = path.join(ROOT, "server/public/static/miniprogram");
+const COVER_DIR = path.join(MEDIA_DIR, "covers");
 const DATA_DIR = path.join(MP, "data");
 const PKG_DETAIL_ROOT = "pkg-detail";
-const GALLERY_DIR = path.join(MP, PKG_DETAIL_ROOT, "gallery");
+const GALLERY_DIR = path.join(MEDIA_DIR, "gallery");
 
 const COVER_EDGE_PX = 640;
 const COVER_JPEG_QUALITY = 32;
@@ -156,7 +157,7 @@ function main() {
     if (!fs.existsSync(src)) throw new Error(`missing cover ${row.code} ${src}`);
     compressJpeg(src, path.join(COVER_DIR, `${row.code}.jpg`), COVER_EDGE_PX, COVER_JPEG_QUALITY);
     const tiers = db.prepare("SELECT min_people, price, member_price FROM route_price_tiers WHERE route_id=? ORDER BY min_people").all(row.id);
-    const cover = `/images/covers/${row.code}.jpg`;
+    const cover = `/static/miniprogram/covers/${row.code}.jpg`;
     const gallery = uniquePhotoFiles(row).map((file, index) => {
       const src = staticPhotoSrc(file);
       const remote = publicMediaUrl(src);
@@ -166,7 +167,7 @@ function main() {
       }
       const name = `${row.code}_${String(index + 1).padStart(2, "0")}.jpg`;
       compressJpeg(file, path.join(GALLERY_DIR, name), GALLERY_EDGE_PX, GALLERY_JPEG_QUALITY);
-      return { thumb: `/${PKG_DETAIL_ROOT}/gallery/${name}`, src, origin };
+      return { thumb: `/static/miniprogram/gallery/${name}`, src, origin };
     });
     const summary = {
       id: row.id,
@@ -209,9 +210,10 @@ function main() {
     writePng(path.join(MP, "images", `${file}-on.png`), 81, 81, on, tabGlyph(kind));
   });
   const coverKb = Math.round(dirSize(COVER_DIR) / 1024);
+  const galleryKb = Math.round(dirSize(GALLERY_DIR) / 1024);
   const pkgKb = Math.round(dirSize(path.join(MP, PKG_DETAIL_ROOT)) / 1024);
   const counts = details.map((d) => `${d.code}:${d.gallery.length}`).join(" ");
-  console.log(`covers ${coverKb}KB pkg-detail ${pkgKb}KB`);
+  console.log(`server covers ${coverKb}KB server gallery ${galleryKb}KB pkg-detail ${pkgKb}KB`);
   console.log(counts);
   if (pkgKb > PKG_DETAIL_MAX_KB) {
     throw new Error(`pkg-detail ${pkgKb}KB exceeds ${PKG_DETAIL_MAX_KB}KB`);
