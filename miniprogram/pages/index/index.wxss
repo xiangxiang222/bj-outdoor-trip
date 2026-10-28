@@ -1,18 +1,26 @@
 /* The landscape leads; search and trip decisions stay within reach. */
-.brand-box { position: relative; height: 580rpx; overflow: hidden; background: #393b47; }
+.brand-box { position: relative; height: 580rpx; overflow: hidden; background: var(--bg, #f6f5f8); }
 .brand-hero, .brand-hero swiper-item, .brand-img { width: 100%; height: 100%; }
 .brand-hero { position: absolute; inset: 0; }
 .brand-img { display: block; }
-.hero-shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(22,24,36,.24), rgba(22,24,36,.10) 28%, rgba(24,22,36,.62)); }
-.home-brand { position: relative; z-index: 2; padding: 0 34rpx; display: flex; align-items: center; gap: 14rpx; color: #fff; }
+.hero-shade { position: absolute; z-index: 0; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(22,24,36,.20), rgba(22,24,36,.04) 28%, rgba(24,22,36,.44) 72%, rgba(24,22,36,.36)); }
+/* Keep sky and photo edges intact; only feather the lower corners and bottom. */
+.hero-side-fade {
+  position: absolute; z-index: 1; inset: 0; pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(var(--hero-surface-rgb, 246,245,248), 0) 74%, var(--bg, #f6f5f8) 100%),
+    radial-gradient(ellipse at bottom left, rgba(var(--hero-surface-rgb, 246,245,248), .22), rgba(var(--hero-surface-rgb, 246,245,248), 0) 58%),
+    radial-gradient(ellipse at bottom right, rgba(var(--hero-surface-rgb, 246,245,248), .22), rgba(var(--hero-surface-rgb, 246,245,248), 0) 58%);
+}
+.home-brand { position: relative; z-index: 2; padding: 0 34rpx; display: flex; align-items: center; gap: 14rpx; color: #fff; text-shadow: 0 2rpx 4rpx rgba(22,24,36,.22); }
 .home-brand-logo { width: 62rpx; height: 62rpx; border-radius: 50%; background: #fff; }
 .home-brand-name { font-size: 30rpx; font-weight: 650; letter-spacing: 4rpx; }
 .home-brand-en { font-size: 13rpx; letter-spacing: 2rpx; opacity: .8; margin-top: 3rpx; }
-.brand-cap { position: absolute; left: 40rpx; right: 32rpx; bottom: 138rpx; z-index: 2; color: #fff; }
+.brand-cap { position: absolute; left: 40rpx; right: 32rpx; bottom: 138rpx; z-index: 2; color: #fff; text-shadow: 0 2rpx 4rpx rgba(22,24,36,.28); }
 .home-eyebrow { font-size: calc(21rpx * var(--ui-scale)); letter-spacing: 2rpx; opacity: .85; }
 .home-kicker { margin-top: 14rpx; font-size: calc(55rpx * var(--ui-scale)); line-height: 1.35; font-weight: 600; letter-spacing: 5rpx; }
 .home-lead { margin-top: 14rpx; font-size: calc(25rpx * var(--ui-scale)); letter-spacing: 3rpx; opacity: .85; }
-.hero-counter { position: absolute; right: 32rpx; bottom: 110rpx; color: #fff; font-size: 25rpx; font-weight: 600; }
+.hero-counter { position: absolute; right: 32rpx; bottom: 110rpx; z-index: 2; color: #fff; font-size: 25rpx; font-weight: 600; text-shadow: 0 2rpx 4rpx rgba(22,24,36,.28); }
 .hero-counter text { opacity: .55; font-size: 18rpx; margin-left: 8rpx; }
 .discovery-card { position: relative; z-index: 3; margin: -82rpx 28rpx 0; padding: 30rpx 32rpx 22rpx; border-radius: 32rpx; background: var(--card, #fff); box-shadow: 0 12rpx 42rpx rgba(45,31,65,.06); }
 .search-card-top { display: flex; justify-content: space-between; align-items: center; }
@@ -83,6 +91,7 @@
 
 .brand-hero { display: var(--media, block); }
 .brand-box.is-text-mode { height: 360rpx; background: #5b3b8c; }
+.is-text-mode .hero-shade, .is-text-mode .hero-side-fade { display: none; }
 .is-text-mode .brand-cap { bottom: 90rpx; }
 .is-text-mode .home-eyebrow, .is-text-mode .home-lead, .is-text-mode .hero-counter { display: none; }
 .is-text-mode .home-kicker { font-size: calc(42rpx * var(--ui-scale)); }
