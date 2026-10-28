@@ -1,7 +1,15 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<load-row wx:if="{{!s}}" />
-<block wx:else>
+<load-row wx:if="{{detailLoading && !s}}" />
+<view wx:elif="{{!s && detailError}}" class="card enroll-load-error">
+  <view class="pad">
+    <view class="title">{{tr.t('行程暂不可用', lang)}}</view>
+    <view class="muted">{{tr.t('请检查网络或稍后重试，确认行程仍可报名后再继续。', lang)}}</view>
+    <view class="btn ghost" wx:if="{{!detailLoading}}" bindtap="loadSchedule">{{tr.t('重新加载', lang)}}</view>
+    <view class="btn ghost" wx:else>{{tr.t('正在重试…', lang)}}</view>
+  </view>
+</view>
+<block wx:elif="{{s}}">
 <view class="pad" wx:if="{{s}}">{{tr.t(s.route.title, lang)}} {{tr.t(s.startDate, lang)}}</view>
 <view class="pad muted" wx:if="{{s.status=='cancelled'}}" style="color:#bc4749">{{tr.t('本团已解散，无法报名。理由：', lang)}}{{tr.t(s.cancelReason, lang)}}</view>
 <view class="pad muted" wx:elif="{{s.oversub.pending}}">{{tr.t(s.oversub.copy, lang)}}</view>

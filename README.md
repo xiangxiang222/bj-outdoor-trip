@@ -23,7 +23,7 @@
 
 ## 怎么跑起来
 
-需要 Node.js 18+（建议 20）。在项目根目录：
+需要 Node.js 20.9+（建议近期 Node.js 20 或 22 LTS）。在项目根目录：
 
 ```bash
 npm install

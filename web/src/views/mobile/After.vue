@@ -1,5 +1,10 @@
 <template>
-  <LoadRow v-if="!s && !msg" />
+  <LoadRow v-if="!s && !loadError" />
+  <div v-else-if="!s && loadError" class="card"><div class="pad" role="alert">
+    <strong>行程回顾暂不可用</strong>
+    <p class="muted">{{ loadError }}</p>
+    <button class="btn ghost" type="button" :disabled="loading" @click="load">重新加载</button>
+  </div></div>
   <div v-else-if="s">
     <div class="card"><div class="pad">
       <strong>{{ s.title }}</strong>
@@ -9,6 +14,10 @@
       <p v-else class="muted">报名参加后，等行程结束即可回来评价。</p>
     </div></div>
     <p v-if="msg" :style="ok ? 'color:var(--leaf)' : 'color:var(--clay)'">{{ msg }}</p>
+    <div v-if="loadError" class="card"><div class="pad" role="alert">
+      <p class="muted">{{ loadError }}</p>
+      <button class="btn ghost" type="button" :disabled="loading" @click="load">重新加载</button>
+    </div></div>
 
     <div v-if="showLottery">
       <div class="h2" v-if="s.lottery?.drawMode !== 'pre'">{{ s.lottery?.drawMode === 'enroll' ? '报名后抽奖' : '行程结束后抽奖' }}</div>
@@ -91,6 +100,8 @@ const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const s = ref(null);
+const loading = ref(false);
+const loadError = ref("");
 const posts = ref([]);
 const msg = ref("");
 const ok = ref(false);
@@ -112,12 +123,16 @@ const showLottery = computed(() => {
 onMounted(load);
 
 async function load() {
+  if (loading.value) return;
+  loading.value = true;
+  loadError.value = "";
   try {
     s.value = (await http.get("/schedules/" + route.params.id + "/after")).data;
     posts.value = (await http.get("/schedules/" + route.params.id + "/contest")).data || [];
   } catch (e) {
-    ok.value = false;
-    msg.value = e.message || "加载失败";
+    loadError.value = e.message || "加载失败";
+  } finally {
+    loading.value = false;
   }
 }
 

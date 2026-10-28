@@ -1,4 +1,4 @@
-const request = require("supertest");
+const request = require("./local-http");
 const { createApp } = require("../src/app");
 const { getDb } = require("../src/db");
 const { seedMinimal } = require("./helpers");

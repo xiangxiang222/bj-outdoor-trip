@@ -11,7 +11,7 @@ describe("guide portal", () => {
     ({ agent, seed } = harness());
   });
 
-  it("logs in by phone captcha, lists assigned trips and checks in", async () => {
+  it("requires a phone verification code before opening guide data and checks in", async () => {
     const userToken = await loginUser(agent);
     await agent.post("/api/enroll").set(auth(userToken)).send({
       scheduleId: seed.individualScheduleId,
@@ -37,10 +37,17 @@ describe("guide portal", () => {
     assert.equal(sch.guide_id, seed.guideId);
 
     const cap = await issueCaptcha(agent);
-    const login = await agent.post("/api/guide/login").send({
+    const sms = await agent.post("/api/auth/sms").send({
       phone: "13700001101",
+      scene: "guide",
       captchaToken: cap.token,
       captcha: cap.code,
+    }).expect(200);
+    assert.equal(sms.body.data.demoCode, "888888");
+    await agent.post("/api/guide/login").send({ phone: "13700001101", code: "000000" }).expect(400);
+    const login = await agent.post("/api/guide/login").send({
+      phone: "13700001101",
+      code: "888888",
     }).expect(200);
     const gauth = auth(login.body.data.token);
     const trips = await agent.get("/api/guide/schedules").set(gauth).expect(200);
@@ -48,6 +55,7 @@ describe("guide portal", () => {
 
     const detail = await agent.get(`/api/guide/schedules/${seed.individualScheduleId}`).set(gauth).expect(200);
     const first = detail.body.data.roster[0];
+    assert.equal(detail.body.data.canStartTrip, false);
     assert.ok(first.phone);
     assert.match(first.phone, /\*\*\*\*/);
     assert.equal(first.phonesVisible, false);
@@ -80,8 +88,16 @@ describe("guide portal", () => {
       .expect(200);
     assert.ok(checked.body.data.checkinAt);
 
+    await agent.post(`/api/guide/schedules/${seed.individualScheduleId}/start`).set(gauth).expect(400);
+    const beforeStart = await agent.get(`/api/guide/schedules/${seed.individualScheduleId}`).set(gauth).expect(200);
+    assert.equal(beforeStart.body.data.roster.some((r) => r.phonesVisible), false);
+    const chinaToday = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    seed.db.prepare("UPDATE schedules SET start_date=? WHERE id=?").run(chinaToday, seed.individualScheduleId);
+    const ready = await agent.get(`/api/guide/schedules/${seed.individualScheduleId}`).set(gauth).expect(200);
+    assert.equal(ready.body.data.canStartTrip, true);
     const started = await agent.post(`/api/guide/schedules/${seed.individualScheduleId}/start`).set(gauth).expect(200);
     assert.ok(started.body.data.startedAt);
+    assert.equal(started.body.data.canStartTrip, false);
     const openedPhone = (started.body.data.roster || []).find((r) => r.id === first.id);
     assert.ok(openedPhone);
     assert.match(openedPhone.phone, /^1\d{10}$/);
@@ -153,11 +169,13 @@ describe("guide portal", () => {
       healthOk: true,
     });
     const cap = await issueCaptcha(agent);
-    const login = await agent.post("/api/guide/login").send({
+    await agent.post("/api/auth/sms").send({
       phone: "13700001101",
+      scene: "guide",
       captchaToken: cap.token,
       captcha: cap.code,
     }).expect(200);
+    const login = await agent.post("/api/guide/login").send({ phone: "13700001101", code: "888888" }).expect(200);
     const gauth = auth(login.body.data.token);
     seed.db.prepare("UPDATE schedules SET guide_id=?, start_date=?, end_date=? WHERE id=?").run(
       seed.guideId,

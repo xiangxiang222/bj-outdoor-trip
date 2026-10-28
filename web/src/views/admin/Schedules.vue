@@ -165,12 +165,12 @@
     </el-dialog>
 
     <el-dialog v-model="showDissolve" :title="dissolveAll ? '解散全部拼团' : '解散拼团'" width="480px">
-      <p v-if="dissolveAll">将解散当前全部 {{ activeCount }} 个进行中的拼团（含用户开团），取消报名、已付款按付款人原路退回，并向出行人发送取消短信。</p>
-      <p v-else-if="cur">解散「{{ cur.route?.title }} {{ cur.startDate }}」后，将取消全部报名、已付款按付款人原路退回，并向出行人发送取消短信。</p>
-      <el-input v-model="dissolveReason" type="textarea" :rows="3" placeholder="请填写解散理由，会写进短信发给报名用户" />
+      <p v-if="dissolveAll">将解散当前全部 {{ activeCount }} 个进行中的拼团（含用户开团），取消报名并处理已付款退款。系统只记录待发送通知，短信尚未接入。</p>
+      <p v-else-if="cur">解散「{{ cur.route?.title }} {{ cur.startDate }}」后，将取消全部报名并处理已付款退款。系统只记录待发送通知，短信尚未接入。</p>
+      <el-input v-model="dissolveReason" type="textarea" :rows="3" placeholder="请填写解散理由，内容会写入待发送通知记录" />
       <template #footer>
         <el-button @click="showDissolve = false">取消</el-button>
-        <el-button type="danger" :loading="dissolving" @click="dissolve">确认解散并通知</el-button>
+        <el-button type="danger" :loading="dissolving" @click="dissolve">确认解散并记录通知</el-button>
       </template>
     </el-dialog>
     <el-dialog v-model="showSplit" title="企业支付分账" width="560px">
@@ -828,10 +828,11 @@ async function dissolve() {
     const url = dissolveAll.value ? "/admin/schedules/dissolve-all" : `/admin/schedules/${cur.value.id}/dissolve`;
     const res = await http.post(url, { reason: dissolveReason.value.trim() });
     showDissolve.value = false;
+    const noticeResult = `已记录待发送通知 ${res.data.smsRecordCount || 0} 条，短信尚未接入`;
     if (dissolveAll.value) {
-      ElMessage.success(`已解散 ${res.data.count} 个拼团：取消 ${res.data.cancelled} 人，退款 ${res.data.refunded} 人，短信 ${res.data.smsCount} 条`);
+      ElMessage.success(`已解散 ${res.data.count} 个拼团：取消 ${res.data.cancelled} 人，退款 ${res.data.refunded} 人；${noticeResult}`);
     } else {
-      ElMessage.success(`已解散：取消 ${res.data.cancelled} 人，退款 ${res.data.refunded} 人，短信 ${res.data.smsCount} 条`);
+      ElMessage.success(`已解散：取消 ${res.data.cancelled} 人，退款 ${res.data.refunded} 人；${noticeResult}`);
     }
     load();
   } finally {

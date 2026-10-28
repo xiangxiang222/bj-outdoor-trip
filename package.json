@@ -15,10 +15,12 @@
     "test": "npm run test --prefix server && npm run test --prefix web",
     "test:coverage": "npm run test:coverage --prefix server && npm run test --prefix web",
     "test:e2e": "node scripts/e2e.js",
+    "test:ui": "node scripts/ui-smoke.cjs",
     "test:e2e:live": "node scripts/e2e.js --live",
     "deploy": "bash scripts/deploy.sh"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "playwright-core": "1.64.1"
   }
 }

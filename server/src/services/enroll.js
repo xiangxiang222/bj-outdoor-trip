@@ -420,8 +420,8 @@ async function cancelEnrollment(enrollmentId, userId, options = {}) {
 
   let refunds = [];
   if (hasMoney && refundedAmount > 0) {
-    clawActivityPoints(en.user_id, en.id, refundedAmount, refundable);
     refunds = await refundEnrollmentToPayers(en, { amount: refundedAmount, remark });
+    clawActivityPoints(en.user_id, en.id, refundedAmount, refundable);
   }
   reverseEnrollReferral(en.id);
 

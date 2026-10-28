@@ -1,1 +1,3 @@
 /* inherit */
+.enroll-load-error { margin: 32rpx 24rpx; }
+.enroll-load-error .btn { margin-top: 24rpx; text-align: center; }

@@ -4,6 +4,7 @@ const { grantMembership } = require("./member");
 const config = require("../config");
 const {
   payLive,
+  requireLivePaymentInProduction,
   yuanToFen,
   unifiedOrder,
   queryOrder,
@@ -162,6 +163,7 @@ function stampTransaction(tradeNo, transactionId) {
 }
 
 function applyEnrollmentCharge(en, payerId, amount, opts = {}) {
+  if (opts.channel !== "wallet" && Number(amount) > 0) requireLivePaymentInProduction();
   const db = getDb();
   const due = remainingDue(en);
   const charged = Number(amount) || 0;
@@ -293,7 +295,7 @@ function creditRefundToWallet(en, slice, remark) {
 }
 
 async function refundEnrollmentToPayers(en, { amount, remark, refundWechat } = {}) {
-  const plan = planPayerRefunds(en, amount);
+  const plan = preflightEnrollmentRefund(en, amount);
   const results = [];
   for (let slice of plan) {
     const refundNo = newTradeNo("RF", slice.userId);
@@ -335,11 +337,18 @@ async function refundEnrollmentToPayers(en, { amount, remark, refundWechat } = {
   return results;
 }
 
+function preflightEnrollmentRefund(en, amount) {
+  const plan = planPayerRefunds(en, amount);
+  if (plan.some((slice) => slice.channel === "wechat")) requireLivePaymentInProduction();
+  return plan;
+}
+
 async function refundPaymentExcess(pay, excess, remark) {
   if (excess <= 0 || !pay) return null;
   const leftover = leftoverOf(pay);
   const amount = Math.min(excess, leftover);
   if (amount <= 0) return null;
+  if (pay.channel === "wechat") requireLivePaymentInProduction();
   const refundNo = newTradeNo("RX", pay.user_id);
   if (pay.channel === "wallet") {
     require("./wallet").credit(pay.user_id, amount, {
@@ -384,12 +393,14 @@ function loadEnrollmentForPay(enrollmentId, token) {
   if (!Number(en.pay_amount || 0)) {
     en.pay_amount = quoteForSchedule(sch, Math.max(realEnrolledCount(sch.id), 1), null).originPrice;
   }
-  expireStalePendings(en.id);
   return { en, sch };
 }
 
 async function payEnrollment(enrollmentId, payerId, opts = {}) {
   const { en, sch } = loadEnrollmentForPay(enrollmentId, opts.token);
+  const useWallet = String(opts.channel || "") === "wallet";
+  if (!useWallet && (Number(opts.amount) > 0 || Number(en.pay_amount) > 0)) requireLivePaymentInProduction();
+  expireStalePendings(en.id);
   const remaining = remainingForPayer(en, payerId);
   if (remaining <= 0) fail(400, "该报名已支付或他人正在支付");
   const amount = parsePayYuan(opts.amount, remaining);
@@ -401,7 +412,7 @@ async function payEnrollment(enrollmentId, payerId, opts = {}) {
     remainingBefore: remaining,
     channel: opts.channel,
   });
-  if (String(opts.channel || "") === "wallet") {
+  if (useWallet) {
     const { debit, balanceOf } = require("./wallet");
     const charged = getDb().transaction(() => {
       debit(payerId, amount, {
@@ -458,6 +469,7 @@ async function payEnrollment(enrollmentId, payerId, opts = {}) {
 }
 
 async function buyMembership(userId, opts = {}) {
+  requireLivePaymentInProduction();
   const amount = config.member.annualFee;
   await ensurePayerWechat(userId, opts.code);
   if (config.wechat.mock) {
@@ -499,6 +511,7 @@ async function buyMembership(userId, opts = {}) {
 }
 
 async function buyWalletTopup(userId, opts = {}) {
+  requireLivePaymentInProduction();
   const { parseYuan, credit, balanceOf } = require("./wallet");
   const amount = parseYuan(opts.amount, { min: 1, max: 5000 });
   await ensurePayerWechat(userId, opts.code);
@@ -591,6 +604,7 @@ function applyCompanyShares(pay) {
 }
 
 async function payCompanySchedule(userId, scheduleId, opts = {}) {
+  requireLivePaymentInProduction();
   const db = getDb();
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
   if (!sch) fail(400, "排期不存在");
@@ -661,6 +675,7 @@ async function payCompanySchedule(userId, scheduleId, opts = {}) {
 }
 
 async function settleByTradeNo(tradeNo, extra = {}) {
+  requireLivePaymentInProduction();
   const db = getDb();
   stampTransaction(tradeNo, extra.transactionId);
   const pay = db.prepare("SELECT * FROM payments WHERE trade_no=?").get(tradeNo);
@@ -856,6 +871,7 @@ module.exports = {
   completeEnrollmentPay,
   applyEnrollmentCharge,
   refundEnrollmentToPayers,
+  preflightEnrollmentRefund,
   repairSkippedWalletRefunds,
   applyWechatSession,
   ensurePayerWechat,

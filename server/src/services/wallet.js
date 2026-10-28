@@ -3,7 +3,7 @@ const { getDb } = require("../db");
 const config = require("../config");
 const { maskName, maskPhone } = require("./biz");
 const { maskIdCard } = require("./idcard");
-const { transferToBalance, queryTransferBill, yuanToFen } = require("./wechat");
+const { transferToBalance, queryTransferBill, yuanToFen, requireLivePaymentInProduction } = require("./wechat");
 
 const CARD_CLOSED = "已改为提现到微信零钱，不再支持绑定银行卡";
 // 微信商家转账到零钱的通道单笔上限，不是产品最低门槛。
@@ -260,6 +260,7 @@ function recordWithdrawDebit(userId, amount, outBillNo) {
 }
 
 async function withdraw(userId, body = {}) {
+  requireLivePaymentInProduction();
   const user = loadUser(userId);
   verifyPin(user, body.pin);
   const bal = balanceOf(userId);

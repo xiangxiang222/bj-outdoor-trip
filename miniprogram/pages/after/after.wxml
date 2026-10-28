@@ -1,6 +1,11 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<load-row wx:if="{{!s}}" />
+<load-row wx:if="{{!s && loading}}" />
+<view wx:if="{{loadError}}" class="card"><view class="pad">
+  <view wx:if="{{!s}}" class="title">{{tr.t('行程回顾暂不可用', lang)}}</view>
+  <view class="muted">{{tr.t(loadError, lang)}}</view>
+  <button class="btn ghost" bindtap="load" disabled="{{loading}}" loading="{{loading}}">{{tr.t('重新加载', lang)}}</button>
+</view></view>
 <view class="card" wx:if="{{s}}"><view class="pad">
   <view class="title">{{tr.t(s.title, lang)}}</view>
   <view class="muted">{{tr.t(s.startDate, lang)}} {{tr.t('· 行程由导游或管理员统一结束后，可以评价和参加评选。', lang)}}</view>

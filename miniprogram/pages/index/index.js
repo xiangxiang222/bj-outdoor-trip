@@ -31,6 +31,7 @@ Page({
     hostSchools: [],
     offers: OFFER_TYPES.filter((o) => o.key !== "full"),
     fold: { extra: false },
+    filterSection: "date",
     picked: [],
     upcoming: null,
     query: "",
@@ -158,7 +159,7 @@ Page({
     this.setData({
       view: "trips",
       hostKind: e.currentTarget.dataset.kind || "",
-      "fold.extra": true,
+      "fold.extra": false,
       query: "",
       city: "",
       date: "",
@@ -255,6 +256,11 @@ Page({
   toggleFold(e) {
     const key = e.currentTarget.dataset.key;
     this.setData({ ["fold." + key]: !this.data.fold[key] });
+  },
+  setFilterSection(e) {
+    const section = e.currentTarget.dataset.section;
+    if (section !== "date" && section !== "options") return;
+    this.setData({ filterSection: section });
   },
   clearPick(e) {
     const key = e.currentTarget.dataset.key;

@@ -32,6 +32,33 @@ describe("auth and profile API", () => {
     await agent.post("/api/auth/sms").send({ phone: "123" }).expect(400);
   });
 
+  it("requires a captcha and an active registered guide before sending guide sms", async () => {
+    const noCaptcha = await agent.post("/api/auth/sms").send({ phone: "13700001101", scene: "guide" }).expect(400);
+    assert.match(noCaptcha.body.message, /图片验证码/);
+    const cap = await issueCaptcha(agent);
+    const unknown = await agent.post("/api/auth/sms").send({
+      phone: "13600000000",
+      scene: "guide",
+      captchaToken: cap.token,
+      captcha: cap.code,
+    }).expect(400);
+    assert.match(unknown.body.message, /未找到导游/);
+    assert.equal(seed.db.prepare("SELECT COUNT(*) AS n FROM sms_codes WHERE scene='guide'").get().n, 0);
+  });
+
+  it("does not expose demo sms codes when production sms is not configured", async () => {
+    const original = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
+    try {
+      const res = await agent.post("/api/auth/sms").send({ phone: "13500135009", scene: "login" }).expect(503);
+      assert.equal(res.body.data, undefined);
+      assert.equal(seed.db.prepare("SELECT COUNT(*) AS n FROM sms_codes WHERE phone=?").get("13500135009").n, 0);
+    } finally {
+      if (original == null) delete process.env.NODE_ENV;
+      else process.env.NODE_ENV = original;
+    }
+  });
+
   it("registers with phone, image captcha and password then logs in", async () => {
     const badPwd = await agent.post("/api/auth/register").send({ phone: "13600136000", password: "123" });
     assert.equal(badPwd.status, 400);
@@ -120,6 +147,17 @@ describe("auth and profile API", () => {
     const res = await agent.post("/api/auth/login-sms").send({ phone: "13500135000", code: "888888" }).expect(200);
     assert.match(res.body.data.user.nickname, /同行者众5000/);
     await agent.post("/api/auth/login-sms").send({ phone: "13500135000", code: "000000" }).expect(400);
+  });
+
+  it("locks a phone verification code after five failed attempts", async () => {
+    await agent.post("/api/auth/sms").send({ phone: "13500135001", scene: "login" }).expect(200);
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await agent.post("/api/auth/login-sms").send({ phone: "13500135001", code: "000000" }).expect(400);
+    }
+    await agent.post("/api/auth/login-sms").send({ phone: "13500135001", code: "888888" }).expect(400);
+    const row = seed.db.prepare("SELECT attempts,used FROM sms_codes WHERE phone=? AND scene='login'").get("13500135001");
+    assert.equal(row.attempts, 5);
+    assert.equal(row.used, 1);
   });
 
   it("logs in with wechat phone authorization and binds an existing phone", async () => {

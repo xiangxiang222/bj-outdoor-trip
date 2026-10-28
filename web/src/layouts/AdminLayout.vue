@@ -40,8 +40,8 @@
             </div>
           </div>
           <el-dropdown trigger="click" @command="onUserCommand">
-            <span class="admin-user"><span class="ops-user-avatar">{{ (me.name || "管").slice(0, 1) }}</span><span class="ops-user-meta">{{ me.name || "管理员" }}<small>{{ me.roleLabel || roleLabel(me.role) }}</small></span><OperationsIcon name="down" /></span>
-            <template #dropdown><el-dropdown-menu><el-dropdown-item command="out">退出登录</el-dropdown-item></el-dropdown-menu></template>
+            <span class="admin-user" role="button" tabindex="0" aria-label="账户菜单"><span class="ops-user-avatar">{{ (me.name || "管").slice(0, 1) }}</span><span class="ops-user-meta">{{ me.name || "管理员" }}<small>{{ me.roleLabel || roleLabel(me.role) }}</small></span><OperationsIcon name="down" /></span>
+            <template #dropdown><el-dropdown-menu><el-dropdown-item data-testid="admin-change-password" command="password">修改密码</el-dropdown-item><el-dropdown-item command="out" divided>退出登录</el-dropdown-item></el-dropdown-menu></template>
           </el-dropdown>
         </div>
       </header>
@@ -51,12 +51,39 @@
         <footer class="ops-main-footer">同行者众 · 在山野，遇见爱</footer>
       </main>
     </div>
+    <el-dialog
+      v-model="passwordDialog"
+      title="修改密码"
+      width="420px"
+      :close-on-click-modal="!passwordSubmitting"
+      :close-on-press-escape="!passwordSubmitting"
+      :show-close="!passwordSubmitting"
+      @closed="resetPasswordForm"
+    >
+      <el-form label-position="top" class="admin-password-form" data-testid="admin-password-form" @submit.prevent="saveOwnPassword">
+        <el-form-item label="原密码">
+          <el-input id="admin-current-password" v-model="passwordForm.oldPassword" type="password" autocomplete="current-password" show-password placeholder="请输入当前密码" />
+        </el-form-item>
+        <el-form-item label="新密码">
+          <el-input id="admin-new-password" v-model="passwordForm.newPassword" type="password" autocomplete="new-password" minlength="6" show-password placeholder="至少 6 位" />
+        </el-form-item>
+        <el-form-item label="确认新密码">
+          <el-input id="admin-confirm-password" v-model="passwordForm.confirmPassword" type="password" autocomplete="new-password" minlength="6" show-password placeholder="再次输入新密码" />
+        </el-form-item>
+        <p v-if="passwordError" class="ops-error" role="alert">{{ passwordError }}</p>
+      </el-form>
+      <template #footer>
+        <el-button :disabled="passwordSubmitting" @click="passwordDialog = false">取消</el-button>
+        <el-button data-testid="admin-password-submit" type="success" :loading="passwordSubmitting" @click="saveOwnPassword">保存新密码</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { ElMessage } from "element-plus";
 import http from "@/api/http";
 import OperationsIcon from "@/components/OperationsIcon.vue";
 import "@/styles/operations.css";
@@ -65,6 +92,11 @@ const router = useRouter();
 const route = useRoute();
 const menuOpen = ref(false);
 const sessionError = ref("");
+const passwordDialog = ref(false);
+const passwordSubmitting = ref(false);
+const passwordError = ref("");
+const emptyPasswordForm = () => ({ oldPassword: "", newPassword: "", confirmPassword: "" });
+const passwordForm = ref(emptyPasswordForm());
 function refreshSession() { window.location.reload(); }
 const navGroups = [
   { label: "经营工作台", items: [
@@ -163,6 +195,52 @@ function onDocClick(e) {
 
 function onUserCommand(cmd) {
   if (cmd === "out") out();
+  if (cmd === "password") openPasswordDialog();
+}
+
+function openPasswordDialog() {
+  passwordForm.value = emptyPasswordForm();
+  passwordError.value = "";
+  passwordDialog.value = true;
+}
+
+function resetPasswordForm() {
+  passwordForm.value = emptyPasswordForm();
+  passwordError.value = "";
+}
+
+async function saveOwnPassword() {
+  if (passwordSubmitting.value) return;
+  const { oldPassword, newPassword, confirmPassword } = passwordForm.value;
+  if (!oldPassword || !newPassword || !confirmPassword) {
+    passwordError.value = "请填写原密码、新密码和确认密码";
+    return;
+  }
+  if (newPassword.length < 6) {
+    passwordError.value = "新密码至少 6 位";
+    return;
+  }
+  if (newPassword === oldPassword) {
+    passwordError.value = "新密码不能与原密码相同";
+    return;
+  }
+  if (newPassword !== confirmPassword) {
+    passwordError.value = "两次输入的新密码不一致";
+    return;
+  }
+
+  passwordError.value = "";
+  passwordSubmitting.value = true;
+  try {
+    await http.put("/admin/me/password", { oldPassword, newPassword });
+    passwordForm.value = emptyPasswordForm();
+    passwordDialog.value = false;
+    ElMessage.success("密码已修改，请牢记新密码");
+  } catch (e) {
+    passwordError.value = e.message || "修改失败，请稍后重试";
+  } finally {
+    passwordSubmitting.value = false;
+  }
 }
 
 onMounted(async () => {

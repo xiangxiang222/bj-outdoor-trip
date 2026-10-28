@@ -70,7 +70,7 @@ function resolveFromServer(name) {
   return require(require.resolve(name, { paths: [SERVER] }));
 }
 
-function prepareIsolated() {
+async function prepareIsolated() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bj-e2e-"));
   process.env.MMC_DATA_DIR = dir;
   process.env.MMC_DB_FILE = path.join(dir, "app.sqlite");
@@ -86,7 +86,11 @@ function prepareIsolated() {
   const { seedMinimal } = require(path.join(SERVER, "test/helpers"));
   const request = resolveFromServer("supertest");
   const seed = seedMinimal();
-  return { seed, agent: request(createApp()), dir };
+  const server = await new Promise((resolve, reject) => {
+    const listener = createApp().listen(0, "127.0.0.1", () => resolve(listener));
+    listener.once("error", reject);
+  });
+  return { seed, agent: request(server), dir, server };
 }
 
 function createAgentClient(agent) {
@@ -189,14 +193,17 @@ async function run(opts) {
   const live = opts.live;
   let seed = null;
   let request;
+  let isolated;
   if (live) {
     request = createFetchClient(opts.base);
   } else {
-    const prepared = prepareIsolated();
+    const prepared = await prepareIsolated();
+    isolated = prepared;
     seed = prepared.seed;
     request = createAgentClient(prepared.agent);
   }
 
+  try {
   const ctx = {
     live,
     seed,
@@ -263,9 +270,13 @@ async function run(opts) {
     assert(missing.status === 404, "不存在的线路应 404");
     const schedules = apiOk(await request("GET", "/api/schedules"), "schedules");
     assert(Array.isArray(schedules), "排期不是数组");
-    if (schedules[0]) {
-      assert(schedules[0].bus && schedules[0].bus.seats, "排期未带车型座位数");
-      assert(schedules[0].meetupMapUrl, "集合点地图链接缺失");
+    const firstSchedule = schedules[0];
+    if (firstSchedule) {
+      assert(firstSchedule.bus && firstSchedule.bus.seats, "排期未带车型座位数");
+      if (firstSchedule.meetupPoint) {
+        const detail = apiOk(await request("GET", "/api/schedules/" + firstSchedule.id), "schedule detail");
+        assert(detail.meetupMapUrl, "有集合点的排期详情缺少地图链接");
+      }
     }
   });
 
@@ -521,12 +532,18 @@ async function run(opts) {
   );
 
   await step(
-    "导游端：验证码登录、行程名单、游客详情、签到",
+    "导游端：短信验证登录、行程名单、游客详情、签到",
     async () => {
       const cap = await readCaptcha(request);
+      const sms = apiOk(
+        await request("POST", "/api/auth/sms", {
+          body: { phone: "13700001101", scene: "guide", captchaToken: cap.token, captcha: cap.code },
+        }),
+        "guide sms"
+      );
       const guide = apiOk(
         await request("POST", "/api/guide/login", {
-          body: { phone: "13700001101", captchaToken: cap.token, captcha: cap.code },
+          body: { phone: "13700001101", code: sms.demoCode || "888888" },
         }),
         "guide login"
       );
@@ -957,6 +974,13 @@ async function run(opts) {
     }
   }
   return failed === 0 ? 0 : 1;
+  } finally {
+    if (isolated) {
+      await new Promise((resolve) => isolated.server.close(resolve));
+      require(path.join(SERVER, "src/db")).resetDb();
+      fs.rmSync(isolated.dir, { recursive: true, force: true });
+    }
+  }
 }
 
 async function main() {

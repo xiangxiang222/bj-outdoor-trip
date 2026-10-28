@@ -128,11 +128,18 @@ function tripRunOf(scheduleId) {
   };
 }
 
+function canStartTrip(sch) {
+  const today = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return !!sch && sch.status !== "cancelled" && !sch.started_at && !sch.completed_at && String(sch.start_date || "") === today;
+}
+
 function startTrip(scheduleId, actor = {}) {
   const sch = loadSchedule(scheduleId);
+  if (sch.completed_at) fail(400, "行程已结束，不能开始");
   if (sch.started_at) {
     return { startedAt: sch.started_at, already: true };
   }
+  if (!canStartTrip(sch)) fail(400, "行程不在出发日期，不能开始");
   const now = nowText();
   getDb()
     .prepare("UPDATE schedules SET started_at=?, started_by=?, started_by_id=? WHERE id=?")
@@ -216,6 +223,7 @@ function confirmCheckin(scheduleId, sessionId, actor = {}) {
 }
 
 module.exports = {
+  canStartTrip,
   startTrip,
   openCheckin,
   markCheckin,

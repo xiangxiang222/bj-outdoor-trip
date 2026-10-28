@@ -255,7 +255,7 @@ describe("official trips, personal bounty and merge", () => {
     assert.match(sms[0].content, /官方团/);
     const wx = getDb().prepare("SELECT * FROM wechat_notices WHERE scene='merge'").all();
     assert.ok(wx.length >= 1);
-    assert.equal(wx[0].status, "sent");
+    assert.equal(wx[0].status, "recorded");
     assert.match(wx[0].page, /pages\/schedule\/schedule/);
 
     const bounty = getDb()

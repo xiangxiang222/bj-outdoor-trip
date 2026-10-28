@@ -1,6 +1,11 @@
 <template>
-  <LoadRow v-if="!s" />
-  <div v-else>
+  <LoadRow v-if="detailLoading && !s" />
+  <div v-else-if="!s && loadError" class="card"><div class="pad enroll-load-error" role="alert">
+    <strong>行程暂不可用</strong>
+    <p class="muted">{{ loadError }}</p>
+    <button class="btn ghost" type="button" :disabled="detailLoading" @click="loadSchedule">{{ detailLoading ? "正在重试…" : "重新加载" }}</button>
+  </div></div>
+  <div v-else-if="s">
     <div class="card"><div class="pad">
       <strong>{{ s.route.title }}</strong>
       <p class="muted">{{ s.startDate }}{{ isActivity ? "" : " · " + (s.bus?.name || "") }} {{ s.meetupTime || "" }}</p>
@@ -172,6 +177,8 @@ const route = useRoute();
 const router = useRouter();
 const store = useUserStore();
 const s = ref(null);
+const detailLoading = ref(true);
+const loadError = ref("");
 const isActivity = computed(() => s.value?.channel === "activity");
 const isFree = computed(() => {
   const q = s.value?.quote || {};
@@ -245,9 +252,17 @@ const seatRows = computed(() => {
   return groups;
 });
 
-onMounted(async () => {
-  if (!requireLogin(store, router, route)) return;
-  s.value = (await http.get("/schedules/" + route.params.id)).data;
+async function loadSchedule() {
+  detailLoading.value = true;
+  loadError.value = "";
+  try {
+    s.value = (await http.get("/schedules/" + route.params.id)).data;
+  } catch (e) {
+    loadError.value = "请检查网络或稍后重试，确认行程仍可报名后再继续。";
+    detailLoading.value = false;
+    return;
+  }
+  detailLoading.value = false;
   quote.value = s.value.quote.price;
   setChrome(isActivity.value ? "报名本局" : "报名", isActivity.value ? "姓名和手机即可" : "实名、保险与选座");
   if (isActivity.value) form.value.insuranceCode = "none";
@@ -297,6 +312,11 @@ onMounted(async () => {
   } catch {
     companions.value = [];
   }
+}
+
+onMounted(async () => {
+  if (!requireLogin(store, router, route)) return;
+  await loadSchedule();
 });
 
 function applyCompanion(c) {

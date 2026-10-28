@@ -265,9 +265,9 @@
 <view class="btn clay" wx:if="{{s.isOrganizer && s.status!='cancelled'}}" bindtap="toggleDissolve">{{tr.t('解散拼团', lang)}}</view>
 <view class="card" wx:if="{{showDissolve}}">
   <view class="pad">
-    <view>{{tr.t('解散后将取消全部报名，已付款按各付款人原路退回，并发送取消短信。', lang)}}</view>
+    <view>{{tr.t('解散后将取消全部报名并处理退款。系统只记录待发送通知，短信尚未接入。', lang)}}</view>
     <textarea class="input" style="width:auto;min-height:140rpx" placeholder="{{tr.t('请填写解散理由', lang)}}" value="{{reason}}" bindinput="setReason" />
-    <view class="btn clay" bindtap="confirmDissolve">{{tr.t('确认解散并通知', lang)}}</view>
+    <view class="btn clay" bindtap="confirmDissolve">{{tr.t('确认解散并记录通知', lang)}}</view>
     <view class="btn ghost" bindtap="toggleDissolve">{{tr.t('取消', lang)}}</view>
   </view>
 </view>

@@ -54,7 +54,8 @@ describe("dissolve group", () => {
     assert.equal(res.body.data.cancelled, 1);
     assert.equal(res.body.data.refunded, 1);
     assert.equal(res.body.data.refundAmount, 199);
-    assert.equal(res.body.data.smsCount, 1);
+    assert.equal(res.body.data.smsCount, 0);
+    assert.equal(res.body.data.smsRecordCount, 1);
 
     const detail = await agent.get(`/api/schedules/${seed.individualScheduleId}`).set(auth(token)).expect(200);
     assert.equal(detail.body.data.status, "cancelled");
@@ -84,7 +85,7 @@ describe("dissolve group", () => {
     const sms = seed.db.prepare("SELECT * FROM sms_logs WHERE scene='cancel' AND ref_id=?").all(seed.individualScheduleId);
     assert.equal(sms.length, 1);
     assert.match(sms[0].content, /人数不足不成团/);
-    assert.equal(sms[0].status, "sent");
+    assert.equal(sms[0].status, "recorded");
 
     const pay = seed.db.prepare("SELECT * FROM payments WHERE status='refunded' AND enrollment_id=?").get(enrolled.body.data.enrollmentId);
     assert.ok(pay);
@@ -130,7 +131,8 @@ describe("dissolve group", () => {
       .expect(200);
     assert.equal(res.body.data.cancelled, 1);
     assert.equal(res.body.data.refunded, 0);
-    assert.equal(res.body.data.smsCount, 1);
+    assert.equal(res.body.data.smsCount, 0);
+    assert.equal(res.body.data.smsRecordCount, 1);
 
     const list = await agent.get("/api/schedules").expect(200);
     assert.equal(list.body.data.some((s) => s.id === id), false);
@@ -159,7 +161,8 @@ describe("dissolve group", () => {
       .send({ reason: "平台统一取消" })
       .expect(200);
     assert.ok(res.body.data.count >= 2);
-    assert.ok(res.body.data.smsCount >= 1);
+    assert.equal(res.body.data.smsCount, 0);
+    assert.ok(res.body.data.smsRecordCount >= 1);
 
     const live = await agent.get("/api/schedules").expect(200);
     assert.equal(live.body.data.length, 0);

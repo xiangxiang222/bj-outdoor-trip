@@ -5,6 +5,8 @@ Page({
   data: {
     id: "",
     s: null,
+    loading: true,
+    loadError: "",
     posts: [],
     msg: "",
     rating: 5,
@@ -20,7 +22,13 @@ Page({
     this.load();
   },
   async load() {
-    if (!this.data.id) return;
+    if (this._loading) return;
+    if (!this.data.id) {
+      this.setData({ loading: false, loadError: "缺少行程信息，请从行程详情重新进入。" });
+      return;
+    }
+    this._loading = true;
+    this.setData({ loading: true, loadError: "" });
     try {
       const [after, contest] = await Promise.all([
         request("/schedules/" + this.data.id + "/after"),
@@ -28,7 +36,10 @@ Page({
       ]);
       this.setData({ s: after.data, posts: contest.data || [] });
     } catch (e) {
-      this.setData({ msg: (e && e.message) || "加载失败" });
+      this.setData({ loadError: (e && e.message) || "加载失败" });
+    } finally {
+      this._loading = false;
+      this.setData({ loading: false });
     }
   },
   needLogin() {

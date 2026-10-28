@@ -5,7 +5,7 @@ const { reverseEnrollReferral } = require("./referral");
 const { buildCancelSms, sendSms } = require("./sms");
 const { releaseCouponByEnrollment } = require("./coupons");
 const { refundableOf } = require("./pay-ledger");
-const { refundEnrollmentToPayers } = require("./payment");
+const { refundEnrollmentToPayers, preflightEnrollmentRefund } = require("./payment");
 
 function fail(status, message) {
   const err = new Error(message);
@@ -33,13 +33,18 @@ async function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
   let refunded = 0;
   let refundAmount = 0;
   let smsCount = 0;
+  let smsRecordCount = 0;
   const refunds = [];
+  const refundPlans = enrollments.map((en) => ({ enrollment: en, amount: refundableOf(en) }));
 
-  for (const en of enrollments) {
-    const money = refundableOf(en);
+  for (const plan of refundPlans) {
+    if (plan.amount > 0) preflightEnrollmentRefund(plan.enrollment, plan.amount);
+  }
+
+  for (const { enrollment: en, amount: money } of refundPlans) {
     if (money > 0) {
-      clawActivityPoints(en.user_id, en.id, money, money);
       const rows = await refundEnrollmentToPayers(en, { amount: money, remark: `解散退款：${trimmed}` });
+      clawActivityPoints(en.user_id, en.id, money, money);
       refunds.push(...rows.map((row) => ({ ...row, enrollmentId: en.id })));
       refunded += 1;
       refundAmount += money;
@@ -77,6 +82,7 @@ async function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
         refId: sch.id,
       });
       if (sms.status === "sent") smsCount += 1;
+      if (sms.status === "recorded") smsRecordCount += 1;
     }
   });
   run();
@@ -91,6 +97,7 @@ async function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
     refunded,
     refundAmount,
     smsCount,
+    smsRecordCount,
     refunds,
     status: "cancelled",
     transferred,
@@ -154,6 +161,7 @@ async function dissolveAllSchedules({ reason, actorId } = {}) {
     refunded: results.reduce((sum, row) => sum + row.refunded, 0),
     refundAmount: results.reduce((sum, row) => sum + row.refundAmount, 0),
     smsCount: results.reduce((sum, row) => sum + row.smsCount, 0),
+    smsRecordCount: results.reduce((sum, row) => sum + row.smsRecordCount, 0),
     reason: trimmed,
   };
 }
