@@ -393,6 +393,7 @@ html.admin-theme .el-form-item__label { color: #8b7c98; font-size: 12px; }
 .guide-captcha-row { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; }
 .guide-captcha-row .input { min-width: 0; flex: 1; margin: 0; }
 .guide-captcha-button { padding: 0; background: #f5effa; border: 1px solid #eae0ef; border-radius: 8px; height: 44px; overflow: hidden; cursor: pointer; min-width: 100px; }
+.guide-sms-button { width: 116px; color: #654477; font-size: 11px; }
 .guide-captcha-button img { display: block; height: 100%; }
 .guide-captcha-button span { font-size: 10px; color: #b39ac4; padding: 9px; }
 .guide-login .guide-login-hint { margin-top: 17px; color: #b6a2c1; font-size: 10px; }

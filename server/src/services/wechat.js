@@ -22,12 +22,25 @@ function payLive() {
   return !mock && !demoSecret(appId) && Boolean(mchId && mchKey);
 }
 
+function requireLivePaymentInProduction() {
+  if (process.env.NODE_ENV === "production" && !payLive()) {
+    const err = new Error("微信支付服务暂不可用");
+    err.status = 503;
+    throw err;
+  }
+}
+
 function mockOpenid(code) {
   return `demo_openid_${crypto.createHash("md5").update(String(code || "guest")).digest("hex").slice(0, 12)}`;
 }
 
 async function code2session(jsCode) {
   if (!loginLive()) {
+    if (process.env.NODE_ENV === "production") {
+      const err = new Error("微信登录服务暂不可用");
+      err.status = 503;
+      throw err;
+    }
     return { openid: mockOpenid(jsCode), session_key: "demo_session", unionid: "" };
   }
   const url =
@@ -270,6 +283,7 @@ async function wechatV3({ method, urlPath, body = "" }) {
 }
 
 async function transferToBalance({ openid, amountFen, outBillNo, remark }) {
+  requireLivePaymentInProduction();
   if (config.wechat.mock) return { mock: true, state: "SUCCESS", out_bill_no: outBillNo };
   if (!openid) {
     const err = new Error("请先用微信登录后再提现");
@@ -302,6 +316,7 @@ async function transferToBalance({ openid, amountFen, outBillNo, remark }) {
 }
 
 async function queryTransferBill(outBillNo) {
+  requireLivePaymentInProduction();
   if (config.wechat.mock) return { mock: true, state: "SUCCESS", out_bill_no: outBillNo };
   const bill = encodeURIComponent(String(outBillNo || ""));
   return wechatV3({
@@ -312,6 +327,7 @@ async function queryTransferBill(outBillNo) {
 }
 
 async function refundOrder({ tradeNo, transactionId, refundNo, totalFen, refundFen }) {
+  requireLivePaymentInProduction();
   if (!payLive()) {
     return { mock: true, refund_id: `mock_${refundNo}`, out_refund_no: refundNo };
   }
@@ -506,6 +522,7 @@ module.exports = {
   mockOpenid,
   loginLive,
   payLive,
+  requireLivePaymentInProduction,
   yuanToFen,
   signMd5,
   xmlToObj,

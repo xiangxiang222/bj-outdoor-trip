@@ -531,7 +531,7 @@ Page({
       this.setData({ showDissolve: false, reason: "" });
       wx.showModal({
         title: "已解散",
-        content: "取消 " + res.data.cancelled + " 人，退款 " + res.data.refunded + " 人，短信 " + res.data.smsCount + " 条",
+        content: "取消 " + res.data.cancelled + " 人，退款 " + res.data.refunded + " 人；已记录待发送通知 " + (res.data.smsRecordCount || 0) + " 条，短信尚未接入",
         showCancel: false,
       });
       this.load();

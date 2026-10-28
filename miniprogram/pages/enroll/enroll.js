@@ -7,6 +7,8 @@ Page({
     ref: "",
     coupon: "",
     s: null,
+    detailLoading: true,
+    detailError: "",
     idHint: "",
     idOk: false,
     isActivity: false,
@@ -44,32 +46,7 @@ Page({
       "form.joinCode": q.code || q.joinCode || "",
     });
     this.loadCompanions();
-    request("/schedules/" + q.id).then((r) => {
-      const s = r.data;
-      const isActivity = s && s.channel === "activity";
-      const qte = (s && s.quote) || {};
-      const isFree = Number(qte.price || 0) === 0 && Number(qte.originPrice || 0) === 0;
-      this.setData({
-        s,
-        isActivity,
-        isFree,
-        "form.insuranceCode": isActivity ? "none" : this.data.form.insuranceCode,
-        cancelSummary: (s.refundPolicy && s.refundPolicy.summary) || this.data.cancelSummary,
-      });
-      wx.setNavigationBarTitle({ title: isActivity ? "报名本局" : "报名" });
-      if (!isActivity) {
-        request("/schedules/" + q.id + "/seats").then((seatRes) => {
-          const seats = (seatRes.data && seatRes.data.seats) || [];
-          const groups = [];
-          seats.forEach((seat) => {
-            const last = groups[groups.length - 1];
-            if (!last || last.row !== seat.row) groups.push({ row: seat.row, seats: [seat] });
-            else last.seats.push(seat);
-          });
-          this.setData({ seatRows: groups });
-        }).catch(() => {});
-      }
-    });
+    this.loadSchedule(q.id);
     request("/meta").then((r) => {
       const data = (r && r.data) || {};
       this.setData({
@@ -80,6 +57,44 @@ Page({
         mergeTpl: (data.subscribeTemplates && data.subscribeTemplates.merge) || "",
       });
     }).catch(() => {});
+  },
+  async loadSchedule(scheduleId) {
+    if (this._detailLoading) return;
+    this._detailLoading = true;
+    this.setData({ detailLoading: true, detailError: "" });
+    const id = typeof scheduleId === "string" ? scheduleId : this.data.id;
+    try {
+      const r = await request("/schedules/" + id);
+      const s = r.data;
+      const isActivity = s && s.channel === "activity";
+      const qte = (s && s.quote) || {};
+      const isFree = Number(qte.price || 0) === 0 && Number(qte.originPrice || 0) === 0;
+      this.setData({
+        s,
+        detailLoading: false,
+        isActivity,
+        isFree,
+        "form.insuranceCode": isActivity ? "none" : this.data.form.insuranceCode,
+        cancelSummary: (s.refundPolicy && s.refundPolicy.summary) || this.data.cancelSummary,
+      });
+      wx.setNavigationBarTitle({ title: isActivity ? "报名本局" : "报名" });
+      if (!isActivity) {
+        request("/schedules/" + this.data.id + "/seats").then((seatRes) => {
+          const seats = (seatRes.data && seatRes.data.seats) || [];
+          const groups = [];
+          seats.forEach((seat) => {
+            const last = groups[groups.length - 1];
+            if (!last || last.row !== seat.row) groups.push({ row: seat.row, seats: [seat] });
+            else last.seats.push(seat);
+          });
+          this.setData({ seatRows: groups });
+        }).catch(() => {});
+      }
+    } catch (err) {
+      this.setData({ detailLoading: false, detailError: "请检查网络或稍后重试，确认行程仍可报名后再继续。" });
+    } finally {
+      this._detailLoading = false;
+    }
   },
   incSupply(e) {
     const code = e.currentTarget.dataset.code;

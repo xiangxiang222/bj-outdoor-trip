@@ -146,11 +146,13 @@ describe("trip page extras", () => {
       healthOk: true,
     });
     const cap = await issueCaptcha(agent);
-    const login = await agent.post("/api/guide/login").send({
+    await agent.post("/api/auth/sms").send({
       phone: "13700001101",
+      scene: "guide",
       captchaToken: cap.token,
       captcha: cap.code,
     }).expect(200);
+    const login = await agent.post("/api/guide/login").send({ phone: "13700001101", code: "888888" }).expect(200);
     await agent
       .post(`/api/guide/schedules/${seed.individualScheduleId}/seats/lock`)
       .set(auth(login.body.data.token))

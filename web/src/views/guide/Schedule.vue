@@ -77,7 +77,7 @@
     </div>
     <p v-if="msg" class="guide-message" role="status" aria-live="polite">{{ msg }}</p>
 
-    <div v-if="!s.startedAt && !tripInactive" class="guide-trip-command"><div><span class="ops-eyebrow">DEPARTURE</span><strong>准备好出发了吗？</strong><small>开始行程后，报名伙伴的联系方式将开放。</small></div><button class="btn" type="button" :disabled="starting" @click="startOfficial">{{ starting ? "正在确认…" : "正式开团" }}</button></div>
+    <div v-if="!s.startedAt && !tripInactive" class="guide-trip-command"><div><span class="ops-eyebrow">DEPARTURE</span><strong>{{ s.canStartTrip ? '准备好出发了吗？' : '请在出发当天正式开团' }}</strong><small>{{ s.canStartTrip ? '开始行程后，报名伙伴的联系方式将开放。' : '开团日期为 ' + s.startDate + '（北京时间），出发前联系方式保持隐藏。' }}</small></div><button class="btn" type="button" :disabled="starting || !s.canStartTrip" @click="startOfficial">{{ starting ? "正在确认…" : "正式开团" }}</button></div>
     <div v-else-if="s.completedAt" class="guide-finish-note"><OperationsIcon name="check" /><span>行程已完成 · {{ s.completedAt }}<small>大家可以参与行程评价和评选。</small></span></div>
     <div v-else-if="s.canCloseTrip" class="guide-trip-command is-finish"><div><span class="ops-eyebrow">JOURNEY COMPLETE</span><strong>本次行程结束了吗？</strong><small>确认后，出行伙伴可以评价和参与评选。</small></div><button class="btn ghost" type="button" :disabled="closing" @click="closeTrip">{{ closing ? "正在结束…" : "结束行程" }}</button></div>
   </div>

@@ -90,18 +90,24 @@
       <div class="hint">看看最近都在忙什么</div>
       <div class="tools">
         <button class="tool-btn" type="button" @click="sort = cycleSort(sort)">{{ sortLabel(sort) }}</button>
-        <button class="tool-btn" type="button" @click="fold.extra = !fold.extra">{{ fold.extra ? "收起" : "筛选" }}</button>
+        <button class="tool-btn" type="button" @click="fold.extra = !fold.extra">{{ fold.extra ? "收起" : "更多筛选" }}</button>
       </div>
     </div>
 
-    <div v-if="fold.extra">
-      <div class="chips">
-        <div class="chip" :class="{ on: !hostKind }" @click="clearHost()">全部团</div>
-        <div class="chip" :class="{ on: hostKind === 'official' }" @click="toggleHost('official')">官方</div>
-        <div class="chip" :class="{ on: hostKind === 'company' }" @click="toggleHost('company')">公司</div>
-        <div class="chip" :class="{ on: hostKind === 'campus' }" @click="toggleHost('campus')">高校</div>
-        <div class="chip" :class="{ on: hostKind === 'individual' }" @click="toggleHost('individual')">个人</div>
+    <div class="chips">
+      <button class="chip" :class="{ on: !hostKind }" type="button" @click="clearHost()">全部团</button>
+      <button class="chip" :class="{ on: hostKind === 'official' }" type="button" @click="toggleHost('official')">官方</button>
+      <button class="chip" :class="{ on: hostKind === 'company' }" type="button" @click="toggleHost('company')">公司</button>
+      <button class="chip" :class="{ on: hostKind === 'campus' }" type="button" @click="toggleHost('campus')">高校</button>
+      <button class="chip" :class="{ on: hostKind === 'individual' }" type="button" @click="toggleHost('individual')">个人</button>
+    </div>
+
+    <div v-if="fold.extra" class="filter-panel">
+      <div class="filter-tabs" role="tablist" aria-label="筛选分组">
+        <button type="button" role="tab" :aria-selected="filterSection === 'date'" @click="filterSection = 'date'">出发日期</button>
+        <button type="button" role="tab" :aria-selected="filterSection === 'options'" @click="filterSection = 'options'">优惠与范围</button>
       </div>
+      <template v-if="filterSection === 'options'">
       <div class="chips" v-if="hostKind === 'company' && hostFacets.companies.length">
         <div class="chip" :class="{ on: !companyName }" @click="companyName = ''">全部公司</div>
         <div class="chip" :class="{ on: companyName === n }" v-for="n in hostFacets.companies" :key="n" @click="toggleCompany(n)">{{ n }}</div>
@@ -110,6 +116,12 @@
         <div class="chip" :class="{ on: !school }" @click="school = ''">全部高校</div>
         <div class="chip" :class="{ on: school === n }" v-for="n in hostFacets.schools" :key="n" @click="toggleSchool(n)">{{ n }}</div>
       </div>
+      <p class="filter-hint">按优惠类型筛选，可与上方团型一起使用。</p>
+      <div class="chips">
+        <button type="button" class="offer-chip" v-for="o in offers" :key="o.key" :aria-pressed="offerFilter === o.key" :style="{ background: o.color, opacity: offerFilter && offerFilter !== o.key ? 0.45 : 1 }" @click="offerFilter = offerFilter === o.key ? '' : o.key">{{ o.label }}</button>
+      </div>
+      </template>
+      <template v-else>
       <div class="cal">
         <div class="cal-day" :class="{ on: date === d.date }" v-for="d in calendar" :key="d.date" @click="toggleDate(d.date)">
           <span class="muted">{{ d.w }}</span>
@@ -117,8 +129,8 @@
           <span class="muted">{{ d.count ? d.count + "团" : "—" }}</span>
         </div>
       </div>
-      <div class="chips">
-        <div class="chip" :class="{ on: monthKey === m.key && monthPicked }" v-for="m in home.months || []" :key="m.key" @click="pickMonth(m.key)">{{ m.label }}</div>
+      <div class="filter-months">
+        <button type="button" class="chip" :class="{ on: monthKey === m.key && monthPicked }" v-for="m in home.months || []" :key="m.key" @click="pickMonth(m.key)">{{ m.label }}</button>
       </div>
       <div class="month-grid" v-if="monthPicked && monthDays.length">
         <button class="month-cell" type="button" :class="{ on: date === d.date }" v-for="d in monthDays" :key="d.date" @click="toggleDate(d.date)">
@@ -132,9 +144,7 @@
       <div class="chips" v-if="activeFestival">
         <div class="chip" :class="{ on: date === d.date }" v-for="d in activeFestival.dates" :key="d.date" @click="toggleDate(d.date)">{{ d.label }}</div>
       </div>
-      <div class="chips">
-        <div class="offer-chip" v-for="o in offers" :key="o.key" :style="{ background: o.color, opacity: offerFilter && offerFilter !== o.key ? 0.45 : 1 }" @click="offerFilter = offerFilter === o.key ? '' : o.key">{{ o.label }}</div>
-      </div>
+      </template>
     </div>
 
     <div class="picked" v-if="picked.length">
@@ -252,6 +262,7 @@ const sort = ref("soon");
 const heroIndex = ref(0);
 const upcoming = ref(null);
 const fold = reactive({ extra: false });
+const filterSection = ref("date");
 const offers = OFFER_TYPES.filter((o) => o.key !== "full");
 const view = ref(pageRoute.query.view === "routes" ? "routes" : "trips");
 const searchHint = computed(() => (view.value === "routes" ? "搜长城 / 十渡 / 坝上" : "搜线路、城区、主理人"));
@@ -430,7 +441,7 @@ async function discoverCampusTrips() {
   companyName.value = "";
   school.value = "";
   hostKind.value = "campus";
-  fold.extra = true;
+  fold.extra = false;
   setView("trips");
   await nextTick();
   discoverTrips();
@@ -466,3 +477,14 @@ async function pickMonth(key) {
   monthDays.value = res.data?.monthDays || [];
 }
 </script>
+
+<style scoped>
+.filter-panel { margin: 8px 0 14px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+.filter-tabs { display: flex; gap: 20px; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+.filter-tabs button { padding: 4px 0 10px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: calc(13px * var(--ui-scale)); }
+.filter-tabs button[aria-selected="true"] { border-bottom-color: var(--plum); color: var(--plum); font-weight: 600; }
+.filter-months { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin: 12px 0 8px; scrollbar-width: none; }
+.filter-months .chip { flex: none; margin: 0; white-space: nowrap; }
+.filter-hint { font-size: calc(12px * var(--ui-scale)); color: var(--muted); line-height: 1.6; }
+.filter-panel .offer-chip { border: 0; font: inherit; font-size: calc(12px * var(--ui-scale)); }
+</style>

@@ -1,9 +1,11 @@
 const { request, setAuth } = require("../../utils/request");
 const { baseUrl } = require("../../config");
+const { isDark } = require("../../utils/appearance");
 
 Page({
   data: { card: null, focus: null, into: 0, span: 0, bar: 0, pill: "", nowLine: "", hasNext: false },
   onShow() {
+    this.setData({ dark: isDark() });
     if (!getApp().globalData.token) {
       wx.redirectTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/member/member") });
       return;
@@ -26,6 +28,7 @@ Page({
   showCard(card, level) {
     if (!card) return;
     const focus = (card.levels || []).find((item) => item.level === Number(level)) || card.levels[0];
+    const perkItems = (focus.perks || []).map((label) => ({ label }));
     const next = (card.levels || []).find((item) => item.level === focus.level + 1);
     const floor = Number(focus.growth || 0);
     const span = next ? Math.max(1, next.growth - floor) : Math.max(1, floor);
@@ -41,13 +44,14 @@ Page({
     this.setData({
       card,
       focus,
+      perkItems,
       into,
       span,
       bar,
       pill,
       nowLine,
       hasNext: !!next,
-      mark: `${baseUrl}/static/member/v${focus.level}.png`,
+      mark: `${baseUrl}/static/member/v${card.level}.png`,
     });
   },
 });

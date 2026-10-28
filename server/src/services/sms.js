@@ -10,7 +10,8 @@ function buildCancelSms({ title, date, reason, refunded }) {
 function sendSms({ phone, scene, content, refType, refId }) {
   const db = getDb();
   const valid = /^1\d{10}$/.test(phone || "");
-  const status = valid ? "sent" : "skipped";
+  // 业务通知尚未接入发送模板；记录日志不代表已送达用户。
+  const status = valid ? "recorded" : "skipped";
   db.prepare(
     `INSERT INTO sms_logs (phone,scene,content,status,ref_type,ref_id) VALUES (?,?,?,?,?,?)`
   ).run(phone || "", scene || "", content || "", status, refType || "", refId || 0);

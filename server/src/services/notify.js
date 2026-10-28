@@ -34,7 +34,7 @@ function sendWechatNotice({ userId, openid, scene, page, data, title, refType, r
     return { skipped: true, reason: "no_openid", mock: true };
   }
   const live = loginLive() && Boolean(templateId);
-  const status = live ? "queued" : "sent";
+  const status = live ? "queued" : "recorded";
   const info = db
     .prepare(
       `INSERT INTO wechat_notices (user_id,openid,scene,template_id,page,payload,status,ref_type,ref_id)
@@ -42,7 +42,7 @@ function sendWechatNotice({ userId, openid, scene, page, data, title, refType, r
     )
     .run(userId || 0, oid, scene || "", templateId, page || "", payload, status, refType || "", refId || 0);
   const id = Number(info.lastInsertRowid);
-  if (!live) return { id, mock: true, status: "sent", openid: oid };
+  if (!live) return { id, mock: true, status: "recorded", openid: oid };
   return sendSubscribeMessage({
     openid: oid,
     templateId,

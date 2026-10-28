@@ -63,7 +63,7 @@ const { signIn, state: signinState } = require("./services/signin");
 const { drawPre, drawPost, claimPrizes, lotteryState, lotteryPublic } = require("./services/lottery");
 const { getAdminLottery, listAdminLotteries, saveAdminLottery, addAssign, removeAssign, attachLotteryOnCreate } = require("./services/lottery-admin");
 const { completeSchedule, afterTripState } = require("./services/aftertrip");
-const { startTrip, openCheckin, markCheckin, unmarkCheckin, confirmCheckin, tripRunOf } = require("./services/trip-run");
+const { startTrip, canStartTrip, openCheckin, markCheckin, unmarkCheckin, confirmCheckin, tripRunOf } = require("./services/trip-run");
 const { listPosts, submitPost, votePost } = require("./services/contest");
 const { assertCanOpenCombo, comboView, parseComboRule } = require("./services/combo");
 const { eligibilityView, applyEnrollLimit, expandEnrollLimit, resolveEnrollLimit } = require("./services/eligibility");
@@ -546,6 +546,7 @@ function scheduleView(sch, req, opts = {}) {
     status: sch.status,
     startedAt: sch.started_at || "",
     startedBy: sch.started_by || "",
+    canStartTrip: canStartTrip(sch),
     completedAt: sch.completed_at || "",
     canCloseTrip:
       sch.status !== "cancelled" &&
@@ -679,7 +680,7 @@ router.get("/meta", (req, res) => {
       name: "同行者众",
       slogan: "在山野，遇见爱",
       studentDiscountRate: config.student.discountRate,
-      smsDemoCode: smsLive() ? "" : config.demoSmsCode,
+      smsDemoCode: smsLive() || process.env.NODE_ENV === "production" ? "" : config.demoSmsCode,
       smsLive: smsLive(),
       wechatPayMock: config.wechat.mock,
       wechatPayLive: payLive(),
@@ -779,7 +780,16 @@ router.get("/play-tags", (req, res) => {
 router.post("/auth/sms", async (req, res) => {
   try {
     const { phone, scene } = req.body || {};
-    const data = await issueSmsCode(phone, scene || "login");
+    const use = scene || "login";
+    if (!["login", "register", "guide"].includes(use)) return res.status(400).json({ ok: false, message: "验证码用途不正确" });
+    if (!smsLive() && process.env.NODE_ENV === "production") return res.status(503).json({ ok: false, message: "短信验证码服务暂不可用" });
+    if (use === "guide") {
+      const body = req.body || {};
+      if (!consumeCaptcha(body.captchaToken, body.captcha)) return res.status(400).json({ ok: false, message: "图片验证码错误或已过期" });
+      const guide = db().prepare("SELECT id FROM guides WHERE phone=? AND status!='off'").get(phone);
+      if (!guide) return res.status(400).json({ ok: false, message: "未找到导游账号" });
+    }
+    const data = await issueSmsCode(phone, use);
     res.json({
       ok: true,
       message: data.demoCode ? "演示环境验证码为 888888" : "验证码已发送",
@@ -791,10 +801,15 @@ router.post("/auth/sms", async (req, res) => {
 });
 
 function consumeSms(phone, code, scene) {
+  if (process.env.NODE_ENV === "production" && !smsLive()) return false;
   const row = db()
-    .prepare("SELECT * FROM sms_codes WHERE phone=? AND code=? AND scene=? AND used=0 AND expire_at>=datetime('now','localtime') ORDER BY id DESC LIMIT 1")
-    .get(phone, code, scene);
-  if (!row) return false;
+    .prepare("SELECT * FROM sms_codes WHERE phone=? AND scene=? AND expire_at>=datetime('now','localtime') ORDER BY id DESC LIMIT 1")
+    .get(phone, scene);
+  if (!row || row.used || Number(row.attempts || 0) >= 5) return false;
+  if (String(row.code) !== String(code || "")) {
+    db().prepare("UPDATE sms_codes SET attempts=attempts+1, used=CASE WHEN attempts+1>=5 THEN 1 ELSE used END WHERE id=?").run(row.id);
+    return false;
+  }
   db().prepare("UPDATE sms_codes SET used=1 WHERE id=?").run(row.id);
   return true;
 }
@@ -879,6 +894,9 @@ function chinaMobile(raw) {
 
 router.post("/auth/wechat-phone", async (req, res) => {
   try {
+    if (process.env.NODE_ENV === "production" && !loginLive()) {
+      return res.status(503).json({ ok: false, message: "微信登录服务暂不可用" });
+    }
     const body = req.body || {};
     const sess = await code2session(body.loginCode || `demo_${Date.now()}`);
     if (sess.errcode) return res.status(400).json({ ok: false, message: sess.errmsg || "微信登录失败" });
@@ -921,6 +939,9 @@ router.post("/auth/wechat-phone", async (req, res) => {
 
 router.post("/auth/wechat", optionalUser, async (req, res) => {
   try {
+    if (process.env.NODE_ENV === "production" && !loginLive()) {
+      return res.status(503).json({ ok: false, message: "微信登录服务暂不可用" });
+    }
     const { code, nickname, avatar } = req.body || {};
     const sess = await code2session(code || `demo_${Date.now()}`);
     if (sess.errcode) return res.status(400).json({ ok: false, message: sess.errmsg || "微信登录失败" });
@@ -2248,6 +2269,7 @@ router.post("/pay/confirm", authUser, async (req, res) => {
 });
 
 router.post("/pay/mock-success", authUser, (req, res) => {
+  if (process.env.NODE_ENV === "production") return res.status(403).json({ ok: false, message: "生产环境不支持模拟支付" });
   if (payLive()) return res.status(403).json({ ok: false, message: "已接入真实支付，不能再模拟付款" });
   const { tradeNo, enrollmentId, scene } = req.body || {};
   if (scene === "member") {
@@ -2421,10 +2443,11 @@ function publicGuide(g, req) {
 }
 
 router.post("/guide/login", (req, res) => {
-  const { phone, captchaToken, captcha } = req.body || {};
-  if (!consumeCaptcha(captchaToken, captcha)) return res.status(400).json({ ok: false, message: "验证码错误或已过期" });
+  const { phone, code } = req.body || {};
+  if (!/^1\d{10}$/.test(String(phone || ""))) return res.status(400).json({ ok: false, message: "手机号不正确" });
   const guide = db().prepare("SELECT * FROM guides WHERE phone=?").get(phone);
   if (!guide || guide.status === "off") return res.status(400).json({ ok: false, message: "未找到导游账号" });
+  if (!consumeSms(phone, code, "guide")) return res.status(400).json({ ok: false, message: "验证码错误或已过期" });
   res.json({ ok: true, data: { token: signGuide(guide), ...publicGuide(guide, req) } });
 });
 

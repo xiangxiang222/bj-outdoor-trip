@@ -37,6 +37,6 @@ Page({
     }).catch((e) => this.setData({ msg: (e && e.message) || "保存失败" }));
   },
   remove(e) {
-    request("/me/companions/" + e.currentTarget.dataset.id, "DELETE").then((r) => this.setData({ list: r.data || [] })).catch(() => {});
+    return request("/me/companions/" + e.currentTarget.dataset.id, "DELETE").then((r) => this.setData({ list: r.data || [], msg: "" })).catch(() => this.setData({ msg: "删除失败，请稍后重试" }));
   },
 });

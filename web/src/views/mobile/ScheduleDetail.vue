@@ -455,13 +455,13 @@
 
     <div v-if="showDissolve" class="card" style="margin:12px 14px 0">
       <div class="pad">
-        <p>解散后将取消全部报名，已付款按各付款人原路退回，并向出行人发送取消短信。</p>
+        <p>解散后将取消全部报名并处理退款。系统只记录待发送通知，短信尚未接入。</p>
         <label>解散理由</label>
         <textarea class="input" v-model="reason" rows="3" placeholder="例如：天气预警、人数不足不成团" />
         <p v-if="dissolveErr" style="color:var(--clay)">{{ dissolveErr }}</p>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button class="btn ghost" style="flex:1" @click="showDissolve = false">取消</button>
-          <button class="btn clay" style="flex:1" :disabled="dissolving" @click="dissolve">确认解散</button>
+          <button class="btn clay" style="flex:1" :disabled="dissolving" @click="dissolve">确认解散并记录通知</button>
         </div>
       </div>
     </div>
@@ -1121,7 +1121,7 @@ async function dissolve() {
   try {
     const res = await http.post(`/schedules/${s.value.id}/dissolve`, { reason: reason.value.trim() });
     showDissolve.value = false;
-    msg.value = `已解散，取消 ${res.data.cancelled} 人，退款 ${res.data.refunded} 人，短信 ${res.data.smsCount} 条`;
+    msg.value = `已解散，取消 ${res.data.cancelled} 人，退款 ${res.data.refunded} 人；已记录待发送通知 ${res.data.smsRecordCount || 0} 条，短信尚未接入`;
     await load();
   } catch (e) {
     dissolveErr.value = e.message;

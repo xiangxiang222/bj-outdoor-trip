@@ -1,7 +1,7 @@
 <template>
   <LoadRow v-if="!ready" />
   <div v-else-if="data">
-    <div class="card" style="background:linear-gradient(135deg,#1b4332,#40916c);color:#fff">
+    <div class="card" style="background:linear-gradient(135deg,#5b3b8c,#8b6aac);color:#fff">
       <div class="pad">
         <div class="muted" style="opacity:.85">{{ data.universal ? "通用优惠券" : "本团优惠券" }}</div>
         <div style="font-size: calc(28px * var(--ui-scale));font-weight:700;margin:8px 0">{{ data.label }}</div>

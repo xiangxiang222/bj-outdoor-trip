@@ -1,6 +1,6 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
-const request = require("supertest");
+const request = require("./local-http");
 const { createApp } = require("../src/app");
 const { seedMinimal } = require("./helpers");
 

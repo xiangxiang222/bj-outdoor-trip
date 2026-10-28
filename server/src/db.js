@@ -56,6 +56,7 @@ function createSchema(db) {
       scene TEXT,
       expire_at TEXT,
       used INTEGER DEFAULT 0,
+      attempts INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
@@ -447,6 +448,7 @@ function ensurePaymentTradeNoIndex(db) {
 }
 
 function migrateSchema(db) {
+  addColumnIfMissing(db, "sms_codes", "attempts", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "schedules", "cancel_reason", "TEXT");
   addColumnIfMissing(db, "schedules", "cancelled_at", "TEXT");
   addColumnIfMissing(db, "schedules", "cancelled_by", "TEXT");

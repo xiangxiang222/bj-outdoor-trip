@@ -1,10 +1,19 @@
 const path = require("path");
 
 const rootDir = path.join(__dirname, "..");
+const developmentJwtSecret = "bj-outdoor-trip-dev-secret-change-me";
+const jwtSecret = process.env.JWT_SECRET || developmentJwtSecret;
+
+if (process.env.NODE_ENV === "production" && (
+  !process.env.JWT_SECRET || jwtSecret.trim().length < 32 ||
+  jwtSecret === developmentJwtSecret || new Set(jwtSecret).size < 8
+)) {
+  throw new Error("生产环境必须设置至少 32 位的随机 JWT_SECRET，不能使用开发默认值或重复字符");
+}
 
 module.exports = {
   port: Number(process.env.PORT || 3780),
-  jwtSecret: process.env.JWT_SECRET || "bj-outdoor-trip-dev-secret-change-me",
+  jwtSecret,
   jwtExpire: "30d",
   adminJwtExpire: "7d",
   dataDir: process.env.MMC_DATA_DIR || path.join(rootDir, "data"),
