@@ -8,6 +8,7 @@
     <swiper-item wx:if="{{!home.brand.slides.length}}"><image class="brand-img" src="{{mediaBase}}/covers/R01.jpg" mode="aspectFill" /></swiper-item>
   </swiper>
   <view class="hero-shade"></view>
+  <view class="hero-side-fade"></view>
   <view class="home-brand" style="padding-top:{{statusBarHeight + 12}}px">
     <image class="home-brand-logo" src="{{mediaBase}}/logo.jpg" mode="aspectFit" />
     <view><view class="home-brand-name">{{tr.t('同行者众', lang)}}</view><view class="home-brand-en">TOGETHER, INTO THE WILD</view></view>

@@ -152,8 +152,8 @@ function pageStyle(look, freezeScale) {
   const dark = isDark(look);
   const scale = freezeScale ? 1 : (SIZES[look.size] || 1);
   const vars = dark
-    ? "--bg:#121214;--card:#1c1c1e;--ink:#f2f2f2;--muted:#9a9a9a;--line:#2c2c2e;"
-    : "--bg:#f6f5f8;--card:#ffffff;--ink:#24222a;--muted:#8a8692;--line:#eeecf2;";
+    ? "--bg:#121214;--card:#1c1c1e;--ink:#f2f2f2;--muted:#9a9a9a;--line:#2c2c2e;--hero-surface-rgb:18,18,20;"
+    : "--bg:#f6f5f8;--card:#ffffff;--ink:#24222a;--muted:#8a8692;--line:#eeecf2;--hero-surface-rgb:246,245,248;";
   const media = look.textMode ? "none" : "block";
   const grid = look.textMode ? "none" : "grid";
   const hero = look.textMode ? "0px" : "360rpx";
