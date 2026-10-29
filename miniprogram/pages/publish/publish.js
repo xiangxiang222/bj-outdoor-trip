@@ -1,6 +1,7 @@
 const { request, showError } = require("../../utils/request");
+const { isDark } = require("../../utils/appearance");
 const { OFFER_TYPES } = require("../../utils/offer");
-const { KINDS } = require("../../utils/activity-kind");
+const { KINDS, kindByKey, composeActivityDescription, validateActivityDetails } = require("../../utils/activity-kind");
 const { openCampusPick, emptyTarget, patchTarget } = require("../../utils/campus");
 const { syncGenderRatio, genderRowsFor, payload: genderPayload } = require("../../utils/gender-ratio");
 
@@ -14,6 +15,10 @@ const CHANNEL_LABELS = ["户外线路（上首页）", "同城局（上活动 Ta
 
 function pad(n) {
   return n < 10 ? "0" + n : String(n);
+}
+function decodeQuery(value) {
+  try { return decodeURIComponent(value || ""); }
+  catch { return String(value || ""); }
 }
 function formatDate(d) {
   const shanghai = new Date(d.getTime() + 8 * 60 * 60 * 1000);
@@ -34,6 +39,8 @@ Page({
   data: {
     tags: [],
     kinds: KINDS,
+    selectedActivityKind: KINDS[0],
+    activityFields: KINDS[0].fields,
     offers: OFFER_TYPES,
     offerLabels: OFFER_TYPES.map((o) => o.label),
     offerIndex: 5,
@@ -63,12 +70,14 @@ Page({
     cityIndex: 2,
     errors: {},
     submitting: false,
+    dark: false,
     form: {
       title: "",
       city: "",
       days: 1,
       channel: "trip",
       activityKind: "掼蛋",
+      activityDetails: {},
       playTagIds: [],
       offerType: "full",
       originPrice: 199,
@@ -100,6 +109,7 @@ Page({
       notes: "",
     },
   },
+  onShow() { this.setData({ dark: isDark() }); },
   onLoad(q) {
     const app = getApp();
     const organizer = ["individual", "company", "campus"].includes(q.organizer) ? q.organizer : "";
@@ -116,9 +126,9 @@ Page({
       const i = dates.findIndex((d) => d.value === q.date);
       if (i >= 0) dateIndex = i;
     }
-    const kind = q.kind ? decodeURIComponent(q.kind) : "";
+    const kind = decodeQuery(q.kind);
     const organizerIndex = organizer ? ["individual", "company", "campus"].indexOf(organizer) : 0;
-    const title = q.title ? decodeURIComponent(q.title) : "";
+    const title = decodeQuery(q.title);
     const asActivity = q.channel === "activity" || KINDS.some((k) => k.key === kind || k.key === title);
     const activityKind = KINDS.some((k) => k.key === kind) ? kind : KINDS.some((k) => k.key === title) ? title : "掼蛋";
     const user = app.globalData.user || {};
@@ -133,7 +143,9 @@ Page({
       "form.startDate": dates[dateIndex].value,
       "form.channel": asActivity ? "activity" : "trip",
       "form.activityKind": activityKind,
-      "form.title": title && !KINDS.some((k) => k.key === title) ? title : asActivity ? activityKind : title,
+      selectedActivityKind: kindByKey(activityKind),
+      activityFields: kindByKey(activityKind).fields,
+      "form.title": title && !KINDS.some((k) => k.key === title) ? title : "",
       "form.organizerType": organizer || this.data.form.organizerType,
       "form.offerType": asActivity ? "free" : this.data.form.offerType,
       "form.originPrice": asActivity ? 0 : this.data.form.originPrice,
@@ -206,9 +218,17 @@ Page({
   },
   pickKind(e) {
     const key = e.currentTarget.dataset.key;
+    if (!kindByKey(key)) return;
     const prev = this.data.form.activityKind;
+    this._activityDrafts = this._activityDrafts || {};
+    this._activityDrafts[prev] = this.data.form.activityDetails || {};
     const title = !this.data.form.title || this.data.form.title === prev ? key : this.data.form.title;
-    this.setData({ "form.activityKind": key, "form.title": title });
+    this.setData({ "form.activityKind": key, "form.title": title === key ? "" : title, "form.activityDetails": this._activityDrafts[key] || {}, selectedActivityKind: kindByKey(key), activityFields: kindByKey(key).fields, "errors.activityDetails": "" });
+  },
+  setActivityField(e) {
+    const key = e.currentTarget.dataset.key;
+    if (!this.data.activityFields.some((field) => field.key === key)) return;
+    this.setData({ ["form.activityDetails." + key]: e.detail.value, "errors.activityDetails": "" });
   },
   setDay(e) {
     const i = Number(e.detail.value);
@@ -475,17 +495,22 @@ Page({
       }
       form.days = 1;
       form.organizerType = "individual";
-      form.offerType = Number(form.originPrice) > 0 ? form.offerType || "full" : "free";
+      form.offerType = Number(form.originPrice) > 0 ? "full" : "free";
       if (!String(form.meetupPoint || "").trim()) {
         this.blockSubmit("meetupPoint", "请填写地点");
         return;
       }
+      if (!String(form.city || "").trim()) { this.blockSubmit("city", "请选择活动所在城区"); return; }
+      if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(form.meetupTime || "")) { this.blockSubmit("meetupTime", "请选择活动开始时间"); return; }
+      const detailError = validateActivityDetails(form.activityKind, form.activityDetails);
+      if (detailError) { this.blockSubmit("activityDetails", detailError); return; }
       this.setData({ errors: {} });
       try {
         this.setData({ submitting: true });
         wx.showLoading({ title: "提交中", mask: true });
         const res = await request("/trips", "POST", {
           ...form,
+          description: composeActivityDescription(form.activityKind, form.activityDetails, form.description),
           originPrice: Number(form.originPrice),
           minGroupSize: Number(form.minGroupSize),
           maxSeats: Number(form.maxSeats) || 12,

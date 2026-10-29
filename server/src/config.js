@@ -55,6 +55,11 @@ module.exports = {
     apiKey: process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "",
     baseUrl: process.env.AI_BASE_URL || "https://api.openai.com/v1",
     model: process.env.AI_MODEL || "gpt-4o-mini",
+    discoveryTimeoutMs: Number(process.env.AI_DISCOVERY_TIMEOUT_MS || 7500),
+    discoveryConcurrency: Number(process.env.AI_DISCOVERY_CONCURRENCY || 3),
+    discoveryDailyLimit: Number(process.env.AI_DISCOVERY_DAILY_LIMIT ?? 200),
+    discoveryPerMinute: Number(process.env.AI_DISCOVERY_PER_MINUTE || 20),
+    discoveryGlobalPerMinute: Number(process.env.AI_DISCOVERY_GLOBAL_PER_MINUTE || 120),
   },
   aliyun: {
     accessKeyId: process.env.ALIYUN_ACCESS_KEY_ID || "",

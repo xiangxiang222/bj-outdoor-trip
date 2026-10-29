@@ -2,7 +2,7 @@ const { request } = require("../../utils/request");
 const { payStatusText, starText } = require("../../utils/labels");
 const { shareCover, absMedia } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
-const { dateOf } = require("../../utils/activity-kind");
+const { dateOf, activityDetails, activityBody, activityEnded } = require("../../utils/activity-kind");
 const { peopleLine, trustChips, dockPrice, enrollCta, canShowEnroll, ticketState, showDetailTabs } = require("../../utils/scan-facts");
 const { openCampusPick } = require("../../utils/campus");
 const { decodeShareScene, persistRef, readRef, enrollQuery } = require("../../utils/share-scene");
@@ -161,6 +161,9 @@ Page({
         busPhotos: (s.bus && s.bus.photos) || [],
         busText: busLine(s),
         isActivity,
+        activityInfo: isActivity ? activityDetails(s) : [],
+        activityIntro: isActivity ? activityBody(s) : "",
+        activityIsOver: isActivity && activityEnded(s),
         isFree,
         remainSeats,
         whenLabel,

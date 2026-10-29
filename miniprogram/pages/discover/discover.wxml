@@ -1,0 +1,73 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<wxs src="../../utils/locale.wxs" module="tr" />
+<view class="discover-page {{dark ? 'is-dark' : ''}}">
+  <view class="discover-top">
+    <view class="discover-eyebrow">FIND YOUR NEXT JOURNEY</view>
+    <view class="discover-title">{{tr.t('一句话找团',lang)}}</view>
+    <view class="discover-subtitle">{{tr.t('把想法说出来，找到真实可参加的一程。',lang)}}</view>
+  </view>
+  <view class="discover-input-card">
+    <view class="discover-input-row"><view class="discover-spark" aria-hidden="true">✦</view><textarea class="discover-input" maxlength="400" auto-height placeholder="{{tr.t('例如：下周末长城，200元内，轻松一点',lang)}}" value="{{message}}" bindinput="onInput" bindconfirm="submit" confirm-type="search" /></view>
+    <view class="discover-input-footer"><text>{{message.length}}/400</text><button class="discover-submit" bindtap="submit" loading="{{loading}}" disabled="{{loading}}">{{tr.t('找一程',lang)}}<text>→</text></button></view>
+  </view>
+  <view class="discover-examples" wx:if="{{!hasSearched}}">
+    <view class="discover-label">{{tr.t('试试这样说',lang)}}</view>
+    <view class="discover-example-row"><button wx:for="{{examples}}" wx:key="*this" bindtap="pickExample" disabled="{{loading}}" data-value="{{item}}">{{tr.t(item,lang)}}</button></view>
+  </view>
+  <view class="discover-loading" wx:if="{{loading && !hasSearched}}"><view class="discover-spinner"></view>{{tr.t('正在找真实团期…',lang)}}</view>
+  <view class="discover-error" wx:if="{{error}}"><view><view class="discover-error-title">{{tr.t('找团暂时遇到问题',lang)}}</view><view class="discover-muted">{{tr.t(error,lang)}}</view></view><button bindtap="retry" disabled="{{loading}}">{{tr.t('重新找团',lang)}}</button></view>
+  <view class="discover-result" wx:if="{{hasSearched}}">
+    <view class="discover-result-head"><view><view class="discover-label">{{modelMode ? tr.t('已理解出行偏好',lang) : tr.t('已按描述整理条件',lang)}}</view><view class="discover-count" wx:if="{{!loading}}">{{total}} {{tr.t('个团可查看',lang)}}</view></view><button bindtap="toggleEdit" disabled="{{loading}}">{{editing ? tr.t('收起',lang) : tr.t('修改条件',lang)}}<text>⌄</text></button></view>
+    <view class="discover-condition-row" wx:if="{{conditions.length}}"><text class="discover-condition" wx:for="{{conditions}}" wx:key="key">{{tr.t(item.label,lang)}}</text></view>
+    <view class="discover-warning" wx:for="{{warnings}}" wx:key="*this">ⓘ {{tr.t(item,lang)}}</view>
+    <view class="discover-question" wx:if="{{question}}"><view class="discover-question-title">{{tr.t('请先确认一下',lang)}}</view><view>{{tr.t(question,lang)}}</view><button bindtap="toggleEdit" disabled="{{loading}}">{{tr.t('确认或修改条件',lang)}} →</button></view>
+    <view class="discover-edit-card" wx:if="{{editing}}">
+      <view class="discover-edit-title">{{tr.t('确认你的偏好',lang)}}</view>
+      <view class="discover-edit-label">{{tr.t('出发时间',lang)}}</view>
+      <view class="discover-choice-row"><button class="{{draft.time=='any'?'on':''}}" data-key="time" data-value="any" bindtap="setDraftChoice">{{tr.t('不限日期',lang)}}</button><button class="{{draft.time=='weekend'?'on':''}}" data-key="time" data-value="weekend" bindtap="setDraftChoice">{{tr.t('本周末',lang)}}</button><button class="{{draft.time=='nextweekend'?'on':''}}" data-key="time" data-value="nextweekend" bindtap="setDraftChoice">{{tr.t('下周末',lang)}}</button></view>
+      <view class="discover-date-row"><picker mode="date" start="{{today}}" value="{{draft.dateFrom}}" data-key="dateFrom" bindchange="setDraft"><view>{{draft.dateFrom || tr.t('开始日期',lang)}}</view></picker><text>—</text><picker mode="date" start="{{draft.dateFrom || today}}" value="{{draft.dateTo}}" data-key="dateTo" bindchange="setDraft"><view>{{draft.dateTo || tr.t('结束日期',lang)}}</view></picker><button bindtap="clearDate">{{tr.t('清除日期',lang)}}</button></view>
+      <view class="discover-edit-label">{{tr.t('每人团费上限（0 也有效）',lang)}}</view><input class="discover-field" type="digit" value="{{draft.budgetMax}}" placeholder="{{tr.t('不设上限',lang)}}" data-key="budgetMax" bindinput="setDraft" />
+      <view class="discover-field-note">{{tr.t('仅筛选团费，餐饮、门票等另付项目请查看费用说明。',lang)}}</view>
+      <view class="discover-edit-label">{{tr.t('同行人数',lang)}}</view><input class="discover-field" type="number" value="{{draft.partySize}}" placeholder="1–50" data-key="partySize" bindinput="setDraft" />
+      <view class="discover-edit-label">{{tr.t('目的地',lang)}}</view><input class="discover-field" value="{{draft.destination}}" maxlength="40" placeholder="{{tr.t('想去哪里，例如长城、怀柔',lang)}}" data-key="destination" bindinput="setDraft" />
+      <view class="discover-edit-label">{{tr.t('强度偏好',lang)}}</view><view class="discover-choice-row"><button class="{{draft.intensity=='any'?'on':''}}" data-key="intensity" data-value="any" bindtap="setDraftChoice">{{tr.t('不限强度',lang)}}</button><button class="{{draft.intensity=='easy'?'on':''}}" data-key="intensity" data-value="easy" bindtap="setDraftChoice">{{tr.t('轻松一些',lang)}}</button></view>
+      <view class="discover-edit-label">{{tr.t('团型',lang)}}</view><view class="discover-choice-row"><button wx:for="{{hosts}}" wx:key="key" class="{{draft.hostKind==item.key?'on':''}}" data-key="hostKind" data-value="{{item.key}}" bindtap="setDraftChoice">{{tr.t(item.label,lang)}}</button></view>
+      <view class="discover-edit-label">{{tr.t('跨校偏好',lang)}}</view><view class="discover-choice-row"><button class="{{draft.campusScope=='any'?'on':''}}" data-key="campusScope" data-value="any" bindtap="setDraftChoice">{{tr.t('不限定',lang)}}</button><button class="{{draft.campusScope=='cross'?'on':''}}" data-key="campusScope" data-value="cross" bindtap="setDraftChoice">{{tr.t('跨校团',lang)}}</button></view>
+      <view class="discover-edit-error" wx:if="{{editError}}">{{tr.t(editError,lang)}}</view>
+      <view class="discover-edit-actions"><button bindtap="resetFilters" disabled="{{loading}}">{{tr.t('清空条件',lang)}}</button><button class="primary" bindtap="applyFilters" disabled="{{loading}}">{{tr.t('按这些条件找团',lang)}}</button></view>
+    </view>
+    <view class="discover-loading" wx:if="{{loading}}"><view class="discover-spinner"></view>{{tr.t('正在找真实团期…',lang)}}</view>
+    <view class="discover-empty" wx:elif="{{!results.length && !question}}"><view class="discover-empty-title">{{tr.t('暂时没有同时符合的团',lang)}}</view><view class="discover-muted">{{tr.t('可以修改日期、预算或报名范围；我们不会自动放宽条件。',lang)}}</view><view class="discover-clear-row"><button wx:if="{{filters.time!='any'}}" data-key="time" bindtap="clearCondition">{{tr.t('清除日期',lang)}}</button><button wx:if="{{filters.budgetMax!==null}}" data-key="budget" bindtap="clearCondition">{{tr.t('清除预算',lang)}}</button><button wx:if="{{filters.hostKind!='any' || filters.campusScope!='any'}}" data-key="scope" bindtap="clearCondition">{{tr.t('清除范围',lang)}}</button><button bindtap="toggleEdit">{{tr.t('修改条件',lang)}}</button></view></view>
+    <view class="discover-compare-hint" wx:if="{{results.length}}">{{tr.t('选 2–3 个团，放在一起比较',lang)}}</view>
+    <view class="discover-card" wx:for="{{results}}" wx:key="id" bindtap="openResult" data-id="{{item.id}}">
+      <view class="discover-card-top"><view class="discover-card-copy"><view class="discover-card-date">{{item.startDate}}<text wx:if="{{item.endDate && item.endDate!=item.startDate}}">—{{item.endDate}}</text><text wx:if="{{item.region}}"> · {{tr.t(item.region,lang)}}</text></view><view class="discover-card-title">{{tr.t(item.title,lang)}}</view><view class="discover-card-meta">{{item.days || '—'}} {{tr.t('日',lang)}} · {{item.meetupTime || tr.t('时间待定',lang)}} · {{tr.t(item.meetupPoint || '集合点待提供',lang)}}</view></view><button class="discover-compare-check {{item.compareSelected?'on':''}}" catchtap="toggleCompare" data-id="{{item.id}}" aria-label="{{item.compareSelected ? tr.t('移出比较',lang) : tr.t('加入比较',lang)}}">{{item.compareSelected ? '✓' : '+'}}</button></view>
+      <view class="discover-card-facts"><view class="discover-price" wx:if="{{item.hasPrice}}">¥{{item.price.amount}}<text class="discover-price-label">{{tr.t(item.price.label || '当前人均团费',lang)}}</text></view><text class="discover-unknown" wx:else>{{tr.t('费用暂未提供',lang)}}</text><text>{{item.remain==null ? tr.t('余位暂未提供',lang) : tr.t('余',lang)+item.remain+tr.t('座',lang)}}</text><text class="discover-status {{item.participation.status}}">{{tr.t(item.participation.label,lang)}}</text></view>
+      <view class="discover-reasons" wx:if="{{item.reasons.length}}"><text wx:for="{{item.reasons}}" wx:key="*this">{{tr.t(item,lang)}}</text></view>
+      <view class="discover-caution" wx:if="{{item.cautions.length}}">{{tr.t(item.cautions[0],lang)}}</view>
+      <view class="discover-eligibility" wx:if="{{item.eligibilityLabel}}">{{tr.t(item.eligibilityLabel,lang)}}</view>
+      <view class="discover-participation-reason" wx:if="{{item.participation.reason}}">{{tr.t(item.participation.reason,lang)}}</view>
+      <view class="discover-detail-link">{{tr.t('查看团期与费用明细',lang)}} →</view>
+    </view>
+    <view class="discover-actions" wx:if="{{results.length}}"><button wx:if="{{hasMore}}" bindtap="loadMore" disabled="{{loading}}">{{tr.t('查看更多团',lang)}}<text>→</text></button><button wx:if="{{compareIds.length}}" bindtap="openCompare" disabled="{{compareIds.length<2}}">{{tr.t('比较已选',lang)}} {{compareIds.length}} {{tr.t('项',lang)}}</button></view>
+  </view>
+  <view class="discover-back" bindtap="backHome">← {{tr.t('回到普通筛选',lang)}}</view>
+  <view class="discover-compare-mask" wx:if="{{comparing}}" bindtap="closeCompare">
+    <view class="discover-compare-sheet" catchtap="noop"><view class="discover-compare-head"><view class="discover-label">{{tr.t('把选择放在一起看',lang)}}</view><button bindtap="closeCompare" aria-label="{{tr.t('关闭比较',lang)}}">×</button></view>
+      <view class="discover-compare-table"><view class="discover-compare-col" wx:for="{{compareRows}}" wx:key="id">
+        <view class="discover-compare-title">{{tr.t(item.title,lang)}}</view>
+        <view class="discover-compare-fact"><text>{{tr.t('出发',lang)}}</text><text>{{item.startDate || tr.t('暂未提供',lang)}}<text wx:if="{{item.endDate && item.endDate!=item.startDate}}"> — {{item.endDate}}</text></text></view>
+        <view class="discover-compare-fact"><text>{{tr.t('集合',lang)}}</text><text>{{item.meetupTime || tr.t('暂未提供',lang)}} · {{tr.t(item.meetupPoint || '暂未提供',lang)}}</text></view>
+        <view class="discover-compare-fact"><text>{{tr.t('当前人均团费',lang)}}</text><text>{{item.hasPrice ? '¥'+item.price.amount : tr.t('暂未提供',lang)}}</text></view>
+        <view class="discover-compare-fact"><text>{{tr.t('费用包含',lang)}}</text><text>{{tr.t(item.feeInclude || '暂未提供',lang)}}</text></view>
+        <view class="discover-compare-fact"><text>{{tr.t('费用不含',lang)}}</text><text>{{tr.t(item.feeExclude || '暂未提供',lang)}}</text></view>
+        <view class="discover-compare-fact"><text>{{tr.t('强度',lang)}}</text><text>{{tr.t(item.difficulty || '暂未提供',lang)}}</text></view>
+        <view class="discover-compare-fact"><text>{{tr.t('线路标注里程（待核实）',lang)}}</text><text>{{item.distanceKm==null ? tr.t('暂未提供',lang) : item.distanceKm+' km'}}</text></view>
+        <view class="discover-compare-fact"><text>{{tr.t('余位',lang)}}</text><text>{{item.remain==null ? tr.t('暂未提供',lang) : item.remain}}</text></view>
+        <view class="discover-compare-fact"><text>{{tr.t('报名范围',lang)}}</text><text>{{tr.t(item.eligibilityLabel || '暂未提供',lang)}}</text></view>
+        <view class="discover-compare-fact"><text>{{tr.t('参与条件',lang)}}</text><text>{{tr.t(item.participation.label || '暂未提供',lang)}}<text wx:if="{{item.participation.reason}}"> · {{tr.t(item.participation.reason,lang)}}</text></text></view>
+        <view class="discover-field-note" wx:if="{{item.price.note}}">{{tr.t(item.price.note,lang)}}</view>
+        <view class="discover-detail-link" bindtap="openResult" data-id="{{item.id}}">{{tr.t('查看团期与费用明细',lang)}} →</view>
+      </view></view>
+    </view>
+  </view>
+</view>

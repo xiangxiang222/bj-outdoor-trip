@@ -1,5 +1,5 @@
 const { request, showError } = require("../../utils/request");
-const { showAfterActions, todayYmd } = require("../../utils/trips");
+const { isReviewTrip } = require("../../utils/trips");
 const { orderBadge, orderHint, orderMoney, orderShop, orderSpec, canReorder, priceLines, payMethodLabel, placedLabel, orderNo, maskTravelerPhone } = require("../../utils/order-view");
 const { detailUrl } = require("../../utils/media");
 const app = getApp();
@@ -47,7 +47,7 @@ Page({
     try {
       const res = await request("/orders/" + this.data.id);
       const order = res.data || null;
-      const canReview = Boolean(order && showAfterActions(order) && order.canReview && String(order.start_date || "").slice(0, 10) < todayYmd());
+      const canReview = isReviewTrip(order);
       const names = ((order && order.helpers) || []).map((row) => row.nickname).filter(Boolean).join("、");
       this.setData({
         order,

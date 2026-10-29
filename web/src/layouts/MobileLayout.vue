@@ -1,5 +1,5 @@
 <template>
-  <div class="mp-phone" :class="{ 'is-account': accountTone, 'is-home': isHome, 'is-mine': route.name === 'mine', 'is-look-font': route.name === 'look-font' }">
+  <div class="mp-phone" :class="{ 'is-account': accountTone, 'is-home': isHome, 'is-catalog': isHome && route.query.view === 'routes', 'is-mine': route.name === 'mine', 'is-orders': route.name === 'orders', 'is-look-font': route.name === 'look-font', 'is-activities': route.name === 'activities', 'is-activity-publish': route.name === 'publish' && route.query.channel === 'activity' }">
     <div class="mp-status" :class="{ 'is-home': isHome }">
       <router-link to="/m" class="brand-lockup" aria-label="同行者众 首页">
         <span class="brand-mark-frame" aria-hidden="true">
@@ -21,7 +21,7 @@
         <router-link class="header-publish" to="/m/publish"><span>＋</span> 发起旅行</router-link>
       </div>
     </div>
-    <div v-if="!isHome && route.name !== 'mine'" class="mp-nav">
+    <div v-if="!isHome && !['mine', 'orders'].includes(route.name)" class="mp-nav">
       <button v-if="showBack" class="nav-back" type="button" aria-label="返回" @click="goBack">‹</button>
       <div>
         <h1>{{ title }}</h1>
@@ -93,7 +93,7 @@ watch(() => route.path, () => {
 const tabNames = new Set(["home", "activities", "orders", "mine"]);
 const isHome = computed(() => route.name === "home");
 const showBack = computed(() => !tabNames.has(route.name));
-const accountPaths = ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/photo-apply", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile", "/m/orders", "/m/lottery", "/m/publish", "/m/coupons", "/m/user"];
+const accountPaths = ["/m/activities", "/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/photo-apply", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile", "/m/orders", "/m/lottery", "/m/publish", "/m/coupons", "/m/user"];
 const accountTone = computed(() => accountPaths.some((p) => route.path === p || route.path.startsWith(p + "/")));
 const mineActive = computed(() =>
   ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/photo-apply", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile"].some(
@@ -113,7 +113,8 @@ function goBack() {
 const title = computed(() => {
   const map = {
     home: "同行者众",
-    activities: "同城局",
+    discover: "一句话找团",
+    activities: "同城活动",
     official: "客服与规则",
     rules: "客服与规则",
     student: "校园认证",
@@ -159,6 +160,7 @@ const title = computed(() => {
 const subtitle = computed(() => {
   const map = {
     home: "在山野，遇见爱",
+    discover: "说说期待，找到真实可参与的一程",
     activities: "把熟悉的城市，过成新的相遇",
     official: "加微信、看规则、找客服",
     rules: "加微信、看规则、找客服",
@@ -176,3 +178,21 @@ const subtitle = computed(() => {
   return chromeSubtitle.value || map[route.name] || "在山野，遇见爱";
 });
 </script>
+
+<style scoped>
+:global(html[data-night="dark"] .mp-phone.is-orders) { background:#1a121c; background-image:none; }
+:global(html[data-night="dark"] .is-orders .mp-status), :global(html[data-night="dark"] .is-orders .mp-nav) { background:#211b29; border-color:#392f43; }
+:global(html[data-night="dark"] .is-orders .brand-name) { color:#eee7f5; }
+:global(html[data-night="dark"] .is-orders .desktop-nav a), :global(html[data-night="dark"] .is-orders .header-help) { color:#c0b0cf; }
+:global(html[data-night="dark"] .mp-phone.is-catalog) { background:#1a121c; background-image:none; }
+:global(html[data-night="dark"] .is-catalog .mp-status) { background:#211b29; border-color:#392f43; }
+:global(html[data-night="dark"] .is-catalog .brand-name) { color:#eee7f5; }
+:global(html[data-night="dark"] .is-catalog .brand-tagline), :global(html[data-night="dark"] .is-catalog .desktop-nav a), :global(html[data-night="dark"] .is-catalog .header-help) { color:#c0b0cf; }
+:global(html[data-night="dark"] .is-catalog .icp-foot), :global(html[data-night="dark"] .is-orders .icp-foot) { color:#a594b4; background:#211b29; }
+:global(html[data-night="dark"] .is-catalog .mp-tab), :global(html[data-night="dark"] .is-orders .mp-tab) { background:#211b29; border-color:#392f43; }
+:global(html[data-night="dark"] .is-catalog .mp-tab a.active), :global(html[data-night="dark"] .is-orders .mp-tab a.active) { color:#d2b5ef; }
+:global(html[data-night="dark"] .mp-phone.is-activities), :global(html[data-night="dark"] .mp-phone.is-activity-publish) { background:#1a121c; background-image:none; }
+:global(html[data-night="dark"] .is-activities .mp-status), :global(html[data-night="dark"] .is-activities .mp-nav), :global(html[data-night="dark"] .is-activity-publish .mp-status), :global(html[data-night="dark"] .is-activity-publish .mp-nav) { background:#211b29; border-color:#392f43; }
+:global(html[data-night="dark"] .is-activities .brand-name), :global(html[data-night="dark"] .is-activity-publish .brand-name) { color:#eee7f5; }
+:global(html[data-night="dark"] .is-activities .desktop-nav a), :global(html[data-night="dark"] .is-activities .header-help), :global(html[data-night="dark"] .is-activity-publish .desktop-nav a), :global(html[data-night="dark"] .is-activity-publish .header-help) { color:#c0b0cf; }
+</style>

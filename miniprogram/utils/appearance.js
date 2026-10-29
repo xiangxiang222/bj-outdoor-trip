@@ -192,10 +192,12 @@ function applyChrome(look) {
   const dark = isDark(look);
   const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
   const active = pages.length ? pages[pages.length - 1].route : "";
-  const profile = !dark && active === "pages/mine/mine";
+  const profile = active === "pages/mine/mine";
+  const campus = ["pages/student/student", "pages/activities/activities"].includes(active);
+  const chrome = profile ? (dark ? "#211c29" : "#f1edf8") : campus ? (dark ? "#121214" : "#f6f5f8") : dark ? "#352442" : "#5b3b8c";
   wx.setNavigationBarColor({
-    frontColor: profile ? "#000000" : "#ffffff",
-    backgroundColor: profile ? "#fcf9ff" : dark ? "#352442" : "#5b3b8c",
+    frontColor: (profile || campus) && !dark ? "#000000" : "#ffffff",
+    backgroundColor: chrome,
     fail() {},
   });
   wx.setTabBarStyle({
@@ -204,11 +206,10 @@ function applyChrome(look) {
     backgroundColor: dark ? "#1c1c1e" : "#ffffff",
     fail() {},
   });
-  const chrome = profile ? "#fcf9ff" : dark ? "#352442" : "#5b3b8c";
   wx.setBackgroundColor({
     backgroundColor: chrome,
     backgroundColorTop: chrome,
-    backgroundColorBottom: dark ? "#121214" : profile ? "#f7f8fa" : "#f6f5f8",
+    backgroundColorBottom: dark ? "#121214" : "#f6f5f8",
     fail() {},
   });
   wx.setBackgroundTextStyle({ textStyle: "light", fail() {} });

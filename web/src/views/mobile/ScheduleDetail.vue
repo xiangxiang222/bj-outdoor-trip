@@ -41,6 +41,7 @@
           <span>“{{ reviewQuote }}”</span>
           <i>{{ reviews.count }}条</i>
         </button>
+        <div v-if="isActivity && activityInfo.length" class="activity-detail-brief"><div v-for="item in activityInfo" :key="item.label"><span>{{ item.label }}</span><strong>{{ item.value }}</strong></div></div>
         <div class="fact-list">
           <div class="fact-row">
             <span class="fact-k">时间</span>
@@ -352,6 +353,7 @@
 
     <div v-show="tab === 'route'" class="trip-pane">
       <LoadRow v-if="!routeDetail && !s.route" />
+      <section v-else-if="isActivity" class="activity-description-card"><h2>活动介绍</h2><dl v-if="activityInfo.length"><div v-for="item in activityInfo" :key="item.label"><dt>{{ item.label }}</dt><dd>{{ item.value }}</dd></div></dl><p v-if="activityIntro">{{ activityIntro }}</p><p v-else-if="!activityInfo.length">发起人暂未填写更多介绍，请先核对上方时间与地点。</p><p v-if="s.notes" class="muted">{{ s.notes }}</p></section>
       <RouteProfile
         v-else
         embedded
@@ -425,6 +427,7 @@
         <div class="enroll-price"><b>待付 ¥{{ s.myEnrollment.remainAmount }}</b></div>
         <button class="btn" type="button" @click="invitePay">去支付</button>
       </div>
+      <p v-else-if="activityIsOver && !s.myEnrollment" class="muted" style="text-align:center">活动已开始或结束，暂不能报名</p>
       <p v-else-if="s.myEnrollment && (isActivity || s.myEnrollment.payStatus !== 'paid')" class="muted" style="text-align:center;margin:0 0 8px">{{ ticket?.title || "已报名" }}<template v-if="isActivity && s.myEnrollment.status !== 'waitlist'">，到场找发起人即可</template></p>
       <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>
       <button v-if="s.isOrganizer && s.status !== 'cancelled'" class="btn ghost block" style="margin-top:8px;color:var(--clay)" @click="showDissolve = true">解散拼团</button>
@@ -489,7 +492,7 @@ import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { payStatusText, scheduleStatusText, starText } from "@/utils/labels";
-import { formatActivityDate, activityKindOf } from "@/utils/activityKind";
+import { formatActivityDate, activityKindOf, activityDetails, activityBody, activityEnded } from "@/utils/activityKind";
 import { canShowEnroll, dockPrice, enrollCta, peopleLine, showDetailTabs, ticketState, trustChips } from "@/utils/scanFacts";
 import { nativeShareSupported, scheduleShareText, scheduleShareUrl } from "@/utils/share";
 import { drawTripPoster, downloadPosterPng, posterDataUrl } from "@/utils/sharePoster";
@@ -541,9 +544,12 @@ const ctaText = computed(() => enrollCta(s.value));
 const kindTag = computed(() => activityKindOf(s.value)?.label || "");
 const tabItems = computed(() => [
   { id: "trip", label: isActivity.value ? "本局" : "本团" },
-  { id: "route", label: "线路" },
+  { id: "route", label: isActivity.value ? "活动介绍" : "线路" },
   { id: "rules", label: "须知" },
 ]);
+const activityInfo = computed(() => activityDetails(s.value));
+const activityIntro = computed(() => activityBody(s.value));
+const activityIsOver = computed(() => isActivity.value && activityEnded(s.value));
 const storyRoute = computed(() => routeDetail.value || s.value?.route || {});
 const sellLine = computed(() => {
   const route = storyRoute.value;
@@ -764,7 +770,7 @@ async function load() {
   heroIndex.value = 0;
   fallbackIds.value = (s.value.myEnrollment?.fallbacks || []).map((f) => f.id);
   autoAlt.value = !!s.value.myEnrollment?.autoAlt;
-  setChrome(isActivity.value ? "局详情" : "行程详情", isActivity.value ? "时间、地点、还缺几人" : "座位、集合与报名");
+  setChrome(isActivity.value ? "局详情" : "行程详情", isActivity.value ? "时间、地点与参与安排" : "座位、集合与报名");
   if (!isActivity.value) {
     try {
       seatChart.value = (await http.get("/schedules/" + route.params.id + "/seats")).data;
@@ -1130,3 +1136,18 @@ async function dissolve() {
   }
 }
 </script>
+
+
+<style scoped>
+.activity-detail-brief { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px 18px; border:1px solid var(--line); border-radius:14px; background:var(--bg); padding:16px; margin:18px 0 6px; }
+.activity-detail-brief > div { min-width:0; display:flex; flex-direction:column; gap:5px; line-height:1.7; }
+.activity-detail-brief span { color:var(--muted); font-size:calc(10px * var(--ui-scale,1)); }
+.activity-detail-brief strong { color:var(--ink); font-size:calc(12px * var(--ui-scale,1)); font-weight:500; overflow-wrap:anywhere; background:transparent; }
+.activity-description-card { border-radius:16px; background:var(--card,#fff); padding:22px; }
+.activity-description-card h2 { font-size:calc(18px * var(--ui-scale,1)); color:var(--ink); font-weight:600; margin:0 0 20px; }
+.activity-description-card dl { margin:0 0 22px; }
+.activity-description-card dl > div { display:grid; grid-template-columns:85px minmax(0,1fr); gap:12px; padding:12px 0; border-bottom:1px solid var(--line); line-height:1.8; font-size:calc(12px * var(--ui-scale,1)); }
+.activity-description-card dt { color:var(--muted); }
+.activity-description-card dd { margin:0; color:var(--ink); overflow-wrap:anywhere; }
+.activity-description-card > p { font-size:calc(13px * var(--ui-scale,1)); color:var(--ink); line-height:1.9; white-space:pre-wrap; }
+</style>
