@@ -1,11 +1,39 @@
 const { request } = require("../../utils/request");
-const { OFFER_TYPES, buildCalendar } = require("../../utils/offer");
+const { isDark } = require("../../utils/appearance");
+const { OFFER_TYPES } = require("../../utils/offer");
 const { detailUrl, normalizeLegacyMedia } = require("../../utils/media");
 const { decorateFeed } = require("../../utils/feed-card");
 const { cycleSort, hostFacets, processFeed, sortLabel } = require("../../utils/feed-list");
 const { loadRouteCatalog } = require("../../utils/route-catalog");
+const { ROUTE_MODES, readRouteMode, saveRouteMode } = require("../../utils/route-presentation");
+const { chinaDay, departureMonths, availableDepartures, buildDepartureMonth, matchesDepartureTime } = require("../../utils/departure-dates");
 function asList(rows) {
   return Array.isArray(rows) && rows.length ? rows : [];
+}
+function departureSelection(data, draft) {
+  const mode = draft ? data.draftMode : "";
+  const date = draft ? mode === "date" ? data.draftDate : "" : data.date;
+  const month = draft ? mode === "month" ? data.draftMonthKey : "" : data.monthPicked ? data.monthKey : "";
+  const festival = draft ? mode === "festival" ? data.draftFestivalKey : "" : data.festivalKey;
+  const row = (data.home.festivals || []).find((item) => item.key === festival);
+  return {
+    date, month,
+    preset: draft ? mode === "weekend" || mode === "nextweekend" ? mode : "any" : data.timePreset || "any",
+    festivalDates: festival ? (row && row.dates || []).map((item) => item.date) : undefined,
+  };
+}
+function departureLabel(data, draft) {
+  const selection = departureSelection(data, draft);
+  if (selection.date) return selection.date.replace(/-/g, ".");
+  if (selection.month) return selection.month + " 整月";
+  const festival = draft ? data.draftFestivalKey : data.festivalKey;
+  if (selection.festivalDates) {
+    const row = (data.home.festivals || []).find((item) => item.key === festival);
+    return row ? row.name : "不限日期";
+  }
+  if (selection.preset === "weekend") return "本周末";
+  if (selection.preset === "nextweekend") return "下周末";
+  return "不限日期";
 }
 
 Page({
@@ -15,14 +43,29 @@ Page({
     home: { brand: { kicker: "同行者众", lead: "在山野，遇见爱", slides: [] }, cities: [], tags: [], festivals: [], months: [] },
     groups: [],
     allSchedules: [],
-    calendar: [],
     city: "",
     date: "",
     tag: "",
     monthKey: "",
     monthPicked: false,
-    monthDays: [],
     festivalKey: "",
+    timePreset: "any",
+    departurePreset: "any",
+    departureLabel: "选日期",
+    departureSheet: false,
+    departureMonth: "",
+    departureCells: [],
+    departureWeekdays: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
+    departureFestivals: [],
+    departureCanPrev: false,
+    departureCanNext: true,
+    departureMonthCount: 0,
+    departureDraftCount: 0,
+    draftMode: "any",
+    draftDate: "",
+    draftMonthKey: "",
+    draftFestivalKey: "",
+    draftLabel: "不限日期",
     offerFilter: "",
     hostKind: "",
     companyName: "",
@@ -31,9 +74,10 @@ Page({
     hostSchools: [],
     offers: OFFER_TYPES.filter((o) => o.key !== "full"),
     fold: { extra: false },
-    filterSection: "date",
     picked: [],
     upcoming: null,
+    campusAction: "去认证",
+    campusDark: false,
     query: "",
     sort: "soon",
     sortText: "即将出发",
@@ -45,6 +89,9 @@ Page({
     routeList: [],
     routeErr: "",
     routeLoading: false,
+    routeMode: "poster",
+    routeModes: ROUTE_MODES,
+    routeDark: false,
     loading: true,
   },
   onLoad() {
@@ -58,18 +105,28 @@ Page({
       this.setData({
         loading: false,
         home: cached.home,
-        monthKey: (cached.home.months && cached.home.months[0] && cached.home.months[0].key) || "",
-        monthDays: cached.home.monthDays || [],
         allSchedules,
-        calendar: buildCalendar(allSchedules),
       });
       this.applyGroups();
     }
     this.load();
   },
   onShow() {
+    this._routeUnloaded = false;
+    this.setData({ routeMode: readRouteMode(), routeDark: isDark() });
+    this.applyGroups();
     const app = getApp();
     if (!app || !app.globalData) return;
+    const user = app.globalData.user || {};
+    this.setData({
+      campusAction: user.isStudent || user.isAlumni ? "已认证" : user.studentStatus === "pending" ? "认证进度" : "去认证",
+      campusDark: isDark(),
+    });
+    if (app.globalData.homeCampus) {
+      app.globalData.homeCampus = false;
+      this.quickHost({ currentTarget: { dataset: { kind: "campus" } } });
+      return;
+    }
     if (app.globalData.homeView === "routes") {
       app.globalData.homeView = "";
       this.setView({ currentTarget: { dataset: { view: "routes" } } });
@@ -79,30 +136,16 @@ Page({
     this.load().then(() => wx.stopPullDownRefresh());
   },
   applyGroups() {
-    const { city, date, tag, offerFilter, festivalKey, home, allSchedules, query, sort, monthKey, monthPicked, hostKind, companyName, school } = this.data;
-    const fest = (home.festivals || []).find((f) => f.key === festivalKey);
-    const festDates = new Set(((fest && fest.dates) || []).map((d) => d.date));
+    const { city, tag, offerFilter, allSchedules, query, sort, hostKind, companyName, school } = this.data;
     const facets = hostFacets(allSchedules);
-    const groups = processFeed(allSchedules, {
-      query,
-      sort,
-      city,
-      tag,
-      date,
-      festivalDates: festivalKey ? festDates : null,
-      offerFilter,
-      monthKey,
-      monthPicked,
-      channel: "trip",
-      hostKind,
-      companyName,
-      school,
-    }).map((s) => decorateFeed(s));
+    const base = this.departureBase();
+    const selection = departureSelection(this.data);
+    const groups = base.filter((row) => matchesDepartureTime(row, selection)).map((row) => decorateFeed(row));
+    const activeTime = Boolean(selection.date || selection.month || selection.festivalDates || selection.preset !== "any");
+    const timeLabel = departureLabel(this.data);
     const picked = [];
     if (city) picked.push({ key: "city", label: city });
-    if (date) picked.push({ key: "date", label: date.slice(5) });
-    if (monthPicked && !date && monthKey) picked.push({ key: "month", label: monthKey.slice(5) + "月" });
-    if (festivalKey && fest) picked.push({ key: "fest", label: fest.name });
+    if (activeTime) picked.push({ key: "time", label: timeLabel });
     if (tag) picked.push({ key: "tag", label: tag });
     if (offerFilter) {
       const o = this.data.offers.find((x) => x.key === offerFilter);
@@ -116,7 +159,94 @@ Page({
     if (school) picked.push({ key: "school", label: school });
     if (String(query || "").trim()) picked.push({ key: "q", label: "搜 " + String(query).trim() });
     if (sort !== "soon") picked.push({ key: "sort", label: sortLabel(sort) });
-    this.setData({ groups, picked, sortText: sortLabel(sort), hostCompanies: facets.companies, hostSchools: facets.schools });
+    this.setData({ groups, picked, departurePreset: selection.date || selection.month || selection.festivalDates ? "custom" : selection.preset, departureLabel: timeLabel, sortText: sortLabel(sort), hostCompanies: facets.companies, hostSchools: facets.schools });
+    if (this.data.departureSheet) this.paintDepartureSheet();
+  },
+  departureBase() {
+    const { city, tag, offerFilter, allSchedules, query, sort, hostKind, companyName, school } = this.data;
+    return availableDepartures(processFeed(allSchedules, { city, tag, offerFilter, query, sort, hostKind, companyName, school, channel: "trip" }));
+  },
+  setDeparturePreset(e) {
+    const key = e.currentTarget.dataset.key;
+    if (!["any", "weekend", "nextweekend"].includes(key)) return;
+    this.setData({ timePreset: key, date: "", monthPicked: false, monthKey: "", festivalKey: "" });
+    this.applyGroups();
+  },
+  clearDepartureTime() {
+    this.setDeparturePreset({ currentTarget: { dataset: { key: "any" } } });
+  },
+  openDepartureDates() {
+    this.applyGroups();
+    const months = departureMonths();
+    const selection = departureSelection(this.data);
+    const firstFestivalDate = (selection.festivalDates || []).filter((date) => date >= chinaDay()).sort()[0];
+    const candidate = (selection.date || selection.month || firstFestivalDate || "").slice(0, 7);
+    const month = months.some((item) => item.key === candidate) ? candidate : months[0].key;
+    const mode = selection.date ? "date" : selection.month ? "month" : selection.festivalDates ? "festival" : selection.preset;
+    this.setData({ departureSheet: true, departureMonth: month, draftMode: mode, draftDate: selection.date || "", draftMonthKey: selection.month || "", draftFestivalKey: this.data.festivalKey || "" });
+    this.paintDepartureSheet();
+  },
+  closeDepartureDates() {
+    this.setData({ departureSheet: false });
+    this.applyGroups();
+  },
+  departureNoop() {},
+  paintDepartureSheet() {
+    const months = departureMonths();
+    const index = months.findIndex((item) => item.key === this.data.departureMonth);
+    const base = this.departureBase();
+    const today = chinaDay();
+    const lastMonth = months[months.length - 1].key;
+    const festivals = (this.data.home.festivals || []).map((item) => ({ ...item, dates: (item.dates || []).filter((day) => day.date >= today && day.date.slice(0, 7) <= lastMonth) })).filter((item) => item.dates.length);
+    this.setData({
+      departureCells: buildDepartureMonth(this.data.departureMonth, base),
+      departureCanPrev: index > 0,
+      departureCanNext: index >= 0 && index < months.length - 1,
+      departureMonthCount: base.filter((row) => matchesDepartureTime(row, { month: this.data.departureMonth })).length,
+      departureDraftCount: base.filter((row) => matchesDepartureTime(row, departureSelection(this.data, true))).length,
+      departureFestivals: festivals,
+      draftLabel: departureLabel(this.data, true),
+    });
+  },
+  moveDepartureMonth(e) {
+    const offset = Number(e.currentTarget.dataset.offset);
+    if (offset !== -1 && offset !== 1) return;
+    const months = departureMonths();
+    const index = months.findIndex((item) => item.key === this.data.departureMonth);
+    const next = months[index + offset];
+    if (!next || index < 0) return;
+    this.setData({ departureMonth: next.key });
+    this.paintDepartureSheet();
+  },
+  selectDepartureDay(e) {
+    const date = e.currentTarget.dataset.date;
+    const day = this.data.departureCells.find((item) => item.date === date);
+    if (!day || day.disabled || !day.date) return;
+    const selected = this.data.draftMode === "date" && this.data.draftDate === date;
+    this.setData({ draftMode: selected ? "any" : "date", draftDate: selected ? "" : date, draftMonthKey: "", draftFestivalKey: "" });
+    this.paintDepartureSheet();
+  },
+  selectDepartureMonth() {
+    const selected = this.data.draftMode === "month" && this.data.draftMonthKey === this.data.departureMonth;
+    this.setData({ draftMode: selected ? "any" : "month", draftDate: "", draftMonthKey: selected ? "" : this.data.departureMonth, draftFestivalKey: "" });
+    this.paintDepartureSheet();
+  },
+  selectDepartureFestival(e) {
+    const key = e.currentTarget.dataset.key;
+    const festival = this.data.departureFestivals.find((item) => item.key === key);
+    if (!festival) return;
+    const selected = this.data.draftMode === "festival" && this.data.draftFestivalKey === key;
+    this.setData({ draftMode: selected ? "any" : "festival", draftDate: "", draftMonthKey: "", draftFestivalKey: selected ? "" : key, ...(!selected ? { departureMonth: festival.dates[0].date.slice(0, 7) } : {}) });
+    this.paintDepartureSheet();
+  },
+  resetDepartureDraft() {
+    this.setData({ draftMode: "any", draftDate: "", draftMonthKey: "", draftFestivalKey: "" });
+    this.paintDepartureSheet();
+  },
+  applyDepartureDates() {
+    const selection = departureSelection(this.data, true);
+    this.setData({ timePreset: selection.preset, date: selection.date, monthKey: selection.month, monthPicked: Boolean(selection.month), festivalKey: this.data.draftMode === "festival" ? this.data.draftFestivalKey : "", departureSheet: false });
+    this.applyGroups();
   },
   async load() {
     try {
@@ -129,10 +259,7 @@ Page({
       this.setData({
         loading: false,
         home,
-        monthKey: (home.months && home.months[0] && home.months[0].key) || "",
-        monthDays: home.monthDays || [],
         allSchedules,
-        calendar: buildCalendar(allSchedules),
       });
       wx.setStorageSync("bj_home_cache", { home, schedules: allSchedules });
       this.applyGroups();
@@ -148,7 +275,7 @@ Page({
     if (this.data.view === "routes") this._searchTimer = setTimeout(() => this.loadRoutes(), 250);
     else this.applyGroups();
   },
-  onUnload() { clearTimeout(this._searchTimer); },
+  onUnload() { clearTimeout(this._searchTimer); this._routeUnloaded = true; this._routeRequestId = (this._routeRequestId || 0) + 1; },
   explore() { wx.pageScrollTo({ selector: "#explore", duration: 300 }); },
   showRoutes() {
     this.setView({ currentTarget: { dataset: { view: "routes" } } });
@@ -163,6 +290,7 @@ Page({
       query: "",
       city: "",
       date: "",
+      timePreset: "any",
       tag: "",
       offerFilter: "",
       festivalKey: "",
@@ -192,24 +320,41 @@ Page({
     this.setData({ routeTag: e.currentTarget.dataset.c || "" });
     this.loadRoutes();
   },
+  setRouteMode(e) {
+    const value = e.currentTarget.dataset.mode;
+    if (!ROUTE_MODES.some((mode) => mode.key === value)) return;
+    this.setData({ routeMode: saveRouteMode(value) });
+  },
+  clearRouteFilters() {
+    clearTimeout(this._searchTimer);
+    this.setData({ routeDays: 0, routeTag: "", query: "" });
+    return this.loadRoutes();
+  },
+  onRouteImageError(e) {
+    const id = Number(e.currentTarget.dataset.id);
+    const index = this.data.routeList.findIndex((item) => Number(item.id) === id);
+    if (index >= 0) this.setData({ ["routeList[" + index + "].imageBroken"]: true });
+  },
   async loadRoutes() {
-    if (!this.data.routeList.length) this.setData({ routeLoading: true });
+    const requestId = this._routeRequestId = (this._routeRequestId || 0) + 1;
+    const filters = { q: String(this.data.query || "").trim(), days: this.data.routeDays, tag: this.data.routeTag };
+    this.setData({ routeLoading: true, routeErr: "" });
     if (!this.data.routeTags.length) {
       try {
         const tagsRes = await request("/play-tags");
+        if (this._routeUnloaded || requestId !== this._routeRequestId) return;
         this.setData({ routeTags: tagsRes.data || [] });
       } catch {
+        if (this._routeUnloaded || requestId !== this._routeRequestId) return;
         this.setData({ routeTags: this.data.home.tags || [] });
       }
     }
     try {
-      const { list, err } = await loadRouteCatalog({
-        q: String(this.data.query || "").trim(),
-        days: this.data.routeDays,
-        tag: this.data.routeTag,
-      });
-      this.setData({ routeList: list, routeErr: err, routeLoading: false });
+      const { list, err } = await loadRouteCatalog(filters);
+      if (this._routeUnloaded || requestId !== this._routeRequestId) return;
+      this.setData({ ...(err ? {} : { routeList: list }), routeErr: err, routeLoading: false });
     } catch (e) {
+      if (this._routeUnloaded || requestId !== this._routeRequestId) return;
       this.setData({ routeErr: (e && e.message) || "加载失败", routeLoading: false });
     }
   },
@@ -231,7 +376,7 @@ Page({
   },
   setDate(e) {
     const d = e.currentTarget.dataset.date;
-    this.setData({ date: this.data.date === d ? "" : d });
+    this.setData({ date: this.data.date === d ? "" : d, timePreset: "any", monthPicked: false, monthKey: "", festivalKey: "" });
     this.applyGroups();
   },
   setTag(e) {
@@ -250,26 +395,19 @@ Page({
   },
   setFestival(e) {
     const key = e.currentTarget.dataset.key;
-    this.setData({ festivalKey: this.data.festivalKey === key ? "" : key });
+    this.setData({ festivalKey: this.data.festivalKey === key ? "" : key, date: "", timePreset: "any", monthPicked: false, monthKey: "" });
     this.applyGroups();
   },
   toggleFold(e) {
     const key = e.currentTarget.dataset.key;
     this.setData({ ["fold." + key]: !this.data.fold[key] });
   },
-  setFilterSection(e) {
-    const section = e.currentTarget.dataset.section;
-    if (section !== "date" && section !== "options") return;
-    this.setData({ filterSection: section });
-  },
   clearPick(e) {
     const key = e.currentTarget.dataset.key;
     if (key === "city") this.setData({ city: "" });
-    if (key === "date") this.setData({ date: "" });
+    if (["time", "date", "fest", "month"].includes(key)) { this.clearDepartureTime(); return; }
     if (key === "tag") this.setData({ tag: "" });
     if (key === "offer") this.setData({ offerFilter: "" });
-    if (key === "fest") this.setData({ festivalKey: "" });
-    if (key === "month") this.setData({ monthPicked: false });
     if (key === "q") this.setData({ query: "" });
     if (key === "sort") this.setData({ sort: "soon" });
     if (key === "host") this.setData({ hostKind: "", companyName: "", school: "" });
@@ -312,10 +450,10 @@ Page({
     this.setData({ school: "" });
     this.applyGroups();
   },
-  async pickMonth(e) {
+  pickMonth(e) {
     const key = e.currentTarget.dataset.key;
-    const res = await request("/home?month=" + key);
-    this.setData({ monthKey: key, monthPicked: true, "fold.extra": true, monthDays: (res.data && res.data.monthDays) || [] });
+    if (!departureMonths().some((month) => month.key === key)) return;
+    this.setData({ monthKey: key, monthPicked: true, date: "", festivalKey: "", timePreset: "any" });
     this.applyGroups();
   },
   goGroup(e) {
@@ -372,6 +510,9 @@ Page({
   },
   goOfficial() {
     wx.navigateTo({ url: "/pages/official/official" });
+  },
+  goDiscover() {
+    wx.navigateTo({ url: "/pages/discover/discover" });
   },
   goStudent() {
     const app = getApp();

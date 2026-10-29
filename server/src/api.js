@@ -15,6 +15,7 @@ const { assertTextSafe, assertTexts, assertImageFile } = require("./services/con
 const { verifyIdentity } = require("./services/id-verify");
 const { issueSmsCode, smsLive } = require("./services/sms");
 const { buildSchedulePoster } = require("./services/share-poster");
+const { discoverySearch } = require("./services/discovery");
 const { createPosterLineup, lineupSchedules } = require("./services/poster-lineup");
 const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
@@ -151,6 +152,14 @@ const {
 } = require("./services/official-trip");
 
 const router = express.Router();
+router.post("/discovery/search", optionalUser, async (req, res) => {
+  try {
+    res.json({ ok: true, data: await discoverySearch(req.body, req) });
+  } catch (error) {
+    const status = error.status || 500;
+    res.status(status).json({ ok: false, message: status < 500 ? error.message : "暂时无法查找团期，请稍后重试" });
+  }
+});
 const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
 
 function resolveOrganizer(body, user, forceIndividual, allowOfficial) {
@@ -495,6 +504,9 @@ function scheduleView(sch, req, opts = {}) {
     : light && !briefRoute
       ? compactRoute(route)
       : briefRouteView(fullRoute, briefRoute);
+  if (!light && sch.channel === "activity" && mappedRoute && fullRoute) {
+    mappedRoute.description = fullRoute.description || "";
+  }
   const meetup = meetupMap(sch.meetup_point);
   let lockedCount = 0;
   try {

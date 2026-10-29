@@ -4,7 +4,7 @@ import { canShowEnroll, dockPrice, enrollCta, peopleLine, showDetailTabs, ticket
 describe("scanFacts", () => {
   it("keeps full trips as waitlist people line", () => {
     expect(peopleLine({ enrolled: 30, maxSeats: 30, remain: 0, waitlistCount: 2 })).toBe("已满 · 可候补 2 人");
-    expect(peopleLine({ enrolled: 4, maxSeats: 8, remain: 4, channel: "activity" })).toBe("还缺 4 人 · 已有 4/8");
+    expect(peopleLine({ enrolled: 4, minGroupSize: 4, maxSeats: 8, remain: 4, channel: "activity", startDate: "2099-10-29" })).toBe("已成局 · 已报名 4 人 · 余 4 位");
   });
 
   it("shows pay / cancel / insurance chips", () => {

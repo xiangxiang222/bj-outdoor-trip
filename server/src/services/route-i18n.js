@@ -32,6 +32,8 @@ const SKIP_FIELDS = new Set([
   "openid",
   "tags",
   "playTags",
+  // Search filters are machine-readable values sent back for editing/paging.
+  "filters",
 ]);
 
 const pending = new Set();
@@ -75,6 +77,14 @@ function collectRouteStrings(row) {
   addText(bucket, row.title);
   addText(bucket, row.subtitle);
   addText(bucket, row.description);
+  if (String(row.description || "").startsWith("【活动信息】\n")) {
+    const [head, ...body] = row.description.slice(7).split("\n\n");
+    for (const line of head.split("\n")) {
+      const split = line.indexOf("：");
+      if (split > 0) addText(bucket, line.slice(split + 1));
+    }
+    addText(bucket, body.join("\n\n"));
+  }
   addText(bucket, row.fee_include);
   addText(bucket, row.fee_exclude);
   addText(bucket, row.equipment);
@@ -303,6 +313,16 @@ function localizeString(value, map, keys) {
 
 function walk(value, map, keys, field) {
   if (SKIP_FIELDS.has(field)) return value;
+  // Activity headings and labels are a saved format read by both clients.
+  // Translate their values and prose without changing that format.
+  if (field === "description" && typeof value === "string" && value.startsWith("【活动信息】\n")) {
+    const [head, ...body] = value.slice(7).split("\n\n");
+    const lines = head.split("\n").map((line) => {
+      const split = line.indexOf("：");
+      return split > 0 ? line.slice(0, split + 1) + localizeString(line.slice(split + 1), map, keys).replace(/[\r\n]+/g, " ") : line;
+    });
+    return "【活动信息】\n" + lines.join("\n") + (body.length ? "\n\n" + localizeString(body.join("\n\n"), map, keys) : "");
+  }
   if (typeof value === "string") return localizeString(value, map, keys);
   if (Array.isArray(value)) return value.map((item) => walk(item, map, keys, ""));
   if (value && typeof value === "object") {

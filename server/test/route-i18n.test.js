@@ -60,10 +60,35 @@ describe("route english", () => {
     assert.equal(body.blurb, "今晚 Xiangshan night hike");
   });
 
+  it("collects activity fact values separately so they can translate without losing their saved labels", () => {
+    const description = "【活动信息】\n跑步距离：五公里轻松跑\n参考配速：不竞速一起跑\n\n先热身十分钟。";
+    const strings = collectRouteStrings({ description });
+    assert.ok(strings.includes("五公里轻松跑"));
+    assert.ok(strings.includes("不竞速一起跑"));
+    assert.ok(strings.includes("先热身十分钟。"));
+    const translated = applyEnglishPayload({ description }, { "五公里轻松跑": "5 km\nEasy pace", "先热身十分钟。": "Warm up first." });
+    assert.equal(translated.description, "【活动信息】\n跑步距离：5 km Easy pace\n参考配速：不竞速一起跑\n\nWarm up first.");
+  });
+
   it("reads the language header", () => {
     assert.equal(requestLang({ get: () => "en", query: {} }), "en");
     assert.equal(requestLang({ get: () => "zh-Hant", query: {} }), "tw");
     assert.equal(requestLang({ get: () => "", query: {} }), "zh");
+  });
+
+  it("keeps discovery filter values stable while English readers edit or page results", async () => {
+    const { agent } = harness();
+    const db = getDb();
+    const row = db.prepare("SELECT id,title FROM routes WHERE code=?").get("R01");
+    db.prepare("UPDATE routes SET i18n_json=? WHERE id=?").run(JSON.stringify({ en: { [row.title]: "Mutianyu day trip" } }), row.id);
+    const filters = { time:"any",dateFrom:"",dateTo:"",budgetMax:null,partySize:1,destination:row.title,intensity:"any",hostKind:"any",campusScope:"any" };
+    const first = await agent.post("/api/discovery/search").set("X-Lang", "en").send({ filters, limit:1 }).expect(200);
+    assert.deepEqual(first.body.data.filters, filters);
+    assert.ok(first.body.data.total > 0);
+    assert.equal(first.body.data.results[0].title, "Mutianyu day trip");
+    const repeated = await agent.post("/api/discovery/search").set("X-Lang", "en").send({ filters:first.body.data.filters,limit:1 }).expect(200);
+    assert.equal(repeated.body.data.total, first.body.data.total);
+    assert.equal(repeated.body.data.results[0].id, first.body.data.results[0].id);
   });
 
   it("stores english from the model and does not call it again", async () => {

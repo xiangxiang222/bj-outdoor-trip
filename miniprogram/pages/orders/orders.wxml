@@ -1,107 +1,19 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="page-heading"><view class="section-kicker">YOUR NEXT CHAPTER</view><view class="section-title">{{tr.t('我的每一程', lang)}}</view><view class="muted">{{tr.t('从期待出发，到回味山野，所有同行都在这里。', lang)}}</view></view>
-<view class="card" wx:if="{{!loggedIn}}">
-  <view class="pad">
-    <view class="title">{{tr.t('登录后看出行计划', lang)}}</view>
-    <view class="muted">{{tr.t('山野团和同城局都会出现在这里，出发前能看到集合时间和地点。', lang)}}</view>
-    <view class="btn" bindtap="goLogin">{{tr.t('登录查看行程', lang)}}</view>
-  </view>
-</view>
-
-<block wx:else>
-  <view class="od-bar">
-    <input class="od-search" placeholder="{{tr.t('搜索我的订单', lang)}}" value="{{keyword}}" bindinput="setKeyword" />
-    <view class="od-tools">
-      <view class="od-tabs-wrap">
-      <scroll-view class="od-tabs" scroll-x enhanced show-scrollbar="{{false}}" scroll-into-view="{{tabInto}}" scroll-with-animation>
-        <view class="od-tab-row">
-          <view id="tab-all" class="od-tab {{tab=='all'?'on':''}}" bindtap="setTab" data-tab="all">{{tr.t('全部', lang)}}</view>
-          <view id="tab-unpaid" class="od-tab {{tab=='unpaid'?'on':''}}" bindtap="setTab" data-tab="unpaid">{{tr.t('待付款', lang)}}</view>
-          <view id="tab-recruiting" class="od-tab {{tab=='recruiting'?'on':''}}" bindtap="setTab" data-tab="recruiting">{{tr.t('招募中', lang)}}</view>
-          <view id="tab-depart" class="od-tab {{tab=='depart'?'on':''}}" bindtap="setTab" data-tab="depart">{{tr.t('待出发', lang)}}</view>
-          <view id="tab-review" class="od-tab {{tab=='review'?'on':''}}" bindtap="setTab" data-tab="review">{{tr.t('待评价', lang)}}</view>
-          <view id="tab-waitlist" class="od-tab {{tab=='waitlist'?'on':''}}" bindtap="setTab" data-tab="waitlist">{{tr.t('候补中', lang)}}</view>
-          <view id="tab-refund" class="od-tab {{tab=='refund'?'on':''}}" bindtap="setTab" data-tab="refund">{{tr.t('已退款', lang)}}</view>
-        </view>
-      </scroll-view>
-      <view class="od-fade"></view>
-      </view>
-      <view class="od-filter {{filterOn?'on':''}}" bindtap="openFilter">
-        <view class="od-funnel"></view>
-        <text>{{tr.t('筛选', lang)}}</text>
-      </view>
+<view class="journey-page {{dark?'is-dark':''}}">
+  <view class="journey-hero"><view class="journey-eyebrow">EVERY JOURNEY MATTERS</view><view class="journey-title">{{tr.t('我的每一程',lang)}}</view><view class="journey-intro">{{tr.t('期待下一次出发，也珍藏每一次同行。',lang)}}</view><view class="journey-landscape" aria-hidden="true"><view></view><view></view><view></view></view><view class="journey-summary" wx:if="{{loggedIn}}"><button wx:for="{{summary}}" wx:key="key" bindtap="setTab" data-key="{{item.key}}"><view class="summary-count">{{ready?item.count:'—'}}</view><view class="summary-label">{{tr.t(item.label,lang)}}<text aria-hidden="true">↗</text></view></button></view></view>
+  <view class="journey-empty" wx:if="{{!loggedIn}}"><view class="journey-empty-mark" aria-hidden="true">↗</view><view class="journey-empty-title">{{tr.t('登录后看出行计划',lang)}}</view><view class="journey-empty-copy">{{tr.t('山野团和同城局都会出现在这里，出发前能看到集合时间和地点。',lang)}}</view><button class="od-btn solid" bindtap="goLogin">{{tr.t('登录查看行程',lang)}}</button></view>
+  <block wx:else>
+    <view class="od-bar"><view class="journey-search"><view class="journey-search-icon" aria-hidden="true"></view><input class="od-search" placeholder="{{tr.t('搜索行程、地点或出行人',lang)}}" value="{{keyword}}" bindinput="setKeyword" /></view><view class="od-tools"><view class="od-tabs-wrap"><scroll-view class="od-tabs" scroll-x enhanced show-scrollbar="{{false}}" scroll-into-view="{{tabInto}}" scroll-with-animation><view class="od-tab-row"><button wx:for="{{statusTabs}}" wx:key="key" id="tab-{{item.key}}" class="od-tab {{tab==item.key?'on':''}}" bindtap="setTab" data-tab="{{item.key}}">{{tr.t(item.label,lang)}}<text wx:if="{{ready && item.count}}">{{item.count}}</text></button></view></scroll-view></view><button class="od-filter {{filterOn || extraStatus?'on':''}}" bindtap="openFilter"><view class="journey-filter-icon" aria-hidden="true"><view></view><view></view><view></view></view><text>{{tr.t('筛选',lang)}}</text></button></view></view>
+    <view class="journey-result"><text>{{tr.t(selectedStatus,lang)}} · {{shown.length}} {{tr.t('项行程',lang)}}</text><button wx:if="{{keyword || filterOn}}" bindtap="clearFilters">{{tr.t('清空筛选',lang)}} ×</button></view>
+    <view wx:if="{{loadError}}" class="journey-error"><view><view class="journey-error-title">{{tr.t('行程加载失败',lang)}}</view><view class="journey-error-copy">{{tr.t(list.length?'已保留上次的行程，请重试更新。':'暂时无法获取行程，请稍后重试。',lang)}}</view></view><button class="od-btn" disabled="{{loading}}" bindtap="load">{{tr.t('重新加载',lang)}}</button></view>
+    <view class="journey-list">
+      <view class="od-card" wx:for="{{shown}}" wx:key="id"><view class="journey-card-main" bindtap="goDetail" data-id="{{item.id}}"><view class="od-head"><view class="od-shop"><view></view>{{tr.t(item.shop,lang)}}</view><view class="od-status {{item.hot?'is-hot':''}} {{item.ended?'is-ended':''}}">{{tr.t(item.badge,lang)}}</view></view><view class="od-goods"><image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" lazy-load /><view wx:else class="od-ph"><view></view><view></view></view><view class="od-main"><view class="od-title">{{tr.t(item.title,lang)}}</view><view class="journey-card-copy">{{tr.t(item.cardCopy,lang)}}</view><view class="journey-view">{{tr.t('查看行程详情',lang)}} ↗</view></view></view><view class="journey-arrangement"><view><view class="journey-calendar" aria-hidden="true"></view><text class="journey-date">{{tr.t(item.travelDate,lang)}}</text><text>{{tr.t(item.travelTime,lang)}}</text></view><view><view class="journey-pin" aria-hidden="true"></view><text>{{tr.t(item.travelPlace,lang)}}</text></view></view></view><view class="journey-card-foot"><view class="journey-payment"><text>{{tr.t(item.paymentLabel,lang)}}</text><text>{{tr.t(item.moneyText,lang)}}</text></view><view class="od-help" wx:if="{{item.helperCount}}">{{tr.t('帮忙支付',lang)}} {{item.helperCount}} {{tr.t('人',lang)}}</view></view><view class="od-actions" wx:if="{{item.canCancel || item.canPay || item.reviewable || (item.canAfter && item.completed) || item.again}}"><button wx:if="{{item.canCancel}}" class="od-btn" disabled="{{cancelling==item.id}}" bindtap="cancel" data-id="{{item.id}}">{{tr.t(cancelling==item.id?'取消中…':item.status=='waitlist'?'取消候补':'取消报名',lang)}}</button><button wx:if="{{item.canPay}}" class="od-btn solid" bindtap="goPay" data-token="{{item.payShareToken}}" data-id="{{item.id}}">{{tr.t('去支付',lang)}}</button><button wx:if="{{item.reviewable}}" class="od-btn solid" bindtap="goDetail" data-id="{{item.id}}" data-review="1">{{tr.t('去评价',lang)}}</button><button wx:if="{{item.canAfter && item.completed}}" class="od-btn" bindtap="goAfter" data-sid="{{item.schedule_id}}">{{tr.t('评价 / 评选',lang)}}</button><button wx:if="{{item.again}}" class="od-btn {{!item.reviewable && !item.canPay?'solid':''}}" bindtap="goRoute" data-rid="{{item.route_id}}">{{tr.t('再次报名',lang)}}</button></view></view>
     </view>
-  </view>
-  <view class="od-list">
-
-  <view class="od-card" wx:for="{{shown}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
-    <view class="od-head">
-      <view class="od-shop">{{tr.t(item.shop, lang)}}</view>
-      <view class="od-status {{item.hot?'is-hot':''}}">{{tr.t(item.badge, lang)}}</view>
-    </view>
-    <view class="od-goods">
-      <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
-      <view wx:else class="od-ph"></view>
-      <view class="od-main">
-        <view class="od-title">{{tr.t(item.title, lang)}}</view>
-        <view class="od-spec">{{tr.t(item.spec, lang)}}</view>
-      </view>
-      <view class="od-price">
-        <view>{{tr.t(item.moneyText, lang)}}</view>
-        <view class="od-qty">{{tr.t('共1人', lang)}}</view>
-      </view>
-    </view>
-    <view class="od-help" wx:if="{{item.helperCount}}">{{tr.t('帮忙支付', lang)}} {{item.helperCount}} {{tr.t('人', lang)}}</view>
-    <view class="od-actions" wx:if="{{item.canCancel || item.canPay || item.reviewable || (item.canAfter && item.completed) || item.again}}" catchtap="noop">
-      <view wx:if="{{item.canCancel}}" class="od-btn" catchtap="cancel" data-id="{{item.id}}">{{tr.t(item.status=='waitlist'?'取消候补':'取消报名', lang)}}</view>
-      <view wx:if="{{item.canPay}}" class="od-btn solid" catchtap="goPay" data-token="{{item.payShareToken}}" data-id="{{item.id}}">{{tr.t('去支付', lang)}}</view>
-      <view wx:if="{{item.reviewable}}" class="od-btn solid" catchtap="goDetail" data-id="{{item.id}}" data-review="1">{{tr.t('去评价', lang)}}</view>
-      <view wx:if="{{item.canAfter && item.completed}}" class="od-btn" catchtap="goAfter" data-sid="{{item.schedule_id}}">{{tr.t('评价 / 评选', lang)}}</view>
-      <view wx:if="{{item.again}}" class="od-btn {{item.reviewable ? '' : 'solid'}}" catchtap="goRoute" data-rid="{{item.route_id}}">{{tr.t('再次报名', lang)}}</view>
-    </view>
-  </view>
-
-  <load-row wx:if="{{loading}}" />
-  <view class="card" wx:elif="{{emptyAll}}">
-    <view class="pad">
-      <view class="title">{{tr.t('还没有报名。', lang)}}</view>
-      <view class="muted">{{tr.t('去首页报一个山野团，或去活动页约一局。', lang)}}</view>
-      <view class="btn" bindtap="goHomeTab">{{tr.t('去首页', lang)}}</view>
-      <view class="btn ghost" bindtap="goActTab">{{tr.t('去同城局', lang)}}</view>
-    </view>
-  </view>
-  <view class="pad muted" wx:elif="{{!shown.length}}">{{tr.t('没有符合条件的订单', lang)}}</view>
-  <view class="od-end" wx:else>{{tr.t('没有更多订单', lang)}}</view>
+    <load-row wx:if="{{loading}}" />
+    <view wx:elif="{{!loadError && emptyAll}}" class="journey-empty"><view class="journey-empty-mark" aria-hidden="true">↗</view><view class="journey-empty-title">{{tr.t('下一程，等你出发',lang)}}</view><view class="journey-empty-copy">{{tr.t('去发现一条心动的线路，或参加一场有趣的同城活动。',lang)}}</view><button class="od-btn solid" bindtap="goHomeTab">{{tr.t('发现山野线路',lang)}}</button><button class="od-btn" bindtap="goActTab">{{tr.t('看看同城活动',lang)}}</button></view>
+    <view wx:elif="{{!loadError && !shown.length}}" class="journey-empty"><view class="journey-empty-title">{{tr.t(tab=='ended'?'好风景，留在未来的回忆里':'这里暂时没有行程',lang)}}</view><view class="journey-empty-copy">{{tr.t(tab=='ended'?'已参加并结束的行程会收在这里。取消报名和退款记录可在其他状态中查看。':'试试其他状态，或调整搜索与时间条件。',lang)}}</view><button class="od-btn" bindtap="clearFilters">{{tr.t('查看全部行程',lang)}}</button></view><view wx:elif="{{shown.length}}" class="od-end">{{tr.t('每一次同行，都有值得记住的风景',lang)}}</view>
+  </block>
   <view class="tab-pad"></view>
-  </view>
-</block>
-
-<view class="od-mask" wx:if="{{sheet}}" bindtap="closeFilter">
-  <view class="od-sheet" catchtap="noop">
-    <view class="od-x" bindtap="closeFilter">×</view>
-    <view class="od-sheet-title">{{tr.t('订单筛选', lang)}}</view>
-    <view class="od-label">{{tr.t('下单时间', lang)}}</view>
-    <view class="od-presets">
-      <view wx:for="{{quick}}" wx:key="key" class="od-preset {{draftPreset==item.key?'on':''}}" data-key="{{item.key}}" bindtap="pickPreset">{{tr.t(item.label, lang)}}</view>
-      <view wx:for="{{years}}" wx:key="key" class="od-preset {{draftPreset==item.key?'on':''}}" data-key="{{item.key}}" bindtap="pickPreset">{{item.label}}</view>
-      <block wx:if="{{moreYears}}">
-        <view wx:for="{{extra}}" wx:key="key" class="od-preset {{draftPreset==item.key?'on':''}}" data-key="{{item.key}}" bindtap="pickPreset">{{item.label}}</view>
-      </block>
-      <view wx:if="{{!moreYears && extra.length}}" class="od-preset" bindtap="showYears">{{tr.t('展开', lang)}}</view>
-    </view>
-    <view class="od-range">
-      <picker mode="date" value="{{draftStart}}" bindchange="setStart">
-        <view class="od-date">{{draftStart || tr.t('起始时间', lang)}}</view>
-      </picker>
-      <view class="od-dash">—</view>
-      <picker mode="date" value="{{draftEnd}}" bindchange="setEnd">
-        <view class="od-date">{{draftEnd || tr.t('终止时间', lang)}}</view>
-      </picker>
-    </view>
-    <view class="od-sheet-bar">
-      <view class="od-btn" bindtap="resetDraft">{{tr.t('重置', lang)}}</view>
-      <view class="od-btn solid" bindtap="applyFilter">{{tr.t('确定', lang)}}</view>
-    </view>
-  </view>
+  <view class="od-mask" wx:if="{{sheet}}" bindtap="closeFilter"><view class="od-sheet" catchtap="noop"><button class="od-x" bindtap="closeFilter" aria-label="{{tr.t('关闭筛选',lang)}}">×</button><view class="journey-eyebrow">FIND YOUR JOURNEY</view><view class="od-sheet-title">{{tr.t('行程筛选',lang)}}</view><view class="od-label">{{tr.t('行程状态',lang)}}</view><view class="od-presets"><button wx:for="{{allStatusTabs}}" wx:key="key" class="od-preset {{draftTab==item.key?'on':''}}" bindtap="setDraftTab" data-key="{{item.key}}">{{tr.t(item.label,lang)}}</button></view><view class="od-label">{{tr.t('报名时间',lang)}}</view><view class="od-presets"><button wx:for="{{quick}}" wx:key="key" class="od-preset {{draftPreset==item.key?'on':''}}" data-key="{{item.key}}" bindtap="pickPreset">{{tr.t(item.label,lang)}}</button><button wx:for="{{years}}" wx:key="key" class="od-preset {{draftPreset==item.key?'on':''}}" data-key="{{item.key}}" bindtap="pickPreset">{{item.label}}</button><block wx:if="{{moreYears}}"><button wx:for="{{extra}}" wx:key="key" class="od-preset {{draftPreset==item.key?'on':''}}" data-key="{{item.key}}" bindtap="pickPreset">{{item.label}}</button></block><button wx:if="{{!moreYears && extra.length}}" class="od-preset" bindtap="showYears">{{tr.t('展开',lang)}}</button></view><view class="od-range"><picker mode="date" value="{{draftStart}}" bindchange="setStart"><view class="od-date">{{draftStart || tr.t('起始时间',lang)}}</view></picker><text>—</text><picker mode="date" value="{{draftEnd}}" bindchange="setEnd"><view class="od-date">{{draftEnd || tr.t('终止时间',lang)}}</view></picker></view><view wx:if="{{filterError}}" class="journey-filter-error">{{tr.t(filterError,lang)}}</view><view class="od-sheet-bar"><button class="od-btn" bindtap="resetDraft">{{tr.t('重置',lang)}}</button><button class="od-btn solid" bindtap="applyFilter">{{tr.t('确定',lang)}}</button></view></view></view>
 </view>

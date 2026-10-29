@@ -1,0 +1,37 @@
+<wxs src="../utils/locale.wxs" module="rt" />
+
+<template name="route-modes">
+  <view class="rt-toolbar">
+    <view class="rt-result"><text>{{count}}</text> {{rt.t('条线路', lang)}}<text class="rt-refresh" wx:if="{{loading && count}}"> · {{rt.t('更新中', lang)}}</text></view>
+    <view class="rt-modes" aria-role="group" aria-label="{{rt.t('线路显示方式', lang)}}">
+      <button wx:for="{{modes}}" wx:key="key" class="rt-mode {{mode==item.key?'on':''}}" bindtap="setRouteMode" data-mode="{{item.key}}" aria-label="{{rt.t(item.label, lang)}}" aria-pressed="{{mode==item.key}}">
+        <view class="rt-mode-icon {{item.key}}" aria-hidden="true"><view></view><view></view><view></view><view></view></view><text>{{rt.t(item.label, lang)}}</text>
+      </button>
+    </view>
+  </view>
+</template>
+
+<template name="route-cards">
+  <view class="rt-cards rt-{{mode}}">
+    <view class="rt-card" wx:for="{{rows}}" wx:key="id" bindtap="goRoute" data-id="{{item.id}}" aria-role="button" aria-label="{{rt.t(item.title, lang)}}">
+      <view class="rt-cover">
+        <view class="rt-cover-fallback" aria-hidden="true"><view class="rt-mountain"></view><text>INTO THE WILD</text></view>
+        <image wx:if="{{item.cover && !item.imageBroken}}" src="{{item.cover}}" mode="aspectFill" lazy-load binderror="onRouteImageError" data-id="{{item.id}}" />
+        <view class="rt-duration">{{item.viewFacts.days}}{{rt.t('日', lang)}}<text wx:if="{{item.difficulty}}"> · {{rt.t(item.difficulty, lang)}}</text></view>
+      </view>
+      <view class="rt-card-body">
+        <view class="rt-region"><view class="rt-pin" aria-hidden="true"></view><text>{{rt.t(item.region || '周边山野', lang)}}</text></view>
+        <view class="rt-inline-facts">{{item.viewFacts.days}}{{rt.t('日', lang)}}<text wx:if="{{item.difficulty}}"> · {{rt.t(item.difficulty, lang)}}</text></view>
+        <view class="rt-title">{{rt.t(item.title, lang)}}</view>
+        <view class="rt-subtitle" wx:if="{{item.subtitle}}">{{rt.t(item.subtitle, lang)}}</view>
+        <view class="rt-tags" wx:if="{{item.viewFacts.tags.length}}"><text wx:for="{{item.viewFacts.tags}}" wx:for-item="routeTag" wx:key="*this">{{rt.t(routeTag, lang)}}</text></view>
+        <view class="rt-card-footer">
+          <view class="rt-price" wx:if="{{item.viewFacts.hasPrice}}"><text class="rt-currency">¥</text><text class="rt-amount">{{item.viewFacts.price}}</text><text class="rt-price-note">{{rt.t('起', lang)}}</text></view>
+          <view class="rt-price rt-unpriced" wx:else>{{rt.t('价格待确认', lang)}}</view>
+          <view class="rt-price-caption" wx:if="{{item.viewFacts.member}}">{{rt.t('会员起价', lang)}}</view>
+        </view>
+        <view class="rt-schedule {{item.viewFacts.hasSchedule?'available':''}}"><view aria-hidden="true"></view><text wx:if="{{item.viewFacts.hasSchedule}}">{{item.viewFacts.nextDate}} {{rt.t('可出发', lang)}}</text><text wx:else>{{rt.t('可自选日期发团', lang)}}</text><text class="rt-arrow" aria-hidden="true">↗</text></view>
+      </view>
+    </view>
+  </view>
+</template>

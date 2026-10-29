@@ -1,36 +1,24 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="page-heading"><view class="section-kicker">CURATED OUTDOOR JOURNEYS</view><view class="section-title">{{tr.t('把周末，还给山野', lang)}}</view><view class="muted">{{tr.t('从一日轻徒步，到多日深度探索。找到适合自己的出发方式。', lang)}}</view></view>
-<input class="input" placeholder="{{tr.t('搜索长城 / 十渡 / 坝上', lang)}}" value="{{q}}" bindconfirm="onSearch" />
-<view class="chips">
-  <view class="chip {{days==0?'on':''}}" bindtap="setDays" data-d="0">{{tr.t('全部天数', lang)}}</view>
-  <view class="chip {{days==1?'on':''}}" bindtap="setDays" data-d="1">{{tr.t('1日', lang)}}</view>
-  <view class="chip {{days==2?'on':''}}" bindtap="setDays" data-d="2">{{tr.t('2日', lang)}}</view>
-  <view class="chip {{days==3?'on':''}}" bindtap="setDays" data-d="3">{{tr.t('3日', lang)}}</view>
-  <view class="chip {{days=='multi'?'on':''}}" bindtap="setDays" data-d="multi">{{tr.t('多日', lang)}}</view>
-</view>
-<view class="chips">
-  <view class="chip {{tag==''?'on':''}}" bindtap="setTag" data-c="">{{tr.t('全部玩法', lang)}}</view>
-  <view class="play-tag" wx:for="{{tags}}" wx:key="id" style="background:{{item.color}}" bindtap="setTag" data-c="{{item.name}}">{{tr.t(item.name, lang)}}</view>
-</view>
-<load-row wx:if="{{loading && !list.length}}" />
-<view wx:elif="{{err}}" class="muted pad">{{tr.t(err, lang)}}</view>
-<view wx:elif="{{!list.length}}" class="muted pad">{{tr.t(q || days || tag ? '没有匹配的线路' : '正式线路正在整理，发布后会出现在这里。', lang)}}</view>
-<view class="card" bindtap="goApply">
-  <view class="pad">
-    <view class="title">{{tr.t('申请收录线路', lang)}}</view>
-    <view class="muted">{{tr.t('留下联系方式，通过后会出现在线路目录', lang)}}</view>
-  </view>
-</view>
-<view class="card route-card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
-  <image class="cover" src="{{item.cover}}" mode="aspectFill" />
-  <view class="pad">
-    <view class="route-eyebrow">{{tr.t(item.region, lang)}} · {{item.days}}{{tr.t('天山野之旅', lang)}}</view>
-    <view class="title">{{tr.t(item.title, lang)}}</view>
-    <view class="muted">{{tr.t(item.region, lang)}} · {{tr.t(item.days, lang)}}{{tr.t('日 ·', lang)}} {{tr.t(item.difficulty, lang)}}</view>
-    <view class="price">
-      <text wx:if="{{item.fromPrice > item.memberFromPrice}}" class="price-origin">¥{{tr.t(item.fromPrice, lang)}}</text>
-      ¥{{tr.t(item.memberFromPrice || item.fromPrice, lang)}} {{tr.t('起', lang)}}
-    </view>
-  </view>
+<import src="../../templates/route-catalog.wxml" />
+<view class="rt-catalog {{routeDark?'is-dark':''}} {{textMode?'is-text-mode':''}}">
+  <view class="rt-intro"><view class="rt-eyebrow">CURATED OUTDOOR JOURNEYS</view><view class="rt-heading">{{tr.t('把周末，还给山野', lang)}}</view><view class="rt-lead">{{tr.t('从一日轻徒步，到多日深度探索。找到适合自己的出发方式。', lang)}}</view></view>
+  <view class="rt-search"><view class="rt-search-icon" aria-hidden="true"></view><input placeholder="{{tr.t('搜索线路、目的地或玩法', lang)}}" value="{{q}}" bindconfirm="onSearch" confirm-type="search" aria-label="{{tr.t('搜索线路', lang)}}" /></view>
+  <scroll-view scroll-x class="rt-filter-scroll"><view class="rt-filter-row">
+    <button class="rt-filter {{days==0?'on':''}}" bindtap="setDays" data-d="0">{{tr.t('全部天数', lang)}}</button>
+    <button class="rt-filter {{days==1?'on':''}}" bindtap="setDays" data-d="1">{{tr.t('1日', lang)}}</button>
+    <button class="rt-filter {{days==2?'on':''}}" bindtap="setDays" data-d="2">{{tr.t('2日', lang)}}</button>
+    <button class="rt-filter {{days==3?'on':''}}" bindtap="setDays" data-d="3">{{tr.t('3日', lang)}}</button>
+    <button class="rt-filter {{days=='multi'?'on':''}}" bindtap="setDays" data-d="multi">{{tr.t('多日', lang)}}</button>
+  </view></scroll-view>
+  <scroll-view scroll-x class="rt-filter-scroll"><view class="rt-filter-row">
+    <button class="rt-filter {{tag==''?'on':''}}" bindtap="setTag" data-c="">{{tr.t('全部玩法', lang)}}</button>
+    <button class="rt-filter {{tag==item.name?'on':''}}" wx:for="{{tags}}" wx:key="id" bindtap="setTag" data-c="{{item.name}}">{{tr.t(item.name, lang)}}</button>
+  </view></scroll-view>
+  <template is="route-modes" data="{{count:list.length,modes:routeModes,mode:routeMode,loading:loading,lang:lang}}" />
+  <load-row wx:if="{{loading && !list.length}}" />
+  <view wx:if="{{err}}" class="rt-error"><view><view class="rt-error-title">{{tr.t('线路加载失败', lang)}}</view><view class="rt-error-note" wx:if="{{list.length}}">{{tr.t('已保留上次内容，可重新加载。', lang)}}</view></view><button class="rt-retry" bindtap="search">{{tr.t('重新加载', lang)}}</button></view>
+  <template is="route-cards" data="{{rows:list,mode:routeMode,lang:lang}}" />
+  <view wx:if="{{!loading && !list.length && !err}}" class="rt-empty"><view class="rt-empty-title">{{tr.t(q || days || tag ? '没有匹配的线路' : '正式线路正在整理，发布后会出现在这里。', lang)}}</view><view wx:if="{{q || days || tag}}">{{tr.t('换个天数或玩法，发现新的山野。', lang)}}</view><button wx:if="{{q || days || tag}}" class="rt-clear" bindtap="clearRouteFilters">{{tr.t('清空筛选', lang)}}</button></view>
+  <button class="rt-apply" bindtap="goApply"><view><view class="rt-apply-title">{{tr.t('有一条私藏路线？', lang)}}</view><view class="rt-apply-note">{{tr.t('申请收录，把喜欢的山野分享给同行。', lang)}}</view></view><text class="rt-apply-arrow" aria-hidden="true">↗</text></button>
 </view>

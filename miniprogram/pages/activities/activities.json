@@ -1,1 +1,8 @@
-{ "navigationBarTitleText": "同城局", "usingComponents": {} }
+{
+  "navigationBarTitleText": "同城活动",
+  "navigationBarBackgroundColor": "#f6f5f8",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#f6f5f8",
+  "enablePullDownRefresh": true,
+  "usingComponents": {}
+}

@@ -94,14 +94,35 @@ html[data-night="dark"] .home-page { --hero-surface: var(--cream); --hero-surfac
 .hero-photo-credit i { width: 1px; height: 10px; background: rgba(255,255,255,.55); }
 .home-page .live-pulse { margin: 14px 20px 0; border: 1px solid #f0edf2; }
 .home-pad { padding: 12px 20px 24px; }
-.campus-card { display: flex; align-items: center; gap: 12px; margin: 0 -2px 14px; padding: 12px 3px; background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; box-shadow: none; }
-.campus-mark, .organizer-icon { display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; border-radius: 8px; color: var(--thu); background: var(--thu-soft); }
-.campus-mark .travel-icon { width: 22px; height: 22px; }
-.campus-copy { min-width: 0; flex: 1; }
-.campus-copy strong { display: block; color: var(--ink); font-size: 13px; }
-.campus-copy p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
-.campus-cta { flex: none; color: var(--thu); font-size: 12px; font-weight: 650; }
-.home-page .campus-cta { color: var(--thu) !important; background: var(--thu-soft); }
+.campus-card {
+  --campus-ink: #5b3b8c; --campus-muted: #766183; --campus-edge: #d6c7e9;
+  --campus-pass: #fbf9ff; --campus-back: #e0d4ef; --campus-stamp: #79609c; --campus-button: #fff;
+  position: relative; overflow: hidden; display: flex; align-items: center; gap: 18px;
+  margin: 0 -2px 16px; padding: 17px 16px; border: 1px solid #e6def0; border-radius: 16px;
+  background: linear-gradient(110deg, #f6f1fc, #eee6f7 62%, #e9e1f3);
+}
+html[data-night="dark"] .campus-card { --campus-ink: #d6c1f1; --campus-muted: #b3a2c5; --campus-edge: #675177; --campus-pass: #3c304b; --campus-back: #4b3a5f; --campus-stamp: #c3a3e6; --campus-button: #49385d; background: linear-gradient(110deg, #302638, #292230); border-color: #46364f; }
+.campus-ridge { position: absolute; right: -12px; bottom: -50px; width: 140px; height: 130px; border: 1px solid var(--campus-edge); border-radius: 44%; transform: rotate(-24deg); opacity: .5; pointer-events: none; }
+.campus-ridge::before, .campus-ridge::after { content: ''; position: absolute; border: 1px solid var(--campus-edge); border-radius: 44%; }
+.campus-ridge::before { inset: 9px; }
+.campus-ridge::after { inset: 18px; }
+.campus-pass { position: relative; width: 42px; height: 52px; flex: 0 0 42px; color: var(--campus-ink); }
+.campus-pass-back { position: absolute; inset: 2px; border: 1px solid var(--campus-edge); border-radius: 7px; background: var(--campus-back); transform: rotate(-15deg) translate(-3px, 1px); }
+.campus-pass-face { position: absolute; inset: 2px 0; border: 1px solid var(--campus-edge); border-radius: 7px; background: var(--campus-pass); box-shadow: 0 4px 8px rgba(69,41,103,.06); transform: rotate(8deg); }
+.campus-pass-face > .travel-icon { position: absolute; top: 5px; left: 6px; width: 26px; height: 26px; stroke-width: 1.2; }
+.campus-pass-lines { position: absolute; left: 7px; bottom: 11px; width: 14px; height: 1px; border-radius: 1px; background: var(--campus-edge); box-shadow: 0 4px 0 var(--campus-edge); }
+.campus-pass-stamp { position: absolute; right: -5px; bottom: 3px; display: grid; place-items: center; width: 16px; height: 16px; border: 2px solid var(--campus-pass); border-radius: 50%; color: #fff; background: var(--campus-stamp); }
+.campus-pass-stamp .travel-icon { width: 10px; height: 10px; }
+.campus-copy { position: relative; min-width: 0; flex: 1; }
+.campus-eyebrow { display: flex; align-items: center; gap: 7px; color: var(--campus-muted); font-size: calc(9px * var(--ui-scale, 1)); line-height: 1.4; letter-spacing: .14em; }
+.campus-eyebrow i { width: 18px; height: 1px; background: var(--campus-edge); }
+.campus-copy strong { display: block; margin-top: 5px; color: var(--campus-ink); font-size: calc(16px * var(--ui-scale, 1)); font-weight: 600; line-height: 1.5; }
+.campus-card-footer { margin-top: 7px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.campus-copy p { margin: 0; min-width: 0; color: var(--campus-muted); font-size: calc(10px * var(--ui-scale, 1)); line-height: 1.6; }
+.home-page .campus-cta { display: inline-flex; align-items: center; gap: 7px; flex: none; padding: 5px 10px; border: 1px solid var(--campus-edge); border-radius: 999px; color: var(--campus-ink) !important; background: var(--campus-button); font-size: calc(11px * var(--ui-scale, 1)); font-weight: 500; line-height: 1.4; text-decoration: none; }
+.campus-cta > span { font-size: 14px; font-weight: 400; line-height: 1; }
+.campus-cta:hover { box-shadow: 0 2px 8px rgba(69,41,103,.1); }
+.organizer-icon { display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; border-radius: 8px; color: var(--thu); background: var(--thu-soft); }
 .organizer-section { padding: 6px 0 8px; }
 .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0 13px; }
 .section-heading h2 { margin: 4px 0 0; font-size: 15px; font-weight: 650; }
@@ -188,9 +209,9 @@ html[data-night="dark"] .home-page { --hero-surface: var(--cream); --hero-surfac
 .journey-shortcuts button:nth-child(4) > span { color: #738896; background: #e9f0f5; }
 .journey-shortcuts .travel-icon { width: 24px; height: 24px; }
 .journey-shortcuts strong { font-size: 12px; font-weight: 550; }
-.journey-shortcuts small { margin-top: -3px; color: var(--muted); font-size: 9px; white-space: nowrap; }
+.journey-shortcuts small { max-width: 100%; margin-top: -3px; color: var(--muted); font-size: 9px; line-height: 1.4; white-space: normal; text-align: center; }
 .destination-section { padding: 20px 0 14px; }
-.destination-caption { flex: none; color: #928b9a; font-size: 10px; }
+.destination-caption { flex: none; color: var(--thu); font-size: 10px; text-decoration: none; }
 .destination-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 9px; }
 .destination-card { position: relative; display: block; min-width: 0; height: 160px; overflow: hidden; padding: 0; border: 0; border-radius: 11px; text-align: left; color: #fff; background: #364934; cursor: pointer; }
 .destination-card > img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
@@ -201,7 +222,6 @@ html[data-night="dark"] .home-page { --hero-surface: var(--cream); --hero-surfac
 .destination-copy strong { font-size: 12px; line-height: 1.5; font-weight: 600; }
 .destination-copy em { display: none; font-style: normal; font-size: 11px; color: #ffffffb0; }
 .destination-card > .travel-icon { display: none; position: absolute; right: 17px; bottom: 20px; width: 18px; height: 18px; }
-.campus-cta { padding: 6px 10px; border: 0; border-radius: 999px; color: var(--thu); background: var(--thu-soft); }
 .home-seg { scroll-margin-top: 12px; }
 .home-pad:has(> .feed-card) > :not(.feed-card) { grid-column: 1/-1; }
 .mp-phone.is-account .mp-nav, .mp-phone.is-account .mp-nav h1, .mp-phone.is-account .nav-back { color: var(--ink); }
@@ -269,7 +289,7 @@ html[data-night="dark"] .home-page { --hero-surface: var(--cream); --hero-surfac
   .journey-shortcuts button { display: grid; grid-template-columns: 47px 1fr; grid-template-rows: 1fr 1fr; column-gap: 13px; row-gap: 4px; text-align: left; align-items: center; }
   .journey-shortcuts button > span { grid-row: 1/3; width: 47px; height: 47px; border-radius: 13px; }
   .journey-shortcuts strong { align-self: end; font-size: 14px; }
-  .journey-shortcuts small { align-self: start; margin: 0; font-size: 11px; }
+  .journey-shortcuts small { align-self: start; margin: 0; font-size: 11px; text-align: left; }
   .destination-section { padding: 16px 0 24px; }
   .destination-section .section-heading { padding-bottom: 19px; }
   .destination-grid { gap: 18px; }
@@ -283,7 +303,7 @@ html[data-night="dark"] .home-page { --hero-surface: var(--cream); --hero-surfac
   .destination-card > .travel-icon { display: block; }
   .destination-card:hover > img { transform: scale(1.04); }
   .home-seg { scroll-margin-top: 96px; }
-  .campus-card { margin-bottom: 14px; padding: 12px 0; }
+  .campus-card { margin-bottom: 14px; padding: 22px 26px; }
   .organizer-section { padding: 17px 0; }
   .section-heading h2 { font-size: 20px; }
   .section-eyebrow { font-size: 10px; }

@@ -2,7 +2,7 @@
   <div class="mine-page mine-retail">
     <template v-if="store.token && store.profile">
       <div class="account-toolbar">
-        <button class="account-member-pill" type="button" @click="openMember"><MineGlyph name="crown" /><span>同行会员</span><MineGlyph name="chevron" /></button>
+        <div class="account-space"><h1>我的</h1><p>每一程，都值得期待</p></div>
         <div class="account-tools">
           <button type="button" @click="$router.push('/m/official')"><MineGlyph name="headset" /><span>客服</span></button>
           <button type="button" @click="goAuth('/m/notices')"><span class="account-icon"><MineGlyph name="message" /><em v-if="hub.unreadCount" class="account-badge">{{ hub.unreadCount > 9 ? '9+' : hub.unreadCount }}</em></span><span>消息</span></button>
@@ -48,22 +48,9 @@
       </section>
 
       <section class="account-card account-orders" aria-label="我的行程">
-        <div class="account-history">
-          <button type="button" @click="goAuth('/m/views')">
-            <span>足迹</span>
-            <b v-if="hubReady">{{ hub.viewCount || 0 }}</b>
-            <span v-else class="spinner" aria-hidden="true"></span>
-          </button>
-          <button type="button" @click="goAuth('/m/favorites')">
-            <span>收藏</span>
-            <b v-if="hubReady">{{ hub.favoriteCount || 0 }}</b>
-            <span v-else class="spinner" aria-hidden="true"></span>
-          </button>
-          <button type="button" @click="goAuth('/m/follows')">
-            <span>关注</span>
-            <b v-if="hubReady">{{ hub.followCount || 0 }}</b>
-            <span v-else class="spinner" aria-hidden="true"></span>
-          </button>
+        <div class="account-section-head">
+          <h2>我的行程</h2>
+          <button class="account-all" type="button" @click="goOrders('all')"><span>全部订单</span><MineGlyph name="chevron" /></button>
         </div>
         <div class="account-order-row">
           <div class="account-shortcuts">
@@ -96,8 +83,22 @@
               <span>待评价</span>
             </button>
           </div>
-          <button class="account-all" type="button" @click="goOrders('all')">
-            <b>全部</b><span class="account-circle-arrow"><MineGlyph name="chevron" /></span>
+        </div>
+        <div class="account-history">
+          <button type="button" @click="goAuth('/m/views')">
+            <span>足迹</span>
+            <b v-if="hubReady">{{ hub.viewCount || 0 }}</b>
+            <span v-else class="spinner" aria-hidden="true"></span>
+          </button>
+          <button type="button" @click="goAuth('/m/favorites')">
+            <span>收藏</span>
+            <b v-if="hubReady">{{ hub.favoriteCount || 0 }}</b>
+            <span v-else class="spinner" aria-hidden="true"></span>
+          </button>
+          <button type="button" @click="goAuth('/m/follows')">
+            <span>关注</span>
+            <b v-if="hubReady">{{ hub.followCount || 0 }}</b>
+            <span v-else class="spinner" aria-hidden="true"></span>
           </button>
         </div>
       </section>

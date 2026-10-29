@@ -5,57 +5,84 @@
   <view class="section-title">{{tr.t('发起一场同行', lang)}}</view>
   <view class="pub-lead">{{tr.t('选好线路与出发时间，再决定由谁发起、谁可以报名。', lang)}}</view>
 </view>
+<view class="pub-page-head" wx:if="{{form.channel=='activity'}}"><view class="section-kicker">CREATE A CITY MOMENT</view><view class="section-title">{{tr.t('好时光，由你发起', lang)}}</view><view class="pub-lead">{{tr.t('把兴趣、时间和地点说清楚，让同好放心加入。', lang)}}</view></view>
 <view class="pub-intro" wx:if="{{form.channel=='activity'}}">{{tr.t('提交后需审核，通过后出现在活动 Tab。', lang)}}</view>
 
-<block wx:if="{{form.channel=='activity'}}">
+<view class="pub-activity {{dark?'is-dark':''}}" wx:if="{{form.channel=='activity'}}">
   <view class="pub-card">
-    <view class="pub-h">{{tr.t('玩法', lang)}}</view>
+    <view class="pub-h">{{tr.t('01 选一种共同的喜欢', lang)}}</view>
     <view class="kind-grid">
       <view class="act-kind {{form.activityKind==item.key?'on':''}}" wx:for="{{kinds}}" wx:key="key" bindtap="pickKind" data-key="{{item.key}}">
-        <view class="emoji">{{tr.t(item.emoji, lang)}}</view>
+        <view class="pub-interest-icon {{item.slug}}" aria-hidden="true">
+          <block wx:if="{{item.slug=='cards'}}"><view class="pub-art-card back"></view><view class="pub-art-card front"><view class="pub-art-diamond"></view></view></block>
+          <block wx:elif="{{item.slug=='run'}}"><view class="pub-art-head"></view><view class="pub-art-body"></view><view class="pub-art-arm"></view><view class="pub-art-leg first"></view><view class="pub-art-leg second"></view><view class="pub-art-speed"></view></block>
+          <block wx:elif="{{item.slug=='movie'}}"><view class="pub-art-film"><view class="pub-art-film-hole"></view><view class="pub-art-play"></view></view></block>
+          <block wx:else><view class="pub-art-person one"></view><view class="pub-art-person two"></view><view class="pub-art-shoulder one"></view><view class="pub-art-shoulder two"></view><view class="pub-art-star"></view></block>
+        </view>
         <view>{{tr.t(item.label, lang)}}</view>
       </view>
     </view>
-    <view class="pub-label">{{tr.t('标题', lang)}}</view>
-    <input class="pub-field" placeholder="{{tr.t('标题，例如周五夜掼蛋', lang)}}" value="{{form.title}}" bindinput="setField" data-k="title" />
+    <view class="pub-kind-guide"><view>{{tr.t(selectedActivityKind.title, lang)}}</view><text>{{tr.t(selectedActivityKind.description, lang)}}</text></view>
+    <view class="pub-label">{{tr.t('活动名称', lang)}}</view>
+    <input class="pub-field" placeholder="{{tr.t(selectedActivityKind.titlePlaceholder, lang)}}" maxlength="60" value="{{form.title}}" bindinput="setField" data-k="title" />
     <view class="field-error" wx:if="{{errors.title}}">{{tr.t(errors.title, lang)}}</view>
-    <view class="pub-label">{{tr.t('地点', lang)}}</view>
+  </view>
+  <view class="pub-card">
+    <view class="pub-h">{{tr.t('02 把见面的细节定下来', lang)}}</view>
+    <view class="pub-label">{{tr.t('具体集合地点', lang)}}</view>
     <input class="pub-field" placeholder="{{tr.t('地点，例如三里屯太古里', lang)}}" value="{{form.meetupPoint}}" bindinput="setField" data-k="meetupPoint" />
     <view class="field-error" wx:if="{{errors.meetupPoint}}">{{tr.t(errors.meetupPoint, lang)}}</view>
     <view class="pub-label">{{tr.t('城区', lang)}}</view>
     <picker mode="selector" range="{{cityNames}}" value="{{cityIndex}}" bindchange="setCityPick">
       <view class="pub-pick">{{tr.t(form.city || '选择城区', lang)}}</view>
     </picker>
+    <view class="field-error" wx:if="{{errors.city}}">{{tr.t(errors.city, lang)}}</view>
     <view class="pub-row">
       <view class="pub-col">
         <view class="pub-label">{{tr.t('日期', lang)}}</view>
         <picker mode="selector" range="{{dateLabels}}" value="{{dateIndex}}" bindchange="setDate">
           <view class="pub-pick">{{tr.t(dateLabels[dateIndex], lang)}}</view>
         </picker>
+        <view class="field-error" wx:if="{{errors.startDate}}">{{tr.t(errors.startDate, lang)}}</view>
       </view>
       <view class="pub-col">
         <view class="pub-label">{{tr.t('时间', lang)}}</view>
         <picker mode="time" value="{{form.meetupTime}}" bindchange="setMeetupTime">
           <view class="pub-pick">{{form.meetupTime}}</view>
         </picker>
+        <view class="field-error" wx:if="{{errors.meetupTime}}">{{tr.t(errors.meetupTime, lang)}}</view>
       </view>
     </view>
     <view class="pub-row">
       <view class="pub-col">
         <view class="pub-label">{{tr.t('最少几人成局', lang)}}</view>
         <input class="pub-field" type="number" placeholder="{{tr.t('最少几人成局', lang)}}" value="{{form.minGroupSize}}" bindinput="setField" data-k="minGroupSize" />
+        <view class="field-error" wx:if="{{errors.minGroupSize}}">{{tr.t(errors.minGroupSize, lang)}}</view>
       </view>
       <view class="pub-col">
         <view class="pub-label">{{tr.t('人数上限', lang)}}</view>
         <input class="pub-field" type="number" placeholder="{{tr.t('人数上限', lang)}}" value="{{form.maxSeats}}" bindinput="setField" data-k="maxSeats" />
+        <view class="field-error" wx:if="{{errors.maxSeats}}">{{tr.t(errors.maxSeats, lang)}}</view>
       </view>
     </view>
     <view class="pub-label">{{tr.t('费用（元，0 为免费）', lang)}}</view>
-    <input class="pub-field" type="number" placeholder="{{tr.t('费用（元，0 为免费）', lang)}}" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
-    <view class="pub-label">{{tr.t('介绍', lang)}}</view>
-    <textarea class="pub-field pub-area" placeholder="{{tr.t('介绍：带什么、几点开始、怎么找人', lang)}}" value="{{form.description}}" bindinput="setField" data-k="description" />
+    <input class="pub-field" type="digit" placeholder="{{tr.t('费用（元，0 为免费）', lang)}}" value="{{form.originPrice}}" bindinput="setField" data-k="originPrice" />
+    <view class="field-error" wx:if="{{errors.originPrice}}">{{tr.t(errors.originPrice, lang)}}</view>
+    <view class="pub-note">{{tr.t('费用填 0 为免费；如有场地、茶位或票款，请在下面说明。', lang)}}</view>
   </view>
-</block>
+  <view class="pub-card">
+    <view class="pub-h">{{tr.t('03 让大家报名前就了解', lang)}}</view>
+    <view class="pub-kind-guide"><view>{{tr.t(selectedActivityKind.title, lang)}}</view><text>{{tr.t(selectedActivityKind.notice, lang)}}</text></view>
+    <block wx:for="{{activityFields}}" wx:key="key">
+      <view class="pub-label">{{tr.t(item.label, lang)}}<text wx:if="{{!item.required}}"> · {{tr.t('选填', lang)}}</text></view>
+      <input class="pub-field" placeholder="{{tr.t(item.placeholder, lang)}}" value="{{form.activityDetails[item.key]}}" maxlength="120" bindinput="setActivityField" data-key="{{item.key}}" />
+    </block>
+    <view class="field-error" wx:if="{{errors.activityDetails}}">{{tr.t(errors.activityDetails, lang)}}</view>
+    <view class="pub-label">{{tr.t('补充介绍 · 选填', lang)}}</view>
+    <textarea class="pub-field pub-area" placeholder="{{tr.t(selectedActivityKind.descriptionPlaceholder, lang)}}" value="{{form.description}}" bindinput="setField" data-k="description" maxlength="1200" />
+
+  </view>
+</view>
 
 <view class="sheet" wx:else>
   <view class="line">

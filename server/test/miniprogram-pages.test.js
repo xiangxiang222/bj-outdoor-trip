@@ -10,19 +10,44 @@ function pageHarness(pageName, options = {}) {
   const filename = path.resolve(__dirname, "../../miniprogram/pages", pageName, `${pageName}.js`);
   const localRequire = createRequire(filename);
   const app = options.app || { globalData: { token: "test-token", user: {} } };
-  const calls = { redirects: [], scrolls: [], titles: [] };
+  const calls = { redirects: [], navigations: [], scrolls: [], titles: [], requests: [], auth: [], campusPicks: [], media: [], uploads: [], modals: [], toasts: [], tabs: [], previews: [] };
+  const storage = new Map(Object.entries(options.storage || {}));
   let definition;
   const context = {
     require(id) {
-      if (id === "../../utils/request") return { request: options.request || (() => Promise.resolve({ data: {} })), setAuth() {} };
+      if (id === "../../utils/request") return {
+        request(...args) {
+          calls.requests.push(args);
+          return options.request ? options.request(...args) : Promise.resolve({ data: {} });
+        },
+        setAuth(token, user) {
+          app.globalData.token = token;
+          app.globalData.user = user;
+          calls.auth.push({ token, user });
+        },
+      };
+      if (id === "../../utils/appearance") return { isDark: () => !!options.dark };
+      if (pageName === "student" && id === "../../utils/campus") return { openCampusPick(value) { calls.campusPicks.push(value); } };
+      if (pageName === "student" && id === "../../utils/media") return { absMedia: (url) => url && url.startsWith("/") ? "https://example.test" + url : url };
       return localRequire(id);
     },
     Page(value) { definition = value; },
     getApp() { return app; },
     wx: {
       redirectTo(value) { calls.redirects.push(value); },
+      navigateTo(value) { calls.navigations.push(value); },
       pageScrollTo(value) { calls.scrolls.push(value); },
       setNavigationBarTitle(value) { calls.titles.push(value); },
+      chooseMedia(value) { calls.media.push(value); },
+      uploadFile(value) { calls.uploads.push(value); },
+      showModal(value) { calls.modals.push(value); },
+      showToast(value) { calls.toasts.push(value); },
+      showLoading() {},
+      hideLoading() {},
+      switchTab(value) { calls.tabs.push(value); },
+      previewImage(value) { calls.previews.push(value); },
+      getStorageSync(key) { return storage.get(key); },
+      setStorageSync(key, value) { storage.set(key, value); },
     },
     setTimeout,
     clearTimeout,
@@ -37,12 +62,33 @@ function pageHarness(pageName, options = {}) {
       target[keys[keys.length - 1]] = value;
     }
   };
-  return { page, calls };
+  return { page, calls, app };
+}
+
+function studentHarness(options = {}) {
+  const harness = pageHarness("student", options);
+  harness.page.onLoad({});
+  return harness;
 }
 
 describe("native mini-program page behavior", () => {
-  it("opens campus discovery with a clean filter and keeps advanced filters collapsed", () => {
-    const { page, calls } = pageHarness("index");
+  it("keeps campus browsing and campus verification on separate home entrances", () => {
+    const template = fs.readFileSync(path.resolve(__dirname, "../../miniprogram/pages/index/index.wxml"), "utf8");
+    const shortcuts = Array.from(template.matchAll(/<view class="quick-entry"([^>]*)>/g));
+    assert.equal(shortcuts.length, 4);
+    assert.match(shortcuts[1][1], /bindtap="goPublish"/);
+    assert.match(shortcuts[1][1], /data-kind="campus"/);
+    assert.match(shortcuts[2][1], /bindtap="goPublish"/);
+    assert.match(shortcuts[2][1], /data-kind="company"/);
+    assert.match(shortcuts[3][1], /bindtap="quickHost"/);
+    assert.match(shortcuts[3][1], /data-kind="campus"/);
+    const banner = template.match(/<view\b(?=[^>]*class="campus-card(?:\s[^"]*)?")[^>]*>/);
+    assert.ok(banner, "campus verification banner is present");
+    assert.match(banner[0], /\bbindtap="goStudent"/);
+  });
+
+  it("opens campus discovery anonymously with a clean filter and keeps advanced filters collapsed", () => {
+    const { page, calls } = pageHarness("index", { app: { globalData: { token: "", user: {} } } });
     page.setData({
       view: "routes", "fold.extra": true, query: "长城", city: "怀柔", date: "2026-10-31",
       tag: "登山", offerFilter: "deal", festivalKey: "holiday", monthPicked: true,
@@ -59,38 +105,368 @@ describe("native mini-program page behavior", () => {
     assert.equal(page.data.monthPicked, false);
     assert.deepEqual(Array.from(page.data.picked, (item) => item.key), ["host"]);
     assert.equal(calls.scrolls[0].selector, "#explore");
+    assert.equal(calls.navigations.length, 0);
+    assert.equal(calls.redirects.length, 0);
   });
 
-  it("switches advanced filter sections without applying queries or clearing selected filters", () => {
+  it("takes campus verification to login with a return path only when anonymous", () => {
+    const { page, calls } = pageHarness("index", { app: { globalData: { token: "", user: {} } } });
+    page.goStudent();
+    assert.equal(calls.navigations.length, 1);
+    const login = new URL(calls.navigations[0].url, "https://test.invalid");
+    assert.equal(login.pathname, "/pages/login/login");
+    assert.equal(login.searchParams.get("redirect"), "/pages/student/student");
+
+    const signedIn = pageHarness("index");
+    signedIn.page.goStudent();
+    assert.equal(signedIn.calls.navigations.length, 1);
+    assert.equal(signedIn.calls.navigations[0].url, "/pages/student/student");
+  });
+
+  it("refreshes the campus action when returning from verification without making requests", () => {
+    const app = { globalData: { token: "test-token", user: {} } };
+    let requests = 0;
+    const { page } = pageHarness("index", { app, request() { requests++; return Promise.resolve({ data: {} }); } });
+    assert.equal(page.data.campusAction, "去认证");
+    for (const [user, expected] of [
+      [{}, "去认证"],
+      [{ studentStatus: "pending" }, "认证进度"],
+      [{ isStudent: true, studentStatus: "pending" }, "已认证"],
+      [{ isAlumni: true }, "已认证"],
+      [{ studentStatus: "rejected" }, "去认证"],
+      [{}, "去认证"],
+    ]) {
+      app.globalData.user = user;
+      page.onShow();
+      assert.equal(page.data.campusAction, expected);
+      assert.equal(page.data.campusDark, false);
+    }
+    assert.equal(requests, 0);
+    const dark = pageHarness("index", { dark: true });
+    dark.page.onShow();
+    assert.equal(dark.page.data.campusDark, true);
+  });
+
+  it("keeps more filters limited to offers and scope without changing the selected departure date", () => {
     const { page } = pageHarness("index");
-    assert.equal(page.data.filterSection, "date");
     let queryRuns = 0;
     page.applyGroups = () => { queryRuns++; };
     page.setData({
-      "fold.extra": true, filterSection: "date", date: "2026-10-31", monthKey: "2026-10",
-      monthPicked: true, festivalKey: "new-year", offerFilter: "free", hostKind: "campus", school: "某大学",
-      groups: [{ id: 27 }], picked: [{ key: "date", label: "10-31" }, { key: "offer", label: "免费团" }],
+      date: "2026-10-31", timePreset: "any", offerFilter: "free", hostKind: "campus", school: "某大学",
+      groups: [{ id: 27 }], picked: [{ key: "time", label: "2026.10.31" }, { key: "offer", label: "免费团" }],
     });
-
-    page.setFilterSection({ currentTarget: { dataset: { section: "options" } } });
-    assert.equal(page.data.filterSection, "options");
-    page.setFilterSection({ currentTarget: { dataset: { section: "date" } } });
-    assert.equal(page.data.filterSection, "date");
-    assert.equal(queryRuns, 0);
-    assert.equal(page.data.date, "2026-10-31");
-    assert.equal(page.data.monthPicked, true);
-    assert.equal(page.data.festivalKey, "new-year");
-    assert.equal(page.data.offerFilter, "free");
-    assert.equal(page.data.school, "某大学");
-    assert.deepEqual(Array.from(page.data.picked, (item) => item.key), ["date", "offer"]);
-
+    page.toggleFold({ currentTarget: { dataset: { key: "extra" } } });
+    assert.equal(page.data.fold.extra, true);
     page.toggleFold({ currentTarget: { dataset: { key: "extra" } } });
     assert.equal(page.data.fold.extra, false);
+    assert.equal(queryRuns, 0);
     assert.equal(page.data.date, "2026-10-31");
     assert.equal(page.data.offerFilter, "free");
-    page.toggleFold({ currentTarget: { dataset: { key: "extra" } } });
-    assert.equal(page.data.filterSection, "date");
-    assert.equal(page.data.date, "2026-10-31");
+    assert.equal(page.data.school, "某大学");
+    assert.deepEqual(Array.from(page.data.picked, (item) => item.key), ["time", "offer"]);
+    const template = fs.readFileSync(path.resolve(__dirname, "../../miniprogram/pages/index/index.wxml"), "utf8");
+    assert.match(template, /departure-extra-panel/);
+    assert.match(template, /优惠与范围/);
+    assert.doesNotMatch(template, /class="(?:calendar-scroll|month-grid|filter-sections)"/);
+  });
+
+  it("keeps anonymous campus certification local until an upload or submission requires login", async () => {
+    const { page, calls } = studentHarness({ app: { globalData: { token: "", user: {} } }, dark: true });
+    page.onShow();
+    await page.refreshStatus();
+    assert.equal(page.data.dark, true);
+    assert.equal(page.data.certified, false);
+    assert.equal(page.data.pending, false);
+    assert.equal(page.data.refreshing, false);
+    assert.equal(calls.requests.length, 0);
+
+    page.pickCard();
+    await page.submit();
+    assert.equal(calls.media.length, 0);
+    assert.equal(calls.requests.length, 0);
+    assert.equal(calls.navigations.length, 2);
+    for (const navigation of calls.navigations) {
+      const login = new URL(navigation.url, "https://test.invalid");
+      assert.equal(login.pathname, "/pages/login/login");
+      assert.equal(login.searchParams.get("redirect"), "/pages/student/student");
+    }
+  });
+
+  it("preserves alumni identity, certificate and deliberate clears when campus pickers return", () => {
+    const profile = { campusKind: "student", school: "旧学校", college: "旧学院", major: "旧专业", studentNo: "12345", studentCardUrl: "/static/uploads/old.png" };
+    const { page, calls } = studentHarness();
+    page.syncUser(profile);
+    page.setKind({ currentTarget: { dataset: { kind: "alumni" } } });
+    page.onNo({ detail: { value: "" } });
+    page.setData({ errors: { school: "旧错误", college: "旧错误", major: "旧错误" } });
+    page.pickSchool();
+    calls.campusPicks.at(-1).onPick(["新学校"]);
+    page.syncUser(profile);
+    assert.equal(page.data.campusKind, "alumni");
+    assert.equal(page.data.studentNo, "");
+    assert.equal(page.data.studentCardUrl, profile.studentCardUrl);
+    assert.equal(page.data.school, "新学校");
+    assert.equal(page.data.college, "");
+    assert.equal(page.data.major, "");
+    assert.ok(!page.data.errors.school);
+    assert.ok(!page.data.errors.college);
+    assert.ok(!page.data.errors.major);
+
+    page.pickCollege();
+    assert.equal(calls.campusPicks.at(-1).school, "新学校");
+    calls.campusPicks.at(-1).onPick(["新学院"]);
+    page.pickMajor();
+    assert.equal(calls.campusPicks.at(-1).college, "新学院");
+    calls.campusPicks.at(-1).onPick(["新专业"]);
+    page.pickSchool();
+    calls.campusPicks.at(-1).onPick([]);
+    page.syncUser(profile);
+    for (const key of ["school", "college", "major", "studentNo"]) assert.equal(page.data[key], "", `keeps cleared ${key}`);
+    assert.equal(page.data.campusKind, "alumni");
+  });
+
+  it("locks pending and approved certification against editing, uploading and resubmitting", async () => {
+    for (const status of [
+      { studentStatus: "pending" },
+      { studentStatus: "approved", isStudent: true },
+      { studentStatus: "approved", isAlumni: true, campusKind: "alumni" },
+    ]) {
+      const { page, calls } = studentHarness();
+      page.syncUser({ school: "北京大学", studentNo: "12345", studentCardUrl: "/static/uploads/card.png", ...status });
+      const before = [page.data.campusKind, page.data.school, page.data.studentNo, page.data.studentCardUrl];
+      page.setKind({ currentTarget: { dataset: { kind: page.data.campusKind === "alumni" ? "student" : "alumni" } } });
+      page.onNo({ detail: { value: "99999" } });
+      page.pickSchool();
+      page.pickCollege();
+      page.pickMajor();
+      page.pickCard();
+      await page.submit();
+      assert.deepEqual([page.data.campusKind, page.data.school, page.data.studentNo, page.data.studentCardUrl], before);
+      assert.equal(calls.campusPicks.length, 0);
+      assert.equal(calls.media.length, 0);
+      assert.equal(calls.requests.length, 0);
+    }
+  });
+
+  it("refreshes a cached pending certification once and shows the approved server record", async () => {
+    let resolveRequest;
+    const { page, calls, app } = studentHarness({ request: () => new Promise((resolve) => { resolveRequest = resolve; }) });
+    page.syncUser({ campusKind: "student", studentStatus: "pending", school: "旧学校" });
+    assert.equal(page.data.pending, true);
+    const first = page.refreshStatus();
+    const duplicate = page.refreshStatus();
+    assert.equal(calls.requests.length, 1);
+    assert.equal(calls.requests[0][0], "/me");
+    assert.equal(page.data.refreshing, true);
+    const approved = { campusKind: "alumni", studentStatus: "approved", isAlumni: true, school: "审核学校", studentCardUrl: "/static/uploads/approved.png" };
+    resolveRequest({ data: approved });
+    await first;
+    await duplicate;
+    assert.equal(page.data.certified, true);
+    assert.equal(page.data.pending, false);
+    assert.equal(page.data.campusKind, "alumni");
+    assert.equal(page.data.school, "审核学校");
+    assert.equal(page.data.studentCardUrl, approved.studentCardUrl);
+    assert.equal(page.data.refreshing, false);
+    assert.equal(page.data.refreshError, "");
+    assert.equal(app.globalData.user, approved);
+    assert.equal(calls.auth.length, 1);
+  });
+
+  it("hydrates an untouched empty cache with the latest rejected certification record", async () => {
+    const rejected = { campusKind: "alumni", studentStatus: "rejected", school: "北京大学", college: "信息学院", major: "计算机科学", studentNo: "", studentCardUrl: "/static/uploads/rejected.png" };
+    const { page, calls, app } = studentHarness({ request: () => Promise.resolve({ data: rejected }) });
+    await page.onShow();
+    assert.equal(calls.requests.length, 1);
+    assert.equal(page.data.rejected, true);
+    assert.equal(page.data.pending, false);
+    assert.equal(page.data.certified, false);
+    for (const key of ["campusKind", "school", "college", "major", "studentNo", "studentCardUrl"]) assert.equal(page.data[key], rejected[key]);
+    assert.equal(page.data.cardPreviewUrl, "https://example.test/static/uploads/rejected.png");
+    assert.equal(app.globalData.user, rejected);
+  });
+
+  it("keeps certification drafts through refresh failures and a later successful retry", async () => {
+    let fail = true;
+    const old = { campusKind: "student", studentStatus: "rejected", school: "旧学校", studentNo: "12345" };
+    const { page, calls } = studentHarness({ request() {
+      return fail ? Promise.reject(new Error("网络暂不可用")) : Promise.resolve({ data: old });
+    } });
+    page.syncUser(old);
+    page.setKind({ currentTarget: { dataset: { kind: "alumni" } } });
+    page.setData({ school: "草稿学校", college: "", major: "", studentNo: "", studentCardUrl: "/static/uploads/draft.png" });
+    await page.refreshStatus();
+    assert.equal(page.data.refreshing, false);
+    assert.ok(page.data.refreshError);
+    assert.equal(page.data.rejected, true);
+    fail = false;
+    await page.refreshStatus();
+    assert.equal(calls.requests.length, 2);
+    assert.equal(page.data.refreshError, "");
+    assert.equal(page.data.campusKind, "alumni");
+    assert.equal(page.data.school, "草稿学校");
+    assert.equal(page.data.studentNo, "");
+    assert.equal(page.data.studentCardUrl, "/static/uploads/draft.png");
+  });
+
+  it("validates student evidence and dependent campus selections before requesting review", async () => {
+    for (const [patch, expected] of [
+      [{ studentNo: " 123 " }, /学号/],
+      [{ studentCardUrl: "" }, /上传|照片|证/],
+      [{ school: "", college: "学院", major: "" }, /学校/],
+      [{ school: "学校", college: "", major: "专业" }, /学院/],
+    ]) {
+      const { page, calls } = studentHarness();
+      page.syncUser({});
+      page.setData({ campusKind: "student", studentNo: "1234", studentCardUrl: "/static/uploads/card.png", school: "", college: "", major: "", ...patch });
+      await page.submit();
+      assert.equal(calls.requests.length, 0);
+      assert.equal(page.data.loading, false);
+      assert.match(JSON.stringify(page.data.errors), expected);
+    }
+  });
+
+  it("submits alumni without an optional school or student number and caches the pending result", async () => {
+    const pending = { campusKind: "alumni", studentStatus: "pending", school: "", college: "", major: "", studentNo: "", studentCardUrl: "/static/uploads/alumni.png" };
+    const { page, calls, app } = studentHarness({ request: () => Promise.resolve({ data: pending }) });
+    page.syncUser({});
+    page.setData({ campusKind: "alumni", school: "", college: "", major: "", studentNo: "", studentCardUrl: pending.studentCardUrl });
+    await page.submit();
+    assert.equal(calls.requests.length, 1);
+    assert.equal(calls.requests[0][0], "/me/student");
+    assert.equal(calls.requests[0][1], "POST");
+    assert.equal(calls.requests[0][2].campusKind, "alumni");
+    assert.equal(calls.requests[0][2].studentNo, "");
+    assert.equal(calls.requests[0][2].studentCardUrl, pending.studentCardUrl);
+    assert.equal(page.data.pending, true);
+    assert.equal(page.data.loading, false);
+    assert.equal(app.globalData.user, pending);
+    assert.equal(calls.scrolls.at(-1).selector, "#cert-result");
+  });
+
+  it("does not let an earlier status refresh overwrite a successful certification submission", async () => {
+    let resolveRefresh;
+    const pending = { campusKind: "alumni", studentStatus: "pending", school: "草稿学校", studentNo: "", studentCardUrl: "/static/uploads/submitted.png" };
+    const { page, calls, app } = studentHarness({ request(url) {
+      return url === "/me" ? new Promise((resolve) => { resolveRefresh = resolve; }) : Promise.resolve({ data: pending });
+    } });
+    page.syncUser({});
+    const refresh = page.refreshStatus();
+    page.setData({ campusKind: "alumni", school: pending.school, studentCardUrl: pending.studentCardUrl });
+    await page.submit();
+    assert.equal(page.data.pending, true);
+    assert.equal(calls.auth.length, 1);
+    resolveRefresh({ data: { campusKind: "student", studentStatus: "rejected", school: "过期资料", studentCardUrl: "/static/uploads/old.png" } });
+    await refresh;
+    assert.equal(page.data.pending, true);
+    assert.equal(page.data.rejected, false);
+    assert.equal(page.data.campusKind, "alumni");
+    assert.equal(page.data.school, pending.school);
+    assert.equal(page.data.studentCardUrl, pending.studentCardUrl);
+    assert.equal(app.globalData.user, pending);
+    assert.equal(calls.auth.length, 1);
+    assert.equal(page.data.refreshing, false);
+    assert.equal(page.data.refreshError, "");
+  });
+
+  it("deduplicates certification submissions and preserves the draft when review submission fails", async () => {
+    let rejectRequest;
+    const { page, calls } = studentHarness({ request: () => new Promise((_resolve, reject) => { rejectRequest = reject; }) });
+    page.syncUser({});
+    page.setData({ campusKind: "student", studentNo: "12345", studentCardUrl: "/static/uploads/card.png", school: "北京大学" });
+    const first = page.submit();
+    await page.submit();
+    assert.equal(page.data.loading, true);
+    assert.equal(calls.requests.length, 1);
+    rejectRequest(new Error("提交暂不可用"));
+    await first;
+    assert.equal(page.data.loading, false);
+    assert.match(page.data.errors.submit, /提交暂不可用/);
+    assert.equal(page.data.school, "北京大学");
+    assert.equal(page.data.studentNo, "12345");
+    assert.equal(page.data.studentCardUrl, "/static/uploads/card.png");
+    assert.equal(calls.auth.length, 0);
+  });
+
+  it("rejects oversized and unsupported certificate photos before uploading", async () => {
+    for (const file of [
+      { tempFilePath: "/tmp/oversized.jpg", size: 5 * 1024 * 1024 + 1 },
+      { tempFilePath: "/tmp/unsupported.gif", size: 200 },
+    ]) {
+      const { page, calls } = studentHarness();
+      page.syncUser({});
+      page.pickCard();
+      assert.equal(calls.media.length, 1);
+      await calls.media[0].success({ tempFiles: [file] });
+      assert.equal(calls.uploads.length, 0);
+      assert.equal(page.data.uploading, false);
+      assert.ok(page.data.errors.card || calls.modals.length || calls.toasts.length);
+    }
+  });
+
+  it("blocks submission while a certificate uploads and keeps the previous photo on upload failure", async () => {
+    const { page, calls } = studentHarness();
+    page.syncUser({});
+    page.setData({ campusKind: "student", studentNo: "12345", studentCardUrl: "/static/uploads/old.png" });
+    page.pickCard();
+    const selected = calls.media[0].success({ tempFiles: [{ tempFilePath: "/tmp/new.png", size: 300 }] });
+    assert.equal(page.data.uploading, true);
+    assert.equal(calls.uploads.length, 1);
+    page.pickCard();
+    await page.submit();
+    assert.equal(calls.media.length, 1);
+    assert.equal(calls.requests.length, 0);
+    calls.uploads[0].fail({ errMsg: "uploadFile:fail offline" });
+    await selected;
+    assert.equal(page.data.uploading, false);
+    assert.equal(page.data.studentCardUrl, "/static/uploads/old.png");
+    assert.ok(page.data.errors.card || calls.modals.length || calls.toasts.length);
+  });
+
+  it("previews a newly uploaded certificate remotely while retaining its original submission URL", async () => {
+    const { page, calls } = studentHarness({ app: { globalData: { token: "test-token", user: {}, baseUrl: "https://example.test" } } });
+    page.syncUser({});
+    page.pickCard();
+    const selected = calls.media[0].success({ tempFiles: [{ tempFilePath: "/tmp/card.webp", size: 300 }] });
+    const upload = calls.uploads[0];
+    assert.equal(upload.url, "https://example.test/api/upload");
+    assert.equal(upload.header.Authorization, "Bearer test-token");
+    upload.success({ statusCode: 200, data: JSON.stringify({ ok: true, data: { url: "/static/uploads/card.webp" } }) });
+    await selected;
+    assert.equal(page.data.uploading, false);
+    assert.equal(page.data.studentCardUrl, "/static/uploads/card.webp");
+    assert.equal(page.data.cardPreviewUrl, "https://example.test/static/uploads/card.webp");
+  });
+
+  it("ignores a certification status response after the page has unloaded", async () => {
+    let resolveRequest;
+    const { page, calls } = studentHarness({ request: () => new Promise((resolve) => { resolveRequest = resolve; }) });
+    page.syncUser({ studentStatus: "pending" });
+    const first = page.refreshStatus();
+    page.onUnload();
+    resolveRequest({ data: { studentStatus: "approved", isStudent: true, school: "过期响应" } });
+    await first;
+    assert.equal(page.data.certified, false);
+    assert.equal(page.data.school, "");
+    assert.equal(calls.auth.length, 0);
+  });
+
+  it("returns from certification to public campus discovery without requiring verified identity", () => {
+    const { page, calls, app } = studentHarness({ app: { globalData: { token: "", user: {} } } });
+    page.goDiscover();
+    assert.equal(app.globalData.homeCampus, true);
+    assert.equal(calls.tabs.length, 1);
+    assert.equal(calls.tabs[0].url, "/pages/index/index");
+    assert.equal(calls.navigations.length, 0);
+    const home = pageHarness("index", { app });
+    home.page.setData({ view: "routes", hostKind: "company", query: "旧搜索", "fold.extra": true });
+    home.page.onShow();
+    assert.equal(app.globalData.homeCampus, false);
+    assert.equal(home.page.data.view, "trips");
+    assert.equal(home.page.data.hostKind, "campus");
+    assert.equal(home.page.data.query, "");
+    assert.equal(home.page.data.fold.extra, false);
+    assert.equal(home.calls.scrolls.at(-1).selector, "#explore");
   });
 
   it("previews a higher membership tier without changing the current badge or real progress", () => {

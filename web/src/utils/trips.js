@@ -1,14 +1,43 @@
 export function todayYmd(now = new Date()) {
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  const date = new Date(new Date(now).getTime() + 8 * 60 * 60 * 1000);
+  return date.toISOString().slice(0, 10);
+}
+
+function validTripDay(value) {
+  const text = String(value || "").slice(0, 10);
+  const stamp = Date.parse(text + "T00:00:00Z");
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) && Number.isFinite(stamp) && new Date(stamp).toISOString().slice(0, 10) === text ? text : "";
+}
+
+export function tripEndDay(row) {
+  if (!row) return "";
+  const start = validTripDay(row.start_date || row.startDate);
+  const end = validTripDay(row.end_date || row.endDate);
+  return end && (!start || end >= start) ? end : start;
+}
+
+function completedTrip(row) {
+  return Boolean(row && (row.completed === true || row.completed_at || row.completedAt || ["finished", "completed", "ended"].includes(row.schedule_status || row.scheduleStatus)));
+}
+
+export function isEndedTrip(row, today = todayYmd()) {
+  if (!row || row.status !== "joined" || row.schedule_status === "cancelled" || row.scheduleStatus === "cancelled" || row.pay_status === "refunded") return false;
+  if (isGroupTrip(row) && !isFormedTrip(row)) return false;
+  const end = tripEndDay(row);
+  return completedTrip(row) || Boolean(end && end < today);
 }
 
 export function isUpcomingTrip(row, today = todayYmd()) {
-  if (!row) return false;
-  if (row.status === "cancelled" || row.schedule_status === "cancelled") return false;
-  return String(row.start_date || row.startDate || "").slice(0, 10) >= today;
+  if (!row || row.status === "cancelled" || row.schedule_status === "cancelled" || row.scheduleStatus === "cancelled" || completedTrip(row) || row.pay_status === "refunded") return false;
+  const end = tripEndDay(row);
+  return Boolean(end && end >= today);
+}
+
+export function normalizeTripTab(raw) {
+  const tab = String(raw || "");
+  if (tab === "upcoming") return "depart";
+  if (["completed", "finished", "past"].includes(tab)) return "ended";
+  return ["all", "unpaid", "recruiting", "depart", "review", "waitlist", "refund", "ended"].includes(tab) ? tab : "";
 }
 
 export function isWaitlistTrip(row) {
@@ -42,7 +71,7 @@ function isGroupTrip(row) {
 
 export function isFormedTrip(row) {
   if (!isGroupTrip(row) || row.schedule_status === "cancelled" || row.status === "cancelled") return false;
-  if (row.guaranteed === true || row.schedule_status === "confirmed" || row.schedule_status === "full" || row.schedule_status === "finished") {
+  if (completedTrip(row) || row.guaranteed === true || row.schedule_status === "confirmed" || row.schedule_status === "full") {
     return true;
   }
   const min = Number(row.minGroupSize ?? row.min_group_size);
@@ -53,7 +82,7 @@ export function isFormedTrip(row) {
 export function isRecruitingTrip(row, today = todayYmd()) {
   if (!isGroupTrip(row) || row.status !== "joined") return false;
   if (row.schedule_status === "cancelled") return false;
-  if (isUnpaidTrip(row) || isFormedTrip(row)) return false;
+  if (completedTrip(row) || isUnpaidTrip(row) || isFormedTrip(row)) return false;
   const date = String(row.start_date || row.startDate || "").slice(0, 10);
   if (date && date < today) return false;
   return true;
@@ -78,11 +107,7 @@ export function showAfterActions(row) {
 }
 
 export function isReviewTrip(row, today = todayYmd()) {
-  if (!row || !row.canReview) return false;
-  if (row.schedule_status === "cancelled") return false;
-  if (isRecruitingTrip(row, today)) return false;
-  if (isGroupTrip(row) && row.status === "joined" && !isFormedTrip(row)) return false;
-  return String(row.start_date || row.startDate || "").slice(0, 10) < today;
+  return Boolean(row && row.canReview && isEndedTrip(row, today));
 }
 
 export function isRefundTrip(row) {
@@ -95,11 +120,13 @@ export function deskTrips(rows, today = todayYmd()) {
   const review = [];
   const refund = [];
   const recruiting = [];
+  const ended = [];
   for (const row of Array.isArray(rows) ? rows : []) {
     if (isUnpaidTrip(row)) unpaid.push(row);
     if (isRecruitingTrip(row, today)) recruiting.push(row);
     if (isReviewTrip(row, today)) review.push(row);
     if (isRefundTrip(row)) refund.push(row);
+    if (isEndedTrip(row, today)) ended.push(row);
   }
   const byDate = (a, b) => String(a.start_date || a.startDate || "").localeCompare(String(b.start_date || b.startDate || ""));
   recruiting.sort(byDate);
@@ -110,6 +137,7 @@ export function deskTrips(rows, today = todayYmd()) {
     review,
     refund,
     recruiting,
+    ended: ended.sort((a, b) => tripEndDay(b).localeCompare(tripEndDay(a))),
     depart: split.upcoming.filter((row) => !isUnpaidTrip(row) && !isRecruitingTrip(row, today)),
   };
 }

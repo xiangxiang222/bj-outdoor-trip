@@ -1,3 +1,5 @@
+const { activityFacts, activityEnded } = require("./activity-kind");
+
 function timeLine(row) {
   if (!row) return "";
   const start = String(row.startDate || row.start_date || "");
@@ -24,7 +26,8 @@ function peopleLine(row) {
   }
   const left = Number.isFinite(remain) ? remain : Math.max(0, max - enrolled);
   if (activity) {
-    return "还缺 " + left + " 人 · 已有 " + enrolled + "/" + max + (wait ? " · 候补 " + wait : "");
+    const facts = activityFacts(row);
+    return [facts.phase, facts.progress, facts.capacity].filter(Boolean).join(" · ") + (wait ? " · 候补 " + wait : "");
   }
   const min = row.minGroupSize || row.min_group_size;
   return "已报名 " + enrolled + "/" + max + (min ? "，最低成团 " + min : "") + (wait ? " · 候补 " + wait : "");
@@ -61,6 +64,7 @@ function canShowEnroll(row) {
   if (!row) return false;
   if (row.myEnrollment) return false;
   if (row.status === "cancelled") return false;
+  if (row.channel === "activity" && activityEnded(row)) return false;
   if (row.reviewStatus === "pending" || row.reviewStatus === "rejected") return false;
   return true;
 }

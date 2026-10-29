@@ -1,65 +1,64 @@
 /* Account page: shared proportions and icon geometry with the mini-program. */
-.mp-phone.is-mine .mp-status { background: #fcf9ff; }
-.mp-phone.is-mine .mp-body { background: #f7f8fa; }
-.mine-page.mine-retail { --account-card: #fff; --account-ink: #25242a; --account-muted: #76737d; --account-line: #f2f1f5; --account-soft: #faf7ff; --account-purple: #5b3b8c; --account-bright: #8658d6; --account-benefit-start: #f4e9ff; --account-benefit-end: #fff2e9; --account-benefit-detail: #87718e; --account-capsule: #fff; --account-count-bg: #f6f5f8; --account-count-ink: #77727e; --account-create-route: #fff7ef; --account-create-trip: #f6efff; --account-service-campus: #f3edff; --account-service-guide: #fff4e9; --account-service-photo: #edf7f3; --account-service-poster: #eef3ff; padding: 4px 12px 16px; margin: 0; border-radius: 0; background: radial-gradient(ellipse at 15% 0, #fff3f5 0, transparent 48%), linear-gradient(180deg, #fcf9ff, #f7f8fa 280px); color: var(--account-ink); font-family: var(--ui-font, "PingFang SC", "Helvetica Neue", sans-serif); }
+.mp-phone.is-mine .mp-status { background: #f1edf8; }
+.mp-phone.is-mine .mp-body { background: #f6f5f8; }
+.mine-page.mine-retail { --account-card: #fff; --account-ink: #29262e; --account-muted: #746b7f; --account-line: #eeeaf3; --account-soft: #f3eff8; --account-purple: #5b3b8c; --account-bright: #7653a5; --account-benefit-start: #f0eaf8; --account-benefit-end: #f8f5fc; --account-benefit-detail: #746082; --account-capsule: #fff; --account-count-bg: #f6f3fa; --account-count-ink: #756b82; --account-create-bg: #f5f2fa; padding: 4px 12px 16px; margin: 0; border-radius: 0; background: linear-gradient(180deg, #f1edf8, #f6f5f8 260px); color: var(--account-ink); font-family: var(--ui-font, "PingFang SC", "Helvetica Neue", sans-serif); }
 .mine-retail button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
 .mine-retail :where([class^="account-"] button, button[class^="account-"]) { appearance: none; border: 0; margin: 0; background: none; color: inherit; padding: 0; cursor: pointer; text-align: inherit; }
 .mine-retail button:focus-visible { outline: 2px solid var(--account-purple); outline-offset: 3px; }
 .mine-retail button:active { opacity: .65; }
 .mine-retail .mine-glyph { width: 25px; height: 25px; flex: none; }
 .mine-retail .mine-glyph * { vector-effect: none; }
-.mine-retail .account-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 4px 2px 24px; }
-.mine-retail .account-member-pill { display: flex; align-items: center; gap: 5px; min-height: 34px; padding: 0 8px; border-radius: 24px; background: rgba(255,255,255,.9); color: var(--account-purple); font-size: calc(12px * var(--ui-scale)); white-space: nowrap; }
-.account-member-pill .mine-glyph { width: 16px; height: 16px; }
-.account-member-pill .mine-glyph:last-child { width: 10px; height: 10px; }
+.mine-retail .account-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 2px 18px; }
+.mine-retail .account-space { flex: 1; min-width: 0; }
+.mine-retail .account-space h1 { margin: 0; color: var(--account-ink); font-size: calc(22px * var(--ui-scale)); font-weight: 600; line-height: 1.3; }
+.mine-retail .account-space p { margin: 5px 0 0; color: var(--account-muted); font-size: calc(11px * var(--ui-scale)); line-height: 1.4; }
 .account-tools { display: flex; gap: 3px; }
 .mine-retail .account-tools > button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-width: 42px; min-height: 46px; font-size: calc(11.5px * var(--ui-scale)); line-height: 1.25; }
 .account-tools .mine-glyph { width: 23px; height: 23px; }
 .mine-retail .account-tools .account-icon { width: 23px; height: 23px; }
-.mine-retail .account-card { background: var(--account-card); border-radius: 18px; margin-bottom: 12px; }
+.mine-retail .account-card { background: var(--account-card); border: 1px solid var(--account-line); border-radius: 16px; margin-bottom: 12px; box-shadow: 0 3px 16px rgba(61,41,86,.025); }
 .mine-retail .account-overview { padding: 0 14px 14px; }
-.mine-retail .account-profile-row { display: flex; align-items: center; gap: 12px; min-height: 82px; }
-.mine-retail .account-avatar { position: relative; flex: none; align-self: flex-start; margin-top: -10px; width: 64px; height: 64px; border: 3px solid var(--account-card); box-sizing: border-box; border-radius: 50%; overflow: hidden; background: var(--account-service-campus); color: var(--account-purple); font-size: calc(25px * var(--ui-scale)); font-weight: 650; text-align: center; box-shadow: 0 3px 12px rgba(91,59,140,.06); }
+.mine-retail .account-profile-row { display: flex; align-items: center; gap: 12px; min-height: 84px; }
+.mine-retail .account-avatar { position: relative; flex: none; width: 56px; height: 56px; border: 2px solid var(--account-card); box-sizing: border-box; border-radius: 50%; overflow: hidden; background: var(--account-soft); color: var(--account-purple); font-size: calc(25px * var(--ui-scale)); font-weight: 600; text-align: center; }
 .account-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.mine-retail .account-identity { flex: 1; min-width: 0; padding: 6px 0 12px; }
-.mine-retail .account-name { display: block; max-width: 100%; padding: 2px 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: calc(20px * var(--ui-scale)); font-weight: 700; line-height: 1.4; }
+.mine-retail .account-identity { flex: 1; min-width: 0; padding: 10px 0; }
+.mine-retail .account-name { display: block; max-width: 100%; padding: 2px 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: calc(20px * var(--ui-scale)); font-weight: 600; line-height: 1.4; }
 .mine-retail .account-tier { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; min-height: 22px; color: var(--account-purple); font-size: calc(12px * var(--ui-scale)); line-height: 1.35; }
 .account-tier .mine-glyph { width: 13px; height: 13px; }
 .account-tier small { padding: 1px 4px; border-radius: 3px; background: var(--account-soft); font-size: calc(9px * var(--ui-scale)); }
-.mine-retail .account-stats { display: flex; align-items: stretch; padding: 5px 0 16px; }
+.mine-retail .account-stats { display: flex; align-items: stretch; padding: 8px 0 16px; border-top: 1px solid var(--account-line); }
 .mine-retail .account-stats > button { flex: 1; min-width: 0; min-height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; }
-.account-stats b { display: flex; align-items: center; justify-content: center; min-height: 28px; max-width: 100%; font-size: calc(26px * var(--ui-scale)); font-weight: 700; line-height: 1.25; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.account-stats b { display: flex; align-items: center; justify-content: center; min-height: 28px; max-width: 100%; font-size: calc(24px * var(--ui-scale)); font-weight: 600; line-height: 1.25; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .account-stats b.account-sign { font-size: calc(16px * var(--ui-scale)); color: var(--account-purple); }
 .account-stats > button > span:last-child { font-size: calc(13px * var(--ui-scale)); color: var(--account-muted); line-height: 1.4; }
 .account-stats .account-unit { font-size: calc(10px * var(--ui-scale)); }
 .mine-retail .account-benefits, .mine-retail .account-expiring { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 5px; font-size: calc(11px * var(--ui-scale)); color: var(--account-purple); line-height: 1.5; }
-.mine-retail .account-benefits { padding: 12px; min-height: 68px; border-radius: 12px; background: linear-gradient(110deg, var(--account-benefit-start), var(--account-benefit-end)); box-sizing: border-box; gap: 10px; }
+.mine-retail .account-benefits { padding: 12px; min-height: 68px; border: 1px solid var(--account-line); border-radius: 12px; background: linear-gradient(110deg, var(--account-benefit-start), var(--account-benefit-end)); box-sizing: border-box; gap: 10px; }
 .mine-retail .account-benefits-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; flex: 1; min-width: 0; }
 .mine-retail .account-benefits-title { display: flex; align-items: center; gap: 5px; font-size: calc(14px * var(--ui-scale)); font-weight: 650; line-height: 1.4; }
 .mine-retail .account-benefits-detail { display: flex; flex-wrap: wrap; gap: 2px 8px; color: var(--account-benefit-detail); font-size: calc(11px * var(--ui-scale)); line-height: 1.5; }
 .mine-retail .account-perk { white-space: nowrap; }
 .mine-retail .account-benefits-title .mine-glyph { width: 17px; height: 17px; }
-.mine-retail .account-benefits-more { display: flex; align-items: center; gap: 2px; flex: none; padding: 7px 10px; border-radius: 999px; background: var(--account-capsule); color: var(--account-purple); font-size: calc(11px * var(--ui-scale)); font-weight: 550; white-space: nowrap; }
+.mine-retail .account-benefits-more { display: flex; align-items: center; gap: 2px; flex: none; padding: 7px 10px; border: 1px solid var(--account-line); border-radius: 999px; background: var(--account-capsule); color: var(--account-purple); font-size: calc(11px * var(--ui-scale)); font-weight: 500; white-space: nowrap; }
 .account-benefits-more .mine-glyph, .account-expiring .mine-glyph { width: 10px; height: 10px; }
 .mine-retail .account-expiring { padding: 0 2px 8px; }
-.account-history { display: flex; align-items: stretch; margin: 0 12px; padding: 4px 0; border-bottom: 1px solid var(--account-line); }
-.mine-retail .account-history > button { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 5px; min-height: 44px; font-size: calc(14px * var(--ui-scale)); }
+.mine-retail .account-section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 15px 15px 0; }
+.mine-retail .account-section-head h2 { margin: 0; color: var(--account-ink); font-size: calc(16px * var(--ui-scale)); font-weight: 600; line-height: 1.4; }
+.mine-retail .account-history { display: flex; align-items: stretch; margin: 0 14px; padding: 4px 0; border-top: 1px solid var(--account-line); }
+.mine-retail .account-history > button { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 5px; min-height: 44px; font-size: calc(12px * var(--ui-scale)); color: var(--account-muted); }
 .mine-retail .account-history b { padding: 0 5px; border-radius: 11px; background: var(--account-count-bg); color: var(--account-count-ink); font-weight: 500; line-height: 1.5; font-size: calc(13.5px * var(--ui-scale)); font-variant-numeric: tabular-nums; }
-.mine-retail .account-order-row { display: flex; align-items: center; padding: 17px 8px 17px; }
+.mine-retail .account-order-row { display: flex; align-items: center; padding: 15px 8px 16px; }
 .account-shortcuts { display: flex; align-items: stretch; flex: 1; min-width: 0; }
 .mine-retail .account-shortcuts > button { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; min-height: 64px; font-size: calc(13px * var(--ui-scale)); text-align: center; line-height: 1.4; }
 .mine-retail .account-icon { position: relative; width: 28px; height: 28px; flex: none; }
 .account-icon .mine-glyph { display: block; width: 100%; height: 100%; }
 .account-badge { position: absolute; right: -8px; top: -5px; min-width: 13px; height: 14px; padding: 0 3px; border: 1.5px solid var(--account-card); border-radius: 11px; background: var(--account-bright); color: #fff; font-size: 9.5px; line-height: 14px; font-weight: 500; font-style: normal; text-align: center; box-sizing: content-box; }
-.mine-retail .account-all { flex: none; width: 41px; min-height: 50px; margin-left: 6px; padding-left: 6px; border-left: 1px solid var(--account-line); display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 6px; font-size: calc(14px * var(--ui-scale)); font-weight: 600; }
-.account-all b { font-weight: 600; white-space: nowrap; }
-.account-circle-arrow { width: 16px; height: 16px; border: 1px solid #96929c; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-.account-circle-arrow .mine-glyph { width: 12px; height: 12px; }
+.mine-retail .account-all { flex: none; min-height: 30px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; color: var(--account-muted); font-size: calc(11px * var(--ui-scale)); font-weight: 400; white-space: nowrap; }
+.mine-retail .account-all .mine-glyph { width: 10px; height: 10px; }
 .mine-retail .account-services { padding: 16px 14px 0; }
-.account-services h2 { margin: 0 0 12px; font-size: calc(16px * var(--ui-scale)); font-weight: 650; line-height: 1.4; color: var(--account-ink); }
+.account-services h2 { margin: 0 0 12px; font-size: calc(16px * var(--ui-scale)); font-weight: 600; line-height: 1.4; color: var(--account-ink); }
 .account-create { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.mine-retail .account-create > button { display: flex; align-items: center; gap: 8px; min-height: 64px; padding: 9px 8px; border-radius: 12px; background: var(--account-create-route); }
-.mine-retail .account-create > button:nth-child(2) { background: var(--account-create-trip); }
+.mine-retail .account-create > button { display: flex; align-items: center; gap: 8px; min-height: 64px; padding: 9px 8px; border: 1px solid var(--account-line); border-radius: 12px; background: var(--account-create-bg); }
 .account-create-icon { width: 22px; height: 22px; flex: none; color: var(--account-purple); }
 .account-create-icon .mine-glyph { width: 100%; height: 100%; }
 .account-create-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2.5px; line-height: 1.4; }
@@ -68,12 +67,9 @@
 .account-create > button > .mine-glyph { width: 10px; height: 10px; }
 .mine-retail .account-service-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 17px 0 13px; gap: 2px; }
 .mine-retail .account-service-grid > button { min-width: 0; min-height: 62px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 8px; padding-top: 5px; font-size: calc(13px * var(--ui-scale)); text-align: center; line-height: 1.4; white-space: normal; }
-.mine-retail .account-service-grid span { max-width: 100%; }
-.mine-retail .account-service-icon { width: 40px; height: 40px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 13px; background: var(--account-service-campus); }
+.mine-retail .account-service-grid span { max-width: 100%; overflow-wrap: anywhere; }
+.mine-retail .account-service-icon { width: 40px; height: 40px; flex: none; display: flex; align-items: center; justify-content: center; border-radius: 13px; background: var(--account-soft); color: var(--account-purple); }
 .mine-retail .account-service-icon .mine-glyph { width: 25px; height: 25px; }
-.mine-retail .account-service-grid > button:nth-child(2) .account-service-icon { background: var(--account-service-guide); }
-.mine-retail .account-service-grid > button:nth-child(3) .account-service-icon { background: var(--account-service-photo); }
-.mine-retail .account-service-grid > button:nth-child(4) .account-service-icon { background: var(--account-service-poster); }
 .mine-retail .account-feedback { display: flex; width: 100%; align-items: center; gap: 7px; border-top: 1px solid var(--account-line); min-height: 51px; font-size: calc(13px * var(--ui-scale)); }
 .account-feedback > .mine-glyph:first-child { width: 20px; height: 20px; }
 .account-feedback small { flex: 1; color: var(--account-muted); font-size: calc(10.5px * var(--ui-scale)); text-align: right; }
@@ -85,10 +81,9 @@
 .mine-retail .mine-rec > button { background: var(--account-card); border-radius: 11px; }
 .mine-retail .mine-rec strong { color: var(--account-ink); }
 .mine-retail .mine-rec b { color: var(--account-purple); }
-html[data-night="dark"] .mp-phone.is-mine .mp-status { background: #26212e; }
+html[data-night="dark"] .mp-phone.is-mine .mp-status { background: #211c29; }
 html[data-night="dark"] .mp-phone.is-mine .mp-body { background: #121214; }
-html[data-night="dark"] .mine-page.mine-retail { --account-card: #1c1c20; --account-ink: #eeeaf4; --account-muted: #aaa4b4; --account-line: #353039; --account-soft: #30283d; --account-purple: #c9b2ec; --account-bright: #8658d6; --account-benefit-start: #352944; --account-benefit-end: #3b2e34; --account-benefit-detail: #c3b1cc; --account-capsule: #483654; --account-count-bg: #302d35; --account-count-ink: #beb8c7; --account-create-route: #302922; --account-create-trip: #30253e; --account-service-campus: #30253e; --account-service-guide: #342b23; --account-service-photo: #24342e; --account-service-poster: #263044; background: linear-gradient(180deg, #26212e, #121214 280px); }
-html[data-night="dark"] .mine-retail .account-member-pill { background: #352c42; }
+html[data-night="dark"] .mine-page.mine-retail { --account-card: #1c1c20; --account-ink: #eeeaf4; --account-muted: #aaa4b4; --account-line: #353039; --account-soft: #2b2535; --account-purple: #c9b2ec; --account-bright: #956fcb; --account-benefit-start: #30263d; --account-benefit-end: #27212f; --account-benefit-detail: #c3b1cc; --account-capsule: #3a2d4c; --account-count-bg: #29242f; --account-count-ink: #beb8c7; --account-create-bg: #27222f; background: linear-gradient(180deg, #211c29, #121214 260px); }
 
 html[data-night="dark"] .mp-phone.is-mine .brand-name { color: #eeeaf4; }
 .mine-retail .avatar-sheet, .mine-retail .moments-sheet { background: var(--account-card); color: var(--account-ink); }
@@ -109,14 +104,15 @@ html[data-night="dark"] .mine-retail .poster-pick-copy strong { background: tran
   .mine-retail .account-benefits-more { padding: 7px 8px; }
   .mine-retail .account-create > button { gap: 5px; padding: 10px 7px; }
   .mine-retail .account-create > button > .mine-glyph { display: none; }
-  .mine-retail .account-all { width: 46px; padding-left: 6px; }
+  .mine-retail .account-toolbar { gap: 6px; }
+  .mine-retail .account-space p { max-width: 132px; }
 }
 @media (min-width: 900px) {
   .mine-page.mine-retail { max-width: 920px; padding: 24px; margin: 24px auto; border-radius: 20px; }
   .mine-retail .account-toolbar { padding-bottom: 30px; }
   .mine-retail .account-overview { padding: 0 24px 20px; }
   .mine-retail .account-profile-row { min-height: 96px; gap: 14px; }
-  .mine-retail .account-avatar { width: 72px; height: 72px; margin-top: -12px; }
+  .mine-retail .account-avatar { width: 64px; height: 64px; }
   .mine-retail .account-name { font-size: calc(23px * var(--ui-scale)); }
   .mine-retail .account-stats { padding: 6px 0 20px; }
   .account-stats b { font-size: calc(28px * var(--ui-scale)); }

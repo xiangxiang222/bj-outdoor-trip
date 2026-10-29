@@ -97,3 +97,11 @@
 .poster-split { display: flex; gap: 16rpx; align-items: flex-start; margin-bottom: 16rpx; }
 .poster-facts { flex: 1; }
 .poster-qr { width: 180rpx; height: 180rpx; background: #fff; flex-shrink: 0; }
+
+
+.activity-detail-brief { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24rpx 28rpx; margin:20rpx 28rpx; padding:28rpx; border:1rpx solid var(--line); border-radius:22rpx; background:var(--card); color:var(--ink); font-size:calc(25rpx * var(--ui-scale)); line-height:1.7; }
+.activity-detail-brief > view { min-width:0; word-break:break-all; }
+.activity-info-label { color:var(--muted); font-size:calc(22rpx * var(--ui-scale)); margin-bottom:8rpx; }
+.activity-info-row { display:flex; gap:24rpx; padding:24rpx 28rpx; border-bottom:1rpx solid var(--line); font-size:calc(25rpx * var(--ui-scale)); line-height:1.8; }
+.activity-info-row > text { flex:none; width:150rpx; color:var(--muted); }
+.activity-info-row > view { flex:1; min-width:0; word-break:break-all; color:var(--ink); }

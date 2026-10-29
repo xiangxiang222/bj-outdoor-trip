@@ -1,4 +1,6 @@
 {
-  "navigationBarTitleText": "行程",
-  "backgroundColor": "#f3f4f6"
+  "navigationBarTitleText": "我的每一程",
+  "navigationBarBackgroundColor": "#f6f5f8",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#f6f5f8"
 }

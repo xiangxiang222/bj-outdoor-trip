@@ -1,4 +1,4 @@
-const { isRecruitingTrip, isReviewTrip, isUnpaidTrip, isUpcomingTrip, recruitFacts, todayYmd, tripKindLabel } = require("./trips");
+const { isEndedTrip, isRecruitingTrip, isReviewTrip, isUnpaidTrip, isUpcomingTrip, recruitFacts, todayYmd, tripKindLabel } = require("./trips");
 
 function orderShop(row) {
   const key = (row && row.kind) || "";
@@ -29,6 +29,7 @@ function orderMoney(row) {
 
 function isOverdueOpen(row, today) {
   if (!row || row.channel === "activity" || row.status !== "joined") return false;
+  if (isEndedTrip(row, today)) return false;
   if (row.schedule_status === "cancelled" || row.schedule_status === "finished") return false;
   if (row.guaranteed === true || row.schedule_status === "confirmed" || row.schedule_status === "full") return false;
   const date = String(row.start_date || row.startDate || "").slice(0, 10);
@@ -47,6 +48,7 @@ function orderBadge(row, today) {
   if (isRecruitingTrip(row, day)) return { key: "recruiting", label: "待成团" };
   if (isOverdueOpen(row, day)) return { key: "overdue", label: "待处理" };
   if (isReviewTrip(row, day)) return { key: "review", label: "待评价" };
+  if (isEndedTrip(row, day)) return { key: "done", label: "已结束" };
   if (row.status === "joined" && isUpcomingTrip(row, day)) return { key: "depart", label: "待出行" };
   if (row.status === "joined" || row.reviewed) return { key: "done", label: "已完成" };
   return { key: row.status || "", label: "已报名" };

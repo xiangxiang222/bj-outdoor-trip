@@ -1,5 +1,5 @@
 <template>
-  <div class="publish-page">
+  <div class="publish-page" :class="{ 'is-activity': isActivity }">
     <header class="publish-intro">
       <span class="publish-eyebrow">{{ isActivity ? 'CITY MOMENTS' : 'GO TOGETHER' }}</span>
       <h1>{{ isActivity ? '把好时光，约在一起' : '把山野，变成我们的下一站' }}</h1>
@@ -18,8 +18,9 @@
         <div class="publish-card-title"><span>01</span><div><h2>{{ isActivity ? '想约什么局' : '先选一段好风景' }}</h2><p>{{ isActivity ? '从共同的兴趣开始' : '精选成熟线路，行程与费用更清楚' }}</p></div></div>
         <template v-if="isActivity">
           <div class="publish-kinds" role="group" aria-label="活动玩法">
-            <button v-for="kind in kinds" :key="kind.key" type="button" :class="{ selected: form.activityKind === kind.key }" @click="pickKind(kind.key)"><span>{{ kind.emoji }}</span><strong>{{ kind.label }}</strong></button>
+            <button v-for="kind in kinds" :key="kind.key" type="button" :class="{ selected: form.activityKind === kind.key }" @click="pickKind(kind.key)"><TravelIcon :name="kind.icon" /><strong>{{ kind.label }}</strong></button>
           </div>
+          <div class="publish-kind-guide"><strong>{{ selectedActivityKind.title }}</strong><p>{{ selectedActivityKind.description }}</p></div>
           <label for="publish-title">活动名称</label>
           <input id="publish-title" class="input" v-model="form.title" :placeholder="kindPlaceholder" maxlength="60" />
         </template>
@@ -80,16 +81,21 @@
           <template v-if="form.organizerType === 'campus'"><div class="publish-switch"><div><strong>超额报名抽签</strong><small>{{ form.offerType === 'free' ? '高校免费团自动开启' : '报名超出座位时抽签确认，未超则全部确认' }}</small></div><el-switch v-model="form.oversub" :disabled="form.offerType === 'free'" aria-label="超额报名抽签" /></div><details class="publish-advanced"><summary>更多报名设置 <span>男女比例</span></summary><GenderRatioFields v-model="form.genderRatio" :targets="resolvedTargets" /></details></template>
           <template v-if="tags.length"><label>想怎么玩 · 可多选</label><div class="publish-tags"><button v-for="tag in tags" :key="tag.id" type="button" :class="{ selected: form.playTagIds.includes(tag.id) }" @click="toggleTag(tag.id)">{{ tag.name }}</button></div></template>
         </template>
-        <template v-else><label for="publish-description">活动介绍</label><textarea id="publish-description" class="input" v-model="form.description" rows="5" placeholder="怎么玩、费用包含什么、需要带什么，写给未来的同行者…" maxlength="2000" /></template>
+        <template v-else>
+          <div class="publish-kind-guide"><strong>{{ selectedActivityKind.title }}</strong><p>{{ selectedActivityKind.notice }}</p></div>
+          <div class="publish-activity-field" v-for="field in selectedActivityKind.fields" :key="field.key"><label :for="'activity-' + field.key">{{ field.label }}<small v-if="!field.required"> · 选填</small></label><input :id="'activity-' + field.key" class="input" v-model="form.activityDetails[field.key]" :placeholder="field.placeholder" :aria-required="field.required" maxlength="120" /></div>
+          <label for="publish-description">补充介绍 · 选填</label><textarea id="publish-description" class="input" v-model="form.description" rows="4" :placeholder="selectedActivityKind.descriptionPlaceholder" maxlength="1200" />
+        </template>
         <div class="publish-switch"><div><strong>凭口令加入</strong><small>适合企业、社团或好友定向邀请</small></div><el-switch v-model="form.privateJoin" aria-label="凭口令加入" /></div>
         <template v-if="form.privateJoin"><label for="publish-code">入团口令 · 选填</label><input id="publish-code" class="input" v-model="form.joinCode" maxlength="16" placeholder="4～16 个字，留空自动生成" autocomplete="off" /><p class="publish-help">口令团会展示在列表中，报名时需要填写口令。</p></template>
         <label for="publish-notes">给同行者的话 · 选填</label><textarea id="publish-notes" class="input" v-model="form.notes" rows="3" maxlength="2000" placeholder="例如：欢迎新朋友，记得带一份好心情。" />
       </section>
 
       <section v-show="step === 3" class="publish-card publish-review">
-        <div class="publish-card-title"><span>04</span><div><h2>好风景，就差你们了</h2><p>再看一眼，准备邀请同行者</p></div></div>
+        <div class="publish-card-title"><span>04</span><div><h2>{{ isActivity ? '好时光，就差你们了' : '好风景，就差你们了' }}</h2><p>再看一眼，准备邀请同行者</p></div></div>
         <div class="publish-review-heading"><span>{{ isActivity ? '同城小聚' : organizerKinds.find(kind => kind.key === form.organizerType)?.label }}</span><h3>{{ isActivity ? form.title : selectedRoute?.title }}</h3></div>
         <dl class="publish-summary"><div><dt>{{ isActivity ? '活动日期' : '出发日期' }}</dt><dd>{{ form.startDate }}{{ isActivity ? ' · ' + form.meetupTime : '' }}</dd></div><div><dt>集合安排</dt><dd>{{ form.meetupPoint }}{{ !isActivity ? ' · ' + form.meetupTime : '' }}</dd></div><div><dt>人数安排</dt><dd>{{ form.minGroupSize }} 人{{ isActivity ? '成局' : '成团' }} · 上限 {{ isActivity ? form.maxSeats : selectedBus?.seats }} 人</dd></div><div v-if="!isActivity"><dt>团型 / 车型</dt><dd>{{ offers.find(offer => offer.key === form.offerType)?.label }} · {{ selectedBus?.name }}</dd></div><div v-if="!isActivity && form.offerType === 'free'"><dt>每人费用</dt><dd>免费</dd></div><div v-else-if="!isActivity && routePrice"><dt>参考价格</dt><dd>¥{{ routePrice.price }} / 人<span v-if="form.memberPriceOn"> · 会员 ¥{{ routePrice.memberPrice }}</span><span v-if="form.studentPriceOn"> · 学生 ¥{{ routePrice.studentPrice }}</span></dd></div><div v-else-if="isActivity"><dt>每人费用</dt><dd>{{ Number(form.originPrice) ? '¥' + form.originPrice : '免费' }}</dd></div><div v-if="form.organizerType !== 'individual' && !isActivity"><dt>发起{{ form.organizerType === 'campus' ? '学校' : '公司' }}</dt><dd>{{ form.companyName }}</dd></div><div v-if="form.organizerType === 'campus' && !isActivity"><dt>报名范围</dt><dd>{{ audienceSummary }}</dd></div><div><dt>加入方式</dt><dd>{{ form.privateJoin ? '凭口令报名' : '公开报名' }}</dd></div></dl>
+        <dl v-if="isActivity" class="publish-summary publish-activity-summary"><div v-for="field in selectedActivityKind.fields.filter(item => form.activityDetails[item.key])" :key="field.key"><dt>{{ field.label }}</dt><dd>{{ form.activityDetails[field.key] }}</dd></div></dl>
         <div class="publish-notice"><strong>{{ isActivity ? '提交后，等待运营审核' : '发布后，分享邀请同行' }}</strong><p>{{ isActivity ? '活动审核通过后开放报名。你可以在活动详情中查看审核状态。' : form.organizerType === 'company' ? '成员报名后，由公司统一结算团费。发布成功后可分享团页邀请同事。' : '报名先占座，出行前付款。发布成功后可分享团页，随时查看报名进度。' }}</p></div>
       </section>
 
@@ -107,7 +113,8 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { requireLogin } from "@/utils/auth";
 import { OFFER_TYPES } from "@/utils/offer";
-import { ACTIVITY_KINDS } from "@/utils/activityKind";
+import { ACTIVITY_KINDS, kindByKey } from "@/utils/activityKind";
+import TravelIcon from "@/components/TravelIcon.vue";
 import { todayYmd } from "@/utils/trips";
 import CampusAudienceFields from "@/components/CampusAudienceFields.vue";
 import CampusNamePicker from "@/components/CampusNamePicker.vue";
@@ -149,7 +156,7 @@ const organizationNames = { company: store.profile?.companyName || "", campus: s
 const tomorrow = new Date();
 tomorrow.setDate(tomorrow.getDate() + 1);
 const form = ref({
-  channel: startAsActivity ? "activity" : "trip", title: queryTitle && !kinds.some(kind => kind.key === queryTitle) ? queryTitle : queryKind || queryTitle,
+  channel: startAsActivity ? "activity" : "trip", title: queryTitle && !kinds.some(kind => kind.key === queryTitle) ? queryTitle : "",
   activityKind: kinds.some(kind => kind.key === queryKind) ? queryKind : kinds.some(kind => kind.key === queryTitle) ? queryTitle : "掼蛋",
   routeId: props.fixedRouteId || Number(route.query.routeId) || 0, startDate: String(route.query.date || todayYmd(tomorrow)),
   organizerType, companyName: organizationNames[organizerType], busTypeId: "", minGroupSize: startAsActivity ? 4 : 10,
@@ -157,7 +164,7 @@ const form = ref({
   city: startAsActivity ? "朝阳" : "", offerType: startAsActivity ? "free" : "full", originPrice: 0, playTagIds: [],
   studentOnly: false, alumniOk: false, oversub: false, genderRatio: emptyGenderRatio(),
   campusScope: "school", campusSchool: store.profile?.school || "", campusCollege: store.profile?.college || "", colleges: "", campusTargets: [],
-  privateJoin: false, joinCode: "", description: "", notes: "", comboRule: { require: "student_or_group", school: "" }, memberPriceOn: true, studentPriceOn: true,
+  privateJoin: false, joinCode: "", activityDetails: {}, description: "", notes: "", comboRule: { require: "student_or_group", school: "" }, memberPriceOn: true, studentPriceOn: true,
 });
 const postedId = ref(0);
 const isActivity = computed(() => form.value.channel === "activity");
@@ -172,7 +179,9 @@ const routePublishError = computed(() => {
 });
 const resolvedTargets = computed(() => campusTargetsForPlan(form.value));
 const audienceSummary = computed(() => campusAudienceSummary(form.value));
-const kindPlaceholder = computed(() => `例如：周五${kinds.find(kind => kind.key === form.value.activityKind)?.label || '同城'}小聚`);
+const selectedActivityKind = computed(() => kindByKey(form.value.activityKind) || kinds[0]);
+const kindPlaceholder = computed(() => selectedActivityKind.value.titlePlaceholder);
+const activityDrafts = {};
 
 watch(() => form.value.organizerType, (next, prev) => {
   if (prev) organizationNames[prev] = form.value.companyName;
@@ -243,9 +252,12 @@ async function onRoute() {
   }
 }
 function pickKind(key) {
+  if (!kindByKey(key)) return;
   const prev = form.value.activityKind;
+  activityDrafts[prev] = form.value.activityDetails;
+  form.value.activityDetails = activityDrafts[key] || {};
   form.value.activityKind = key;
-  if (!form.value.title || form.value.title === prev) form.value.title = key;
+  if (form.value.title === prev) form.value.title = "";
 }
 function toggleTag(id) { form.value.playTagIds = form.value.playTagIds.includes(id) ? form.value.playTagIds.filter(value => value !== id) : [...form.value.playTagIds, id]; }
 function focusCard() { document.querySelector(".publish-page")?.scrollIntoView({ behavior: "smooth", block: "start" }); }
@@ -312,7 +324,11 @@ async function advance() {
 .publish-loading { color:#a396b1; font-size:12px; padding:15px 0; }
 .publish-kinds { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:20px; }
 .publish-kinds button { display:flex; align-items:center; flex-direction:column; gap:9px; padding:12px 6px; border-radius:12px; border:1px solid #eae5ef; background:#fff; color:#796c85; cursor:pointer; }
-.publish-kinds button span { font-size:20px; }
+.publish-kinds .travel-icon { width:25px; height:25px; }
+.publish-kind-guide { border:1px solid #e8dff1; background:#f8f4fc; padding:14px 16px; border-radius:14px; margin:0 0 19px; color:#5b3b8c; }
+.publish-kind-guide strong { font-size:13px; font-weight:600; background:transparent; }
+.publish-kind-guide p { font-size:11px; line-height:1.8; margin:5px 0 0; color:#8b7b99; }
+.publish-activity-field label small { font-weight:400; color:#9c90a5; }
 .publish-kinds button strong { font-size:12px; font-weight:500; }
 .publish-kinds button.selected { border-color:#8a6cab; background:#f5effb; color:#5b3b8c; }
 .publish-organizers { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:21px; }
@@ -356,5 +372,16 @@ async function advance() {
 .publish-error { padding:12px 14px; background:#fff0f0; border-radius:10px; color:#b75a5a; font-size:12px; line-height:1.6; margin:14px 0 0; }
 .publish-error button { border:0; background:transparent; color:#8b4c7e; cursor:pointer; text-decoration:underline; font-size:11px; margin-left:8px; padding:0; }
 .publish-card :deep(.el-switch) { --el-switch-on-color:#6b4c91; --el-switch-off-color:#e3dce9; }
+:global(html[data-night="dark"] .publish-page.is-activity) { color:#eee7f5; color-scheme:dark; }
+:global(html[data-night="dark"] .publish-page.is-activity .publish-card), :global(html[data-night="dark"] .publish-page.is-activity .publish-success), :global(html[data-night="dark"] .publish-page.is-activity .publish-back), :global(html[data-night="dark"] .publish-page.is-activity .publish-kinds button) { background:#24202c; border-color:#3e344b; color:#e5d9f0; }
+:global(html[data-night="dark"] .publish-page.is-activity .input), :global(html[data-night="dark"] .publish-page.is-activity .select) { background:#1d1924; border-color:#44394f; color:#eee7f5; }
+:global(html[data-night="dark"] .publish-page.is-activity .publish-card label), :global(html[data-night="dark"] .publish-page.is-activity .publish-summary dd) { color:#dfd2eb; }
+:global(html[data-night="dark"] .publish-page.is-activity .publish-card-title p), :global(html[data-night="dark"] .publish-page.is-activity .publish-intro p), :global(html[data-night="dark"] .publish-page.is-activity .publish-help), :global(html[data-night="dark"] .publish-page.is-activity .publish-switch small), :global(html[data-night="dark"] .publish-page.is-activity .publish-notice p), :global(html[data-night="dark"] .publish-page.is-activity .publish-kind-guide p) { color:#b9a9c8; }
+:global(html[data-night="dark"] .publish-page.is-activity .publish-kind-guide), :global(html[data-night="dark"] .publish-page.is-activity .publish-notice), :global(html[data-night="dark"] .publish-page.is-activity .publish-kinds button.selected), :global(html[data-night="dark"] .publish-page.is-activity .publish-review-heading > span) { background:#32263f; border-color:#665075; color:#d1b4ef; }
+:global(html[data-night="dark"] .publish-page.is-activity .publish-kind-guide strong), :global(html[data-night="dark"] .publish-page.is-activity .publish-notice strong), :global(html[data-night="dark"] .publish-page.is-activity .publish-steps .active small) { color:#d4b5f2; background:transparent; }
+:global(html[data-night="dark"] .publish-page.is-activity .publish-switch), :global(html[data-night="dark"] .publish-page.is-activity .publish-review-heading), :global(html[data-night="dark"] .publish-page.is-activity .publish-summary > div) { border-color:#3e344b; }
+:global(html[data-night="dark"] .publish-page.is-activity .publish-steps button > span) { border-color:#1a121c; background:#3a3045; color:#c0b1cc; }
+:global(html[data-night="dark"] .publish-page.is-activity .publish-steps button.active > span) { background:#77519e; color:#fff; box-shadow:0 0 0 3px #3a2949; }
+:global(html[data-night="dark"] .publish-page.is-activity .publish-error) { background:#3e252c; color:#f3b1b5; }
 @media (min-width:700px) { .publish-intro h1 { font-size:28px; } .publish-card { padding:28px; } .publish-organizers button { padding:20px 10px; } }
 </style>

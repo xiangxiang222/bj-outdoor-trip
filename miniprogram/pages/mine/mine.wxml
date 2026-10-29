@@ -1,14 +1,13 @@
-<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}{{dark ? '' : 'background-color:#f7f8fa;'}}{{posterPick || momentsOpen ? 'overflow:hidden;' : ''}}" />
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}{{posterPick || momentsOpen ? 'overflow:hidden;' : ''}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
 <view class="mine-nav {{dark ? 'is-dark' : ''}}" style="padding-top: {{statusBarHeight}}px;">
   <view class="mine-nav-bar" style="height: {{navBarHeight}}px;"></view>
 </view>
 <view class="mine-page {{dark ? 'is-dark' : ''}}" wx:if="{{user}}">
   <view class="account-toolbar">
-    <view class="account-member-pill" bindtap="openMember" hover-class="account-tap">
-      <image src="{{iconBase}}crown{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" />
-      <text>{{tr.t('同行会员', lang)}}</text>
-      <image class="account-chevron" src="{{iconBase}}chevron{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" />
+    <view class="account-heading">
+      <view class="account-page-title">{{tr.t('我的', lang)}}</view>
+      <text class="account-page-note">{{tr.t('每一程，都值得期待', lang)}}</text>
     </view>
     <view class="account-tools">
       <view bindtap="goOfficial" hover-class="account-tap"><image src="{{iconBase}}headset{{dark ? '-dark' : ''}}.png" mode="aspectFit" /><text>{{tr.t('客服', lang)}}</text></view>
@@ -53,10 +52,9 @@
   </view>
 
   <view class="account-card account-orders">
-    <view class="account-history">
-      <view bindtap="go" data-url="/pages/views/views" hover-class="account-tap"><text>{{tr.t('足迹', lang)}}</text><text class="account-count" wx:if="{{hubReady}}">{{hub.viewCount || 0}}</text><view class="spinner" wx:else></view></view>
-      <view bindtap="go" data-url="/pages/favorites/favorites" hover-class="account-tap"><text>{{tr.t('收藏', lang)}}</text><text class="account-count" wx:if="{{hubReady}}">{{hub.favoriteCount || 0}}</text><view class="spinner" wx:else></view></view>
-      <view bindtap="go" data-url="/pages/follows/follows" hover-class="account-tap"><text>{{tr.t('关注', lang)}}</text><text class="account-count" wx:if="{{hubReady}}">{{hub.followCount || 0}}</text><view class="spinner" wx:else></view></view>
+    <view class="account-section-head">
+      <view class="account-section-title">{{tr.t('我的行程', lang)}}</view>
+      <view class="account-all" bindtap="goOrders" data-tab="all" hover-class="account-tap"><text>{{tr.t('全部订单', lang)}}</text><image class="account-chevron" src="{{iconBase}}chevron{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view>
     </view>
     <view class="account-order-row">
       <view class="account-shortcuts">
@@ -65,7 +63,11 @@
         <view bindtap="goOrders" data-tab="depart" hover-class="account-tap"><view class="account-icon"><image src="{{iconBase}}backpack{{dark ? '-dark' : ''}}.png" mode="aspectFit" /><text wx:if="{{hub.departCount}}" class="account-badge">{{hub.departCount > 99 ? '99+' : hub.departCount}}</text></view><text>{{tr.t('待出行', lang)}}</text></view>
         <view bindtap="goOrders" data-tab="review" hover-class="account-tap"><view class="account-icon"><image src="{{iconBase}}review{{dark ? '-dark' : ''}}.png" mode="aspectFit" /><text wx:if="{{hub.reviewCount}}" class="account-badge">{{hub.reviewCount > 99 ? '99+' : hub.reviewCount}}</text></view><text>{{tr.t('待评价', lang)}}</text></view>
       </view>
-      <view class="account-all" bindtap="goOrders" data-tab="all" hover-class="account-tap"><text>{{tr.t('全部', lang)}}</text><view class="account-circle-arrow"><image src="{{iconBase}}chevron{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view></view>
+    </view>
+    <view class="account-history">
+      <view bindtap="go" data-url="/pages/views/views" hover-class="account-tap"><text>{{tr.t('足迹', lang)}}</text><text class="account-count" wx:if="{{hubReady}}">{{hub.viewCount || 0}}</text><view class="spinner" wx:else></view></view>
+      <view bindtap="go" data-url="/pages/favorites/favorites" hover-class="account-tap"><text>{{tr.t('收藏', lang)}}</text><text class="account-count" wx:if="{{hubReady}}">{{hub.favoriteCount || 0}}</text><view class="spinner" wx:else></view></view>
+      <view bindtap="go" data-url="/pages/follows/follows" hover-class="account-tap"><text>{{tr.t('关注', lang)}}</text><text class="account-count" wx:if="{{hubReady}}">{{hub.followCount || 0}}</text><view class="spinner" wx:else></view></view>
     </view>
   </view>
 
@@ -76,10 +78,10 @@
       <view bindtap="go" data-url="/pages/publish/publish" hover-class="account-tap"><view class="account-create-icon"><image src="{{iconBase}}publish{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" /></view><view class="account-create-copy"><text>{{tr.t('发起行程', lang)}}</text><text>{{tr.t('高校 · 企业 · 好友', lang)}}</text></view><image class="account-chevron" src="{{iconBase}}chevron{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view>
     </view>
     <view class="account-service-grid">
-      <view bindtap="go" data-url="/pages/student/student" hover-class="account-tap"><view class="account-service-icon"><image src="{{iconBase}}cap{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view><text>{{tr.t(campusLabel, lang)}}</text></view>
-      <view bindtap="go" data-url="/pages/leader/leader" hover-class="account-tap"><view class="account-service-icon"><image src="{{iconBase}}compass{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view><text>{{tr.t(leaderLabel, lang)}}</text></view>
-      <view bindtap="go" data-url="/pages/photo-apply/photo-apply" hover-class="account-tap"><view class="account-service-icon"><image src="{{iconBase}}camera{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view><text>{{tr.t('摄影师申请', lang)}}</text></view>
-      <view bindtap="openPoster" hover-class="account-tap"><view class="account-service-icon"><image src="{{iconBase}}poster{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view><text>{{tr.t('生成海报', lang)}}</text></view>
+      <view bindtap="go" data-url="/pages/student/student" hover-class="account-tap"><view class="account-service-icon"><image src="{{iconBase}}cap{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" /></view><text>{{tr.t(campusLabel, lang)}}</text></view>
+      <view bindtap="go" data-url="/pages/leader/leader" hover-class="account-tap"><view class="account-service-icon"><image src="{{iconBase}}compass{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" /></view><text>{{tr.t(leaderLabel, lang)}}</text></view>
+      <view bindtap="go" data-url="/pages/photo-apply/photo-apply" hover-class="account-tap"><view class="account-service-icon"><image src="{{iconBase}}camera{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" /></view><text>{{tr.t('摄影师申请', lang)}}</text></view>
+      <view bindtap="openPoster" hover-class="account-tap"><view class="account-service-icon"><image src="{{iconBase}}poster{{dark ? '-dark' : '-purple'}}.png" mode="aspectFit" /></view><text>{{tr.t('生成海报', lang)}}</text></view>
     </view>
     <view class="account-feedback" bindtap="go" data-url="/pages/feedback/feedback" hover-class="account-tap"><image src="{{iconBase}}feedback{{dark ? '-dark' : ''}}.png" mode="aspectFit" /><text>{{tr.t('意见反馈', lang)}}</text><text class="account-feedback-note">{{tr.t('让下一次出行更好', lang)}}</text><image class="account-chevron" src="{{iconBase}}chevron{{dark ? '-dark' : ''}}.png" mode="aspectFit" /></view>
   </view>

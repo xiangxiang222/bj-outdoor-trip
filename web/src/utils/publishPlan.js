@@ -1,3 +1,4 @@
+import { composeActivityDescription, validateActivityDetails } from "./activityKind";
 import { emptyCampusTarget, formatCampusTarget, normalizeCampusTargets } from "./campusTargets";
 import { splitCampusNames } from "./campusNames";
 import { applyCampusPublish } from "./genderRatio";
@@ -66,6 +67,7 @@ export function prepareActivityPayload(form = {}) {
     ...prepareSchedulePayload({ ...form, organizerType: "individual" }),
     channel: "activity",
     title: String(form.title || "").trim(),
+    description: form.activityDetails ? composeActivityDescription(form.activityKind, form.activityDetails, form.description) : form.description,
     meetupPoint: String(form.meetupPoint || "").trim(),
     days: 1,
     originPrice: Number(form.originPrice),
@@ -78,8 +80,8 @@ export function prepareActivityPayload(form = {}) {
 function validDate(value) {
   const text = String(value || "");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) return false;
-  const date = new Date(`${text}T12:00:00`);
-  return Number.isFinite(date.getTime()) && todayYmd(date) === text;
+  const date = new Date(`${text}T00:00:00Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === text;
 }
 
 export function validatePublishPlan(form = {}, { step, today = todayYmd(), buses = [], profile = {} } = {}) {
@@ -119,6 +121,10 @@ export function validatePublishPlan(form = {}, { step, today = todayYmd(), buses
     }
   }
   if (at(2)) {
+    if (activity && form.activityDetails) {
+      const detailError = validateActivityDetails(form.activityKind, form.activityDetails);
+      if (detailError) return detailError;
+    }
     if (!activity) {
       const bus = buses.find((row) => String(row.id) === String(form.busTypeId));
       if (!bus) return "请选择本线路可用的车型";

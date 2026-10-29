@@ -1,7 +1,7 @@
 {
   "navigationStyle": "custom",
   "navigationBarTextStyle": "black",
-  "backgroundColor": "#f7f8fa",
-  "backgroundColorTop": "#fcf9ff",
-  "backgroundColorBottom": "#f7f8fa"
+  "backgroundColor": "#f6f5f8",
+  "backgroundColorTop": "#f1edf8",
+  "backgroundColorBottom": "#f6f5f8"
 }

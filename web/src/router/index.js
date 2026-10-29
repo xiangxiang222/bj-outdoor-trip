@@ -7,6 +7,7 @@ const routes = [
     component: () => import("@/layouts/MobileLayout.vue"),
     children: [
       { path: "", name: "home", component: () => import("@/views/mobile/Home.vue") },
+      { path: "discover", name: "discover", component: () => import("@/views/mobile/Discover.vue") },
       { path: "activities", name: "activities", component: () => import("@/views/mobile/Activities.vue") },
       { path: "official", name: "official", component: () => import("@/views/mobile/Official.vue") },
       { path: "rules", redirect: "/m/official#rules" },

@@ -65,9 +65,10 @@
   </view>
 </view>
 
+<view class="activity-detail-brief" wx:if="{{isActivity && activityInfo.length}}"><view wx:for="{{activityInfo}}" wx:key="label"><view class="activity-info-label">{{tr.t(item.label, lang)}}</view><view>{{tr.t(item.value, lang)}}</view></view></view>
 <view class="goods-tabs">
   <view class="goods-tab {{tab=='trip'?'on':''}}" bindtap="setTab" data-tab="trip">{{tr.t(isActivity ? '本局' : '本团', lang)}}</view>
-  <view class="goods-tab {{tab=='route'?'on':''}}" bindtap="setTab" data-tab="route">{{tr.t('线路', lang)}}</view>
+  <view class="goods-tab {{tab=='route'?'on':''}}" bindtap="setTab" data-tab="route">{{tr.t(isActivity ? '活动介绍' : '线路', lang)}}</view>
   <view class="goods-tab {{tab=='rules'?'on':''}}" bindtap="setTab" data-tab="rules">{{tr.t('须知', lang)}}</view>
 </view>
 
@@ -273,6 +274,9 @@
 </view>
 </block>
 
+<block wx:elif="{{tab=='route' && isActivity}}">
+<view class="card"><view class="pad title">{{tr.t('活动介绍', lang)}}</view><view class="activity-info-row" wx:for="{{activityInfo}}" wx:key="label"><text>{{tr.t(item.label, lang)}}</text><view>{{tr.t(item.value, lang)}}</view></view><view class="pad story-text" wx:if="{{activityIntro}}">{{tr.t(activityIntro, lang)}}</view><view class="pad muted" wx:elif="{{!activityInfo.length}}">{{tr.t('发起人暂未填写更多介绍，请先核对上方时间与地点。', lang)}}</view><view class="pad muted" wx:if="{{s.notes}}">{{tr.t(s.notes, lang)}}</view></view>
+</block>
 <block wx:elif="{{tab=='route'}}">
   <load-row wx:if="{{!routeDetail.title}}" />
   <block wx:else>
@@ -404,6 +408,7 @@
     </view>
     <view class="btn dock-cta" bindtap="invitePay">{{tr.t('去支付', lang)}}</view>
   </view>
+  <view class="pad muted" wx:elif="{{activityIsOver && !s.myEnrollment}}" style="text-align:center">{{tr.t('活动已开始或结束，暂不能报名', lang)}}</view>
   <view class="pad muted" wx:elif="{{s.myEnrollment && (isActivity || s.myEnrollment.payStatus!='paid')}}" style="text-align:center">{{tr.t(ticket.title || '已报名', lang)}}<text wx:if="{{isActivity && s.myEnrollment.status != 'waitlist'}}">{{tr.t('，到场找发起人即可', lang)}}</text></view>
 </view>
 <view class="app-tabs-spacer" wx:if="{{showDetailTabs}}"></view>

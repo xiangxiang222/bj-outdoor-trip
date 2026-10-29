@@ -75,7 +75,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import LoadRow from "@/components/LoadRow.vue";
-import { showAfterActions, todayYmd } from "@/utils/trips";
+import { isReviewTrip } from "@/utils/trips";
 import { canReorder, maskTravelerPhone, orderBadge, orderHint, orderMoney, orderNo, orderShop, orderSpec, payMethodLabel, placedLabel, priceLines } from "@/utils/orderView";
 
 const pageRoute = useRoute();
@@ -100,7 +100,7 @@ const placed = computed(() => placedLabel(order.value));
 const no = computed(() => orderNo(order.value));
 const phone = computed(() => maskTravelerPhone(order.value?.traveler_phone));
 const place = computed(() => order.value?.meetup_point || order.value?.city || orderSpec(order.value));
-const canReview = computed(() => showAfterActions(order.value) && order.value?.canReview && String(order.value?.start_date || "").slice(0, 10) < todayYmd());
+const canReview = computed(() => isReviewTrip(order.value));
 const again = computed(() => canReorder(order.value));
 const hasActions = computed(() => order.value && (order.value.canCancel || order.value.canPay || canReview.value || (order.value.canAfter && order.value.completed) || again.value));
 

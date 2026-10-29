@@ -1,52 +1,102 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="act-hero">
-  <view class="act-hero-text">
-    <view class="title">{{tr.t('同城也能约', lang)}}</view>
-    <view class="muted light">{{tr.t('掼蛋、跑步、看电影。山野线路请回首页。', lang)}}</view>
+<template name="activity-icon">
+  <view class="activity-art {{art}}" aria-hidden="true">
+    <block wx:if="{{art=='cards'}}"><view class="art-card back"></view><view class="art-card front"><view class="art-diamond"></view></view></block>
+    <block wx:elif="{{art=='run'}}"><view class="art-head"></view><view class="art-body"></view><view class="art-arm"></view><view class="art-leg first"></view><view class="art-leg second"></view><view class="art-speed"></view></block>
+    <block wx:elif="{{art=='movie'}}"><view class="art-film"><view class="art-film-hole"></view><view class="art-play"></view></view></block>
+    <block wx:else><view class="art-person one"></view><view class="art-person two"></view><view class="art-shoulder one"></view><view class="art-shoulder two"></view><view class="art-star"></view></block>
   </view>
-  <view class="btn gold" bindtap="goPublish">{{tr.t('发起一局', lang)}}</view>
-</view>
-<input class="feed-search" placeholder="{{tr.t('搜局、城区、主理人', lang)}}" value="{{query}}" bindinput="onQuery" confirm-type="search" />
-<view class="kind-grid">
-  <view class="act-kind {{kind==item.key?'on':''}}" wx:for="{{kinds}}" wx:key="key" bindtap="setKind" data-key="{{item.key}}">
-    <view class="emoji">{{tr.t(item.emoji, lang)}}</view>
-    <view>{{tr.t(item.label, lang)}}</view>
-    <view class="muted tiny">{{tr.t(item.hint, lang)}}</view>
+</template>
+<view class="activity-page {{dark?'is-dark':''}}">
+  <view class="activity-hero">
+    <view class="activity-eyebrow">CITY MOMENTS</view>
+    <view class="activity-hero-title">{{tr.t('把喜欢的事，', lang)}}<view>{{tr.t('约在一起', lang)}}</view></view>
+    <view class="activity-hero-sub">{{tr.t('小小的兴趣，也能遇见合拍的人。', lang)}}</view>
+    <button class="activity-create" bindtap="goPublish"><text class="activity-plus" aria-hidden="true">＋</text>{{tr.t('发起活动', lang)}}</button>
+    <view class="activity-hero-art" aria-hidden="true">
+      <view class="hero-orbit"></view><view class="hero-ticket back"></view>
+      <view class="hero-ticket front"><view class="ticket-label">MEET</view><view class="ticket-symbol"><view></view><view></view></view><view class="ticket-rule"></view><view class="ticket-caption">TOGETHER</view></view>
+      <view class="hero-spark">✦</view><view class="hero-dot"></view>
+    </view>
   </view>
-</view>
-<view class="feed-toolbar">
-  <view class="hint" wx:if="{{loading && !rows.length}}">{{tr.t('正在加载', lang)}}</view>
-  <view class="hint" wx:else>{{tr.t('本周', lang)}} {{tr.t(weekCount, lang)}} {{tr.t('场 · 共', lang)}} {{tr.t(list.length, lang)}} {{tr.t('场', lang)}}</view>
-  <view class="tools">
-    <view class="tool-btn" bindtap="cycleSort">{{tr.t(sortText, lang)}}</view>
-    <view class="tool-btn play" bindtap="goPublish">{{tr.t('发起', lang)}}</view>
+
+  <view class="activity-kinds" aria-label="{{tr.t('选择活动兴趣', lang)}}">
+    <button wx:for="{{kinds}}" wx:key="key" class="activity-kind {{kind==item.key?'on':''}}" bindtap="setKind" data-key="{{item.key}}" aria-label="{{tr.t(item.label, lang)}}">
+      <view class="activity-kind-icon"><template is="activity-icon" data="{{art:item.art}}" /></view>
+      <view class="activity-kind-label">{{tr.t(item.label, lang)}}</view>
+      <view class="activity-kind-hint">{{tr.t(item.hint, lang)}}</view>
+      <view class="activity-kind-dot" wx:if="{{kind==item.key}}"></view>
+    </button>
   </view>
-</view>
-<view class="picked" wx:if="{{picked.length}}">
-  <view class="picked-chip" wx:for="{{picked}}" wx:key="key" bindtap="clearPick" data-key="{{item.key}}">{{tr.t(item.label, lang)}} ×</view>
-</view>
-<view class="feed-card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}">
-  <view class="feed-cover">
-    <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" />
-    <view wx:else class="feed-ph">{{tr.t(item.coverMark, lang)}}</view>
-    <view class="feed-boarded">{{tr.t(item.boarded, lang)}}</view>
+
+  <view class="activity-theme" wx:if="{{selectedKind}}">
+    <view class="theme-copy"><view class="theme-title">{{tr.t(selectedKind.title || selectedKind.label, lang)}}</view><view class="theme-description">{{tr.t(selectedKind.description, lang)}}</view></view>
+    <button class="theme-create" bindtap="goPublish">{{tr.t(selectedKind.publishLabel || '我来发起', lang)}}<text aria-hidden="true"> ↗</text></button>
   </view>
-  <view class="feed-body">
-    <view class="feed-when">{{tr.t(item.feedWhen, lang)}} · {{tr.t(item.city, lang)}}</view>
-    <view class="feed-title"><text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{tr.t(item.privateLabel || '口令团', lang)}}</text> {{tr.t(item.route.title, lang)}}</view>
-    <view class="feed-host">{{tr.t(item.host, lang)}}<text wx:if="{{item.kindLabel}}"> · {{tr.t(item.kindLabel, lang)}}</text></view>
-    <view class="feed-tagline" wx:if="{{item.tagline}}">{{tr.t(item.tagline, lang)}}</view>
-    <view class="feed-price" wx:if="{{item.free}}">{{tr.t('免费', lang)}}</view>
-    <view class="feed-price" wx:else><text class="strong">¥{{tr.t(item.price, lang)}}</text> {{tr.t('起', lang)}}</view>
+
+  <view class="activity-section-head">
+    <view><view class="activity-section-eyebrow">FIND YOUR PEOPLE</view><view class="activity-section-title">{{tr.t('日常，也值得期待', lang)}}</view></view>
+    <button class="activity-show-all" wx:if="{{kind}}" bindtap="showAll">{{tr.t('全部活动', lang)}}<text aria-hidden="true"> ›</text></button>
   </view>
-</view>
-<load-row wx:if="{{loading && !list.length}}" />
-<view class="card" wx:elif="{{!list.length}}">
-  <view class="pad">
-    <view class="title">{{tr.t(kind ? '还没有这类局' : '还没有同城局', lang)}}</view>
-    <view class="muted">{{tr.t('发起一局，审核通过后出现在这里。', lang)}}</view>
-    <view class="btn ghost" bindtap="goPublish">{{tr.t('去发起', lang)}}</view>
+  <view class="activity-search">
+    <view class="activity-search-icon" aria-hidden="true"></view>
+    <input class="activity-search-input" placeholder="{{tr.t('搜活动、地点或发起人', lang)}}" value="{{query}}" bindinput="onQuery" confirm-type="search" maxlength="100" aria-label="{{tr.t('搜索同城活动', lang)}}" />
+    <button wx:if="{{query}}" class="activity-search-clear" bindtap="clearQuery" aria-label="{{tr.t('清空搜索', lang)}}">×</button>
   </view>
+  <view class="activity-filter-bar">
+    <picker class="activity-city" mode="selector" range="{{cityPickerLabels}}" value="{{cityIndex}}" bindchange="setCity" aria-label="{{tr.t('选择城区', lang)}}"><view>{{tr.t(city || '全部城区', lang)}}<text class="activity-chevron" aria-hidden="true"></text></view></picker>
+    <picker class="activity-sort" mode="selector" range="{{sortPickerLabels}}" value="{{sortIndex}}" bindchange="setSort" aria-label="{{tr.t('活动排序', lang)}}"><view>{{tr.t(sortText, lang)}}<text class="activity-chevron" aria-hidden="true"></text></view></picker>
+  </view>
+  <scroll-view class="activity-time-scroll" scroll-x="{{true}}" enhanced show-scrollbar="{{false}}">
+    <view class="activity-time-row">
+      <button class="activity-filter {{time==item.key?'on':''}}" wx:for="{{times}}" wx:key="key" data-key="{{item.key}}" bindtap="setTime">{{tr.t(item.label, lang)}}</button>
+      <view class="activity-filter-divider"></view>
+      <button class="activity-filter {{freeOnly?'on':''}}" bindtap="toggleFree">{{tr.t('免费', lang)}}<text wx:if="{{freeOnly}}" aria-hidden="true"> ✓</text></button>
+      <button class="activity-filter {{availableOnly?'on':''}}" bindtap="toggleAvailable">{{tr.t('有余位', lang)}}<text wx:if="{{availableOnly}}" aria-hidden="true"> ✓</text></button>
+    </view>
+  </scroll-view>
+  <view class="activity-result-line" aria-live="polite">
+    <view wx:if="{{loading && !rows.length}}">{{tr.t('正在寻找同城好时光…', lang)}}</view>
+    <view wx:elif="{{!loadError}}">{{tr.t('找到', lang)}} <text>{{list.length}}</text> {{tr.t('场活动', lang)}}<text wx:if="{{loading}}"> · {{tr.t('更新中', lang)}}</text></view>
+    <view wx:else></view>
+    <button wx:if="{{hasRefinements}}" bindtap="clearFilters">{{tr.t('清空筛选', lang)}}</button>
+  </view>
+  <view wx:if="{{loadError}}" class="activity-error" aria-live="polite">
+    <view><view class="activity-error-title">{{tr.t('活动暂时加载失败', lang)}}</view><view class="activity-error-sub">{{tr.t(rows.length ? '已保留上次内容，稍后再试试。' : '检查网络后，再试一次吧。', lang)}}</view></view>
+    <button bindtap="retry" disabled="{{loading}}">{{tr.t('重新加载', lang)}}</button>
+  </view>
+  <load-row wx:if="{{loading && !rows.length}}" />
+
+  <view class="activity-list">
+    <view class="activity-card" wx:for="{{list}}" wx:key="id" bindtap="go" data-id="{{item.id}}" aria-role="button" aria-label="{{tr.t(item.route.title, lang)}}">
+      <view class="activity-card-top">
+        <view class="activity-cover" wx:if="{{!textMode}}">
+          <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" lazy-load data-index="{{index}}" binderror="imageError" />
+          <view wx:else class="activity-cover-fallback"><template is="activity-icon" data="{{art:item.art}}" /></view>
+          <view class="activity-kind-badge">{{tr.t(item.kindLabel, lang)}}</view>
+        </view>
+        <view class="activity-card-copy">
+          <view class="activity-when">{{tr.t(item.facts.dateLabel, lang)}}<text wx:if="{{item.facts.timeLabel}}"> · {{item.facts.timeLabel}}</text></view>
+          <view class="activity-card-title">{{tr.t(item.route.title || item.title, lang)}}</view>
+          <view class="activity-place"><view class="activity-pin" aria-hidden="true"></view><text>{{tr.t(item.facts.place || item.city || '地点待补充', lang)}}</text></view>
+          <view class="activity-host">{{tr.t(item.host || '活动发起人', lang)}}<text wx:if="{{item.private}}"> · {{tr.t('凭口令加入', lang)}}</text></view>
+        </view>
+      </view>
+      <view class="activity-card-bottom">
+        <view class="activity-people"><view class="activity-phase">{{tr.t(item.facts.phase, lang)}}</view><view class="activity-capacity">{{tr.t(item.facts.progress, lang)}}<text wx:if="{{item.facts.capacity}}"> · {{tr.t(item.facts.capacity, lang)}}</text></view></view>
+        <view class="activity-price"><text wx:if="{{item.facts.free}}" class="activity-price-free">{{tr.t('免费', lang)}}</text><view wx:else><text class="activity-currency">¥</text><text class="activity-amount">{{item.facts.price}}</text><text class="activity-per-person"> / {{tr.t('人', lang)}}</text></view><view class="activity-card-link">{{tr.t('查看活动', lang)}}<text aria-hidden="true"> ↗</text></view></view>
+      </view>
+    </view>
+  </view>
+  <view class="activity-empty" wx:if="{{!loading && !loadError && !list.length}}">
+    <view class="activity-empty-art" aria-hidden="true"><view></view><view></view></view>
+    <view class="activity-empty-title">{{tr.t(hasFilters ? '暂时没有合适的活动' : '好时光，等你来发起', lang)}}</view>
+    <view class="activity-empty-description">{{tr.t(hasFilters ? '换个日期或城区，也许就能遇见。' : '约一场牌局、跑步或电影，把兴趣变成一次见面。', lang)}}</view>
+    <button wx:if="{{hasRefinements}}" class="activity-empty-primary" bindtap="clearFilters">{{tr.t('清空筛选', lang)}}</button>
+    <button wx:else class="activity-empty-primary" bindtap="goPublish">{{tr.t(selectedKind ? selectedKind.publishLabel : '发起第一场活动', lang)}}</button>
+    <button wx:if="{{hasFilters}}" class="activity-empty-secondary" bindtap="showAll">{{tr.t('看看全部活动', lang)}}</button>
+  </view>
+  <view class="activity-footnote" wx:if="{{list.length}}">{{tr.t('认真赴约，让每一次见面都有回应。', lang)}}</view>
 </view>
 <view class="tab-pad"></view>
