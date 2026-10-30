@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const { harness, loginUser, auth, ID, issueCaptcha } = require("./http");
 const config = require("../src/config");
 const { signMd5, objToXml, UNIFIED_ORDER_URL, ORDER_QUERY_URL } = require("../src/services/wechat");
-const { shipmentRetryDelays } = require("../src/services/payment");
+const { shipmentRetryDelays, payEnrollment } = require("../src/services/payment");
 
 const LIVE_KEY = "a".repeat(32);
 
@@ -156,6 +156,31 @@ describe("wechat live pay", () => {
       assert.equal(row.payStatus, "paid");
       const confirmed = await agent.post("/api/pay/confirm").set(auth(token)).send({ tradeNo }).expect(200);
       assert.equal(confirmed.body.data.already, true);
+    } finally {
+      wechat.restore();
+      restorePay();
+    }
+  });
+
+  it("rechecks the shared balance before issuing concurrent helpers' WeChat prepayments", async () => {
+    const restorePay = useLivePay();
+    const wechat = mockWechatPay();
+    try {
+      seed.db.prepare("UPDATE users SET wechat_openid=? WHERE id=?").run("owner-openid",seed.userId);
+      seed.db.prepare("UPDATE users SET wechat_openid=? WHERE id=?").run("helper-openid",seed.companyUserId);
+      const enrollmentId = Number(seed.db.prepare("INSERT INTO enrollments(schedule_id,user_id,status,pay_status,pay_amount,campus_snapshot_json) VALUES (?,?,'joined','unpaid',100,?)")
+        .run(seed.individualScheduleId,seed.userId,JSON.stringify({studentPrice:false})).lastInsertRowid);
+      const attempts = await Promise.allSettled([
+        payEnrollment(enrollmentId,seed.userId,{amount:80}),
+        payEnrollment(enrollmentId,seed.companyUserId,{amount:80}),
+      ]);
+      assert.equal(attempts.filter((result) => result.status === "fulfilled").length,1);
+      const rejected = attempts.find((result) => result.status === "rejected");
+      assert.equal(rejected.reason.status,400);
+      assert.match(rejected.reason.message,/超过待付余额 ¥20/);
+      const payments = seed.db.prepare("SELECT amount,status FROM payments WHERE enrollment_id=?").all(enrollmentId);
+      assert.deepEqual(payments,[{amount:80,status:"pending"}]);
+      assert.equal(wechat.calls.filter((href) => href === UNIFIED_ORDER_URL).length,1);
     } finally {
       wechat.restore();
       restorePay();
@@ -346,6 +371,19 @@ describe("enrollment pay share and crowdfund", () => {
     assert.equal(detail.body.data.myEnrollment.helpers[0].remark, "他人代付");
   });
 
+  it("rechecks an in-flight payment after another helper pays from their wallet", async () => {
+    const { enrollmentId } = await enrollSelf();
+    seed.db.prepare("UPDATE enrollments SET pay_amount=100 WHERE id=?").run(enrollmentId);
+    seed.db.prepare("UPDATE users SET wallet_balance=100 WHERE id=?").run(seed.companyUserId);
+    const pendingWechat = payEnrollment(enrollmentId,seed.userId,{amount:80});
+    const wallet = await payEnrollment(enrollmentId,seed.companyUserId,{amount:80,channel:"wallet"});
+    assert.equal(wallet.remainAmount,20);
+    await assert.rejects(pendingWechat,(error) => error.status === 400 && /超过待付余额 ¥20/.test(error.message));
+    const charged = seed.db.prepare("SELECT SUM(amount) AS amount FROM payments WHERE enrollment_id=? AND status='success'").get(enrollmentId);
+    assert.equal(charged.amount,80);
+    assert.equal(seed.db.prepare("SELECT wallet_balance FROM users WHERE id=?").get(seed.companyUserId).wallet_balance,20);
+  });
+
   it("refunds each crowdfund payer on cancel", async () => {
     const { token, enrollmentId } = await enrollSelf();
     await agent.post("/api/pay/for-enrollment").set(auth(token)).send({ enrollmentId, amount: 80 }).expect(200);
@@ -374,6 +412,56 @@ describe("wechat order detail", () => {
 
   beforeEach(() => {
     ({ agent, seed } = harness());
+  });
+
+  it("only returns a settled payment's profile to its actual payer", async () => {
+    const payer = await loginUser(agent);
+    const other = await loginUser(agent, "13900139000");
+    seed.db.prepare(
+      "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (0,?,0,10,'wallet','success','CONFIRM-PRIVATE','','wallet_topup')"
+    ).run(seed.userId);
+    await agent.post("/api/pay/confirm").send({ tradeNo:"CONFIRM-PRIVATE" }).expect(401);
+    const denied = await agent.post("/api/pay/confirm").set(auth(other)).send({ tradeNo:"CONFIRM-PRIVATE" }).expect(403);
+    assert.equal(denied.body.data, undefined);
+    const confirmed = await agent.post("/api/pay/confirm").set(auth(payer)).send({ tradeNo:"CONFIRM-PRIVATE" }).expect(200);
+    assert.equal(confirmed.body.data.user.id,seed.userId);
+    assert.equal(confirmed.body.data.already,true);
+  });
+
+  it("lets a helper confirm their own prepayment but refuses the traveler before querying or settling it", async () => {
+    const traveler = await loginUser(agent);
+    const helper = await loginUser(agent, "13900139000");
+    const restorePay = useLivePay();
+    const wechat = mockWechatPay("SUCCESS");
+    try {
+      seed.db.prepare("UPDATE users SET wechat_openid=? WHERE id=?").run("helper-openid",seed.companyUserId);
+      const enrollmentId = Number(seed.db.prepare("INSERT INTO enrollments(schedule_id,user_id,status,pay_status,pay_amount,campus_snapshot_json) VALUES (?,?,'joined','unpaid',100,?)")
+        .run(seed.individualScheduleId,seed.userId,JSON.stringify({studentPrice:false})).lastInsertRowid);
+      const payment = await agent.post("/api/pay/for-enrollment").set(auth(helper)).send({ enrollmentId,amount:80 }).expect(200);
+      const tradeNo = payment.body.data.tradeNo;
+      const denied = await agent.post("/api/pay/confirm").set(auth(traveler)).send({ tradeNo }).expect(403);
+      assert.equal(denied.body.data,undefined);
+      assert.equal(wechat.calls.filter((href) => href === ORDER_QUERY_URL).length,0);
+      assert.equal(seed.db.prepare("SELECT status FROM payments WHERE trade_no=?").get(tradeNo).status,"pending");
+      const confirmed = await agent.post("/api/pay/confirm").set(auth(helper)).send({ tradeNo }).expect(200);
+      assert.equal(confirmed.body.data.user.id,seed.companyUserId);
+      assert.equal(confirmed.body.data.remainAmount,20);
+      assert.equal(wechat.calls.filter((href) => href === ORDER_QUERY_URL).length,1);
+      assert.equal(seed.db.prepare("SELECT status FROM payments WHERE trade_no=?").get(tradeNo).status,"success");
+    } finally {
+      wechat.restore();
+      restorePay();
+    }
+  });
+
+  it("authorizes a company trade against the paying company rather than a participant", async () => {
+    const participant = await loginUser(agent);
+    const company = await loginUser(agent, "13900139000");
+    const insert = seed.db.prepare("INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene) VALUES (0,?,?,20,'wallet','success','CONFIRM-COMPANY','',?)");
+    insert.run(seed.companyUserId,seed.companyScheduleId,"company");
+    await agent.post("/api/pay/confirm").set(auth(participant)).send({ tradeNo:"CONFIRM-COMPANY" }).expect(403);
+    const confirmed = await agent.post("/api/pay/confirm").set(auth(company)).send({ tradeNo:"CONFIRM-COMPANY" }).expect(200);
+    assert.equal(confirmed.body.data.user.id,seed.companyUserId);
   });
 
   it("opens a paid order by the wechat trade number for the payer", async () => {
