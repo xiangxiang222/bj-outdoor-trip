@@ -171,12 +171,13 @@ async function growPool() {
 
 async function verify(row, kind) {
   try {
-    await http.post(`/admin/users/${row.id}/verify`, { kind, action: "approve" });
+    await http.post(`/admin/users/${row.id}/verify`, { kind, action: "approve", ...(kind === "student" ? { revision: row.studentRevision } : {}) });
     ElMessage.success(kind === "student" ? "校园认证已通过" : kind === "leader" ? "领队已通过" : "团体已通过");
     window.dispatchEvent(new Event("admin-notices-refresh"));
     await load();
   } catch (e) {
     ElMessage.error(e.message);
+    if (e.status === 409) { window.dispatchEvent(new Event("admin-notices-refresh")); await load(); }
   }
 }
 

@@ -1,6 +1,7 @@
 const { getDb } = require("../db");
 const { addPoints, isMember, quoteForSchedule, realEnrolledCount, maybeMatchGuide } = require("./helpers");
 const { grantMembership } = require("./member");
+const { assertCampusEnrollment } = require("./campus-certification");
 const config = require("../config");
 const {
   payLive,
@@ -390,6 +391,7 @@ function loadEnrollmentForPay(enrollmentId, token) {
   if (owner && Number(owner.is_virtual)) fail(400, "该报名不能支付");
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(en.schedule_id);
   if (!sch || sch.status === "cancelled") fail(400, "该拼团已解散");
+  assertCampusEnrollment(en, sch);
   if (!Number(en.pay_amount || 0)) {
     en.pay_amount = quoteForSchedule(sch, Math.max(realEnrolledCount(sch.id), 1), null).originPrice;
   }
@@ -426,6 +428,9 @@ async function payEnrollment(enrollmentId, payerId, opts = {}) {
     return { ...charged, channel: "wallet", walletBalance: balanceOf(payerId) };
   }
   await ensurePayerWechat(payerId, opts.code);
+  // The WeChat session request can yield while the enrollee withdraws or
+  // changes campus identity; validate the fresh booking before reserving money.
+  loadEnrollmentForPay(en.id);
   if (config.wechat.mock || amount <= 0) {
     return applyEnrollmentCharge(en, payerId, amount, { remark });
   }
@@ -614,6 +619,7 @@ async function payCompanySchedule(userId, scheduleId, opts = {}) {
     .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending' AND status='joined'")
     .all(sch.id);
   if (!pending.length) fail(400, "没有待统一支付的报名");
+  pending.forEach((en) => assertCampusEnrollment(en, sch));
   const quote = quoteForSchedule(sch, Math.max(realEnrolledCount(sch.id), 1), null);
   const lines = pending.map((en) => ({
     id: en.id,
@@ -635,6 +641,7 @@ async function payCompanySchedule(userId, scheduleId, opts = {}) {
     };
   }
   await ensurePayerWechat(userId, opts.code);
+  pending.forEach((en) => assertCampusEnrollment(db.prepare("SELECT * FROM enrollments WHERE id=?").get(en.id), db.prepare("SELECT * FROM schedules WHERE id=?").get(sch.id)));
   if (!payLive()) fail(400, "未配置微信支付密钥，无法收款");
   let row = db
     .prepare("SELECT * FROM payments WHERE user_id=? AND schedule_id=? AND scene='company' AND status='pending' ORDER BY id DESC")

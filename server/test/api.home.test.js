@@ -36,7 +36,7 @@ describe("homepage and publish review", () => {
     assert.equal(stu.body.data.studentStatus, "pending");
     await agent.post("/api/feedback").set(auth(token)).send({ kind: "suggest", content: "希望增加夜观星空" }).expect(200);
     const admin = await loginAdmin(agent);
-    await agent.post(`/api/admin/users/${seed.userId}/verify`).set(auth(admin)).send({ kind: "student", action: "approve" }).expect(200);
+    await agent.post(`/api/admin/users/${seed.userId}/verify`).set(auth(admin)).send({ kind: "student", revision: require("../src/db").getDb().prepare("SELECT student_revision FROM users WHERE id=?").get(seed.userId).student_revision, action: "approve" }).expect(200);
     const me = await agent.get("/api/me").set(auth(token)).expect(200);
     assert.equal(me.body.data.isStudent, true);
     const enrolled = await agent

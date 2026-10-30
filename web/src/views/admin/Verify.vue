@@ -133,12 +133,15 @@ async function decide(row, action) {
     if (action === "reject") {
       await ElMessageBox.confirm(`拒绝「${row.user.nickname}」的${label}？`, "拒绝认证", { type: "warning" });
     }
-    await http.post(`/admin/users/${row.user.id}/verify`, { kind: apiKind, action });
+    await http.post(`/admin/users/${row.user.id}/verify`, { kind: apiKind, action, ...(apiKind === "student" ? { revision: row.user.studentRevision } : {}) });
     ElMessage.success(action === "approve" ? `${label}已通过` : `${label}已拒绝`);
     window.dispatchEvent(new Event("admin-notices-refresh"));
     await load();
   } catch (e) {
-    if (e !== "cancel") ElMessage.error(e.message || "已取消");
+    if (e !== "cancel" && e !== "close") {
+      ElMessage.error(e.message || "操作失败");
+      if (e.status === 409) { window.dispatchEvent(new Event("admin-notices-refresh")); await load(); }
+    }
   }
 }
 </script>

@@ -97,6 +97,7 @@ const { scheduleRouteI18n } = require("./services/route-i18n");
 const { submitApply, listMine: listRouteApps, reviewApply, adminFields, bountyYuan, applicationView, reviewOf, isListed } = require("./services/route-apply");
 const { ingestRoute, botRoute, listBotRoutes } = require("./services/route-bot");
 const { noticeCampus, noticeGroup, noticeLeader, noticeTrip, listNotices, markRead, markAllRead, resolveNotices } = require("./services/notices");
+const campusCertification = require("./services/campus-certification");
 const { submitFeedback, listFeedbacks } = require("./services/feedback");
 const { createCaptcha, codesMatch } = require("./services/captcha");
 const {
@@ -309,7 +310,8 @@ function userPublic(u, req) {
     isStudent: isStudent(u),
     isAlumni: isAlumni(u),
     studentStatus: u.student_status || "",
-    campusKind: u.campus_kind === "alumni" ? "alumni" : u.student_status || u.is_student ? "student" : "",
+    studentRevision: Number(u.student_revision || 0),
+    campusKind: u.campus_kind === "alumni" ? "alumni" : u.campus_kind === "student" || u.is_student || ["pending","approved","rejected","withdrawn"].includes(u.student_status) ? "student" : "",
     school: u.school || "",
     college: u.college || "",
     major: u.major || "",
@@ -334,7 +336,7 @@ function userPublic(u, req) {
 }
 
 function jsonError(res, e) {
-  res.status(e.status || 500).json({ ok: false, message: e.message, ...(e.extra || {}) });
+  res.status(e.status || 500).json({ ok: false, message: e.message, ...(e.code ? { code:e.code } : {}), ...(e.extra || {}) });
 }
 
 function openidOf(userId) {
@@ -1313,36 +1315,61 @@ function optionalCampusName(raw, label) {
   return value;
 }
 
-router.post("/me/student", authUser, (req, res) => {
-  const body = req.body || {};
-  let school;
-  let college;
-  let major;
-  try {
-    school = optionalCampusName(body.school, "学校全称");
-    college = optionalCampusName(body.college, "学院");
-    major = optionalCampusName(body.major, "专业");
-  } catch (e) {
-    return res.status(e.status || 400).json({ ok: false, message: e.message });
-  }
-  const studentNo = String(body.studentNo || body.student_no || "").trim().slice(0, 32);
-  const studentCardUrl = parseStudentCardUrl(body.studentCardUrl || body.student_card_url);
-  const rawKind = String(body.campusKind || body.campus_kind || "student").toLowerCase();
-  const campusKind = rawKind === "alumni" ? "alumni" : "student";
-  if (campusKind === "student" && studentNo.length < 4) return res.status(400).json({ ok: false, message: "请填写学号" });
-  if (!studentCardUrl) return res.status(400).json({ ok: false, message: "请上传学生证照片" });
-  db()
-    .prepare(
-      "UPDATE users SET school=?, college=?, major=?, student_no=?, student_card_url=?, campus_kind=?, student_status='pending', is_student=0 WHERE id=?"
-    )
-    .run(school, college, major, studentNo, studentCardUrl, campusKind, req.userId);
-  const next = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
-  noticeCampus(next);
-  res.json({
-    ok: true,
-    data: userPublic(next, req),
-    message: campusKind === "alumni" ? "已提交校友认证，待后台审核" : "已提交学生认证，待后台审核",
+router.get("/me/student/manage", authUser, (req, res) => {
+  res.json({ ok:true, data:campusCertification.management(db().prepare("SELECT * FROM users WHERE id=?").get(req.userId)) });
+});
+
+for (const action of ["withdraw", "revoke"]) {
+  router.post(`/me/student/${action}`, authUser, (req, res) => {
+    try {
+      db().transaction(() => {
+        const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+        campusCertification.assertRevision(user, (req.body || {}).revision);
+        const allowed = action === "withdraw" ? user.student_status === "pending" : isStudent(user) || isAlumni(user);
+        if (!allowed) throw campusCertification.conflict();
+        campusCertification.beforeIdentityChange(user);
+        const history = campusCertification.historyFor(user, action);
+        if (action === "withdraw") {
+          db().prepare("UPDATE users SET student_status='withdrawn', is_student=0, student_revision=student_revision+1, student_history_json=? WHERE id=?").run(history, user.id);
+        } else {
+          db().prepare("UPDATE users SET student_status='revoked', is_student=0, campus_kind='', student_no='', student_card_url='', student_revision=student_revision+1, student_history_json=? WHERE id=?").run(history, user.id);
+        }
+        resolveNotices("campus", "user", user.id, 0);
+      }).immediate();
+      res.json({ ok:true, data:userPublic(db().prepare("SELECT * FROM users WHERE id=?").get(req.userId), req), message:action === "withdraw" ? "已撤回认证申请" : "已解除校园认证" });
+    } catch (error) { jsonError(res, error); }
   });
+}
+
+router.post("/me/student", authUser, (req, res) => {
+  try {
+    const body = req.body || {};
+    const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+    campusCertification.assertRevision(user, body.revision, { optionalInitial:true });
+    if (user.student_status === "pending") throw campusCertification.conflict("申请正在审核，请先撤回后再修改资料");
+    const school = optionalCampusName(body.school, "学校全称");
+    const college = optionalCampusName(body.college, "学院");
+    const major = optionalCampusName(body.major, "专业");
+    const studentNo = String(body.studentNo || body.student_no || "").trim().slice(0, 32);
+    const studentCardUrl = parseStudentCardUrl(body.studentCardUrl || body.student_card_url);
+    const rawKind = String(body.campusKind || body.campus_kind || "student").toLowerCase();
+    const campusKind = rawKind === "alumni" ? "alumni" : "student";
+    if (campusKind === "student" && studentNo.length < 4) return res.status(400).json({ ok:false, message:"请填写学号" });
+    if (!studentCardUrl) return res.status(400).json({ ok:false, message:"请上传学生证照片" });
+    const proofPath = (value) => { try { return new URL(value, "https://local.invalid").pathname; } catch { return value; } };
+    if (campusKind === "alumni" && isStudent(user) && proofPath(studentCardUrl) === proofPath(user.student_card_url)) return res.status(400).json({ ok:false, message:"转为校友请上传毕业证或校友证照片" });
+    db().transaction(() => {
+      const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
+      campusCertification.assertRevision(user, body.revision, { optionalInitial:true });
+      if (user.student_status === "pending") throw campusCertification.conflict("申请正在审核，请先撤回后再修改资料");
+      campusCertification.beforeIdentityChange(user);
+      db().prepare("UPDATE users SET school=?, college=?, major=?, student_no=?, student_card_url=?, campus_kind=?, student_status='pending', is_student=0, student_revision=student_revision+1, student_history_json=? WHERE id=?")
+        .run(school, college, major, campusKind === "alumni" ? "" : studentNo, studentCardUrl, campusKind, campusCertification.historyFor(user, isStudent(user) || isAlumni(user) ? "change" : "submit"), user.id);
+      noticeCampus(db().prepare("SELECT * FROM users WHERE id=?").get(user.id));
+    }).immediate();
+    const next = db().prepare("SELECT * FROM users WHERE id=?").get(user.id);
+    res.json({ ok:true, data:userPublic(next, req), message:campusKind === "alumni" ? "已提交校友认证，待后台审核" : "已提交学生认证，待后台审核" });
+  } catch (error) { jsonError(res, error); }
 });
 
 router.post("/me/group", authUser, async (req, res) => {
@@ -2664,7 +2691,8 @@ function adminUserView(user) {
     isStudent: isStudent(user),
     isAlumni: isAlumni(user),
     studentStatus: user.student_status || "",
-    campusKind: user.campus_kind === "alumni" ? "alumni" : user.student_status || user.is_student ? "student" : "",
+    studentRevision: Number(user.student_revision || 0),
+    campusKind: user.campus_kind === "alumni" ? "alumni" : user.campus_kind === "student" || user.is_student || ["pending","approved","rejected","withdrawn"].includes(user.student_status) ? "student" : "",
     school: user.school || "",
     college: user.college || "",
     major: user.major || "",
@@ -3249,9 +3277,11 @@ router.post("/admin/schedules/:id/draw", authAdmin, requireCap("ops"), (req, res
     res.json({
       ok: true,
       data,
-      message: data.over
-        ? `报名超过座位，已抽出 ${data.winnerCount} 人出行`
-        : `报名未超过座位，已全部确认 ${data.winnerCount} 人`,
+      message: data.needsVerificationCount
+        ? `已确认 ${data.winnerCount} 人出行，${data.needsVerificationCount} 人需重新核验校园身份，未分配席位`
+        : data.over
+          ? `报名超过座位，已抽出 ${data.winnerCount} 人出行`
+          : `报名未超过座位，已全部确认 ${data.winnerCount} 人`,
     });
   } catch (e) {
     res.status(e.status || 500).json({ ok: false, message: e.message });
@@ -3390,6 +3420,7 @@ router.post("/admin/schedules/:id/settle", authAdmin, requireCap("ops"), (req, r
   if (!sch) return res.status(400).json({ ok: false, message: "排期不存在" });
   if (sch.status === "cancelled") return res.status(400).json({ ok: false, message: "该拼团已解散" });
   const pending = db().prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending' AND status='joined'").all(sch.id);
+  try { pending.forEach((en) => campusCertification.assertCampusEnrollment(en, sch)); } catch (error) { return jsonError(res, error); }
   const quote = quoteForSchedule(sch, Math.max(realEnrolledCount(sch.id), 1), null);
   for (const en of pending) {
     const amount = quote.originPrice + Number(en.insurance_fee || 0) + Number(en.supplies_fee || 0);
@@ -3589,7 +3620,7 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
   const q = String(req.query.q || "").trim();
   const pending = String(req.query.pending || "").trim();
   let sql =
-    "SELECT id,phone,nickname,gender,is_member,member_expire_at,member_level,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,school,college,major,student_no,student_card_url,campus_kind,group_status,group_name,role,leader_status,leader_name,leader_years,leader_intro FROM users WHERE deleted_at IS NULL";
+    "SELECT id,phone,nickname,gender,is_member,member_expire_at,member_level,points,company_name,created_at,IFNULL(is_virtual,0) AS is_virtual,student_status,student_revision,school,college,major,student_no,student_card_url,campus_kind,group_status,group_name,role,leader_status,leader_name,leader_years,leader_intro FROM users WHERE deleted_at IS NULL";
   const args = [];
   if (q) {
     sql += " AND (IFNULL(phone,'') LIKE ? OR IFNULL(nickname,'') LIKE ? OR IFNULL(company_name,'') LIKE ? OR IFNULL(school,'') LIKE ? OR IFNULL(college,'') LIKE ? OR IFNULL(major,'') LIKE ? OR IFNULL(group_name,'') LIKE ? OR IFNULL(leader_name,'') LIKE ?)";
@@ -3613,7 +3644,8 @@ router.get("/admin/users", authAdmin, requireCap("ops"), (req, res) => {
       isAlumni: isAlumni(u),
       isLeader: isLeader(u),
       studentStatus: u.student_status || "",
-      campusKind: u.campus_kind === "alumni" ? "alumni" : u.student_status || u.is_student ? "student" : "",
+      studentRevision: Number(u.student_revision || 0),
+      campusKind: u.campus_kind === "alumni" ? "alumni" : u.campus_kind === "student" || u.is_student || ["pending","approved","rejected","withdrawn"].includes(u.student_status) ? "student" : "",
       school: u.school || "",
       college: u.college || "",
       major: u.major || "",
@@ -3704,13 +3736,25 @@ router.post("/admin/users/:id/verify", authAdmin, requireCap("ops"), (req, res) 
   const kind = (req.body || {}).kind;
   const action = (req.body || {}).action || "approve";
   if (kind === "student") {
-    if (action === "approve") {
-      if (user.campus_kind === "alumni") {
-        db().prepare("UPDATE users SET student_status='approved', is_student=0 WHERE id=?").run(user.id);
-      } else {
-        db().prepare("UPDATE users SET student_status='approved', is_student=1 WHERE id=?").run(user.id);
-      }
-    } else db().prepare("UPDATE users SET student_status='rejected', is_student=0 WHERE id=?").run(user.id);
+    try {
+      if (!["approve", "reject"].includes(action)) return res.status(400).json({ ok:false, message:"请选择通过或驳回" });
+      const next = db().transaction(() => {
+        const user = managedUser(req.params.id);
+        if (!user) throw campusCertification.conflict();
+        campusCertification.assertRevision(user, (req.body || {}).revision);
+        if (user.student_status !== "pending") throw campusCertification.conflict("该认证申请已处理或已撤回，请刷新审核列表");
+        db().prepare("UPDATE users SET student_status=?, is_student=?, student_revision=student_revision+1, student_history_json=? WHERE id=?")
+          .run(action === "approve" ? "approved" : "rejected", action === "approve" && user.campus_kind !== "alumni" ? 1 : 0, campusCertification.historyFor(user, action), user.id);
+        resolveNotices("campus", "user", user.id, req.adminId);
+        pushUserNotice({
+          userId:user.id, kind:"verify", title:action === "approve" ? "校园认证已通过" : "校园认证未通过",
+          body:action === "approve" ? "可以在「我的」里看到新的资格。" : "如需补充材料，可再次提交。",
+          href:"/m/student", refType:"verify", refId:user.id,
+        });
+        return db().prepare("SELECT * FROM users WHERE id=?").get(user.id);
+      }).immediate();
+      return res.json({ ok:true, data:adminUserView(next) });
+    } catch (error) { return jsonError(res, error); }
   } else if (kind === "group") {
     if (action === "approve") db().prepare("UPDATE users SET group_status='approved' WHERE id=?").run(user.id);
     else db().prepare("UPDATE users SET group_status='rejected' WHERE id=?").run(user.id);

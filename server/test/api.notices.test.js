@@ -43,14 +43,14 @@ describe("admin review notices", () => {
     const token = await loginUser(agent);
     const admin = await loginAdmin(agent);
     await agent.post("/api/me/student").set(auth(token)).send(campusPayload({ school: "清华大学" })).expect(200);
-    await agent.post("/api/me/student").set(auth(token)).send(campusPayload({ school: "清华大学" })).expect(200);
+    await agent.post("/api/me/student").set(auth(token)).send(campusPayload({ school: "清华大学" })).expect(409);
     const box = await agent.get("/api/admin/notices").set(auth(admin)).expect(200);
     assert.equal(box.body.data.unread, 1);
 
     await agent
       .post(`/api/admin/users/${seed.userId}/verify`)
       .set(auth(admin))
-      .send({ kind: "student", action: "approve" })
+      .send({ kind: "student", revision: require("../src/db").getDb().prepare("SELECT student_revision FROM users WHERE id=?").get(seed.userId).student_revision, action: "approve" })
       .expect(200);
     const after = await agent.get("/api/admin/notices").set(auth(admin)).expect(200);
     assert.equal(after.body.data.unread, 0);

@@ -40,7 +40,7 @@ describe("oversub draw and campus alumni", () => {
     await agent
       .post(`/api/admin/users/${userId}/verify`)
       .set(auth(admin))
-      .send({ kind: "student", action: "approve" })
+      .send({ kind: "student", revision: require("../src/db").getDb().prepare("SELECT student_revision FROM users WHERE id=?").get(userId).student_revision, action: "approve" })
       .expect(200);
   }
 

@@ -5,6 +5,8 @@ const { firstFreeSeat, parseLockedSeats } = require("./seats");
 const { flagOn } = require("./offer");
 const { sendSms } = require("./sms");
 const { redeemHeldForEnrollment } = require("./coupons");
+const { campusEnrollmentCheck } = require("./campus-certification");
+const { pushUserNotice } = require("./mine-desk");
 const { recordEnrollReferral } = require("./referral");
 
 const OVERSUB_COPY = "车位有限。报名人数超过座位时，将抽签决定出行人；未超过则全部确认。";
@@ -140,7 +142,9 @@ function drawOversub(scheduleId, { force = false, rng = Math.random } = {}) {
   if (sch.drawn_at && force) resetDraw(sch.id);
 
   const current = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
-  const applicants = listApplicants(current.id);
+  const allApplicants = listApplicants(current.id);
+  const applicants = allApplicants.filter((en) => campusEnrollmentCheck(en, current).ok);
+  const invalidApplicants = allApplicants.filter((en) => !campusEnrollmentCheck(en, current).ok);
   const seats = drawSeatCount(current);
   const shuffled = shuffle(applicants, rng);
   const winnerRows = shuffled.slice(0, seats);
@@ -149,6 +153,9 @@ function drawOversub(scheduleId, { force = false, rng = Math.random } = {}) {
   const now = dayjs().format("YYYY-MM-DD HH:mm:ss");
 
   const run = db.transaction(() => {
+    // Keep the booking record available to repair or cancel, but never award a
+    // seat after its campus identity or student-price qualification was removed.
+    invalidApplicants.forEach((en) => waitlistEnrollment(en, null, now));
     winnerRows.forEach((en, i) => {
       const seat = firstFreeSeat(current.id, current.max_seats);
       confirmEnrollment(en, i + 1, seat);
@@ -168,13 +175,20 @@ function drawOversub(scheduleId, { force = false, rng = Math.random } = {}) {
   maybeMatchGuide(current.id);
   const route = db.prepare("SELECT title FROM routes WHERE id=?").get(current.route_id);
   notifyDraw(current, route?.title, winnerRows, loserRows, over);
+  invalidApplicants.forEach((en) => pushUserNotice({
+    userId:en.user_id, kind:"verify", title:"报名需重新核验校园身份",
+    body:`您报名的「${route?.title || "活动"}」尚未确认席位，校园身份或学生价资格已变化。请重新认证，或取消后按当前资格报名。`,
+    href:"/m/student", refType:"enrollment", refId:en.id,
+  }));
 
   return {
     scheduleId: current.id,
-    applied: applicants.length,
+    applied: allApplicants.length,
+    eligibleCount: applicants.length,
     seats,
     winnerCount: winnerRows.length,
-    waitlistCount: loserRows.length,
+    waitlistCount: loserRows.length + invalidApplicants.length,
+    needsVerificationCount: invalidApplicants.length,
     over,
     drawnAt: now,
   };

@@ -18,6 +18,7 @@ const {
 const config = require("../config");
 const { assertComboEnroll, parseComboWant } = require("./combo");
 const { assertEnrollLimit } = require("./eligibility");
+const { snapshotFor, campusEnrollmentCheck } = require("./campus-certification");
 const { assertGenderRatio } = require("./gender-ratio");
 const { resolveSupplies } = require("./supplies");
 const { isOversubPending } = require("./oversub");
@@ -299,6 +300,15 @@ function enrollUser({
       supply.fee
     );
   const enrollmentId = Number(info.lastInsertRowid);
+  const ordinaryQuote = quoteForSchedule(sch, Math.max(waitlisted ? quotePeople : quotePeople + 1, 1), { ...user, student_status:"", is_student:0 });
+  const ordinaryCoupon = couponPack ? decideCouponPrice({ quote:ordinaryQuote, user:{ ...user, student_status:"", is_student:0 }, campaign:couponPack.campaign, waitlisted }) : null;
+  const ordinaryBilled = ordinaryCoupon && ordinaryCoupon.applyCoupon ? ordinaryCoupon.couponPay : Number(ordinaryQuote.price || 0);
+  const studentPriceUsed = quote.isStudent && !company && !roleWaive && !giftApplied && billed > 0 && billed < ordinaryBilled;
+  db.prepare("UPDATE enrollments SET campus_snapshot_json=? WHERE id=?").run(snapshotFor(user, sch, {
+    usedStudentPrice:studentPriceUsed,
+    bookedTripPrice:company ? 0 : tripPay,
+    ordinaryTripPrice:company || roleWaive || giftApplied ? 0 : ordinaryBilled,
+  }), enrollmentId);
   const payShareToken = payStatus === "unpaid" ? ensurePayShareToken(enrollmentId) : "";
   if (couponApplied) {
     attachCouponToEnrollment(couponPack.coupon.id, enrollmentId, waitlisted || appliedOnly);
@@ -368,9 +378,9 @@ function promoteWaitlist(scheduleId) {
   const next = db
     .prepare(
       `SELECT * FROM enrollments WHERE schedule_id=? AND status='waitlist'
-       ORDER BY CASE WHEN draw_rank IS NULL THEN 1 ELSE 0 END, draw_rank, id LIMIT 1`
+       ORDER BY CASE WHEN draw_rank IS NULL THEN 1 ELSE 0 END, draw_rank, id`
     )
-    .get(scheduleId);
+    .all(scheduleId).find((en) => campusEnrollmentCheck(en, sch).ok);
   if (!next) return null;
   const seat = firstFreeSeat(scheduleId, sch.max_seats);
   db.prepare("UPDATE enrollments SET status='joined', promoted_at=datetime('now','localtime'), seat_no=? WHERE id=?").run(

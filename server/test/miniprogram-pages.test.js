@@ -451,6 +451,239 @@ describe("native mini-program page behavior", () => {
     assert.equal(calls.auth.length, 0);
   });
 
+  it("keeps approved identity unchanged until an edit is submitted and restores it on cancel", () => {
+    const approved = { studentStatus: "approved", isStudent: true, studentRevision: 4, campusKind: "student", school: "北京大学", college: "计算机学院", studentNo: "12345", studentCardUrl: "/static/uploads/card.png" };
+    const { page, calls, app } = studentHarness();
+    page.syncUser(approved);
+    page.toggleManagement();
+    assert.equal(page.data.managementOpen, true);
+    page.startEdit();
+    page.onNo({ detail: { value: "99999" } });
+    page.setData({ school: "清华大学" });
+    page.syncUser(approved);
+    assert.equal(page.data.school, "清华大学", "background profile refresh must not replace an edit");
+    assert.equal(page.data.certified, true);
+    assert.equal(page.data.editing, true);
+    assert.equal(calls.requests.length, 0);
+    assert.equal(calls.auth.length, 0);
+    page.cancelEdit();
+    assert.equal(page.data.editing, false);
+    assert.equal(page.data.school, approved.school);
+    assert.equal(page.data.studentNo, approved.studentNo);
+    assert.equal(page.data.studentCardUrl, approved.studentCardUrl);
+    assert.equal(calls.requests.length, 0);
+    assert.deepEqual(app.globalData.user, {});
+  });
+
+  it("requires a new alumni certificate when converting and does not silently change current certification", async () => {
+    const approved = { studentStatus: "approved", isStudent: true, studentRevision: 8, campusKind: "student", school: "北京大学", studentNo: "12345", studentCardUrl: "/static/uploads/student.png" };
+    const { page, calls } = studentHarness();
+    page.syncUser(approved);
+    page.startEdit({ currentTarget: { dataset: { kind: "alumni" } } });
+    assert.equal(page.data.campusKind, "alumni");
+    assert.equal(page.data.school, approved.school);
+    assert.equal(page.data.studentNo, "");
+    assert.equal(page.data.studentCardUrl, "");
+    assert.equal(page.data.cardPreviewUrl, "");
+    assert.equal(page.data.certified, true);
+    page.setKind({ currentTarget: { dataset: { kind: "student" } } });
+    assert.equal(page.data.campusKind, "alumni");
+    await page.submit();
+    assert.match(page.data.errors.card, /毕业证|校友证/);
+    assert.equal(calls.requests.length, 0);
+    page.cancelEdit();
+    assert.equal(page.data.studentCardUrl, approved.studentCardUrl);
+    assert.equal(page.data.campusKind, "student");
+  });
+
+  it("allows abandoning a withdrawal confirmation without posting and includes enrollment impact", async () => {
+    const pending = { studentStatus: "pending", studentRevision: 3, school: "北京大学", studentCardUrl: "/static/uploads/card.png" };
+    const { page, calls } = studentHarness({ request: () => Promise.resolve({ data: { revision: 3, status: "pending", impact: { paidConfirmed: 1, unpaid: 2, applied: 3, waitlist: 4 } } }) });
+    page.syncUser(pending);
+    const action = page.withdraw();
+    await new Promise(setImmediate);
+    assert.equal(calls.modals.length, 1);
+    assert.match(calls.modals[0].content, /待支付：2笔/);
+    assert.match(calls.modals[0].content, /抽签中：3笔/);
+    assert.match(calls.modals[0].content, /候补中：4笔/);
+    assert.match(calls.modals[0].content, /保留原订单和价格/);
+    calls.modals[0].success({ cancel: true });
+    await action;
+    assert.equal(calls.requests.length, 1);
+    assert.equal(calls.requests[0][0], "/me/student/manage");
+    assert.equal(page.data.pending, true);
+    assert.equal(page.data.managing, false);
+    assert.equal(page.data.studentCardUrl, pending.studentCardUrl);
+  });
+
+  it("withdraws a pending application once, retains its draft and caches the new identity revision", async () => {
+    const pending = { studentStatus: "pending", studentRevision: 2, school: "北京大学", studentNo: "12345", studentCardUrl: "/static/uploads/card.png" };
+    const withdrawn = { ...pending, studentStatus: "withdrawn", studentRevision: 3, isStudent: false };
+    const { page, calls, app } = studentHarness({ request: (url) => Promise.resolve({ data: url.endsWith("/manage") ? { revision: 2, impact: {} } : withdrawn }) });
+    page.syncUser(pending);
+    const first = page.withdraw();
+    await page.withdraw();
+    await new Promise(setImmediate);
+    assert.equal(calls.requests.length, 1);
+    assert.equal(calls.modals.length, 1);
+    calls.modals[0].success({ confirm: true });
+    await first;
+    assert.equal(calls.requests.length, 2);
+    assert.equal(calls.requests[1][0], "/me/student/withdraw");
+    assert.equal(calls.requests[1][2].revision, 2);
+    assert.equal(page.data.pending, false);
+    assert.equal(page.data.studentRevision, 3);
+    assert.equal(page.data.studentCardUrl, pending.studentCardUrl);
+    assert.equal(page.data.studentNo, pending.studentNo);
+    assert.match(page.data.actionMessage, /申请已撤回/);
+    assert.equal(app.globalData.user, withdrawn);
+    assert.equal(page.data.loading, false);
+  });
+
+  it("shows the actual blocked payment before offering a certification mutation", async () => {
+    const approved = { studentStatus:"approved", studentRevision:9, isStudent:true, school:"北京大学" };
+    const { page, calls } = studentHarness({ request:() => Promise.resolve({ data:{ revision:9, impact:{}, paymentBlocks:[{ id:17, scheduleId:6, enrollmentId:8, message:"有尚未确认关闭的微信支付，请先在订单中完成支付或联系客服处理后再管理认证" }] } }) });
+    page.syncUser(approved);
+    const action = page.revoke();
+    await new Promise(setImmediate);
+    assert.equal(calls.modals.length, 1);
+    assert.equal(calls.modals[0].showCancel, false);
+    assert.match(calls.modals[0].content, /团期 #6 · 报名 #8/);
+    assert.match(calls.modals[0].content, /已结束团期/);
+    assert.match(calls.modals[0].content, /尚未确认关闭/);
+    calls.modals[0].success({ confirm:true });
+    await action;
+    assert.equal(calls.requests.length, 1, "a blocked preview must never post the change");
+    assert.equal(calls.requests[0][0], "/me/student/manage");
+    assert.equal(page.data.certified, true);
+    assert.equal(page.data.managing, false);
+    assert.match(page.data.errors.manage, /先处理/);
+  });
+
+  it("explains a missing legacy price record before changing certification", async () => {
+    const { page, calls } = studentHarness({ request:() => Promise.resolve({ data:{ revision:9, impact:{}, priceReviews:[{ scheduleId:6, enrollmentId:8, message:"旧订单缺少当时价格记录" }] } }) });
+    page.syncUser({ studentStatus:"approved", studentRevision:9, isStudent:true });
+    const action = page.revoke();
+    await new Promise(setImmediate);
+    assert.equal(calls.modals[0].title, "有旧订单需要核实");
+    assert.match(calls.modals[0].content, /缺少当时的价格记录/);
+    assert.match(calls.modals[0].content, /先完成或取消报名/);
+    assert.equal(calls.modals[0].showCancel, false);
+    calls.modals[0].success({ confirm:true });
+    await action;
+    assert.equal(calls.requests.length, 1);
+    assert.equal(page.data.certified, true);
+  });
+
+  it("keeps certification and management actions after a failed release, then succeeds on retry", async () => {
+    const approved = { studentStatus: "approved", isAlumni: true, campusKind: "alumni", studentRevision: 9, school: "北京大学", studentNo: "12345", studentCardUrl: "/static/uploads/alumni.png" };
+    const revoked = { studentStatus: "revoked", studentRevision: 10, isStudent: false, isAlumni: false, school: "北京大学", studentNo: "", studentCardUrl: "" };
+    let attempts = 0;
+    const { page, calls, app } = studentHarness({ request: (url) => {
+      if (url.endsWith("/manage")) return Promise.resolve({ data: { revision: 9, impact: {} } });
+      return ++attempts === 1 ? Promise.reject(new Error("网络暂不可用")) : Promise.resolve({ data: revoked });
+    } });
+    page.syncUser(approved);
+    page.toggleManagement();
+    let action = page.revoke();
+    await new Promise(setImmediate);
+    calls.modals.at(-1).success({ confirm: true });
+    await action;
+    assert.equal(page.data.certified, true);
+    assert.equal(page.data.managementOpen, true);
+    assert.equal(page.data.studentCardUrl, approved.studentCardUrl);
+    assert.match(page.data.errors.manage, /网络暂不可用/);
+    assert.equal(calls.auth.length, 0);
+    action = page.revoke();
+    await new Promise(setImmediate);
+    calls.modals.at(-1).success({ confirm: true });
+    await action;
+    assert.equal(page.data.certified, false);
+    assert.equal(page.data.studentCardUrl, "");
+    assert.equal(page.data.studentNo, "");
+    assert.equal(page.data.school, approved.school);
+    assert.equal(page.data.managementOpen, false);
+    assert.equal(app.globalData.user, revoked);
+  });
+
+  it("confirms alumni changes before submitting the current revision and pauses identity only on success", async () => {
+    const approved = { studentStatus: "approved", isStudent: true, campusKind: "student", studentRevision: 5, school: "北京大学", studentNo: "12345", studentCardUrl: "/static/uploads/student.png" };
+    const pending = { studentStatus: "pending", campusKind: "alumni", studentRevision: 6, school: "北京大学", studentNo: "", studentCardUrl: "/static/uploads/alumni.png" };
+    const { page, calls } = studentHarness({ request: (url) => Promise.resolve({ data: url.endsWith("/manage") ? { revision: 5, impact: {} } : pending }) });
+    page.syncUser(approved);
+    page.startEdit({ currentTarget: { dataset: { kind: "alumni" } } });
+    page.setData({ studentCardUrl: pending.studentCardUrl });
+    const submission = page.submit();
+    await new Promise(setImmediate);
+    assert.equal(page.data.certified, true);
+    assert.equal(calls.requests.length, 1);
+    calls.modals.at(-1).success({ confirm: true });
+    await submission;
+    const payload = calls.requests[1][2];
+    assert.equal(calls.requests[1][0], "/me/student");
+    assert.equal(payload.revision, 5);
+    assert.equal(payload.studentNo, "");
+    assert.equal(payload.campusKind, "alumni");
+    assert.equal(payload.studentCardUrl, pending.studentCardUrl);
+    assert.equal(page.data.certified, false);
+    assert.equal(page.data.pending, true);
+    assert.equal(page.data.editing, false);
+  });
+
+  it("refreshes a conflicting certification revision instead of acting on an old preview", async () => {
+    const approved = { studentStatus: "approved", isStudent: true, studentRevision: 4, school: "北京大学" };
+    const latest = { studentStatus: "pending", studentRevision: 5, school: "清华大学" };
+    const { page, calls } = studentHarness({ request: (url) => Promise.resolve({ data: url === "/me" ? latest : { revision: 5, impact: {} } }) });
+    page.syncUser(approved);
+    await page.revoke();
+    assert.equal(calls.modals.length, 0);
+    assert.deepEqual(calls.requests.map((r) => r[0]), ["/me/student/manage", "/me"]);
+    assert.equal(page.data.pending, true);
+    assert.equal(page.data.studentRevision, 5);
+    assert.match(page.data.errors.manage, /状态已更新/);
+  });
+
+  it("forces a fresh profile after a change conflict even when an older refresh is still in flight", async () => {
+    const approved = { studentStatus: "approved", isStudent: true, studentRevision: 4, school: "北京大学", studentNo: "12345", studentCardUrl: "/static/uploads/student.png" };
+    const latest = { studentStatus: "pending", studentRevision: 5, school: "清华大学" };
+    let resolveOld, reads = 0;
+    const conflict = Object.assign(new Error("认证已变更"), { code: "student_revision_conflict" });
+    const { page, calls } = studentHarness({ request: (url) => {
+      if (url === "/me") return ++reads === 1 ? new Promise((resolve) => { resolveOld = resolve; }) : Promise.resolve({ data: latest });
+      if (url.endsWith("/manage")) return Promise.resolve({ data: { revision: 4, impact: {} } });
+      return Promise.reject(conflict);
+    } });
+    page.syncUser(approved);
+    const older = page.refreshStatus();
+    page.startEdit();
+    const submission = page.submit();
+    await new Promise(setImmediate);
+    calls.modals[0].success({ confirm: true });
+    await submission;
+    assert.equal(reads, 2, "a stale in-flight read cannot satisfy conflict recovery");
+    assert.equal(page.data.pending, true);
+    assert.equal(page.data.editing, false);
+    assert.equal(page.data.school, latest.school);
+    resolveOld({ data: approved });
+    await older;
+    assert.equal(page.data.pending, true);
+    assert.equal(page.data.studentRevision, 5);
+    assert.equal(page.data.school, latest.school);
+  });
+
+  it("does not apply a confirmed release or a profile response to a different account", async () => {
+    const approved = { studentStatus: "approved", isStudent: true, studentRevision: 7, school: "北京大学" };
+    const { page, calls, app } = studentHarness({ request: () => Promise.resolve({ data: { revision: 7, impact: {} } }) });
+    page.syncUser(approved);
+    const action = page.revoke();
+    await new Promise(setImmediate);
+    app.globalData.token = "another-account";
+    calls.modals[0].success({ confirm: true });
+    await action;
+    assert.equal(calls.requests.length, 1);
+    assert.equal(calls.auth.length, 0);
+  });
+
   it("returns from certification to public campus discovery without requiring verified identity", () => {
     const { page, calls, app } = studentHarness({ app: { globalData: { token: "", user: {} } } });
     page.goDiscover();

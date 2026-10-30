@@ -651,7 +651,7 @@ describe("coupons", () => {
     }).expect(200);
     const guestId = guest.body.data.user.id;
     await agent.post("/api/me/student").set(auth(guest.body.data.token)).send(campusPayload({ school: "北京大学" })).expect(200);
-    await agent.post(`/api/admin/users/${guestId}/verify`).set(auth(admin)).send({ kind: "student", action: "approve" }).expect(200);
+    await agent.post(`/api/admin/users/${guestId}/verify`).set(auth(admin)).send({ kind: "student", revision: require("../src/db").getDb().prepare("SELECT student_revision FROM users WHERE id=?").get(guestId).student_revision, action: "approve" }).expect(200);
 
     const cap2 = await issueCaptcha(agent);
     const other = await agent.post("/api/auth/register").send({
@@ -663,7 +663,7 @@ describe("coupons", () => {
     }).expect(200);
     const otherId = other.body.data.user.id;
     await agent.post("/api/me/student").set(auth(other.body.data.token)).send(campusPayload({ school: "清华大学" })).expect(200);
-    await agent.post(`/api/admin/users/${otherId}/verify`).set(auth(admin)).send({ kind: "student", action: "approve" }).expect(200);
+    await agent.post(`/api/admin/users/${otherId}/verify`).set(auth(admin)).send({ kind: "student", revision: require("../src/db").getDb().prepare("SELECT student_revision FROM users WHERE id=?").get(otherId).student_revision, action: "approve" }).expect(200);
 
     const people = await agent
       .get("/api/admin/coupons/people?campus=1&school=北京大学")
