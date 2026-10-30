@@ -47,7 +47,16 @@ async function invokeWechatPay(data) {
     throw new Error("支付参数不完整，请稍后再试");
   }
   await requestPayment(payArgs(pay));
-  const confirmed = await request("/pay/confirm", "POST", { tradeNo: data.tradeNo });
+  let confirmed;
+  try {
+    confirmed = await request("/pay/confirm", "POST", { tradeNo: data.tradeNo });
+  } catch (error) {
+    // The payment sheet already succeeded. A failed status request does not
+    // mean the customer should pay again; let the caller retry confirmation.
+    error.paymentPending = true;
+    error.tradeNo = data.tradeNo;
+    throw error;
+  }
   return Object.assign({}, data, confirmed.data || {}, { needPay: false, mock: false });
 }
 

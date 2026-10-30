@@ -46,10 +46,13 @@ function request(path, method, data) {
         }
         const err = new Error((res.data && res.data.message) || "HTTP " + res.statusCode);
         err.code = (res.data && res.data.code) || "";
+        err.status = res.statusCode;
         reject(err);
       },
       fail(err) {
-        reject(new Error(failMessage(err, baseUrl)));
+        const error = new Error(failMessage(err, baseUrl));
+        error.networkError = true;
+        reject(error);
       },
     });
   });

@@ -2294,7 +2294,7 @@ router.get("/pay/order/:tradeNo", authUser, (req, res) => {
 router.post("/pay/confirm", authUser, async (req, res) => {
   try {
     const tradeNo = String((req.body || {}).tradeNo || "");
-    const data = await confirmTrade(tradeNo);
+    const data = await confirmTrade(tradeNo, req.userId);
     res.json({
       ok: true,
       data: {

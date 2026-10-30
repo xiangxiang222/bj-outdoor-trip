@@ -399,15 +399,15 @@ function loadEnrollmentForPay(enrollmentId, token) {
 }
 
 async function payEnrollment(enrollmentId, payerId, opts = {}) {
-  const { en, sch } = loadEnrollmentForPay(enrollmentId, opts.token);
+  let { en, sch } = loadEnrollmentForPay(enrollmentId, opts.token);
   const useWallet = String(opts.channel || "") === "wallet";
   if (!useWallet && (Number(opts.amount) > 0 || Number(en.pay_amount) > 0)) requireLivePaymentInProduction();
   expireStalePendings(en.id);
-  const remaining = remainingForPayer(en, payerId);
+  let remaining = remainingForPayer(en, payerId);
   if (remaining <= 0) fail(400, "该报名已支付或他人正在支付");
-  const amount = parsePayYuan(opts.amount, remaining);
+  let amount = parsePayYuan(opts.amount, remaining);
   if (amount <= 0) fail(400, "该报名已支付");
-  const remark = remarkForPay({
+  let remark = remarkForPay({
     payerId,
     enrolleeId: en.user_id,
     amount,
@@ -428,9 +428,15 @@ async function payEnrollment(enrollmentId, payerId, opts = {}) {
     return { ...charged, channel: "wallet", walletBalance: balanceOf(payerId) };
   }
   await ensurePayerWechat(payerId, opts.code);
-  // The WeChat session request can yield while the enrollee withdraws or
-  // changes campus identity; validate the fresh booking before reserving money.
-  loadEnrollmentForPay(en.id);
+  // Session lookup can yield while another payer reserves or settles part of
+  // this fee. Recheck both identity and the available amount immediately before
+  // the synchronous reservation so two helpers cannot reserve the same balance.
+  ({ en, sch } = loadEnrollmentForPay(en.id));
+  remaining = remainingForPayer(en, payerId);
+  if (remaining <= 0) fail(400, "该报名已支付或他人正在支付");
+  amount = parsePayYuan(opts.amount, remaining);
+  if (amount <= 0) fail(400, "该报名已支付");
+  remark = remarkForPay({ payerId, enrolleeId:en.user_id, amount, remainingBefore:remaining, channel:opts.channel });
   if (config.wechat.mock || amount <= 0) {
     return applyEnrollmentCharge(en, payerId, amount, { remark });
   }
@@ -839,11 +845,12 @@ async function handleWechatNotify(xml) {
   return notifyReply(true, "OK");
 }
 
-async function confirmTrade(tradeNo) {
+async function confirmTrade(tradeNo, userId) {
   if (!tradeNo) fail(400, "缺少订单号");
   const db = getDb();
-  const pay = db.prepare("SELECT * FROM payments WHERE trade_no=?").get(tradeNo);
+  const pay = chargeOf(tradeNo);
   if (!pay) fail(400, "支付单不存在");
+  if (Number(pay.user_id) !== Number(userId)) fail(403, "这不是你的订单");
   if (pay.status !== "success") {
     if (!payLive()) fail(400, "当前为演示支付");
     const data = await queryOrder(tradeNo);
@@ -851,7 +858,7 @@ async function confirmTrade(tradeNo) {
     await settleByTradeNo(tradeNo, { transactionId: data.transaction_id });
   }
   await reportSettledShipment(tradeNo);
-  const next = db.prepare("SELECT * FROM payments WHERE trade_no=?").get(tradeNo);
+  const next = db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id);
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(next.user_id);
   const en = next.enrollment_id ? db.prepare("SELECT * FROM enrollments WHERE id=?").get(next.enrollment_id) : null;
   return {

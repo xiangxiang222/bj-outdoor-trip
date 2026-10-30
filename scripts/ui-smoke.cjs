@@ -467,6 +467,7 @@ async function main() {
     await require("./ui-home-dates-cases.cjs")({ test, pageFor, goto, output });
     await require("./ui-discovery-cases.cjs")({ test, pageFor, goto, db, seed, output });
     await require("./ui-campus-management-cases.cjs")({ test, pageFor, goto, db, seed, origin, userToken, output });
+    await require("./ui-payment-cases.cjs")({ test, pageFor, goto, db, seed, origin, userToken, output });
     // These are rendering checks; transactional flows are covered by API E2E and tests above.
     const mobile = ["/m", "/m/discover", "/m/activities", "/m/official", "/m/student", "/m/group", "/m/leader", "/m/photo-apply", "/m/route-apply", "/m/feedback", "/m/lottery", "/m/after/1", "/m/route/1", "/m/schedule/1", "/m/enroll/1", "/m/open/0", "/m/publish", "/m/chain", "/m/mine", "/m/settings", "/m/settings/font", "/m/settings/night", "/m/settings/lang", "/m/profile", "/m/wallet", "/m/signin", "/m/wallet/cards", "/m/wallet/pin", "/m/login", "/m/member", "/m/orders", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/stats/1", "/m/guides", "/m/guide/1", "/m/user/1"];
     const adminPages = ["/admin", "/admin/routes", "/admin/schedules", "/admin/enrollments", "/admin/coupons", "/admin/lottery", "/admin/users", "/admin/verify", "/admin/feedback", "/admin/tags", "/admin/refund", "/admin/staff"];
