@@ -66,11 +66,12 @@ describe("route catalog presentation", () => {
       null,
     ] };
     expect(routeUpcomingFacts(route, now)).toEqual({ date: "2026-10-29", count: 2 });
-    vi.spyOn(Date, "now").mockReturnValue(now.getTime());
+    vi.useFakeTimers({ toFake:["Date"] });
+    vi.setSystemTime(now);
     try {
       expect(native.decorateRoute(route).viewFacts.nextDate).toBe("10.29");
       expect(native.decorateRoute({ upcoming: route.upcoming.filter((row) => !row || row.status !== "confirmed" && row.startDate !== "2026-10-31") }).viewFacts.hasSchedule).toBe(false);
-    } finally { vi.restoreAllMocks(); }
+    } finally { vi.useRealTimers(); }
     expect(routeUpcomingFacts({}, now)).toEqual({ date: "", count: 0 });
     expect(route.upcoming[0].start_date).toBe("2026-10-28");
   });
