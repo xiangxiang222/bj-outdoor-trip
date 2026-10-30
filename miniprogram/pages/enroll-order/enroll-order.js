@@ -84,6 +84,15 @@ Page({
     if (!token) return;
     wx.navigateTo({ url: "/pages/pay/pay?token=" + token });
   },
+  goWish() {
+    if (!this.data.order) return;
+    if (this.data.order.wishToken) {
+      wx.navigateTo({ url:"/pages/wishes/wishes?token=" + encodeURIComponent(this.data.order.wishToken) });
+      return;
+    }
+    if (!this.data.order.canLinkWish) return;
+    wx.navigateTo({ url:"/pages/wishes/wishes?view=new&kind=trip&enrollmentId=" + encodeURIComponent(this.data.id) });
+  },
   openReview() {
     this.setData({ reviewOpen: true, rating: 5, content: "" });
   },

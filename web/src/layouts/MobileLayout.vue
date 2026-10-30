@@ -1,5 +1,5 @@
 <template>
-  <div class="mp-phone" :class="{ 'is-account': accountTone, 'is-home': isHome, 'is-catalog': isHome && route.query.view === 'routes', 'is-mine': route.name === 'mine', 'is-orders': route.name === 'orders', 'is-look-font': route.name === 'look-font', 'is-activities': route.name === 'activities', 'is-activity-publish': route.name === 'publish' && route.query.channel === 'activity' }">
+  <div class="mp-phone" :class="{ 'is-account': accountTone, 'is-home': isHome, 'is-catalog': isHome && route.query.view === 'routes', 'is-mine': route.name === 'mine', 'is-wishes': route.path.startsWith('/m/wishes'), 'is-orders': route.name === 'orders', 'is-look-font': route.name === 'look-font', 'is-activities': route.name === 'activities', 'is-activity-publish': route.name === 'publish' && route.query.channel === 'activity' }">
     <div class="mp-status" :class="{ 'is-home': isHome }">
       <router-link to="/m" class="brand-lockup" aria-label="同行者众 首页">
         <span class="brand-mark-frame" aria-hidden="true">
@@ -93,10 +93,10 @@ watch(() => route.path, () => {
 const tabNames = new Set(["home", "activities", "orders", "mine"]);
 const isHome = computed(() => route.name === "home");
 const showBack = computed(() => !tabNames.has(route.name));
-const accountPaths = ["/m/activities", "/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/photo-apply", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile", "/m/orders", "/m/lottery", "/m/publish", "/m/coupons", "/m/user"];
+const accountPaths = ["/m/wishes", "/m/activities", "/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/photo-apply", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile", "/m/orders", "/m/lottery", "/m/publish", "/m/coupons", "/m/user"];
 const accountTone = computed(() => accountPaths.some((p) => route.path === p || route.path.startsWith(p + "/")));
 const mineActive = computed(() =>
-  ["/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/photo-apply", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile"].some(
+  ["/m/wishes", "/m/mine", "/m/login", "/m/member", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/student", "/m/group", "/m/leader", "/m/photo-apply", "/m/route-apply", "/m/official", "/m/feedback", "/m/wallet", "/m/signin", "/m/settings", "/m/profile"].some(
     (p) => route.path === p || route.path.startsWith(p + "/")
   )
 );

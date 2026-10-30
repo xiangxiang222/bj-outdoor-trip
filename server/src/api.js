@@ -153,6 +153,7 @@ const {
 } = require("./services/official-trip");
 
 const router = express.Router();
+router.use(require("./wishes-api"));
 router.post("/discovery/search", optionalUser, async (req, res) => {
   try {
     res.json({ ok: true, data: await discoverySearch(req.body, req) });
@@ -2343,8 +2344,10 @@ function mapUserOrder(e, req, reviewed, refunds) {
     realEnrolled: e.real_enrolled,
   });
   const progress = payProgress(e);
-  const { refund_rules_json, ...rest } = e;
+  const { refund_rules_json, wish_token, ...rest } = e;
   return {
+    wishToken: wish_token || null,
+    canLinkWish: require("./services/wishes").canLinkEnrollment(e.id),
     ...rest,
     cover: attachAssetHost(req, e.cover),
     idCard: maskIdCard(e.id_card),
@@ -2388,6 +2391,7 @@ function loadUserOrders(userId, req, onlyId) {
       `SELECT e.*, s.start_date, s.end_date, s.organizer_type, s.status AS schedule_status, s.route_id,
               s.meetup_point, s.meetup_time, s.city, s.started_at, IFNULL(s.channel,'trip') AS channel,
               s.min_group_size,
+              (SELECT token FROM wishes w WHERE w.enrollment_id=e.id AND w.owner_id=e.user_id) AS wish_token,
               (SELECT COUNT(*) FROM enrollments e2
                LEFT JOIN users u ON u.id=e2.user_id
                WHERE e2.schedule_id=s.id AND e2.status='joined' AND IFNULL(u.is_virtual,0)=0) AS real_enrolled,

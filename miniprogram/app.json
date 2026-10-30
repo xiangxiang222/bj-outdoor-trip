@@ -46,7 +46,8 @@
     "pages/photo-apply/photo-apply",
     "pages/route-apply/route-apply",
     "pages/student/student",
-    "pages/campus-pick/campus-pick"
+    "pages/campus-pick/campus-pick",
+    "pages/wishes/wishes"
   ],
   "subPackages": [
     {

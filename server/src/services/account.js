@@ -44,6 +44,8 @@ async function deleteAccount(userId) {
     }
   }
 
+  // A departed friend must not leave an unfulfilled wish permanently locked.
+  db.prepare("UPDATE wishes SET claimed_by=NULL,claimed_at=NULL,revision=revision+1 WHERE claimed_by=? AND status='open' AND completed_at IS NULL").run(userId);
   db.prepare("DELETE FROM favorites WHERE user_id=?").run(userId);
   db.prepare("DELETE FROM companions WHERE user_id=?").run(userId);
   db.prepare("DELETE FROM follows WHERE user_id=? OR target_user_id=?").run(userId, userId);

@@ -30,6 +30,7 @@
     </view>
     <view class="od-help" wx:if="{{helpers}}">{{tr.t('帮忙支付', lang)}} {{helpers}}</view>
   </view>
+  <view class="od-card od-wish-entry" wx:if="{{order.canLinkWish || order.wishToken}}" bindtap="goWish" role="button" aria-label="{{tr.t(order.wishToken ? '查看旅行心意' : '发起旅行心愿', lang)}}"><view class="od-wish-art" aria-hidden="true"></view><view><view class="od-wish-title">{{tr.t(order.wishToken ? '旅行心意，好好收着' : '让朋友的心意，陪你出发', lang)}}</view><view class="od-wish-note">{{tr.t(order.wishToken ? '查看这笔订单收到的心意与祝福' : '发起旅行心愿，代付或分摊真实团费', lang)}}</view></view><text aria-hidden="true">→</text></view>
   <view class="od-card od-lines">
     <view class="od-line" wx:for="{{lines}}" wx:key="label">
       <text>{{tr.t(item.label, lang)}}</text>

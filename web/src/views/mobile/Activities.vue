@@ -9,6 +9,7 @@
       <div class="activity-hero-bottom"><span>从一个兴趣，认识一群同频的人</span><button type="button" @click="goPublish()"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>发起活动</button></div>
     </header>
 
+    <router-link class="activity-wish-entry" to="/m/wishes"><span class="wish-entry-symbol" aria-hidden="true">✧</span><span><b>意思意思</b><small>一杯喜欢的，一件想做的，给心意一个回应。</small></span><span aria-hidden="true">↗</span></router-link>
     <nav class="activity-kinds" aria-label="选择活动类型">
       <button v-for="(item, index) in kinds" :key="item.key" type="button" class="activity-kind" :class="[{ on: kind === item.key }, 'kind-' + index]" :aria-pressed="kind === item.key" @click="selectKind(item.key)">
         <span class="activity-kind-icon"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><template v-if="index === 0"><rect x="9" y="5" width="17" height="23" rx="3" transform="rotate(12 9 5)"/><rect x="5" y="3" width="17" height="23" rx="3"/><path d="m13.5 10 4 5-4 5-4-5 4-5Z"/></template><template v-else-if="index === 1"><circle cx="21" cy="5" r="2.5"/><path d="m9 11 6-3 5 6 6 1M15 8l-3 11 7 3 2 7M12 19l-4 8H3m5-10H3m5-10H5"/></template><template v-else-if="index === 2"><rect x="4" y="10" width="24" height="18" rx="3"/><path d="M4 17h24M4 10l23-6 1.5 5M7 9l3 5m5-7 3 5m5-7 3 5m-13 9 7 4-7 4v-8Z"/></template><template v-else><circle cx="16" cy="9" r="4"/><path d="M8 28v-5a8 8 0 0 1 16 0v5M5 8a3 3 0 0 0 0 6m22-6a3 3 0 0 1 0 6M2 26v-4a6 6 0 0 1 5-6m23 10v-4a6 6 0 0 0-5-6"/></template></svg></span>
@@ -103,6 +104,13 @@ onUnmounted(() => { disposed = true; window.clearInterval(tick); });
 </script>
 
 <style scoped>
+.activity-wish-entry { display:flex; align-items:center; gap:12px; margin:16px 0 0; padding:15px 16px; border:1px solid var(--ac-line); border-radius:18px; background:var(--ac-paper); color:var(--ac-purple); text-decoration:none; }
+.activity-wish-entry .wish-entry-symbol { display:grid; place-items:center; flex:none; width:39px; height:39px; border-radius:13px; background:var(--ac-soft); font-size:28px; }
+.activity-wish-entry > span:nth-child(2) { flex:1; min-width:0; }
+.activity-wish-entry b { display:block; font-size:15px; font-weight:600; }
+.activity-wish-entry small { display:block; margin-top:3px; font-size:11px; color:var(--ac-muted); }
+.activity-wish-entry > span:last-child { font-size:22px; }
+
 .activity-page { --ac-ink:#292530; --ac-muted:#8b8295; --ac-purple:#5b3b8c; --ac-paper:#fff; --ac-line:#e9e4ef; --ac-soft:#f4eff9; --ac-tint:#ece3f5; --ac-hero:linear-gradient(115deg,#eee7f7 0%,#f6f1fb 70%,#eee6f7 100%); max-width:1120px; margin:0 auto; padding:4px 0 20px; color:var(--ac-ink); font-size:calc(13px * var(--ui-scale,1)); line-height:1.5; overflow-wrap:anywhere; }
 .activity-page *, .activity-page *::before, .activity-page *::after { box-sizing:border-box; }
 .activity-page button, .activity-page select, .activity-page input { font:inherit; }

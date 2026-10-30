@@ -3,6 +3,8 @@ const app = getApp();
 
 function openHref(href) {
   const text = String(href || "");
+  const wish = text.match(/^\/m\/wishes\/([A-Za-z0-9_-]{20,64})$/);
+  if (wish) { wx.navigateTo({ url: "/pages/wishes/wishes?token=" + encodeURIComponent(wish[1]) }); return; }
   const sch = text.match(/\/m\/schedule\/(\d+)/);
   if (sch) {
     wx.navigateTo({ url: "/pages/schedule/schedule?id=" + sch[1] });

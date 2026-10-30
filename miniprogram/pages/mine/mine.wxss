@@ -18,6 +18,10 @@ page { background: var(--bg, #f6f5f8); color: var(--ink, #29262e); }
   background: linear-gradient(180deg, #211c29 0, #121214 520rpx);
 }
 .account-tap { opacity: .65; }
+.account-wishes{display:flex;align-items:center;gap:23rpx;padding:27rpx;color:var(--account-purple)}
+.account-wish-art{position:relative;flex:none;width:46rpx;height:49rpx;border:2rpx solid var(--account-accent);border-radius:8rpx;transform:rotate(-7deg);color:var(--account-accent)}
+.account-wish-art::before{content:'';position:absolute;inset:-5rpx 4rpx 5rpx -5rpx;border:1rpx solid var(--account-accent);border-radius:8rpx;transform:rotate(-8deg);opacity:.25}.account-wish-art>view{position:absolute;top:13rpx;left:13rpx;width:14rpx;height:14rpx;border-bottom:2rpx solid currentColor;border-left:2rpx solid currentColor;transform:rotate(-45deg)}
+.account-wish-copy{flex:1;min-width:0;line-height:1.6;overflow-wrap:anywhere}.account-wish-copy>view{font-size:calc(29rpx * var(--ui-scale));font-weight:600}.account-wish-copy>view>text{display:inline-block;margin-left:14rpx;padding:2rpx 10rpx;vertical-align:middle;border-radius:8rpx;background:var(--account-soft);font-weight:400;font-size:calc(18rpx * var(--ui-scale));color:var(--account-accent)}.account-wish-copy>text{display:block;color:var(--account-muted);font-size:calc(21rpx * var(--ui-scale));margin-top:6rpx}.account-wish-arrow{flex:none;font-size:32rpx}
 .account-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; padding: 4rpx 4rpx 26rpx; }
 .account-heading { flex: 1; min-width: 0; }
 .account-page-title { font-size: calc(44rpx * var(--ui-scale)); font-weight: 600; line-height: 1.3; }

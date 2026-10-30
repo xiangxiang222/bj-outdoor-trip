@@ -43,6 +43,12 @@
       </div>
     </section>
 
+    <button v-if="wishEnrollmentId || order.wishToken" type="button" class="od-wish-entry" @click="goWish">
+      <span class="od-wish-icon" aria-hidden="true"><WishGlyph kind="other" /></span>
+      <span><strong>{{ t(order.wishToken ? '这一程的心意，收在这里' : '把这一程，写进心愿') }}</strong><small>{{ t(order.wishToken ? '查看心愿与朋友留下的心意' : '邀请朋友，为真实行程出一份心意') }}</small></span>
+      <span class="od-wish-arrow" aria-hidden="true">↗</span>
+    </button>
+
     <section class="od-card od-lines">
       <div><span>订单编号</span><b class="od-no">{{ no }} <button type="button" @click="copyNo">复制</button></b></div>
       <div v-if="placed"><span>下单时间</span><b>{{ placed }}</b></div>
@@ -71,10 +77,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import LoadRow from "@/components/LoadRow.vue";
+import WishGlyph from "@/components/WishGlyph.vue";
+import { readLook } from "@/utils/appearance";
+import { translate } from "@/utils/locale";
 import { isReviewTrip } from "@/utils/trips";
 import { canReorder, maskTravelerPhone, orderBadge, orderHint, orderMoney, orderNo, orderShop, orderSpec, payMethodLabel, placedLabel, priceLines } from "@/utils/orderView";
 
@@ -88,6 +97,11 @@ const cancelling = ref(false);
 const submitting = ref(false);
 const reviewOpen = ref(false);
 const form = ref({ rating: 5, content: "" });
+const language = ref(readLook().lang);
+const onLook = () => { language.value = readLook().lang; };
+window.addEventListener("bj-look", onLook);
+onBeforeUnmount(() => window.removeEventListener("bj-look", onLook));
+function t(text) { return translate(text, language.value); }
 
 const badge = computed(() => orderBadge(order.value));
 const hint = computed(() => orderHint(order.value));
@@ -103,6 +117,13 @@ const place = computed(() => order.value?.meetup_point || order.value?.city || o
 const canReview = computed(() => isReviewTrip(order.value));
 const again = computed(() => canReorder(order.value));
 const hasActions = computed(() => order.value && (order.value.canCancel || order.value.canPay || canReview.value || (order.value.canAfter && order.value.completed) || again.value));
+const wishEnrollmentId = computed(() => {
+  const item = order.value;
+  if (item?.canLinkWish !== true) return 0;
+  // GET /orders/:id is built from enrollments, so its own id is an enrollment id.
+  const id = Number(item.enrollmentId ?? item.enrollment_id ?? item.id);
+  return Number.isSafeInteger(id) && id > 0 ? id : 0;
+});
 
 onMounted(load);
 watch(() => pageRoute.params.id, load);
@@ -121,6 +142,10 @@ async function load() {
 }
 function goPay() {
   if (order.value?.payShareToken) router.push("/m/pay/" + order.value.payShareToken);
+}
+function goWish() {
+  if (order.value?.wishToken) { router.push("/m/wishes/" + encodeURIComponent(order.value.wishToken)); return; }
+  if (wishEnrollmentId.value) router.push({ path: "/m/wishes/new", query: { kind: "trip", enrollmentId: String(wishEnrollmentId.value) } });
 }
 function goSchedule() {
   if (order.value?.schedule_id) router.push("/m/schedule/" + order.value.schedule_id);
@@ -171,3 +196,7 @@ async function submitReview() {
   }
 }
 </script>
+
+<style scoped>
+.od-wish-entry{display:flex;align-items:center;gap:13px;width:100%;margin:12px 0;padding:16px 17px;border:1px solid #e8dff0;border-radius:17px;background:#faf7fd;color:#5b3b8c;text-align:left;font:inherit;cursor:pointer;overflow-wrap:anywhere}.od-wish-entry>span:nth-child(2){flex:1;min-width:0}.od-wish-icon{width:35px;height:35px;flex:none}.od-wish-entry strong{display:block;font-size:calc(14px * var(--ui-scale,1));font-weight:600;line-height:1.6}.od-wish-entry small{display:block;font-size:calc(11px * var(--ui-scale,1));color:#93849f;line-height:1.7;margin-top:3px}.od-wish-arrow{font-size:24px;flex:none;color:#9c83bb}.od-wish-entry:focus-visible{outline:3px solid #b4a0d4;outline-offset:3px}:global(html[data-night="dark"] .od-wish-entry){background:#302838;border-color:#51405f;color:#d4b8ee}:global(html[data-night="dark"] .od-wish-entry small){color:#bba9ca}
+</style>
