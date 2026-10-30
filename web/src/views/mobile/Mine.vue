@@ -103,6 +103,7 @@
         </div>
       </section>
 
+      <router-link to="/m/wishes" class="account-wish-entry"><span class="account-wish-symbol" aria-hidden="true">✧</span><span><b>意思意思</b><small>把小心意，变成小美好</small></span><span aria-hidden="true">↗</span></router-link>
       <section class="account-card account-services" aria-label="出行与服务">
         <h2>出行与服务</h2>
         <div class="account-create">

@@ -123,3 +123,10 @@ html[data-night="dark"] .mine-retail .poster-pick-copy strong { background: tran
   .mine-retail .account-service-grid { padding: 22px 0 12px; }
   .mine-retail .account-service-grid > button { min-height: 80px; }
 }
+
+.mine-retail .account-wish-entry { display:flex; align-items:center; gap:13px; padding:18px 20px; margin:0 0 14px; border:1px solid var(--account-line); border-radius:22px; color:var(--account-purple); background:linear-gradient(115deg,var(--account-soft),var(--account-card)); text-decoration:none; }
+.mine-retail .account-wish-entry > span:nth-child(2) { flex:1; min-width:0; }
+.mine-retail .account-wish-entry b { display:block; font-weight:600; color:inherit; background:none; font-size:calc(16px * var(--ui-scale,1)); }
+.mine-retail .account-wish-entry small { display:block; margin-top:3px; font-size:calc(11px * var(--ui-scale,1)); color:var(--account-muted); }
+.mine-retail .account-wish-symbol { display:grid; place-items:center; width:42px; height:42px; flex:none; border:1px solid var(--account-line); border-radius:15px; font-size:29px; }
+.mine-retail .account-wish-entry > span:last-child { font-size:22px; }

@@ -71,6 +71,8 @@
     </view>
   </view>
 
+  <view class="account-card account-wishes" id="mine-wishes" bindtap="go" data-url="/pages/wishes/wishes" hover-class="account-tap" role="button" aria-label="{{tr.t('我的心意簿', lang)}}"><view class="account-wish-art" aria-hidden="true"><view></view></view><view class="account-wish-copy"><view>{{tr.t('我的心意簿', lang)}}<text>{{tr.t('意思意思', lang)}}</text></view><text>{{tr.t('发起的心愿，认领的安排，都好好收着。', lang)}}</text></view><text class="account-wish-arrow" aria-hidden="true">→</text></view>
+
   <view class="account-card account-services">
     <view class="account-section-title">{{tr.t('出行与服务', lang)}}</view>
     <view class="account-create">

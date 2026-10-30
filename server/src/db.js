@@ -12,6 +12,45 @@ function ensureDirs() {
 
 function createSchema(db) {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS wishes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      token TEXT NOT NULL UNIQUE,
+      owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      request_key TEXT NOT NULL,
+      request_json TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      title TEXT NOT NULL,
+      recipient_name TEXT NOT NULL DEFAULT '',
+      note TEXT NOT NULL DEFAULT '',
+      enrollment_id INTEGER REFERENCES enrollments(id) ON DELETE CASCADE,
+      status TEXT NOT NULL DEFAULT 'open',
+      claimed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      claimed_at TEXT,
+      completed_at TEXT,
+      revision INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      UNIQUE(owner_id, request_key)
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS wishes_enrollment ON wishes(enrollment_id) WHERE enrollment_id IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS wishes_owner ON wishes(owner_id,id);
+    CREATE TABLE IF NOT EXISTS wish_participants (
+      wish_id INTEGER NOT NULL REFERENCES wishes(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY(wish_id,user_id)
+    );
+    CREATE INDEX IF NOT EXISTS wish_participants_user ON wish_participants(user_id,wish_id);
+    CREATE TABLE IF NOT EXISTS wish_blessings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      wish_id INTEGER NOT NULL REFERENCES wishes(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      request_key TEXT NOT NULL,
+      message TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      UNIQUE(wish_id,user_id)
+    );
+  `);
+  db.exec(`
     PRAGMA journal_mode = WAL;
     PRAGMA foreign_keys = ON;
 

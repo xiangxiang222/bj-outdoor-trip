@@ -4,6 +4,11 @@
   color:var(--act-ink); background:var(--bg,#f6f5f8); padding:24rpx 28rpx 34rpx; box-sizing:border-box;
 }
 .activity-page.is-dark { --act-purple:#d0b5ee; --act-ink:#eee8f4; --act-muted:#aa9ab8; --act-soft:#302439; --act-card:#211d28; --act-edge:#4a375a; --act-line:#362b40; --act-icon:#c8ace4; --act-hero:#2c2235; --act-ticket:#392b45; }
+.activity-page .activity-wish-entry{display:flex;align-items:center;gap:22rpx;width:100%;margin-top:22rpx;padding:25rpx 27rpx;background:var(--act-card);border:1rpx solid var(--act-edge);border-radius:25rpx;text-align:left;white-space:normal}
+.activity-wish-symbol{position:relative;flex:none;width:42rpx;height:43rpx;color:var(--act-icon);border:2rpx solid currentColor;border-radius:7rpx;transform:rotate(-7deg)}
+.activity-wish-symbol::before{content:'';position:absolute;width:12rpx;height:12rpx;left:12rpx;top:11rpx;border-left:2rpx solid currentColor;border-bottom:2rpx solid currentColor;transform:rotate(-45deg)}
+.activity-wish-symbol>view{position:absolute;width:16rpx;height:2rpx;left:6rpx;bottom:5rpx;background:currentColor;opacity:.4}
+.activity-wish-copy{min-width:0;flex:1}.activity-wish-copy>view{font-size:calc(26rpx * var(--ui-scale));font-weight:600;color:var(--act-purple);line-height:1.5;overflow-wrap:anywhere}.activity-wish-copy>text{display:block;margin-top:7rpx;color:var(--act-muted);font-size:calc(21rpx * var(--ui-scale));line-height:1.7}.activity-wish-arrow{flex:none;color:var(--act-purple);font-size:32rpx}
 .activity-page button { margin:0; border:0; border-radius:0; padding:0; background:transparent; color:inherit; font-size:inherit; font-weight:inherit; line-height:inherit; box-sizing:border-box; }
 .activity-page button::after { border:0; }
 .activity-hero { position:relative; overflow:hidden; padding:34rpx 30rpx 32rpx; border:1rpx solid var(--act-edge); border-radius:30rpx; background:linear-gradient(118deg,var(--act-card),var(--act-hero)); }

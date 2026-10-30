@@ -111,4 +111,5 @@ Page({
     const url = "/pages/publish/publish?channel=activity" + (this.data.kind ? "&kind=" + encodeURIComponent(this.data.kind) : "");
     wx.navigateTo({ url: app.globalData.token ? url : "/pages/login/login?redirect=" + encodeURIComponent(url) });
   },
+  goWishes() { wx.navigateTo({ url:"/pages/wishes/wishes" }); },
 });

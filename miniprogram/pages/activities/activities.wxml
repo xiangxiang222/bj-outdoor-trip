@@ -21,6 +21,8 @@
     </view>
   </view>
 
+  <button class="activity-wish-entry" id="activity-wishes" bindtap="goWishes"><view class="activity-wish-symbol" aria-hidden="true"><view></view></view><view class="activity-wish-copy"><view>{{tr.t('意思意思，把惦记变成小美好', lang)}}</view><text>{{tr.t('一杯喜欢的，一次想见的，朋友来认领安排。', lang)}}</text></view><text class="activity-wish-arrow" aria-hidden="true">→</text></button>
+
   <view class="activity-kinds" aria-label="{{tr.t('选择活动兴趣', lang)}}">
     <button wx:for="{{kinds}}" wx:key="key" class="activity-kind {{kind==item.key?'on':''}}" bindtap="setKind" data-key="{{item.key}}" aria-label="{{tr.t(item.label, lang)}}">
       <view class="activity-kind-icon"><template is="activity-icon" data="{{art:item.art}}" /></view>

@@ -75,6 +75,7 @@ function promptUnusedCoupons() {
 const appearance = require("./utils/appearance");
 const locale = require("./utils/locale");
 const NAV_TITLES = {
+  "pages/wishes/wishes": "意思意思",
   "pages/index/index": "同行者众",
   "pages/activities/activities": "同城局",
   "pages/orders/orders": "行程",

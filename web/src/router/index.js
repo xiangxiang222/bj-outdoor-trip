@@ -8,6 +8,9 @@ const routes = [
     children: [
       { path: "", name: "home", component: () => import("@/views/mobile/Home.vue") },
       { path: "discover", name: "discover", component: () => import("@/views/mobile/Discover.vue") },
+      { path: "wishes", name: "wishes", component: () => import("@/views/mobile/Wishes.vue") },
+      { path: "wishes/new", name: "wish-new", component: () => import("@/views/mobile/Wishes.vue") },
+      { path: "wishes/:token", name: "wish-detail", component: () => import("@/views/mobile/Wishes.vue") },
       { path: "activities", name: "activities", component: () => import("@/views/mobile/Activities.vue") },
       { path: "official", name: "official", component: () => import("@/views/mobile/Official.vue") },
       { path: "rules", redirect: "/m/official#rules" },
