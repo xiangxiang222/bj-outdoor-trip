@@ -1,6 +1,9 @@
 const { getDb } = require("../db");
 const { quoteForSchedule, enrolledCount, maybeMatchGuide } = require("./helpers");
 const { firstFreeSeat, assertSeatAvailable } = require("./seats");
+const { assertEnrollLimit } = require("./eligibility");
+const { assertComboEnroll } = require("./combo");
+const { snapshotFor } = require("./campus-certification");
 
 function fail(status, message) {
   const err = new Error(message);
@@ -81,6 +84,16 @@ function listFallbacks(enrollmentId) {
 
 function copyJoin(en, target) {
   const db = getDb();
+  const user = db.prepare("SELECT * FROM users WHERE id=?").get(en.user_id);
+  // A transfer creates a new booking; a paid source order does not grant
+  // permanent campus eligibility for a different target trip.
+  try {
+    assertEnrollLimit(user, target);
+    assertComboEnroll(user, target);
+  } catch (error) {
+    if (error.status !== 400) throw error;
+    return null;
+  }
   if (enrolledCount(target.id) >= Number(target.max_seats)) return null;
   const dup = db
     .prepare("SELECT id FROM enrollments WHERE schedule_id=? AND user_id=? AND status!='cancelled'")
@@ -99,7 +112,6 @@ function copyJoin(en, target) {
     seat = firstFreeSeat(target.id, target.max_seats);
   }
   if (!seat) return null;
-  const user = db.prepare("SELECT * FROM users WHERE id=?").get(en.user_id);
   const quote = quoteForSchedule(target, enrolledCount(target.id) + 1, user);
   const oldPay = Number(en.pay_amount || 0);
   const newPay = Number(quote.price || 0);
@@ -146,6 +158,11 @@ function copyJoin(en, target) {
       en.health_declared_at,
       0
     );
+  const ordinaryQuote = quoteForSchedule(target, enrolledCount(target.id), { ...user, student_status:"", is_student:0 });
+  db.prepare("UPDATE enrollments SET campus_snapshot_json=? WHERE id=?").run(snapshotFor(user, target, {
+    bookedTripPrice:newPay,
+    ordinaryTripPrice:Number(ordinaryQuote.price || 0),
+  }), info.lastInsertRowid);
   maybeMatchGuide(target.id);
   return {
     enrollmentId: Number(info.lastInsertRowid),

@@ -13,7 +13,7 @@ describe("campus gender ratio", () => {
   async function approveStudent(token, userId, school, college) {
     await agent.post("/api/me/student").set(auth(token)).send(campusPayload({ school, college })).expect(200);
     const admin = await loginAdmin(agent);
-    await agent.post(`/api/admin/users/${userId}/verify`).set(auth(admin)).send({ kind: "student", action: "approve" }).expect(200);
+    await agent.post(`/api/admin/users/${userId}/verify`).set(auth(admin)).send({ kind: "student", revision: require("../src/db").getDb().prepare("SELECT student_revision FROM users WHERE id=?").get(userId).student_revision, action: "approve" }).expect(200);
   }
 
   function enroll(token, idCard) {

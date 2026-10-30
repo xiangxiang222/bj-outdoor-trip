@@ -111,3 +111,42 @@
 .status-refresh > text { flex: 1; min-width: 0; }
 .status-refresh > button { flex: none; width: auto; min-width: 84rpx; max-width: 180rpx; margin: 0; padding: 8rpx 16rpx; border-radius: 99rpx; color: var(--cert-purple); background: var(--cert-selected); font-size: calc(21rpx * var(--ui-scale)); line-height: 1.5; }
 .cert-signature { padding: 34rpx 0 calc(40rpx + env(safe-area-inset-bottom)); text-align: center; color: var(--cert-muted); font-size: 15rpx; line-height: 1.5; letter-spacing: 3rpx; }
+/* Secondary controls keep the verified identity, rather than its removal, in focus. */
+.action-feedback { margin-top:22rpx; padding:22rpx 24rpx; border:1rpx solid var(--cert-edge); border-radius:20rpx; background:var(--cert-selected); color:var(--cert-purple); font-size:calc(23rpx * var(--ui-scale)); line-height:1.7; }
+.manage-entry { margin:18rpx 6rpx 0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10rpx 16rpx; color:var(--cert-muted); font-size:calc(21rpx * var(--ui-scale)); line-height:1.6; }
+.student-page .manage-entry button { width:auto; min-width:0; margin:0; padding:10rpx 16rpx; border:1rpx solid var(--cert-edge); border-radius:99rpx; background:var(--cert-card); color:var(--cert-purple); font-size:calc(22rpx * var(--ui-scale)); line-height:1.5; }
+.manage-error { margin:20rpx 4rpx 0; color:var(--cert-error); font-size:calc(22rpx * var(--ui-scale)); line-height:1.7; }
+.cert-management { margin-top:24rpx; }
+.student-page .manage-toggle { width:100%; min-width:0; min-height:96rpx; box-sizing:border-box; display:flex; align-items:center; gap:20rpx; margin:0; padding:20rpx 22rpx; border:1rpx solid var(--cert-edge); border-radius:20rpx; background:var(--cert-selected); color:var(--cert-purple); text-align:left; line-height:1.5; }
+.manage-entry-copy { flex:1; min-width:0; white-space:normal; }
+.manage-entry-copy > view { font-size:calc(28rpx * var(--ui-scale)); font-weight:600; line-height:1.5; }
+.manage-entry-copy > text { display:block; margin-top:4rpx; color:var(--cert-muted); font-size:calc(20rpx * var(--ui-scale)); line-height:1.65; overflow-wrap:break-word; }
+.manage-entry-symbol { position:relative; flex:none; width:36rpx; height:40rpx; margin-right:2rpx; box-sizing:border-box; }
+.manage-entry-symbol::before { content:''; position:absolute; inset:2rpx 7rpx 3rpx 0; border:2rpx solid; border-radius:6rpx; }
+.manage-entry-symbol::after { content:''; position:absolute; left:7rpx; top:12rpx; width:12rpx; border-top:2rpx solid; box-shadow:0 7rpx 0 currentColor; }
+.manage-entry-symbol > view { position:absolute; width:22rpx; height:7rpx; right:-3rpx; bottom:10rpx; border:2rpx solid; border-radius:2rpx; box-sizing:border-box; background:var(--cert-selected); box-shadow:0 0 0 3rpx var(--cert-selected); transform:rotate(-45deg); }
+.manage-chevron { flex:none; width:10rpx; height:10rpx; border-right:2rpx solid; border-bottom:2rpx solid; transform:rotate(45deg); margin-bottom:5rpx; }
+.manage-chevron.is-open { transform:rotate(225deg); margin-top:8rpx; margin-bottom:0; }
+.manage-options { margin-top:16rpx; padding:0 24rpx; border:1rpx solid var(--cert-line); border-radius:24rpx; background:var(--cert-card); }
+.student-page .manage-option { width:100%; box-sizing:border-box; display:flex; align-items:center; gap:22rpx; margin:0; padding:24rpx 0; border-radius:0; background:transparent; color:var(--cert-purple); text-align:left; line-height:1.5; }
+.manage-option + .manage-option { border-top:1rpx solid var(--cert-line); }
+.manage-copy { flex:1; min-width:0; }
+.manage-copy > view { color:var(--cert-ink); font-size:calc(25rpx * var(--ui-scale)); font-weight:500; }
+.manage-copy > text { display:block; margin-top:5rpx; color:var(--cert-muted); font-size:calc(20rpx * var(--ui-scale)); line-height:1.65; white-space:normal; }
+.manage-symbol { flex:none; position:relative; width:33rpx; height:35rpx; box-sizing:border-box; }
+.manage-symbol.edit { width:27rpx; height:31rpx; border:2rpx solid; border-radius:5rpx; margin-right:6rpx; }
+.manage-symbol.edit::before { content:''; position:absolute; width:19rpx; border-top:2rpx solid; transform:rotate(-45deg); top:12rpx; right:-10rpx; background:var(--cert-card); box-shadow:0 0 0 3rpx var(--cert-card); }
+.manage-symbol.alumni { border:2rpx solid; width:27rpx; height:31rpx; border-radius:4rpx; margin-right:6rpx; }
+.manage-symbol.alumni::before { content:''; position:absolute; width:11rpx; left:6rpx; top:7rpx; border-top:2rpx solid; box-shadow:0 6rpx 0 currentColor; }
+.manage-symbol.alumni::after { content:''; position:absolute; width:11rpx; height:11rpx; right:-6rpx; bottom:-3rpx; border:2rpx solid; border-radius:50%; background:var(--cert-card); }
+.manage-symbol.release { border:2rpx solid var(--cert-muted); border-radius:50%; width:29rpx; height:29rpx; margin-right:4rpx; }
+.manage-symbol.release::after { content:''; position:absolute; left:5rpx; right:5rpx; top:11rpx; border-top:2rpx solid var(--cert-muted); }
+.manage-option.is-release .manage-copy > view { color:var(--cert-muted); }
+.manage-footnote { padding:2rpx 0 22rpx; color:var(--cert-muted); font-size:calc(18rpx * var(--ui-scale)); line-height:1.7; }
+.cert-edit-notice { margin-top:24rpx; padding:24rpx; border:1rpx solid var(--cert-edge); border-radius:24rpx; background:var(--cert-selected); }
+.edit-notice-top { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12rpx; }
+.edit-notice-top .section-title { flex:1; min-width:0; color:var(--cert-purple); }
+.student-page .edit-notice-top button { width:auto; min-width:0; margin:0; padding:7rpx 0 7rpx 10rpx; border:0; border-radius:0; background:transparent; color:var(--cert-purple); font-size:calc(22rpx * var(--ui-scale)); line-height:1.5; }
+.conversion-identity { display:flex; align-items:center; gap:24rpx; padding:4rpx 0; }
+.conversion-identity .identity-title { margin-top:0; color:var(--cert-purple); }
+.student-page .manage-option[disabled], .student-page .manage-toggle[disabled], .student-page .manage-entry button[disabled], .student-page .edit-notice-top button[disabled] { opacity:.5; }

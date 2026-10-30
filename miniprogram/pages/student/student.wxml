@@ -10,12 +10,14 @@
   </view>
 
   <view class="status-refresh" wx:if="{{refreshError}}"><text>{{tr.t(refreshError, lang)}}</text><button bindtap="refreshStatus" disabled="{{refreshing}}">{{tr.t(refreshing ? '更新中…' : '重试', lang)}}</button></view>
-  <view class="cert-status {{rejected ? 'is-rejected' : ''}}" wx:if="{{certified || pending || rejected}}" id="cert-result" aria-live="polite">
+  <view class="manage-error" wx:if="{{errors.manage}}" role="alert">{{tr.t(errors.manage, lang)}}</view>
+  <view class="action-feedback" wx:if="{{actionMessage}}" id="cert-action-feedback" role="status">{{tr.t(actionMessage, lang)}}</view>
+  <view class="cert-status {{rejected ? 'is-rejected' : ''}}" wx:if="{{(certified || pending || rejected) && !editing}}" id="cert-result" aria-live="polite">
     <view class="status-icon {{pending ? 'is-pending' : rejected ? 'is-rejected' : 'is-approved'}}"><view></view></view>
     <view class="status-copy"><view class="status-title">{{tr.t(certified ? (campusKind == 'alumni' ? '校友身份已认证' : '校园身份已认证') : pending ? '资料已提交，等待审核' : '暂未通过，请更新资料', lang)}}</view><view class="status-note">{{tr.t(certified ? '校园身份已就绪，下一程见。' : pending ? '结果会显示在本页，不用重复提交。' : '请核对身份信息和证件清晰度后重新提交。', lang)}}</view></view>
   </view>
 
-  <block wx:if="{{certified || pending}}">
+  <block wx:if="{{(certified || pending) && !editing}}">
     <view class="cert-section cert-summary">
       <view class="section-heading"><view><view class="section-title">{{tr.t('我的校园身份', lang)}}</view><view class="section-note">{{tr.t(pending ? '以下资料已提交审核' : '以下资料已通过审核', lang)}}</view></view><text class="summary-badge">{{tr.t(pending ? '审核中' : '已认证', lang)}}</text></view>
       <view class="summary-row"><text>{{tr.t('身份', lang)}}</text><text>{{tr.t(kindLabel, lang)}}</text></view>
@@ -23,18 +25,41 @@
       <view class="summary-row" wx:if="{{college}}"><text>{{tr.t('学院', lang)}}</text><text>{{tr.t(college, lang)}}</text></view>
       <view class="summary-row" wx:if="{{major}}"><text>{{tr.t('专业', lang)}}</text><text>{{tr.t(major, lang)}}</text></view>
       <view class="summary-proof"><view class="small-shield"></view><text>{{tr.t('身份凭证已提交', lang)}}</text></view>
+      <view class="cert-management" wx:if="{{certified}}">
+        <button class="manage-toggle" bindtap="toggleManagement" aria-expanded="{{managementOpen}}" disabled="{{loading || managing}}">
+          <view class="manage-entry-symbol" aria-hidden="true"><view></view></view>
+          <view class="manage-entry-copy"><view>{{tr.t('管理认证', lang)}}</view><text>{{tr.t(campusKind == 'alumni' ? '修改资料 · 解除认证' : '修改资料 · 转校友 · 解除认证', lang)}}</text></view>
+          <view class="manage-chevron {{managementOpen ? 'is-open' : ''}}"></view>
+        </button>
+        <view class="manage-options" wx:if="{{managementOpen}}">
+          <button class="manage-option" bindtap="startEdit" disabled="{{loading || managing || refreshing}}"><view class="manage-symbol edit" aria-hidden="true"></view><view class="manage-copy"><view>{{tr.t('变更认证资料', lang)}}</view><text>{{tr.t('更新学校、学院或身份信息', lang)}}</text></view><view class="field-chevron"></view></button>
+          <button class="manage-option" wx:if="{{campusKind != 'alumni'}}" bindtap="startEdit" data-kind="alumni" disabled="{{loading || managing || refreshing}}"><view class="manage-symbol alumni" aria-hidden="true"></view><view class="manage-copy"><view>{{tr.t('转为校友认证', lang)}}</view><text>{{tr.t('毕业了，仍可遇见校园伙伴', lang)}}</text></view><view class="field-chevron"></view></button>
+          <button class="manage-option is-release" bindtap="revoke" disabled="{{loading || managing || refreshing}}"><view class="manage-symbol release" aria-hidden="true"></view><view class="manage-copy"><view>{{tr.t('解除校园认证', lang)}}</view><text>{{tr.t('停止校园身份及后续专属权益', lang)}}</text></view><view class="field-chevron"></view></button>
+          <view class="manage-footnote">{{tr.t('已有订单不会自动取消，操作前会说明具体影响', lang)}}</view>
+        </view>
+      </view>
+    </view>
+    <view class="manage-entry" wx:if="{{pending}}">
+      <text>{{tr.t('资料有误，可撤回后修改', lang)}}</text><button bindtap="withdraw" disabled="{{loading || managing || refreshing}}">{{tr.t(managing || loading ? '处理中…' : '撤回申请', lang)}}</button>
     </view>
     <view class="cert-state-help">{{tr.t(campusKind == 'alumni' ? '校友可报名开放给校友的校园团；学生价仅适用于符合条件的在读师生。' : '学生价以各团的优惠设置为准；学校、学院和专业用于匹配报名范围。', lang)}}</view>
     <view class="cert-actions"><button class="cert-primary" bindtap="goDiscover">{{tr.t('发现校园旅程', lang)}}<text> →</text></button><button class="cert-secondary" bindtap="goBack">{{tr.t(redirect ? '返回报名' : '返回', lang)}}</button></view>
+
   </block>
 
   <block wx:else>
+    <view class="cert-edit-notice" wx:if="{{editing}}" id="cert-edit-notice">
+      <view class="edit-notice-top"><view class="section-title">{{tr.t(converting ? '从校园，到下一程' : '更新你的校园身份', lang)}}</view><button bindtap="cancelEdit" disabled="{{loading || uploading || managing}}">{{tr.t('取消修改', lang)}}</button></view>
+      <view class="section-note">{{tr.t('当前认证暂时保留；提交后进入重新审核，期间暂停校园资格和学生价。', lang)}}</view>
+      <view class="section-note" wx:if="{{converting}}">{{tr.t('请上传毕业证或校友证，审核通过后可参加开放给校友的活动。', lang)}}</view>
+    </view>
     <view class="cert-section">
       <view class="section-heading"><view><view class="section-title">{{tr.t('先认识一下你', lang)}}</view><view class="section-note">{{tr.t('选择与你的证件一致的身份', lang)}}</view></view><text class="section-count">01</text></view>
-      <view class="identity-options">
+      <view class="identity-options" wx:if="{{!converting}}">
         <view class="identity-option {{campusKind == 'student' ? 'selected' : ''}}" bindtap="setKind" data-kind="student" role="radio" aria-checked="{{campusKind == 'student'}}"><view class="identity-symbol student"></view><view class="identity-title">{{tr.t('在读师生', lang)}}</view><view class="identity-note">{{tr.t('学生 · 教职工', lang)}}</view><view class="identity-radio"></view></view>
         <view class="identity-option {{campusKind == 'alumni' ? 'selected' : ''}}" bindtap="setKind" data-kind="alumni" role="radio" aria-checked="{{campusKind == 'alumni'}}"><view class="identity-symbol alumni"></view><view class="identity-title">{{tr.t('毕业校友', lang)}}</view><view class="identity-note">{{tr.t('已毕业的校园伙伴', lang)}}</view><view class="identity-radio"></view></view>
       </view>
+      <view class="conversion-identity" wx:else><view class="identity-symbol alumni"></view><view><view class="identity-title">{{tr.t('毕业校友', lang)}}</view><view class="identity-note">{{tr.t('校友身份不享学生价', lang)}}</view></view></view>
     </view>
 
     <view class="cert-section" id="campus-fields">
@@ -43,14 +68,14 @@
         <view class="campus-field {{errors.school ? 'has-error' : ''}}"><view class="field-label">{{tr.t('学校', lang)}}<text>{{tr.t('选填', lang)}}</text></view><view class="campus-selector {{school ? '' : 'placeholder'}}" bindtap="pickSchool" role="button" aria-label="{{tr.t('选择学校', lang)}}"><text>{{tr.t(school || '搜索并选择学校', lang)}}</text><view class="field-chevron"></view></view><view class="field-error" wx:if="{{errors.school}}">{{tr.t(errors.school, lang)}}</view></view>
         <view class="campus-field {{errors.college ? 'has-error' : ''}}"><view class="field-label">{{tr.t('学院', lang)}}<text>{{tr.t('选填', lang)}}</text></view><view class="campus-selector {{college ? '' : 'placeholder'}} {{!school ? 'is-disabled' : ''}}" bindtap="pickCollege" role="button" aria-label="{{tr.t('选择学院', lang)}}"><text>{{tr.t(college || (school ? '选择所在学院' : '请先选择学校'), lang)}}</text><view class="field-chevron"></view></view><view class="field-error" wx:if="{{errors.college}}">{{tr.t(errors.college, lang)}}</view></view>
         <view class="campus-field {{errors.major ? 'has-error' : ''}}"><view class="field-label">{{tr.t('专业', lang)}}<text>{{tr.t('选填', lang)}}</text></view><view class="campus-selector {{major ? '' : 'placeholder'}} {{!college ? 'is-disabled' : ''}}" bindtap="pickMajor" role="button" aria-label="{{tr.t('选择专业', lang)}}"><text>{{tr.t(major || (college ? '选择所在专业' : '请先选择学院'), lang)}}</text><view class="field-chevron"></view></view><view class="field-error" wx:if="{{errors.major}}">{{tr.t(errors.major, lang)}}</view></view>
-        <view class="campus-field {{errors.studentNo ? 'has-error' : ''}}" wx:if="{{campusKind == 'student'}}"><view class="field-label">{{tr.t('学号 / 工号', lang)}}<text class="required">{{tr.t('必填', lang)}}</text></view><input class="student-number" value="{{studentNo}}" placeholder="{{tr.t('填写证件上的学号或工号', lang)}}" placeholder-class="number-placeholder" maxlength="32" disabled="{{loading || uploading}}" bindinput="onNo" aria-label="{{tr.t('学号 / 工号', lang)}}" /><view class="field-error" wx:if="{{errors.studentNo}}">{{tr.t(errors.studentNo, lang)}}</view></view>
+        <view class="campus-field {{errors.studentNo ? 'has-error' : ''}}" wx:if="{{campusKind == 'student'}}"><view class="field-label">{{tr.t('学号 / 工号', lang)}}<text class="required">{{tr.t('必填', lang)}}</text></view><input class="student-number" value="{{studentNo}}" placeholder="{{tr.t('填写证件上的学号或工号', lang)}}" placeholder-class="number-placeholder" maxlength="32" disabled="{{loading || uploading || managing}}" bindinput="onNo" aria-label="{{tr.t('学号 / 工号', lang)}}" /><view class="field-error" wx:if="{{errors.studentNo}}">{{tr.t(errors.studentNo, lang)}}</view></view>
       </view>
       <view class="field-hint">{{tr.t('完善校园信息，更准确地匹配出行范围', lang)}}</view>
     </view>
 
     <view class="cert-section" id="campus-proof">
       <view class="section-heading"><view><view class="section-title">{{tr.t('带上你的校园凭证', lang)}}</view><view class="section-note">{{tr.t(campusKind == 'alumni' ? '毕业证或校友证，上传一张即可' : '学生证或教职工证，上传一张即可', lang)}}</view></view><text class="section-count">03</text></view>
-      <button class="proof-upload {{studentCardUrl ? 'has-photo' : ''}}" bindtap="pickCard" disabled="{{uploading || loading}}" aria-label="{{tr.t(studentCardUrl ? '更换证件照片' : '上传证件照片', lang)}}">
+      <button class="proof-upload {{studentCardUrl ? 'has-photo' : ''}}" bindtap="pickCard" disabled="{{uploading || loading || managing}}" aria-label="{{tr.t(studentCardUrl ? '更换证件照片' : '上传证件照片', lang)}}">
         <image wx:if="{{cardPreviewUrl}}" src="{{cardPreviewUrl}}" mode="aspectFit" class="proof-image" />
         <view wx:else class="proof-illustration" aria-hidden="true"><view class="proof-avatar"></view><view class="proof-lines"></view><view class="proof-add"></view></view>
         <view class="proof-caption"><view class="proof-title">{{tr.t(uploading ? '证件上传中…' : studentCardUrl ? '已上传，点击可更换' : '上传证件照片', lang)}}</view><view class="proof-note">{{tr.t('支持 JPG / PNG / WebP，5MB 以内', lang)}}</view></view>
@@ -62,7 +87,7 @@
 
     <view class="cert-actions">
       <view class="submit-error" wx:if="{{errors.submit}}" role="alert">{{tr.t(errors.submit, lang)}}</view>
-      <button class="cert-primary" bindtap="submit" disabled="{{loading || uploading}}">{{tr.t(loading ? '正在提交…' : uploading ? '证件上传中…' : rejected ? '更新资料并重新提交' : '提交校园认证', lang)}}</button>
+      <button class="cert-primary" bindtap="submit" disabled="{{loading || uploading || managing}}">{{tr.t(loading ? '正在提交…' : managing ? '正在核对…' : uploading ? '证件上传中…' : editing ? '提交认证变更' : rejected ? '更新资料并重新提交' : '提交校园认证', lang)}}</button>
       <view class="submit-note">{{tr.t('提交后由平台审核，结果可在本页查看', lang)}}</view>
       <button class="cert-secondary" wx:if="{{redirect}}" bindtap="goBack">{{tr.t('返回报名', lang)}}</button>
     </view>

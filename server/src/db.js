@@ -496,6 +496,9 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "enrollments", "supplies_fee", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "users", "is_student", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "users", "student_status", "TEXT");
+  addColumnIfMissing(db, "users", "student_revision", "INTEGER NOT NULL DEFAULT 0");
+  addColumnIfMissing(db, "users", "student_history_json", "TEXT DEFAULT '[]'");
+  addColumnIfMissing(db, "enrollments", "campus_snapshot_json", "TEXT DEFAULT ''");
   addColumnIfMissing(db, "users", "school", "TEXT");
   addColumnIfMissing(db, "users", "college", "TEXT");
   addColumnIfMissing(db, "users", "major", "TEXT");
