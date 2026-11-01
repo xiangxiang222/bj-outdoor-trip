@@ -1,6 +1,14 @@
 <template>
   <section class="route-catalog" :class="'mode-' + mode" :data-mode="mode" data-testid="route-catalog" aria-label="精选线路">
     <div class="rc-intro"><span>CURATED JOURNEYS</span><h2>换个角度，发现山野</h2><p>先选心动的风景，再安排下一次出发。</p></div>
+    <div class="rc-selected" role="group" aria-label="当前线路筛选">
+      <template v-if="selectedFilters.length">
+        <span class="rc-selected-label">已选条件</span>
+        <button v-for="filter in selectedFilters" :key="filter.key" class="rc-selected-chip" type="button" :aria-label="'取消' + filter.label + '：' + filter.value" @click="clearFilter(filter.key)"><span>{{ filter.label }}：{{ filter.value }}</span><span aria-hidden="true">×</span></button>
+        <button class="rc-clear-all" type="button" @click="clearFilters">清空筛选</button>
+      </template>
+      <span v-else class="rc-selected-label">全部线路</span>
+    </div>
     <div class="rc-filters">
       <div class="rc-scroll" role="group" aria-label="线路天数">
         <button type="button" :aria-pressed="days === 0" :class="{ on: days === 0 }" @click="days = 0">全部天数</button>
@@ -44,7 +52,7 @@
         </div>
       </router-link>
     </div>
-    <div v-else-if="ready && !loading && !error" class="rc-empty"><svg viewBox="0 0 56 48" fill="none" aria-hidden="true"><path d="m3 39 18-29 16 23 8-12 9 18M14 22l7 4 6-8M3 44h51"/><circle cx="43" cy="8" r="4"/></svg><h3>{{ q || days || tag ? '没有匹配的线路' : '下一段山野，正在准备中' }}</h3><p>{{ q || days || tag ? '换个天数或玩法，看看新的风景。' : '正式线路发布后，会出现在这里。' }}</p><button v-if="days || tag" type="button" @click="clearFilters">重置天数与玩法</button></div>
+    <div v-else-if="ready && !loading && !error" class="rc-empty"><svg viewBox="0 0 56 48" fill="none" aria-hidden="true"><path d="m3 39 18-29 16 23 8-12 9 18M14 22l7 4 6-8M3 44h51"/><circle cx="43" cy="8" r="4"/></svg><h3>{{ selectedFilters.length ? '没有匹配的线路' : '下一段山野，正在准备中' }}</h3><p>{{ selectedFilters.length ? '试试取消部分条件，看看其他风景。' : '正式线路发布后，会出现在这里。' }}</p><button v-if="selectedFilters.length" type="button" @click="clearFilters">清空筛选</button></div>
     <router-link class="rc-apply" to="/m/route-apply"><span><strong>把你喜欢的路线，分享给同行的人</strong><small>没有想走的线？申请收录</small></span><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5"/></svg></router-link>
   </section>
 </template>
@@ -55,7 +63,8 @@ import http from "@/api/http";
 import LoadRow from "@/components/LoadRow.vue";
 import { ROUTE_MODES, normalizeRouteMode, routeLabels, routePriceFacts, routeUpcomingFacts } from "@/utils/routePresentation";
 
-const props = defineProps({ q: { type: String, default: "" }, seedTag: { type: String, default: "" } });
+const props = defineProps({ q: { type: String, default: "" }, category: { type: String, default: "" }, seedTag: { type: String, default: "" } });
+const emit = defineEmits(["update:q", "update:category"]);
 const list = ref([]);
 const days = ref(0);
 const tag = ref(props.seedTag || "");
@@ -67,6 +76,14 @@ const brokenImages = ref({});
 const modes = ROUTE_MODES;
 const mode = ref("poster");
 const cards = computed(() => list.value.map((route) => ({ ...route, labels: routeLabels(route), price: routePriceFacts(route), departure: routeUpcomingFacts(route) })));
+const selectedFilters = computed(() => {
+  const selected = [];
+  if (props.category) selected.push({ key: "category", label: "主题", value: props.category });
+  if (props.q.trim()) selected.push({ key: "q", label: "关键词", value: props.q.trim() });
+  if (days.value) selected.push({ key: "days", label: "天数", value: days.value === "multi" ? "多日" : days.value + "日" });
+  if (tag.value) selected.push({ key: "tag", label: "玩法", value: tag.value });
+  return selected;
+});
 let requestId = 0;
 let disposed = false;
 
@@ -79,7 +96,8 @@ async function load() {
   const params = {};
   if (days.value) params.days = days.value;
   if (tag.value) params.tag = tag.value;
-  if (props.q) params.q = props.q;
+  if (props.q.trim()) params.q = props.q.trim();
+  if (props.category) params.category = props.category;
   loading.value = true;
   error.value = false;
   try {
@@ -95,8 +113,19 @@ async function load() {
     if (!disposed && current === requestId) loading.value = false;
   }
 }
-function clearFilters() { days.value = 0; tag.value = ""; }
-watch([days, tag, () => props.q], load);
+function clearFilter(key) {
+  if (key === "q") emit("update:q", "");
+  else if (key === "category") emit("update:category", "");
+  else if (key === "days") days.value = 0;
+  else if (key === "tag") tag.value = "";
+}
+function clearFilters() {
+  days.value = 0;
+  tag.value = "";
+  emit("update:q", "");
+  emit("update:category", "");
+}
+watch([days, tag, () => props.q, () => props.category], load);
 watch(() => props.seedTag, (value) => { tag.value = value || ""; });
 onMounted(() => {
   try { mode.value = normalizeRouteMode(localStorage.getItem("bj_route_view")); } catch { /* Default to the editorial view. */ }
@@ -118,6 +147,12 @@ onUnmounted(() => { disposed = true; requestId++; });
 .rc-intro > span { color:#a08bb5; font-size:9px; letter-spacing:.16em !important; }
 .rc-intro h2 { margin-top:7px; font-size:calc(21px * var(--ui-scale,1)); font-weight:600; line-height:1.5; }
 .rc-intro p { margin-top:6px; color:var(--rc-muted); font-size:calc(12px * var(--ui-scale,1)); line-height:1.7; }
+.rc-selected { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:0 0 13px; min-width:0; }
+.rc-selected-label { color:var(--rc-muted); font-size:calc(12px * var(--ui-scale,1)); line-height:1.6; }
+.rc-selected .rc-selected-chip { display:inline-flex; align-items:center; gap:9px; max-width:100%; min-width:0; min-height:44px; padding:8px 12px; border:1px solid var(--rc-line); border-radius:11px; color:var(--rc-purple); background:var(--rc-soft); font-size:calc(12px * var(--ui-scale,1)); line-height:1.5; text-align:left; }
+.rc-selected-chip > span:first-child { min-width:0; overflow-wrap:anywhere; }
+.rc-selected-chip > span:last-child { flex:none; font-size:18px; line-height:1; }
+.rc-selected .rc-clear-all { flex:none; min-height:44px; padding:8px 3px; border:0; background:transparent; color:var(--rc-muted); font-size:calc(12px * var(--ui-scale,1)); line-height:1.5; }
 .rc-filters { border-bottom:1px solid var(--rc-line); padding-bottom:8px; }
 .rc-scroll { display:flex; gap:8px; overflow:auto; scrollbar-width:none; padding:3px 1px 10px; }
 .rc-scroll::-webkit-scrollbar { display:none; }

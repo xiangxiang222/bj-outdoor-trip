@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { deskTrips, isUpcomingTrip, showAfterActions, splitTrips, tripKindLabel } from "./trips";
+import { deskTrips, isCancelledTrip, isUpcomingTrip, normalizeTripTab, showAfterActions, splitTrips, tripKindLabel } from "./trips";
 
 describe("splitTrips", () => {
   const today = "2026-09-05";
@@ -77,6 +77,23 @@ describe("splitTrips", () => {
     );
     expect(desk.refund.map((r) => r.id)).toEqual([1]);
     expect(desk.past.map((r) => r.id)).toEqual([1, 2]);
+  });
+
+  it("filters cancelled enrollments and cancelled departures without treating a refund alone as cancellation", () => {
+    const rows = [
+      { id: 1, status: "cancelled", start_date: "2026-09-10" },
+      { id: 2, status: "joined", schedule_status: "cancelled", start_date: "2026-09-11" },
+      { id: 3, status: "waitlist", scheduleStatus: "cancelled", start_date: "2026-09-12" },
+      { id: 4, status: "cancelled", pay_status: "refunded", refundProgress: { text: "已退款" } },
+      { id: 5, status: "joined", refundProgress: { text: "部分退款" }, start_date: "2026-09-13" },
+    ];
+    const desk = deskTrips(rows, today);
+    expect(desk.cancelled.map(row => row.id)).toEqual([1, 2, 3, 4]);
+    expect(desk.refund.map(row => row.id)).toEqual([4, 5]);
+    expect(desk.depart.some(row => desk.cancelled.includes(row))).toBe(false);
+    expect(desk.ended.some(row => desk.cancelled.includes(row))).toBe(false);
+    expect(isCancelledTrip(null)).toBe(false);
+    expect(normalizeTripTab("cancelled")).toBe("cancelled");
   });
 
   it("hides complete and review actions until a group trip has formed", () => {

@@ -1,26 +1,29 @@
 <template>
   <div class="mp-phone" :class="{ 'is-account': accountTone, 'is-home': isHome, 'is-catalog': isHome && route.query.view === 'routes', 'is-mine': route.name === 'mine', 'is-wishes': route.path.startsWith('/m/wishes'), 'is-orders': route.name === 'orders', 'is-look-font': route.name === 'look-font', 'is-activities': route.name === 'activities', 'is-activity-publish': route.name === 'publish' && route.query.channel === 'activity' }">
-    <div class="mp-status" :class="{ 'is-home': isHome }">
-      <router-link to="/m" class="brand-lockup" aria-label="同行者众 首页">
-        <span class="brand-mark-frame" aria-hidden="true">
-          <img src="/brand/mark.png" alt="" />
-        </span>
-        <span class="brand-type">
-          <span class="brand-name">同行者众</span>
-          <span v-if="isHome" class="brand-tagline">在山野，遇见爱</span>
-        </span>
-      </router-link>
-      <nav class="desktop-nav" aria-label="主导航">
-        <router-link to="/m" :class="{ selected: isHome }">发现山野</router-link>
-        <router-link to="/m/activities">同城相遇</router-link>
-        <router-link to="/m/orders">我的行程</router-link>
-        <router-link to="/m/mine">会员与我的</router-link>
-      </nav>
-      <div class="header-actions">
-        <router-link class="header-help" to="/m/official" aria-label="联系客服"><TravelIcon name="headset" /><span>旅行顾问</span></router-link>
-        <router-link class="header-publish" to="/m/publish"><span>＋</span> 发起旅行</router-link>
+    <!-- Keep the home brand inside the image's scroll area; other pages retain their header. -->
+    <Teleport :to="scrollBody || 'body'" :disabled="!isHome || !scrollBody">
+      <div class="mp-status" :class="{ 'is-home': isHome }">
+        <router-link to="/m" class="brand-lockup" aria-label="同行者众 首页">
+          <span class="brand-mark-frame" aria-hidden="true">
+            <img src="/brand/mark.png" alt="" />
+          </span>
+          <span class="brand-type">
+            <span class="brand-name">同行者众</span>
+            <span v-if="isHome" class="brand-tagline">在山野，遇见爱</span>
+          </span>
+        </router-link>
+        <nav class="desktop-nav" aria-label="主导航">
+          <router-link to="/m" :class="{ selected: isHome }">发现山野</router-link>
+          <router-link to="/m/activities">同城相遇</router-link>
+          <router-link to="/m/orders">我的行程</router-link>
+          <router-link to="/m/mine">会员与我的</router-link>
+        </nav>
+        <div class="header-actions">
+          <router-link class="header-help" to="/m/official" aria-label="联系客服"><TravelIcon name="headset" /><span>旅行顾问</span></router-link>
+          <router-link class="header-publish" to="/m/publish"><span>＋</span> 发起旅行</router-link>
+        </div>
       </div>
-    </div>
+    </Teleport>
     <div v-if="!isHome && !['mine', 'orders'].includes(route.name)" class="mp-nav">
       <button v-if="showBack" class="nav-back" type="button" aria-label="返回" @click="goBack">‹</button>
       <div>

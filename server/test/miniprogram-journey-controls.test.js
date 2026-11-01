@@ -128,6 +128,38 @@ describe('native journey filters and one-off activity navigation',()=>{
     page.setDraftTab(event('ended'));
     assert.deepEqual(Array.from(page.data.shown,row=>row.id),[3]);
   });
+  it('filters cancelled bookings and cancelled departures, combining status with search and time',async()=>{
+    const cancelled = [
+      {...rows[0],id:4,title:'取消的山野报名',status:'cancelled',created_at:'2026-10-03'},
+      {...rows[0],id:5,title:'取消的山野团期',schedule_status:'cancelled',created_at:'2026-09-03'},
+      {...rows[0],id:6,title:'取消并退款',status:'cancelled',pay_status:'refunded',refundProgress:{text:'已退款'},created_at:'2026-09-04'},
+      {...rows[0],id:7,title:'仅部分退款',refundProgress:{text:'差额退款'},created_at:'2026-10-03'},
+      {...rows[0],id:8,title:'另一种团期字段',schedule_status:undefined,scheduleStatus:'cancelled',created_at:'2026-09-03'},
+    ];
+    const {page}=harness('orders',()=>Promise.resolve({data:rows.concat(cancelled)}));
+    page.onLoad({tab:'cancelled'}); await page.onShow();
+    assert.equal(page.data.tab,'cancelled');
+    assert.equal(page.data.selectedStatus,'已取消');
+    assert.deepEqual(Array.from(page.data.shown,row=>row.id),[4,5,6,8]);
+    assert.equal(page.data.statusTabs.find(item=>item.key==='cancelled').count,4);
+    page.openFilter();
+    assert.equal(page.data.draftTab,'cancelled');
+    assert.ok(page.data.allStatusTabs.some(item=>item.key==='cancelled'&&item.label==='已取消'));
+    page.setKeyword(event('', '山野'));
+    assert.deepEqual(Array.from(page.data.shown,row=>row.id),[4,5]);
+    page.setStart(event('', '2026-10-01'));
+    assert.deepEqual(Array.from(page.data.shown,row=>row.id),[4]);
+    page.closeFilter(); page.openFilter();
+    assert.equal(page.data.draftTab,'cancelled');
+    page.clearFilters();
+    assert.equal(page.data.tab,'all');
+    assert.equal(page.data.keyword,'');
+    assert.equal(page.data.start,'');
+    assert.equal(page.data.shown.length,8);
+    page.setDraftTab(event('cancelled'));
+    assert.equal(page.data.tab,'cancelled');
+    assert.deepEqual(Array.from(page.data.shown,row=>row.id),[4,5,6,8]);
+  });
   it('applies custom dates immediately, preserves the last valid range on invalid edits, and clears it',()=>{
     const {page}=harness('orders'); page.setData({list:rows,tab:'all'}); page.paint(); page.openFilter();
     page.setStart(event('', '2026-10-01'));

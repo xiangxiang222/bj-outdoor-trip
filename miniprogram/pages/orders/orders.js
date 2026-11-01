@@ -3,7 +3,7 @@ const { deskTrips, isReviewTrip, isEndedTrip, normalizeTripTab, tripEndDay } = r
 const { orderBadge, orderHint, orderMoney, orderShop, orderSpec, orderIcon, canReorder, orderTimePresets, matchOrderTime, matchOrderQuery } = require("../../utils/order-view");
 const { isDark } = require("../../utils/appearance");
 const app = getApp();
-const STATUS_TABS = [{key:"all",label:"全部"},{key:"depart",label:"待出发"},{key:"unpaid",label:"待付款"},{key:"review",label:"待评价"},{key:"ended",label:"已结束"},{key:"recruiting",label:"招募中"},{key:"waitlist",label:"候补中"},{key:"refund",label:"已退款"}];
+const STATUS_TABS = [{key:"all",label:"全部"},{key:"depart",label:"待出发"},{key:"unpaid",label:"待付款"},{key:"review",label:"待评价"},{key:"ended",label:"已结束"},{key:"recruiting",label:"招募中"},{key:"waitlist",label:"候补中"},{key:"refund",label:"已退款"},{key:"cancelled",label:"已取消"}];
 const PRIMARY_KEYS = ["all","depart","unpaid","review","ended"];
 
 function decorate(item) {
@@ -130,6 +130,7 @@ Page({
       : tab === "waitlist" ? split.waitlist
       : tab === "refund" ? split.refund
       : tab === "ended" ? split.ended
+      : tab === "cancelled" ? split.cancelled
       : this.data.list;
     const filter = { preset: this.data.preset, start: this.data.start, end: this.data.end };
     const shown = pool.filter((row) => matchOrderTime(row, filter) && matchOrderQuery(row, this.data.keyword));

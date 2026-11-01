@@ -37,7 +37,7 @@ export function normalizeTripTab(raw) {
   const tab = String(raw || "");
   if (tab === "upcoming") return "depart";
   if (["completed", "finished", "past"].includes(tab)) return "ended";
-  return ["all", "unpaid", "recruiting", "depart", "review", "waitlist", "refund", "ended"].includes(tab) ? tab : "";
+  return ["all", "unpaid", "recruiting", "depart", "review", "waitlist", "refund", "ended", "cancelled"].includes(tab) ? tab : "";
 }
 
 export function isWaitlistTrip(row) {
@@ -114,6 +114,10 @@ export function isRefundTrip(row) {
   return Boolean(row && row.refundProgress);
 }
 
+export function isCancelledTrip(row) {
+  return Boolean(row && (row.status === "cancelled" || row.schedule_status === "cancelled" || row.scheduleStatus === "cancelled"));
+}
+
 export function deskTrips(rows, today = todayYmd()) {
   const split = splitTrips(rows, today);
   const unpaid = [];
@@ -121,12 +125,14 @@ export function deskTrips(rows, today = todayYmd()) {
   const refund = [];
   const recruiting = [];
   const ended = [];
+  const cancelled = [];
   for (const row of Array.isArray(rows) ? rows : []) {
     if (isUnpaidTrip(row)) unpaid.push(row);
     if (isRecruitingTrip(row, today)) recruiting.push(row);
     if (isReviewTrip(row, today)) review.push(row);
     if (isRefundTrip(row)) refund.push(row);
     if (isEndedTrip(row, today)) ended.push(row);
+    if (isCancelledTrip(row)) cancelled.push(row);
   }
   const byDate = (a, b) => String(a.start_date || a.startDate || "").localeCompare(String(b.start_date || b.startDate || ""));
   recruiting.sort(byDate);
@@ -137,6 +143,7 @@ export function deskTrips(rows, today = todayYmd()) {
     review,
     refund,
     recruiting,
+    cancelled,
     ended: ended.sort((a, b) => tripEndDay(b).localeCompare(tripEndDay(a))),
     depart: split.upcoming.filter((row) => !isUnpaidTrip(row) && !isRecruitingTrip(row, today)),
   };

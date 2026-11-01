@@ -69,6 +69,7 @@ const allStatusTabs = [
   { key: "waitlist", label: "候补中" },
   { key: "refund", label: "已退款" },
   { key: "ended", label: "已结束" },
+  { key: "cancelled", label: "已取消" },
 ];
 
 const normalizeTab = normalizeTripTab;
@@ -99,6 +100,7 @@ const pool = computed(() => {
   if (tab.value === "waitlist") return split.value.waitlist;
   if (tab.value === "refund") return split.value.refund;
   if (tab.value === "ended") return split.value.ended;
+  if (tab.value === "cancelled") return split.value.cancelled;
   return list.value;
 });
 const shown = computed(() => pool.value.filter((row) => matchOrderTime(row, applied.value) && matchOrderQuery(row, keyword.value)));

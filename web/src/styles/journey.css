@@ -33,7 +33,10 @@ body { background: #fff; color: var(--ink); }
 .mp-phone { background: #fff; background-image: none; }
 .mp-phone *, .mp-phone *::before, .mp-phone *::after { letter-spacing: 0 !important; }
 .mp-status { height: 62px; padding: 8px 16px; background: #fff; color: var(--ink); }
-.mp-status.is-home { height: 62px; }
+.mp-phone.is-home { --home-nav-ink: #fff; --home-nav-muted: rgba(255,255,255,.85); }
+.mp-phone.is-home .mp-body { position: relative; }
+.mp-phone.is-home .mp-status { position: absolute; inset: 0 0 auto; z-index: 20; height: 62px; background: transparent; border: 0; box-shadow: none; color: var(--home-nav-ink); }
+.mp-phone.is-home .brand-lockup { text-shadow: 0 1px 5px rgba(14,21,27,.4); }
 .brand-mark-frame { width: 35px; height: 35px; flex-basis: 35px; border-radius: 50%; background: #f4f1f7; box-shadow: none; }
 .brand-name { color: #302d34; font-weight: 700; letter-spacing: 0; }
 .brand-tagline { color: var(--muted); letter-spacing: 0; }
@@ -63,14 +66,23 @@ body { background: #fff; color: var(--ink); }
 .trip-kind { background: var(--thu-soft); color: var(--thu); border-radius: 4px; }
 .home-page { --hero-surface: #f5f5f7; --hero-surface-rgb: 245,245,247; --home-input: #f6f5f8; margin: -12px -16px 0; }
 html[data-night="dark"] .home-page { --hero-surface: var(--cream); --hero-surface-rgb: 26,18,28; --home-input: #302735; }
-.mp-phone.is-home .brand-name { color: var(--ink); }
+.mp-phone.is-home .brand-name,
+html[data-night="dark"] .mp-phone.is-home .brand-name { color: var(--home-nav-ink); }
+.mp-phone.is-home .brand-tagline,
+html[data-night="dark"] .mp-phone.is-home .brand-tagline { color: var(--home-nav-muted); }
 html[data-night="dark"] .mp-phone.is-home { background: var(--cream); }
-html[data-night="dark"] .mp-phone.is-home .mp-status { background: var(--paper); }
+html[data-night="dark"] .mp-phone.is-home .mp-status { background: transparent; }
 html[data-night="dark"] .mp-phone.is-home .icp-foot { background: var(--paper); color: var(--muted); }
 html[data-night="dark"] .mp-phone.is-home .mp-body { background: var(--cream); }
+.mp-phone.is-home .desktop-nav a,
+.mp-phone.is-home .header-help,
 html[data-night="dark"] .mp-phone.is-home .desktop-nav a,
-html[data-night="dark"] .mp-phone.is-home .header-help { color: var(--muted); }
-html[data-night="dark"] .mp-phone.is-home .desktop-nav a.selected { color: var(--ink); }
+html[data-night="dark"] .mp-phone.is-home .header-help { color: var(--home-nav-muted); }
+.mp-phone.is-home .desktop-nav a.selected,
+.mp-phone.is-home .desktop-nav a:hover,
+html[data-night="dark"] .mp-phone.is-home .desktop-nav a.selected { color: var(--home-nav-ink); }
+.mp-phone.is-home .desktop-nav a.selected::after { background: currentColor; }
+.mp-phone.is-home .header-help .travel-icon { color: inherit; }
 .brand-hero,
 .home-page .brand-hero { height: auto; min-height: 340px; margin: 0; border-radius: 0; background-color: #313834; }
 .brand-hero .swipe,
@@ -79,7 +91,7 @@ html[data-night="dark"] .mp-phone.is-home .desktop-nav a.selected { color: var(-
 .home-page .brand-hero .swipe img { width: 100%; height: 100%; }
 .home-page .brand-hero .swipe { position: absolute; inset: 0; }
 .brand-hero .swipe img { object-position: center 52%; }
-.home-page .brand-hero::after { content: ""; position: absolute; z-index: 0; inset: 0; pointer-events: none; background: linear-gradient(90deg,rgba(18,24,25,.24),rgba(18,24,25,0) 78%), linear-gradient(180deg, rgba(22,24,36,.20), rgba(22,24,36,.04) 28%, rgba(24,22,36,.44) 72%, rgba(24,22,36,.36)); }
+.home-page .brand-hero::after { content: ""; position: absolute; z-index: 0; inset: 0; pointer-events: none; background: linear-gradient(90deg,rgba(18,24,25,.24),rgba(18,24,25,0) 78%), linear-gradient(180deg, rgba(16,22,30,.58), rgba(22,24,36,.10) 30%, rgba(24,22,36,.44) 72%, rgba(24,22,36,.36)); }
 .home-page .brand-hero::before {
   content: ""; position: absolute; z-index: 1; inset: 0; pointer-events: none;
   background:
@@ -296,6 +308,11 @@ html[data-night="dark"] .home-page .discovery-date input { color-scheme: dark; }
   .icp-foot { padding: 16px; }
   .home-page { max-width: 1280px; margin: 0 auto; padding: 0 40px; }
   .brand-hero, .home-page .brand-hero { height: auto; min-height: 420px; margin: 24px 0 0; border-radius: 8px; }
+  .mp-phone.is-home .mp-status { height: 76px; padding-inline: max(60px,calc((100vw - 1136px)/2)); }
+  .mp-phone.is-home .home-page { max-width: none; padding: 0; }
+  .mp-phone.is-home .brand-hero { margin: 0; border-radius: 0; }
+  .mp-phone.is-home .brand-cap { max-width: 1280px; margin: 0 auto; padding-inline: 92px; }
+  .mp-phone.is-home .home-pad { max-width: 1280px; margin: 0 auto; padding-inline: 40px; }
   .brand-hero .swipe, .home-page .brand-hero .swipe,
   .brand-hero .swipe img, .home-page .brand-hero .swipe img { height: 100%; }
   .brand-cap, .home-page .brand-cap { padding: 150px 52px 105px; }
@@ -400,9 +417,12 @@ html[data-night="dark"] .home-page .discovery-date input { color-scheme: dark; }
   .desktop-nav { gap: 17px; }
   .header-actions { gap: 10px; }
   .header-help span { display: none; }
+  .mp-phone.is-home .mp-status { gap: 20px; padding-inline: 32px; }
 }
 @media (min-width: 760px) and (max-width: 1250px) {
   .home-page { padding-inline: 28px; }
+  .mp-phone.is-home .home-pad { padding-inline: 28px; }
+  .mp-phone.is-home .brand-cap { padding-inline: 80px; }
   .organizer-grid { max-width: 100%; }
 }
 @media (max-width: 430px) {
@@ -423,12 +443,15 @@ html[data-night="dark"] .home-page .discovery-date input { color-scheme: dark; }
   .home-page .discovery-search-fields { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
   .home-page .discovery-submit { grid-column: 1/-1; }
 }
+html[data-text="1"] .mp-phone.is-home { --home-nav-ink: var(--ink); --home-nav-muted: var(--muted); }
+html[data-text="1"] .mp-phone.is-home .brand-lockup { text-shadow: none; }
+html[data-text="1"] .mp-phone.is-home .brand-mark-frame img { display: block !important; }
 html[data-text="1"] .home-page .brand-hero { min-height: 0; background: var(--thu-soft); }
 html[data-text="1"] .home-page .brand-hero .swipe,
 html[data-text="1"] .home-page .brand-hero::before,
 html[data-text="1"] .home-page .brand-hero::after,
 html[data-text="1"] .home-page .hero-dots { display: none; }
-html[data-text="1"] .home-page .brand-cap { padding: 48px 24px 86px; text-shadow: none; }
+html[data-text="1"] .home-page .brand-cap { padding-block: 96px 86px; text-shadow: none; }
 html[data-text="1"] .home-page .brand-cap h2 { color: var(--ink); }
 html[data-text="1"] .home-page .hero-eyebrow,
 html[data-text="1"] .home-page .brand-cap > p { color: var(--muted); }

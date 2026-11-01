@@ -1,14 +1,14 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
 <import src="../../templates/route-catalog.wxml" />
-<view class="home-page {{homeDark ? 'is-dark' : ''}} {{textMode ? 'is-text-mode' : ''}}">
+<view class="home-page {{homeDark ? 'is-dark' : ''}} {{textMode ? 'is-text-mode' : ''}}" bindtouchstart="cancelExplore">
+<view class="brand-box" style="--home-nav-height:{{statusBarHeight + navHeight}}px">
 <view class="home-nav" style="padding-top:{{statusBarHeight}}px">
   <view class="home-brand" style="height:{{navHeight}}px;padding-right:{{navRight}}px">
     <image class="home-brand-logo" src="/images/home/brand-mark.png" mode="aspectFit" />
     <view class="home-brand-copy"><view class="home-brand-name">{{tr.t('同行者众', lang)}}</view><view class="home-brand-en">{{tr.t('在山野，遇见爱', lang)}}</view></view>
   </view>
 </view>
-<view class="brand-box">
   <swiper class="brand-hero" current="{{heroIndex}}" autoplay circular interval="6000" bindchange="onHeroChange">
     <swiper-item wx:for="{{heroSlides}}" wx:key="url" bindtap="goSlide" data-id="{{item.routeId}}">
       <image wx:if="{{!item.imageBroken}}" class="brand-img" src="{{item.url}}" mode="aspectFill" binderror="onHeroError" data-index="{{index}}" />
@@ -49,7 +49,7 @@
 <view class="destination-section">
   <view class="home-section-heading"><view><view class="section-title">{{tr.t('走出日常，自然会有答案', lang)}}</view></view><text class="destination-caption" bindtap="showRoutes">{{tr.t('更多灵感', lang)}} ↗</text></view>
   <view class="destination-grid">
-    <view class="destination-card" wx:for="{{destinations}}" wx:key="keyword" bindtap="searchDestination" data-keyword="{{item.keyword}}">
+    <view class="destination-card" wx:for="{{destinations}}" wx:key="category" bindtap="discoverInspiration" data-category="{{item.category}}">
       <image class="destination-photo" src="{{item.photo}}" mode="aspectFill" lazy-load />
       <view class="destination-shade"></view><view class="destination-tag">{{tr.t(item.tag, lang)}}</view>
       <view class="destination-copy"><view class="destination-name">{{tr.t(item.name, lang)}}</view><view class="destination-en">{{item.en}}</view><view class="destination-note">{{tr.t(item.copy, lang)}}</view></view>
@@ -168,6 +168,11 @@
 <block wx:else>
   <view class="rt-catalog {{routeDark?'is-dark':''}} {{textMode?'is-text-mode':''}}">
     <view class="rt-intro"><view class="rt-eyebrow">CURATED OUTDOOR JOURNEYS</view><view class="rt-heading">{{tr.t('选一条线，走进山野', lang)}}</view><view class="rt-lead">{{tr.t('先看风景与安排，再选择适合自己的出发。', lang)}}</view></view>
+    <view class="rt-active" wx:if="{{routePicked.length}}" aria-role="group" aria-label="{{tr.t('当前线路筛选', lang)}}">
+      <view class="rt-active-head"><text>{{tr.t('已选条件', lang)}}</text><button bindtap="clearRouteFilters">{{tr.t('清空筛选', lang)}}</button></view>
+      <view class="rt-active-chips"><button wx:for="{{routePicked}}" wx:key="key" bindtap="clearRouteFilter" data-key="{{item.key}}" aria-label="{{tr.t('移除筛选', lang)}} {{tr.t(item.type, lang)}} {{tr.t(item.value, lang)}}"><text>{{tr.t(item.type, lang)}}：</text><text>{{tr.t(item.value, lang)}}</text><text aria-hidden="true">×</text></button></view>
+    </view>
+    <view wx:else class="rt-all">{{tr.t('全部线路', lang)}}</view>
     <scroll-view scroll-x class="rt-filter-scroll"><view class="rt-filter-row">
       <button class="rt-filter {{routeDays==0?'on':''}}" bindtap="setRouteDays" data-d="0">{{tr.t('全部天数', lang)}}</button>
       <button class="rt-filter {{routeDays==1?'on':''}}" bindtap="setRouteDays" data-d="1">{{tr.t('1日', lang)}}</button>
@@ -183,7 +188,7 @@
     <load-row wx:if="{{routeLoading && !routeList.length}}" />
     <view wx:if="{{routeErr}}" class="rt-error"><view><view class="rt-error-title">{{tr.t('线路加载失败', lang)}}</view><view class="rt-error-note" wx:if="{{routeList.length}}">{{tr.t('已保留上次内容，可重新加载。', lang)}}</view></view><button class="rt-retry" bindtap="loadRoutes">{{tr.t('重新加载', lang)}}</button></view>
     <template is="route-cards" data="{{rows:routeList,mode:routeMode,lang:lang}}" />
-    <view wx:if="{{!routeLoading && !routeList.length && !routeErr}}" class="rt-empty"><view class="rt-empty-title">{{tr.t('没有匹配的线路', lang)}}</view><view>{{tr.t('换个天数或玩法，发现新的山野。', lang)}}</view><button wx:if="{{query || routeDays || routeTag}}" class="rt-clear" bindtap="clearRouteFilters">{{tr.t('清空筛选', lang)}}</button></view>
+    <view wx:if="{{!routeLoading && !routeList.length && !routeErr}}" class="rt-empty"><view class="rt-empty-title">{{tr.t('没有匹配的线路', lang)}}</view><view>{{tr.t('试试调整或清空筛选条件。', lang)}}</view><button wx:if="{{routePicked.length}}" class="rt-clear" bindtap="clearRouteFilters">{{tr.t('清空筛选', lang)}}</button></view>
     <button class="rt-apply" bindtap="goRouteApply"><view><view class="rt-apply-title">{{tr.t('有一条私藏路线？', lang)}}</view><view class="rt-apply-note">{{tr.t('申请收录，把喜欢的山野分享给同行。', lang)}}</view></view><text class="rt-apply-arrow" aria-hidden="true">↗</text></button>
   </view>
 </block>

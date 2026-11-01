@@ -6,11 +6,12 @@ function asList(rows) {
   return Array.isArray(rows) ? rows : [];
 }
 
-async function loadRouteCatalog({ q = "", days = 0, tag = "" } = {}) {
+async function loadRouteCatalog({ q = "", days = 0, tag = "", category = "" } = {}) {
   const params = [];
   if (q) params.push("q=" + encodeURIComponent(q));
   if (days) params.push("days=" + days);
   if (tag) params.push("tag=" + encodeURIComponent(tag));
+  if (category) params.push("category=" + encodeURIComponent(category));
   try {
     const res = await request("/routes" + (params.length ? "?" + params.join("&") : ""));
     if (!Array.isArray(res.data)) throw new Error("线路加载失败，请重试");

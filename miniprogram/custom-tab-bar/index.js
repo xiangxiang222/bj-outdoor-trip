@@ -35,6 +35,12 @@ Component({
     },
     switchTab(e) {
       const url = e.currentTarget.dataset.path;
+      const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+      const current = pages[pages.length - 1];
+      if (current && typeof current.navigateHome === "function") {
+        current.navigateHome("switchTab", url);
+        return;
+      }
       wx.switchTab({ url });
     },
   },

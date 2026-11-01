@@ -22,6 +22,8 @@ function harness(response = {}) {
     },
   }, { filename });
   const page = { ...definition, data: structuredClone(definition.data) };
+  // Scrolling is covered by the page behavior suite; these cases exercise dates.
+  page.explore = () => {};
   page.setData = function (patch) {
     for (const [key, value] of Object.entries(patch)) {
       const parts = key.replace(/\[(\d+)\]/g, ".$1").split(".");

@@ -49,6 +49,36 @@ describe("routes and schedules API", () => {
     assert.equal(cat.body.data.length, 1);
   });
 
+  it("filters coastal inspiration by its category rather than a sea character in another route's region or title", async () => {
+    const insert = seed.db.prepare("INSERT INTO routes (code,title,category,region,tags_json,status) VALUES (?,?,?,?,?,'on')");
+    const coastId = Number(insert.run("CAT-SEA", "北戴河海边漫步", "海滨", "秦皇岛", "[]").lastInsertRowid);
+    const mountainId = Number(insert.run("CAT-MOUNTAIN", "凤凰岭登山", "登山", "北京海淀", "[]").lastInsertRowid);
+    const cultureId = Number(insert.run("CAT-CULTURE", "山海文化展馆", "文化", "北京", "[]").lastInsertRowid);
+
+    const keyword = await agent.get("/api/routes?q=海").expect(200);
+    const keywordIds = keyword.body.data.map((route) => route.id);
+    assert.ok(keywordIds.includes(coastId));
+    assert.ok(keywordIds.includes(mountainId));
+    assert.ok(keywordIds.includes(cultureId));
+
+    const coastal = await agent.get("/api/routes?category=海滨").expect(200);
+    assert.deepEqual(coastal.body.data.map((route) => route.id), [coastId]);
+    const mountain = await agent.get("/api/routes?category=登山").expect(200);
+    assert.deepEqual(mountain.body.data.map((route) => route.id), [mountainId]);
+  });
+
+  it("combines an inspiration category with keyword, duration and play filters", async () => {
+    const insert = seed.db.prepare("INSERT INTO routes (code,title,category,days,tags_json,status) VALUES (?,?,?,?,?,'on')");
+    const wantedId = Number(insert.run("CAT-MATCH", "北戴河亲子两日游", "海滨", 2, JSON.stringify(["亲子"])).lastInsertRowid);
+    insert.run("CAT-DAY", "北戴河亲子一日游", "海滨", 1, JSON.stringify(["亲子"]));
+    insert.run("CAT-KEYWORD", "青岛亲子两日游", "海滨", 2, JSON.stringify(["亲子"]));
+    insert.run("CAT-TAG", "北戴河摄影两日游", "海滨", 2, JSON.stringify(["摄影"]));
+    insert.run("CAT-OTHER", "北戴河亲子登山两日游", "登山", 2, JSON.stringify(["亲子"]));
+
+    const response = await agent.get("/api/routes?category=海滨&q=北戴河&days=2&tag=亲子").expect(200);
+    assert.deepEqual(response.body.data.map((route) => route.id), [wantedId]);
+  });
+
   it("returns route detail, 404, and favored flag", async () => {
     await agent.get("/api/routes/99999").expect(404);
     const token = await loginUser(agent);
