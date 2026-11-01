@@ -9,6 +9,7 @@ vi.mock('vue', async importOriginal => {
 vi.mock('vue-router', () => ({ useRoute: () => ({ params: { id: '12' }, query: {} }), useRouter: () => fixture.router }));
 vi.mock('@/api/http', () => ({ default: { get: vi.fn(), post: vi.fn() } }));
 vi.mock('@/utils/appearance', () => ({ readLook: () => ({ lang: 'zh' }) }));
+vi.mock('@/stores/user', () => ({ useUserStore: () => ({ token: '' }) }));
 
 const setupPage = () => OrderDetail.setup({}, { expose: vi.fn() });
 const eligible = (extra = {}) => ({ id: 12, canLinkWish: true, canPay: true, status: 'joined', pay_status: 'unpaid', schedule_status: 'recruiting', start_date: '2099-01-01', ...extra });
