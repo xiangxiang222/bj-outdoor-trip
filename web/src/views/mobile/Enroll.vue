@@ -154,7 +154,7 @@
       </label>
     </div></div>
     </template>
-    <p v-else class="muted">出发日前可取消；到场找发起人。</p>
+    <p v-else class="muted">活动开始前可取消，已付费用原路退回；到场找发起人。</p>
     <p v-if="err" style="color:var(--clay)">{{ err }}</p>
     <button v-if="s.status !== 'cancelled'" class="btn block" style="margin-top:16px" :disabled="loading || (s.eligibility?.enabled && !s.eligibility.canEnroll)" @click="submit">
       {{ enrollBtn }}
@@ -216,7 +216,7 @@ const form = ref({
 });
 const fallbackOptions = ref([]);
 const waiver = ref("");
-const cancelSummary = ref("出发日前可取消；出发当天不可取消。解散则报名作废。");
+const cancelSummary = ref("活动开始前可取消，已付费用原路退回。解散则报名作废。");
 const supplyItems = computed(() => store.meta?.supplies || []);
 const supplyQty = ref({});
 function setQty(code, delta) {

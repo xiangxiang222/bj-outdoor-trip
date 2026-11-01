@@ -1,6 +1,6 @@
 const { request, showError } = require("../../utils/request");
 const { deskTrips, isReviewTrip, isEndedTrip, normalizeTripTab, tripEndDay } = require("../../utils/trips");
-const { orderBadge, orderHint, orderMoney, orderShop, orderSpec, canReorder, orderTimePresets, matchOrderTime, matchOrderQuery } = require("../../utils/order-view");
+const { orderBadge, orderHint, orderMoney, orderShop, orderSpec, orderIcon, canReorder, orderTimePresets, matchOrderTime, matchOrderQuery } = require("../../utils/order-view");
 const { isDark } = require("../../utils/appearance");
 const app = getApp();
 const STATUS_TABS = [{key:"all",label:"全部"},{key:"depart",label:"待出发"},{key:"unpaid",label:"待付款"},{key:"review",label:"待评价"},{key:"ended",label:"已结束"},{key:"recruiting",label:"招募中"},{key:"waitlist",label:"候补中"},{key:"refund",label:"已退款"}];
@@ -10,6 +10,7 @@ function decorate(item) {
   const badge = orderBadge(item);
   return Object.assign({}, item, {
     badge: badge.label,
+    icon: orderIcon(item),
     hot: badge.key === "unpaid",
     shop: orderShop(item),
     spec: orderSpec(item),
@@ -29,7 +30,7 @@ function decorate(item) {
 Page({
   data: {
     loggedIn: false,
-    tab: "depart",
+    tab: "all",
     tabInto: "",
     keyword: "",
     list: [],
@@ -48,10 +49,11 @@ Page({
     start: "",
     end: "",
     filterOn: false,
+    timeLabel: "",
     statusTabs: STATUS_TABS.slice(0,5),
     allStatusTabs: STATUS_TABS,
     summary: [{key:"depart",label:"待出发",count:0},{key:"unpaid",label:"待付款",count:0},{key:"ended",label:"已结束",count:0}],
-    selectedStatus: "待出发",
+    selectedStatus: "全部",
     ready: false,
     loadError: false,
     filterError: "",
@@ -64,10 +66,25 @@ Page({
     const tab = normalizeTripTab(query && query.tab);
     if (tab) { this.data.tab = tab; this._selectedTab = true; }
   },
-  onUnload() { this._unloaded = true; },
+  invalidateLoad() {
+    this._requestVersion = (this._requestVersion || 0) + 1;
+    this._pendingLoad = null;
+  },
+  onHide() { this.invalidateLoad(); },
+  onUnload() { this._unloaded = true; this.invalidateLoad(); },
   onShow() {
     this._unloaded = false;
     this.setData({ dark: isDark() });
+    if (this._account !== app.globalData.token) {
+      this._account = app.globalData.token;
+      this.invalidateLoad();
+      this.setData({list:[],shown:[],ready:false,loadError:false});
+    }
+    const revision = app.globalData.enrollmentRevision || 0;
+    if (this._enrollmentRevision != null && this._enrollmentRevision !== revision) {
+      this.setData({tab:"all",keyword:"",preset:"",start:"",end:"",sheet:false});
+    }
+    this._enrollmentRevision = revision;
     const preset = app.globalData.ordersTab || "";
     if (preset) {
       app.globalData.ordersTab = "";
@@ -81,24 +98,25 @@ Page({
       return;
     }
     this.setData({ loggedIn: true });
-    this.load();
+    this.paint();
+    this.invalidateLoad();
+    return this.load();
   },
   load() {
     if (this._pendingLoad) return this._pendingLoad;
     this.setData({ loading:true, loadError:false });
+    const token = app.globalData.token;
+    const version = this._requestVersion = (this._requestVersion || 0) + 1;
+    const active = () => !this._unloaded && token === app.globalData.token && version === this._requestVersion;
     this._pendingLoad = request("/orders").then((response) => {
-      if (this._unloaded) return;
+      if (!active()) return;
       if (!Array.isArray(response.data)) throw new Error("Invalid orders");
       const list = response.data.map(decorate);
-      let tab = normalizeTripTab(this.data.tab) || "all";
-      if (!this.data.ready && !this._selectedTab) {
-        const split = deskTrips(list);
-        tab = ["depart","unpaid","recruiting","review","waitlist","refund"].find((key) => split[key].length) || "all";
-      }
+      const tab = normalizeTripTab(this.data.tab) || "all";
       this.setData({ list, tab, ready:true });
       this.paint();
-    }).catch(() => { if (!this._unloaded) this.setData({ loadError:true }); })
-      .finally(() => { if (!this._unloaded) this.setData({ loading:false }); this._pendingLoad = null; });
+    }).catch(() => { if (active()) this.setData({ loadError:true }); })
+      .finally(() => { if (active()) { this.setData({ loading:false }); this._pendingLoad = null; } });
     return this._pendingLoad;
   },
   paint() {
@@ -126,6 +144,7 @@ Page({
       selectedStatus: (STATUS_TABS.find((item) => item.key === tab) || STATUS_TABS[0]).label,
       extraStatus: !PRIMARY_KEYS.includes(tab),
       filterOn: Boolean(this.data.preset || this.data.start || this.data.end),
+      timeLabel: this.data.preset ? ([].concat(this.data.quick, this.data.years, this.data.extra).find((cell) => cell.key === this.data.preset) || {}).label || this.data.preset : this.data.start || this.data.end ? (this.data.start || "不限") + " — " + (this.data.end || "不限") : "",
     });
   },
   goLogin() {
@@ -135,6 +154,7 @@ Page({
     const tab = normalizeTripTab(e.currentTarget.dataset.tab || e.currentTarget.dataset.key);
     if (!tab) return;
     this.data.tab = tab;
+    if (this.data.sheet) this.setData({draftTab:tab});
     this._selectedTab = true;
     this.paint();
   },
@@ -160,31 +180,50 @@ Page({
   pickPreset(e) {
     const key = e.currentTarget.dataset.key;
     this.setData({ draftPreset: this.data.draftPreset === key ? "" : key, draftStart: "", draftEnd: "" });
+    this.commitTime();
   },
   showYears() {
     this.setData({ moreYears: true });
   },
   setStart(e) {
     this.setData({ draftStart: e.detail.value, draftPreset: "" });
+    this.commitTime();
   },
   setEnd(e) {
     this.setData({ draftEnd: e.detail.value, draftPreset: "" });
+    this.commitTime();
   },
   resetDraft() {
-    this.setData({ draftTab:"all", filterError:"", draftPreset: "", draftStart: "", draftEnd: "" });
-  },
-  applyFilter() {
-    if (this.data.draftStart && this.data.draftEnd && this.data.draftStart > this.data.draftEnd) { this.setData({filterError:"起始时间不能晚于终止时间"}); return; }
-    this.data.tab = normalizeTripTab(this.data.draftTab) || "all";
+    this.setData({ draftTab:"all", filterError:"", draftPreset:"", draftStart:"", draftEnd:"", tab:"all", preset:"", start:"", end:"" });
     this._selectedTab = true;
-    this.data.preset = this.data.draftPreset;
-    this.data.start = this.data.draftStart;
-    this.data.end = this.data.draftEnd;
-    this.setData({ sheet: false, filterError:"" });
     this.paint();
   },
-  setDraftTab(e) { this.setData({draftTab:e.currentTarget.dataset.key}); },
+  commitTime() {
+    if (this.data.draftStart && this.data.draftEnd && this.data.draftStart > this.data.draftEnd) {
+      this.setData({filterError:"起始时间不能晚于终止时间"});
+      return false;
+    }
+    this.setData({preset:this.data.draftPreset, start:this.data.draftStart, end:this.data.draftEnd, filterError:""});
+    this.paint();
+    return true;
+  },
+  applyFilter() {
+    if (this.commitTime()) this.setData({sheet:false});
+  },
+  setDraftTab(e) {
+    const tab = normalizeTripTab(e.currentTarget.dataset.key);
+    if (!tab) return;
+    this.setData({tab, draftTab:tab});
+    this._selectedTab = true;
+    this.paint();
+  },
+  clearTime() { this.setData({preset:"",start:"",end:"",draftPreset:"",draftStart:"",draftEnd:"",filterError:""}); this.paint(); },
   clearFilters() { this.setData({keyword:"",preset:"",start:"",end:"",tab:"all"}); this._selectedTab = true; this.paint(); },
+  coverError(e) {
+    const id = e.currentTarget.dataset.id;
+    this.setData({list:this.data.list.map((row) => String(row.id) === String(id) ? Object.assign({},row,{cover:""}) : row)});
+    this.paint();
+  },
   goHomeTab() {
     wx.switchTab({ url: "/pages/index/index" });
   },
@@ -213,7 +252,7 @@ Page({
   },
   goRoute(e) {
     const id = e.currentTarget.dataset.rid;
-    if (!id) return;
+    if (!id || !(this.data.list || []).some((row) => String(row.route_id) === String(id) && canReorder(row))) return;
     wx.navigateTo({ url: "/pkg-detail/detail/detail?id=" + id });
   },
   cancel(e) {
@@ -238,6 +277,7 @@ Page({
           await request("/orders/" + id + "/cancel", "POST");
           wx.showToast({ title: "已取消报名", icon: "none" });
           this._selectedTab = true;
+          this.invalidateLoad();
           await this.load();
         } catch (err) {
           showError("取消失败", err);

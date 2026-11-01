@@ -84,6 +84,13 @@ describe("lottery after-trip contest", () => {
   it("lets a guide or admin close the trip once for everyone", async () => {
     const token = await loginUser(agent);
     await enroll(token).expect(200);
+    // Both voters must join while enrollment is still open, before the trip is closed.
+    const other = await register("13600136008", "投票客", ID.femaleBj);
+    await enroll(other, {
+      travelerName: "投票客",
+      travelerPhone: "13600136008",
+      idCard: ID.femaleBj,
+    }).expect(200);
     seed.db.prepare("UPDATE schedules SET start_date=?, end_date=? WHERE id=?").run(
       dayjs().format("YYYY-MM-DD"),
       dayjs().format("YYYY-MM-DD"),
@@ -148,12 +155,6 @@ describe("lottery after-trip contest", () => {
     const selfVote = await agent.post(`/api/contest/${mine.body.data.id}/vote`).set(auth(token));
     assert.equal(selfVote.status, 400, selfVote.body?.message || "");
 
-    const other = await register("13600136008", "投票客", ID.femaleBj);
-    await enroll(other, {
-      travelerName: "投票客",
-      travelerPhone: "13600136008",
-      idCard: ID.femaleBj,
-    }).expect(200);
     const voted = await agent.post(`/api/contest/${mine.body.data.id}/vote`).set(auth(other)).expect(200);
     assert.equal(voted.body.data[0].votes, 1);
     assert.equal(voted.body.data[0].voted, true);

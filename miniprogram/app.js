@@ -8,6 +8,7 @@ App({
     routeFilter: null,
     homeView: "",
     couponPrompted: false,
+    enrollmentRevision: 0,
   },
   onLaunch() {
     this.globalData.token = wx.getStorageSync("bj_token") || "";

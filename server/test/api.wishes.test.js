@@ -519,14 +519,14 @@ describe("意思意思: free arrangements and existing trip orders", () => {
     const cases = [
       ["UPDATE schedules SET start_date='2020-01-01' WHERE id=?", `UPDATE schedules SET start_date='${originalDate}' WHERE id=?`],
       ["UPDATE schedules SET review_status='pending' WHERE id=?", "UPDATE schedules SET review_status='approved' WHERE id=?"],
-      ["UPDATE schedules SET status='cancelled' WHERE id=?", "UPDATE schedules SET status='recruiting' WHERE id=?"],
+      ["UPDATE schedules SET status='cancelled' WHERE id=?", "UPDATE schedules SET status='recruiting' WHERE id=?", false],
       ["UPDATE schedules SET started_at='2026-01-01 08:00:00' WHERE id=?", "UPDATE schedules SET started_at=NULL WHERE id=?"],
       ["UPDATE schedules SET completed_at='2026-01-01 20:00:00' WHERE id=?", "UPDATE schedules SET completed_at=NULL WHERE id=?"],
     ];
-    for (const [change, restore] of cases) {
+    for (const [change, restore, canPay = true] of cases) {
       seed.db.prepare(change).run(seed.individualScheduleId);
       const row = await agent.get(`/api/orders/${booking.enrollmentId}`).set(auth(booking.token)).expect(200);
-      assert.equal(row.body.data.canPay, true, change);
+      assert.equal(row.body.data.canPay, canPay, change);
       assert.equal(row.body.data.canLinkWish, false, change);
       assert.equal(row.body.data.wishToken, null, change);
       seed.db.prepare(restore).run(seed.individualScheduleId);

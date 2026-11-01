@@ -23,7 +23,9 @@ export const useUserStore = defineStore("user", () => {
 
   async function fetchMe() {
     if (!token.value) return;
+    const account = token.value;
     const res = await http.get("/me");
+    if (token.value !== account) return;
     profile.value = res.data;
     localStorage.setItem("bj_user", JSON.stringify(res.data));
   }

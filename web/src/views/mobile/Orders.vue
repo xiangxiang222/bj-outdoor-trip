@@ -4,7 +4,7 @@
       <div class="journey-eyebrow">EVERY JOURNEY MATTERS</div>
       <h1>我的每一程</h1><p>期待下一次出发，也珍藏每一次同行。</p>
       <svg class="journey-hero-art" viewBox="0 0 100 100" fill="none" aria-hidden="true"><circle cx="51" cy="48" r="39"/><path d="m15 68 27-34 23 27 11-13 16 20M42 34l8 20 8-4M21 76h64M63 24h17m-8-8v16"/></svg>
-      <div v-if="store.token" class="journey-summary" data-testid="journey-summary"><button v-for="item in summary" :key="item.key" type="button" @click="selectTab(item.key)"><strong>{{ ready ? item.count : '—' }}</strong><span>{{ item.label }}<i aria-hidden="true">↗</i></span></button></div>
+      <div v-if="store.token" class="journey-summary" data-testid="journey-summary"><button v-for="item in summary" :key="item.key" type="button" :class="{on:tab === item.key}" :aria-pressed="tab === item.key" @click="selectTab(item.key)"><strong>{{ ready ? item.count : '—' }}</strong><span>{{ item.label }}<i aria-hidden="true">{{ tab === item.key ? '✓' : '›' }}</i></span></button></div>
     </header>
     <section v-if="!store.token" class="journey-empty"><span class="journey-empty-mark" aria-hidden="true">↗</span><h2>登录后看出行计划</h2><p>山野团和同城局都会出现在这里，出发前能看到集合时间和地点。</p><button class="od-btn solid" type="button" @click="goLogin()">登录查看行程</button></section>
     <template v-else>
@@ -13,22 +13,23 @@
         <div class="od-tools"><div class="od-tabs" role="tablist" aria-label="行程状态"><button v-for="item in statusTabs" :key="item.key" :data-testid="'order-tab-' + item.key" type="button" role="tab" :aria-selected="tab === item.key" :class="{ on: tab === item.key }" @click="selectTab(item.key)">{{ item.label }}<small v-if="ready && tabCount(item.key)">{{ tabCount(item.key) }}</small></button></div><button class="od-filter" :class="{ on: filterOn || !primaryKeys.includes(tab) }" type="button" @click="openFilter"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/><circle cx="7" cy="5" r="2"/><circle cx="13" cy="10" r="2"/><circle cx="7" cy="15" r="2"/></svg><span>筛选</span></button></div>
       </div>
       <div class="journey-result"><span>{{ selectedStatus }}<i>·</i>{{ shown.length }} 项行程</span><button v-if="keyword || filterOn" type="button" @click="clearFilters">清空筛选 ×</button></div>
+      <div v-if="timeLabel" class="journey-chips"><button type="button" @click="clearTime">报名时间 · {{ timeLabel }} <span aria-hidden="true">×</span></button></div>
       <div v-if="loadError" class="journey-error" role="alert"><div><strong>行程加载失败</strong><p>{{ list.length ? '已保留上次的行程，请重试更新。' : '暂时无法获取行程，请稍后重试。' }}</p></div><button class="od-btn" type="button" :disabled="loading" @click="load">重新加载</button></div>
       <div class="journey-list">
       <article v-for="o in shown" :key="o.id" class="od-card" data-testid="order-card">
         <button class="journey-card-main" type="button" @click="openOrder(o)">
           <header class="od-head"><span class="od-shop"><i aria-hidden="true"></i>{{ shopOf(o) }}</span><span class="od-status" :class="{ 'is-hot': hotStatus(o), 'is-ended': split.ended.some(item => item.id === o.id) }">{{ badgeOf(o).label }}</span></header>
-          <div class="od-goods"><img v-if="o.cover" :src="o.cover" alt="" loading="lazy" @error="o.cover = ''"/><span v-else class="od-ph"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path d="m4 30 13-19 13 19M25 23l6-9 6 16M13 17l5 6 4-3"/></svg></span><div class="od-main"><b>{{ o.title }}</b><p>{{ hintOf(o) }}</p><span class="journey-view">查看行程详情 <i aria-hidden="true">↗</i></span></div></div>
+          <div class="od-goods"><img v-if="o.cover" :src="o.cover" alt="" loading="lazy" @error="o.cover = ''"/><span v-else class="od-ph"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><path :d="iconPaths[orderIcon(o)]"/></svg></span><div class="od-main"><b>{{ o.title }}</b><p>{{ hintOf(o) }}</p><span class="journey-view">查看行程详情 <i aria-hidden="true">↗</i></span></div></div>
           <div class="journey-arrangement"><p><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="3.5" width="12" height="10.5" rx="2"/><path d="M5 2v3m6-3v3M2 7h12"/></svg><strong>{{ travelDate(o) }}</strong><span>{{ travelTime(o) }}</span></p><p><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M13 6.5C13 10 8 14 8 14S3 10 3 6.5a5 5 0 1 1 10 0Z"/><circle cx="8" cy="6.5" r="1.5"/></svg><span>{{ travelPlace(o) }}</span></p></div>
         </button>
         <div class="journey-card-foot"><p class="journey-payment"><span>{{ paymentLabel(o) }}</span><strong>{{ moneyOf(o) }}</strong></p><p v-if="o.helpers?.length" class="od-help">帮忙支付 {{ o.helpers.length }} 人</p></div>
-        <div v-if="hasActions(o)" class="od-actions"><button v-if="o.canCancel" class="od-btn" type="button" :disabled="cancelling === o.id" @click="cancel(o)">{{ cancelling === o.id ? '取消中…' : o.status === 'waitlist' ? '取消候补' : '取消报名' }}</button><button v-if="o.canPay" class="od-btn solid" type="button" @click="goPay(o)">去支付</button><button v-if="reviewable(o)" class="od-btn solid" type="button" @click="openReview(o)">去评价</button><button v-if="o.canAfter && o.completed" class="od-btn" type="button" @click="goAfter(o)">评价 / 评选</button><button v-if="againOf(o)" class="od-btn" :class="{ solid: !reviewable(o) && !o.canPay }" type="button" @click="again(o)">再次报名</button></div>
+        <div v-if="hasActions(o)" class="od-actions"><button v-if="o.canCancel" class="od-btn" type="button" :disabled="cancelling === o.id" @click="cancel(o)">{{ cancelling === o.id ? '取消中…' : o.status === 'waitlist' ? '取消候补' : '取消报名' }}</button><button v-if="o.canPay" class="od-btn solid" type="button" @click="goPay(o)">去支付</button><button v-if="reviewable(o)" class="od-btn solid" type="button" @click="openReview(o)">去评价</button><button v-if="o.canAfter && o.completed" class="od-btn" type="button" @click="goAfter(o)">评价 / 评选</button><button v-if="againOf(o)" class="od-btn" :class="{ solid: !reviewable(o) && !o.canPay }" type="button" @click="again(o)">查看其他团期</button></div>
       </article></div>
       <LoadRow v-if="loading" />
       <section v-else-if="!loadError && !list.length" class="journey-empty"><span class="journey-empty-mark" aria-hidden="true">↗</span><h2>下一程，等你出发</h2><p>去发现一条心动的线路，或参加一场有趣的同城活动。</p><button class="od-btn solid" type="button" @click="$router.push('/m')">发现山野线路</button><button class="od-btn" type="button" @click="$router.push('/m/activities')">看看同城活动</button></section>
       <section v-else-if="!loadError && !shown.length" class="journey-empty"><h2>{{ tab === 'ended' ? '好风景，留在未来的回忆里' : '这里暂时没有行程' }}</h2><p>{{ tab === 'ended' ? '已参加并结束的行程会收在这里。取消报名和退款记录可在其他状态中查看。' : '试试其他状态，或调整搜索与时间条件。' }}</p><button class="od-btn" type="button" @click="clearFilters">查看全部行程</button></section><p v-else-if="shown.length && !loading" class="od-end">每一次同行，都有值得记住的风景</p>
     </template>
-    <div v-if="sheet" class="od-mask" @click.self="sheet = false"><section class="od-sheet" role="dialog" aria-modal="true" aria-labelledby="journey-filter-title"><button class="od-x" type="button" aria-label="关闭筛选" @click="sheet = false">×</button><span class="journey-eyebrow">FIND YOUR JOURNEY</span><h3 id="journey-filter-title">行程筛选</h3><p class="od-label">行程状态</p><div class="od-presets journey-status-options"><button v-for="item in allStatusTabs" :key="item.key" type="button" :aria-pressed="draftTab === item.key" :class="{on:draftTab === item.key}" @click="draftTab=item.key">{{ item.label }}</button></div><p class="od-label">报名时间</p><div class="od-presets"><button v-for="item in presetCells" :key="item.key" type="button" :class="{on:draft.preset === item.key}" @click="pickPreset(item.key)">{{ item.label }}</button><button v-if="presets.extra.length && !moreYears" type="button" @click="moreYears=true">展开</button></div><div class="od-range"><label class="od-date"><span>{{ draft.start || '起始时间' }}</span><input v-model="draft.start" type="date" aria-label="起始时间" @change="draft.preset = ''; filterError = ''"/></label><i>—</i><label class="od-date"><span>{{ draft.end || '终止时间' }}</span><input v-model="draft.end" type="date" aria-label="终止时间" @change="draft.preset = ''; filterError = ''"/></label></div><p v-if="filterError" class="journey-filter-error" role="alert">{{ filterError }}</p><div class="od-sheet-bar"><button class="od-btn" type="button" @click="resetDraft">重置</button><button class="od-btn solid" type="button" @click="applyFilter">确定</button></div></section></div><p v-if="msg" class="journey-feedback" role="status">{{ msg }}</p>
+    <div v-if="sheet" class="od-mask" @click.self="sheet = false"><section class="od-sheet" role="dialog" aria-modal="true" aria-labelledby="journey-filter-title"><button class="od-x" type="button" aria-label="关闭筛选" @click="sheet = false">×</button><span class="journey-eyebrow">FIND YOUR JOURNEY</span><h3 id="journey-filter-title">行程筛选</h3><p class="filter-live-note">选择后即时生效，关闭仍会保留</p><p class="od-label">行程状态</p><div class="od-presets journey-status-options"><button v-for="item in allStatusTabs" :key="item.key" type="button" :aria-pressed="draftTab === item.key" :class="{on:draftTab === item.key}" @click="setFilterTab(item.key)">{{ item.label }}</button></div><p class="od-label">报名时间</p><div class="od-presets"><button v-for="item in presetCells" :key="item.key" type="button" :class="{on:draft.preset === item.key}" @click="pickPreset(item.key)">{{ item.label }}</button><button v-if="presets.extra.length && !moreYears" type="button" @click="moreYears=true">展开</button></div><div class="od-range"><label class="od-date"><span>{{ draft.start || '起始时间' }}</span><input v-model="draft.start" type="date" aria-label="起始时间" @change="draft.preset = ''; commitTime()"/></label><i>—</i><label class="od-date"><span>{{ draft.end || '终止时间' }}</span><input v-model="draft.end" type="date" aria-label="终止时间" @change="draft.preset = ''; commitTime()"/></label></div><p v-if="filterError" class="journey-filter-error" role="alert">{{ filterError }}</p><div class="od-sheet-bar"><button class="od-btn" type="button" @click="resetDraft">重置</button><button class="od-btn solid" type="button" @click="applyFilter">完成</button></div></section></div><p v-if="msg" class="journey-feedback" role="status">{{ msg }}</p>
   </div>
 </template>
 
@@ -39,8 +40,15 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { deskTrips, isReviewTrip, normalizeTripTab, tripEndDay } from "@/utils/trips";
 import LoadRow from "@/components/LoadRow.vue";
-import { canReorder, matchOrderQuery, matchOrderTime, orderBadge, orderHint, orderMoney, orderShop, orderSpec, orderTimePresets } from "@/utils/orderView";
+import { canReorder, matchOrderQuery, matchOrderTime, orderBadge, orderHint, orderMoney, orderShop, orderSpec, orderIcon, orderTimePresets } from "@/utils/orderView";
 
+const iconPaths = {
+  trip:"m4 30 13-19 13 19M25 23l6-9 6 16M13 17l5 6 4-3",
+  cards:"M16 10 9 9a3 3 0 0 0-3 3l-2 18a3 3 0 0 0 3 3l9 1M18 6l15 3a3 3 0 0 1 2 4l-4 20a3 3 0 0 1-4 2l-15-3a3 3 0 0 1-2-4l4-20a3 3 0 0 1 4-2Zm5 10-5 5 3 6 5-5-3-6Z",
+  run:"M26 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM8 17l7-5 9 3 4 6 7 1M23 15l-6 10 8 4 3 8M18 24l-7 10H4",
+  movie:"M5 12h30v23H5V12ZM5 12l-1-7 29-3 2 8M12 4l5 7m6-8 5 7M18 18l9 5-9 6v-11Z",
+  club:"M16 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm14 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8ZM5 34v-7a10 10 0 0 1 20 0v7m3-12a7 7 0 0 1 8 7v5",
+};
 const store = useUserStore();
 const router = useRouter();
 const pageRoute = useRoute();
@@ -65,16 +73,18 @@ const allStatusTabs = [
 
 const normalizeTab = normalizeTripTab;
 
-const tab = ref(normalizeTab(pageRoute.query.tab) || "depart");
+const tab = ref(normalizeTab(pageRoute.query.tab) || "all");
 const ready = ref(false);
 const loadError = ref(false);
 const filterError = ref("");
 const draftTab = ref("");
 let pendingLoad;
 let disposed = false;
+let requestVersion = 0;
 const loading = ref(true);
 const presets = computed(() => orderTimePresets());
 const presetCells = computed(() => presets.value.quick.concat(presets.value.years, moreYears.value ? presets.value.extra : []));
+const timeLabel = computed(() => applied.value.preset ? presetCells.value.concat(presets.value.extra).find(item => item.key === applied.value.preset)?.label || applied.value.preset : applied.value.start || applied.value.end ? `${applied.value.start || "不限"} — ${applied.value.end || "不限"}` : "");
 const filterOn = computed(() => Boolean(applied.value.preset || applied.value.start || applied.value.end));
 const split = computed(() => deskTrips(list.value));
 const primaryKeys = ["all", "depart", "unpaid", "review", "ended"];
@@ -94,14 +104,21 @@ const pool = computed(() => {
 const shown = computed(() => pool.value.filter((row) => matchOrderTime(row, applied.value) && matchOrderQuery(row, keyword.value)));
 
 onMounted(load);
-onUnmounted(() => { disposed = true; });
+onUnmounted(() => { disposed = true; requestVersion++; });
+watch(() => store.token, () => {
+  requestVersion++;
+  pendingLoad = null;
+  list.value = [];
+  ready.value = false;
+  loadError.value = false;
+  load();
+});
 watch(tab, () => nextTick(revealTab));
 watch(
   () => String(pageRoute.query.tab || ""),
   (q) => {
     const next = normalizeTab(q);
-    if (next) tab.value = next;
-    else if (list.value.length) pickDefault();
+    tab.value = next || "all";
   }
 );
 
@@ -110,18 +127,17 @@ function load() {
   if (!store.token) { list.value = []; loading.value = false; return Promise.resolve(); }
   loading.value = true;
   loadError.value = false;
+  const version = ++requestVersion;
+  const token = store.token;
+  const active = () => !disposed && token === store.token && version === requestVersion;
   pendingLoad = http.get("/orders").then((response) => {
-    if (disposed) return;
+    if (!active()) return;
     if (!Array.isArray(response.data)) throw new Error("Invalid orders");
     list.value = response.data;
-    if (!ready.value) {
-      ready.value = true;
-      if (normalizeTab(pageRoute.query.tab)) tab.value = normalizeTab(pageRoute.query.tab);
-      else pickDefault();
-    }
+    ready.value = true;
     nextTick(revealTab);
-  }).catch(() => { if (!disposed) loadError.value = true; })
-    .finally(() => { if (!disposed) loading.value = false; pendingLoad = null; });
+  }).catch(() => { if (active()) loadError.value = true; })
+    .finally(() => { if (active()) { loading.value = false; pendingLoad = null; } });
   return pendingLoad;
 }
 function selectTab(key) {
@@ -147,16 +163,6 @@ function revealTab() {
   if (!scroller || !el) return;
   const left = el.offsetLeft - (scroller.clientWidth - el.offsetWidth) / 2;
   scroller.scrollTo({ left: Math.max(0, left) });
-}
-function pickDefault() {
-  const desk = deskTrips(list.value);
-  if (desk.depart.length) tab.value = "depart";
-  else if (desk.unpaid.length) tab.value = "unpaid";
-  else if (desk.recruiting.length) tab.value = "recruiting";
-  else if (desk.review.length) tab.value = "review";
-  else if (desk.waitlist.length) tab.value = "waitlist";
-  else if (desk.refund.length) tab.value = "refund";
-  else tab.value = "all";
 }
 function reviewable(o) { return isReviewTrip(o); }
 
@@ -200,7 +206,7 @@ function goAfter(o) {
   router.push("/m/after/" + o.schedule_id);
 }
 function again(o) {
-  if (o.route_id) router.push("/m/route/" + o.route_id);
+  if (canReorder(o)) router.push("/m/route/" + o.route_id);
 }
 function goPay(o) {
   if (o.payShareToken) router.push("/m/pay/" + o.payShareToken);
@@ -215,19 +221,24 @@ function openFilter() {
 }
 function pickPreset(key) {
   draft.value = { preset: draft.value.preset === key ? "" : key, start: "", end: "" };
+  commitTime();
 }
+function setFilterTab(key) { draftTab.value = key; selectTab(key); }
 function resetDraft() {
   filterError.value = "";
   draftTab.value = "all";
   draft.value = { preset: "", start: "", end: "" };
-}
-function applyFilter() {
-  if (draft.value.start && draft.value.end && draft.value.start > draft.value.end) { filterError.value = "起始时间不能晚于终止时间"; return; }
-  filterError.value = "";
-  selectTab(draftTab.value);
   applied.value = { ...draft.value };
-  sheet.value = false;
+  selectTab("all");
 }
+function clearTime() { applied.value = {preset:"",start:"",end:""}; draft.value = {...applied.value}; filterError.value = ""; }
+function commitTime() {
+  if (draft.value.start && draft.value.end && draft.value.start > draft.value.end) { filterError.value = "起始时间不能晚于终止时间"; return false; }
+  filterError.value = "";
+  applied.value = { ...draft.value };
+  return true;
+}
+function applyFilter() { if (commitTime()) sheet.value = false; }
 function cancelMessage(o) {
   const deduct = Number(o && o.deductAmount) || 0;
   if (deduct > 0) {
@@ -305,4 +316,7 @@ async function cancel(o) {
 :global(html[data-text="1"] .od-page .od-goods img),:global(html[data-text="1"] .od-page .od-ph),:global(html[data-text="1"] .od-page .journey-hero-art) { display:none; }
 @media(max-width:360px) { .journey-hero { padding-inline:17px; }.journey-hero > p { max-width:100%; }.journey-hero-art { opacity:.2; }.journey-summary button { padding-inline:8px; }.od-page .od-tabs { gap:17px; }.od-page .od-goods { gap:11px; }.od-page .od-goods img,.od-page .od-ph { width:73px; height:90px; }.od-page .od-presets { gap:7px; }.od-page .od-card .od-head { align-items:flex-start; }.journey-card-foot { align-items:flex-start; } }
 @media(min-width:700px) { .od-page { max-width:1040px; margin:auto; padding:10px 16px 32px; }.journey-hero { padding:28px 30px 0; }.journey-hero h1 { font-size:calc(33px * var(--ui-scale,1)); }.journey-hero > p { font-size:calc(13px * var(--ui-scale,1)); }.journey-hero-art { width:175px; height:175px; right:50px; top:-6px; }.journey-summary { max-width:560px; padding:20px 0; }.journey-list { grid-template-columns:repeat(2,minmax(0,1fr)); }.od-page .od-tabs { gap:29px; }.od-page .od-card { display:flex; flex-direction:column; }.journey-card-main { flex:1; }.od-page .od-sheet { border-radius:24px; margin:30px; }.od-page .od-mask { align-items:center; } }
+
+.journey-summary { gap:7px; padding:12px 0 15px; }.journey-summary button { padding:11px 10px; border:1px solid transparent; border-radius:12px; }.journey-summary button:first-child { padding-left:10px; }.journey-summary button.on { border-color:#d9c7eb; background:var(--jo-paper); box-shadow:0 3px 9px #5b3b8c0a; }.journey-summary button.on span { color:var(--jo-purple); font-weight:600; }.journey-summary button.on i { opacity:1; }
+.journey-chips { display:flex; flex-wrap:wrap; gap:8px; margin:-4px 0 12px; }.journey-chips button { display:flex; align-items:center; gap:12px; border:0; border-radius:8px; background:var(--jo-soft); color:var(--jo-purple); padding:7px 10px; font-size:11px; max-width:100%; }.filter-live-note { margin:-15px 0 16px; color:var(--jo-muted); font-size:11px; line-height:1.6; }
 </style>

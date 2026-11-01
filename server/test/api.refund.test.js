@@ -147,6 +147,9 @@ describe("refund policy API", () => {
     assert.equal(sameDay.body.data.refundPercent, 50);
     assert.equal(sameDay.body.data.refundAmount, 100);
 
+    // Register while the departure is still in the future, then advance the
+    // schedule to its actual start to test cancellation after departure.
+    seed.db.prepare("UPDATE schedules SET start_date=? WHERE id=?").run(dayjs().add(1, "day").format("YYYY-MM-DD"), seed.individualScheduleId);
     const third = await agent
       .post("/api/enroll")
       .set(auth(token))
@@ -161,7 +164,7 @@ describe("refund policy API", () => {
         healthOk: true,
       })
       .expect(200);
-    seed.db.prepare("UPDATE schedules SET started_at=datetime('now','localtime') WHERE id=?").run(seed.individualScheduleId);
+    seed.db.prepare("UPDATE schedules SET start_date=?, started_at=datetime('now','localtime') WHERE id=?").run(dayjs().format("YYYY-MM-DD"), seed.individualScheduleId);
     const started = await agent.post(`/api/orders/${third.body.data.enrollmentId}/cancel`).set(auth(token));
     assert.equal(started.status, 400);
     assert.match(started.body.message, /正式开团后/);

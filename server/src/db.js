@@ -207,6 +207,7 @@ function createSchema(db) {
       bus_photo TEXT,
       locked_seats TEXT DEFAULT '[]',
       consult_group TEXT,
+      consult_group_qr_image TEXT,
       offer_type TEXT DEFAULT 'full',
       offer_price INTEGER,
       review_status TEXT DEFAULT 'approved',
@@ -510,6 +511,7 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "schedules", "bus_photo", "TEXT");
   addColumnIfMissing(db, "schedules", "locked_seats", "TEXT DEFAULT '[]'");
   addColumnIfMissing(db, "schedules", "consult_group", "TEXT");
+  addColumnIfMissing(db, "schedules", "consult_group_qr_image", "TEXT");
   addColumnIfMissing(db, "schedules", "offer_type", "TEXT DEFAULT 'full'");
   addColumnIfMissing(db, "schedules", "offer_price", "INTEGER");
   addColumnIfMissing(db, "schedules", "review_status", "TEXT DEFAULT 'approved'");

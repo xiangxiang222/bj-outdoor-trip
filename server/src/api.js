@@ -17,7 +17,7 @@ const { issueSmsCode, smsLive } = require("./services/sms");
 const { buildSchedulePoster } = require("./services/share-poster");
 const { discoverySearch } = require("./services/discovery");
 const { createPosterLineup, lineupSchedules } = require("./services/poster-lineup");
-const { dissolveSchedule, dissolveAllSchedules } = require("./services/dissolve");
+const { dissolveSchedule, dissolveAllSchedules, canOrganizerDissolve } = require("./services/dissolve");
 const { enrollUser, cancelEnrollment, photographerOf, applyPhotographer } = require("./services/enroll");
 const { resolveJoinCode, joinLockView } = require("./services/joinCode");
 const { scheduleSeats, setLockedSeats, toggleLockedSeat, assignSeat, pickMySeat } = require("./services/seats");
@@ -47,6 +47,8 @@ const {
 const { offerMeta, liveMemberPrice, liveStudentPrice, flagOn } = require("./services/offer");
 const { publicUserProfile, updateScheduleTrip, chainItem, galleryOfSchedule } = require("./services/trip");
 const { activityCoverPath, activityCoverBlob } = require("./services/activity-cover");
+const { activityGroupInput, canViewActivityGroup, uploadedGroupQrImage } = require("./services/activity-group");
+const { assertEnrollmentOpen } = require("./services/enroll");
 const { thumbPublicPath } = require("./services/thumbs");
 const { payEnrollment, buyWalletTopup, payCompanySchedule, confirmTrade, orderByTradeNo, applyWechatSession, applyEnrollmentCharge } = require("./services/payment");
 const { payShareView, collectedMapForSchedule, payProgress, ensurePayShareToken, contributorsOf, scheduleRevenue, revenueBreakdown } = require("./services/pay-ledger");
@@ -54,7 +56,7 @@ const { refundMembership } = require("./services/member");
 const { memberState, setMemberLevel } = require("./services/tiers");
 const { addPhoto, removePhoto, ensureReferralCode, resolveLiveUser, adoptOrganizer } = require("./services/profile");
 const { leadersOf, applyLeader, settleLeaderRewards, recruitPayload } = require("./services/leaders");
-const { referralCard, groupQrPayload, settleEnrollReferrals } = require("./services/referral");
+const { referralCard, settleEnrollReferrals } = require("./services/referral");
 const { optionsForSchedule, setFallbacks, listFallbacks } = require("./services/fallback");
 const { generateVirtualUsers, setVirtualUsersForSchedule, growVirtualPool, virtualPoolStats } = require("./services/virtual");
 const { listPulse, recordView, parseVisitorId } = require("./services/pulse");
@@ -78,6 +80,7 @@ const { draftRoute } = require("./services/route-draft");
 const { buildRouteTemplate, parseRouteTemplate } = require("./services/route-template");
 const {
   listNotices: listUserNotices,
+  listNoticePage,
   unreadCount,
   markNoticeRead,
   markAllNoticesRead,
@@ -570,9 +573,10 @@ function scheduleView(sch, req, opts = {}) {
     cancelReason: sch.cancel_reason || "",
     cancelledAt: sch.cancelled_at || "",
     cancelledBy: sch.cancelled_by || "",
+    canDissolve: !!(req.userId && Number(req.userId) === Number(sch.organizer_id) && canOrganizerDissolve(sch)),
     shareToken: sch.share_token,
     notes: sch.notes,
-    consultGroup: sch.consult_group || "",
+    consultGroup: sch.channel === "activity" ? "" : sch.consult_group || "",
     enrolled,
     waitlistCount: waitlistCount(sch.id),
     remain: Math.max(0, sch.max_seats - shown - lockedCount),
@@ -1089,15 +1093,25 @@ router.get("/me/coupons", authUser, (req, res) => {
 });
 
 router.get("/me/notices", authUser, (req, res) => {
-  res.json({ ok: true, data: listUserNotices(req.userId), unread: unreadCount(req.userId) });
+  try {
+    res.json({ ok: true, ...listNoticePage(req.userId, req.query) });
+  } catch (err) { jsonError(res, err); }
 });
 
 router.post("/me/notices/read-all", authUser, (req, res) => {
-  res.json({ ok: true, data: markAllNoticesRead(req.userId) });
+  try {
+    listNoticePage(req.userId, req.body || {});
+    markAllNoticesRead(req.userId);
+    res.json({ ok: true, ...listNoticePage(req.userId, req.body || {}) });
+  } catch (err) { jsonError(res, err); }
 });
 
 router.post("/me/notices/:id/read", authUser, (req, res) => {
-  res.json({ ok: true, data: markNoticeRead(req.userId, req.params.id) });
+  try {
+    listNoticePage(req.userId, req.body || {});
+    markNoticeRead(req.userId, req.params.id);
+    res.json({ ok: true, ...listNoticePage(req.userId, req.body || {}) });
+  } catch (err) { jsonError(res, err); }
 });
 
 router.get("/me/views", authUser, (req, res) => {
@@ -1635,12 +1649,18 @@ router.get("/routes/apps", authUser, (req, res) => {
 router.get("/routes/:id", optionalUser, (req, res) => {
   const row = db().prepare("SELECT * FROM routes WHERE id=?").get(req.params.id);
   if (!row) return res.status(404).json({ ok: false, message: "线路不存在" });
+  const activityOnly = db().prepare(`SELECT 1 FROM schedules s WHERE s.route_id=? AND s.channel='activity'
+    AND NOT EXISTS (SELECT 1 FROM schedules t WHERE t.route_id=s.route_id AND IFNULL(t.channel,'trip')='trip') LIMIT 1`).get(row.id);
+  if (activityOnly) {
+    return res.status(404).json({ ok: false, message: "同城活动请查看本场活动详情" });
+  }
   const mine = req.userId && Number(row.submitted_by || 0) === Number(req.userId);
   if (!isListed(row) && !mine) return res.status(404).json({ ok: false, message: "线路不存在" });
   const bundle = loadRouteBundle(row.id);
   const schedules = db()
-    .prepare("SELECT * FROM schedules WHERE route_id=? AND start_date>=date('now','localtime') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved' ORDER BY start_date")
+    .prepare("SELECT * FROM schedules WHERE route_id=? AND IFNULL(channel,'trip')='trip' AND status IN ('recruiting','confirmed') AND IFNULL(review_status,'approved')='approved' ORDER BY start_date,meetup_time")
     .all(row.id)
+    .filter((s) => { try { assertEnrollmentOpen(s); return true; } catch { return false; } })
     .map((s) => scheduleView(s, req, { card: true }));
   let favored = false;
   if (req.userId) {
@@ -1743,7 +1763,6 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
       if (item.canPay) item.payShareToken = ensurePayShareToken(e.id);
       return item;
     });
-  const groupText = sch.consult_group || contacts.officialWechat;
   let myEnrollment = null;
   if (req.userId) {
     const mine = db()
@@ -1776,7 +1795,12 @@ router.get("/schedules/:id", optionalUser, async (req, res) => {
       ...scheduleView(sch, req, { briefRoute: true }),
       chain,
       isOrganizer: !!(req.userId && sch.organizer_id && Number(req.userId) === Number(sch.organizer_id)),
-      consultGroupQr: await groupQrPayload(groupText),
+      consultGroup: sch.channel === "activity"
+        ? (canViewActivityGroup(sch, req.userId, myEnrollment) ? sch.consult_group || "" : "")
+        : sch.consult_group || "",
+      consultGroupQr: sch.channel === "activity"
+        ? (canViewActivityGroup(sch, req.userId, myEnrollment) ? attachAssetHost(req, uploadedGroupQrImage(sch.consult_group_qr_image)) : "")
+        : attachAssetHost(req, uploadedGroupQrImage(sch.consult_group_qr_image)),
       myEnrollment,
       fallbackOptions: optionsForSchedule(sch.id),
       coupon: publicSummaryForSchedule(sch.id, req),
@@ -2067,7 +2091,7 @@ router.post("/trips", authUser, async (req, res) => {
   const user = db().prepare("SELECT * FROM users WHERE id=?").get(req.userId);
   const b = req.body || {};
   try {
-    await assertTexts(user && user.wechat_openid, 4, [b.title, b.subtitle, b.description, b.notes, b.notices]);
+    await assertTexts(user && user.wechat_openid, 4, [b.title, b.subtitle, b.description, b.notes, b.notices, b.consultGroup]);
   } catch (e) {
     return jsonError(res, e);
   }
@@ -2082,6 +2106,9 @@ router.post("/trips", authUser, async (req, res) => {
   if (!title) return res.status(400).json({ ok: false, message: "请填写线路标题" });
   if (!b.startDate) return res.status(400).json({ ok: false, message: "请选择出发日期" });
   const isActivity = b.channel === "activity";
+  let activityGroup;
+  try { activityGroup = isActivity ? activityGroupInput(b) : null; }
+  catch (e) { return jsonError(res, e); }
   let bus = b.busTypeId ? db().prepare("SELECT * FROM bus_types WHERE id=?").get(b.busTypeId) : null;
   if (!bus && isActivity) {
     bus = db().prepare("SELECT * FROM bus_types ORDER BY seats ASC, id LIMIT 1").get();
@@ -2192,6 +2219,10 @@ router.post("/trips", authUser, async (req, res) => {
     return jsonError(res, e);
   }
   attachLotteryOnCreate(schInfo.lastInsertRowid, b);
+  if (activityGroup) {
+    db().prepare("UPDATE schedules SET consult_group=?,consult_group_qr_image=? WHERE id=?")
+      .run(activityGroup.consultGroup, activityGroup.consultGroupQrImage, schInfo.lastInsertRowid);
+  }
   markPersonalBounty(schInfo.lastInsertRowid);
   const sch = db().prepare("SELECT * FROM schedules WHERE id=?").get(schInfo.lastInsertRowid);
   noticeTrip(sch, user, title);
@@ -2338,6 +2369,8 @@ function mapUserOrder(e, req, reviewed, refunds) {
     status: e.schedule_status,
     startDate: e.start_date,
     startedAt: e.started_at,
+    completedAt: e.schedule_completed_at || e.completed_at,
+    meetupTime: e.meetup_time,
     channel: e.channel,
     refundRulesJson: e.refund_rules_json,
     minGroupSize: e.min_group_size,
@@ -2349,7 +2382,9 @@ function mapUserOrder(e, req, reviewed, refunds) {
     wishToken: wish_token || null,
     canLinkWish: require("./services/wishes").canLinkEnrollment(e.id),
     ...rest,
-    cover: attachAssetHost(req, e.cover),
+    cover: attachAssetHost(req, e.cover || (e.channel === "activity" ? activityCoverPath([e.title, e.category].join(" ")) : "")),
+    category: e.category || "",
+    activityKind: e.channel === "activity" ? e.category || "同城" : "",
     idCard: maskIdCard(e.id_card),
     canCancel: quote.canCancel,
     refundPercent: quote.percent,
@@ -2360,7 +2395,7 @@ function mapUserOrder(e, req, reviewed, refunds) {
     payAmount: progress.payAmount,
     paidAmount: progress.paidAmount,
     remainAmount: progress.remainAmount,
-    canPay: e.status === "joined" && e.pay_status === "unpaid" && progress.remainAmount > 0,
+    canPay: e.status === "joined" && e.schedule_status !== "cancelled" && e.pay_status === "unpaid" && progress.remainAmount > 0,
     payShareToken: e.pay_status === "unpaid" ? ensurePayShareToken(e.id) : e.pay_share_token || "",
     helpers: contributorsOf(e.id, e.user_id).filter((row) => row.helper),
     reviewed: reviewed.has(e.schedule_id),
@@ -2389,13 +2424,13 @@ function loadUserOrders(userId, req, onlyId) {
   return db()
     .prepare(
       `SELECT e.*, s.start_date, s.end_date, s.organizer_type, s.status AS schedule_status, s.route_id,
-              s.meetup_point, s.meetup_time, s.city, s.started_at, IFNULL(s.channel,'trip') AS channel,
+              s.meetup_point, s.meetup_time, s.city, s.started_at, s.completed_at AS schedule_completed_at, IFNULL(s.channel,'trip') AS channel,
               s.min_group_size,
               (SELECT token FROM wishes w WHERE w.enrollment_id=e.id AND w.owner_id=e.user_id) AS wish_token,
               (SELECT COUNT(*) FROM enrollments e2
                LEFT JOIN users u ON u.id=e2.user_id
                WHERE e2.schedule_id=s.id AND e2.status='joined' AND IFNULL(u.is_virtual,0)=0) AS real_enrolled,
-              r.title, r.cover, r.days, r.refund_rules_json
+              r.title, r.cover, r.days, r.category, r.refund_rules_json
        FROM enrollments e JOIN schedules s ON s.id=e.schedule_id JOIN routes r ON r.id=s.route_id
        WHERE ${where} ORDER BY e.id DESC`
     )

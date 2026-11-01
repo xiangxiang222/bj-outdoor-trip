@@ -163,7 +163,7 @@ describe("official trips, personal bounty and merge", () => {
     const token = await loginUser(agent);
     getDb().prepare("UPDATE users SET wechat_openid=? WHERE id=?").run("o_merge_demo", seed.userId);
     const admin = await loginAdmin(agent);
-    const now = dayjs("2026-09-19");
+    const now = dayjs().add(10, "day").startOf("day");
     const tomorrow = now.add(1, "day").format("YYYY-MM-DD");
     const official = await agent
       .post("/api/admin/schedules")
@@ -267,7 +267,7 @@ describe("official trips, personal bounty and merge", () => {
   it("does not merge a formed personal trip or a different meetup", async () => {
     const token = await loginUser(agent);
     const admin = await loginAdmin(agent);
-    const now = dayjs("2026-09-19");
+    const now = dayjs().add(10, "day").startOf("day");
     const tomorrow = now.add(1, "day").format("YYYY-MM-DD");
     await agent
       .post("/api/admin/schedules")

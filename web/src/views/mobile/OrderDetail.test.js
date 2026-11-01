@@ -56,3 +56,27 @@ describe('order detail travel wish entry', () => {
     expect(fixture.router.push).not.toHaveBeenCalled();
   });
 });
+
+
+describe('order detail state presentation and route actions', () => {
+  beforeEach(() => { vi.clearAllMocks(); vi.stubGlobal('window', {addEventListener:vi.fn(),removeEventListener:vi.fn()}); });
+  it('shows only the remaining amount as due on a partial payment', () => {
+    const state = setupPage();
+    state.order.value = eligible({payAmount:30,paidAmount:10,remainAmount:20});
+    expect(state.amount.value).toBe(20);
+    expect(state.amountLabel.value).toBe('剩余待付');
+    state.order.value = {...state.order.value,canPay:false,pay_status:'paid'};
+    expect(state.amount.value).toBe(30);
+    expect(state.amountLabel.value).toBe('费用合计');
+  });
+  it('recognizes one-off activity kinds and never navigates to their synthetic routes', () => {
+    const state=setupPage();
+    for (const [category,icon] of [['掼蛋','cards'],['跑步','run'],['电影','movie'],['招募','club']]) {
+      state.order.value=eligible({channel:'activity',category,route_id:9,completed:true,start_date:'2020-01-01',canPay:false,pay_status:'paid'});
+      expect(state.activity.value).toBe(true); expect(state.icon.value).toBe(icon); expect(state.again.value).toBe(false); state.goOtherDates();
+    }
+    expect(fixture.router.push).not.toHaveBeenCalled();
+    state.order.value={...state.order.value,channel:'trip',schedule_status:'finished'};
+    state.goOtherDates(); expect(fixture.router.push).toHaveBeenCalledWith('/m/route/9');
+  });
+});

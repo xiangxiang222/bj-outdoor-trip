@@ -75,6 +75,7 @@ function applyLeader(scheduleId, userId, { leadRef } = {}) {
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
   if (!sch) fail(404, "排期不存在");
   if (sch.status === "cancelled") fail(400, "该拼团已解散");
+  require("./enroll").assertEnrollmentOpen(sch);
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
   if (!user || user.deleted_at) fail(401, "请先登录");
   if (!isLeader(user)) {

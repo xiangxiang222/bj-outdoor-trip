@@ -136,10 +136,16 @@ module.exports = async function catalogCases({ test, pageFor, goto, db, seed, ou
       const dialog = p.getByRole("dialog");
       await dialog.getByLabel("起始时间", { exact: true }).fill(day(1));
       await dialog.getByLabel("终止时间", { exact: true }).fill(day(-1));
-      await dialog.getByRole("button", { name: "确定", exact: true }).click();
+      await dialog.getByRole("button", { name: "完成", exact: true }).click();
       assert.ok(await dialog.getByRole("alert").isVisible());
       await p.screenshot({ path: path.join(output, "journeys-filters.png"), fullPage: true });
       await dialog.getByRole("button", { name: "关闭筛选", exact: true }).click();
+      assert.equal(await p.locator(".od-card").count(), 0, "the last valid start date stays applied after closing");
+      await p.locator(".od-filter").click();
+      assert.equal(await dialog.getByLabel("起始时间", { exact: true }).inputValue(), day(1));
+      await dialog.getByRole("button", { name: "重置", exact: true }).click();
+      await dialog.getByRole("button", { name: "已结束", exact: true }).click();
+      await dialog.getByRole("button", { name: "完成", exact: true }).click();
       assert.equal(await p.locator(".od-card").count(), 2);
     } finally { await p.close(); }
   });

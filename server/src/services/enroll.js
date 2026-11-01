@@ -26,6 +26,7 @@ const { assertJoinCode } = require("./joinCode");
 const { cancelQuote, refundAmount } = require("./refund");
 const { ensurePayShareToken, refundableOf } = require("./pay-ledger");
 const { refundEnrollmentToPayers } = require("./payment");
+const { scheduleHasStarted } = require("./schedule-lifecycle");
 
 function fail(status, message, extra) {
   const err = new Error(message);
@@ -69,6 +70,7 @@ function applyPhotographer(scheduleId, userId) {
   if (sch.channel === "activity") fail(400, "同城局不设摄影师");
   if (sch.status === "cancelled") fail(400, "该拼团已解散");
   if ((sch.review_status || "approved") !== "approved") fail(400, "该团正在审核或未通过，暂不能报名");
+  assertEnrollmentOpen(sch);
   const user = db.prepare("SELECT * FROM users WHERE id=?").get(userId);
   if (!user || user.deleted_at) fail(401, "请先登录");
   assertEnrollLimit(user, sch);
@@ -112,17 +114,9 @@ function truthy(v) {
   return v === true || v === 1 || v === "true" || v === "1" || v === "on";
 }
 
-function assertActivityOpen(sch) {
-  if (sch.channel !== "activity") return;
-  const message = "活动已开始或结束，暂不能报名";
-  if (sch.started_at || sch.completed_at || ["finished", "completed", "ended"].includes(sch.status)) fail(400, message);
-  const date = String(sch.start_date || "").slice(0, 10);
-  const stamp = /^\d{4}-\d{2}-\d{2}$/.test(date) ? Date.parse(date + "T00:00:00Z") : NaN;
-  if (!Number.isFinite(stamp) || new Date(stamp).toISOString().slice(0, 10) !== date) return;
-  const beijing = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
-  const today = beijing.slice(0, 10);
-  const time = String(sch.meetup_time || "").trim();
-  if (date < today || (date === today && /^([01]\d|2[0-3]):[0-5]\d$/.test(time) && time <= beijing.slice(11, 16))) fail(400, message);
+function assertEnrollmentOpen(sch) {
+  const message = sch.channel === "activity" ? "活动已开始或结束，暂不能报名" : "本团已开始或结束，请选择其他团期";
+  if (scheduleHasStarted(sch)) fail(400, message);
 }
 
 function enrollUser({
@@ -154,7 +148,7 @@ function enrollUser({
   if (!sch) fail(400, "排期不存在");
   if (sch.status === "cancelled") fail(400, "该拼团已解散，无法报名");
   if ((sch.review_status || "approved") !== "approved") fail(400, "该团正在审核或未通过，暂不能报名");
-  assertActivityOpen(sch);
+  assertEnrollmentOpen(sch);
   assertJoinCode(sch, joinCode, user);
   assertEnrollLimit(user, sch);
   assertComboEnroll(user, sch);
@@ -374,6 +368,7 @@ function promoteWaitlist(scheduleId) {
   const db = getDb();
   const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
   if (!sch || sch.status === "cancelled") return null;
+  try { assertEnrollmentOpen(sch); } catch { return null; }
   if (enrolledCount(scheduleId) >= Number(sch.max_seats)) return null;
   const next = db
     .prepare(
@@ -421,6 +416,8 @@ async function cancelEnrollment(enrollmentId, userId, options = {}) {
       status: sch.status,
       startDate: sch.start_date,
       startedAt: sch.started_at,
+      completedAt: sch.completed_at,
+      meetupTime: sch.meetup_time,
       channel: sch.channel || "trip",
       route,
       minGroupSize: sch.min_group_size,
@@ -491,6 +488,7 @@ function canCancelEnrollment(en, scheduleStatus, startDate) {
 }
 
 module.exports = {
+  assertEnrollmentOpen,
   enrollUser,
   promoteWaitlist,
   cancelEnrollment,

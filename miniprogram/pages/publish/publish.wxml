@@ -80,6 +80,19 @@
     <view class="field-error" wx:if="{{errors.activityDetails}}">{{tr.t(errors.activityDetails, lang)}}</view>
     <view class="pub-label">{{tr.t('补充介绍 · 选填', lang)}}</view>
     <textarea class="pub-field pub-area" placeholder="{{tr.t(selectedActivityKind.descriptionPlaceholder, lang)}}" value="{{form.description}}" bindinput="setField" data-k="description" maxlength="1200" />
+    <view class="pub-group">
+      <view class="pub-label">{{tr.t('活动微信群 · 选填', lang)}}</view>
+      <view class="pub-note">{{tr.t('上传真实群二维码，仅发起人和已确认参加者可见。', lang)}}</view>
+      <view class="pub-group-upload" bindtap="pickGroupQr">
+        <image wx:if="{{groupPreview}}" class="pub-group-preview" src="{{groupPreview}}" mode="aspectFit" />
+        <view class="pub-group-add" wx:else>＋</view>
+        <view><view>{{tr.t(groupUploading ? '正在上传…' : (groupPreview ? '更换群二维码' : '上传群二维码'), lang)}}</view><text>{{tr.t('JPG、PNG、WebP 或 GIF，5MB 以内', lang)}}</text></view>
+      </view>
+      <view wx:if="{{groupPreview && !groupUploading}}" class="pub-group-actions"><view class="pub-link" bindtap="previewGroupQr">{{tr.t('查看二维码', lang)}}</view><view class="pub-link" bindtap="removeGroupQr">{{tr.t('移除二维码', lang)}}</view></view>
+      <view class="field-error" wx:if="{{errors.groupQr}}">{{tr.t(errors.groupQr, lang)}}</view>
+      <input class="pub-field" placeholder="{{tr.t('群说明，例如进群请备注报名姓名', lang)}}" value="{{form.consultGroup}}" bindinput="setField" data-k="consultGroup" maxlength="80" />
+      <view class="pub-note">{{tr.t('不上传也可发布；二维码过期时请联系发起人。', lang)}}</view>
+    </view>
 
   </view>
 </view>
@@ -272,4 +285,4 @@
 <view id="submit-error" class="field-error" wx:if="{{errors.form}}">{{tr.t(errors.form, lang)}}</view>
 <view class="pub-confirm" wx:if="{{form.channel!='activity' && form.routeId}}"><view>{{tr.t('出发前，再确认一下', lang)}}</view><text>{{routeLabel}}</text><text>{{form.startDate}} · {{form.meetupTime}} · {{form.meetupPoint}}</text><text>{{tr.t(organizerLabels[organizerIndex], lang)}} · {{form.minGroupSize}}{{tr.t('人成团', lang)}}</text></view>
 <view class="pub-review-note">{{tr.t(form.channel=='activity' ? '提交后由平台审核，审核通过后开放报名。' : '发布后即可报名，可分享给同行', lang)}}</view>
-<button class="btn clay" bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}">{{tr.t(submitting ? '正在提交' : (form.channel=='activity' ? '提交审核' : '确认发布'), lang)}}</button>
+<button class="btn clay" bindtap="submit" loading="{{submitting}}" disabled="{{submitting || groupUploading}}">{{tr.t(submitting ? '正在提交' : (form.channel=='activity' ? '提交审核' : '确认发布'), lang)}}</button>

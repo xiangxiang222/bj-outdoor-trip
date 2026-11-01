@@ -130,12 +130,76 @@ describe("activity enrollment lifecycle", () => {
     assert.equal(ledgerSnapshot().enrollments, 0);
   });
 
-  it("keeps outdoor-trip enrollment outside the new activity lifecycle guard", async (t) => {
+  it("rejects completed outdoor trips instead of reopening the old group", async (t) => {
     t.mock.method(Date, "now", () => NOW);
     configure({ channel: "trip", start_date: "2026-10-25", started_at: "2026-10-25 10:00:00", completed_at: "2026-10-25 11:00:00", status: "finished" });
     const result = await agent.post("/api/enroll").set(auth(token())).send(enrollPayload({
       idCard: ID.maleBj, emergencyName: "家人", emergencyPhone: "13700000002", waiverAccepted: true, healthOk: true,
-    })).expect(200);
-    assert.equal(result.body.data.status, "joined");
+    })).expect(400);
+    assert.match(result.body.message, /本团已开始或结束/);
+    assert.equal(ledgerSnapshot().enrollments, 0);
+  });
+
+  it("does not promote waitlisted participants into started or completed one-off groups", (t) => {
+    t.mock.method(Date, "now", () => NOW);
+    const { promoteWaitlist } = require("../src/services/enroll");
+    const waiting = seed.db.prepare("INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,status,pay_status,pay_amount) VALUES (?,?,?,?,?,?,?)")
+      .run(seed.individualScheduleId, seed.userId, "候补者", "13800138000", "waitlist", "paid", 0).lastInsertRowid;
+    const before = ledgerSnapshot();
+    for (const channel of ["activity", "trip"]) {
+      for (const patch of [
+        { start_date: "2026-10-25" },
+        { started_at: "2026-10-25 10:00:00" },
+        { completed_at: "2026-10-25 11:00:00" },
+        { status: "finished" },
+        { start_date: "2026-10-26", meetup_time: "00:30" },
+      ]) {
+        configure({ channel, ...patch });
+        assert.equal(promoteWaitlist(seed.individualScheduleId), null);
+        const saved = seed.db.prepare("SELECT * FROM enrollments WHERE id=?").get(waiting);
+        assert.equal(saved.status, "waitlist");
+        assert.equal(saved.seat_no, null);
+        assert.deepEqual(ledgerSnapshot(), before);
+      }
+    }
+  });
+
+  it("blocks photographer conversion after departure without granting a seat or waiving fees", async (t) => {
+    t.mock.method(Date, "now", () => NOW);
+    const id = seed.db.prepare("INSERT INTO enrollments (schedule_id,user_id,traveler_name,traveler_phone,status,pay_status,pay_amount,join_mode) VALUES (?,?,?,?,?,?,?,?)")
+      .run(seed.individualScheduleId, seed.userId, "摄影候补", "13800138000", "waitlist", "unpaid", 99, "chain").lastInsertRowid;
+    const before = seed.db.prepare("SELECT * FROM enrollments WHERE id=?").get(id);
+    for (const patch of [
+      { start_date: "2026-10-25" },
+      { started_at: "2026-10-25 10:00:00" },
+      { completed_at: "2026-10-25 11:00:00" },
+      { status: "finished" },
+    ]) {
+      configure({ channel: "trip", ...patch });
+      const result = await agent.post(`/api/schedules/${seed.individualScheduleId}/photographers/apply`).set(auth(token())).expect(400);
+      assert.match(result.body.message, /本团已开始或结束/);
+      assert.deepEqual(seed.db.prepare("SELECT * FROM enrollments WHERE id=?").get(id), before);
+    }
+  });
+
+  it("blocks new volunteer leaders after departure without assigning slots or referral rewards", async (t) => {
+    t.mock.method(Date, "now", () => NOW);
+    seed.db.prepare("UPDATE users SET leader_status='approved' WHERE id=?").run(seed.userId);
+    const leaders = seed.db.prepare("SELECT COUNT(*) AS n FROM schedule_leaders").get().n;
+    const referrals = seed.db.prepare("SELECT COUNT(*) AS n FROM leader_referrals").get().n;
+    for (const patch of [
+      { start_date: "2026-10-25" },
+      { started_at: "2026-10-25 10:00:00" },
+      { completed_at: "2026-10-25 11:00:00" },
+      { status: "finished" },
+    ]) {
+      configure({ channel: "trip", ...patch });
+      const before = seed.db.prepare("SELECT * FROM schedules WHERE id=?").get(seed.individualScheduleId);
+      const result = await agent.post(`/api/schedules/${seed.individualScheduleId}/leaders/apply`).set(auth(token())).send({ leadRef: "SOMEONE" }).expect(400);
+      assert.match(result.body.message, /本团已开始或结束/);
+      assert.equal(seed.db.prepare("SELECT COUNT(*) AS n FROM schedule_leaders").get().n, leaders);
+      assert.equal(seed.db.prepare("SELECT COUNT(*) AS n FROM leader_referrals").get().n, referrals);
+      assert.deepEqual(seed.db.prepare("SELECT * FROM schedules WHERE id=?").get(seed.individualScheduleId), before);
+    }
   });
 });

@@ -85,6 +85,14 @@
           <div class="publish-kind-guide"><strong>{{ selectedActivityKind.title }}</strong><p>{{ selectedActivityKind.notice }}</p></div>
           <div class="publish-activity-field" v-for="field in selectedActivityKind.fields" :key="field.key"><label :for="'activity-' + field.key">{{ field.label }}<small v-if="!field.required"> · 选填</small></label><input :id="'activity-' + field.key" class="input" v-model="form.activityDetails[field.key]" :placeholder="field.placeholder" :aria-required="field.required" maxlength="120" /></div>
           <label for="publish-description">补充介绍 · 选填</label><textarea id="publish-description" class="input" v-model="form.description" rows="4" :placeholder="selectedActivityKind.descriptionPlaceholder" maxlength="1200" />
+          <div class="publish-group">
+            <label>活动微信群 · 选填</label><p class="publish-help">上传真实群二维码，仅发起人和已确认参加者可见。</p>
+            <label class="publish-group-upload" for="publish-group-qr"><img v-if="form.consultGroupQrImage" :src="form.consultGroupQrImage" alt="群二维码预览" /><span v-else class="publish-group-add" aria-hidden="true">＋</span><span>{{ groupUploading ? '正在上传…' : form.consultGroupQrImage ? '更换群二维码' : '上传群二维码' }}<small>JPG、PNG、WebP 或 GIF，5MB 以内</small></span><input id="publish-group-qr" type="file" accept="image/jpeg,image/png,image/webp,image/gif" :disabled="groupUploading || loading" @change="uploadGroupQr" /></label>
+            <div v-if="form.consultGroupQrImage" class="publish-group-actions"><a :href="form.consultGroupQrImage" target="_blank" rel="noopener noreferrer">查看二维码</a><button class="publish-group-remove" type="button" :disabled="groupUploading || loading" @click="form.consultGroupQrImage = ''">移除二维码</button></div>
+            <p v-if="groupError" class="publish-error" role="alert">{{ groupError }}</p>
+            <label for="publish-group-note">群说明 · 选填</label><input id="publish-group-note" class="input" v-model="form.consultGroup" maxlength="80" placeholder="群说明，例如进群请备注报名姓名" />
+            <p class="publish-help">不上传也可发布；二维码过期时请联系发起人。</p>
+          </div>
         </template>
         <div class="publish-switch"><div><strong>凭口令加入</strong><small>适合企业、社团或好友定向邀请</small></div><el-switch v-model="form.privateJoin" aria-label="凭口令加入" /></div>
         <template v-if="form.privateJoin"><label for="publish-code">入团口令 · 选填</label><input id="publish-code" class="input" v-model="form.joinCode" maxlength="16" placeholder="4～16 个字，留空自动生成" autocomplete="off" /><p class="publish-help">口令团会展示在列表中，报名时需要填写口令。</p></template>
@@ -100,14 +108,14 @@
       </section>
 
       <div v-if="err" class="publish-error" role="alert">{{ err }}<button v-if="!isActivity && (!routes.length || (form.routeId && !selectedRoute))" type="button" :disabled="routeLoading" @click="loadInitial">重新加载</button></div>
-      <div class="publish-actions"><button v-if="step > 0" class="publish-back" type="button" :disabled="loading" @click="goStep(step - 1)">上一步</button><button class="btn publish-next" type="submit" :disabled="loading || routeLoading || (!isActivity && !routesReady)">{{ loading ? '正在发布…' : step < 3 ? '下一步' : isActivity ? '提交活动审核' : '发布并邀请同行' }}<span v-if="!loading && step < 3" aria-hidden="true">→</span></button></div>
+      <div class="publish-actions"><button v-if="step > 0" class="publish-back" type="button" :disabled="loading" @click="goStep(step - 1)">上一步</button><button class="btn publish-next" type="submit" :disabled="loading || groupUploading || routeLoading || (!isActivity && !routesReady)">{{ loading ? '正在发布…' : step < 3 ? '下一步' : isActivity ? '提交活动审核' : '发布并邀请同行' }}<span v-if="!loading && step < 3" aria-hidden="true">→</span></button></div>
       <p class="publish-footer">{{ step < 3 ? '每一步，都让出发更安心' : '同行者众 · 在山野，遇见爱' }}</p>
     </form>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
@@ -135,6 +143,10 @@ const routeLoading = ref(false);
 const selectedRoute = ref(null);
 const err = ref("");
 const loading = ref(false);
+const groupUploading = ref(false);
+const groupError = ref("");
+let disposed = false;
+onUnmounted(() => { disposed = true; });
 const step = ref(0);
 const today = todayYmd();
 const offers = OFFER_TYPES;
@@ -164,7 +176,7 @@ const form = ref({
   city: startAsActivity ? "朝阳" : "", offerType: startAsActivity ? "free" : "full", originPrice: 0, playTagIds: [],
   studentOnly: false, alumniOk: false, oversub: false, genderRatio: emptyGenderRatio(),
   campusScope: "school", campusSchool: store.profile?.school || "", campusCollege: store.profile?.college || "", colleges: "", campusTargets: [],
-  privateJoin: false, joinCode: "", activityDetails: {}, description: "", notes: "", comboRule: { require: "student_or_group", school: "" }, memberPriceOn: true, studentPriceOn: true,
+  privateJoin: false, joinCode: "", activityDetails: {}, description: "", notes: "", consultGroup: "", consultGroupQrImage: "", comboRule: { require: "student_or_group", school: "" }, memberPriceOn: true, studentPriceOn: true,
 });
 const postedId = ref(0);
 const isActivity = computed(() => form.value.channel === "activity");
@@ -262,8 +274,26 @@ function pickKind(key) {
 function toggleTag(id) { form.value.playTagIds = form.value.playTagIds.includes(id) ? form.value.playTagIds.filter(value => value !== id) : [...form.value.playTagIds, id]; }
 function focusCard() { document.querySelector(".publish-page")?.scrollIntoView({ behavior: "smooth", block: "start" }); }
 function goStep(next) { if (loading.value || next > step.value) return; step.value = next; err.value = ""; focusCard(); }
+async function uploadGroupQr(event) {
+  const file = event.target.files?.[0];
+  event.target.value = "";
+  if (!file || groupUploading.value || loading.value) return;
+  groupError.value = "";
+  if (file.size > 5 * 1024 * 1024) { groupError.value = "群二维码图片请小于 5MB"; return; }
+  if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) { groupError.value = "请选择 JPG、PNG、WebP 或 GIF 图片"; return; }
+  const token = store.token;
+  groupUploading.value = true;
+  try {
+    const data = new FormData(); data.append("file", file);
+    const result = await http.post("/upload", data);
+    if (!result.data?.url) throw new Error("上传失败，请重试");
+    if (!disposed && token === store.token) form.value.consultGroupQrImage = result.data.url;
+  } catch (error) { if (!disposed && token === store.token) groupError.value = error.message || "上传失败，请重试"; }
+  finally { if (!disposed) groupUploading.value = false; }
+}
 async function advance() {
   if (loading.value || routeLoading.value) return;
+  if (groupUploading.value) { err.value = "请等待群二维码上传完成"; return; }
   err.value = validatePublishPlan(form.value, { step: step.value < 3 ? step.value : undefined, today: todayYmd(), buses: buses.value, profile: store.profile || {} });
   if (err.value) return;
   if (!isActivity.value && !selectedRoute.value) { err.value = "请重新选择线路，等待线路资料加载完成"; step.value = 0; return; }
@@ -384,4 +414,14 @@ async function advance() {
 :global(html[data-night="dark"] .publish-page.is-activity .publish-steps button.active > span) { background:#77519e; color:#fff; box-shadow:0 0 0 3px #3a2949; }
 :global(html[data-night="dark"] .publish-page.is-activity .publish-error) { background:#3e252c; color:#f3b1b5; }
 @media (min-width:700px) { .publish-intro h1 { font-size:28px; } .publish-card { padding:28px; } .publish-organizers button { padding:20px 10px; } }
+.publish-group { margin-top:24px; padding-top:10px; border-top:1px solid var(--line,#eee8f4); }
+.publish-group .publish-group-upload { display:flex; gap:14px; align-items:center; position:relative; cursor:pointer; margin-top:13px; padding:14px; border:1px dashed #cfc0e1; border-radius:14px; background:#f7f3fb; color:#5b3b8c; font-size:13px; }
+.publish-group-upload img, .publish-group-add { width:58px; height:58px; object-fit:contain; border-radius:8px; background:#fff; flex:none; }
+.publish-group-add { display:grid; place-items:center; font-size:28px; font-weight:300; }
+.publish-group-upload small { display:block; margin-top:7px; font-size:10px; line-height:1.7; color:#91839f; font-weight:400; }
+.publish-group-upload input { position:absolute; width:1px; height:1px; opacity:0; }
+.publish-group-upload:focus-within { outline:2px solid #a990c1; outline-offset:3px; }
+.publish-group-remove { border:0; background:none; color:#795b97; padding:12px 0 0; font-size:11px; cursor:pointer; }
+.publish-group-actions { display:flex; gap:18px; align-items:baseline; }
+.publish-group-actions a { padding-top:12px; color:#795b97; font-size:11px; text-decoration:none; }
 </style>

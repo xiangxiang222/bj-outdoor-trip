@@ -1,9 +1,9 @@
 <template>
   <LoadRow v-if="!pageReady" />
   <p v-else-if="!s" class="muted pad">加载失败</p>
-  <div v-else class="trip-detail">
+  <div v-else class="trip-detail" :class="{ 'is-activity': isActivity }">
     <div class="card offer-card" style="border-radius:0;margin:0">
-      <div class="offer-hero" v-if="gallery.length" @click="previewHero">
+      <div class="offer-hero" v-if="!isActivity && gallery.length" @click="previewHero">
         <img :src="gallery[heroIndex]" :alt="s.route.title" />
         <div class="hero-dots" v-if="gallery.length > 1">
           <i v-for="(g, i) in gallery" :key="g" :class="{ on: i === heroIndex }" />
@@ -16,7 +16,10 @@
         :route-id="s.routeId || s.route?.id"
       />
       <div class="offer-sheet">
-        <div class="offer-price-row">
+        <div v-if="isActivity" class="city-heading"><img v-if="gallery.length" :src="gallery[0]" class="city-cover" :alt="s.route.title" @click="previewHero" /><div v-else class="city-cover city-cover-fallback"><TravelIcon :name="kindInfo?.icon || 'community'" /></div><div class="city-heading-copy"><span class="city-kicker">{{ kindTag || '同城小聚' }} · 兴趣相聚</span><h1 class="offer-title">{{ s.route.title }}</h1><div class="city-price">{{ isFree ? '免费参加' : '¥' + payPrice }}<small v-if="!isFree">/人</small></div></div></div>
+        <div v-if="isActivity" class="city-status"><strong>{{ activityPresentation.title }}</strong><p>{{ activityPresentation.hint }}</p></div>
+        <div v-if="isActivity && canDissolve" class="city-manage"><span>你是本次活动的发起人</span><button class="btn ghost" type="button" @click="openDissolve">取消活动</button></div>
+        <div class="offer-price-row" v-if="!isActivity">
           <div v-if="isActivity && isFree" class="offer-price">免费</div>
           <div v-else>
             <b class="offer-price">¥{{ payPrice }}</b><small>/人</small>
@@ -24,15 +27,15 @@
           <span class="tag">{{ statusTag }}</span>
         </div>
         <p v-if="tierHint" class="offer-tiers">{{ tierHint }}</p>
-        <h1 class="offer-title">{{ s.route.title }}</h1>
+        <h1 v-if="!isActivity" class="offer-title">{{ s.route.title }}</h1>
         <p v-if="sellLine" class="offer-sell">{{ sellLine }}</p>
-        <div class="tag-row">
+        <div class="tag-row" v-if="!isActivity">
           <TripKind :kind="s.kind" :type="s.organizerType" :channel="s.channel" />
           <span v-if="s.offerLabel" class="offer-chip inline" :style="{ background: s.offerColor }">{{ s.offerLabel }}</span>
           <span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">{{ s.privateLabel || "口令团" }}</span>
           <span class="play-tag sm" v-for="t in s.playTags || s.route.tags || []" :key="t.id || t" :style="{ background: t.color || '#2d6a4f' }">{{ t.name || t }}</span>
         </div>
-        <div class="trust-row" v-if="trusts.length">
+        <div class="trust-row" v-if="!isActivity && trusts.length">
           <span class="trust-chip" v-for="c in trusts" :key="c">{{ c }}</span>
         </div>
         <button v-if="reviewQuote" class="offer-quote" type="button" @click="jumpReviews">
@@ -41,7 +44,6 @@
           <span>“{{ reviewQuote }}”</span>
           <i>{{ reviews.count }}条</i>
         </button>
-        <div v-if="isActivity && activityInfo.length" class="activity-detail-brief"><div v-for="item in activityInfo" :key="item.label"><span>{{ item.label }}</span><strong>{{ item.value }}</strong></div></div>
         <div class="fact-list">
           <div class="fact-row">
             <span class="fact-k">时间</span>
@@ -65,6 +67,7 @@
             </span>
           </div>
         </div>
+        <div v-if="isActivity && activityInfo.length" class="activity-detail-brief"><div v-for="item in activityInfo.slice(0, 2)" :key="item.label"><span>{{ item.label }}</span><strong>{{ item.value }}</strong></div></div>
         <p v-if="s.guaranteed && !isActivity" class="ok offer-guaranteed">已成团 · 铁定出发</p>
       </div>
     </div>
@@ -128,9 +131,10 @@
             <a v-if="busPhotos.length" class="nav-link" href="#" @click.prevent="showBus = true">{{ busText }}</a>
             <span v-else>{{ busText }}</span>
           </p>
-          <div class="progress"><i :style="{ width: Math.min(100, (shownEnrolled / s.maxSeats) * 100) + '%' }"></i></div>
+          <div v-if="isActivity" class="city-progress-title">参与人数<strong>{{ shownEnrolled }} / {{ s.maxSeats }}</strong></div>
+          <div v-if="!isActivity || !activityPresentation.closed" class="progress"><i :style="{ width: Math.min(100, (shownEnrolled / s.maxSeats) * 100) + '%' }"></i></div>
           <div class="row">
-            <span v-if="s.minGroupSize || s.oversub?.label" class="muted">{{ isActivity ? "满 " + s.minGroupSize + " 人成局" : "最低成团 " + s.minGroupSize }}<template v-if="s.oversub?.label"> · {{ s.oversub.label }}</template></span>
+            <span v-if="(!isActivity || !activityPresentation.closed) && (s.minGroupSize || s.oversub?.label)" class="muted">{{ isActivity ? "满 " + s.minGroupSize + " 人成局" : "最低成团 " + s.minGroupSize }}<template v-if="s.oversub?.label"> · {{ s.oversub.label }}</template></span>
             <span v-else></span>
           </div>
           <p class="muted" v-if="s.oversub?.enabled">{{ s.oversub.copy }}</p>
@@ -254,22 +258,21 @@
         </div></div>
       </template>
 
-      <div class="h2" v-if="s.myEnrollment">报名后</div>
-      <div class="card" v-if="s.myEnrollment"><div class="pad">
+      <div class="h2" v-if="s.myEnrollment || (isActivity && s.isOrganizer)">{{ isActivity ? '参与安排' : '报名后' }}</div>
+      <div class="card" v-if="s.myEnrollment || (isActivity && s.isOrganizer)"><div class="pad">
         <template v-if="isActivity">
-          <p style="margin-top:0">已报名。到场时找发起人即可。</p>
-          <p>本局微信群</p>
-          <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本局群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
-          <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
+          <div class="city-group"><div class="city-group-heading">本局微信群<span>{{ activityPresentation.closed ? '本次活动的群信息，供已确认参加者查看' : '见面前，先和同好打声招呼' }}</span></div><div v-if="activityGroupQr || s.consultGroup" class="city-group-content"><a v-if="activityGroupQr" :href="activityGroupQr" target="_blank" rel="noopener noreferrer" aria-label="查看本局群二维码"><img :src="activityGroupQr" class="city-group-qr" alt="本局群二维码" @error="groupQrError" /></a><div><p v-if="s.consultGroup">{{ s.consultGroup }}</p><small v-if="activityGroupQr">点击查看，长按识别群二维码</small><small v-if="activityGroupQr">二维码失效时，请联系发起人。</small></div></div><p v-if="activityGroupQrError" class="city-group-empty">群二维码暂时加载失败。<button type="button" class="nav-link" @click="failedGroupQr = ''">重新加载</button></p><p v-else-if="!activityGroupQr && !s.consultGroup" class="city-group-empty">{{ activityGroupEmpty }}</p></div>
           <button v-if="showAfter" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">评价 / 评选</button>
-          <p v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">费用待付 ¥{{ s.myEnrollment.remainAmount }}，点下方去支付。</p>
+          <p v-if="!activityPresentation.closed && s.myEnrollment?.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">费用待付 ¥{{ s.myEnrollment.remainAmount }}，点下方去支付。</p>
         </template>
         <template v-else>
           <p v-if="s.myEnrollment.status === 'applied'">已报名，待确认出行名单。{{ s.oversub?.copy }}</p>
           <p v-else>1. 座位图可改座，早报名早选座。</p>
           <p>2. 本团微信群</p>
-          <img v-if="s.consultGroupQr" :src="s.consultGroupQr" alt="本团群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" />
-          <p class="muted">{{ s.consultGroup || contacts.officialWechat }}</p>
+          <img v-if="activityGroupQr" :src="activityGroupQr" alt="本团群二维码" style="width:140px;height:140px;background:#fff;border-radius:12px" @error="groupQrError" />
+          <p v-if="s.consultGroup" class="muted">{{ s.consultGroup }}</p>
+          <p v-if="activityGroupQrError" class="muted">群二维码暂时加载失败。<button type="button" class="nav-link" @click="failedGroupQr = ''">重新加载</button></p>
+          <p v-else-if="!activityGroupQr && !s.consultGroup" class="muted">发起人暂未提供本团群信息，请联系发起人确认。</p>
           <p>3. 候选团（本团未成团则按顺序转团，价格多退少补）</p>
           <label class="check-row" v-for="opt in candidateOptions" :key="opt.id">
             <input type="checkbox" :value="opt.id" v-model="fallbackIds" />
@@ -284,7 +287,7 @@
           <p v-if="s.myEnrollment.status === 'joined' && s.myEnrollment.payStatus === 'unpaid' && s.myEnrollment.remainAmount > 0">团费待付 ¥{{ s.myEnrollment.remainAmount }} / ¥{{ s.myEnrollment.payAmount }}，点下方去支付。</p>
           <button v-if="showAfter" class="btn block" type="button" style="margin-top:8px" @click="$router.push('/m/after/' + s.id)">评价 / 评选</button>
         </template>
-        <PayHelpers :list="s.myEnrollment.helpers" />
+        <PayHelpers :list="s.myEnrollment?.helpers || []" />
       </div></div>
 
       <div class="h2" v-if="s.combo?.enabled">组合团 · 另一半条件</div>
@@ -331,7 +334,7 @@
         </div>
       </div>
 
-      <div id="trip-reviews" class="h2">本团评价 <span v-if="reviews.count" class="muted">{{ reviews.avg }} 分 · {{ reviews.count }} 条</span></div>
+      <div id="trip-reviews" class="h2">{{ isActivity ? '活动评价' : '本团评价' }} <span v-if="reviews.count" class="muted">{{ reviews.avg }} 分 · {{ reviews.count }} 条</span></div>
       <LoadRow v-if="!reviewsReady && !reviews.list?.length" />
       <div class="card" v-else-if="reviews.list?.length">
         <div class="pad review-item" v-for="rv in reviews.list" :key="rv.id">
@@ -367,12 +370,13 @@
     <div v-show="tab === 'rules'" class="trip-pane">
       <div class="h2">退改说明</div>
       <div class="card rules-block"><div class="pad">
-        <p class="muted" style="margin-top:0">{{ isActivity ? "出发日前可取消；当天不可取消。" : refundCopy.summary }}</p>
+        <p class="muted" style="margin-top:0">{{ isActivity ? "活动开始前可取消；已支付费用按原支付渠道退回。" : refundCopy.summary }}</p>
         <p v-if="!isActivity && refundCopy.current?.hint" class="muted">{{ refundCopy.current.hint }}</p>
         <p v-if="!isActivity" v-for="(it, i) in refundCopy.items" :key="i" class="muted">{{ i + 1 }}. {{ it }}</p>
       </div></div>
 
-      <template v-if="commonRules.sections?.length">
+      <div v-if="isActivity" class="card city-rules"><div class="pad"><h2>参与须知</h2><p>{{ kindInfo?.notice || '请根据自身情况参加，尊重同行者并遵守现场约定。' }}</p></div></div>
+      <template v-if="!isActivity && commonRules.sections?.length">
         <div class="h2">{{ commonRules.title || "公共规则" }}</div>
         <div class="card rules-block"><div class="pad">
           <p class="muted" style="margin-top:0">{{ commonRules.summary }}</p>
@@ -383,13 +387,13 @@
         </div></div>
       </template>
 
-      <div class="h2" v-if="waiverText">风险告知</div>
-      <div class="card rules-block" v-if="waiverText"><div class="pad">
+      <div class="h2" v-if="!isActivity && waiverText">风险告知</div>
+      <div class="card rules-block" v-if="!isActivity && waiverText"><div class="pad">
         <p class="muted waiver-text" style="margin-top:0">{{ waiverText }}</p>
       </div></div>
 
-      <div class="h2" v-if="faqs.length">常见问题</div>
-      <div class="card rules-block" v-if="faqs.length"><div class="pad">
+      <div class="h2" v-if="!isActivity && faqs.length">常见问题</div>
+      <div class="card rules-block" v-if="!isActivity && faqs.length"><div class="pad">
         <div class="faq-item" v-for="f in faqs" :key="f.q">
           <strong>{{ f.q }}</strong>
           <p class="muted">{{ f.a }}</p>
@@ -421,16 +425,16 @@
           <b>{{ priceDock.main }}</b>
           <small v-if="priceDock.sub">{{ priceDock.sub }}</small>
         </div>
-        <button class="btn" type="button" @click="$router.push(enrollHref)">{{ ctaText }}</button>
+        <button class="btn" type="button" @click="goEnroll">{{ ctaText }}</button>
       </div>
-      <div v-else-if="s.myEnrollment?.status === 'joined' && s.myEnrollment.remainAmount > 0 && s.myEnrollment.payShareToken" class="enroll-bar">
+      <div v-else-if="(!isActivity || !activityPresentation.closed) && s.myEnrollment?.status === 'joined' && s.myEnrollment.remainAmount > 0 && s.myEnrollment.payShareToken" class="enroll-bar">
         <div class="enroll-price"><b>待付 ¥{{ s.myEnrollment.remainAmount }}</b></div>
         <button class="btn" type="button" @click="invitePay">去支付</button>
       </div>
-      <p v-else-if="activityIsOver && !s.myEnrollment" class="muted" style="text-align:center">活动已开始或结束，暂不能报名</p>
-      <p v-else-if="s.myEnrollment && (isActivity || s.myEnrollment.payStatus !== 'paid')" class="muted" style="text-align:center;margin:0 0 8px">{{ ticket?.title || "已报名" }}<template v-if="isActivity && s.myEnrollment.status !== 'waitlist'">，到场找发起人即可</template></p>
+      <p v-else-if="isActivity && activityPresentation.closed && !s.myEnrollment" class="muted" style="text-align:center">{{ activityPresentation.title }}</p>
+      <p v-else-if="s.myEnrollment && (isActivity || s.myEnrollment.payStatus !== 'paid')" class="muted" style="text-align:center;margin:0 0 8px">{{ isActivity ? activityPresentation.title : (ticket?.title || "已报名") }}</p>
       <button v-if="isOwner && s.organizerType === 'company' && s.status !== 'cancelled'" class="btn block" style="margin-top:8px" @click="settle">公司统一微信支付</button>
-      <button v-if="s.isOrganizer && s.status !== 'cancelled'" class="btn ghost block" style="margin-top:8px;color:var(--clay)" @click="showDissolve = true">解散拼团</button>
+      <button v-if="!isActivity && canDissolve" class="btn ghost block" style="margin-top:8px;color:var(--clay)" @click="openDissolve">解散拼团</button>
       <p v-if="msg" class="muted">{{ msg }}</p>
     </div>
 
@@ -456,18 +460,16 @@
       </div>
     </div>
 
-    <div v-if="showDissolve" class="card" style="margin:12px 14px 0">
-      <div class="pad">
-        <p>解散后将取消全部报名并处理退款。系统只记录待发送通知，短信尚未接入。</p>
-        <label>解散理由</label>
-        <textarea class="input" v-model="reason" rows="3" placeholder="例如：天气预警、人数不足不成团" />
-        <p v-if="dissolveErr" style="color:var(--clay)">{{ dissolveErr }}</p>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <button class="btn ghost" style="flex:1" @click="showDissolve = false">取消</button>
-          <button class="btn clay" style="flex:1" :disabled="dissolving" @click="dissolve">确认解散并记录通知</button>
-        </div>
-      </div>
-    </div>
+    <Teleport to="body"><div v-if="showDissolve" class="dissolve-mask" @click.self="closeDissolve" @keydown.esc="closeDissolve">
+      <section class="dissolve-dialog" role="dialog" aria-modal="true" aria-labelledby="dissolve-title" tabindex="-1">
+        <h2 id="dissolve-title">{{ isActivity ? '取消本次活动' : '解散拼团' }}</h2>
+        <p>{{ isActivity ? '取消后将关闭活动报名，已报名者会收到取消消息，已支付费用按原支付渠道退回。' : '解散后将取消全部报名，并按退费规则处理退款。' }}</p>
+        <label for="dissolve-reason">{{ isActivity ? '取消原因' : '解散理由' }}</label>
+        <textarea id="dissolve-reason" class="input" v-model="reason" rows="3" maxlength="200" :disabled="dissolving" :placeholder="isActivity ? '请填写取消原因' : '请填写解散理由'" />
+        <p v-if="dissolveErr" class="dissolve-error" role="alert">{{ dissolveErr }}</p>
+        <div class="dissolve-actions"><button class="btn ghost" type="button" :disabled="dissolving" @click="closeDissolve">暂不取消</button><button class="btn" type="button" :disabled="dissolving" @click="dissolve">{{ dissolving ? '正在处理…' : isActivity ? '确认取消活动' : '确认解散' }}</button></div>
+      </section>
+    </div></Teleport>
 
     <div v-if="dayPhoto" class="lightbox" @click.self="dayPhoto = ''">
       <img :src="dayPhoto" alt="行程照片" />
@@ -505,6 +507,7 @@ import LoadRow from "@/components/LoadRow.vue";
 import LivePulse from "@/components/LivePulse.vue";
 import CampusNamePicker from "@/components/CampusNamePicker.vue";
 import TripKind from "@/components/TripKind.vue";
+import TravelIcon from "@/components/TravelIcon.vue";
 
 const TAB_IDS = ["trip", "route", "rules"];
 const route = useRoute();
@@ -514,6 +517,22 @@ const s = ref(null);
 const pageReady = ref(false);
 const tab = ref(normalizeTab(route.query.tab));
 const isActivity = computed(() => s.value?.channel === "activity");
+function canDissolveSchedule(row) {
+  if (!row) return false;
+  if (typeof row.canDissolve === "boolean") return row.canDissolve;
+  if (!row.isOrganizer || row.status === "cancelled") return false;
+  if (row.channel === "activity" && ["pending", "rejected"].includes(row.reviewStatus) && !row.startedAt && !row.completedAt && !["finished", "completed", "ended"].includes(row.status)) return true;
+  return row.channel !== "activity" || !activityEnded(row);
+}
+const canDissolve = computed(() => canDissolveSchedule(s.value));
+const failedGroupQr = ref("");
+function uploadedGroupQr(value) {
+  const url = String(value || "").trim();
+  return /^(?:https?:\/\/[^/?#]+)?\/static\/uploads\/[\w-]+\.(?:png|jpe?g|webp|gif)(?:\?[^#]*)?$/i.test(url) ? url : "";
+}
+const activityGroupQrError = computed(() => !!failedGroupQr.value && failedGroupQr.value === s.value?.consultGroupQr);
+const activityGroupQr = computed(() => activityGroupQrError.value ? "" : uploadedGroupQr(s.value?.consultGroupQr));
+function groupQrError() { failedGroupQr.value = s.value?.consultGroupQr || ""; }
 const refundCopy = computed(() => s.value?.refundPolicy || cancelPolicy.value);
 const isFree = computed(() => {
   const q = s.value?.quote || {};
@@ -529,19 +548,50 @@ const whenText = computed(() => {
   const end = s.value.endDate && s.value.endDate !== s.value.startDate ? " 至 " + s.value.endDate : "";
   return [s.value.startDate + end, s.value.meetupTime].filter(Boolean).join(" ");
 });
-const peopleText = computed(() => peopleLine(s.value));
+const peopleText = computed(() => isActivity.value && activityPresentation.value.closed ? "已报名 " + Number(s.value?.enrolled || 0) + " 人" : peopleLine(s.value));
 const placeText = computed(() => {
   if (!s.value) return "";
   if (isActivity.value) return s.value.meetupPoint || "";
   return [s.value.meetupPoint, s.value.meetupTime].filter(Boolean).join(" ");
 });
 const trusts = computed(() => trustChips(s.value));
-const ticket = computed(() => ticketState(s.value, route.query));
+const activityPresentation = computed(() => {
+  const row = s.value || {};
+  const en = row.myEnrollment;
+  const today = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+  const ended = !!row.completedAt || ["finished", "completed", "ended"].includes(row.status) || String(row.endDate || row.startDate || "").slice(0, 10) < today;
+  let title = "招募中", hint = "先了解活动安排，再决定是否加入。";
+  if (row.status === "cancelled") { title = "活动已取消"; hint = row.cancelReason || "本次活动已取消，请查看报名记录与退款进度。"; }
+  else if (row.reviewStatus === "pending") { title = "审核中"; hint = "审核通过后开放报名。"; }
+  else if (row.reviewStatus === "rejected") { title = "审核未通过"; hint = "本次活动暂未开放报名。"; }
+  else if (ended) { title = "活动已结束"; hint = "本次活动已结束，报名记录为你保留。"; }
+  else if (activityEnded(row)) { title = "活动已开始"; hint = "本次活动已开始，报名入口已关闭。"; }
+  else if (en?.status === "waitlist") { title = "候补中"; hint = "有人退出时按报名顺序递补，确认后可查看群信息。"; }
+  else if (en?.status === "applied") { title = "报名待确认"; hint = "名单确认后可查看本局微信群。"; }
+  else if (en?.status === "joined" && Number(en.remainAmount) > 0) { title = "待付款"; hint = "请完成剩余费用支付，支付确认后可查看群信息。"; }
+  else if (en?.status === "joined") { title = "已报名"; hint = "请核对见面时间与地点，按约定准时参加。"; }
+  else if (Number(row.remain) <= 0) { title = "已满员"; hint = "可报名候补，等待空位递补。"; }
+  return { title, hint, ended, closed: ended || activityEnded(row) || row.status === "cancelled" };
+});
+const activityGroupEmpty = computed(() => {
+  const row = s.value || {};
+  const en = row.myEnrollment;
+  if (!row.isOrganizer && (en?.status !== "joined" || Number(en.remainAmount) > 0)) {
+    return activityPresentation.value.closed ? "本次活动已关闭，群信息仅向已确认参加者开放。" : "确认参加并完成支付后可查看群信息。";
+  }
+  return activityPresentation.value.closed ? "发起人未提供本次活动的群信息。" : "发起人暂未提供群信息，请按活动安排到场。";
+});
+const ticket = computed(() => {
+  const base = ticketState(s.value, isActivity.value ? { posted: route.query.posted } : route.query);
+  if (!isActivity.value || (!s.value?.myEnrollment && !base)) return base;
+  return { ...(base || {}), kind: "activity", title: activityPresentation.value.title, sub: activityPresentation.value.hint, trips: !!s.value.myEnrollment, share: !activityPresentation.value.closed };
+});
 const priceDock = computed(() => dockPrice(s.value));
-const showEnroll = computed(() => canShowEnroll(s.value));
+const showEnroll = computed(() => canShowEnroll(s.value) && !s.value?.completedAt && !["finished", "completed", "ended"].includes(s.value?.status));
 const showAfter = computed(() => !!(s.value?.completedAt && s.value?.myEnrollment?.status === "joined"));
 const ctaText = computed(() => enrollCta(s.value));
-const kindTag = computed(() => activityKindOf(s.value)?.label || "");
+const kindInfo = computed(() => activityKindOf(s.value));
+const kindTag = computed(() => kindInfo.value?.label || "");
 const tabItems = computed(() => [
   { id: "trip", label: isActivity.value ? "本局" : "本团" },
   { id: "route", label: isActivity.value ? "活动介绍" : "线路" },
@@ -550,7 +600,7 @@ const tabItems = computed(() => [
 const activityInfo = computed(() => activityDetails(s.value));
 const activityIntro = computed(() => activityBody(s.value));
 const activityIsOver = computed(() => isActivity.value && activityEnded(s.value));
-const storyRoute = computed(() => routeDetail.value || s.value?.route || {});
+const storyRoute = computed(() => isActivity.value ? {} : routeDetail.value || s.value?.route || {});
 const sellLine = computed(() => {
   const route = storyRoute.value;
   return route.subtitle || (route.highlights || [])[0] || "";
@@ -647,6 +697,15 @@ const enrollHref = computed(() => {
   const s = q.toString();
   return "/m/enroll/" + (route.params.id || "") + (s ? "?" + s : "");
 });
+function goEnroll() {
+  const row = s.value;
+  if (!canShowEnroll(row) || row.completedAt || ["finished", "completed", "ended"].includes(row.status)) {
+    msg.value = row?.channel === "activity" && activityEnded(row) ? "本次活动已关闭报名" : "本次行程暂不可报名";
+    load();
+    return;
+  }
+  router.push(enrollHref.value);
+}
 const photoEnrollHref = computed(() => {
   const q = new URLSearchParams();
   if (route.query.ref) q.set("ref", String(route.query.ref));
@@ -710,7 +769,7 @@ const seatHint = computed(() => {
 const statusTag = computed(() => {
   if (!s.value) return "";
   if (s.value.status === "cancelled") return scheduleStatusText("cancelled");
-  if (isActivity.value) return isFree.value ? "免费局" : kindTag.value || "同城局";
+  if (isActivity.value) return activityPresentation.value.title;
   if (s.value.guaranteed || s.value.status === "confirmed") return "已成团";
   return scheduleStatusText(s.value.status) || "招募中";
 });
@@ -804,7 +863,7 @@ async function load() {
   } catch {
     /* ignore */
   }
-  if (s.value.routeId) {
+  if (s.value.routeId && !isActivity.value) {
     try {
       routeDetail.value = (await http.get("/routes/" + s.value.routeId)).data;
     } catch {
@@ -1118,16 +1177,18 @@ async function expandLimit(body) {
 }
 
 async function dissolve() {
+  if (dissolving.value) return;
+  if (!canDissolveSchedule(s.value)) { showDissolve.value = false; await load(); return; }
   dissolveErr.value = "";
   if (!reason.value.trim()) {
-    dissolveErr.value = "请填写解散理由";
+    dissolveErr.value = isActivity.value ? "请填写取消原因" : "请填写解散理由";
     return;
   }
   dissolving.value = true;
   try {
     const res = await http.post(`/schedules/${s.value.id}/dissolve`, { reason: reason.value.trim() });
     showDissolve.value = false;
-    msg.value = `已解散，取消 ${res.data.cancelled} 人，退款 ${res.data.refunded} 人；已记录待发送通知 ${res.data.smsRecordCount || 0} 条，短信尚未接入`;
+    msg.value = `${isActivity.value ? '活动已取消' : '已解散'}，已取消 ${Number(res.data.cancelled || 0)} 人的报名` + (Number(res.data.refunded) > 0 ? `，已为 ${res.data.refunded} 人处理退款，请留意原支付渠道。` : '。');
     await load();
   } catch (e) {
     dissolveErr.value = e.message;
@@ -1135,6 +1196,13 @@ async function dissolve() {
     dissolving.value = false;
   }
 }
+function openDissolve() {
+  if (!canDissolveSchedule(s.value)) { load(); return; }
+  dissolveErr.value = "";
+  showDissolve.value = true;
+  nextTick(() => document.querySelector('.dissolve-dialog')?.focus());
+}
+function closeDissolve() { if (!dissolving.value) showDissolve.value = false; }
 </script>
 
 
@@ -1150,4 +1218,75 @@ async function dissolve() {
 .activity-description-card dt { color:var(--muted); }
 .activity-description-card dd { margin:0; color:var(--ink); overflow-wrap:anywhere; }
 .activity-description-card > p { font-size:calc(13px * var(--ui-scale,1)); color:var(--ink); line-height:1.9; white-space:pre-wrap; }
+
+.trip-detail.is-activity { --city-purple:var(--pine,#5b3b8c); --city-soft:var(--soft,#f4eff9); padding-top:12px; color:var(--ink); }
+.is-activity .offer-card { margin:0 14px 14px !important; border-radius:20px !important; border:1px solid var(--line); box-shadow:none; background:var(--card,#fff); }
+.is-activity .offer-sheet { padding:18px; }
+.city-heading { display:flex; align-items:center; gap:15px; padding-bottom:17px; }
+.city-cover { width:88px; height:88px; flex:none; object-fit:cover; border-radius:15px; background:var(--city-soft); }
+.city-cover-fallback { display:grid; place-items:center; color:var(--city-purple); }
+.city-cover-fallback :deep(svg) { width:40px; height:40px; stroke-width:1.35; }
+.city-heading-copy { flex:1; min-width:0; }
+.city-kicker { color:var(--muted); font-size:10px; letter-spacing:1.5px; }
+.is-activity .city-heading .offer-title { font-size:calc(21px * var(--ui-scale,1)); margin:8px 0 9px; font-weight:650; line-height:1.5; color:var(--ink); overflow-wrap:anywhere; }
+.city-price { color:var(--city-purple); font-size:17px; font-weight:650; }
+.city-price small { margin-left:4px; font-size:11px; font-weight:400; }
+.city-status { border-top:1px solid var(--line); padding:15px 0 8px; }
+.city-status strong { display:inline-block; font-size:12px; color:var(--city-purple); background:var(--city-soft); padding:5px 11px; border-radius:7px; }
+.city-status p { margin:8px 0; color:var(--muted); font-size:12px; line-height:1.8; }
+.city-manage { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:14px; border-top:1px solid var(--line); font-size:11px; color:var(--muted); }
+.is-activity .city-manage .btn { flex:none; margin:0; padding:7px 13px; font-size:12px; }
+.is-activity .fact-list { margin-top:0; }
+.is-activity .fact-row { gap:12px; margin:0; padding:8px 0; align-items:flex-start; font-size:13px; line-height:1.75; }
+.is-activity .fact-k { flex:none; width:31px; color:var(--muted); font-weight:400; }
+.is-activity .fact-v { color:var(--ink); font-weight:500; min-width:0; overflow-wrap:anywhere; }
+.is-activity .nav-link { color:var(--city-purple); }
+.is-activity .offer-quote { padding:9px 12px; margin:7px 0 12px; background:var(--city-soft); color:var(--city-purple); font-size:12px; }
+.is-activity .offer-quote b { color:var(--city-purple); }
+.is-activity .activity-detail-brief { padding:14px; gap:12px; margin:10px 0; background:var(--bg); border-color:var(--line); }
+.is-activity :deep(.goods-tabs) { margin:0 14px; top:0; background:var(--bg); border-bottom:1px solid var(--line); }
+.is-activity :deep(.goods-tabs button) { height:46px; font-size:14px; color:var(--muted); }
+.is-activity :deep(.goods-tabs button.on) { color:var(--city-purple); font-weight:600; }
+.is-activity :deep(.goods-tabs button.on::after) { background:var(--city-purple); height:3px; width:24px; bottom:3px; }
+.is-activity .trip-pane { padding-top:16px; }
+.is-activity .trip-pane .card { border:1px solid var(--line); border-radius:18px; box-shadow:none; }
+.is-activity .card .pad { padding:18px; }
+.is-activity .h2 { font-size:16px; margin:24px 4px 12px; font-weight:600; color:var(--ink); }
+.is-activity .ticket-card { background:var(--city-soft); border:1px solid var(--line); border-radius:14px; padding:16px; color:var(--city-purple); }
+.is-activity .ticket-card > strong { font-size:17px; font-weight:600; }
+.is-activity .ticket-card .muted { color:var(--muted); font-size:12px; line-height:1.8; }
+.is-activity .ticket-actions { display:flex; gap:10px; margin-top:14px; }
+.is-activity .ticket-actions .btn { flex:1; min-width:0; padding:10px 8px; border-radius:24px; font-size:13px; }
+.is-activity .btn { background:var(--city-purple); border:1px solid var(--city-purple); color:#fff; box-shadow:none; border-radius:24px; font-size:13px; }
+.is-activity .btn.ghost { background:var(--card,#fff); border-color:var(--line); color:var(--city-purple); }
+.city-progress-title { display:flex; justify-content:space-between; color:var(--muted); font-size:12px; margin:18px 0 10px; }
+.city-progress-title strong { color:var(--city-purple); font-size:13px; font-weight:600; }
+.is-activity .progress { height:5px; border-radius:5px; margin:0 0 9px; background:var(--city-soft); }
+.is-activity .progress i { background:#aa8bc6; }
+.is-activity .row .muted { font-size:11px; }
+.city-group-heading { font-size:15px; color:var(--ink); font-weight:600; }
+.city-group-heading span { display:block; font-size:11px; margin-top:7px; color:var(--muted); font-weight:400; }
+.city-group-content { display:flex; gap:16px; align-items:center; margin-top:17px; font-size:13px; line-height:1.8; }
+.city-group-content > a { flex:none; }
+.city-group-qr { display:block; width:120px; height:120px; object-fit:contain; border-radius:10px; background:#fff; }
+.city-group-content > div { flex:1; min-width:0; overflow-wrap:anywhere; }
+.city-group-content p { margin:0 0 10px; }
+.city-group-content small { display:block; margin-top:8px; color:var(--muted); font-size:11px; }
+.city-group-empty { background:var(--city-soft); padding:13px; border-radius:10px; font-size:12px; line-height:1.8; color:var(--muted); margin:15px 0 0; }
+.city-rules h2 { font-size:16px; font-weight:600; margin:0 0 14px; }
+.city-rules p { font-size:13px; color:var(--muted); line-height:1.9; }
+.is-activity .enroll-dock { border-top:1px solid var(--line); background:var(--card,#fff); box-shadow:none; padding:12px 18px calc(12px + env(safe-area-inset-bottom)); }
+.is-activity .enroll-dock .enroll-price b { color:var(--city-purple); font-size:18px; }
+.is-activity .enroll-dock .btn { min-width:130px; }
+.is-activity .enroll-dock > p { color:var(--city-purple); font-size:13px; }
+.city-group-empty button.nav-link { border:0; padding:0 0 0 8px; background:none; font:inherit; cursor:pointer; }
+.dissolve-mask { position:fixed; inset:0; z-index:2000; display:flex; align-items:center; justify-content:center; box-sizing:border-box; padding:20px; background:rgba(29,21,39,.5); }
+.dissolve-dialog { width:100%; max-width:420px; max-height:80vh; overflow-y:auto; box-sizing:border-box; border-radius:20px; padding:24px; background:var(--card,#fff); color:var(--ink,#29232f); outline:none; }
+.dissolve-dialog h2 { margin:0; font-size:19px; }
+.dissolve-dialog p { margin:14px 0; color:var(--muted,#8d8198); font-size:13px; line-height:1.8; }
+.dissolve-dialog label { display:block; font-size:13px; margin-bottom:8px; }
+.dissolve-dialog textarea { width:100%; box-sizing:border-box; resize:vertical; min-height:96px; }
+.dissolve-dialog p.dissolve-error { color:#ac536a; }
+.dissolve-actions { display:flex; gap:10px; margin-top:20px; }
+.dissolve-actions .btn { flex:1; min-width:0; margin:0; padding:12px 8px; border-radius:24px; font-size:13px; }
 </style>

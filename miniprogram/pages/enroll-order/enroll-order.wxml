@@ -1,77 +1,21 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<load-row wx:if="{{!order}}" />
-<block wx:if="{{order}}">
-  <view class="od-hero">
-    <view class="od-hero-title">{{tr.t(badge, lang)}}</view>
-    <view class="od-hero-sub">{{tr.t(hint, lang)}}</view>
-  </view>
-  <view class="od-card od-block" wx:if="{{order.traveler_name || place}}">
-    <view class="od-who">{{tr.t(order.traveler_name || '出行人', lang)}} {{phone}}</view>
-    <view class="od-spec">{{tr.t(place, lang)}}</view>
-  </view>
-  <view class="od-card">
-    <view class="od-head">
-      <view class="od-shop">{{tr.t(shop, lang)}}</view>
-      <view wx:if="{{order.schedule_id}}" class="od-jump" bindtap="goSchedule">{{tr.t('团详情', lang)}} ›</view>
+<view class="enroll-detail {{dark?'is-dark':''}}">
+  <load-row wx:if="{{!order && !err}}" />
+  <block wx:if="{{order}}">
+    <view class="ed-status state-{{stateKey}}"><view class="ed-state-mark" aria-hidden="true"><view></view></view><view class="ed-status-copy"><view class="ed-eyebrow">{{tr.t(activity?'同城活动报名':'出行订单',lang)}}</view><view class="ed-status-title">{{tr.t(badge,lang)}}</view><view class="ed-status-hint">{{tr.t(hint,lang)}}</view></view></view>
+    <view class="ed-card ed-event" bindtap="goSchedule" role="button" aria-label="{{tr.t(activity?'查看本场活动':'查看本次团期',lang)}}">
+      <view class="ed-section-head"><text class="ed-tag">{{tr.t(shop,lang)}}</text><view class="ed-link">{{tr.t(activity?'本场活动':'本次团期',lang)}} <text aria-hidden="true">›</text></view></view>
+      <view class="ed-event-main"><image wx:if="{{order.cover}}" src="{{order.cover}}" mode="aspectFill" binderror="coverError" /><view wx:else class="ed-placeholder icon-{{icon}}" aria-hidden="true"><view></view><view></view><text>{{icon=='cards'?'♦':icon=='movie'?'▷':icon=='club'?'＋':icon=='run'?'↗':''}}</text></view><view class="ed-event-title"><view>{{tr.t(order.title,lang)}}</view><text>{{tr.t(activity?'一场相遇，一起赴约':'这一程，与同频的人同行',lang)}}</text></view></view>
+      <view class="ed-arrangement"><view><text class="ed-field-label">{{tr.t(activity?'活动时间':'出发时间',lang)}}</text><text class="ed-field-value">{{date || tr.t('时间待确认',lang)}}</text></view><view><text class="ed-field-label">{{tr.t(activity?'活动地点':'集合地点',lang)}}</text><text class="ed-field-value">{{tr.t(place,lang)}}</text></view><view wx:if="{{!activity && order.seat_no}}"><text class="ed-field-label">{{tr.t('座位',lang)}}</text><text class="ed-field-value">{{order.seat_no}}</text></view></view>
     </view>
-    <view class="od-goods" bindtap="goSchedule">
-      <image wx:if="{{order.cover}}" src="{{order.cover}}" mode="aspectFill" />
-      <view wx:else class="od-ph"></view>
-      <view class="od-main">
-        <view class="od-title">{{tr.t(order.title, lang)}}</view>
-        <view class="od-spec">{{tr.t(spec, lang)}}</view>
-        <view class="od-spec" wx:if="{{order.seat_no}}">{{order.seat_no}} {{tr.t('座', lang)}}</view>
-      </view>
-      <view class="od-price">
-        <view>{{tr.t(money, lang)}}</view>
-        <view class="od-qty">{{tr.t('共1人', lang)}}</view>
-      </view>
-    </view>
-    <view class="od-help" wx:if="{{helpers}}">{{tr.t('帮忙支付', lang)}} {{helpers}}</view>
-  </view>
-  <view class="od-card od-wish-entry" wx:if="{{order.canLinkWish || order.wishToken}}" bindtap="goWish" role="button" aria-label="{{tr.t(order.wishToken ? '查看旅行心意' : '发起旅行心愿', lang)}}"><view class="od-wish-art" aria-hidden="true"></view><view><view class="od-wish-title">{{tr.t(order.wishToken ? '旅行心意，好好收着' : '让朋友的心意，陪你出发', lang)}}</view><view class="od-wish-note">{{tr.t(order.wishToken ? '查看这笔订单收到的心意与祝福' : '发起旅行心愿，代付或分摊真实团费', lang)}}</view></view><text aria-hidden="true">→</text></view>
-  <view class="od-card od-lines">
-    <view class="od-line" wx:for="{{lines}}" wx:key="label">
-      <text>{{tr.t(item.label, lang)}}</text>
-      <text class="od-val">{{tr.t(item.text, lang)}}</text>
-    </view>
-    <view class="od-line is-due">
-      <text>{{tr.t('应付', lang)}}</text>
-      <text class="od-val">{{tr.t(money, lang)}}</text>
-    </view>
-  </view>
-  <view class="od-card od-lines">
-    <view class="od-line">
-      <text>{{tr.t('订单编号', lang)}}</text>
-      <text class="od-val od-no">{{orderNo}} <text class="od-copy" catchtap="copyNo">{{tr.t('复制', lang)}}</text></text>
-    </view>
-    <view class="od-line" wx:if="{{placed}}">
-      <text>{{tr.t('下单时间', lang)}}</text>
-      <text class="od-val">{{placed}}</text>
-    </view>
-    <view class="od-line">
-      <text>{{tr.t('支付方式', lang)}}</text>
-      <text class="od-val">{{tr.t(payMethod, lang)}}</text>
-    </view>
-    <view class="od-line" wx:if="{{order.start_date}}">
-      <text>{{tr.t('出发日期', lang)}}</text>
-      <text class="od-val">{{order.start_date}}</text>
-    </view>
-  </view>
-  <view class="od-card od-block" wx:if="{{reviewOpen}}">
-    <view class="star-pick">
-      <text wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="star {{rating >= n ? 'on' : ''}}" catchtap="pickStar" data-n="{{n}}">★</text>
-    </view>
-    <textarea class="input" placeholder="{{tr.t('这次出行怎么样（选填）', lang)}}" value="{{content}}" bindinput="setContent" />
-    <view class="btn" bindtap="submitReview">{{tr.t('提交评价', lang)}}</view>
-  </view>
-  <view class="od-dock" wx:if="{{order.canCancel || order.canPay || canReview || (order.canAfter && order.completed) || again}}">
-    <view wx:if="{{order.canCancel}}" class="od-btn" bindtap="cancel">{{tr.t(order.status=='waitlist'?'取消候补':'取消报名', lang)}}</view>
-    <view wx:if="{{order.canPay}}" class="od-btn solid" bindtap="goPay">{{tr.t('去支付', lang)}}</view>
-    <view wx:if="{{canReview && !reviewOpen}}" class="od-btn solid" bindtap="openReview">{{tr.t('去评价', lang)}}</view>
-    <view wx:if="{{order.canAfter && order.completed}}" class="od-btn" bindtap="goAfter">{{tr.t('评价 / 评选', lang)}}</view>
-    <view wx:if="{{again}}" class="od-btn {{canReview ? '' : 'solid'}}" bindtap="goRoute">{{tr.t('再次报名', lang)}}</view>
-  </view>
-</block>
-<view class="pad" wx:if="{{err}}" style="color:#bc4749">{{tr.t(err, lang)}}</view>
+    <view class="ed-card ed-person"><view class="ed-section-title">{{tr.t(activity?'参与人':'出行人',lang)}}<text>{{tr.t('共1人',lang)}}</text></view><view class="ed-person-row"><view class="ed-person-mark" aria-hidden="true"><view></view></view><view><view class="ed-person-name">{{tr.t(order.traveler_name || '出行人',lang)}}</view><text wx:if="{{phone}}">{{phone}}</text></view></view></view>
+    <view class="ed-card ed-fees"><view class="ed-section-title">{{tr.t('费用明细',lang)}}</view><view class="ed-row" wx:for="{{lines}}" wx:key="label"><text>{{tr.t(item.label,lang)}}</text><text>{{tr.t(item.text,lang)}}</text></view><view wx:if="{{order.paidAmount > 0 && order.canPay}}" class="ed-row"><text>{{tr.t('已支付',lang)}}</text><text>¥{{order.paidAmount}}</text></view><view class="ed-total"><text>{{tr.t(amountLabel,lang)}}</text><view>{{amountText}}</view></view><view wx:if="{{helpers}}" class="ed-helper">{{tr.t('帮忙支付',lang)}} · {{helpers}}</view></view>
+    <view wx:if="{{order.canLinkWish || order.wishToken}}" class="ed-wish" bindtap="goWish" role="button"><view class="ed-wish-art" aria-hidden="true"></view><view><view>{{tr.t(order.wishToken?'旅行心意，好好收着':'让朋友的心意，陪你出发',lang)}}</view><text>{{tr.t(order.wishToken?'查看这笔订单收到的心意与祝福':'发起旅行心愿，代付或分摊真实团费',lang)}}</text></view><text aria-hidden="true">›</text></view>
+    <view class="ed-card ed-info"><view class="ed-section-title">{{tr.t('订单信息',lang)}}</view><view class="ed-row"><text>{{tr.t('订单编号',lang)}}</text><view class="ed-order-no"><text>{{orderNo}}</text><button bindtap="copyNo">{{tr.t('复制',lang)}}</button></view></view><view wx:if="{{placed}}" class="ed-row"><text>{{tr.t('下单时间',lang)}}</text><text>{{placed}}</text></view><view class="ed-row"><text>{{tr.t('支付方式',lang)}}</text><text>{{tr.t(payMethod,lang)}}</text></view></view>
+    <view wx:if="{{reviewOpen}}" class="ed-card ed-review"><view class="ed-section-title">{{tr.t('记录这次同行',lang)}}</view><view class="ed-stars"><button wx:for="{{[1,2,3,4,5]}}" wx:for-item="n" wx:key="*this" class="{{rating>=n?'on':''}}" bindtap="pickStar" data-n="{{n}}" aria-label="{{n}}">★</button></view><textarea placeholder="{{tr.t('这次出行怎么样（选填）',lang)}}" value="{{content}}" bindinput="setContent" /><button class="ed-button primary" disabled="{{submitting}}" bindtap="submitReview">{{tr.t(submitting?'提交中…':'提交评价',lang)}}</button></view>
+    <view class="ed-record-note" wx:if="{{!order.canCancel && !order.canPay && !canReview && !again}}">{{tr.t('报名记录已为你保存',lang)}}</view>
+    <view class="ed-dock" wx:if="{{order.canCancel || order.canPay || (canReview && !reviewOpen) || (order.canAfter && order.completed) || again}}"><view class="ed-dock-content"><view wx:if="{{order.canPay}}" class="ed-dock-price"><text>{{tr.t('待支付',lang)}}</text><view>{{amountText}}</view></view><view class="ed-dock-actions"><button wx:if="{{order.canCancel}}" class="ed-button" disabled="{{cancelling}}" bindtap="cancel">{{tr.t(cancelling?'取消中…':order.status=='waitlist'?'取消候补':'取消报名',lang)}}</button><button wx:if="{{order.canPay}}" class="ed-button primary" bindtap="goPay">{{tr.t('去支付',lang)}}</button><button wx:if="{{canReview && !reviewOpen}}" class="ed-button primary" bindtap="openReview">{{tr.t('去评价',lang)}}</button><button wx:if="{{order.canAfter && order.completed}}" class="ed-button" bindtap="goAfter">{{tr.t('评价 / 评选',lang)}}</button><button wx:if="{{again}}" class="ed-button {{canReview?'':'primary'}}" bindtap="goRoute">{{tr.t('查看其他团期',lang)}}</button></view></view></view>
+  </block>
+  <view wx:if="{{err}}" class="ed-card ed-error"><view>{{tr.t(err,lang)}}</view><button class="ed-button" bindtap="load">{{tr.t('重新加载',lang)}}</button></view>
+</view>
