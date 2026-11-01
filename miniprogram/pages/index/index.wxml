@@ -1,52 +1,62 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
 <import src="../../templates/route-catalog.wxml" />
-<view class="brand-box {{textMode ? 'is-text-mode' : ''}}">
-  <swiper class="brand-hero" autoplay circular interval="6000" bindchange="onHeroChange">
-    <swiper-item wx:for="{{home.brand.slides}}" wx:key="title" bindtap="goSlide" data-id="{{item.routeId}}">
-      <image class="brand-img" src="{{item.url}}" mode="aspectFill" />
+<view class="home-page {{homeDark ? 'is-dark' : ''}} {{textMode ? 'is-text-mode' : ''}}">
+<view class="home-nav" style="padding-top:{{statusBarHeight}}px">
+  <view class="home-brand" style="height:{{navHeight}}px;padding-right:{{navRight}}px">
+    <image class="home-brand-logo" src="/images/home/brand-mark.png" mode="aspectFit" />
+    <view class="home-brand-copy"><view class="home-brand-name">{{tr.t('同行者众', lang)}}</view><view class="home-brand-en">{{tr.t('在山野，遇见爱', lang)}}</view></view>
+  </view>
+</view>
+<view class="brand-box">
+  <swiper class="brand-hero" current="{{heroIndex}}" autoplay circular interval="6000" bindchange="onHeroChange">
+    <swiper-item wx:for="{{heroSlides}}" wx:key="url" bindtap="goSlide" data-id="{{item.routeId}}">
+      <image wx:if="{{!item.imageBroken}}" class="brand-img" src="{{item.url}}" mode="aspectFill" binderror="onHeroError" data-index="{{index}}" />
     </swiper-item>
-    <swiper-item wx:if="{{!home.brand.slides.length}}"><image class="brand-img" src="{{mediaBase}}/covers/R01.jpg" mode="aspectFill" /></swiper-item>
   </swiper>
   <view class="hero-shade"></view>
   <view class="hero-side-fade"></view>
-  <view class="home-brand" style="padding-top:{{statusBarHeight + 12}}px">
-    <image class="home-brand-logo" src="{{mediaBase}}/logo.jpg" mode="aspectFit" />
-    <view><view class="home-brand-name">{{tr.t('同行者众', lang)}}</view><view class="home-brand-en">TOGETHER, INTO THE WILD</view></view>
-  </view>
-  <view class="brand-cap" bindtap="goCurrentSlide">
+  <view class="brand-cap">
     <view class="home-eyebrow">{{tr.t('离城市近一点 · 离自然更近一点', lang)}}</view>
-    <view class="home-kicker">{{tr.t('在山野，遇见爱', lang)}}</view>
+    <view class="home-kicker" aria-label="{{tr.t('在山野，遇见爱', lang)}}"><text>{{tr.t('在山野，', lang)}}</text><text>{{tr.t('遇见爱', lang)}}</text></view>
     <view class="home-lead">{{tr.t('和同频的人，一起出发。', lang)}}</view>
+    <view class="hero-discover" bindtap="discoverJourney" aria-role="button">{{tr.t('发现下一程', lang)}}<text aria-hidden="true">↗</text></view>
   </view>
-  <view class="hero-counter" wx:if="{{home.brand.slides.length}}">0{{heroIndex + 1}} <text>/ 0{{home.brand.slides.length}}</text></view>
+  <view class="hero-dots" wx:if="{{heroSlides.length > 1}}"><view wx:for="{{heroSlides}}" wx:key="url" class="hero-dot {{heroIndex == index ? 'selected' : ''}}" bindtap="selectHero" data-index="{{index}}" aria-role="button" aria-label="{{tr.t('切换风景', lang)}} {{index + 1}}"><view></view></view></view>
 </view>
 
 <view class="discovery-card">
-  <view class="search-card-top"><text class="departure-city">{{tr.t('北京出发', lang)}}</text><text class="search-card-hint">{{tr.t('下一站，去哪里', lang)}}</text></view>
-  <view class="search-input-row"><view class="search-line-icon"></view><input class="feed-search" placeholder="{{tr.t(searchHint, lang)}}" value="{{query}}" bindinput="onQuery" bindconfirm="explore" confirm-type="search" /></view>
-  <view class="search-context"><text>{{tr.t('周边短途', lang)}}</text><text>{{tr.t('高校跨校 · 跨学院', lang)}}</text><text>{{tr.t('企业团队', lang)}}</text></view>
-  <view class="btn search-cta" bindtap="explore">{{tr.t('发现我的下一程', lang)}}<text> →</text></view>
-  <view class="search-trust">{{tr.t('正规线路 · 透明费用 · 专业领队', lang)}}</view>
+  <view class="search-card-top"><text class="search-caption">{{tr.t('下一程，想去哪里', lang)}}</text><text class="departure-city">{{tr.t('从北京出发', lang)}}</text></view>
+  <view class="search-input-row"><view class="search-line-icon" aria-hidden="true"></view><input class="feed-search" placeholder="{{tr.t(searchHint, lang)}}" value="{{query}}" bindinput="onQuery" bindconfirm="discoverTrips" confirm-type="search" /></view>
+  <view class="search-date" bindtap="openDepartureDates" aria-role="button" aria-label="{{tr.t('选择出发日期', lang)}}"><view class="departure-calendar-icon" aria-hidden="true"></view><text>{{tr.t(departurePreset == 'any' ? '出发日期不限' : departureLabel, lang)}}</text><view class="departure-down" aria-hidden="true"></view></view>
+  <view class="search-cta" bindtap="discoverTrips" aria-role="button">{{tr.t('寻找我的山野', lang)}}<text aria-hidden="true">→</text></view>
+  <view class="search-hot"><text class="search-hot-label">{{tr.t('热门', lang)}}</text><text wx:for="{{hotWords}}" wx:key="*this" bindtap="searchDestination" data-keyword="{{item}}">{{tr.t(item, lang)}}</text></view>
 </view>
 
 <view class="discovery-ai-entry" bindtap="goDiscover" aria-label="{{tr.t('说说你想怎么玩',lang)}}">
   <view class="discovery-ai-mark" aria-hidden="true"><view></view><view></view></view>
-  <view class="discovery-ai-copy"><view>{{tr.t('还没想好？说说你想怎么玩',lang)}}</view><text>{{tr.t('把时间、预算和偏好变成真实团期',lang)}}</text></view>
+  <view class="discovery-ai-copy"><view>{{tr.t('说说你想怎么玩',lang)}}</view><text>{{tr.t('时间、预算和偏好，一起说清楚',lang)}}</text></view>
   <text class="discovery-ai-arrow" aria-hidden="true">→</text>
 </view>
 
 <view class="quick-entries">
-  <view class="quick-entry" bindtap="showRoutes"><view class="quick-icon route"><view></view></view><text>{{tr.t('精选线路', lang)}}</text><text class="quick-note">{{tr.t('山野灵感', lang)}}</text></view>
-  <view class="quick-entry" bindtap="quickHost" data-kind="campus"><view class="quick-icon campus"><view></view></view><text>{{tr.t('高校同行', lang)}}</text><text class="quick-note">{{tr.t('发现跨校旅程', lang)}}</text></view>
-  <view class="quick-entry" bindtap="quickHost" data-kind="company"><view class="quick-icon company"><view></view></view><text>{{tr.t('企业团建', lang)}}</text><text class="quick-note">{{tr.t('寻找团队出行', lang)}}</text></view>
-  <view class="quick-entry" bindtap="goGuides"><view class="quick-icon companions"><view></view><view class="companion-spark"></view></view><text>{{tr.t('专业领队', lang)}}</text><text class="quick-note">{{tr.t('认识带路的人', lang)}}</text></view>
+  <view class="quick-entry" bindtap="showRoutes"><view class="quick-icon route"><image src="/images/home/mountain.svg" mode="aspectFit" /></view><text>{{tr.t('精选线路', lang)}}</text><text class="quick-note">{{tr.t('山野灵感', lang)}}</text></view>
+  <view class="quick-entry" bindtap="quickHost" data-kind="campus"><view class="quick-icon campus"><image src="/images/home/school.svg" mode="aspectFit" /></view><text>{{tr.t('高校同行', lang)}}</text><text class="quick-note">{{tr.t('发现跨校旅程', lang)}}</text></view>
+  <view class="quick-entry" bindtap="quickHost" data-kind="company"><view class="quick-icon company"><image src="/images/home/building.svg" mode="aspectFit" /></view><text>{{tr.t('企业团建', lang)}}</text><text class="quick-note">{{tr.t('寻找团队出行', lang)}}</text></view>
+  <view class="quick-entry" bindtap="goGuides"><view class="quick-icon companions"><image src="/images/home/people.svg" mode="aspectFit" /></view><text>{{tr.t('专业领队', lang)}}</text><text class="quick-note">{{tr.t('认识带路的人', lang)}}</text></view>
 </view>
 
-<view class="trip-hint" wx:if="{{upcoming}}" bindtap="goUpcoming">
-  <view><view class="muted">{{tr.t('下一段旅程，已在路上', lang)}}</view><view class="trip-hint-title">{{tr.t(upcoming.startDate, lang)}} · {{tr.t(upcoming.title, lang)}}</view></view>
-  <text class="trip-hint-arrow">›</text>
+<view class="destination-section">
+  <view class="home-section-heading"><view><view class="section-title">{{tr.t('走出日常，自然会有答案', lang)}}</view></view><text class="destination-caption" bindtap="showRoutes">{{tr.t('更多灵感', lang)}} ↗</text></view>
+  <view class="destination-grid">
+    <view class="destination-card" wx:for="{{destinations}}" wx:key="keyword" bindtap="searchDestination" data-keyword="{{item.keyword}}">
+      <image class="destination-photo" src="{{item.photo}}" mode="aspectFill" lazy-load />
+      <view class="destination-shade"></view><view class="destination-tag">{{tr.t(item.tag, lang)}}</view>
+      <view class="destination-copy"><view class="destination-name">{{tr.t(item.name, lang)}}</view><view class="destination-en">{{item.en}}</view><view class="destination-note">{{tr.t(item.copy, lang)}}</view></view>
+    </view>
+  </view>
 </view>
+
 <view class="campus-card {{campusDark ? 'is-dark' : ''}}" bindtap="goStudent" hover-class="campus-pressed" aria-label="{{tr.t('校园认证', lang)}}">
   <view class="campus-ridge" aria-hidden="true"></view>
   <view class="campus-pass" aria-hidden="true">
@@ -59,13 +69,17 @@
     <view class="campus-card-footer"><text class="campus-note">{{tr.t('认证校园身份，发现专属旅程', lang)}}</text><view class="campus-cta">{{tr.t(campusAction, lang)}}<text>↗</text></view></view>
   </view>
 </view>
-<view class="explore-heading" id="explore"><view><view class="section-kicker">FIND YOUR NEXT JOURNEY</view><view class="section-title">{{tr.t('总有一程，心之所向', lang)}}</view></view></view>
-<view class="home-seg">
+<view class="trip-hint" wx:if="{{upcoming}}" bindtap="goUpcoming">
+  <view><view class="muted">{{tr.t('下一段旅程，已在路上', lang)}}</view><view class="trip-hint-title">{{tr.t(upcoming.startDate, lang)}} · {{tr.t(upcoming.title, lang)}}</view></view>
+  <text class="trip-hint-arrow">›</text>
+</view>
+<view class="home-seg" id="explore">
   <view class="home-seg-btn {{view=='trips'?'on':''}}" bindtap="setView" data-view="trips">{{tr.t('即将出发', lang)}}</view>
   <view class="home-seg-btn {{view=='routes'?'on':''}}" bindtap="setView" data-view="routes">{{tr.t('精选线路', lang)}}</view>
 </view>
 <block wx:if="{{view=='trips'}}">
 <view class="departure-time-bar {{campusDark?'is-dark':''}}" aria-label="{{tr.t('按出发时间选团',lang)}}">
+  <view class="departure-bar-heading"><view>{{tr.t('什么时候出发',lang)}}</view><text>{{tr.t('选个日子，去透透气',lang)}}</text></view>
   <scroll-view scroll-x enhanced show-scrollbar="{{false}}" class="departure-shortcut-scroll"><view class="departure-shortcut-row">
     <button class="departure-time-chip {{departurePreset=='any'?'on':''}}" bindtap="setDeparturePreset" data-key="any" aria-pressed="{{departurePreset=='any'}}">{{tr.t('不限日期',lang)}}</button>
     <button class="departure-time-chip {{departurePreset=='weekend'?'on':''}}" bindtap="setDeparturePreset" data-key="weekend" aria-pressed="{{departurePreset=='weekend'}}">{{tr.t('本周末',lang)}}</button>
@@ -116,13 +130,6 @@
   <view class="picked-chip" wx:for="{{picked}}" wx:key="key" bindtap="clearPick" data-key="{{item.key}}">{{tr.t(item.label, lang)}} ×</view>
 </view>
 
-<view class="publish-entry" bindtap="goPublish">
-  <view class="publish-entry-copy">
-    <view class="publish-entry-title">{{tr.t('这一程，由你发起', lang)}}</view>
-    <view class="publish-entry-sub">{{tr.t('个人 · 企业 · 高校，一站式发团', lang)}}</view>
-  </view>
-  <view class="publish-entry-go">{{tr.t('发起组团', lang)}}</view>
-</view>
 <view class="feed-card" wx:for="{{groups}}" wx:key="id" bindtap="goGroup" data-id="{{item.id}}">
   <view class="feed-cover">
     <image wx:if="{{item.cover}}" src="{{item.cover}}" mode="aspectFill" lazy-load />
@@ -131,7 +138,8 @@
   </view>
   <view class="feed-body">
     <view class="feed-when">{{tr.t(item.feedWhen, lang)}} · {{tr.t(item.city, lang)}}</view>
-    <view class="feed-title"><view class="trip-kind {{item.kind || 'individual'}}"><view class="trip-kind-ico"></view>{{tr.t(item.kindLabel || '个人', lang)}}</view> <text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{tr.t(item.privateLabel || '口令团', lang)}}</text> {{tr.t(item.route.title, lang)}}</view>
+    <view class="feed-title">{{tr.t(item.route.title, lang)}}</view>
+    <view class="feed-badges"><view class="trip-kind {{item.kind || 'individual'}}"><view class="trip-kind-ico"></view>{{tr.t(item.kindLabel || '个人', lang)}}</view> <text class="offer-chip inline" wx:if="{{item.private}}" style="background:#4c1d95">{{tr.t(item.privateLabel || '口令团', lang)}}</text></view>
     <view class="feed-host">{{tr.t(item.host, lang)}}</view>
     <view class="feed-tagline" wx:if="{{item.tagline}}">{{tr.t(item.tagline, lang)}}</view>
     <view class="feed-price" wx:if="{{item.free}}">{{tr.t('免费', lang)}}</view>
@@ -179,7 +187,18 @@
     <button class="rt-apply" bindtap="goRouteApply"><view><view class="rt-apply-title">{{tr.t('有一条私藏路线？', lang)}}</view><view class="rt-apply-note">{{tr.t('申请收录，把喜欢的山野分享给同行。', lang)}}</view></view><text class="rt-apply-arrow" aria-hidden="true">↗</text></button>
   </view>
 </block>
-<view class="home-foot muted" bindtap="goOfficial">{{tr.t('客服与规则', lang)}}</view>
+<view class="organizer-section">
+  <view class="home-section-heading"><view><view class="section-title">{{tr.t('和熟悉的人，去新的地方', lang)}}</view></view></view>
+  <view class="organizer-grid">
+    <view class="organizer-link" bindtap="goPublish" data-kind="campus"><view class="organizer-icon campus"><image src="/images/home/school.svg" mode="aspectFit" /></view><view class="organizer-copy"><view>{{tr.t('高校出行', lang)}}</view><text>{{tr.t('跨校同行，一起看世界', lang)}}</text></view><text class="organizer-arrow" aria-hidden="true">›</text></view>
+    <view class="organizer-link" bindtap="goPublish" data-kind="company"><view class="organizer-icon company"><image src="/images/home/building.svg" mode="aspectFit" /></view><view class="organizer-copy"><view>{{tr.t('企业团建', lang)}}</view><text>{{tr.t('让团队，在山野相聚', lang)}}</text></view><text class="organizer-arrow" aria-hidden="true">›</text></view>
+  </view>
+  <view class="publish-entry" bindtap="goPublish">
+    <view class="publish-entry-copy"><view class="publish-entry-title">{{tr.t('这一程，由你发起', lang)}}</view><view class="publish-entry-sub">{{tr.t('个人 · 企业 · 高校，一站式发团', lang)}}</view></view>
+    <view class="publish-entry-go">{{tr.t('创建行程', lang)}}<text aria-hidden="true">↗</text></view>
+  </view>
+</view>
+<view class="home-foot" bindtap="goOfficial">{{tr.t('客服与规则', lang)}}<text aria-hidden="true"> ↗</text></view>
 
 <view wx:if="{{departureSheet}}" class="departure-mask {{campusDark?'is-dark':''}}" bindtap="closeDepartureDates" catchtouchmove="departureNoop">
   <view class="departure-sheet" catchtap="departureNoop" aria-role="dialog" aria-label="{{tr.t('选择出发日期',lang)}}">
@@ -201,3 +220,4 @@
   </view>
 </view>
 <view class="tab-pad"></view>
+</view>

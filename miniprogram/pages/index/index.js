@@ -1,7 +1,7 @@
 const { request } = require("../../utils/request");
 const { isDark } = require("../../utils/appearance");
 const { OFFER_TYPES } = require("../../utils/offer");
-const { detailUrl, normalizeLegacyMedia } = require("../../utils/media");
+const { absMedia, detailUrl, normalizeLegacyMedia, withAbsSlides } = require("../../utils/media");
 const { decorateFeed } = require("../../utils/feed-card");
 const { cycleSort, hostFacets, processFeed, sortLabel } = require("../../utils/feed-list");
 const { loadRouteCatalog } = require("../../utils/route-catalog");
@@ -9,6 +9,16 @@ const { ROUTE_MODES, readRouteMode, saveRouteMode } = require("../../utils/route
 const { chinaDay, departureMonths, availableDepartures, buildDepartureMonth, matchesDepartureTime } = require("../../utils/departure-dates");
 function asList(rows) {
   return Array.isArray(rows) && rows.length ? rows : [];
+}
+const HERO_PHOTOS = ["mutianyu_06", "wuling_07", "beidaihe"].map((name) => absMedia("/static/photos/" + name + ".jpg"));
+const DESTINATIONS = [
+  { keyword: "长城", name: "在长城，追一场山风", en: "WALK INTO THE WILD", tag: "山脊漫步", copy: "把辽阔，装进行程", photo: absMedia("/static/photos/mutianyu.jpg") },
+  { keyword: "山", name: "山深处，有好风景", en: "FIND YOUR OWN PACE", tag: "山野徒步", copy: "慢下来，听山野说话", photo: absMedia("/static/photos/wuling_07.jpg") },
+  { keyword: "海", name: "去海边，等风也等你", en: "MEET BY THE SEA", tag: "海岸出走", copy: "有些放松，只需一片海", photo: absMedia("/static/photos/beidaihe.jpg") },
+];
+function heroSlides(home) {
+  const slides = withAbsSlides(home && home.brand && home.brand.slides).filter((slide) => slide.url);
+  return slides.length ? slides : HERO_PHOTOS.map((url) => ({ url }));
 }
 function departureSelection(data, draft) {
   const mode = draft ? data.draftMode : "";
@@ -39,7 +49,13 @@ function departureLabel(data, draft) {
 Page({
   data: {
     heroIndex: 0,
+    heroSlides: heroSlides(),
+    destinations: DESTINATIONS,
+    hotWords: ["长城", "古北水镇", "徒步", "草原"],
     statusBarHeight: 24,
+    navHeight: 44,
+    navRight: 108,
+    homeDark: false,
     home: { brand: { kicker: "同行者众", lead: "在山野，遇见爱", slides: [] }, cities: [], tags: [], festivals: [], months: [] },
     groups: [],
     allSchedules: [],
@@ -97,7 +113,14 @@ Page({
   onLoad() {
     try {
       const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
-      this.setData({ statusBarHeight: info.statusBarHeight || 24 });
+      const statusBarHeight = info.statusBarHeight || 24;
+      const capsule = wx.getMenuButtonBoundingClientRect ? wx.getMenuButtonBoundingClientRect() : null;
+      const validCapsule = capsule && capsule.height > 0 && capsule.top >= statusBarHeight;
+      this.setData({
+        statusBarHeight,
+        navHeight: validCapsule ? (capsule.top - statusBarHeight) * 2 + capsule.height : 44,
+        navRight: validCapsule && info.windowWidth > capsule.left ? info.windowWidth - capsule.left + 12 : 108,
+      });
     } catch (e) {}
     const cached = normalizeLegacyMedia(wx.getStorageSync("bj_home_cache"));
     if (cached && cached.home) {
@@ -105,6 +128,7 @@ Page({
       this.setData({
         loading: false,
         home: cached.home,
+        heroSlides: heroSlides(cached.home),
         allSchedules,
       });
       this.applyGroups();
@@ -113,7 +137,7 @@ Page({
   },
   onShow() {
     this._routeUnloaded = false;
-    this.setData({ routeMode: readRouteMode(), routeDark: isDark() });
+    this.setData({ routeMode: readRouteMode(), routeDark: isDark(), homeDark: isDark() });
     this.applyGroups();
     const app = getApp();
     if (!app || !app.globalData) return;
@@ -176,6 +200,7 @@ Page({
     this.setDeparturePreset({ currentTarget: { dataset: { key: "any" } } });
   },
   openDepartureDates() {
+    if (this.data.view !== "trips") this.setView({ currentTarget: { dataset: { view: "trips" } } });
     this.applyGroups();
     const months = departureMonths();
     const selection = departureSelection(this.data);
@@ -259,6 +284,8 @@ Page({
       this.setData({
         loading: false,
         home,
+        heroSlides: heroSlides(home),
+        heroIndex: 0,
         allSchedules,
       });
       wx.setStorageSync("bj_home_cache", { home, schedules: allSchedules });
@@ -277,6 +304,26 @@ Page({
   },
   onUnload() { clearTimeout(this._searchTimer); this._routeUnloaded = true; this._routeRequestId = (this._routeRequestId || 0) + 1; },
   explore() { wx.pageScrollTo({ selector: "#explore", duration: 300 }); },
+  discoverTrips() {
+    clearTimeout(this._searchTimer);
+    if (this.data.view === "routes") this.loadRoutes();
+    else this.applyGroups();
+    this.explore();
+  },
+  discoverJourney() {
+    clearTimeout(this._searchTimer);
+    this.setView({ currentTarget: { dataset: { view: "trips" } } });
+    this.applyGroups();
+    this.explore();
+  },
+  searchDestination(e) {
+    const keyword = String(e.currentTarget.dataset.keyword || "").trim();
+    if (!keyword) return;
+    clearTimeout(this._searchTimer);
+    this.setData({ query: keyword, routeDays: 0, routeTag: "", tag: "" });
+    this.setView({ currentTarget: { dataset: { view: "routes" } } });
+    this.explore();
+  },
   showRoutes() {
     this.setView({ currentTarget: { dataset: { view: "routes" } } });
     this.explore();
@@ -462,13 +509,28 @@ Page({
   onHeroChange(e) {
     this.setData({ heroIndex: Number(e.detail.current) || 0 });
   },
+  selectHero(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    if (Number.isInteger(index) && index >= 0 && index < this.data.heroSlides.length) this.setData({ heroIndex: index });
+  },
+  onHeroError(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    const slides = this.data.heroSlides.slice();
+    const slide = slides[index];
+    if (!slide || slide.imageBroken) return;
+    const fallback = HERO_PHOTOS[index % HERO_PHOTOS.length];
+    slides[index] = slide.url !== fallback && !slide.fallbackUsed
+      ? { ...slide, url: fallback, fallbackUsed: true }
+      : { ...slide, imageBroken: true };
+    this.setData({ heroSlides: slides });
+  },
   goSlide(e) {
     const id = Number(e.currentTarget.dataset.id);
     if (!Number.isInteger(id) || id <= 0) return;
     wx.navigateTo({ url: detailUrl(id) });
   },
   goCurrentSlide() {
-    const slides = (this.data.home.brand && this.data.home.brand.slides) || [];
+    const slides = this.data.heroSlides;
     const slide = slides[this.data.heroIndex] || slides[0];
     const id = Number(slide && slide.routeId);
     if (!Number.isInteger(id) || id <= 0) return;

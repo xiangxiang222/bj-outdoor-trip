@@ -48,6 +48,7 @@ function pageHarness(pageName, options = {}) {
       previewImage(value) { calls.previews.push(value); },
       getStorageSync(key) { return storage.get(key); },
       setStorageSync(key, value) { storage.set(key, value); },
+      ...options.wx,
     },
     setTimeout,
     clearTimeout,
@@ -72,6 +73,81 @@ function studentHarness(options = {}) {
 }
 
 describe("native mini-program page behavior", () => {
+  it("uses the actual status bar and WeChat capsule to keep the home brand clear of system controls", () => {
+    const { page } = pageHarness("index", { wx: {
+      getWindowInfo: () => ({ statusBarHeight: 47, windowWidth: 390 }),
+      getMenuButtonBoundingClientRect: () => ({ top: 51, height: 32, left: 296 }),
+    } });
+    page.load = () => {};
+    page.onLoad();
+    assert.equal(page.data.statusBarHeight, 47);
+    assert.equal(page.data.navHeight, 40);
+    assert.equal(page.data.navRight, 106);
+
+    const invalid = pageHarness("index", { wx: {
+      getWindowInfo: () => ({ statusBarHeight: 24, windowWidth: 390 }),
+      getMenuButtonBoundingClientRect: () => ({ top: 0, height: 0, left: 0 }),
+    } }).page;
+    invalid.load = () => {};
+    invalid.onLoad();
+    assert.equal(invalid.data.navHeight, 44);
+    assert.equal(invalid.data.navRight, 108);
+  });
+
+  it("opens destination inspiration as a fresh route search and submits the current search immediately", () => {
+    const { page, calls } = pageHarness("index");
+    let routeLoads = 0;
+    page.loadRoutes = () => { routeLoads++; };
+    page.setData({ routeDays: "multi", routeTag: "亲子", tag: "亲子", query: "旧搜索" });
+    page.searchDestination({ currentTarget: { dataset: { keyword: "长城" } } });
+    assert.equal(page.data.view, "routes");
+    assert.equal(page.data.query, "长城");
+    assert.equal(page.data.routeDays, 0);
+    assert.equal(page.data.routeTag, "");
+    assert.equal(routeLoads, 1);
+    assert.equal(calls.scrolls.at(-1).selector, "#explore");
+    page.discoverTrips();
+    assert.equal(routeLoads, 2);
+  });
+
+  it("discovers trips without imposing a weekend and preserves a deliberately selected departure date", () => {
+    const { page, calls } = pageHarness("index");
+    page.setData({ view: "routes" });
+    page.discoverJourney();
+    assert.equal(page.data.view, "trips");
+    assert.equal(page.data.departurePreset, "any");
+    assert.equal(page.data.date, "");
+    assert.equal(calls.scrolls.at(-1).selector, "#explore");
+    page.setData({ view: "routes", date: "2099-01-01" });
+    page.discoverJourney();
+    assert.equal(page.data.view, "trips");
+    assert.equal(page.data.date, "2099-01-01");
+    assert.equal(page.data.departurePreset, "custom");
+    page.openDepartureDates();
+    assert.equal(page.data.view, "trips");
+    assert.equal(page.data.departureSheet, true);
+    assert.equal(page.data.draftMode, "date");
+    assert.equal(page.data.draftDate, "2099-01-01");
+  });
+
+  it("stops retrying failed hero images and keeps route links valid across image fallbacks", () => {
+    const { page, calls } = pageHarness("index");
+    page.setData({ heroSlides: [{ url: "https://example.test/missing.jpg", routeId: 27 }] });
+    const event = { currentTarget: { dataset: { index: 0 } } };
+    page.onHeroError(event);
+    assert.equal(page.data.heroSlides[0].fallbackUsed, true);
+    assert.notEqual(page.data.heroSlides[0].url, "https://example.test/missing.jpg");
+    page.goCurrentSlide();
+    assert.equal(calls.navigations[0].url, "/pkg-detail/detail/detail?id=27");
+    page.onHeroError(event);
+    assert.equal(page.data.heroSlides[0].imageBroken, true);
+    const failed = page.data.heroSlides;
+    page.onHeroError(event);
+    assert.equal(page.data.heroSlides, failed);
+    page.selectHero({ currentTarget: { dataset: { index: 99 } } });
+    assert.equal(page.data.heroIndex, 0);
+  });
+
   it("keeps campus browsing and campus verification on separate home entrances", () => {
     const template = fs.readFileSync(path.resolve(__dirname, "../../miniprogram/pages/index/index.wxml"), "utf8");
     const shortcuts = Array.from(template.matchAll(/<view class="quick-entry"([^>]*)>/g));

@@ -13,22 +13,21 @@
           :alt="brandSlide.title || '同行者众'"
           fetchpriority="high"
           decoding="async"
-        @error="onHeroError"
+          @error="onHeroError"
         />
       </div>
       <div class="brand-cap">
-        <span class="hero-eyebrow"><TravelIcon name="compass" /> 北京 · 周边山野</span>
-        <h2>周末去山里见</h2>
-        <p>趁着风正好，把一天还给山野。</p>
-        <button class="hero-discover" type="button" @click="discoverWeekend">看看本周末 <TravelIcon name="arrow" /></button>
-        <div class="hero-dots" aria-label="切换山野图片"><button v-for="(photo, i) in fallbackPhotos" :key="photo" type="button" :class="{ selected: heroIndex % fallbackPhotos.length === i }" :aria-label="'第 ' + (i + 1) + ' 张'" :aria-pressed="heroIndex % fallbackPhotos.length === i" @click="heroIndex = i"></button></div>
+        <span class="hero-eyebrow">离城市近一点 · 离自然更近一点</span>
+        <h2><span>在山野，</span><span>遇见爱</span></h2>
+        <p>和同频的人，一起出发。</p>
+        <button class="hero-discover" type="button" @click="discoverJourney">发现下一程 <TravelIcon name="arrow" /></button>
       </div>
-      <div class="hero-photo-credit"><span>BEIYE · OUTDOOR</span><i></i><span>山野精选</span></div>
+      <div v-if="brandSlides.length > 1" class="hero-dots" aria-label="切换山野图片"><button v-for="(slide, i) in brandSlides" :key="i" type="button" :class="{ selected: activeHeroIndex === i }" :aria-label="'第 ' + (i + 1) + ' 张'" :aria-pressed="activeHeroIndex === i" @click="heroIndex = i"></button></div>
     </div>
 
     <div class="home-pad">
     <form class="discovery-search" @submit.prevent="discoverTrips">
-      <div class="discovery-search-title"><span class="search-caption">给周末，一个好去处</span><span>从北京出发 <TravelIcon name="pin" /></span></div>
+      <div class="discovery-search-title"><span class="search-caption">下一程，想去哪里</span><span>从北京出发 <TravelIcon name="pin" /></span></div>
       <div class="discovery-search-fields">
         <label class="discovery-input"><TravelIcon name="search" /><input v-model="query" type="search" :placeholder="searchHint" aria-label="搜索线路、目的地或发起人" /></label>
         <label class="discovery-date"><TravelIcon name="calendar" /><input v-model="date" type="date" :min="today" :max="lastDepartureDay" aria-label="出发日期" @change="onSearchDate" /><span v-if="!date">{{ hasTimeFilter ? selectedTimeLabel : '出发日期不限' }}</span></label>
@@ -93,7 +92,7 @@
     </div>
 
     <div class="feed-toolbar">
-      <div class="hint">看看最近都在忙什么</div>
+      <div class="hint">找到同频的旅伴</div>
       <div class="tools">
         <button class="tool-btn" type="button" @click="sort = cycleSort(sort)">{{ sortLabel(sort) }}</button>
         <button class="tool-btn" type="button" @click="fold.extra = !fold.extra">{{ fold.extra ? "收起" : "更多筛选" }}</button>
@@ -140,7 +139,8 @@
       </div>
       <div class="feed-body">
         <p class="feed-when">{{ feedWhen(s.startDate, s.meetupTime) }} · {{ s.city || s.route?.region }}</p>
-        <h3 class="feed-title"><TripKind :kind="s.kind" :type="s.organizerType" :channel="s.channel" /> <span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">口令团</span> {{ s.route?.title }}</h3>
+        <h3 class="feed-title">{{ s.route?.title }}</h3>
+        <div class="feed-badges"><TripKind :kind="s.kind" :type="s.organizerType" :channel="s.channel" /><span v-if="s.private" class="offer-chip inline" style="background:#4c1d95">口令团</span></div>
         <p class="feed-host">{{ hostName(s) }}<template v-if="s.meetupPoint"> · {{ s.meetupPoint }}</template></p>
         <p class="feed-tagline" v-if="taglineOf(s)">{{ taglineOf(s) }}</p>
         <p class="feed-price">
@@ -169,7 +169,7 @@
     </div>
     </template>
 
-    <RouteCatalog v-else :q="query" :seed-tag="tag" />
+    <RouteCatalog v-else :key="routeSearchVersion" :q="query" :seed-tag="tag" />
 
     <section class="organizer-section">
       <div class="section-heading">
@@ -247,7 +247,7 @@ const today = computed(() => chinaDay(departureNow.value));
 const selectableMonths = computed(() => departureMonths(departureNow.value));
 const lastDepartureDay = computed(() => buildDepartureMonth(selectableMonths.value.at(-1)?.key, [], departureNow.value).filter((cell) => !cell.blank).at(-1)?.date || today.value);
 const destinations = [
-  { keyword: '长城', name: '在长城，追一场山风', en: 'WALK INTO THE WILD', tag: '山脊漫步', copy: '把辽阔，装进周末', photo: '/static/photos/mutianyu.jpg' },
+  { keyword: '长城', name: '在长城，追一场山风', en: 'WALK INTO THE WILD', tag: '山脊漫步', copy: '把辽阔，装进行程', photo: '/static/photos/mutianyu.jpg' },
   { keyword: '山', name: '山深处，有好风景', en: 'FIND YOUR OWN PACE', tag: '山野徒步', copy: '慢下来，听山野说话', photo: '/static/photos/wuling_07.jpg' },
   { keyword: '海', name: '去海边，等风也等你', en: 'MEET BY THE SEA', tag: '海岸出走', copy: '有些放松，只需一片海', photo: '/static/photos/beidaihe.jpg' },
 ];
@@ -277,22 +277,23 @@ const school = ref("");
 const query = ref("");
 const sort = ref("soon");
 const heroIndex = ref(0);
+const routeSearchVersion = ref(0);
 const upcoming = ref(null);
 const fold = reactive({ extra: false });
 const offers = OFFER_TYPES.filter((o) => o.key !== "full");
 const view = ref(pageRoute.query.view === "routes" ? "routes" : "trips");
 const searchHint = computed(() => (view.value === "routes" ? "搜长城 / 十渡 / 坝上" : "搜线路、城区、主理人"));
 
-const brandSlides = computed(() => {
-  if (home.value.brand?.slides?.length) return home.value.brand.slides;
-  return (home.value.brand?.gallery || []).map((url) => ({ url, title: "" }));
-});
-const brandSlide = computed(() => {
-  const list = brandSlides.value;
-  if (!list.length) return null;
-  return list[heroIndex.value % list.length];
-});
 const fallbackPhotos = ["/static/photos/mutianyu_06.jpg", "/static/photos/wuling_07.jpg", "/static/photos/beidaihe.jpg"];
+const brandSlides = computed(() => {
+  const brand = home.value.brand || {};
+  const slides = (Array.isArray(brand.slides) ? brand.slides : []).filter((slide) => slide?.url);
+  if (slides.length) return slides;
+  const gallery = (Array.isArray(brand.gallery) ? brand.gallery : []).filter(Boolean);
+  return (gallery.length ? gallery : fallbackPhotos).map((url) => ({ url, title: "同行者众" }));
+});
+const activeHeroIndex = computed(() => heroIndex.value % brandSlides.value.length);
+const brandSlide = computed(() => brandSlides.value[activeHeroIndex.value]);
 const heroSource = computed(() => mediaSrc(brandSlide.value?.url) || fallbackPhotos[heroIndex.value % fallbackPhotos.length]);
 const activeFestival = computed(() => (home.value.festivals || []).find((f) => f.key === festivalKey.value));
 const baseGroups = computed(() => availableDepartures(processFeed(schedules.value, {
@@ -515,8 +516,8 @@ function onCalendarKeydown(event) {
   if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
   else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
 }
-async function discoverWeekend() {
-  selectTimePreset("weekend");
+async function discoverJourney() {
+  setView("trips");
   await nextTick();
   discoverTrips();
 }
@@ -563,9 +564,13 @@ async function discoverHostTrips(kind) {
   await nextTick();
   discoverTrips();
 }
-function searchDestination(keyword) {
+async function searchDestination(keyword) {
+  tag.value = "";
   query.value = keyword;
-  setView('routes');
+  // A destination starts a fresh catalog, including its own days/tag filters.
+  routeSearchVersion.value++;
+  setView("routes");
+  await nextTick();
   discoverTrips();
 }
 function onHeroError(e) {
