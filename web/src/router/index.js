@@ -13,6 +13,7 @@ const routes = [
       { path: "wishes/:token", name: "wish-detail", component: () => import("@/views/mobile/Wishes.vue") },
       { path: "activities", name: "activities", component: () => import("@/views/mobile/Activities.vue") },
       { path: "official", name: "official", component: () => import("@/views/mobile/Official.vue") },
+      { path: "legal/:doc?", name: "legal", component: () => import("@/views/mobile/Legal.vue") },
       { path: "rules", redirect: "/m/official#rules" },
       { path: "student", name: "student", component: () => import("@/views/mobile/Student.vue") },
       { path: "group", name: "group", component: () => import("@/views/mobile/Group.vue") },

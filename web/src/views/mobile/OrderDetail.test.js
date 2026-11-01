@@ -1,18 +1,47 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import OrderDetail from './OrderDetail.vue';
+import http from '@/api/http';
 
-const fixture = vi.hoisted(() => ({ router: { push: vi.fn() } }));
+const fixture = vi.hoisted(() => ({ router: { push: vi.fn(), replace: vi.fn() }, store: { token: 'account-a' } }));
 vi.mock('vue', async importOriginal => {
   const vue = await importOriginal();
   return { ...vue, onMounted: vi.fn(), onBeforeUnmount: vi.fn(), watch: vi.fn(), useSSRContext: () => ({ modules: new Set() }) };
 });
 vi.mock('vue-router', () => ({ useRoute: () => ({ params: { id: '12' }, query: {} }), useRouter: () => fixture.router }));
 vi.mock('@/api/http', () => ({ default: { get: vi.fn(), post: vi.fn() } }));
+vi.mock('@/stores/user', () => ({ useUserStore: () => fixture.store }));
 vi.mock('@/utils/appearance', () => ({ readLook: () => ({ lang: 'zh' }) }));
 vi.mock('@/stores/user', () => ({ useUserStore: () => ({ token: '' }) }));
 
 const setupPage = () => OrderDetail.setup({}, { expose: vi.fn() });
 const eligible = (extra = {}) => ({ id: 12, canLinkWish: true, canPay: true, status: 'joined', pay_status: 'unpaid', schedule_status: 'recruiting', start_date: '2099-01-01', ...extra });
+const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return {promise, resolve}; };
+
+describe('order detail account isolation', () => {
+  beforeEach(() => { vi.clearAllMocks(); fixture.store.token = 'account-a'; vi.stubGlobal('window', {addEventListener:vi.fn(),removeEventListener:vi.fn()}); });
+  it('clears an existing order immediately and loads the same id for the new account', async () => {
+    const pending = deferred(); http.get.mockReturnValueOnce(pending.promise);
+    const state = setupPage(); state.order.value = eligible({traveler_name:'账号甲'}); state.reviewOpen.value = true; state.form.value.content = '旧评价';
+    fixture.store.token = 'account-b'; const loading = state.onAccountChange();
+    expect(state.order.value).toBe(null); expect(state.reviewOpen.value).toBe(false); expect(state.form.value.content).toBe('');
+    expect(http.get).toHaveBeenCalledWith('/orders/12');
+    pending.resolve({data:eligible({traveler_name:'账号乙'})}); await loading;
+    expect(state.order.value.traveler_name).toBe('账号乙');
+  });
+  it('does not repopulate old private data during an A to B to A account round trip', async () => {
+    const first = deferred(), second = deferred(), third = deferred();
+    http.get.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise).mockReturnValueOnce(third.promise);
+    const state = setupPage(); const a = state.load(); fixture.store.token='account-b'; const b=state.onAccountChange(); fixture.store.token='account-a'; const fresh=state.onAccountChange();
+    first.resolve({data:eligible({traveler_name:'过时甲'})}); second.resolve({data:eligible({traveler_name:'账号乙'})}); await a; await b;
+    expect(state.order.value).toBe(null);
+    third.resolve({data:eligible({traveler_name:'最新甲'})}); await fresh; expect(state.order.value.traveler_name).toBe('最新甲');
+  });
+  it('clears the order on logout before returning to login without requesting private data', async () => {
+    const state=setupPage(); state.order.value=eligible(); fixture.store.token=''; await state.onAccountChange();
+    expect(state.order.value).toBe(null); expect(http.get).not.toHaveBeenCalled();
+    expect(fixture.router.replace).toHaveBeenCalledWith({path:'/m/login',query:{redirect:'/m/orders/12'}});
+  });
+});
 
 describe('order detail travel wish entry', () => {
   beforeEach(() => {

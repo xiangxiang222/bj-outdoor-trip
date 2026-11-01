@@ -1,12 +1,26 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
+<template name="legalConsent">
+  <view class="login-legal">
+    <view wx:if="{{legalLoading}}" class="login-legal-note">正在加载协议…</view>
+    <view wx:elif="{{legalError}}" class="login-legal-error">{{legalError}}<text class="login-legal-link" bindtap="loadLegal"> 重新加载</text></view>
+    <view wx:elif="{{legalBundle.status === 'draft'}}" class="login-legal-note">{{legalBundle.notice || '协议为审阅版，尚未正式生效。'}}</view>
+    <checkbox-group wx:elif="{{legalBundle.status === 'published'}}" bindchange="toggleLegal">
+      <label class="login-legal-check"><checkbox value="accepted" checked="{{legalAccepted}}" color="#5b3b8c" /><text>我已阅读并同意</text></label>
+    </checkbox-group>
+    <view class="login-legal-links"><text class="login-legal-link" bindtap="openLegal" data-doc="terms">《用户协议》</text><text class="login-legal-link" bindtap="openLegal" data-doc="privacy">《隐私政策》</text></view>
+    <view class="login-legal-link login-legal-center" bindtap="openLegal">查看全部协议与信息清单 ›</view>
+  </view>
+</template>
 <view class="auth-page" wx:if="{{!account}}">
   <view class="auth-dialog">
     <view class="auth-title">{{tr.t('提示', lang)}}</view>
     <view class="auth-text">{{tr.t('您还未登录，登录授权后使用', lang)}}</view>
+    <template is="legalConsent" data="{{legalLoading, legalError, legalBundle, legalAccepted}}" />
     <view class="auth-actions">
       <view class="auth-cancel" bindtap="cancel">{{tr.t('取消', lang)}}</view>
-      <button class="auth-go" open-type="getPhoneNumber" bindgetphonenumber="onGetPhone">{{tr.t('去登录', lang)}}</button>
+      <button wx:if="{{legalAllowed}}" class="auth-go" open-type="getPhoneNumber" bindgetphonenumber="onGetPhone">{{tr.t('去登录', lang)}}</button>
+      <button wx:else class="auth-go" bindtap="checkLegal">{{tr.t('去登录', lang)}}</button>
     </view>
   </view>
   <view class="auth-alt" bindtap="showAccount">{{tr.t('手机号密码登录', lang)}}</view>
@@ -17,6 +31,7 @@
     <view class="login-back" bindtap="backAuth">{{tr.t('返回', lang)}}</view>
     <view class="login-nav-title">{{tr.t(tab==='login' ? '登录' : '注册', lang)}}</view>
   </view>
+  <template is="legalConsent" data="{{legalLoading, legalError, legalBundle, legalAccepted}}" />
   <view class="chips pad">
     <view class="chip {{tab==='login'?'on':''}}" bindtap="setTab" data-tab="login">{{tr.t('登录', lang)}}</view>
     <view class="chip {{tab==='register'?'on':''}}" bindtap="setTab" data-tab="register">{{tr.t('注册', lang)}}</view>

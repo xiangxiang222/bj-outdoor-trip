@@ -1,5 +1,6 @@
 const { request, setAuth } = require("../../utils/request");
 const { saveCaptchaFile } = require("../../utils/captcha");
+const { validateLegalBundle, legalGuardMessage, legalAuthPayload } = require("../../utils/legal");
 Page({
   data: {
     account: false,
@@ -19,6 +20,11 @@ Page({
     redirect: "",
     statusBarHeight: 20,
     errors: {},
+    legalBundle: null,
+    legalLoading: true,
+    legalError: "",
+    legalAccepted: false,
+    legalAllowed: false,
   },
   onLoad(q) {
     const direct = q.tab === "register" || q.account === "1";
@@ -34,7 +40,43 @@ Page({
       account: direct,
       statusBarHeight,
     });
+    this.loadLegal();
     if (direct && q.tab !== "register") this.loadCaptcha();
+  },
+  async loadLegal() {
+    if (this._legalPending) return;
+    this._legalPending = true;
+    this.setData({ legalLoading: true, legalError: "", legalBundle: null, legalAccepted: false, legalAllowed: false });
+    try {
+      const legalBundle = validateLegalBundle((await request("/legal")).data);
+      this.setData({ legalBundle, legalAllowed: legalBundle.status === "draft" });
+    } catch (e) { this.setData({ legalError: e.message || "协议加载失败，请重试" }); }
+    finally { this._legalPending = false; this.setData({ legalLoading: false }); }
+  },
+  toggleLegal(e) {
+    const legalAccepted = (e.detail.value || []).indexOf("accepted") >= 0;
+    this.setData({ legalAccepted, legalAllowed: !!this.data.legalBundle && (this.data.legalBundle.status === "draft" || legalAccepted) });
+  },
+  checkLegal() {
+    const message = legalGuardMessage(this.data.legalBundle, this.data.legalAccepted);
+    if (message) { wx.showToast({ title: message, icon: "none" }); return false; }
+    return true;
+  },
+  legalPayload() { return legalAuthPayload(this.data.legalBundle, this.data.legalAccepted); },
+  async handleLegalError(error) {
+    if (!error || ["legal_version_changed", "legal_version_conflict"].indexOf(error.code) < 0) return false;
+    this.setData({ legalBundle: null, legalAccepted: false, legalAllowed: false });
+    if (error.code === "legal_version_changed") {
+      await this.loadLegal();
+      wx.showToast({ title: "协议已更新，请重新阅读并勾选同意", icon: "none" });
+    } else {
+      this.setData({ legalLoading: false, legalError: "协议内容正在更新，请稍后重新加载" });
+    }
+    return true;
+  },
+  openLegal(e) {
+    const doc = e.currentTarget.dataset.doc;
+    wx.navigateTo({ url: "/pages/legal/legal" + (doc ? "?doc=" + encodeURIComponent(doc) : "") });
   },
   setTab(e) {
     const tab = e.currentTarget.dataset.tab;
@@ -49,6 +91,7 @@ Page({
   },
   setSmsCode(e) { this.setData({ smsCode: e.detail.value, "errors.smsCode": "" }); },
   async sendSms(e) {
+    if (!this.checkLegal()) return;
     if (this.data.smsWait) return;
     const phone = String(this.data.phone || "").trim();
     if (!/^1\d{10}$/.test(phone)) {
@@ -57,7 +100,7 @@ Page({
     }
     const scene = (e.currentTarget.dataset.scene === "register") ? "register" : "login";
     try {
-      const res = await request("/auth/sms", "POST", { phone, scene });
+      const res = await request("/auth/sms", "POST", { phone, scene, ...this.legalPayload() });
       this.setData({ smsNote: (res && res.message) || "验证码已发送", smsWait: 60, "errors.phone": "" });
       clearInterval(this._smsTimer);
       this._smsTimer = setInterval(() => {
@@ -66,6 +109,7 @@ Page({
         if (left <= 0) clearInterval(this._smsTimer);
       }, 1000);
     } catch (err) {
+      if (await this.handleLegalError(err)) return;
       wx.showModal({ title: "发送失败", content: (err && err.message) || "请稍后重试", showCancel: false });
     }
   },
@@ -113,6 +157,7 @@ Page({
     wx.navigateBack({ fail: () => wx.switchTab({ url: "/pages/mine/mine" }) });
   },
   async smsLogin() {
+    if (!this.checkLegal()) return;
     const errors = {};
     const phone = String(this.data.phone || "").trim();
     if (!phone) errors.phone = "请填写手机号";
@@ -124,12 +169,14 @@ Page({
     }
     this.setData({ errors: {} });
     try {
-      await this.after(await request("/auth/login-sms", "POST", { phone, code: this.data.smsCode }));
+      await this.after(await request("/auth/login-sms", "POST", { phone, code: this.data.smsCode, ...this.legalPayload() }));
     } catch (e) {
+      if (await this.handleLegalError(e)) return;
       wx.showModal({ title: "登录失败", content: (e && e.message) || "请稍后重试", showCancel: false });
     }
   },
   async pwdLogin() {
+    if (!this.checkLegal()) return;
     const errors = {};
     const phone = String(this.data.phone || "").trim();
     if (!phone) errors.phone = "请填写手机号";
@@ -147,13 +194,16 @@ Page({
         password: this.data.password,
         captchaToken: this.data.captchaToken,
         captcha: this.data.captcha.trim(),
+        ...this.legalPayload(),
       }));
     } catch (e) {
+      if (await this.handleLegalError(e)) return;
       this.loadCaptcha();
       wx.showModal({ title: "登录失败", content: (e && e.message) || "请稍后重试", showCancel: false });
     }
   },
   async register() {
+    if (!this.checkLegal()) return;
     const errors = {};
     const phone = String(this.data.phone || "").trim();
     if (!(this.data.nickname || "").trim()) errors.nickname = "请填写昵称";
@@ -173,8 +223,10 @@ Page({
         password: this.data.password,
         nickname: this.data.nickname.trim(),
         smsCode: this.data.smsCode,
+        ...this.legalPayload(),
       }));
     } catch (e) {
+      if (await this.handleLegalError(e)) return;
       wx.showModal({ title: "注册失败", content: e.message, showCancel: false });
     }
   },
@@ -193,6 +245,7 @@ Page({
     this.loadCaptcha();
   },
   async onGetPhone(e) {
+    if (!this.checkLegal()) return;
     const detail = (e && e.detail) || {};
     if (detail.errMsg && detail.errMsg.indexOf("ok") < 0) return;
     if (!detail.code) {
@@ -205,8 +258,10 @@ Page({
       await this.after(await request("/auth/wechat-phone", "POST", {
         loginCode: login.code,
         phoneCode: detail.code,
+        ...this.legalPayload(),
       }));
     } catch (err) {
+      if (await this.handleLegalError(err)) return;
       wx.showModal({ title: "登录失败", content: (err && err.message) || "请稍后重试", showCancel: false });
     } finally {
       wx.hideLoading();

@@ -1,0 +1,40 @@
+<page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
+<view class="legal-page">
+  <load-row wx:if="{{loading}}" />
+  <view wx:elif="{{error}}" class="legal-state"><view>{{error}}</view><button class="btn ghost" bindtap="load">重新加载</button></view>
+  <block wx:elif="{{bundle}}">
+    <view wx:if="{{bundle.status === 'draft'}}" class="legal-notice">{{bundle.notice || '当前内容为审阅版，尚未正式生效。'}}</view>
+    <view wx:if="{{reviewOnly}}" class="legal-back" bindtap="load">重新加载最新内容</view>
+    <view class="legal-meta">版本 {{bundle.version}} · 更新于 {{bundle.updatedAt}}<text wx:if="{{bundle.effectiveAt}}"> · 生效于 {{bundle.effectiveAt}}</text></view>
+    <block wx:if="{{!docId}}">
+      <view class="legal-intro">了解服务约定、个人信息处理方式，以及如何管理你的信息与授权。</view>
+      <view class="legal-documents">
+        <view wx:for="{{bundle.documents}}" wx:key="id" class="legal-document-row" bindtap="openDocument" data-id="{{item.id}}"><view><view class="legal-document-name">{{item.title}}</view><view class="legal-document-summary">{{item.summary}}</view></view><text>›</text></view>
+      </view>
+      <view class="legal-section">
+        <view class="legal-heading">运营者与联系方式</view>
+        <view class="legal-field-label">运营主体</view><view class="legal-field-value">{{bundle.operator.name || '待补充'}}</view>
+        <view class="legal-field-label">联系地址</view><view class="legal-field-value">{{bundle.operator.address || '待补充'}}</view>
+        <view class="legal-field-label">隐私联系邮箱</view><view class="legal-field-value">{{bundle.operator.email || '待补充'}}</view>
+        <view class="legal-field-label">联系电话</view><view class="legal-field-value">{{bundle.operator.phone || '待补充'}}</view>
+      </view>
+    </block>
+    <block wx:elif="{{document}}">
+      <view class="legal-back" bindtap="openCenter">‹ 全部协议与清单</view>
+      <view class="legal-title">{{document.title}}</view>
+      <view class="legal-intro">{{document.summary}}</view>
+      <view class="legal-toc"><view class="legal-heading">本文目录</view><view wx:for="{{document.sections}}" wx:key="id" bindtap="goSection" data-index="{{index}}" class="legal-toc-link">{{item.title}}</view></view>
+      <view wx:for="{{document.sections}}" wx:for-item="section" wx:for-index="sectionIndex" wx:key="id" id="legal-section-{{sectionIndex}}" class="legal-section">
+        <view class="legal-heading">{{section.title}}</view>
+        <view wx:for="{{section.paragraphs}}" wx:for-item="paragraph" wx:key="*this" class="legal-paragraph" user-select>{{paragraph}}</view>
+        <view wx:for="{{section.entries}}" wx:for-item="entry" wx:key="title" class="legal-entry">
+          <view class="legal-entry-title">{{entry.title}}</view>
+          <block wx:for="{{entry.fields}}" wx:for-item="field" wx:key="label"><view class="legal-field-label">{{field.label}}</view><view class="legal-field-value" user-select>{{field.value}}</view></block>
+        </view>
+        <view wx:for="{{section.links}}" wx:for-item="link" wx:key="url" class="legal-source" bindtap="copyLink" data-url="{{link.url}}">{{link.label}} · 复制链接</view>
+      </view>
+      <view class="legal-back" bindtap="openCenter">查看其他协议与清单 ›</view>
+    </block>
+    <view wx:else class="legal-state"><view>未找到该协议</view><view class="legal-back" bindtap="openCenter">返回协议与隐私</view></view>
+  </block>
+</view>

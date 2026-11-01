@@ -129,11 +129,68 @@ module.exports = async function journeyCases({ test, pageFor, goto, db, seed, ou
       await p.locator(".city-status strong").filter({ hasText: "活动已结束" }).waitFor();
       assert.equal(await p.getByRole("button", { name: /报名本局|选择座位|再次报名/ }).count(), 0);
       assert.equal(await p.locator(".seat-grid,.seat-map").count(), 0);
+      assert.equal(await p.locator(".enroll-bar").count(), 0, "ended activities do not need a repeated fixed status footer");
       assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
       await p.screenshot({ path: path.join(output, "activity-ended-detail.png"), fullPage: true });
       const synthetic = await fetch(origin + "/api/routes/" + activity.routeId, { headers });
       assert.equal(synthetic.status, 404, "one-off activities have no reusable route page");
     } finally { await p.close(); }
+  });
+
+  await test("future activity details show the uploaded group only to host and confirmed participant", async () => {
+    const fixture = db.prepare("SELECT id,route_id,consult_group_qr_image FROM schedules WHERE channel='activity' AND consult_group_qr_image IS NOT NULL AND consult_group_qr_image!='' ORDER BY id DESC LIMIT 1").get();
+    assert.ok(fixture, "the earlier browser publish flow uploaded a real group image");
+    db.prepare("UPDATE schedules SET review_status='approved',start_date='2099-11-02',end_date='2099-11-02' WHERE id=?").run(fixture.id);
+    db.prepare("UPDATE routes SET status='on',review_status='approved' WHERE id=?").run(fixture.route_id);
+    const p = await pageFor();
+    const guest = await pageFor("guest");
+    try {
+      await goto(p, "/m/schedule/" + fixture.id);
+      await p.locator(".city-heading").waitFor();
+      assert.match(await p.locator(".city-status strong").innerText(), /招募中/);
+      assert.equal(await p.locator(".offer-hero").count(), 0);
+      assert.ok((await p.locator(".city-group-qr").getAttribute("src")).endsWith(fixture.consult_group_qr_image));
+      await p.waitForFunction(() => { const img = document.querySelector(".city-group-qr"); return img?.complete && img.naturalWidth > 1; });
+      assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+      await p.screenshot({ path: path.join(output, "activity-future-detail.png"), fullPage: true });
+      await p.locator(".city-group").scrollIntoViewIfNeeded();
+      await p.screenshot({ path: path.join(output, "activity-real-group-qr.png"), fullPage: false });
+      for (const [width, size, night] of [[320, 4, "day"], [390, 1, "dark"]]) {
+        const variant = await pageFor("user", width, { size, night });
+        try {
+          await goto(variant, "/m/schedule/" + fixture.id);
+          await variant.locator(".city-heading").waitFor();
+          assert.ok(await variant.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `activity detail overflow: ${width}/${size}/${night}`);
+          await variant.screenshot({ path: path.join(output, `activity-detail-${width}-${night}.png`), fullPage: true });
+        } finally { await variant.close(); }
+      }
+
+      await goto(guest, "/m/schedule/" + fixture.id);
+      await guest.locator(".city-heading").waitFor();
+      assert.equal(await guest.locator(".city-group-qr").count(), 0);
+      assert.doesNotMatch(await guest.locator(".trip-detail").innerText(), /入群请备注报名姓名/);
+      const publicActivity = await (await fetch(origin + "/api/schedules/" + fixture.id)).json();
+      assert.equal(publicActivity.data.consultGroupQr, "");
+      assert.equal(publicActivity.data.consultGroup, "");
+
+      const { signUser } = require("../server/src/middleware/auth");
+      const viewer = db.prepare("SELECT * FROM users WHERE id=?").get(seed.companyUserId);
+      const viewerToken = signUser(viewer);
+      const enrollmentId = Number(db.prepare("INSERT INTO enrollments (schedule_id,user_id,traveler_name,status,pay_status,pay_amount) VALUES (?,?,?,?,?,?)").run(fixture.id, seed.companyUserId, "同行朋友", "joined", "paid", 0).lastInsertRowid);
+      const participant = await pageFor("guest");
+      try {
+        await participant.addInitScript(token => localStorage.setItem("bj_token", token), viewerToken);
+        await goto(participant, "/m/schedule/" + fixture.id);
+        await participant.locator(".city-group-qr").waitFor();
+        assert.match(await participant.locator(".city-status strong").innerText(), /已报名/);
+        assert.equal(await participant.getByRole("button", { name: "取消活动", exact: true }).count(), 0);
+        db.prepare("UPDATE enrollments SET pay_status='unpaid',pay_amount=20 WHERE id=?").run(enrollmentId);
+        await goto(participant, "/m/schedule/" + fixture.id);
+        await participant.locator(".city-status strong").filter({ hasText: "待付款" }).waitFor();
+        assert.equal(await participant.locator(".city-group-qr").count(), 0);
+        assert.match(await participant.locator(".city-group-empty").innerText(), /完成支付后可查看群信息/);
+      } finally { await participant.close(); }
+    } finally { await p.close(); await guest.close(); }
   });
 
   await test("message filters and mark-all-read update real server counts and lists", async () => {

@@ -742,6 +742,7 @@ const shownEnrolled = computed(() => {
 const isOwner = computed(() => store.profile && s.value && Number(s.value.organizerId) === Number(store.profile.id));
 const dockVisible = computed(() => {
   if (!s.value) return false;
+  if (isActivity.value && activityPresentation.value.closed) return false;
   if (!showDetailTabs(s.value)) return true;
   if (s.value.isOrganizer && s.value.status !== "cancelled") return true;
   if (isOwner.value && s.value.organizerType === "company" && s.value.status !== "cancelled") return true;

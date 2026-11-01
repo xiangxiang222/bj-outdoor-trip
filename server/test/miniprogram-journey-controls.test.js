@@ -163,6 +163,27 @@ describe('native journey filters and one-off activity navigation',()=>{
     const pending=page.load(); app.globalData.token='account-b'; resolve({data:rows[1]}); await pending;
     assert.equal(page.data.order,null);
   });
+  it('clears a displayed detail before loading the same order for a new account',async()=>{
+    let resolve;
+    const {page,app}=harness('enroll-order',()=>new Promise(done=>{resolve=done;}));
+    page._account='account-a'; page.setData({id:2,order:{...rows[1],traveler_name:'账号甲'},reviewOpen:true,content:'旧评价'});
+    app.globalData.token='account-b'; const loading=page.onShow();
+    assert.equal(page.data.order,null); assert.equal(page.data.reviewOpen,false); assert.equal(page.data.content,'');
+    resolve({data:{...rows[1],traveler_name:'账号乙'}}); await loading;
+    assert.equal(page.data.order.traveler_name,'账号乙');
+  });
+  it('clears private detail before redirecting a signed-out user to login',()=>{
+    const {page,app,navigation}=harness('enroll-order',()=>assert.fail('must not load after logout'));
+    page._account='account-a'; page.setData({id:2,order:rows[1]}); app.globalData.token=''; page.onShow();
+    assert.equal(page.data.order,null); assert.match(navigation[0],/^\/pages\/login\/login\?redirect=/);
+  });
+  it('ignores an old detail response after an A to B to A account round trip',async()=>{
+    const pending=[]; const {page,app}=harness('enroll-order',()=>new Promise(resolve=>pending.push(resolve)));
+    page._account='account-a'; page.setData({id:2}); const a=page.onShow(); app.globalData.token='account-b'; const b=page.onShow(); app.globalData.token='account-a'; const fresh=page.onShow();
+    pending[0]({data:{...rows[1],traveler_name:'过时甲'}}); pending[1]({data:{...rows[1],traveler_name:'账号乙'}}); await a; await b;
+    assert.equal(page.data.order,null); pending[2]({data:{...rows[1],traveler_name:'最新甲'}}); await fresh;
+    assert.equal(page.data.order.traveler_name,'最新甲');
+  });
 });
 
 describe('native order view semantics',()=>{

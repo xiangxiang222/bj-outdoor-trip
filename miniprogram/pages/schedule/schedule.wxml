@@ -400,7 +400,7 @@
   </view>
 </block>
 
-<view class="enroll-dock" wx:if="{{!showDetailTabs}}">
+<view class="enroll-dock" wx:if="{{!showDetailTabs && (!isActivity || !activityClosed)}}">
   <view class="enroll-bar" wx:if="{{showEnroll}}">
     <view class="enroll-price">
       <text class="strong">{{tr.t(priceDock.main, lang)}}</text>

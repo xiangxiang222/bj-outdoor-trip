@@ -14,6 +14,8 @@ const { code2session, payLive, clientIp, loginLive, getUserPhoneNumber } = requi
 const { assertTextSafe, assertTexts, assertImageFile } = require("./services/content-security");
 const { verifyIdentity } = require("./services/id-verify");
 const { issueSmsCode, smsLive } = require("./services/sms");
+const legal = require("./services/legal");
+const { consentGate, smsConsentGate } = require("./services/legal-consent");
 const { buildSchedulePoster } = require("./services/share-poster");
 const { discoverySearch } = require("./services/discovery");
 const { createPosterLineup, lineupSchedules } = require("./services/poster-lineup");
@@ -157,6 +159,13 @@ const {
 
 const router = express.Router();
 router.use(require("./wishes-api"));
+
+router.get("/legal", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  // Serve the authoritative text verbatim. The global response-localization
+  // middleware must not replace legal prose using AI route translations.
+  res.type("application/json").send(JSON.stringify({ ok: true, data: legal.legalBundle() }));
+});
 router.post("/discovery/search", optionalUser, async (req, res) => {
   try {
     res.json({ ok: true, data: await discoverySearch(req.body, req) });
@@ -796,7 +805,7 @@ router.get("/play-tags", (req, res) => {
   res.json({ ok: true, data: listPlayTags().map((t) => mapPlayTag(t, req)) });
 });
 
-router.post("/auth/sms", async (req, res) => {
+router.post("/auth/sms", smsConsentGate, async (req, res) => {
   try {
     const { phone, scene } = req.body || {};
     const use = scene || "login";
@@ -864,7 +873,7 @@ router.get("/auth/captcha-image/:token", (req, res) => {
   res.send(png);
 });
 
-router.post("/auth/register", (req, res) => {
+router.post("/auth/register", consentGate("register"), (req, res) => {
   const { phone, password, nickname, captchaToken, captcha } = req.body || {};
   if (!/^1\d{10}$/.test(phone || "")) return res.status(400).json({ ok: false, message: "手机号不正确" });
   if (!password || password.length < 6) return res.status(400).json({ ok: false, message: "密码至少 6 位" });
@@ -883,7 +892,7 @@ router.post("/auth/register", (req, res) => {
   res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req) } });
 });
 
-router.post("/auth/login", (req, res) => {
+router.post("/auth/login", consentGate("password"), (req, res) => {
   const { phone, password, captchaToken, captcha } = req.body || {};
   if (!consumeCaptcha(captchaToken, captcha)) return res.status(400).json({ ok: false, message: "验证码错误或已过期" });
   const user = db().prepare("SELECT * FROM users WHERE phone=? AND deleted_at IS NULL").get(phone);
@@ -894,7 +903,7 @@ router.post("/auth/login", (req, res) => {
   res.json({ ok: true, data: { token: signUser(user), user: userPublic(user, req) } });
 });
 
-router.post("/auth/login-sms", (req, res) => {
+router.post("/auth/login-sms", consentGate("sms"), (req, res) => {
   const { phone, code } = req.body || {};
   if (!consumeSms(phone, code, "login")) return res.status(400).json({ ok: false, message: "验证码错误或已过期" });
   let user = db().prepare("SELECT * FROM users WHERE phone=? AND deleted_at IS NULL").get(phone);
@@ -911,7 +920,7 @@ function chinaMobile(raw) {
   return /^1\d{10}$/.test(phone) ? phone : "";
 }
 
-router.post("/auth/wechat-phone", async (req, res) => {
+router.post("/auth/wechat-phone", consentGate("wechat_phone"), async (req, res) => {
   try {
     if (process.env.NODE_ENV === "production" && !loginLive()) {
       return res.status(503).json({ ok: false, message: "微信登录服务暂不可用" });
@@ -956,7 +965,7 @@ router.post("/auth/wechat-phone", async (req, res) => {
   }
 });
 
-router.post("/auth/wechat", optionalUser, async (req, res) => {
+router.post("/auth/wechat", optionalUser, consentGate("wechat", { allowBinding: true }), async (req, res) => {
   try {
     if (process.env.NODE_ENV === "production" && !loginLive()) {
       return res.status(503).json({ ok: false, message: "微信登录服务暂不可用" });

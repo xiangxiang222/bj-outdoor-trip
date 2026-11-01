@@ -78,6 +78,26 @@ function createSchema(db) {
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
+    CREATE TABLE IF NOT EXISTS legal_versions (
+      version TEXT PRIMARY KEY,
+      snapshot_json TEXT NOT NULL,
+      snapshot_sha256 TEXT NOT NULL,
+      archived_at TEXT NOT NULL
+    );
+    CREATE TRIGGER IF NOT EXISTS legal_versions_no_update
+    BEFORE UPDATE ON legal_versions BEGIN
+      SELECT RAISE(ABORT, 'Archived legal documents are immutable');
+    END;
+    CREATE TABLE IF NOT EXISTS legal_consents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      version TEXT NOT NULL REFERENCES legal_versions(version),
+      scope TEXT NOT NULL CHECK(scope='user_agreement_and_privacy_policy'),
+      channel TEXT NOT NULL,
+      accepted_at TEXT NOT NULL,
+      UNIQUE(user_id, version, scope)
+    );
+
     CREATE TABLE IF NOT EXISTS admin_users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE,

@@ -148,6 +148,9 @@
 
     <p class="cell-label">更多服务</p>
     <div class="cell-group">
+      <button class="cell" type="button" @click="$router.push('/m/legal')">
+        <span>协议与隐私</span><i>›</i>
+      </button>
       <button class="cell" type="button" @click="goAuth('/m/group')">
         <span>{{ groupLabel }}</span><i>›</i>
       </button>
