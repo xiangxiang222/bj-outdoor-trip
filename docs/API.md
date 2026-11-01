@@ -15,10 +15,19 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 
 `optionalUser`：有合法用户 token 则解析 `userId`，否则当游客。
 
+## 协议与普通账号确认
+
+`GET /legal` 无需登录，返回 `{ ok: true, data: { version, updatedAt, effectiveAt, status, notice, operator, documents } }`。`status` 为 `draft` 或 `published`；七份文件及清单通过 `documents[].id` 标识，正文为结构化章节。响应 `Cache-Control: no-store`，不使用线路 AI 自动翻译，客户端应保持权威正文。
+
+当状态为 `published` 时，`POST /auth/sms`（普通用户用途）、`/auth/register`、`/auth/login`、`/auth/login-sms`、`/auth/wechat-phone` 和 `/auth/wechat` 需增加 `legalConsent: { accepted: true, version: 当前精确版本 }`。缺少确认返回 400、`code=legal_consent_required`；版本变化返回 409、`legal_version_changed`，须重新取正文、清除勾选并重读。已归档版本的正文被更改会返回 409、`legal_version_conflict`，须运营发布新版本。校验先于验证码消费、短信发送和微信请求。
+
+成功认证才保存用户、版本、普通确认范围、首次成功渠道及服务端时间，并归档正文与 SHA-256；重复确认幂等。草稿、失败认证和短信发送不生成接受记录。已有登录态的微信账号绑定分支及独立导游短信流程有明确的业务豁免，不用于新建普通用户账号绕过确认。此机制不代表已取得敏感、第三方、公开披露或跨境单独同意。公开配置和发布条件见 [LEGAL_RELEASE.md](./LEGAL_RELEASE.md)。
+
 ## 公开
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
+| GET | `/legal` | 七份权威协议与清单、公开运营信息、审阅/正式状态及版本；无需登录，不缓存，不自动翻译 |
 | GET | `/meta` | 品牌名、口号 `slogan`（在山野，遇见爱）、演示短信码、会员年费/95折/赠团文案、`studentDiscountRate`（0.9）、积分规则、保险方案、补给、可选天数、退改说明（含按距出发日比例的 `refundPolicy` / `cancelPolicy`）、风险告知、常见问题、官方账号、公共规则、推荐领队文案、`routeBounty`（用户线路申请首次成团奖励，默认 300 元）、`tripBounty`（个人发团成团奖励，默认 200 元）、`subscribeTemplates.merge`（并团小程序通知模板）、`wechatPayMock` `wechatPayLive` `wechatAppId` |
 | GET | `/home` | 首页：全部上架景点轮播（`brand.slides`，含 `routeId`/`title`/`url`）、按城市分组的景点轮播、玩法标签、节日、月份、天数缩略图。同城局线路不进轮播。Query：`month=YYYY-MM` 返回该月日历（不含 activity） |
 | GET | `/live/pulse` | 首页/线路/团顶部动态条。Query：`scope=home\|route\|schedule`、`routeId`、`scheduleId`。可选用户 token 与 `X-Visitor-Id`。返回 `{ items, watchingNow, watchingText }`。`items[].text` 已拼好，姓名脱敏、不含手机号。同城局报名不进首页。匿名浏览只计入 `watchingNow` |

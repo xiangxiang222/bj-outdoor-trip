@@ -1,0 +1,22 @@
+.legal-page { padding: 24rpx 32rpx 64rpx; color: var(--ink, #33283b); }
+.legal-notice { padding: 28rpx; border: 1rpx solid #e3cba0; border-radius: 20rpx; background: #fff8e9; color: #75551e; font-size: calc(26rpx * var(--ui-scale)); line-height: 1.8; }
+.legal-meta { margin: 24rpx 0; color: var(--muted, #777); font-size: calc(23rpx * var(--ui-scale)); line-height: 1.8; }
+.legal-intro { color: var(--muted, #777); line-height: 1.9; font-size: calc(28rpx * var(--ui-scale)); margin: 20rpx 0 32rpx; }
+.legal-documents { border: 1rpx solid var(--line, #e7e0eb); border-radius: 24rpx; background: var(--card, #fff); overflow: hidden; }
+.legal-document-row { display: flex; align-items: center; justify-content: space-between; gap: 28rpx; padding: 32rpx; border-bottom: 1rpx solid var(--line, #e7e0eb); }
+.legal-document-row:last-child { border-bottom: none; }
+.legal-document-row > view { flex: 1; min-width: 0; }
+.legal-document-name { font-size: calc(30rpx * var(--ui-scale)); font-weight: 650; line-height: 1.7; }
+.legal-document-summary { margin-top: 12rpx; font-size: calc(24rpx * var(--ui-scale)); color: var(--muted, #777); line-height: 1.8; }
+.legal-title { margin: 36rpx 0 16rpx; font-size: calc(42rpx * var(--ui-scale)); font-weight: 700; line-height: 1.5; }
+.legal-toc { margin: 40rpx 0; padding: 28rpx; background: var(--card, #fff); border: 1rpx solid var(--line, #e7e0eb); border-radius: 20rpx; }
+.legal-toc-link { color: var(--leaf, #5b3b8c); padding: 12rpx 0; font-size: calc(26rpx * var(--ui-scale)); line-height: 1.7; }
+.legal-section { margin: 44rpx 0; }
+.legal-heading { font-size: calc(32rpx * var(--ui-scale)); font-weight: 700; line-height: 1.7; margin-bottom: 20rpx; }
+.legal-paragraph { font-size: calc(28rpx * var(--ui-scale)); line-height: 2; white-space: pre-line; overflow-wrap: anywhere; margin: 20rpx 0; }
+.legal-entry { margin: 24rpx 0; padding: 28rpx; background: var(--card, #fff); border: 1rpx solid var(--line, #e7e0eb); border-radius: 20rpx; }
+.legal-entry-title { font-size: calc(29rpx * var(--ui-scale)); font-weight: 650; line-height: 1.7; margin-bottom: 16rpx; }
+.legal-field-label { margin-top: 20rpx; font-size: calc(25rpx * var(--ui-scale)); color: var(--muted, #777); font-weight: 650; line-height: 1.8; }
+.legal-field-value { margin-top: 4rpx; font-size: calc(26rpx * var(--ui-scale)); line-height: 1.9; white-space: pre-line; overflow-wrap: anywhere; }
+.legal-back, .legal-source { color: var(--leaf, #5b3b8c); font-size: calc(26rpx * var(--ui-scale)); line-height: 1.9; padding: 16rpx 0; }
+.legal-state { text-align: center; padding: 64rpx 24rpx; line-height: 2; }

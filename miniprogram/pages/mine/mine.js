@@ -349,6 +349,9 @@ Page({
   register() {
     wx.navigateTo({ url: "/pages/login/login?tab=register" });
   },
+  openLegal() {
+    wx.navigateTo({ url: "/pages/legal/legal" });
+  },
   go(e) {
     const url = e.currentTarget.dataset.url;
     if (!app.globalData.token) {

@@ -5,6 +5,21 @@
       <div class="chip" :class="{ on: tab === 'register' }" @click="goRegister">注册</div>
     </div>
 
+    <section class="login-legal" aria-label="登录协议">
+      <p v-if="legalLoading" class="muted" role="status">正在加载协议…</p>
+      <p v-else-if="legalError" class="login-legal-error" role="alert">{{ legalError }} <button type="button" @click="loadLegal">重新加载</button></p>
+      <p v-else-if="legalBundle?.status === 'draft'" class="muted">{{ legalBundle.notice || '协议为审阅版，尚未正式生效。' }}</p>
+      <label v-else-if="legalBundle?.status === 'published'" class="login-legal-check"><input v-model="legalAccepted" type="checkbox" />我已阅读并同意</label>
+      <div class="login-legal-links"><button type="button" @click="openLegal('terms')">《用户协议》</button><button type="button" @click="openLegal('privacy')">《隐私政策》</button></div>
+      <button class="login-legal-center" type="button" @click="openLegal('')">查看全部协议与信息清单 ›</button>
+    </section>
+    <div v-if="legalDoc !== null" class="login-legal-overlay" @click.self="closeLegal">
+      <section class="login-legal-dialog" role="dialog" aria-modal="true" aria-label="协议与隐私" @keydown.esc="closeLegal">
+        <div class="login-legal-toolbar"><strong>协议与隐私</strong><button ref="legalClose" type="button" @click="closeLegal">关闭</button></div>
+        <div class="login-legal-body"><Legal :doc-id="legalDoc" @navigate="legalDoc = $event" /></div>
+      </section>
+    </div>
+
     <div class="card"><div class="pad">
       <template v-if="tab === 'login'">
         <div class="chips">
@@ -69,11 +84,54 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref } from "vue";
+import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
+import { legalAuthPayload, legalGuardMessage, validateLegalBundle } from "@/utils/legal";
+import Legal from "./Legal.vue";
 
+const legalBundle = ref(null);
+const legalLoading = ref(true);
+const legalError = ref("");
+const legalAccepted = ref(false);
+const legalDoc = ref(null);
+const legalClose = ref(null);
+let legalPending = false;
+let previousFocus = null;
+async function openLegal(id) { previousFocus = window.document.activeElement; legalDoc.value = id; await nextTick(); legalClose.value?.focus(); }
+function closeLegal() { legalDoc.value = null; previousFocus?.focus(); }
+async function loadLegal() {
+  if (legalPending) return;
+  legalPending = true;
+  legalLoading.value = true;
+  legalBundle.value = null;
+  legalAccepted.value = false;
+  legalError.value = "";
+  try { legalBundle.value = validateLegalBundle((await http.get("/legal")).data); }
+  catch (e) { legalError.value = e.message || "协议加载失败，请重试"; }
+  finally { legalPending = false; legalLoading.value = false; }
+}
+function checkLegal() {
+  const message = legalGuardMessage(legalBundle.value, legalAccepted.value);
+  if (message) { err.value = message; return false; }
+  return true;
+}
+function legalPayload() { return legalAuthPayload(legalBundle.value, legalAccepted.value); }
+async function handleLegalError(error) {
+  if (!["legal_version_changed", "legal_version_conflict"].includes(error?.code)) return false;
+  legalBundle.value = null;
+  legalAccepted.value = false;
+  if (error.code === "legal_version_changed") {
+    await loadLegal();
+    err.value = "协议已更新，请重新阅读并勾选同意";
+  } else {
+    legalLoading.value = false;
+    legalError.value = "协议内容正在更新，请稍后重新加载";
+    err.value = legalError.value;
+  }
+  return true;
+}
 const tab = ref("login");
 const loginMode = ref("password");
 const phone = ref("");
@@ -95,6 +153,7 @@ const store = useUserStore();
 let captchaReq = 0;
 
 onMounted(() => {
+  loadLegal();
   if (route.query.tab === "register") goRegister();
   else loadCaptcha();
 });
@@ -141,6 +200,7 @@ async function after(res) {
   else router.replace("/m/mine");
 }
 async function requestCode(scene) {
+  if (!checkLegal()) return;
   err.value = "";
   note.value = "";
   if (smsWait.value) return;
@@ -149,7 +209,7 @@ async function requestCode(scene) {
     return;
   }
   try {
-    const res = await http.post("/auth/sms", { phone: phone.value, scene });
+    const res = await http.post("/auth/sms", { phone: phone.value, scene, ...legalPayload() });
     note.value = res.message || "验证码已发送";
     smsWait.value = 60;
     clearInterval(smsTimer);
@@ -158,10 +218,12 @@ async function requestCode(scene) {
       if (smsWait.value <= 0) clearInterval(smsTimer);
     }, 1000);
   } catch (e) {
+    if (await handleLegalError(e)) return;
     err.value = e.message;
   }
 }
 async function loginSms() {
+  if (!checkLegal()) return;
   err.value = "";
   if (!/^1\d{10}$/.test(phone.value || "")) {
     err.value = "手机号不正确";
@@ -172,12 +234,14 @@ async function loginSms() {
     return;
   }
   try {
-    await after(await http.post("/auth/login-sms", { phone: phone.value, code: smsCode.value }));
+    await after(await http.post("/auth/login-sms", { phone: phone.value, code: smsCode.value, ...legalPayload() }));
   } catch (e) {
+    if (await handleLegalError(e)) return;
     err.value = e.message;
   }
 }
 async function loginPwd() {
+  if (!checkLegal()) return;
   err.value = "";
   if (!captcha.value.trim()) {
     err.value = "请填写图片验证码";
@@ -189,13 +253,16 @@ async function loginPwd() {
       password: password.value,
       captchaToken: captchaToken.value,
       captcha: captcha.value.trim(),
+      ...legalPayload(),
     }));
   } catch (e) {
+    if (await handleLegalError(e)) return;
     err.value = e.message;
     loadCaptcha();
   }
 }
 async function register() {
+  if (!checkLegal()) return;
   err.value = "";
   if (!nickname.value.trim()) {
     err.value = "请填写昵称";
@@ -215,19 +282,37 @@ async function register() {
       password: password.value,
       nickname: nickname.value.trim(),
       smsCode: smsCode.value,
+      ...legalPayload(),
     }));
   } catch (e) {
+    if (await handleLegalError(e)) return;
     err.value = e.message;
   }
 }
 async function wx() {
+  if (!checkLegal()) return;
   err.value = "";
-  try { await after(await http.post("/auth/wechat", { code: "demo_code", nickname: "微信游客" })); }
-  catch (e) { err.value = e.message; }
+  try { await after(await http.post("/auth/wechat", { code: "demo_code", nickname: "微信游客", ...legalPayload() })); }
+  catch (e) { if (!(await handleLegalError(e))) err.value = e.message; }
 }
 </script>
 
 <style scoped>
+.login-legal { padding: 16px 18px; margin: 16px 0; border: 1px solid var(--line, #e7e0eb); border-radius: 12px; background: var(--card, #fff); font-size: calc(13px * var(--ui-scale)); line-height: 1.9; }
+.login-legal p { margin: 0 0 10px; }
+.login-legal-check { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; cursor: pointer; }
+.login-legal-check input { width: 18px; height: 18px; accent-color: #5b3b8c; }
+.login-legal button { color: var(--leaf, #5b3b8c); border: 0; background: none; padding: 4px 0; font: inherit; cursor: pointer; text-align: left; }
+.login-legal-links { display: flex; flex-wrap: wrap; gap: 12px; }
+.login-legal-center { margin-top: 6px; }
+.login-legal-error { color: var(--clay, #aa413f); }
+.login-legal-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(25, 16, 33, .55); }
+.login-legal-dialog { background: var(--bg, #f8f5fb); color: var(--ink); width: 760px; max-width: 100%; max-height: 90vh; display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 70px rgba(0, 0, 0, .2); }
+.login-legal-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--line, #e7e0eb); }
+.login-legal-toolbar button { font: inherit; border: 0; background: none; color: var(--leaf, #5b3b8c); padding: 8px; cursor: pointer; }
+.login-legal-body { padding: 20px; overflow-y: auto; }
+@media (max-width: 600px) { .login-legal-overlay { padding: 12px; } .login-legal-dialog { max-height: 94dvh; } }
+
 .captcha-box {
   width: 100%;
   height: 52px;

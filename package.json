@@ -4,6 +4,7 @@
   "private": true,
   "description": "同行者众 · 北京周边短途游微信小程序（第一阶段）",
   "scripts": {
+    "legal:export": "node scripts/export-legal-docs.cjs",
     "install:all": "npm install && npm install --prefix server && npm install --prefix web",
     "seed": "node server/src/seed/run.js",
     "dev:server": "node --watch server/src/index.js",

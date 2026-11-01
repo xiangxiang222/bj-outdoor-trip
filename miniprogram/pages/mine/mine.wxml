@@ -101,6 +101,7 @@
 <view class="guest-welcome" wx:if="{{!user}}"><image src="{{mediaBase}}/covers/R01.jpg" mode="aspectFill" /><view class="guest-welcome-copy"><view class="section-kicker">YOUR JOURNEY STARTS HERE</view><view>{{tr.t('每一程，都值得期待', lang)}}</view><text>{{tr.t('登录后管理行程，解锁你的同行权益', lang)}}</text></view></view>
 <view class="btn" wx:if="{{!user}}" bindtap="login">{{tr.t('登录', lang)}}</view>
 <view class="btn ghost" wx:if="{{!user}}" bindtap="register">{{tr.t('注册', lang)}}</view>
+<view class="card"><view class="pad" bindtap="openLegal"><text>{{tr.t('协议与隐私', lang)}}</text><text style="float:right;color:var(--muted)">›</text></view></view>
 
 <view class="cell-label" wx:if="{{picks.length}}">{{tr.t('路线推荐', lang)}}</view>
 <view class="mine-rec" wx:if="{{picks.length}}">

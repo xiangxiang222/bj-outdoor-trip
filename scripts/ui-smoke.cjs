@@ -182,7 +182,8 @@ async function main() {
         await p.locator("#activity-equipment").fill("跑鞋、饮水");
         await p.locator("#publish-description").fill("先热身十分钟，小雨改期。 ");
         const uploaded = p.waitForResponse(response => new URL(response.url()).pathname === "/api/upload" && response.request().method() === "POST");
-        await p.locator("#publish-group-qr").setInputFiles({ name: "wechat-group.png", mimeType: "image/png", buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7l8AAAAASUVORK5CYII=", "base64") });
+        const qrFixture = await require(require.resolve("qrcode", { paths: [path.join(root, "server")] })).toBuffer("BROWSER TEST ONLY: group QR upload fixture", { width: 220, margin: 2 });
+        await p.locator("#publish-group-qr").setInputFiles({ name: "wechat-group.png", mimeType: "image/png", buffer: qrFixture });
         const uploadResponse = await uploaded;
         assert.equal(uploadResponse.status(), 200);
         const qrPath = (await uploadResponse.json()).data.url;

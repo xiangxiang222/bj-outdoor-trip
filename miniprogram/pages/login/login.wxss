@@ -102,3 +102,12 @@
   height: 120rpx;
   display: block;
 }
+
+.login-legal { padding: 20rpx 28rpx 28rpx; color: var(--ink, #44384e); font-size: calc(24rpx * var(--ui-scale)); line-height: 1.8; }
+.login-legal-note { color: var(--muted, #777); margin-bottom: 16rpx; }
+.login-legal-error { color: #aa413f; margin-bottom: 16rpx; }
+.login-legal-check { display: flex; align-items: center; min-height: 64rpx; }
+.login-legal-check checkbox { transform: scale(.8); transform-origin: left center; }
+.login-legal-link { color: #725793; padding: 8rpx 0; }
+.login-legal-links { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.login-legal-center { margin-top: 8rpx; }

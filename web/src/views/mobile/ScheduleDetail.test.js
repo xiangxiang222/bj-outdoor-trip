@@ -23,6 +23,7 @@ describe('one-off city activity details', () => {
     state.s.value = activity({ startDate: '2020-01-01', endDate: '2020-01-01', myEnrollment: { status: 'joined', payStatus: 'paid', remainAmount: 0 } });
     expect(state.activityPresentation.value.title).toBe('活动已结束');
     expect(state.showEnroll.value).toBe(false);
+    expect(state.dockVisible.value).toBe(false);
     expect(state.ticket.value.share).toBe(false);
     expect(state.peopleText.value).toBe('已报名 1 人');
     expect(state.activityGroupEmpty.value).not.toMatch(/到场|付款/);

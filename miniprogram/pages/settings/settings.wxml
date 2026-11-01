@@ -44,6 +44,14 @@
     <text class="hint">{{tr.t('余额 ¥', lang)}}{{tr.t(user.walletBalance || 0, lang)}} ›</text>
   </view>
 </view>
+<view class="sec">{{tr.t('协议与隐私', lang)}}</view>
+<view class="list">
+  <view class="row" bindtap="go" data-url="/pages/legal/legal"><text>{{tr.t('协议与隐私中心', lang)}}</text><text class="hint">›</text></view>
+  <view class="row" bindtap="go" data-url="/pages/legal/legal?doc=privacy"><text>{{tr.t('隐私政策', lang)}}</text><text class="hint">›</text></view>
+  <view class="row" bindtap="go" data-url="/pages/legal/legal?doc=collection"><text>{{tr.t('个人信息收集清单', lang)}}</text><text class="hint">›</text></view>
+  <view class="row" bindtap="go" data-url="/pages/legal/legal?doc=sharing"><text>{{tr.t('第三方信息共享清单', lang)}}</text><text class="hint">›</text></view>
+  <view class="row" bindtap="go" data-url="/pages/legal/legal?doc=cancellation"><text>{{tr.t('账号注销须知', lang)}}</text><text class="hint">›</text></view>
+</view>
 <view class="list actions">
   <view class="row center" bindtap="out">{{tr.t('退出登录', lang)}}</view>
   <view class="row center danger" bindtap="closeAccount">{{tr.t('注销账号', lang)}}</view>
