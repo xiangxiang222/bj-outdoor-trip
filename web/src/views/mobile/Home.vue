@@ -37,7 +37,7 @@
     </form>
     <router-link class="discovery-language-entry" data-testid="home-discovery-entry" to="/m/discover"><span class="discovery-language-symbol"><TravelIcon name="compass" /></span><span><strong>说说你想怎么玩</strong><small>时间、预算和偏好，一起说清楚</small></span><TravelIcon name="arrow" /></router-link>
     <div class="journey-shortcuts">
-      <button type="button" @click="setView('routes')"><span><TravelIcon name="mountain" /></span><strong>精选线路</strong><small>去看更大的世界</small></button>
+      <button type="button" @click="discoverRoutes"><span><TravelIcon name="mountain" /></span><strong>精选线路</strong><small>去看更大的世界</small></button>
       <button type="button" @click="discoverHostTrips('campus')"><span><TravelIcon name="school" /></span><strong>高校同行</strong><small>发现跨校旅程</small></button>
       <button type="button" @click="discoverHostTrips('company')"><span><TravelIcon name="building" /></span><strong>企业团建</strong><small>寻找团队出行</small></button>
       <button type="button" @click="router.push('/m/guides')"><span><TravelIcon name="people" /></span><strong>专业领队</strong><small>认识带路的人</small></button>
@@ -45,7 +45,7 @@
     <section class="destination-section" aria-label="山野出游灵感">
       <div class="section-heading"><div><span class="section-eyebrow">A LITTLE ESCAPE</span><h2>走出日常，自然会有答案</h2></div><router-link class="destination-caption" to="/m/guides">专业领队 ›</router-link></div>
       <div class="destination-grid">
-        <button v-for="place in destinations" :key="place.keyword" class="destination-card" type="button" @click="searchDestination(place.keyword)"><img :src="place.photo" :alt="place.name" loading="lazy" /><span class="destination-shade"></span><span class="destination-tag">{{ place.tag }}</span><span class="destination-copy"><small>{{ place.en }}</small><strong>{{ place.name }}</strong><em>{{ place.copy }}</em></span><TravelIcon name="arrow" /></button>
+        <button v-for="place in destinations" :key="place.category" class="destination-card" type="button" @click="discoverInspiration(place.category)"><img :src="place.photo" :alt="place.name" loading="lazy" /><span class="destination-shade"></span><span class="destination-tag">{{ place.tag }}</span><span class="destination-copy"><small>{{ place.en }}</small><strong>{{ place.name }}</strong><em>{{ place.copy }}</em></span><TravelIcon name="arrow" /></button>
       </div>
     </section>
     <section class="campus-card" aria-label="校园认证">
@@ -169,7 +169,7 @@
     </div>
     </template>
 
-    <RouteCatalog v-else :key="routeSearchVersion" :q="query" :seed-tag="tag" />
+    <RouteCatalog v-else :key="routeSearchVersion" v-model:q="query" v-model:category="routeCategory" :seed-tag="tag" />
 
     <section class="organizer-section">
       <div class="section-heading">
@@ -230,6 +230,7 @@ import http from "@/api/http";
 import { useUserStore } from "@/stores/user";
 import { OFFER_TYPES } from "@/utils/offer";
 import { mediaSrc } from "@/utils/media";
+import { createResultScroller } from "@/utils/resultScroll";
 import { boardedLine, coverMark, coverOf, feedWhen, hostName, isFreeOffer, taglineOf } from "@/utils/feedCard";
 import { cycleSort, hostFacets as collectHostFacets, processFeed, sortLabel } from "@/utils/feedList";
 import { availableDepartures, buildDepartureMonth, chinaDay, departureMonths, matchesDepartureTime, weekendRange } from "@/utils/departureDates";
@@ -242,14 +243,15 @@ const router = useRouter();
 const store = useUserStore();
 const schedules = ref([]);
 const feedStart = ref(null);
+const resultScroller = createResultScroller();
 const departureNow = ref(new Date());
 const today = computed(() => chinaDay(departureNow.value));
 const selectableMonths = computed(() => departureMonths(departureNow.value));
 const lastDepartureDay = computed(() => buildDepartureMonth(selectableMonths.value.at(-1)?.key, [], departureNow.value).filter((cell) => !cell.blank).at(-1)?.date || today.value);
 const destinations = [
-  { keyword: '长城', name: '在长城，追一场山风', en: 'WALK INTO THE WILD', tag: '山脊漫步', copy: '把辽阔，装进行程', photo: '/static/photos/mutianyu.jpg' },
-  { keyword: '山', name: '山深处，有好风景', en: 'FIND YOUR OWN PACE', tag: '山野徒步', copy: '慢下来，听山野说话', photo: '/static/photos/wuling_07.jpg' },
-  { keyword: '海', name: '去海边，等风也等你', en: 'MEET BY THE SEA', tag: '海岸出走', copy: '有些放松，只需一片海', photo: '/static/photos/beidaihe.jpg' },
+  { category: '长城', name: '在长城，追一场山风', en: 'WALK INTO THE WILD', tag: '山脊漫步', copy: '把辽阔，装进行程', photo: '/static/photos/mutianyu.jpg' },
+  { category: '登山', name: '山深处，有好风景', en: 'FIND YOUR OWN PACE', tag: '山野徒步', copy: '慢下来，听山野说话', photo: '/static/photos/wuling_07.jpg' },
+  { category: '海滨', name: '去海边，等风也等你', en: 'MEET BY THE SEA', tag: '海岸出走', copy: '有些放松，只需一片海', photo: '/static/photos/beidaihe.jpg' },
 ];
 const home = ref({ brand: {}, cities: [], tags: [], festivals: [], months: [] });
 const loading = ref(true);
@@ -278,6 +280,7 @@ const query = ref("");
 const sort = ref("soon");
 const heroIndex = ref(0);
 const routeSearchVersion = ref(0);
+const routeCategory = ref("");
 const upcoming = ref(null);
 const fold = reactive({ extra: false });
 const offers = OFFER_TYPES.filter((o) => o.key !== "full");
@@ -402,7 +405,7 @@ onMounted(async () => {
     if (n) heroIndex.value = (heroIndex.value + 1) % n;
   }, 4000);
 });
-onUnmounted(() => { homeDisposed = true; clearInterval(heroTimer); clearInterval(departureClock); });
+onUnmounted(() => { homeDisposed = true; resultScroller.cancel(); clearInterval(heroTimer); clearInterval(departureClock); });
 
 watch(
   () => pageRoute.query.view,
@@ -518,8 +521,11 @@ function onCalendarKeydown(event) {
 }
 async function discoverJourney() {
   setView("trips");
-  await nextTick();
-  discoverTrips();
+  return discoverTrips();
+}
+async function discoverRoutes() {
+  setView("routes");
+  return discoverTrips();
 }
 function toggleTag(name) {
   tag.value = tag.value === name ? "" : name;
@@ -544,8 +550,10 @@ function toggleCompany(name) {
 function toggleSchool(name) {
   school.value = school.value === name ? "" : name;
 }
-function discoverTrips() {
-  feedStart.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+async function discoverTrips() {
+  resultScroller.cancel();
+  await nextTick();
+  if (!homeDisposed) resultScroller.scrollTo(feedStart.value);
 }
 async function discoverCampusTrips() {
   return discoverHostTrips("campus");
@@ -561,17 +569,25 @@ async function discoverHostTrips(kind) {
   hostKind.value = kind;
   fold.extra = false;
   setView("trips");
-  await nextTick();
-  discoverTrips();
+  return discoverTrips();
 }
 async function searchDestination(keyword) {
   tag.value = "";
   query.value = keyword;
+  routeCategory.value = "";
   // A destination starts a fresh catalog, including its own days/tag filters.
   routeSearchVersion.value++;
   setView("routes");
-  await nextTick();
-  discoverTrips();
+  return discoverTrips();
+}
+async function discoverInspiration(category) {
+  if (!destinations.some((place) => place.category === category)) return;
+  tag.value = "";
+  query.value = "";
+  routeCategory.value = category;
+  routeSearchVersion.value++;
+  setView("routes");
+  return discoverTrips();
 }
 function onHeroError(e) {
   if (e.target.dataset.fallback === "1") return;

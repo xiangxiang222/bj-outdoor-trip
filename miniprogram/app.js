@@ -66,7 +66,11 @@ function promptUnusedCoupons() {
         confirmText: "去看看",
         cancelText: "稍后",
         success(r) {
-          if (r.confirm) wx.navigateTo({ url: "/pages/coupons/coupons" });
+          if (!r.confirm) return;
+          const stack = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+          const page = stack[stack.length - 1];
+          if (page && typeof page.navigateHome === "function") page.navigateHome("navigateTo", "/pages/coupons/coupons");
+          else wx.navigateTo({ url: "/pages/coupons/coupons" });
         },
       });
     })

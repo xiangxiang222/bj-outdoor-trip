@@ -194,10 +194,11 @@ function applyChrome(look) {
   const active = pages.length ? pages[pages.length - 1].route : "";
   const profile = active === "pages/mine/mine";
   const home = active === "pages/index/index";
+  const homeText = home && look.textMode;
   const campus = ["pages/student/student", "pages/activities/activities"].includes(active);
-  const chrome = home ? (dark ? "#1c1c1e" : "#ffffff") : profile ? (dark ? "#211c29" : "#f1edf8") : campus ? (dark ? "#121214" : "#f6f5f8") : dark ? "#352442" : "#5b3b8c";
+  const chrome = home ? (homeText ? (dark ? "#30263d" : "#efeaf7") : "#303d38") : profile ? (dark ? "#211c29" : "#f1edf8") : campus ? (dark ? "#121214" : "#f6f5f8") : dark ? "#352442" : "#5b3b8c";
   wx.setNavigationBarColor({
-    frontColor: (home || profile || campus) && !dark ? "#000000" : "#ffffff",
+    frontColor: (homeText || profile || campus) && !dark ? "#000000" : "#ffffff",
     backgroundColor: chrome,
     fail() {},
   });
@@ -213,7 +214,7 @@ function applyChrome(look) {
     backgroundColorBottom: dark ? "#121214" : "#f6f5f8",
     fail() {},
   });
-  wx.setBackgroundTextStyle({ textStyle: home && !dark ? "dark" : "light", fail() {} });
+  wx.setBackgroundTextStyle({ textStyle: homeText && !dark ? "dark" : "light", fail() {} });
 }
 
 function t(look) {

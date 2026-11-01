@@ -12,6 +12,21 @@ function pageHarness(pageName, options = {}) {
   const app = options.app || { globalData: { token: "test-token", user: {} } };
   const calls = { redirects: [], navigations: [], scrolls: [], titles: [], requests: [], auth: [], campusPicks: [], media: [], uploads: [], modals: [], toasts: [], tabs: [], previews: [] };
   const storage = new Map(Object.entries(options.storage || {}));
+  const scrollTimers = new Map();
+  let scrollClock = 0;
+  let scrollTimerId = 0;
+  let page;
+  function tickScroll(ms) {
+    const end = scrollClock + ms;
+    for (;;) {
+      const due = [...scrollTimers].filter(([, timer]) => timer.at <= end).sort((a, b) => a[1].at - b[1].at)[0];
+      if (!due) break;
+      scrollClock = due[1].at;
+      scrollTimers.delete(due[0]);
+      due[1].callback();
+    }
+    scrollClock = end;
+  }
   let definition;
   const context = {
     require(id) {
@@ -27,16 +42,38 @@ function pageHarness(pageName, options = {}) {
         },
       };
       if (id === "../../utils/appearance") return { isDark: () => !!options.dark };
+      if (id === "../../utils/page-scroll") return { createPageScroller(config) {
+        return localRequire(id).createPageScroller({ ...config, now: () => scrollClock,
+          schedule(callback, delay) { scrollTimers.set(++scrollTimerId, { at: scrollClock + delay, callback }); return scrollTimerId; },
+          unschedule(timer) { scrollTimers.delete(timer); },
+        });
+      } };
       if (pageName === "student" && id === "../../utils/campus") return { openCampusPick(value) { calls.campusPicks.push(value); } };
       if (pageName === "student" && id === "../../utils/media") return { absMedia: (url) => url && url.startsWith("/") ? "https://example.test" + url : url };
       return localRequire(id);
     },
     Page(value) { definition = value; },
     getApp() { return app; },
+    getCurrentPages() { return options.getCurrentPages ? options.getCurrentPages(page) : [page]; },
     wx: {
       redirectTo(value) { calls.redirects.push(value); },
       navigateTo(value) { calls.navigations.push(value); },
-      pageScrollTo(value) { calls.scrolls.push(value); },
+      pageScrollTo(value) { calls.scrolls.push(value); value.complete?.(); },
+      nextTick(callback) { callback(); },
+      createSelectorQuery() {
+        let selector;
+        const query = {
+          select(value) { selector = value; return query; },
+          selectViewport() { return query; },
+          boundingClientRect() { return query; },
+          scrollOffset() { return query; },
+          exec(callback) {
+            const { top = 1000, scrollTop = 0 } = options.geometry || {};
+            callback(selector ? [{ top }, { scrollTop }] : [{ scrollTop }]);
+          },
+        };
+        return query;
+      },
       setNavigationBarTitle(value) { calls.titles.push(value); },
       chooseMedia(value) { calls.media.push(value); },
       uploadFile(value) { calls.uploads.push(value); },
@@ -54,7 +91,7 @@ function pageHarness(pageName, options = {}) {
     clearTimeout,
   };
   vm.runInNewContext(fs.readFileSync(filename, "utf8"), context, { filename });
-  const page = { ...definition, data: structuredClone(definition.data) };
+  page = { ...definition, data: structuredClone(definition.data) };
   page.setData = function (patch) {
     for (const [key, value] of Object.entries(patch)) {
       const keys = key.split(".");
@@ -63,7 +100,7 @@ function pageHarness(pageName, options = {}) {
       target[keys[keys.length - 1]] = value;
     }
   };
-  return { page, calls, app };
+  return { page, calls, app, tickScroll };
 }
 
 function studentHarness(options = {}) {
@@ -95,29 +132,48 @@ describe("native mini-program page behavior", () => {
   });
 
   it("opens destination inspiration as a fresh route search and submits the current search immediately", () => {
-    const { page, calls } = pageHarness("index");
+    const { page, calls, tickScroll } = pageHarness("index");
     let routeLoads = 0;
     page.loadRoutes = () => { routeLoads++; };
-    page.setData({ routeDays: "multi", routeTag: "亲子", tag: "亲子", query: "旧搜索" });
+    page.setData({ routeCategory: "海滨", routeDays: "multi", routeTag: "亲子", tag: "亲子", query: "旧搜索" });
     page.searchDestination({ currentTarget: { dataset: { keyword: "长城" } } });
     assert.equal(page.data.view, "routes");
     assert.equal(page.data.query, "长城");
+    assert.equal(page.data.routeCategory, "");
     assert.equal(page.data.routeDays, 0);
     assert.equal(page.data.routeTag, "");
     assert.equal(routeLoads, 1);
-    assert.equal(calls.scrolls.at(-1).selector, "#explore");
+    tickScroll(16);
+    assert.ok(calls.scrolls.at(-1).scrollTop > 0);
     page.discoverTrips();
     assert.equal(routeLoads, 2);
   });
 
+  it("opens each inspiration as its real category without an old search, day or play filter", () => {
+    const { page } = pageHarness("index");
+    page.loadRoutes = () => {};
+    for (const category of ["长城", "登山", "海滨"]) {
+      page.setData({ query: "海淀", routeCategory: "", routeDays: 2, routeTag: "亲子", tag: "摄影", date: "2099-04-08" });
+      page.discoverInspiration({ currentTarget: { dataset: { category } } });
+      assert.equal(page.data.view, "routes");
+      assert.equal(page.data.routeCategory, category);
+      assert.equal(page.data.query, "");
+      assert.equal(page.data.routeDays, 0);
+      assert.equal(page.data.routeTag, "");
+      assert.equal(page.data.date, "2099-04-08");
+    }
+    page.onUnload();
+  });
+
   it("discovers trips without imposing a weekend and preserves a deliberately selected departure date", () => {
-    const { page, calls } = pageHarness("index");
+    const { page, calls, tickScroll } = pageHarness("index");
     page.setData({ view: "routes" });
     page.discoverJourney();
     assert.equal(page.data.view, "trips");
     assert.equal(page.data.departurePreset, "any");
     assert.equal(page.data.date, "");
-    assert.equal(calls.scrolls.at(-1).selector, "#explore");
+    tickScroll(16);
+    assert.ok(calls.scrolls.at(-1).scrollTop > 0);
     page.setData({ view: "routes", date: "2099-01-01" });
     page.discoverJourney();
     assert.equal(page.data.view, "trips");
@@ -128,6 +184,109 @@ describe("native mini-program page behavior", () => {
     assert.equal(page.data.departureSheet, true);
     assert.equal(page.data.draftMode, "date");
     assert.equal(page.data.draftDate, "2099-01-01");
+  });
+
+  it("eases long movements using immediate steps and leaves the heading below system controls", () => {
+    const geometry = { top: 180, scrollTop: 450 };
+    const { page, calls, tickScroll } = pageHarness("index", { geometry });
+    page.setData({ statusBarHeight: 59 });
+    page.explore();
+    tickScroll(450);
+    assert.equal(calls.scrolls.at(-1).scrollTop, 515);
+    geometry.top = 1500;
+    page.explore();
+    const before = calls.scrolls.length;
+    tickScroll(450);
+    const middle = calls.scrolls.at(-1).scrollTop;
+    assert.ok(middle > 450 && middle < 1835);
+    assert.ok(calls.scrolls.length > before + 10);
+    tickScroll(500);
+    assert.equal(calls.scrolls.at(-1).scrollTop, 1835);
+    assert.ok(calls.scrolls.every(call => call.duration === 0));
+    page.onUnload();
+  });
+
+  it("invalidates pending render work and stops touch cancellation without querying or writing a position", () => {
+    const pending = [];
+    const { page, calls, tickScroll } = pageHarness("index", { wx: { nextTick(callback) { pending.push(callback); } } });
+    page.explore();
+    page.explore();
+    pending.shift()();
+    tickScroll(16);
+    assert.equal(calls.scrolls.length, 0);
+    pending.shift()();
+    tickScroll(100);
+    const beforeTouch = calls.scrolls.length;
+    assert.ok(beforeTouch > 1);
+    page.cancelExplore();
+    tickScroll(1000);
+    assert.equal(calls.scrolls.length, beforeTouch);
+    page.explore();
+    page.onHide();
+    pending.shift()();
+    tickScroll(1000);
+    assert.equal(calls.scrolls.length, beforeTouch);
+    page.onUnload();
+  });
+
+  it("leaves a nearby heading in place and stops if a different page becomes active", () => {
+    let topPage;
+    const geometry = { top: 95, scrollTop: 400 };
+    const { page, calls, tickScroll } = pageHarness("index", { geometry, getCurrentPages: page => [topPage || page] });
+    page.explore();
+    tickScroll(1000);
+    assert.equal(calls.scrolls.length, 0);
+    geometry.top = 800;
+    page.explore();
+    tickScroll(32);
+    const beforeSwitch = calls.scrolls.length;
+    assert.ok(beforeSwitch > 0);
+    topPage = { route: "pkg-detail/detail/detail" };
+    tickScroll(1000);
+    assert.equal(calls.scrolls.length, beforeSwitch);
+    page.onUnload();
+  });
+
+  it("ignores delayed measurements after a touch, hide or unload without starting a scroll", () => {
+    for (const interrupt of ["cancelExplore", "onHide", "onUnload"]) {
+      const pending = [];
+      const { page, calls, tickScroll } = pageHarness("index", { wx: {
+        createSelectorQuery() {
+          const query = {
+            select() { return query; }, selectViewport() { return query; },
+            boundingClientRect() { return query; }, scrollOffset() { return query; },
+            exec(callback) { pending.push(callback); },
+          };
+          return query;
+        },
+      } });
+      page.explore();
+      page[interrupt]();
+      assert.equal(pending.length, 1, "cancellation must not query the viewport");
+      pending.shift()([{ top: 1000 }, { scrollTop: 0 }]);
+      tickScroll(1000);
+      assert.equal(calls.scrolls.length, 0);
+    }
+  });
+
+  it("waits for the last immediate scroll command before opening a route or switching tabs", () => {
+    for (const method of ["navigateTo", "switchTab"]) {
+      const pending = [];
+      const { page, calls, tickScroll } = pageHarness("index", { wx: {
+        pageScrollTo(options) { pending.push(options); },
+      } });
+      page.explore();
+      tickScroll(1000);
+      assert.equal(pending.length, 1, "a slow bridge must not accumulate commands");
+      const url = method === "navigateTo" ? "/pkg-detail/detail/detail?id=27" : "/pages/orders/orders";
+      page.navigateHome(method, url);
+      assert.equal(calls.navigations.length + calls.tabs.length, 0);
+      pending.shift().complete();
+      assert.equal((method === "navigateTo" ? calls.navigations : calls.tabs)[0].url, url);
+      page.onHide();
+      tickScroll(1000);
+      assert.equal(pending.length, 0);
+    }
   });
 
   it("stops retrying failed hero images and keeps route links valid across image fallbacks", () => {
@@ -163,7 +322,7 @@ describe("native mini-program page behavior", () => {
   });
 
   it("opens campus discovery anonymously with a clean filter and keeps advanced filters collapsed", () => {
-    const { page, calls } = pageHarness("index", { app: { globalData: { token: "", user: {} } } });
+    const { page, calls, tickScroll } = pageHarness("index", { app: { globalData: { token: "", user: {} } } });
     page.setData({
       view: "routes", "fold.extra": true, query: "长城", city: "怀柔", date: "2026-10-31",
       tag: "登山", offerFilter: "deal", festivalKey: "holiday", monthPicked: true,
@@ -179,7 +338,8 @@ describe("native mini-program page behavior", () => {
     }
     assert.equal(page.data.monthPicked, false);
     assert.deepEqual(Array.from(page.data.picked, (item) => item.key), ["host"]);
-    assert.equal(calls.scrolls[0].selector, "#explore");
+    tickScroll(16);
+    assert.ok(calls.scrolls[0].scrollTop > 0);
     assert.equal(calls.navigations.length, 0);
     assert.equal(calls.redirects.length, 0);
   });
@@ -774,7 +934,8 @@ describe("native mini-program page behavior", () => {
     assert.equal(home.page.data.hostKind, "campus");
     assert.equal(home.page.data.query, "");
     assert.equal(home.page.data.fold.extra, false);
-    assert.equal(home.calls.scrolls.at(-1).selector, "#explore");
+    home.tickScroll(16);
+    assert.ok(home.calls.scrolls.at(-1).scrollTop > 0);
   });
 
   it("previews a higher membership tier without changing the current badge or real progress", () => {

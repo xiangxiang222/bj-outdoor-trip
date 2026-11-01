@@ -67,6 +67,33 @@ const pages = [
 ];
 
 describe("native route presentation", () => {
+  it("shows the exact active homepage filters and removes only the chosen condition", async () => {
+    const { page, calls } = harness("index");
+    page.setData({ query: " 北戴河 ", routeCategory: "海滨", routeDays: 2, routeTag: "亲子", routeTags: [{ name: "亲子" }], date: "2099-04-08" });
+    await page.loadRoutes();
+    let params = new URL(calls.at(-1)[0], "https://test.invalid").searchParams;
+    assert.equal(params.get("category"), "海滨");
+    assert.equal(params.get("q"), "北戴河");
+    assert.equal(params.get("days"), "2");
+    assert.equal(params.get("tag"), "亲子");
+    assert.deepEqual(Array.from(page.data.routePicked, (pick) => [pick.key, pick.value]), [["category", "海滨"], ["q", "北戴河"], ["days", "2日"], ["tag", "亲子"]]);
+    await page.clearRouteFilter({ currentTarget: { dataset: { key: "category" } } });
+    params = new URL(calls.at(-1)[0], "https://test.invalid").searchParams;
+    assert.equal(params.has("category"), false);
+    assert.equal(params.get("days"), "2");
+    assert.equal(params.get("tag"), "亲子");
+    assert.equal(params.get("q"), "北戴河");
+    assert.deepEqual(Array.from(page.data.routePicked, (pick) => pick.key), ["q", "days", "tag"]);
+    await page.clearRouteFilter({ currentTarget: { dataset: { key: "q" } } });
+    assert.equal(page.data.query, "");
+    assert.equal(page.data.routeDays, 2);
+    assert.equal(page.data.routeTag, "亲子");
+    await page.clearRouteFilters();
+    assert.equal(page.data.routePicked.length, 0);
+    assert.equal(calls.at(-1)[0], "/routes");
+    assert.equal(page.data.date, "2099-04-08");
+  });
+
   it("shares the selected view between the homepage and the dedicated catalog without changing filters", async () => {
     const store = new Map();
     const home = harness("index", { store });

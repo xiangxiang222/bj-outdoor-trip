@@ -7,14 +7,15 @@ const { cycleSort, hostFacets, processFeed, sortLabel } = require("../../utils/f
 const { loadRouteCatalog } = require("../../utils/route-catalog");
 const { ROUTE_MODES, readRouteMode, saveRouteMode } = require("../../utils/route-presentation");
 const { chinaDay, departureMonths, availableDepartures, buildDepartureMonth, matchesDepartureTime } = require("../../utils/departure-dates");
+const { createPageScroller } = require("../../utils/page-scroll");
 function asList(rows) {
   return Array.isArray(rows) && rows.length ? rows : [];
 }
 const HERO_PHOTOS = ["mutianyu_06", "wuling_07", "beidaihe"].map((name) => absMedia("/static/photos/" + name + ".jpg"));
 const DESTINATIONS = [
-  { keyword: "长城", name: "在长城，追一场山风", en: "WALK INTO THE WILD", tag: "山脊漫步", copy: "把辽阔，装进行程", photo: absMedia("/static/photos/mutianyu.jpg") },
-  { keyword: "山", name: "山深处，有好风景", en: "FIND YOUR OWN PACE", tag: "山野徒步", copy: "慢下来，听山野说话", photo: absMedia("/static/photos/wuling_07.jpg") },
-  { keyword: "海", name: "去海边，等风也等你", en: "MEET BY THE SEA", tag: "海岸出走", copy: "有些放松，只需一片海", photo: absMedia("/static/photos/beidaihe.jpg") },
+  { category: "长城", name: "在长城，追一场山风", en: "WALK INTO THE WILD", tag: "山脊漫步", copy: "把辽阔，装进行程", photo: absMedia("/static/photos/mutianyu.jpg") },
+  { category: "登山", name: "山深处，有好风景", en: "FIND YOUR OWN PACE", tag: "山野徒步", copy: "慢下来，听山野说话", photo: absMedia("/static/photos/wuling_07.jpg") },
+  { category: "海滨", name: "去海边，等风也等你", en: "MEET BY THE SEA", tag: "海岸出走", copy: "有些放松，只需一片海", photo: absMedia("/static/photos/beidaihe.jpg") },
 ];
 function heroSlides(home) {
   const slides = withAbsSlides(home && home.brand && home.brand.slides).filter((slide) => slide.url);
@@ -100,6 +101,8 @@ Page({
     view: "trips",
     searchHint: "搜线路、城区、主理人",
     routeDays: 0,
+    routeCategory: "",
+    routePicked: [],
     routeTag: "",
     routeTags: [],
     routeList: [],
@@ -136,6 +139,7 @@ Page({
     this.load();
   },
   onShow() {
+    this._homeHidden = false;
     this._routeUnloaded = false;
     this.setData({ routeMode: readRouteMode(), routeDark: isDark(), homeDark: isDark() });
     this.applyGroups();
@@ -302,8 +306,50 @@ Page({
     if (this.data.view === "routes") this._searchTimer = setTimeout(() => this.loadRoutes(), 250);
     else this.applyGroups();
   },
-  onUnload() { clearTimeout(this._searchTimer); this._routeUnloaded = true; this._routeRequestId = (this._routeRequestId || 0) + 1; },
-  explore() { wx.pageScrollTo({ selector: "#explore", duration: 300 }); },
+  onHide() { this._homeHidden = true; this.cancelExplore(); },
+  onUnload() { this._homeHidden = true; this.cancelExplore(); clearTimeout(this._searchTimer); this._routeUnloaded = true; this._routeRequestId = (this._routeRequestId || 0) + 1; },
+  homeIsActive() {
+    if (this._homeHidden || this._routeUnloaded) return false;
+    const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
+    return !pages.length || pages[pages.length - 1] === this;
+  },
+  homeScroller() {
+    if (!this._homeScroller) this._homeScroller = createPageScroller({
+      scrollTo: (options) => wx.pageScrollTo(options),
+      isActive: () => this.homeIsActive(),
+    });
+    return this._homeScroller;
+  },
+  cancelExplore() {
+    this._exploreVersion = (this._exploreVersion || 0) + 1;
+    if (this._homeScroller) this._homeScroller.cancel();
+  },
+  navigateHome(method, url) {
+    this.cancelExplore();
+    const navigate = () => {
+      if (this.homeIsActive()) wx[method]({ url });
+    };
+    if (this._homeScroller) this._homeScroller.whenIdle(navigate);
+    else navigate();
+  },
+  explore() {
+    this.cancelExplore();
+    const version = this._exploreVersion;
+    const scroller = this.homeScroller();
+    const active = () => version === this._exploreVersion && this.homeIsActive();
+    // Measure after the chosen catalog and its filters have reached the view.
+    scroller.whenIdle(() => wx.nextTick(() => {
+      if (!active()) return;
+      wx.createSelectorQuery().select("#explore").boundingClientRect().selectViewport().scrollOffset().exec(([rect, viewport]) => {
+        if (!active() || !rect || !viewport) return;
+        const inset = this.data.statusBarHeight + this.data.navHeight + 12;
+        const distance = rect.top - inset;
+        if (Math.abs(distance) < 24) return;
+        const duration = Math.min(900, Math.max(400, Math.round(360 + Math.abs(distance) * 0.4)));
+        scroller.start({ from: viewport.scrollTop, to: Math.max(0, viewport.scrollTop + distance), duration });
+      });
+    }));
+  },
   discoverTrips() {
     clearTimeout(this._searchTimer);
     if (this.data.view === "routes") this.loadRoutes();
@@ -320,7 +366,15 @@ Page({
     const keyword = String(e.currentTarget.dataset.keyword || "").trim();
     if (!keyword) return;
     clearTimeout(this._searchTimer);
-    this.setData({ query: keyword, routeDays: 0, routeTag: "", tag: "" });
+    this.setData({ query: keyword, routeCategory: "", routeDays: 0, routeTag: "", tag: "" });
+    this.setView({ currentTarget: { dataset: { view: "routes" } } });
+    this.explore();
+  },
+  discoverInspiration(e) {
+    const category = e.currentTarget.dataset.category;
+    if (!DESTINATIONS.some((place) => place.category === category)) return;
+    clearTimeout(this._searchTimer);
+    this.setData({ routeCategory: category, query: "", routeDays: 0, routeTag: "", tag: "" });
     this.setView({ currentTarget: { dataset: { view: "routes" } } });
     this.explore();
   },
@@ -374,7 +428,14 @@ Page({
   },
   clearRouteFilters() {
     clearTimeout(this._searchTimer);
-    this.setData({ routeDays: 0, routeTag: "", query: "" });
+    this.setData({ routeCategory: "", routeDays: 0, routeTag: "", query: "" });
+    return this.loadRoutes();
+  },
+  clearRouteFilter(e) {
+    const field = { category: "routeCategory", q: "query", days: "routeDays", tag: "routeTag" }[e.currentTarget.dataset.key];
+    if (!field) return;
+    clearTimeout(this._searchTimer);
+    this.setData({ [field]: field === "routeDays" ? 0 : "" });
     return this.loadRoutes();
   },
   onRouteImageError(e) {
@@ -384,8 +445,13 @@ Page({
   },
   async loadRoutes() {
     const requestId = this._routeRequestId = (this._routeRequestId || 0) + 1;
-    const filters = { q: String(this.data.query || "").trim(), days: this.data.routeDays, tag: this.data.routeTag };
-    this.setData({ routeLoading: true, routeErr: "" });
+    const filters = { category: this.data.routeCategory, q: String(this.data.query || "").trim(), days: this.data.routeDays, tag: this.data.routeTag };
+    const routePicked = [];
+    if (filters.category) routePicked.push({ key: "category", type: "主题", value: filters.category });
+    if (filters.q) routePicked.push({ key: "q", type: "关键词", value: filters.q });
+    if (filters.days) routePicked.push({ key: "days", type: "天数", value: filters.days === "multi" ? "多日" : filters.days + "日" });
+    if (filters.tag) routePicked.push({ key: "tag", type: "玩法", value: filters.tag });
+    this.setData({ routeLoading: true, routeErr: "", routePicked });
     if (!this.data.routeTags.length) {
       try {
         const tagsRes = await request("/play-tags");
@@ -406,7 +472,7 @@ Page({
     }
   },
   goRoute(e) {
-    wx.navigateTo({ url: detailUrl(e.currentTarget.dataset.id) });
+    this.navigateHome("navigateTo", detailUrl(e.currentTarget.dataset.id));
   },
   cycleSort() {
     this.setData({ sort: cycleSort(this.data.sort) });
@@ -504,7 +570,7 @@ Page({
     this.applyGroups();
   },
   goGroup(e) {
-    wx.navigateTo({ url: "/pages/schedule/schedule?id=" + e.currentTarget.dataset.id });
+    this.navigateHome("navigateTo", "/pages/schedule/schedule?id=" + e.currentTarget.dataset.id);
   },
   onHeroChange(e) {
     this.setData({ heroIndex: Number(e.detail.current) || 0 });
@@ -527,35 +593,35 @@ Page({
   goSlide(e) {
     const id = Number(e.currentTarget.dataset.id);
     if (!Number.isInteger(id) || id <= 0) return;
-    wx.navigateTo({ url: detailUrl(id) });
+    this.navigateHome("navigateTo", detailUrl(id));
   },
   goCurrentSlide() {
     const slides = this.data.heroSlides;
     const slide = slides[this.data.heroIndex] || slides[0];
     const id = Number(slide && slide.routeId);
     if (!Number.isInteger(id) || id <= 0) return;
-    wx.navigateTo({ url: detailUrl(id) });
+    this.navigateHome("navigateTo", detailUrl(id));
   },
   goPublish(e) {
     const kind = e && e.currentTarget && e.currentTarget.dataset.kind;
     const url = "/pages/publish/publish" + (kind ? "?organizer=" + encodeURIComponent(kind) : "");
     const app = getApp();
     if (!app.globalData.token) {
-      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(url) });
+      this.navigateHome("navigateTo", "/pages/login/login?redirect=" + encodeURIComponent(url));
       return;
     }
-    wx.navigateTo({ url });
+    this.navigateHome("navigateTo", url);
   },
   goGuides() {
-    wx.navigateTo({ url: "/pages/guides/guides" });
+    this.navigateHome("navigateTo", "/pages/guides/guides");
   },
   goRouteApply() {
     const app = getApp();
     if (!app.globalData.token) {
-      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent("/pages/route-apply/route-apply") });
+      this.navigateHome("navigateTo", "/pages/login/login?redirect=" + encodeURIComponent("/pages/route-apply/route-apply"));
       return;
     }
-    wx.navigateTo({ url: "/pages/route-apply/route-apply" });
+    this.navigateHome("navigateTo", "/pages/route-apply/route-apply");
   },
   loadUpcoming() {
     const app = getApp();
@@ -571,21 +637,21 @@ Page({
       .catch(() => this.setData({ upcoming: null }));
   },
   goUpcoming() {
-    wx.switchTab({ url: "/pages/orders/orders" });
+    this.navigateHome("switchTab", "/pages/orders/orders");
   },
   goOfficial() {
-    wx.navigateTo({ url: "/pages/official/official" });
+    this.navigateHome("navigateTo", "/pages/official/official");
   },
   goDiscover() {
-    wx.navigateTo({ url: "/pages/discover/discover" });
+    this.navigateHome("navigateTo", "/pages/discover/discover");
   },
   goStudent() {
     const app = getApp();
     const url = "/pages/student/student";
     if (!app.globalData.token) {
-      wx.navigateTo({ url: "/pages/login/login?redirect=" + encodeURIComponent(url) });
+      this.navigateHome("navigateTo", "/pages/login/login?redirect=" + encodeURIComponent(url));
       return;
     }
-    wx.navigateTo({ url });
+    this.navigateHome("navigateTo", url);
   },
 });

@@ -40,6 +40,33 @@ describe('journey state and enrollment-time filters',()=>{
     state.sheet.value=false; state.openFilter(); expect(state.draftTab.value).toBe('unpaid');
     state.setFilterTab('ended'); expect(state.shown.value.map(row=>row.id)).toEqual([3]);
   });
+  it('selects cancelled journeys from the sheet, keeps the extra tab and combines search and enrollment dates',()=>{
+    const cancelled=[
+      {...rows[0],id:4,title:'长城',status:'cancelled'},
+      {...rows[0],id:5,title:'长城',schedule_status:'cancelled',created_at:'2020-10-01'},
+      {...rows[0],id:6,title:'海滨',status:'cancelled'},
+    ];
+    const state=setup(); state.list.value=[...rows,...cancelled]; state.openFilter();
+    expect(state.allStatusTabs.some(item=>item.key==='cancelled' && item.label==='已取消')).toBe(true);
+    state.setFilterTab('cancelled');
+    expect(state.shown.value.map(row=>row.id)).toEqual([4,5,6]);
+    expect(state.selectedStatus.value).toBe('已取消');
+    expect(state.tabCount('cancelled')).toBe(3);
+    expect(state.statusTabs.value.at(-1).key).toBe('cancelled');
+    state.sheet.value=false; state.openFilter(); expect(state.draftTab.value).toBe('cancelled');
+    state.keyword.value='长城'; state.draft.value={preset:'',start:'2026-10-01',end:'2026-10-31'}; state.commitTime();
+    expect(state.shown.value.map(row=>row.id)).toEqual([4]);
+    state.clearFilters();
+    expect(state.tab.value).toBe('all'); expect(state.keyword.value).toBe(''); expect(state.shown.value).toHaveLength(6);
+  });
+  it('honors a cancelled journey deep link without falling back to all statuses',async()=>{
+    fixture.route.query={tab:'cancelled'};
+    http.get.mockResolvedValue({data:[...rows,{...rows[0],id:4,status:'cancelled'}]});
+    const state=setup(); await state.load();
+    expect(state.tab.value).toBe('cancelled');
+    expect(state.shown.value.map(row=>row.id)).toEqual([4]);
+    expect(state.selectedStatus.value).toBe('已取消');
+  });
   it('applies valid date changes immediately, keeping the last valid filter during an invalid edit',()=>{
     const state=setup(); state.list.value=rows; state.openFilter();
     state.draft.value.start='2026-10-01'; state.commitTime();
