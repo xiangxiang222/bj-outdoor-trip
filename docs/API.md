@@ -109,7 +109,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | POST | `/schedules` | 用户 | 基于已有线路开团。`organizerType` 为 `individual` / `company` / `campus`。公司须 `companyName`，高校须学校名（`companyName` 或 `campusName`）。可带 `offerType` `playTagIds` `studentOnly` `alumniOk` `oversub` `campusTargets`（`[{school,college,major}]`，三项绑定；学院/专业可空）或旧字段 `schools` `colleges`、`campusScope`（`open\|certified\|college\|school\|colleges\|schools`）`campusSchool` `campusCollege` `lotteryMode`（`off\|pre\|enroll\|both`）、`privateJoin` `joinCode`（加密团口令，4～16 字；勾选加密且口令为空则自动生成 6 位）。`campusScope=schools` 用 `campusTargets`，不要把多校学院名并成一份名单 |
 | POST | `/trips` | 用户 | 发团（类似后台编辑线路）。可带 `channel=activity\|trip`、`activityKind`（掼蛋/跑步/电影/招募）、`studentOnly` `alumniOk` `oversub` `campusTargets` `schools` `colleges` `campusScope` `comboRule` `lotteryMode`、`videos`/`videoUrls`（B 站等视频链接）、`privateJoin` `joinCode`。用户端不能发官方团（`organizerType=official` 会当成个人）。个人山野团提交后待审，成团奖励入钱包（`trip_bounty` 200 元）。审核通过才上首页或活动 Tab |
 | POST | `/upload` | 用户 | 发团封面、学生证。字段 `file` |
-| POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字） |
+| POST | `/schedules/:id/dissolve` | 用户 | 仅发起人。body：`reason`（必填，≤200 字）。同城局未开场可取消；审核中或驳回的未发布活动可撤回。详情返回 `canDissolve`；活动已真实开始或结束后禁止取消。取消后已收款按原付款人全额退回 |
 | PUT | `/schedules/:id/limit` | 用户 | 仅发起人，只扩不缩。`addTargets`（`[{school,college,major}]`）`addSchools` `addColleges` `openAllColleges`。多校时 `addColleges` 必须带 `school`，两校同名学院不能混。不能把「不限学校」收成指定高校，也不能把「本校各学院」收成指定学院 |
 | POST | `/enroll` | 用户 | 见下方报名 body。报超会抽且名单未确认时写入 `applied`（不占座）；确认后中签 `joined`、未中 `waitlist`。候补/`applied` 券为 `held` |
 | POST | `/pay/mock-success` | 用户 | 演示支付成功。`scene=member` 开通会员；否则按 `tradeNo`/`enrollmentId`。`WX_PAY_MOCK=0` 时返回 403 |
@@ -120,7 +120,7 @@ Base URL 本地为 `http://127.0.0.1:3780/api`，线上为 `https://togetherbett
 | POST | `/pay/company-settle` | 用户 | 仅该团 `organizer_id` 可调；成功后模拟分账 |
 | GET | `/orders` | 用户 | 我的报名；每条带 `canCancel` `canPay` `payShareToken` `paidAmount` `remainAmount` `canReview` `reviewed`、`channel`、`refundPercent` `refundHint` `refundAmount`、`deductPercent` `deductAmount`（临近出发不能全额退时的扣除比例和金额）、`helpers`（代付或分摊的付款人） |
 | GET | `/orders/:id` | 用户 | 单条报名，字段与列表相同。不是自己的报名返回 404 |
-| POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（山野团开团前按比例退；同城局出发日前；当天同城局不可取消） |
+| POST | `/orders/:id/cancel` | 用户 | 取消自己的报名（山野团开团前按比例退；同城局活动开始前可取消，包括活动当天尚未开场时） |
 | POST | `/member/buy` | 用户 | 演示环境立即开通/续费会员（年费 99）。真实支付返回 JSAPI 参数，开通发生在回调或 `/pay/confirm`。可带 `code` |
 | GET | `/points` | 用户 | 积分余额与流水 |
 | POST | `/favorites/:routeId` | 用户 | 收藏 |
@@ -194,7 +194,7 @@ H5 入口 `/g`。出行名单点姓名进入游客详情；正式开团前手机
 
 解散成功返回 `cancelled`（取消人数）、`refunded`（退款人数）、`smsCount`、`refunds`（各付款人原路退回）。已付款或已有分摊的报名改为 `pay_status=refunded`。
 
-取消报名：山野团在正式开团前、出发日当天及之前可取消。未成团（真实人数未到成团线，且状态不是已成团/满员/已结束）按实付全额退回；已成团后按线路退费档位（默认 10 天前 100%、3 天前 80%、不足 3 天 50%）按各付款人原路退回。金额按整数元向下取整，比例大于 0 时至少退 1 元；余额支付退回余额。出发日已过仍未成团时，系统自动解散并全额退回。正式开团后或已过出发日返回「正式开团后不可取消」或「已过出发日，不可取消」。同城局仍为出发日前可取消、当天不可取消。解散或后台代取消仍按全额、按付款人原路退回。同一证件取消后可再报。
+取消报名：山野团在正式开团前、出发日当天及之前可取消。未成团（真实人数未到成团线，且状态不是已成团/满员/已结束）按实付全额退回；已成团后按线路退费档位（默认 10 天前 100%、3 天前 80%、不足 3 天 50%）按各付款人原路退回。金额按整数元向下取整，比例大于 0 时至少退 1 元；余额支付退回余额。出发日已过仍未成团时，系统自动解散并全额退回。正式开团后或已过出发日返回「正式开团后不可取消」或「已过出发日，不可取消」。同城局在活动开始前可取消（包括活动当天），已付费用按原付款人全额原路退回；活动开始或结束后不可自行取消。解散或后台代取消仍按全额、按付款人原路退回。同一证件取消后可再报。
 
 ## 管理端（均需管理员 token，登录除外）
 

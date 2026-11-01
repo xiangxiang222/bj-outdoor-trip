@@ -38,9 +38,9 @@
 
 <view class="quick-entries">
   <view class="quick-entry" bindtap="showRoutes"><view class="quick-icon route"><view></view></view><text>{{tr.t('精选线路', lang)}}</text><text class="quick-note">{{tr.t('山野灵感', lang)}}</text></view>
-  <view class="quick-entry" bindtap="goPublish" data-kind="campus"><view class="quick-icon campus"><view></view></view><text>{{tr.t('高校同行', lang)}}</text><text class="quick-note">{{tr.t('发起跨校旅程', lang)}}</text></view>
-  <view class="quick-entry" bindtap="goPublish" data-kind="company"><view class="quick-icon company"><view></view></view><text>{{tr.t('企业团建', lang)}}</text><text class="quick-note">{{tr.t('一起凝聚', lang)}}</text></view>
-  <view class="quick-entry" bindtap="quickHost" data-kind="campus"><view class="quick-icon companions"><view></view><view class="companion-spark"></view></view><text>{{tr.t('校园搭子', lang)}}</text><text class="quick-note">{{tr.t('发现跨校旅程', lang)}}</text></view>
+  <view class="quick-entry" bindtap="quickHost" data-kind="campus"><view class="quick-icon campus"><view></view></view><text>{{tr.t('高校同行', lang)}}</text><text class="quick-note">{{tr.t('发现跨校旅程', lang)}}</text></view>
+  <view class="quick-entry" bindtap="quickHost" data-kind="company"><view class="quick-icon company"><view></view></view><text>{{tr.t('企业团建', lang)}}</text><text class="quick-note">{{tr.t('寻找团队出行', lang)}}</text></view>
+  <view class="quick-entry" bindtap="goGuides"><view class="quick-icon companions"><view></view><view class="companion-spark"></view></view><text>{{tr.t('专业领队', lang)}}</text><text class="quick-note">{{tr.t('认识带路的人', lang)}}</text></view>
 </view>
 
 <view class="trip-hint" wx:if="{{upcoming}}" bindtap="goUpcoming">

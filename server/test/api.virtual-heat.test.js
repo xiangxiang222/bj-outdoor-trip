@@ -182,7 +182,7 @@ describe("virtual auto heat API", () => {
   it("cancels virtuals on merge instead of moving them into the official trip", async () => {
     const token = await loginUser(agent);
     const admin = await loginAdmin(agent);
-    const now = dayjs("2026-09-19");
+    const now = dayjs().add(10, "day").startOf("day");
     const tomorrow = now.add(1, "day").format("YYYY-MM-DD");
     const official = await agent
       .post("/api/admin/schedules")

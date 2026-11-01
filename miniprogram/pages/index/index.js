@@ -484,6 +484,9 @@ Page({
     }
     wx.navigateTo({ url });
   },
+  goGuides() {
+    wx.navigateTo({ url: "/pages/guides/guides" });
+  },
   goRouteApply() {
     const app = getApp();
     if (!app.globalData.token) {

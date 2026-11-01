@@ -23,7 +23,7 @@ Page({
     plans: [],
     supplies: [],
     waiver: "",
-    cancelSummary: "出发日前可取消；出发当天不可取消。",
+    cancelSummary: "活动开始前可取消，已付费用原路退回。",
     mergeTpl: "",
     errors: {},
   },

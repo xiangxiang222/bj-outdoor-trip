@@ -10,7 +10,7 @@ const { createRequire } = require("node:module");
 function harness(options = {}) {
   const filename = path.resolve(__dirname, "../../miniprogram/pages/publish/publish.js");
   const localRequire = createRequire(filename);
-  const calls = { requests: [], redirects: [], errors: [], scrolls: [] };
+  const calls = { requests: [], redirects: [], errors: [], scrolls: [], uploads: [], previews: [] };
   let definition;
   vm.runInNewContext(fs.readFileSync(filename, "utf8"), {
     require(id) {
@@ -31,6 +31,9 @@ function harness(options = {}) {
       redirectTo(value) { calls.redirects.push(value); },
       pageScrollTo(value) { calls.scrolls.push(value); },
       showLoading() {}, hideLoading() {},
+      previewImage(value) { calls.previews.push(value); },
+      chooseMedia(config) { return options.choose ? options.choose(config) : config.success({ tempFiles: [{ tempFilePath: "/tmp/group.png", size: 1200 }] }); },
+      uploadFile(config) { calls.uploads.push(config); if (options.upload) return options.upload(config); config.success({ statusCode: 200, data: JSON.stringify({ ok: true, data: { url: "/static/uploads/activity-group.png" } }) }); },
     },
   }, { filename });
   const page = { ...definition, data: structuredClone(definition.data) };
@@ -85,6 +88,58 @@ describe("native activity publishing", () => {
       assert.equal(calls.redirects[0].url, "/pages/schedule/schedule?id=53&posted=1");
     });
   }
+
+  it("uploads and submits a real optional group image for every activity kind", async () => {
+    for (const [kind, details] of CASES) {
+      const { page, calls } = prepare(kind);
+      fill(page, details);
+      page.pickGroupQr();
+      await new Promise((done) => setImmediate(done));
+      assert.equal(calls.uploads.length, 1);
+      assert.equal(calls.uploads[0].name, "file");
+      assert.equal(calls.uploads[0].header.Authorization, "Bearer test-token");
+      assert.equal(page.data.form.consultGroupQrImage, "/static/uploads/activity-group.png");
+      page.previewGroupQr();
+      assert.equal(calls.previews[0].current, page.data.groupPreview);
+      page.setField(input("consultGroup", "进群请备注报名姓名"));
+      await page.submit();
+      assert.equal(posts(calls)[0][2].consultGroupQrImage, "/static/uploads/activity-group.png");
+      assert.equal(posts(calls)[0][2].consultGroup, "进群请备注报名姓名");
+      page.removeGroupQr();
+      assert.equal(page.data.form.consultGroupQrImage, "");
+      assert.equal(page.data.groupPreview, "");
+    }
+  });
+
+  it("retains the previous image when a replacement upload fails and never submits while uploading", async () => {
+    let upload;
+    const { page, calls } = prepare("跑步", { upload(config) { upload = config; } });
+    fill(page, CASES[1][1]);
+    page.setData({ "form.consultGroupQrImage": "/static/uploads/previous.png" });
+    page.pickGroupQr();
+    assert.equal(page.data.groupUploading, true);
+    await page.submit();
+    assert.equal(posts(calls).length, 0);
+    assert.equal(page.data.errors.groupQr, "请等待群二维码上传完成");
+    upload.success({ statusCode: 403, data: JSON.stringify({ ok: false, message: "图片审核未通过" }) });
+    await new Promise((done) => setImmediate(done));
+    assert.equal(page.data.groupUploading, false);
+    assert.equal(page.data.form.consultGroupQrImage, "/static/uploads/previous.png");
+    assert.equal(page.data.errors.groupQr, "图片审核未通过");
+  });
+
+  it("blocks oversized files before upload and ignores upload completion after leaving", async () => {
+    const oversized = prepare("电影", { choose(config) { config.success({ tempFiles: [{ tempFilePath: "/tmp/group.png", size: 6 * 1024 * 1024 }] }); } });
+    oversized.page.pickGroupQr();
+    assert.equal(oversized.calls.uploads.length, 0);
+    assert.equal(oversized.page.data.errors.groupQr, "群二维码图片请小于 5MB");
+    let upload;
+    const { page } = prepare("电影", { upload(config) { upload = config; } });
+    page.pickGroupQr(); page.onUnload();
+    upload.success({ statusCode: 200, data: JSON.stringify({ ok: true, data: { url: "/static/uploads/late.png" } }) });
+    await new Promise((done) => setImmediate(done));
+    assert.equal(page.data.form.consultGroupQrImage, "");
+  });
 
   it("starts with visible zero and blocks an explicitly cleared fee before any publish request", async () => {
     const { page, calls } = prepare();

@@ -39,9 +39,9 @@
     <router-link class="discovery-language-entry" data-testid="home-discovery-entry" to="/m/discover"><span class="discovery-language-symbol"><TravelIcon name="compass" /></span><span><strong>说说你想怎么玩</strong><small>时间、预算和偏好，一起说清楚</small></span><TravelIcon name="arrow" /></router-link>
     <div class="journey-shortcuts">
       <button type="button" @click="setView('routes')"><span><TravelIcon name="mountain" /></span><strong>精选线路</strong><small>去看更大的世界</small></button>
-      <button type="button" @click="goPublish('', 'campus')"><span><TravelIcon name="school" /></span><strong>高校同行</strong><small>发起跨校旅程</small></button>
-      <button type="button" @click="goPublish('', 'company')"><span><TravelIcon name="building" /></span><strong>公司团建</strong><small>团队一起出发</small></button>
-      <button type="button" @click="discoverCampusTrips"><span><TravelIcon name="campus-pals" /></span><strong>校园搭子</strong><small>发现跨校旅程</small></button>
+      <button type="button" @click="discoverHostTrips('campus')"><span><TravelIcon name="school" /></span><strong>高校同行</strong><small>发现跨校旅程</small></button>
+      <button type="button" @click="discoverHostTrips('company')"><span><TravelIcon name="building" /></span><strong>企业团建</strong><small>寻找团队出行</small></button>
+      <button type="button" @click="router.push('/m/guides')"><span><TravelIcon name="people" /></span><strong>专业领队</strong><small>认识带路的人</small></button>
     </div>
     <section class="destination-section" aria-label="山野出游灵感">
       <div class="section-heading"><div><span class="section-eyebrow">A LITTLE ESCAPE</span><h2>走出日常，自然会有答案</h2></div><router-link class="destination-caption" to="/m/guides">专业领队 ›</router-link></div>
@@ -547,6 +547,9 @@ function discoverTrips() {
   feedStart.value?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 async function discoverCampusTrips() {
+  return discoverHostTrips("campus");
+}
+async function discoverHostTrips(kind) {
   query.value = "";
   city.value = "";
   clearDepartureTime();
@@ -554,7 +557,7 @@ async function discoverCampusTrips() {
   offerFilter.value = "";
   companyName.value = "";
   school.value = "";
-  hostKind.value = "campus";
+  hostKind.value = kind;
   fold.extra = false;
   setView("trips");
   await nextTick();

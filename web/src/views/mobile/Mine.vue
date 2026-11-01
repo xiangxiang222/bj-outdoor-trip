@@ -269,6 +269,7 @@ const router = useRouter();
 const coupons = ref([]);
 const hub = ref({});
 const hubReady = ref(false);
+let loadVersion = 0;
 const memberPerks = computed(() => store.profile?.membership?.perks?.slice(0, 2).join(" · ") || "出行积累成长，解锁更多权益");
 const picker = ref(false);
 const defaults = ref([]);
@@ -307,6 +308,7 @@ watch([posterPick, momentsOpen], ([picking, open]) => {
   document.body.style.overflow = picking || open ? "hidden" : "";
 });
 onUnmounted(() => {
+  loadVersion++;
   document.body.style.overflow = "";
 });
 
@@ -334,26 +336,32 @@ onMounted(() => {
   load();
   loadPicks();
 });
+watch(() => store.token, () => {
+  hub.value = {};
+  coupons.value = [];
+  hubReady.value = false;
+  load();
+});
 
 async function load() {
-  await store.fetchMe().catch(() => {});
-  if (!store.token) {
+  const version = ++loadVersion;
+  const token = store.token;
+  const active = () => version === loadVersion && token === store.token;
+  if (!token) {
+    hub.value = {};
+    coupons.value = [];
     hubReady.value = true;
     return;
   }
-  try {
-    const rows = (await http.get("/me/coupons")).data || [];
-    coupons.value = rows.filter((c) => c.status === "unused");
-  } catch {
-    coupons.value = [];
-  }
-  try {
-    hub.value = (await http.get("/me/wallet")).data || {};
-  } catch {
-    hub.value = {};
-  } finally {
-    hubReady.value = true;
-  }
+  await Promise.all([
+    store.fetchMe().catch(() => {}),
+    http.get("/me/coupons").then((res) => {
+      if (active()) coupons.value = (res.data || []).filter((c) => c.status === "unused");
+    }).catch(() => {}),
+    http.get("/me/wallet").then((res) => {
+      if (active()) hub.value = res.data || {};
+    }).catch(() => {}).finally(() => { if (active()) hubReady.value = true; }),
+  ]);
 }
 
 function goLogin(redirect, tab) {

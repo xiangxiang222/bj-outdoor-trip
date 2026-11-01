@@ -1,4 +1,5 @@
 const { request, showError } = require("../../utils/request");
+const { absMedia } = require("../../utils/media");
 const { isDark } = require("../../utils/appearance");
 const { OFFER_TYPES } = require("../../utils/offer");
 const { KINDS, kindByKey, composeActivityDescription, validateActivityDetails } = require("../../utils/activity-kind");
@@ -70,6 +71,8 @@ Page({
     cityIndex: 2,
     errors: {},
     submitting: false,
+    groupUploading: false,
+    groupPreview: "",
     dark: false,
     form: {
       title: "",
@@ -107,6 +110,8 @@ Page({
       privateJoin: false,
       joinCode: "",
       notes: "",
+      consultGroup: "",
+      consultGroupQrImage: "",
     },
   },
   onShow() { this.setData({ dark: isDark() }); },
@@ -442,8 +447,46 @@ Page({
     if (key) patch["errors." + key] = message;
     this.setData(patch, () => wx.pageScrollTo({ selector: "#submit-error", duration: 200 }));
   },
+  pickGroupQr() {
+    if (this.data.groupUploading || this.data.submitting) return;
+    const app = getApp();
+    const token = app.globalData.token;
+    wx.chooseMedia({ count: 1, mediaType: ["image"], sourceType: ["album", "camera"],
+      success: async (res) => {
+        const file = (res.tempFiles || [])[0];
+        if (!file || this._unloaded || token !== app.globalData.token) return;
+        if (Number(file.size) > 5 * 1024 * 1024) { this.setData({ "errors.groupQr": "群二维码图片请小于 5MB" }); return; }
+        this.setData({ groupUploading: true, "errors.groupQr": "" });
+        try {
+          const url = await new Promise((resolve, reject) => wx.uploadFile({
+            url: app.globalData.baseUrl + "/api/upload", filePath: file.tempFilePath, name: "file",
+            header: { Authorization: "Bearer " + token },
+            success(response) {
+              try {
+                const data = JSON.parse(response.data || "{}");
+                if (response.statusCode >= 200 && response.statusCode < 300 && data.ok && data.data && data.data.url) resolve(data.data.url);
+                else reject(new Error(data.message || "上传失败，请重试"));
+              } catch { reject(new Error("上传失败，请重试")); }
+            }, fail() { reject(new Error("上传失败，请重试")); },
+          }));
+          if (!this._unloaded && token === app.globalData.token) this.setData({ "form.consultGroupQrImage": url, groupPreview: absMedia(url, app.globalData.baseUrl) });
+        } catch (error) {
+          if (!this._unloaded && token === app.globalData.token) this.setData({ "errors.groupQr": error.message || "上传失败，请重试" });
+        } finally { if (!this._unloaded && token === app.globalData.token) this.setData({ groupUploading: false }); }
+      },
+    });
+  },
+  removeGroupQr() {
+    if (!this.data.groupUploading && !this.data.submitting) this.setData({ "form.consultGroupQrImage": "", groupPreview: "", "errors.groupQr": "" });
+  },
+  previewGroupQr() {
+    const current = this.data.groupPreview;
+    if (current) wx.previewImage({ urls: [current], current });
+  },
+  onUnload() { this._unloaded = true; },
   async submit() {
     if (this.data.submitting) return;
+    if (this.data.groupUploading) { this.blockSubmit("groupQr", "请等待群二维码上传完成"); return; }
     const form = Object.assign({}, this.data.form);
     const minimum = Number(form.minGroupSize);
     if (!Number.isInteger(minimum) || minimum < 1) {

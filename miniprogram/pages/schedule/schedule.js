@@ -2,13 +2,48 @@ const { request } = require("../../utils/request");
 const { payStatusText, starText } = require("../../utils/labels");
 const { shareCover, absMedia } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
-const { dateOf, activityDetails, activityBody, activityEnded } = require("../../utils/activity-kind");
+const { dateOf, kindOf, activityDetails, activityBody, activityEnded } = require("../../utils/activity-kind");
 const { peopleLine, trustChips, dockPrice, enrollCta, canShowEnroll, ticketState, showDetailTabs } = require("../../utils/scan-facts");
 const { openCampusPick } = require("../../utils/campus");
 const { decodeShareScene, persistRef, readRef, enrollQuery } = require("../../utils/share-scene");
 const { drawShareCard, drawSharePoster } = require("../../utils/share-card");
 const { baseUrl } = require("../../config");
 const app = getApp();
+
+
+function activityPresentation(s) {
+  const en = s.myEnrollment;
+  const today = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+  const ended = !!s.completedAt || ["finished", "completed", "ended"].includes(s.status) || String(s.endDate || s.startDate || "").slice(0, 10) < today;
+  let title = "招募中", hint = "先了解活动安排，再决定是否加入。";
+  if (s.status === "cancelled") { title = "活动已取消"; hint = s.cancelReason || "本次活动已取消，请查看报名记录与退款进度。"; }
+  else if (s.reviewStatus === "pending") { title = "审核中"; hint = "审核通过后开放报名。"; }
+  else if (s.reviewStatus === "rejected") { title = "审核未通过"; hint = "本次活动暂未开放报名。"; }
+  else if (ended) { title = "活动已结束"; hint = "本次活动已结束，报名记录为你保留。"; }
+  else if (activityEnded(s)) { title = "活动已开始"; hint = "本次活动已开始，报名入口已关闭。"; }
+  else if (en && en.status === "waitlist") { title = "候补中"; hint = "有人退出时按报名顺序递补，确认后可查看群信息。"; }
+  else if (en && en.status === "applied") { title = "报名待确认"; hint = "名单确认后可查看本局微信群。"; }
+  else if (en && en.status === "joined" && Number(en.remainAmount) > 0) { title = "待付款"; hint = "请完成剩余费用支付，支付确认后可查看群信息。"; }
+  else if (en && en.status === "joined") { title = "已报名"; hint = "请核对见面时间与地点，按约定准时参加。"; }
+  else if (Number(s.remain) <= 0) { title = "已满员"; hint = "可报名候补，等待空位递补。"; }
+  const base = ticketState(s, {});
+  const closed = ended || activityEnded(s) || s.status === "cancelled";
+  const ticket = en || base ? { ...(base || {}), kind: "activity", title, sub: hint, trips: !!en, share: !closed } : null;
+  return { title, hint, ended, closed, ticket };
+}
+
+function canDissolveSchedule(s) {
+  if (!s) return false;
+  if (typeof s.canDissolve === "boolean") return s.canDissolve;
+  if (!s.isOrganizer || s.status === "cancelled") return false;
+  if (s.channel === "activity" && ["pending", "rejected"].includes(s.reviewStatus) && !s.startedAt && !s.completedAt && !["finished", "completed", "ended"].includes(s.status)) return true;
+  return s.channel !== "activity" || !activityEnded(s);
+}
+
+function uploadedGroupQr(value) {
+  const url = String(value || "").trim();
+  return /^(?:https?:\/\/[^/?#]+)?\/static\/uploads\/[\w-]+\.(?:png|jpe?g|webp|gif)(?:\?[^#]*)?$/i.test(url) ? url : "";
+}
 
 function busLine(s) {
   const b = s && s.bus;
@@ -57,6 +92,11 @@ Page({
     commonRules: { title: "", summary: "", sections: [] },
     waiverText: "",
     showDissolve: false,
+    canDissolve: false,
+    dissolving: false,
+    dissolveErr: "",
+    activityGroupQr: "",
+    activityGroupQrError: false,
     reason: "",
     addCollege: "",
     addSchool: "",
@@ -153,26 +193,41 @@ Page({
       else if (s.guaranteed || s.status === "confirmed") statusTag = "已成团";
       else if (s.status === "full") statusTag = "已满员";
       else if (s.status === "finished") statusTag = "已结束";
-      const ticket = ticketState(s, { posted: this.data.posted, joined: this.data.joinedHint });
+      const presentation = isActivity ? activityPresentation(s) : null;
+      const ticket = isActivity ? presentation.ticket : ticketState(s, { posted: this.data.posted, joined: this.data.joinedHint });
+      if (presentation) statusTag = presentation.title;
       this.setData({
         s,
-        packing: (s.route && s.route.packingList) || [],
+        packing: !isActivity && (s.route && s.route.packingList) || [],
         gallery: (s.gallery && s.gallery.length ? s.gallery : (s.route && s.route.cover ? [s.route.cover] : [])),
         busPhotos: (s.bus && s.bus.photos) || [],
         busText: busLine(s),
         isActivity,
+        canDissolve: canDissolveSchedule(s),
+        activityGroupQr: uploadedGroupQr(s.consultGroupQr),
+        activityGroupQrError: false,
         activityInfo: isActivity ? activityDetails(s) : [],
+        activityHighlights: isActivity ? activityDetails(s).slice(0, 2) : [],
+        activityKind: isActivity ? kindOf(s) : null,
+        activityHint: presentation ? presentation.hint : "",
+        activityClosed: presentation ? presentation.closed : false,
+        activityTitle: presentation ? presentation.title : "",
+        activityEnded: presentation ? presentation.ended : false,
         activityIntro: isActivity ? activityBody(s) : "",
         activityIsOver: isActivity && activityEnded(s),
         isFree,
         remainSeats,
         whenLabel,
         whenText,
-        peopleText: peopleLine(s),
+        peopleText: isActivity && presentation.closed ? "已报名 " + Number(s.enrolled || 0) + " 人" : peopleLine(s),
+        activityGroupHint: presentation && presentation.closed ? "本次活动的群信息，供已确认参加者查看" : "见面前，先和同好打声招呼",
+        activityGroupEmpty: isActivity && !s.isOrganizer && (!s.myEnrollment || s.myEnrollment.status !== "joined" || Number(s.myEnrollment.remainAmount) > 0)
+          ? (presentation.closed ? "本次活动已关闭，群信息仅向已确认参加者开放。" : "确认参加并完成支付后可查看群信息。")
+          : (presentation && presentation.closed ? "发起人未提供本次活动的群信息。" : "发起人暂未提供群信息，请按活动安排到场。"),
         trusts: trustChips(s),
         ticket,
         priceDock: dockPrice(s),
-        showEnroll: canShowEnroll(s),
+        showEnroll: canShowEnroll(s) && !s.completedAt && !["finished", "completed", "ended"].includes(s.status),
         showDetailTabs: showDetailTabs(s),
         showAfter: !!(s.completedAt && s.myEnrollment && s.myEnrollment.status === "joined"),
         ctaText: enrollCta(s),
@@ -186,9 +241,10 @@ Page({
         cancelItems: (s.refundPolicy && s.refundPolicy.items) || this.data.cancelItems,
         refundHint: (s.refundPolicy && s.refundPolicy.current && s.refundPolicy.current.hint) || "",
         routeDetail: (s.route && s.route.title) ? s.route : this.data.routeDetail,
-        ...storyBits(s.route),
+        ...storyBits(isActivity ? {} : s.route),
       }, () => {
-        this.loadRoute(s.routeId || (s.route && s.route.id));
+        if (!isActivity) this.loadRoute(s.routeId || (s.route && s.route.id));
+        else this.setData({ routeReviewsReady: true });
         this.loadExtras();
         this.prepareShare(s);
       });
@@ -206,7 +262,7 @@ Page({
     }).catch(() => this.setData({ loadErr: "加载失败" }));
   },
   loadExtras() {
-    request("/schedules/" + this.data.id + "/seats").then((r) => {
+    if (!this.data.isActivity) request("/schedules/" + this.data.id + "/seats").then((r) => {
       if (this.data.isActivity) {
         this.setData({ seatRows: [], seatsReady: true });
         return;
@@ -248,6 +304,7 @@ Page({
     }).catch(() => {});
   },
   loadRoute(routeId) {
+    if (this.data.isActivity) { this.setData({ routeReviewsReady: true }); return; }
     routeId = routeId || (this.data.s && (this.data.s.routeId || (this.data.s.route && this.data.s.route.id)));
     if (!routeId) {
       this.setData({ routeReviewsReady: true });
@@ -448,6 +505,12 @@ Page({
     wx.switchTab({ url: "/pages/orders/orders" });
   },
   enroll() {
+    const s = this.data.s;
+    if (!canShowEnroll(s) || s.completedAt || ["finished", "completed", "ended"].includes(s.status)) {
+      wx.showToast({ title: s && s.channel === "activity" && activityEnded(s) ? "本次活动已关闭报名" : "本次行程暂不可报名", icon: "none" });
+      this.load();
+      return;
+    }
     wx.navigateTo({ url: "/pages/enroll/enroll?" + enrollQuery(this) });
   },
   goCoupon() {
@@ -462,7 +525,15 @@ Page({
     wx.navigateTo({ url: "/pages/after/after?id=" + this.data.id });
   },
   stats() { wx.navigateTo({ url: "/pages/stats/stats?id=" + this.data.id }); },
-  toggleDissolve() { this.setData({ showDissolve: !this.data.showDissolve }); },
+  toggleDissolve() {
+    if (this.data.dissolving) return;
+    if (this.data.showDissolve) { this.setData({ showDissolve: false }); return; }
+    if (!canDissolveSchedule(this.data.s)) { this.load(); return; }
+    this.setData({ showDissolve: true, dissolveErr: "" });
+  },
+  stopTap() {},
+  groupQrError() { this.setData({ activityGroupQr: "", activityGroupQrError: true }); },
+  retryGroupQr() { this.setData({ activityGroupQr: uploadedGroupQr(this.data.s && this.data.s.consultGroupQr), activityGroupQrError: false }); },
   setReason(e) { this.setData({ reason: e.detail.value }); },
   goStudent() {
     wx.navigateTo({ url: "/pages/student/student?redirect=" + encodeURIComponent("/pages/schedule/schedule?id=" + this.data.id) });
@@ -524,23 +595,26 @@ Page({
     }
   },
   async confirmDissolve() {
+    if (this.data.dissolving) return;
+    if (!canDissolveSchedule(this.data.s)) { this.setData({ showDissolve: false }); this.load(); return; }
     const reason = (this.data.reason || "").trim();
     if (!reason) {
-      wx.showToast({ title: "请填写解散理由", icon: "none" });
+      this.setData({ dissolveErr: this.data.isActivity ? "请填写取消原因" : "请填写解散理由" });
       return;
     }
+    this.setData({ dissolving: true, dissolveErr: "" });
     try {
       const res = await request("/schedules/" + this.data.id + "/dissolve", "POST", { reason });
       this.setData({ showDissolve: false, reason: "" });
       wx.showModal({
-        title: "已解散",
-        content: "取消 " + res.data.cancelled + " 人，退款 " + res.data.refunded + " 人；已记录待发送通知 " + (res.data.smsRecordCount || 0) + " 条，短信尚未接入",
+        title: this.data.isActivity ? "活动已取消" : "已解散",
+        content: "已取消 " + Number(res.data.cancelled || 0) + " 人的报名" + (Number(res.data.refunded) > 0 ? "，已为 " + res.data.refunded + " 人处理退款，请留意原支付渠道。" : "。"),
         showCancel: false,
       });
       this.load();
     } catch (e) {
-      wx.showModal({ title: "解散失败", content: e.message, showCancel: false });
-    }
+      this.setData({ dissolveErr: e.message || "取消失败，请重试" });
+    } finally { this.setData({ dissolving: false }); }
   },
   prepareShare(s) {
     const quote = (s && s.quote) || {};

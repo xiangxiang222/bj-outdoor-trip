@@ -1,3 +1,4 @@
+const { kindOf } = require("./activity-kind");
 const { isEndedTrip, isRecruitingTrip, isReviewTrip, isUnpaidTrip, isUpcomingTrip, recruitFacts, todayYmd, tripKindLabel } = require("./trips");
 
 function orderShop(row) {
@@ -69,7 +70,7 @@ function orderHint(row, today) {
 }
 
 function canReorder(row, today) {
-  if (!row || !row.route_id) return false;
+  if (!row || !row.route_id || row.channel === "activity" || row.kind === "activity") return false;
   const key = orderBadge(row, today).key;
   return key === "refund" || key === "cancelled" || key === "done" || key === "review";
 }
@@ -77,8 +78,8 @@ function canReorder(row, today) {
 function priceLines(row) {
   const due = Number(row && (row.payAmount != null ? row.payAmount : row.pay_amount) || 0);
   const insurance = Number((row && row.insurance_fee) || 0);
-  const trip = insurance > 0 && insurance < due ? due - insurance : due;
-  const lines = [{ label: "团费", value: trip, text: trip > 0 ? "¥" + trip : "免费" }];
+  const trip = insurance > 0 && insurance <= due ? due - insurance : due;
+  const lines = [{ label: row && (row.channel === "activity" || row.kind === "activity") ? "参与费用" : "团费", value: trip, text: trip > 0 ? "¥" + trip : "免费" }];
   if (insurance > 0) lines.push({ label: "保险", value: insurance, text: "¥" + insurance });
   return { lines, due };
 }
@@ -113,11 +114,16 @@ function maskTravelerPhone(phone) {
   return s.slice(0, 3) + "****" + s.slice(-4);
 }
 
-function ymd(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return y + "-" + m + "-" + d;
+function chinaDate(now) { return new Date(new Date(now).getTime() + 8 * 3600000); }
+function ymd(date) { return date.toISOString().slice(0, 10); }
+function monthsAgo(date, months) {
+  const last = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() - months + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() - months, Math.min(date.getUTCDate(), last)));
+}
+function orderIcon(row) {
+  if (!row || (row.channel !== "activity" && row.kind !== "activity")) return "trip";
+  const kind = kindOf(row);
+  return kind ? kind.slug : "club";
 }
 
 function orderPlacedOn(row) {
@@ -128,7 +134,7 @@ function orderPlacedOn(row) {
 
 function orderTimePresets(now) {
   const date = now || new Date();
-  const y = date.getFullYear();
+  const y = chinaDate(date).getUTCFullYear();
   const years = [1, 2, 3, 4].map((n) => ({ key: String(y - n), label: y - n + "年" }));
   return {
     quick: [
@@ -151,16 +157,9 @@ function matchOrderTime(row, filter, now) {
   if (start && day < start) return false;
   if (end && day > end) return false;
   if (start || end) return true;
-  const date = now || new Date();
-  if (preset === "1m") {
-    const from = new Date(date.getFullYear(), date.getMonth() - 1, date.getDate());
-    return day >= ymd(from) && day <= ymd(date);
-  }
-  if (preset === "3m") {
-    const from = new Date(date.getFullYear(), date.getMonth() - 3, date.getDate());
-    return day >= ymd(from) && day <= ymd(date);
-  }
-  if (preset === "year") return day.startsWith(String(date.getFullYear()));
+  const date = chinaDate(now || new Date());
+  if (preset === "1m" || preset === "3m") return day >= ymd(monthsAgo(date, preset === "1m" ? 1 : 3)) && day <= ymd(date);
+  if (preset === "year") return day.startsWith(String(date.getUTCFullYear()));
   if (/^\d{4}$/.test(preset)) return day.startsWith(preset);
   return true;
 }
@@ -173,6 +172,7 @@ function matchOrderQuery(row, query) {
 }
 
 module.exports = {
+  orderIcon,
   orderShop,
   orderSpec,
   orderMoney,

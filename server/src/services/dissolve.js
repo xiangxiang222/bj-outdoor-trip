@@ -6,11 +6,20 @@ const { buildCancelSms, sendSms } = require("./sms");
 const { releaseCouponByEnrollment } = require("./coupons");
 const { refundableOf } = require("./pay-ledger");
 const { refundEnrollmentToPayers, preflightEnrollmentRefund } = require("./payment");
+const { scheduleHasStarted } = require("./schedule-lifecycle");
 
 function fail(status, message) {
   const err = new Error(message);
   err.status = status;
   throw err;
+}
+
+function canOrganizerDissolve(schedule) {
+  if (!schedule || schedule.status === "cancelled") return false;
+  if (schedule.channel !== "activity") return true;
+  // An unpublished submission can be withdrawn even if its proposed date passed.
+  const awaitingReview = ["pending", "rejected"].includes(schedule.review_status);
+  return !scheduleHasStarted(schedule, { ignorePlannedStart: awaitingReview });
 }
 
 async function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
@@ -25,6 +34,7 @@ async function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
     if (!sch.organizer_id || Number(sch.organizer_id) !== Number(actorId)) {
       fail(403, "只有发起人可以解散拼团");
     }
+    if (!canOrganizerDissolve(sch)) fail(400, "活动已开始或结束，不能取消活动");
   }
 
   const route = db.prepare("SELECT title FROM routes WHERE id=?").get(sch.route_id);
@@ -166,4 +176,4 @@ async function dissolveAllSchedules({ reason, actorId } = {}) {
   };
 }
 
-module.exports = { dissolveSchedule, dissolveAllSchedules, dissolveExpiredUnformed };
+module.exports = { dissolveSchedule, dissolveAllSchedules, dissolveExpiredUnformed, canOrganizerDissolve };

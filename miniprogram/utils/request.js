@@ -37,6 +37,9 @@ function request(path, method, data) {
       },
       success(res) {
         if (res.statusCode >= 200 && res.statusCode < 300 && res.data && res.data.ok) {
+          if (path === "/enroll" && method === "POST") {
+            app.globalData.enrollmentRevision = (app.globalData.enrollmentRevision || 0) + 1;
+          }
           resolve(normalizeLegacyMedia(res.data));
           return;
         }

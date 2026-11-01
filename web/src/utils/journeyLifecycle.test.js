@@ -176,11 +176,17 @@ describe("小程序行程交互回归", () => {
 
   it("keeps an inverted date range in the filter sheet until corrected", () => {
     const page = nativeOrdersPage(vi.fn());
-    page.setData({ sheet: true, tab: "all", draftTab: "ended", draftStart: "2026-10-29", draftEnd: "2026-10-01" });
+    page.setData({ tab: "all" });
+    page.openFilter();
+    page.setDraftTab({ currentTarget: { dataset: { key: "ended" } } });
+    page.setStart({ detail: { value: "2026-10-29" } });
+    page.setEnd({ detail: { value: "2026-10-01" } });
     page.applyFilter();
     expect(page.data.sheet).toBe(true);
     expect(page.data.filterError).toBe("起始时间不能晚于终止时间");
-    expect(page.data.tab).toBe("all");
+    expect(page.data.tab).toBe("ended");
+    expect(page.data.start).toBe("2026-10-29");
+    expect(page.data.end).toBe("");
     page.setEnd({ detail: { value: "2026-10-31" } });
     page.applyFilter();
     expect(page.data.sheet).toBe(false);

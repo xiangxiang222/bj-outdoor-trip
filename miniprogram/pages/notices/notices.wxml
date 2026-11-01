@@ -1,15 +1,24 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="row pad" wx:if="{{list.length}}">
-  <view class="muted">{{tr.t(unread ? unread + ' 条未读' : '都读过了', lang)}}</view>
-  <view wx:if="{{unread}}" class="btn ghost" bindtap="readAll">{{tr.t('全部已读', lang)}}</view>
-</view>
-<view class="card" wx:for="{{list}}" wx:key="id" data-index="{{index}}" bindtap="open">
-  <view class="pad">
-    <view class="title">{{tr.t(item.title, lang)}}</view>
-    <view class="muted">{{tr.t(item.body, lang)}}</view>
-    <view class="muted">{{tr.t(item.createdAt, lang)}}</view>
+<view class="notice-page">
+  <view class="notice-heading">
+    <view><view class="notice-eyebrow">MESSAGE CENTER</view><view class="notice-title">{{tr.t('消息中心', lang)}}</view><view class="notice-subtitle">{{tr.t('重要进展，及时知晓', lang)}}</view></view>
+    <view class="notice-read-all {{!unread || readingAll ? 'disabled' : ''}}" bindtap="readAll">{{tr.t(readingAll ? '正在标记' : '全部标为已读', lang)}}</view>
   </view>
+  <view class="notice-tabs">
+    <view class="notice-tab {{filter === 'all' ? 'selected' : ''}}" data-filter="all" bindtap="selectFilter">{{tr.t('全部', lang)}}<text>{{counts.all}}</text></view>
+    <view class="notice-tab {{filter === 'unread' ? 'selected' : ''}}" data-filter="unread" bindtap="selectFilter">{{tr.t('未读', lang)}}<text>{{counts.unread}}</text></view>
+    <view class="notice-tab {{filter === 'read' ? 'selected' : ''}}" data-filter="read" bindtap="selectFilter">{{tr.t('已读', lang)}}<text>{{counts.read}}</text></view>
+  </view>
+  <load-row wx:if="{{loading}}" />
+  <block wx:else>
+    <view wx:if="{{error}}" class="notice-error"><text>{{tr.t(error, lang)}}</text><view bindtap="retry">{{tr.t('重新加载', lang)}}</view></view>
+    <view class="notice-card {{item.unread ? 'is-unread' : ''}}" wx:for="{{list}}" wx:key="id" data-index="{{index}}" bindtap="open">
+      <view class="notice-symbol"><view></view></view>
+      <view class="notice-content"><view class="notice-card-heading"><view class="notice-card-title">{{tr.t(item.title, lang)}}</view><view wx:if="{{item.unread}}" class="notice-dot"></view></view><view class="notice-body">{{tr.t(item.body, lang)}}</view><view class="notice-meta"><text>{{item.createdAt}}</text><text>{{tr.t(item.unread ? '未读' : '已读', lang)}}</text></view></view>
+    </view>
+    <view wx:if="{{!list.length && !error}}" class="notice-empty"><view class="notice-symbol"><view></view></view><view class="notice-empty-title">{{tr.t(filter === 'unread' ? '暂时没有未读消息' : filter === 'read' ? '暂时没有已读消息' : '暂时没有消息', lang)}}</view><view>{{tr.t('成团、集合点变更、审核结果和退款到账会出现在这里。', lang)}}</view></view>
+    <view wx:if="{{hasMore}}" class="notice-more" bindtap="loadMore">{{tr.t(loadingMore ? '正在加载' : '加载更多消息', lang)}}</view>
+    <view wx:elif="{{list.length}}" class="notice-end">{{tr.t('已显示全部消息', lang)}}</view>
+  </block>
 </view>
-<load-row wx:if="{{loading}}" />
-<view class="pad muted" wx:elif="{{!list.length}}">{{tr.t('成团、集合点变更、审核结果和退款到账会出现在这里。', lang)}}</view>

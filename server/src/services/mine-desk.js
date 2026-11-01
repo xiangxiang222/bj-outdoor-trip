@@ -42,11 +42,28 @@ function mapNotice(row) {
   };
 }
 
-function listNotices(userId) {
-  return getDb()
-    .prepare("SELECT * FROM user_notices WHERE user_id=? ORDER BY id DESC LIMIT 50")
-    .all(userId)
-    .map(mapNotice);
+function listNoticePage(userId, options = {}) {
+  const read = options.read || "all";
+  const limit = options.limit == null ? 50 : Number(options.limit);
+  const beforeId = options.beforeId == null || options.beforeId === "" ? 0 : Number(options.beforeId);
+  if (!["all", "unread", "read"].includes(read)) fail(400, "请选择有效的消息状态");
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) fail(400, "消息分页数量无效");
+  if (!Number.isSafeInteger(beforeId) || beforeId < 0) fail(400, "消息分页位置无效");
+  const db = getDb();
+  const countsRow = db.prepare("SELECT COUNT(*) AS total, COUNT(CASE WHEN read_at IS NULL THEN 1 END) AS unread FROM user_notices WHERE user_id=?").get(userId);
+  const counts = { all: countsRow.total, unread: countsRow.unread, read: countsRow.total - countsRow.unread };
+  const where = ["user_id=?"];
+  const params = [userId];
+  if (read !== "all") where.push(read === "unread" ? "read_at IS NULL" : "read_at IS NOT NULL");
+  if (beforeId) { where.push("id<?"); params.push(beforeId); }
+  const rows = db.prepare("SELECT * FROM user_notices WHERE " + where.join(" AND ") + " ORDER BY id DESC LIMIT ?").all(...params, limit + 1);
+  const hasMore = rows.length > limit;
+  const data = rows.slice(0, limit).map(mapNotice);
+  return { data, unread: counts.unread, counts, total: counts[read === "all" ? "all" : read], hasMore, nextCursor: hasMore ? data[data.length - 1].id : null };
+}
+
+function listNotices(userId, options) {
+  return listNoticePage(userId, options).data;
 }
 
 function unreadCount(userId) {
@@ -308,6 +325,7 @@ function deskCounts(userId) {
 module.exports = {
   pushUserNotice,
   listNotices,
+  listNoticePage,
   unreadCount,
   markNoticeRead,
   markAllNoticesRead,

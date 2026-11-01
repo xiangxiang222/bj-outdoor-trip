@@ -1,5 +1,6 @@
 const dayjs = require("dayjs");
 const { getDb } = require("../db");
+const { scheduleHasStarted } = require("./schedule-lifecycle");
 
 const SETTING_KEY = "refund_rules";
 
@@ -165,6 +166,8 @@ function refundPolicyView(routeRow, schedule) {
         status: schedule.status,
         startDate: schedule.start_date || schedule.startDate,
         startedAt: schedule.started_at || schedule.startedAt,
+        completedAt: schedule.completed_at || schedule.completedAt,
+        meetupTime: schedule.meetup_time || schedule.meetupTime,
         channel: schedule.channel || "trip",
         tiers: rules.tiers,
         minGroupSize: schedule.min_group_size ?? schedule.minGroupSize,
@@ -211,6 +214,8 @@ function scheduleLike(sch) {
     status,
     startDate,
     startedAt,
+    completedAt: sch.completedAt || sch.completed_at || "",
+    meetupTime: sch.meetupTime || sch.meetup_time || "",
     channel,
     tiers,
     minGroupSize: sch.minGroupSize ?? sch.min_group_size,
@@ -239,14 +244,20 @@ function cancelQuote(en, sch) {
     return { canCancel: false, percent: 0, remainingDays: remaining, started, amount: 0, hint: "拼团已解散" };
   }
   if (schedule.channel === "activity") {
-    const ok = dayjs(schedule.startDate).isAfter(dayjs(), "day");
+    const activityStarted = scheduleHasStarted(schedule);
+    const ok = !activityStarted;
+    const { refundableOf } = require("./pay-ledger");
+    const collected = en && en.id ? refundableOf(en) : en && en.pay_status === "paid" ? Number(en.pay_amount || 0) : 0;
+    const amount = ok ? collected : 0;
     return {
       canCancel: ok,
       percent: ok ? 100 : 0,
       remainingDays: remaining,
-      started: false,
-      amount: 0,
-      hint: ok ? "出发日前可取消" : "出发当天及之后不可取消",
+      started: activityStarted,
+      amount,
+      deductPercent: 0,
+      deductAmount: 0,
+      hint: ok ? amount > 0 ? `活动开始前可取消，已付 ¥${amount} 将原路退回` : "活动开始前可取消" : "活动已开始或结束，不可取消报名",
     };
   }
   if (started) {

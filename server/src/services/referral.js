@@ -113,18 +113,11 @@ async function referralCard(userId, req, { scheduleId } = {}) {
   };
 }
 
-function groupQrPayload(text) {
-  const value = String(text || "").trim();
-  if (!value) return Promise.resolve("");
-  return QRCode.toDataURL(value);
-}
-
 module.exports = {
   findReferrer,
   recordEnrollReferral,
   settleEnrollReferrals,
   reverseEnrollReferral,
   referralCard,
-  groupQrPayload,
   fail,
 };

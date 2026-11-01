@@ -190,14 +190,18 @@ Page({
       ...certificationLabels(user),
       dark: appearance.isDark(),
     });
-    this.loadHub();
-    this.loadPicks();
+    const refresh = Promise.all([this.loadHub(), this.loadPicks()]);
     if (this.data.posterPick || this.data.momentsOpen) this.posterChrome({});
+    return refresh;
   },
   onHide() {
+    this._hubVersion = (this._hubVersion || 0) + 1;
+    this._picksVersion = (this._picksVersion || 0) + 1;
     this.showTabBar();
   },
   onUnload() {
+    this._hubVersion = (this._hubVersion || 0) + 1;
+    this._picksVersion = (this._picksVersion || 0) + 1;
     this.showTabBar();
   },
   showTabBar() {
@@ -212,28 +216,32 @@ Page({
     this.setData(Object.assign({ posterCoverBar: open && !!bar }, patch || {}));
   },
   async loadHub() {
-    if (!app.globalData.token) {
+    const token = app.globalData.token;
+    const version = this._hubVersion = (this._hubVersion || 0) + 1;
+    const active = () => token === app.globalData.token && version === this._hubVersion;
+    if (this._hubAccount !== token) {
+      this._hubAccount = token;
+      this.setData({hub:{},coupon:null,hubReady:false});
+    }
+    if (!token) {
       this.setData({ coupon: null, hubReady: true, hub: { balance: 0, departCount: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, reviewCount: 0, refundCount: 0, unreadCount: 0, couponCount: 0, couponExpireHint: "" } });
       return;
     }
-    try {
-      const res = await request("/me/wallet");
-      this.setData({ hub: res.data || {}, hubReady: true });
-    } catch {
-      this.setData({ hubReady: true, hub: { balance: (app.globalData.user && app.globalData.user.walletBalance) || 0, departCount: 0, upcomingCount: 0, waitlistCount: 0, unpaidCount: 0, reviewCount: 0, refundCount: 0, unreadCount: 0, couponCount: 0, couponExpireHint: "" } });
-    }
-    try {
-      const me = await request("/me");
-      setAuth(app.globalData.token, me.data);
-      this.setData({
-        user: me.data,
-        ...certificationLabels(me.data),
-        phone: maskPhone(me.data && me.data.phone),
-        nickHead: me.data && me.data.nickname ? me.data.nickname.slice(0, 1) : "友",
-      });
-    } catch {
-      /* keep cached */
-    }
+    await Promise.all([
+      request("/me/wallet").then((res) => {
+        if (active()) this.setData({hub:res.data || {},hubReady:true});
+      }).catch(() => { if (active()) this.setData({hubReady:true}); }),
+      request("/me").then((me) => {
+        if (!active()) return;
+        setAuth(token, me.data);
+        this.setData({
+          user: me.data,
+          ...certificationLabels(me.data),
+          phone: maskPhone(me.data && me.data.phone),
+          nickHead: me.data && me.data.nickname ? me.data.nickname.slice(0, 1) : "友",
+        });
+      }).catch(() => { /* keep cached */ }),
+    ]);
   },
   async openAvatar() {
     if (!app.globalData.token) {
@@ -306,6 +314,8 @@ Page({
     wx.navigateTo({ url: "/pages/official/official" });
   },
   async loadPicks() {
+    const version = this._picksVersion = (this._picksVersion || 0) + 1;
+    const active = () => version === this._picksVersion;
     try {
       const res = await request("/routes");
       const rows = res.data || [];
@@ -318,9 +328,9 @@ Page({
         fromPrice: r.fromPrice,
         mark: (r.title || "线").slice(0, 1),
       }));
-      this.setData({ picks });
+      if (active()) this.setData({ picks });
     } catch {
-      this.setData({ picks: [] });
+      if (active()) this.setData({ picks: [] });
     }
   },
   openRoute(e) {
@@ -329,7 +339,7 @@ Page({
     wx.navigateTo({ url: "/pkg-detail/detail/detail?id=" + id });
   },
   goOrders(e) {
-    const tab = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.tab) || "depart";
+    const tab = (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.tab) || "all";
     app.globalData.ordersTab = tab;
     wx.switchTab({ url: "/pages/orders/orders" });
   },

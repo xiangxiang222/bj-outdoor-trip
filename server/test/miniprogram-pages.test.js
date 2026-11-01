@@ -76,12 +76,11 @@ describe("native mini-program page behavior", () => {
     const template = fs.readFileSync(path.resolve(__dirname, "../../miniprogram/pages/index/index.wxml"), "utf8");
     const shortcuts = Array.from(template.matchAll(/<view class="quick-entry"([^>]*)>/g));
     assert.equal(shortcuts.length, 4);
-    assert.match(shortcuts[1][1], /bindtap="goPublish"/);
+    assert.match(shortcuts[1][1], /bindtap="quickHost"/);
     assert.match(shortcuts[1][1], /data-kind="campus"/);
-    assert.match(shortcuts[2][1], /bindtap="goPublish"/);
+    assert.match(shortcuts[2][1], /bindtap="quickHost"/);
     assert.match(shortcuts[2][1], /data-kind="company"/);
-    assert.match(shortcuts[3][1], /bindtap="quickHost"/);
-    assert.match(shortcuts[3][1], /data-kind="campus"/);
+    assert.match(shortcuts[3][1], /bindtap="goGuides"/);
     const banner = template.match(/<view\b(?=[^>]*class="campus-card(?:\s[^"]*)?")[^>]*>/);
     assert.ok(banner, "campus verification banner is present");
     assert.match(banner[0], /\bbindtap="goStudent"/);

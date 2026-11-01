@@ -181,6 +181,14 @@ async function main() {
         await p.locator("#activity-route").fill("南门出发，沿园内湖畔环线");
         await p.locator("#activity-equipment").fill("跑鞋、饮水");
         await p.locator("#publish-description").fill("先热身十分钟，小雨改期。 ");
+        const uploaded = p.waitForResponse(response => new URL(response.url()).pathname === "/api/upload" && response.request().method() === "POST");
+        await p.locator("#publish-group-qr").setInputFiles({ name: "wechat-group.png", mimeType: "image/png", buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a7l8AAAAASUVORK5CYII=", "base64") });
+        const uploadResponse = await uploaded;
+        assert.equal(uploadResponse.status(), 200);
+        const qrPath = (await uploadResponse.json()).data.url;
+        await p.locator('.publish-group-upload img[alt="群二维码预览"]').waitFor();
+        await p.locator("#publish-group-note").fill("入群请备注报名姓名，集合前查看通知");
+        await p.screenshot({ path: path.join(output, "activity-running-group-upload.png"), fullPage: true });
         await p.getByRole("button", { name: /下一步/ }).click();
         assert.match(await p.locator(".publish-activity-summary").innerText(), /5 公里.*新手可提前结束/s);
         let posts = 0;
@@ -192,14 +200,20 @@ async function main() {
         const id = (await response.json()).data.id;
         await p.waitForURL((url) => url.pathname === `/m/schedule/${id}`);
         await p.getByText("本团正在审核，通过后才会出现在活动页，暂不能报名。", { exact: true }).waitFor();
-        const saved = db.prepare("SELECT r.category,r.description,s.review_status,s.channel,s.max_seats FROM schedules s JOIN routes r ON r.id=s.route_id WHERE s.id=?").get(id);
+        const saved = db.prepare("SELECT r.category,r.description,s.review_status,s.channel,s.max_seats,s.consult_group,s.consult_group_qr_image FROM schedules s JOIN routes r ON r.id=s.route_id WHERE s.id=?").get(id);
         assert.equal(posts, 1, "double submit is deduplicated");
         assert.equal(saved.category, "跑步");
         assert.equal(saved.channel, "activity");
         assert.equal(saved.review_status, "pending");
         assert.equal(saved.max_seats, 8);
+        assert.equal(saved.consult_group, "入群请备注报名姓名，集合前查看通知");
+        assert.equal(saved.consult_group_qr_image, qrPath);
         assert.match(saved.description, /^【活动信息】\n跑步距离：5 公里，新手可提前结束\n参考配速：7分\/公里，不竞速\n跑步路线：南门出发，沿园内湖畔环线\n装备提示：跑鞋、饮水\n\n先热身十分钟，小雨改期。$/);
         assert.match(await p.locator(".activity-detail-brief").innerText(), /跑步距离.*5 公里/s);
+        assert.match(await p.locator(".city-group").innerText(), /入群请备注报名姓名/);
+        assert.ok((await p.locator(".city-group-qr").getAttribute("src")).endsWith(qrPath));
+        assert.equal(await p.locator(".city-heading").count(), 1);
+        assert.equal(await p.locator(".offer-hero").count(), 0);
         await p.getByRole("tab", { name: "活动介绍", exact: true }).click();
         assert.match(await p.locator(".activity-description-card").innerText(), /先热身十分钟，小雨改期/);
         await p.screenshot({ path: path.join(output, "activity-running-detail.png"), fullPage: true });
@@ -274,7 +288,7 @@ async function main() {
         await p.screenshot({ path: path.join(output, "home-advanced-filters.png"), fullPage: false });
         await p.getByRole("button", { name: "收起", exact: true }).waitFor();
         await p.getByRole("button", { name: "收起", exact: true }).click();
-        await p.locator(".journey-shortcuts").getByRole("button", { name: /校园搭子/ }).click();
+        await p.locator(".journey-shortcuts").getByRole("button", { name: /高校同行/ }).click();
         assert.ok(await p.getByRole("button", { name: "更多筛选", exact: true }).isVisible());
         assert.match(await p.getByRole("button", { name: "高校", exact: true }).getAttribute("class"), /\bon\b/);
         await p.screenshot({ path: path.join(output, "home-filters.png"), fullPage: true });
@@ -284,8 +298,8 @@ async function main() {
       const p = await pageFor("guest");
       try {
         await goto(p, "/m");
-        const campusShortcut = p.locator(".journey-shortcuts button").nth(3);
-        assert.equal(await campusShortcut.locator("strong").innerText(), "校园搭子");
+        const campusShortcut = p.locator(".journey-shortcuts button").nth(1);
+        assert.equal(await campusShortcut.locator("strong").innerText(), "高校同行");
         assert.equal(await campusShortcut.locator("small").innerText(), "发现跨校旅程");
         assert.equal(await p.locator("a.destination-caption").getAttribute("href"), "/m/guides");
         assert.match(await p.locator("a.destination-caption").innerText(), /专业领队/);
@@ -468,7 +482,10 @@ async function main() {
     await require("./ui-discovery-cases.cjs")({ test, pageFor, goto, db, seed, output });
     await require("./ui-campus-management-cases.cjs")({ test, pageFor, goto, db, seed, origin, userToken, output });
     await require("./ui-payment-cases.cjs")({ test, pageFor, goto, db, seed, origin, userToken, output });
+    await require("./ui-journey-cases.cjs")({ test, pageFor, goto, db, seed, output, origin, userToken });
+    await require("./ui-activity-cancellation-cases.cjs")({ test, pageFor, goto, db, seed, output, origin, userToken });
     const wishToken = await require("./ui-wishes-cases.cjs")({ test, pageFor, goto, db, seed, origin, userToken, output });
+    await require("./ui-trip-refresh-cases.cjs")({ test, pageFor, goto, db, seed, output, origin, userToken });
     // These are rendering checks; transactional flows are covered by API E2E and tests above.
     const mobile = ["/m", "/m/discover", "/m/activities", "/m/official", "/m/student", "/m/group", "/m/leader", "/m/photo-apply", "/m/route-apply", "/m/feedback", "/m/lottery", "/m/after/1", "/m/route/1", "/m/schedule/1", "/m/enroll/1", "/m/open/0", "/m/publish", "/m/chain", "/m/mine", "/m/settings", "/m/settings/font", "/m/settings/night", "/m/settings/lang", "/m/profile", "/m/wallet", "/m/signin", "/m/wallet/cards", "/m/wallet/pin", "/m/login", "/m/member", "/m/orders", "/m/favorites", "/m/notices", "/m/views", "/m/companions", "/m/follows", "/m/stats/1", "/m/guides", "/m/guide/1", "/m/user/1"];
     mobile.push("/m/wishes", "/m/wishes/new");
