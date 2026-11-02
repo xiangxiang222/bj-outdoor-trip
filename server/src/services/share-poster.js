@@ -3,10 +3,11 @@ const path = require("path");
 const QRCode = require("qrcode");
 const { getDb, toRoute } = require("../db");
 const config = require("../config");
-const { realEnrolledCount, quoteForSchedule, attachAssetHost, publicBase } = require("./helpers");
+const { realEnrolledCount, quoteForSchedule, attachAssetHost, publicBase, resolveStoredMedia } = require("./helpers");
 const { ensureReferralCode } = require("./profile");
 const { tripKindOf } = require("./official-trip");
 const { loginLive, getWxaCode } = require("./wechat");
+const { activityCoverPath, activityCoverBlob } = require("./activity-cover");
 
 const COVER_MIME = {
   ".jpg": "image/jpeg",
@@ -196,8 +197,12 @@ async function buildSchedulePoster(sch, req, { userId } = {}) {
   const mpPath = mpSharePath({ id: sch.id, ref, joinCode });
   const scene = encodeShareScene({ id: sch.id, ref, joinCode });
   const qr = await qrForShare({ h5Url, scene, joinCode });
-  const publicCover = attachAssetHost(req, route?.cover || "");
-  const coverEmbed = embedLocalMedia(route?.cover || publicCover);
+  const resolvedCover = resolveStoredMedia(route?.cover, { code: route?.code });
+  const cover = resolvedCover || (sch.channel === "activity"
+    ? activityCoverPath(activityCoverBlob(routeRow, sch))
+    : resolveStoredMedia(route?.gallery?.find(Boolean), { code: route?.code }));
+  const publicCover = attachAssetHost(req, cover);
+  const coverEmbed = embedLocalMedia(publicCover);
   const facts = {
     id: sch.id,
     title: route?.title || "行程",
