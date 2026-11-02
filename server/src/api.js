@@ -79,6 +79,7 @@ const { parseVideoInput, videoViews } = require("./services/video");
 const { createVideoSession, videoSessionStatus, writeVideoPart, finishVideoSession, PART_SIZE } = require("./services/video-parts");
 const { storyOf, normalizeStory, normalizeItinerary } = require("./services/story");
 const { draftRoute } = require("./services/route-draft");
+const routePreferences = require("./services/route-preferences");
 const { buildRouteTemplate, parseRouteTemplate } = require("./services/route-template");
 const {
   listNotices: listUserNotices,
@@ -803,6 +804,14 @@ router.get("/home", (req, res) => {
 
 router.get("/play-tags", (req, res) => {
   res.json({ ok: true, data: listPlayTags().map((t) => mapPlayTag(t, req)) });
+});
+
+router.get("/route-preferences", (req, res) => {
+  try {
+    res.json({ ok: true, data: routePreferences.publicPreferences(db(), req.query) });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 router.post("/auth/sms", smsConsentGate, async (req, res) => {
@@ -1595,53 +1604,28 @@ router.get("/guides/:id", (req, res) => {
 });
 
 router.get("/routes", (req, res) => {
-  const { days, category, q, difficulty, tag, city } = req.query;
-  let sql = "SELECT * FROM routes WHERE status='on' AND IFNULL(review_status,'approved')='approved' AND id NOT IN (SELECT DISTINCT route_id FROM schedules WHERE IFNULL(channel,'trip')='activity')";
-  const args = [];
-  if (String(days) === "multi") {
-    sql += " AND days>=4";
-  } else if (days) {
-    sql += " AND days=?";
-    args.push(Number(days));
-  }
-  if (category) {
-    sql += " AND category=?";
-    args.push(category);
-  }
-  if (tag) {
-    sql += " AND (category=? OR tags_json LIKE ?)";
-    args.push(tag, `%${tag}%`);
-  }
-  if (city) {
-    sql += " AND region LIKE ?";
-    args.push(`%${city}%`);
-  }
-  if (difficulty) {
-    sql += " AND difficulty=?";
-    args.push(difficulty);
-  }
-  if (q) {
-    sql += " AND (title LIKE ? OR region LIKE ? OR tags_json LIKE ?)";
-    args.push(`%${q}%`, `%${q}%`, `%${q}%`);
-  }
-  sql += " ORDER BY days, id";
-  const rows = db().prepare(sql).all(...args);
-  const data = rows.map((row) => {
-    const tiers = db().prepare("SELECT * FROM route_price_tiers WHERE route_id=? ORDER BY min_people").all(row.id);
-    const schedules = db().prepare("SELECT id,start_date,status FROM schedules WHERE route_id=? AND start_date>=date('now','localtime') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved' ORDER BY start_date LIMIT 3").all(row.id);
-    const mapped = mapRoute(row, req);
-    const names = new Set([mapped.category, ...(mapped.tags || [])]);
-    const playTags = listPlayTags().filter((t) => names.has(t.name)).map((t) => mapPlayTag(t, req));
-    return mapRouteSummary(row, req, {
-      fromPrice: tiers[0]?.price,
-      memberFromPrice: liveMemberPrice(tiers[0]?.price),
-      studentFromPrice: liveStudentPrice(tiers[0]?.price),
-      priceTiers: tiers.map((t) => ({ minPeople: t.min_people, price: t.price, memberPrice: liveMemberPrice(t.price), studentPrice: liveStudentPrice(t.price) })),
-      upcoming: schedules,
-      playTags,
+  try {
+    const { where, args } = routePreferences.catalogWhere(db(), req.query);
+    const rows = db().prepare(`SELECT r.* FROM routes r WHERE ${where} ORDER BY r.days, r.id`).all(...args);
+    const data = rows.map((row) => {
+      const tiers = db().prepare("SELECT * FROM route_price_tiers WHERE route_id=? ORDER BY min_people").all(row.id);
+      const schedules = db().prepare("SELECT id,start_date,status FROM schedules WHERE route_id=? AND start_date>=date('now','localtime') AND status!='cancelled' AND IFNULL(review_status,'approved')='approved' ORDER BY start_date LIMIT 3").all(row.id);
+      const mapped = mapRoute(row, req);
+      const names = new Set([mapped.category, ...(mapped.tags || [])]);
+      const playTags = listPlayTags().filter((t) => names.has(t.name)).map((t) => mapPlayTag(t, req));
+      return mapRouteSummary(row, req, {
+        fromPrice: tiers[0]?.price,
+        memberFromPrice: liveMemberPrice(tiers[0]?.price),
+        studentFromPrice: liveStudentPrice(tiers[0]?.price),
+        priceTiers: tiers.map((t) => ({ minPeople: t.min_people, price: t.price, memberPrice: liveMemberPrice(t.price), studentPrice: liveStudentPrice(t.price) })),
+        upcoming: schedules,
+        playTags,
+      });
     });
-  });
-  res.json({ ok: true, data });
+    res.json({ ok: true, data });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 router.get("/routes/apps", authUser, (req, res) => {
@@ -2858,6 +2842,38 @@ router.post("/admin/upload", authAdmin, requireCap("photo"), (req, res) => {
     if (!req.file) return res.status(400).json({ ok: false, message: "请选择图片" });
     res.json({ ok: true, data: { url: `/static/uploads/${req.file.filename}` } });
   });
+});
+
+router.get("/admin/route-preferences", authAdmin, requireCap("roster"), (req, res) => {
+  try {
+    res.json({ ok: true, data: routePreferences.adminPreferences(db()) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.post("/admin/route-preferences", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    res.json({ ok: true, data: routePreferences.savePreference(db(), req.body) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.put("/admin/route-preferences/:key", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    res.json({ ok: true, data: routePreferences.savePreference(db(), req.body, req.params.key) });
+  } catch (e) {
+    jsonError(res, e);
+  }
+});
+
+router.delete("/admin/route-preferences/:key", authAdmin, requireCap("ops"), (req, res) => {
+  try {
+    res.json({ ok: true, data: routePreferences.disablePreference(db(), req.params.key) });
+  } catch (e) {
+    jsonError(res, e);
+  }
 });
 
 router.get("/admin/play-tags", authAdmin, requireCap("roster"), (req, res) => {

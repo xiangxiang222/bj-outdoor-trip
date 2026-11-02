@@ -46,12 +46,12 @@
   <view class="quick-entry" bindtap="goGuides"><view class="quick-icon companions"><image src="/images/home/people.svg" mode="aspectFit" /></view><text>{{tr.t('专业领队', lang)}}</text><text class="quick-note">{{tr.t('认识带路的人', lang)}}</text></view>
 </view>
 
-<view class="destination-section">
+<view class="destination-section" wx:if="{{destinations.length}}">
   <view class="home-section-heading"><view><view class="section-title">{{tr.t('走出日常，自然会有答案', lang)}}</view></view><text class="destination-caption" bindtap="showRoutes">{{tr.t('更多灵感', lang)}} ↗</text></view>
   <view class="destination-grid">
-    <view class="destination-card" wx:for="{{destinations}}" wx:key="category" bindtap="discoverInspiration" data-category="{{item.category}}">
+    <view class="destination-card {{routePreference==item.preference?'selected':''}}" wx:for="{{destinations}}" wx:key="preference" bindtap="discoverInspiration" data-preference="{{item.preference}}" aria-role="button" aria-pressed="{{routePreference==item.preference}}">
       <image class="destination-photo" src="{{item.photo}}" mode="aspectFill" lazy-load />
-      <view class="destination-shade"></view><view class="destination-tag">{{tr.t(item.tag, lang)}}</view>
+      <view class="destination-shade"></view><view class="destination-tag">{{tr.t(item.preferenceName, lang)}}</view>
       <view class="destination-copy"><view class="destination-name">{{tr.t(item.name, lang)}}</view><view class="destination-en">{{item.en}}</view><view class="destination-note">{{tr.t(item.copy, lang)}}</view></view>
     </view>
   </view>
@@ -173,22 +173,19 @@
       <view class="rt-active-chips"><button wx:for="{{routePicked}}" wx:key="key" bindtap="clearRouteFilter" data-key="{{item.key}}" aria-label="{{tr.t('移除筛选', lang)}} {{tr.t(item.type, lang)}} {{tr.t(item.value, lang)}}"><text>{{tr.t(item.type, lang)}}：</text><text>{{tr.t(item.value, lang)}}</text><text aria-hidden="true">×</text></button></view>
     </view>
     <view wx:else class="rt-all">{{tr.t('全部线路', lang)}}</view>
+    <template is="route-preferences" data="{{preference:routePreference,options:routePrimaryPreferences,more:routeMorePreferences,expanded:routeMoreOpen,total:routePreferenceTotal,loading:routePreferenceLoading,err:routePreferenceErr,scrollInto:routePreferenceScroll,lang:lang}}" />
     <scroll-view scroll-x class="rt-filter-scroll"><view class="rt-filter-row">
       <button class="rt-filter {{routeDays==0?'on':''}}" bindtap="setRouteDays" data-d="0">{{tr.t('全部天数', lang)}}</button>
       <button class="rt-filter {{routeDays==1?'on':''}}" bindtap="setRouteDays" data-d="1">{{tr.t('1日', lang)}}</button>
       <button class="rt-filter {{routeDays==2?'on':''}}" bindtap="setRouteDays" data-d="2">{{tr.t('2日', lang)}}</button>
       <button class="rt-filter {{routeDays==3?'on':''}}" bindtap="setRouteDays" data-d="3">{{tr.t('3日', lang)}}</button>
-      <button class="rt-filter {{routeDays=='multi'?'on':''}}" bindtap="setRouteDays" data-d="multi">{{tr.t('多日', lang)}}</button>
-    </view></scroll-view>
-    <scroll-view scroll-x class="rt-filter-scroll"><view class="rt-filter-row">
-      <button class="rt-filter {{routeTag==''?'on':''}}" bindtap="setRouteTag" data-c="">{{tr.t('全部玩法', lang)}}</button>
-      <button class="rt-filter {{routeTag==item.name?'on':''}}" wx:for="{{routeTags}}" wx:key="id" bindtap="setRouteTag" data-c="{{item.name}}">{{tr.t(item.name, lang)}}</button>
+      <button class="rt-filter {{routeDays=='multi'?'on':''}}" bindtap="setRouteDays" data-d="multi">{{tr.t('4日及以上', lang)}}</button>
     </view></scroll-view>
     <template is="route-modes" data="{{count:routeList.length,modes:routeModes,mode:routeMode,loading:routeLoading,lang:lang}}" />
     <load-row wx:if="{{routeLoading && !routeList.length}}" />
-    <view wx:if="{{routeErr}}" class="rt-error"><view><view class="rt-error-title">{{tr.t('线路加载失败', lang)}}</view><view class="rt-error-note" wx:if="{{routeList.length}}">{{tr.t('已保留上次内容，可重新加载。', lang)}}</view></view><button class="rt-retry" bindtap="loadRoutes">{{tr.t('重新加载', lang)}}</button></view>
+    <view wx:if="{{routeErr}}" class="rt-error"><view><view class="rt-error-title">{{tr.t(routeErrCode=='ROUTE_PREFERENCE_UNAVAILABLE' ? '所选偏好已不可用' : '线路加载失败', lang)}}</view><view wx:if="{{routeErrCode=='ROUTE_PREFERENCE_UNAVAILABLE'}}">{{tr.t('该出游偏好不存在或已停用，请重新选择', lang)}}</view><view class="rt-error-note" wx:elif="{{routeList.length}}">{{tr.t('已保留上次内容，可重新加载。', lang)}}</view></view><button wx:if="{{routeErrCode=='ROUTE_PREFERENCE_UNAVAILABLE'}}" class="rt-retry" bindtap="clearRouteFilter" data-key="preference">{{tr.t('重新选择偏好', lang)}}</button><button wx:else class="rt-retry" bindtap="loadRoutes">{{tr.t('重新加载', lang)}}</button></view>
     <template is="route-cards" data="{{rows:routeList,mode:routeMode,lang:lang}}" />
-    <view wx:if="{{!routeLoading && !routeList.length && !routeErr}}" class="rt-empty"><view class="rt-empty-title">{{tr.t('没有匹配的线路', lang)}}</view><view>{{tr.t('试试调整或清空筛选条件。', lang)}}</view><button wx:if="{{routePicked.length}}" class="rt-clear" bindtap="clearRouteFilters">{{tr.t('清空筛选', lang)}}</button></view>
+    <view wx:if="{{!routeLoading && !routeList.length && !routeErr}}" class="rt-empty"><view class="rt-empty-title">{{tr.t('没有匹配的线路', lang)}}</view><view>{{tr.t('试试调整或清空筛选条件。', lang)}}</view><button wx:if="{{routePreference}}" class="rt-clear" bindtap="clearRouteFilter" data-key="preference">{{tr.t('取消偏好', lang)}}</button><button wx:if="{{query}}" class="rt-clear" bindtap="clearRouteFilter" data-key="q">{{tr.t('清除关键词', lang)}}</button><button wx:if="{{routePicked.length}}" class="rt-clear" bindtap="clearRouteFilters">{{tr.t('清空筛选', lang)}}</button></view>
     <button class="rt-apply" bindtap="goRouteApply"><view><view class="rt-apply-title">{{tr.t('有一条私藏路线？', lang)}}</view><view class="rt-apply-note">{{tr.t('申请收录，把喜欢的山野分享给同行。', lang)}}</view></view><text class="rt-apply-arrow" aria-hidden="true">↗</text></button>
   </view>
 </block>

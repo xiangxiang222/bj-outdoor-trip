@@ -131,17 +131,17 @@ describe("native mini-program page behavior", () => {
     assert.equal(invalid.data.navRight, 108);
   });
 
-  it("opens destination inspiration as a fresh route search and submits the current search immediately", () => {
+  it("searches a destination keyword without a hidden preference or resetting the chosen duration", () => {
     const { page, calls, tickScroll } = pageHarness("index");
     let routeLoads = 0;
     page.loadRoutes = () => { routeLoads++; };
-    page.setData({ routeCategory: "海滨", routeDays: "multi", routeTag: "亲子", tag: "亲子", query: "旧搜索" });
+    page.setData({ routePreference: "coast", routeDays: "multi", tag: "亲子", query: "旧搜索" });
     page.searchDestination({ currentTarget: { dataset: { keyword: "长城" } } });
     assert.equal(page.data.view, "routes");
     assert.equal(page.data.query, "长城");
-    assert.equal(page.data.routeCategory, "");
-    assert.equal(page.data.routeDays, 0);
-    assert.equal(page.data.routeTag, "");
+    assert.equal(page.data.routePreference, "");
+    assert.equal(page.data.routeDays, "multi");
+    assert.equal(page.data.tag, "亲子");
     assert.equal(routeLoads, 1);
     tickScroll(16);
     assert.ok(calls.scrolls.at(-1).scrollTop > 0);
@@ -149,17 +149,17 @@ describe("native mini-program page behavior", () => {
     assert.equal(routeLoads, 2);
   });
 
-  it("opens each inspiration as its real category without an old search, day or play filter", () => {
+  it("uses the same single preference for each inspiration without resetting deliberate search, days or date", () => {
     const { page } = pageHarness("index");
     page.loadRoutes = () => {};
-    for (const category of ["长城", "登山", "海滨"]) {
-      page.setData({ query: "海淀", routeCategory: "", routeDays: 2, routeTag: "亲子", tag: "摄影", date: "2099-04-08" });
-      page.discoverInspiration({ currentTarget: { dataset: { category } } });
+    for (const preference of ["great-wall", "hiking", "coast"]) {
+      page.setData({ query: "海淀", routePreference: "", routeDays: 2, tag: "摄影", date: "2099-04-08" });
+      page.discoverInspiration({ currentTarget: { dataset: { preference } } });
       assert.equal(page.data.view, "routes");
-      assert.equal(page.data.routeCategory, category);
-      assert.equal(page.data.query, "");
-      assert.equal(page.data.routeDays, 0);
-      assert.equal(page.data.routeTag, "");
+      assert.equal(page.data.routePreference, preference);
+      assert.equal(page.data.query, "海淀");
+      assert.equal(page.data.routeDays, 2);
+      assert.equal(page.data.tag, "摄影");
       assert.equal(page.data.date, "2099-04-08");
     }
     page.onUnload();

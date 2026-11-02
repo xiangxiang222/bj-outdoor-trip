@@ -5,15 +5,6 @@
   min-height:100vh; background:var(--bg,#f5f5f7); color:var(--ink,#29262e);
 }
 .home-page.is-dark { --home-primary:#d6b9f2; --home-soft:#30263d; --home-input:#252429; --home-accent:#e1a18f; }
-.rt-active { margin:0 0 24rpx; padding:20rpx; border:1rpx solid var(--rt-line); border-radius:18rpx; background:var(--rt-paper); }
-.rt-active-head { display:flex; align-items:center; justify-content:space-between; gap:16rpx; color:var(--rt-muted); font-size:calc(23rpx * var(--ui-scale,1)); }
-.rt-catalog .rt-active-head button { flex:none; padding:10rpx 0 10rpx 14rpx; color:var(--rt-purple); font-size:inherit; }
-.rt-active-chips { display:flex; flex-wrap:wrap; gap:12rpx; margin-top:12rpx; }
-.rt-catalog .rt-active-chips button { display:flex; align-items:center; max-width:100%; padding:14rpx 18rpx; border-radius:12rpx; color:var(--rt-purple); background:var(--rt-soft); font-size:calc(23rpx * var(--ui-scale,1)); line-height:1.5; text-align:left; }
-.rt-active-chips button > text:first-child,.rt-active-chips button > text:last-child { flex:none; }
-.rt-active-chips button > text:nth-child(2) { min-width:0; overflow-wrap:anywhere; }
-.rt-active-chips button > text:last-child { margin-left:14rpx; }
-.rt-all { margin:0 4rpx 20rpx; color:var(--rt-muted); font-size:calc(23rpx * var(--ui-scale,1)); }
 .home-nav { position:absolute; z-index:4; top:0; left:0; right:0; box-sizing:border-box; }
 .home-brand { display:flex; align-items:center; gap:12rpx; min-width:0; padding-left:32rpx; padding-bottom:4rpx; box-sizing:border-box; }
 .home-brand-logo { flex:none; width:64rpx; height:64rpx; border:2rpx solid rgba(255,255,255,.65); border-radius:50%; background:#f4f1f7; box-sizing:border-box; }
@@ -86,6 +77,7 @@
 .destination-card { position:relative; min-width:0; min-height:310rpx; overflow:hidden; border-radius:22rpx; color:#fff; background:#364934; }
 .destination-card:nth-child(2) { background:#4f6752; }
 .destination-card:nth-child(3) { background:#577f8b; }
+.destination-card.selected { box-shadow:0 0 0 5rpx var(--home-primary); }
 .destination-photo { position:absolute; inset:0; width:100%; height:100%; display:var(--media,block); }
 .destination-shade { position:absolute; inset:0; background:linear-gradient(180deg,rgba(20,28,20,.1),rgba(20,28,20,.64)); }
 .destination-tag { position:absolute; top:17rpx; left:14rpx; right:auto; max-width:calc(100% - 28rpx); box-sizing:border-box; padding:5rpx 8rpx; border:1rpx solid rgba(255,255,255,.33); border-radius:7rpx; background:rgba(255,255,255,.08); color:#fff; font-size:calc(15rpx * var(--ui-scale)); line-height:1.4; }

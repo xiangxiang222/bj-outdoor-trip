@@ -19,7 +19,10 @@
       <el-select v-model="filters.days" clearable placeholder="天数" class="route-filter">
         <el-option v-for="d in dayOptions" :key="d" :label="dayLabel(d)" :value="d" />
       </el-select>
-      <el-select v-model="filters.category" clearable filterable placeholder="类型" class="route-filter">
+      <el-select v-model="filters.preference" clearable filterable placeholder="前台出游偏好" class="route-filter-wide" :loading="preferencesLoading" @change="syncPreferenceQuery">
+        <el-option v-for="item in enabledPreferences" :key="item.key" :label="item.name" :value="item.key" />
+      </el-select>
+      <el-select v-model="filters.category" clearable filterable placeholder="线路分类" class="route-filter">
         <el-option v-for="item in categoryOptions" :key="item" :label="item" :value="item" />
       </el-select>
       <el-select v-model="filters.difficulty" clearable filterable placeholder="难度" class="route-filter">
@@ -31,7 +34,7 @@
       <el-select v-model="filters.region" clearable filterable placeholder="地区" class="route-filter-wide">
         <el-option v-for="item in regionOptions" :key="item" :label="item" :value="item" />
       </el-select>
-      <el-select v-model="filters.tag" clearable filterable placeholder="标签" class="route-filter">
+      <el-select v-model="filters.tag" clearable filterable placeholder="线路标签" class="route-filter">
         <el-option v-for="item in tagOptions" :key="item" :label="item" :value="item" />
       </el-select>
       <el-select v-model="filters.source" clearable placeholder="来源" class="route-filter">
@@ -42,6 +45,7 @@
       <el-button v-if="filtersOn" link type="primary" @click="resetFilters">清空</el-button>
       <span class="muted route-filter-count">{{ list.length }} / {{ rows.length }}</span>
     </div>
+    <p v-if="preferencesError" class="route-preference-error" role="alert">{{ preferencesError }} <el-button link type="primary" @click="loadPreferences">重新加载偏好配置</el-button></p>
     <p class="admin-scroll-hint">已下架的线路点「上架」会回到目录，也可以编辑后打开「上架」。用户申请和机器采集都先待审，通过后才上架。机器采集没有成团奖励。</p>
     <div v-loading="loading" element-loading-text="加载中…" class="admin-load">
     <el-table :data="list" stripe row-key="id" :row-class-name="rowClass" :empty-text="loading ? ' ' : '暂无数据'">
@@ -55,6 +59,7 @@
       <el-table-column prop="title" label="标题" min-width="180" />
       <el-table-column prop="days" label="天数" width="70" />
       <el-table-column prop="region" label="地区" min-width="140" />
+      <el-table-column label="前台出游偏好" min-width="175"><template #default="{ row }"><div class="route-preference-tags"><el-tag v-for="item in matchingRoutePreferences(row, preferences)" :key="item.key" size="small">{{ item.name }}</el-tag><span v-if="!matchingRoutePreferences(row, preferences).length" class="muted">{{ preferencesError ? '配置加载失败' : '未命中' }}</span></div></template></el-table-column>
       <el-table-column prop="minGroupSize" label="成团" width="70" />
       <el-table-column label="审批" width="90">
         <template #default="{ row }">{{ reviewLabel(row) }}</template>
@@ -143,7 +148,7 @@
             <el-option :value="5" label="多日" />
           </el-select>
         </el-form-item>
-        <el-form-item label="类型">
+        <el-form-item label="线路分类">
           <el-select v-model="form.category" class="field-select" clearable filterable allow-create default-first-option placeholder="可不选">
             <el-option v-for="c in categoryOptions" :key="c" :label="c" :value="c" />
           </el-select>
@@ -187,10 +192,18 @@
           <el-input-number v-model="form.minGroupSize" :min="1" :max="80" />
           <div class="muted">保存后，还没出发的团按这个人数重新判断是否成团。只算真实报名。</div>
         </el-form-item>
-        <el-form-item label="标签">
+        <el-form-item label="线路标签">
           <el-select v-model="form.tags" class="field-select" multiple filterable allow-create default-first-option placeholder="可多选，也可自己打字新建">
             <el-option v-for="t in tagOptions" :key="t" :label="t" :value="t" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="出游偏好预览">
+          <div class="route-preference-preview">
+            <p v-if="preferencesError" class="route-preference-error">偏好配置加载失败，请重新加载后查看预览。</p>
+            <div v-else class="route-preference-tags"><el-tag v-for="item in formPreferences" :key="item.key">{{ item.name }}</el-tag><span v-if="!formPreferences.length" class="muted">当前分类和标签尚未命中已启用的出游偏好。</span></div>
+            <p class="muted">按线路真实内容填写分类和标签，保存后会自动归入命中的前台出游偏好。无需另行勾选；未审核或未上架时仍不会公开展示。</p>
+            <router-link to="/admin/tags" target="_blank" rel="noopener">查看偏好配置 ↗</router-link>
+          </div>
         </el-form-item>
 
         <div class="sec">实拍照片</div>
@@ -404,7 +417,7 @@ import {
 } from "@/utils/routeMeta";
 import { chinaAreaOptions, findRegionPath, formatRegion } from "@/utils/chinaAreas";
 import { composeStory } from "@/utils/story";
-import { filterRoutes } from "@/utils/routeFilters";
+import { filterRoutes, matchingRoutePreferences } from "@/utils/routeFilters";
 import RefundRulesEditor from "@/components/RefundRulesEditor.vue";
 
 let blockSeed = 1;
@@ -416,6 +429,10 @@ function nextKey() {
 const route = useRoute();
 const router = useRouter();
 const rows = ref([]);
+const preferences = ref([]);
+const preferencesLoading = ref(false);
+const preferencesError = ref("");
+const enabledPreferences = computed(() => preferences.value.filter(item => item.status === "on").sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0) || String(a.key).localeCompare(String(b.key))));
 const loading = ref(true);
 const buses = ref([]);
 const show = ref(false);
@@ -433,6 +450,7 @@ const filters = reactive({
   q: "",
   status: "",
   days: "",
+  preference: "",
   category: "",
   difficulty: "",
   season: "",
@@ -440,9 +458,9 @@ const filters = reactive({
   tag: "",
   source: "",
 });
-const list = computed(() => filterRoutes(rows.value, { ...filters, review: reviewFilter.value }));
+const list = computed(() => filterRoutes(rows.value, { ...filters, review: reviewFilter.value }, preferences.value));
 const filtersOn = computed(() =>
-  ["q", "status", "days", "category", "difficulty", "season", "region", "tag", "source"].some((key) => filters[key] !== "" && filters[key] != null)
+  ["q", "status", "days", "preference", "category", "difficulty", "season", "region", "tag", "source"].some((key) => filters[key] !== "" && filters[key] != null)
 );
 const dayOptions = computed(() => {
   const seen = new Set([1, 2, 3, 5]);
@@ -467,12 +485,20 @@ function resetFilters() {
   filters.q = "";
   filters.status = "";
   filters.days = "";
+  filters.preference = "";
   filters.category = "";
   filters.difficulty = "";
   filters.season = "";
   filters.region = "";
   filters.tag = "";
   filters.source = "";
+  syncPreferenceQuery();
+}
+function syncPreferenceQuery() {
+  const query = { ...route.query };
+  if (filters.preference) query.preference = filters.preference;
+  else delete query.preference;
+  if (String(route.query.preference || "") !== filters.preference) router.replace({ path: "/admin/routes", query });
 }
 const focusId = ref("");
 const pendingApply = computed(() => needsReview(form.value));
@@ -491,10 +517,11 @@ const regionProps = { checkStrictly: true, expandTrigger: "click" };
 const galleryList = computed(() =>
   (form.value.gallery || []).map((url, i) => ({ name: `photo-${i + 1}`, url, uid: `${i}-${url}` }))
 );
-const categoryOptions = computed(() => mergeOptions(ROUTE_CATEGORIES, rows.value.map((r) => r.category), form.value.category));
+const categoryOptions = computed(() => mergeOptions(ROUTE_CATEGORIES, rows.value.map((r) => r.category), ...preferences.value.map(item => item.categories || []), form.value.category));
 const difficultyOptions = computed(() => mergeOptions(ROUTE_DIFFICULTIES, rows.value.map((r) => r.difficulty), form.value.difficulty));
 const seasonOptions = computed(() => mergeOptions(ROUTE_SEASONS, rows.value.map((r) => r.season), form.value.season));
-const tagOptions = computed(() => mergeOptions(COMMON_ROUTE_TAGS, ...rows.value.map((r) => r.tags || []), form.value.tags || []));
+const tagOptions = computed(() => mergeOptions(COMMON_ROUTE_TAGS, ...rows.value.map((r) => r.tags || []), ...preferences.value.map(item => item.tags || []), form.value.tags || []));
+const formPreferences = computed(() => matchingRoutePreferences(form.value, preferences.value));
 
 function applyRegion(text) {
   const path = findRegionPath(text);
@@ -520,7 +547,10 @@ function cloneTiers(list) {
 async function load() {
   loading.value = true;
   try {
-    rows.value = (await http.get("/admin/routes")).data || [];
+    await Promise.all([
+      http.get("/admin/routes").then(response => { rows.value = response.data || []; }),
+      loadPreferences(),
+    ]);
     try {
       globalRefund.value = (await http.get("/admin/refund-rules")).data || { tiers: [], summary: "" };
     } catch {
@@ -534,6 +564,16 @@ async function load() {
     loading.value = false;
   }
 }
+async function loadPreferences() {
+  preferencesLoading.value = true;
+  preferencesError.value = "";
+  try {
+    const response = await http.get("/admin/route-preferences");
+    if (!Array.isArray(response.data)) throw new Error("偏好配置格式有误");
+    preferences.value = response.data;
+  } catch (error) { preferencesError.value = error.message || "出游偏好加载失败"; }
+  finally { preferencesLoading.value = false; }
+}
 async function loadBuses() {
   buses.value = (await http.get("/buses")).data || [];
 }
@@ -541,11 +581,15 @@ function syncFromRoute() {
   const next = String(route.query.review || "");
   reviewFilter.value = next === "pending" || next === "approved" || next === "rejected" ? next : "";
   focusId.value = String(route.query.id || "");
+  filters.preference = String(route.query.preference || "");
   load();
 }
 function setReview(value) {
   const next = value === "pending" || value === "approved" || value === "rejected" ? value : "";
-  router.replace({ path: "/admin/routes", query: next ? { review: next } : {} });
+  const query = { ...route.query };
+  if (next) query.review = next;
+  else delete query.review;
+  router.replace({ path: "/admin/routes", query });
 }
 function rowClass({ row }) {
   if (focusId.value && String(row.id) === focusId.value) return "admin-row-focus";
@@ -564,7 +608,7 @@ onMounted(() => {
   syncFromRoute();
   loadBuses();
 });
-watch(() => [route.query.review, route.query.id], syncFromRoute);
+watch(() => [route.query.review, route.query.id, route.query.preference], syncFromRoute);
 
 function blankForm() {
   return {
@@ -1160,4 +1204,9 @@ async function saveReview() {
 .route-filter-count {
   margin-top: 0;
 }
+.route-preference-tags { display:flex; flex-wrap:wrap; gap:5px; }
+.route-preference-preview { width:100%; padding:12px; border:1px solid var(--line,#e7e7eb); border-radius:8px; background:var(--paper,#fff); }
+.route-preference-preview p { margin:8px 0; line-height:1.6; }
+.route-preference-preview a { color:#6a3b8c; font-size:13px; }
+.route-preference-error { color:#b73848; font-size:13px; }
 </style>

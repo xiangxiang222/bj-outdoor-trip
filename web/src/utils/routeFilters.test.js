@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterRoutes } from "./routeFilters";
+import { filterRoutes, matchesRoutePreference, matchingRoutePreferences } from "./routeFilters";
 
 const rows = [
   {
@@ -34,6 +34,31 @@ const rows = [
 ];
 
 describe("filterRoutes", () => {
+  const preferences = [
+    { key: "hiking", name: "徒步登山", status: "on", sortOrder: 20, categories: ["登山"], tags: ["徒步"] },
+    { key: "water", name: "玩水", status: "on", sortOrder: 10, categories: [], tags: ["玩水"] },
+    { key: "coast", name: "海边", status: "on", sortOrder: 30, categories: ["海滨"], tags: ["海边"] },
+    { key: "disabled", name: "旧偏好", status: "off", categories: ["登山"], tags: ["徒步"] },
+  ];
+
+  it("matches configured categories or exact tag members without using titles, places or substrings", () => {
+    expect(matchesRoutePreference(rows[0], preferences[0])).toBe(true);
+    expect(matchesRoutePreference(rows[1], preferences[0])).toBe(true);
+    expect(matchesRoutePreference({ category:"文化", title:"海边旅行", region:"北京海淀", tags:["海边摄影"] }, preferences[2])).toBe(false);
+    expect(matchesRoutePreference({ category:"文化", tags:["海边"] }, preferences[2])).toBe(true);
+    expect(matchesRoutePreference({ category:"海滨", tags:{} }, preferences[2])).toBe(true);
+    expect(matchesRoutePreference(null, preferences[0])).toBe(false);
+    expect(matchingRoutePreferences(rows[0], preferences).map(item => item.key)).toEqual(["water", "hiking"]);
+  });
+
+  it("combines a front-end preference with management filters and rejects disabled or missing configurations", () => {
+    expect(filterRoutes(rows, { preference:"hiking", days:1, review:"approved", tag:"玩水" }, preferences).map(row => row.id)).toEqual([1]);
+    expect(filterRoutes(rows, { preference:"water", category:"登山" }, preferences)).toEqual([]);
+    expect(filterRoutes(rows, { preference:"disabled" }, preferences)).toEqual([]);
+    expect(filterRoutes(rows, { preference:"missing" }, preferences)).toEqual([]);
+    expect(filterRoutes(rows, { preference:"" }, preferences)).toEqual(rows);
+  });
+
   it("keeps every row when nothing is selected", () => {
     expect(filterRoutes(rows, {}).map((row) => row.id)).toEqual([1, 2]);
   });

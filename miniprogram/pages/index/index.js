@@ -4,7 +4,7 @@ const { OFFER_TYPES } = require("../../utils/offer");
 const { absMedia, detailUrl, normalizeLegacyMedia, withAbsSlides } = require("../../utils/media");
 const { decorateFeed } = require("../../utils/feed-card");
 const { cycleSort, hostFacets, processFeed, sortLabel } = require("../../utils/feed-list");
-const { loadRouteCatalog } = require("../../utils/route-catalog");
+const { loadRouteCatalog, loadRoutePreferences, preferenceView } = require("../../utils/route-catalog");
 const { ROUTE_MODES, readRouteMode, saveRouteMode } = require("../../utils/route-presentation");
 const { chinaDay, departureMonths, availableDepartures, buildDepartureMonth, matchesDepartureTime } = require("../../utils/departure-dates");
 const { createPageScroller } = require("../../utils/page-scroll");
@@ -13,9 +13,9 @@ function asList(rows) {
 }
 const HERO_PHOTOS = ["mutianyu_06", "wuling_07", "beidaihe"].map((name) => absMedia("/static/photos/" + name + ".jpg"));
 const DESTINATIONS = [
-  { category: "长城", name: "在长城，追一场山风", en: "WALK INTO THE WILD", tag: "山脊漫步", copy: "把辽阔，装进行程", photo: absMedia("/static/photos/mutianyu.jpg") },
-  { category: "登山", name: "山深处，有好风景", en: "FIND YOUR OWN PACE", tag: "山野徒步", copy: "慢下来，听山野说话", photo: absMedia("/static/photos/wuling_07.jpg") },
-  { category: "海滨", name: "去海边，等风也等你", en: "MEET BY THE SEA", tag: "海岸出走", copy: "有些放松，只需一片海", photo: absMedia("/static/photos/beidaihe.jpg") },
+  { preference: "great-wall", preferenceName: "长城", name: "在长城，追一场山风", en: "WALK INTO THE WILD", tag: "山脊漫步", copy: "把辽阔，装进行程", photo: absMedia("/static/photos/mutianyu.jpg") },
+  { preference: "hiking", preferenceName: "徒步登山", name: "山深处，有好风景", en: "FIND YOUR OWN PACE", tag: "山野徒步", copy: "慢下来，听山野说话", photo: absMedia("/static/photos/wuling_07.jpg") },
+  { preference: "coast", preferenceName: "海边", name: "去海边，等风也等你", en: "MEET BY THE SEA", tag: "海岸出走", copy: "有些放松，只需一片海", photo: absMedia("/static/photos/beidaihe.jpg") },
 ];
 function heroSlides(home) {
   const slides = withAbsSlides(home && home.brand && home.brand.slides).filter((slide) => slide.url);
@@ -101,12 +101,19 @@ Page({
     view: "trips",
     searchHint: "搜线路、城区、主理人",
     routeDays: 0,
-    routeCategory: "",
+    routePreference: "",
+    routePreferences: [],
+    routePrimaryPreferences: [],
+    routeMorePreferences: [],
+    routeMoreOpen: false,
+    routePreferenceTotal: null,
+    routePreferenceLoading: true,
+    routePreferenceErr: "",
+    routePreferenceScroll: "route-pref-all",
     routePicked: [],
-    routeTag: "",
-    routeTags: [],
     routeList: [],
     routeErr: "",
+    routeErrCode: "",
     routeLoading: false,
     routeMode: "poster",
     routeModes: ROUTE_MODES,
@@ -136,6 +143,7 @@ Page({
       });
       this.applyGroups();
     }
+    this.loadPreferences();
     this.load();
   },
   onShow() {
@@ -161,7 +169,7 @@ Page({
     }
   },
   onPullDownRefresh() {
-    this.load().then(() => wx.stopPullDownRefresh());
+    Promise.all([this.load(), this.loadPreferences(true)]).then(() => wx.stopPullDownRefresh());
   },
   applyGroups() {
     const { city, tag, offerFilter, allSchedules, query, sort, hostKind, companyName, school } = this.data;
@@ -307,7 +315,7 @@ Page({
     else this.applyGroups();
   },
   onHide() { this._homeHidden = true; this.cancelExplore(); },
-  onUnload() { this._homeHidden = true; this.cancelExplore(); clearTimeout(this._searchTimer); this._routeUnloaded = true; this._routeRequestId = (this._routeRequestId || 0) + 1; },
+  onUnload() { this._homeHidden = true; this.cancelExplore(); clearTimeout(this._searchTimer); this._routeUnloaded = true; this._routeRequestId = (this._routeRequestId || 0) + 1; this._preferenceRequestId = (this._preferenceRequestId || 0) + 1; },
   homeIsActive() {
     if (this._homeHidden || this._routeUnloaded) return false;
     const pages = typeof getCurrentPages === "function" ? getCurrentPages() : [];
@@ -366,15 +374,16 @@ Page({
     const keyword = String(e.currentTarget.dataset.keyword || "").trim();
     if (!keyword) return;
     clearTimeout(this._searchTimer);
-    this.setData({ query: keyword, routeCategory: "", routeDays: 0, routeTag: "", tag: "" });
+    this.setData({ query: keyword, routePreference: "" });
     this.setView({ currentTarget: { dataset: { view: "routes" } } });
     this.explore();
   },
   discoverInspiration(e) {
-    const category = e.currentTarget.dataset.category;
-    if (!DESTINATIONS.some((place) => place.category === category)) return;
+    const preference = e.currentTarget.dataset.preference;
+    if (!this.data.destinations.some((place) => place.preference === preference)) return;
     clearTimeout(this._searchTimer);
-    this.setData({ routeCategory: category, query: "", routeDays: 0, routeTag: "", tag: "" });
+    this.setData({ routePreference: preference });
+    this.refreshPreferenceView();
     this.setView({ currentTarget: { dataset: { view: "routes" } } });
     this.explore();
   },
@@ -407,19 +416,80 @@ Page({
     const view = e.currentTarget.dataset.view || "trips";
     this.setData({
       view,
-      routeTag: view === "routes" ? this.data.tag || "" : this.data.routeTag,
       searchHint: view === "routes" ? "搜长城 / 十渡 / 坝上" : "搜线路、城区、主理人",
     });
     if (view === "routes") this.loadRoutes();
   },
+  setRoutePreference(e) {
+    const preference = e.currentTarget.dataset.preference || "";
+    if (preference && !this.data.routePreferences.some((option) => option.key === preference)) return;
+    if (preference === this.data.routePreference) return;
+    clearTimeout(this._searchTimer);
+    this.setData({ routePreference: preference });
+    this.refreshPreferenceView();
+    return this.loadRoutes();
+  },
+  toggleRoutePreferences() {
+    this.setData({ routeMoreOpen: !this.data.routeMoreOpen });
+    this.refreshPreferenceView();
+  },
+  refreshPreferenceView() {
+    const previousName = this._selectedPreferenceName && this._selectedPreferenceName.key === this.data.routePreference ? this._selectedPreferenceName.name : "";
+    const view = preferenceView(this.data.routePreferences, this.data.routePreference, this.data.routeMoreOpen, previousName);
+    this._selectedPreferenceName = { key: this.data.routePreference, name: view.selectedName };
+    const name = view.selectedName || this.data.routePreference;
+    const routePicked = [];
+    if (this.data.routePreference) routePicked.push({ key: "preference", type: "偏好", value: name });
+    const q = String(this.data.query || "").trim();
+    if (q) routePicked.push({ key: "q", type: "关键词", value: q });
+    if (this.data.routeDays) routePicked.push({ key: "days", type: "天数", value: this.data.routeDays === "multi" ? "4日及以上" : this.data.routeDays + "日" });
+    const preference = this.data.routePreference;
+    this.setData({ routePrimaryPreferences: view.primary, routeMorePreferences: view.more, routePicked, routePreferenceScroll: "" });
+    const reveal = () => {
+      if (!this._routeUnloaded && this.data.routePreference === preference) this.setData({ routePreferenceScroll: "route-pref-" + (preference || "all") });
+    };
+    if (wx.nextTick) wx.nextTick(reveal);
+    else reveal();
+  },
+  loadPreferences(force = false) {
+    const filters = { q: String(this.data.query || "").trim(), days: this.data.routeDays };
+    const base = JSON.stringify(filters);
+    if (!force && this._preferenceBase === base) {
+      if (this._preferencePromise) return this._preferencePromise;
+      if (this._preferenceReady) return Promise.resolve();
+    }
+    const requestId = this._preferenceRequestId = (this._preferenceRequestId || 0) + 1;
+    this._preferenceBase = base;
+    this._preferenceReady = false;
+    this.setData({ routePreferences: this.data.routePreferences.map((option) => ({ ...option, count: null })), routePreferenceLoading: true, routePreferenceErr: "", routePreferenceTotal: null });
+    this.refreshPreferenceView();
+    const task = (async () => {
+      try {
+        const data = await loadRoutePreferences(filters);
+        if (data.err) throw new Error(data.err);
+        if (this._routeUnloaded || requestId !== this._preferenceRequestId) return;
+        this._preferenceReady = true;
+        this.setData({ routePreferences: data.options, routePreferenceTotal: data.total,
+          routePreferenceLoading: false, routePreferenceErr: "",
+          destinations: DESTINATIONS.filter((place) => data.options.some((option) => option.key === place.preference))
+            .map((place) => ({ ...place, preferenceName: data.options.find((option) => option.key === place.preference).name })),
+        });
+        this.refreshPreferenceView();
+      } catch (e) {
+        if (this._routeUnloaded || requestId !== this._preferenceRequestId) return;
+        this.setData({ routePreferenceLoading: false, routePreferenceErr: (e && e.message) || "偏好数量暂时加载失败", routePreferenceTotal: null });
+      } finally {
+        if (requestId === this._preferenceRequestId) this._preferencePromise = null;
+      }
+    })();
+    this._preferencePromise = task;
+    return task;
+  },
+  reloadRoutePreferences() { return this.loadPreferences(true); },
   setRouteDays(e) {
     const d = e.currentTarget.dataset.d;
     this.setData({ routeDays: d === "multi" ? "multi" : Number(d) });
-    this.loadRoutes();
-  },
-  setRouteTag(e) {
-    this.setData({ routeTag: e.currentTarget.dataset.c || "" });
-    this.loadRoutes();
+    return this.loadRoutes();
   },
   setRouteMode(e) {
     const value = e.currentTarget.dataset.mode;
@@ -428,11 +498,11 @@ Page({
   },
   clearRouteFilters() {
     clearTimeout(this._searchTimer);
-    this.setData({ routeCategory: "", routeDays: 0, routeTag: "", query: "" });
+    this.setData({ routePreference: "", routeDays: 0, query: "" });
     return this.loadRoutes();
   },
   clearRouteFilter(e) {
-    const field = { category: "routeCategory", q: "query", days: "routeDays", tag: "routeTag" }[e.currentTarget.dataset.key];
+    const field = { preference: "routePreference", q: "query", days: "routeDays" }[e.currentTarget.dataset.key];
     if (!field) return;
     clearTimeout(this._searchTimer);
     this.setData({ [field]: field === "routeDays" ? 0 : "" });
@@ -445,31 +515,20 @@ Page({
   },
   async loadRoutes() {
     const requestId = this._routeRequestId = (this._routeRequestId || 0) + 1;
-    const filters = { category: this.data.routeCategory, q: String(this.data.query || "").trim(), days: this.data.routeDays, tag: this.data.routeTag };
-    const routePicked = [];
-    if (filters.category) routePicked.push({ key: "category", type: "主题", value: filters.category });
-    if (filters.q) routePicked.push({ key: "q", type: "关键词", value: filters.q });
-    if (filters.days) routePicked.push({ key: "days", type: "天数", value: filters.days === "multi" ? "多日" : filters.days + "日" });
-    if (filters.tag) routePicked.push({ key: "tag", type: "玩法", value: filters.tag });
-    this.setData({ routeLoading: true, routeErr: "", routePicked });
-    if (!this.data.routeTags.length) {
-      try {
-        const tagsRes = await request("/play-tags");
-        if (this._routeUnloaded || requestId !== this._routeRequestId) return;
-        this.setData({ routeTags: tagsRes.data || [] });
-      } catch {
-        if (this._routeUnloaded || requestId !== this._routeRequestId) return;
-        this.setData({ routeTags: this.data.home.tags || [] });
-      }
-    }
+    const filters = { preference: this.data.routePreference, q: String(this.data.query || "").trim(), days: this.data.routeDays };
+    this.refreshPreferenceView();
+    this.setData({ routeLoading: true, routeErr: "", routeErrCode: "" });
+    const preferences = this.loadPreferences();
     try {
-      const { list, err } = await loadRouteCatalog(filters);
+      const { list, err, code = "" } = await loadRouteCatalog(filters);
       if (this._routeUnloaded || requestId !== this._routeRequestId) return;
-      this.setData({ ...(err ? {} : { routeList: list }), routeErr: err, routeLoading: false });
+      this.setData({ ...(code === "ROUTE_PREFERENCE_UNAVAILABLE" ? { routeList: [] } : err ? {} : { routeList: list }), routeErr: err, routeErrCode: code, routeLoading: false });
+      if (code === "ROUTE_PREFERENCE_UNAVAILABLE") await this.loadPreferences(true);
     } catch (e) {
       if (this._routeUnloaded || requestId !== this._routeRequestId) return;
       this.setData({ routeErr: (e && e.message) || "加载失败", routeLoading: false });
     }
+    await preferences;
   },
   goRoute(e) {
     this.navigateHome("navigateTo", detailUrl(e.currentTarget.dataset.id));

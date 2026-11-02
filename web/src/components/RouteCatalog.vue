@@ -10,14 +10,22 @@
       <span v-else class="rc-selected-label">全部线路</span>
     </div>
     <div class="rc-filters">
+      <div class="rc-preferences" role="group" aria-label="出游偏好" :aria-busy="preferencesLoading">
+        <div class="rc-preference-heading"><span>出游偏好</span><button v-if="morePreferences.length" type="button" :aria-expanded="moreOpen" @click="moreOpen = !moreOpen">{{ moreOpen ? '收起偏好' : '更多偏好' }}<span aria-hidden="true">{{ moreOpen ? '⌃' : '⌄' }}</span></button></div>
+        <div ref="preferenceRow" class="rc-scroll rc-preference-options">
+          <button type="button" data-preference="" :aria-pressed="preference === ''" :class="{ on: preference === '' }" @click="preference = ''"><span>全部</span><small v-if="countReady && preferenceTotal != null">{{ preferenceTotal }}</small></button>
+          <button v-for="option in visiblePreferences" :key="option.key" type="button" :data-preference="option.key" :aria-pressed="preference === option.key" :class="{ on: preference === option.key, 'rc-zero': countReady && option.count === 0 }" @click="preference = option.key"><span>{{ option.name }}</span><small v-if="countReady && option.count != null">{{ option.count }}</small></button>
+        </div>
+        <div v-if="moreOpen && morePreferences.length" class="rc-scroll rc-preference-options rc-preference-more">
+          <button v-for="option in morePreferences" :key="option.key" type="button" :aria-pressed="preference === option.key" @click="preference = option.key"><span>{{ option.name }}</span><small v-if="countReady && option.count != null">{{ option.count }}</small></button>
+        </div>
+        <p v-if="preferencesLoading" class="rc-preference-status" role="status">正在更新偏好数量…</p>
+        <div v-else-if="preferencesError" class="rc-preference-status rc-preference-error" role="alert"><span>偏好数量暂时加载失败</span><button type="button" @click="$emit('retry-preferences')">重新加载偏好</button></div>
+      </div>
       <div class="rc-scroll" role="group" aria-label="线路天数">
         <button type="button" :aria-pressed="days === 0" :class="{ on: days === 0 }" @click="days = 0">全部天数</button>
         <button v-for="n in [1, 2, 3]" :key="n" type="button" :aria-pressed="days === n" :class="{ on: days === n }" @click="days = n">{{ n }}日</button>
-        <button type="button" :aria-pressed="days === 'multi'" :class="{ on: days === 'multi' }" @click="days = 'multi'">多日</button>
-      </div>
-      <div class="rc-scroll rc-play" role="group" aria-label="线路玩法">
-        <button type="button" :aria-pressed="tag === ''" :class="{ on: tag === '' }" @click="tag = ''">全部玩法</button>
-        <button v-for="item in tags" :key="item.id || item.name" type="button" :aria-pressed="tag === item.name" :class="{ on: tag === item.name }" @click="tag = item.name">{{ item.name }}</button>
+        <button type="button" :aria-pressed="days === 'multi'" :class="{ on: days === 'multi' }" @click="days = 'multi'">4日及以上</button>
       </div>
     </div>
     <div class="rc-toolbar">
@@ -31,7 +39,7 @@
         </button>
       </div>
     </div>
-    <div v-if="error" class="rc-error" role="alert"><div><strong>线路暂时加载失败</strong><p>{{ list.length ? '已保留上次结果，重新加载即可更新。' : '请检查网络，再试一次。' }}</p></div><button type="button" :disabled="loading" @click="load">重新加载</button></div>
+    <div v-if="error" class="rc-error" role="alert"><div><strong>{{ preferenceUnavailable ? '所选偏好已不可用' : '线路暂时加载失败' }}</strong><p>{{ preferenceUnavailable ? '该出游偏好不存在或已停用，请重新选择' : list.length ? '已保留上次结果，重新加载即可更新。' : '请检查网络，再试一次。' }}</p></div><button v-if="preferenceUnavailable" type="button" @click="clearFilter('preference')">重新选择偏好</button><button v-else type="button" :disabled="loading" @click="load">重新加载</button></div>
     <LoadRow v-if="loading && !list.length" />
     <div v-if="list.length" class="rc-results" :class="'mode-' + mode" :aria-busy="loading">
       <router-link v-for="route in cards" :key="route.id" class="rc-card" data-testid="route-card" :to="'/m/route/' + route.id">
@@ -58,30 +66,58 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import http from "@/api/http";
 import LoadRow from "@/components/LoadRow.vue";
 import { ROUTE_MODES, normalizeRouteMode, routeLabels, routePriceFacts, routeUpcomingFacts } from "@/utils/routePresentation";
+import { PRIMARY_ROUTE_PREFERENCES, preferenceName, routeBaseParams } from "@/utils/routePreferences";
 
-const props = defineProps({ q: { type: String, default: "" }, category: { type: String, default: "" }, seedTag: { type: String, default: "" } });
-const emit = defineEmits(["update:q", "update:category"]);
+const props = defineProps({
+  q: { type: String, default: "" },
+  preference: { type: String, default: "" },
+  days: { type: [Number, String], default: 0 },
+  preferenceOptions: { type: Array, default: () => PRIMARY_ROUTE_PREFERENCES.map((option) => ({ ...option })) },
+  preferenceTotal: { type: Number, default: null },
+  preferencesLoading: { type: Boolean, default: false },
+  preferencesError: { type: Boolean, default: false },
+});
+const emit = defineEmits(["update:q", "update:preference", "update:days", "retry-preferences"]);
+const preference = computed({ get: () => props.preference, set: (value) => emit("update:preference", value) });
+const days = computed({ get: () => props.days, set: (value) => emit("update:days", value) });
+const moreOpen = ref(false);
+const preferenceRow = ref(null);
+const countReady = computed(() => !props.preferencesLoading && !props.preferencesError);
+const primaryPreferences = computed(() => props.preferenceOptions.filter((option) => option.primary));
+const rememberedPreference = ref({ key: "", name: "" });
+watch([() => props.preference, () => props.preferenceOptions.find((option) => option.key === props.preference)?.name], ([key, name]) => {
+  if (rememberedPreference.value.key !== key) rememberedPreference.value = { key, name: name || preferenceName(props.preferenceOptions, key) };
+  else if (name) rememberedPreference.value.name = name;
+}, { immediate: true, flush: "sync" });
+const selectedPreferenceName = computed(() => rememberedPreference.value.key === props.preference ? rememberedPreference.value.name : preferenceName(props.preferenceOptions, props.preference));
+const visiblePreferences = computed(() => {
+  const visible = [...primaryPreferences.value];
+  if (props.preference && !visible.some((option) => option.key === props.preference)) {
+    const selected = props.preferenceOptions.find((option) => option.key === props.preference);
+    visible.push(selected || { key: props.preference, name: selectedPreferenceName.value, count: null });
+  }
+  return visible;
+});
+const morePreferences = computed(() => props.preferenceOptions.filter((option) => !option.primary && option.key !== props.preference && countReady.value && option.count > 0));
 const list = ref([]);
-const days = ref(0);
-const tag = ref(props.seedTag || "");
-const tags = ref([]);
 const ready = ref(false);
 const loading = ref(false);
 const error = ref(false);
+const errorCode = ref("");
+const preferenceUnavailable = computed(() => error.value && errorCode.value === "ROUTE_PREFERENCE_UNAVAILABLE");
 const brokenImages = ref({});
 const modes = ROUTE_MODES;
 const mode = ref("poster");
 const cards = computed(() => list.value.map((route) => ({ ...route, labels: routeLabels(route), price: routePriceFacts(route), departure: routeUpcomingFacts(route) })));
 const selectedFilters = computed(() => {
   const selected = [];
-  if (props.category) selected.push({ key: "category", label: "主题", value: props.category });
+  if (props.preference) selected.push({ key: "preference", label: "偏好", value: selectedPreferenceName.value });
+  if (days.value) selected.push({ key: "days", label: "天数", value: days.value === "multi" ? "4日及以上" : days.value + "日" });
   if (props.q.trim()) selected.push({ key: "q", label: "关键词", value: props.q.trim() });
-  if (days.value) selected.push({ key: "days", label: "天数", value: days.value === "multi" ? "多日" : days.value + "日" });
-  if (tag.value) selected.push({ key: "tag", label: "玩法", value: tag.value });
   return selected;
 });
 let requestId = 0;
@@ -93,13 +129,11 @@ function setMode(value) {
 }
 async function load() {
   const current = ++requestId;
-  const params = {};
-  if (days.value) params.days = days.value;
-  if (tag.value) params.tag = tag.value;
-  if (props.q.trim()) params.q = props.q.trim();
-  if (props.category) params.category = props.category;
+  const params = routeBaseParams(props.q, days.value);
+  if (props.preference) params.preference = props.preference;
   loading.value = true;
   error.value = false;
+  errorCode.value = "";
   try {
     const response = await http.get("/routes", { params });
     if (disposed || current !== requestId) return;
@@ -107,30 +141,45 @@ async function load() {
     list.value = response.data;
     brokenImages.value = {};
     ready.value = true;
-  } catch {
-    if (!disposed && current === requestId) error.value = true;
+  } catch (err) {
+    if (!disposed && current === requestId) {
+      error.value = true;
+      errorCode.value = err?.code || "";
+      if (errorCode.value === "ROUTE_PREFERENCE_UNAVAILABLE") {
+        list.value = [];
+        brokenImages.value = {};
+        emit("retry-preferences");
+      }
+    }
   } finally {
     if (!disposed && current === requestId) loading.value = false;
   }
 }
 function clearFilter(key) {
   if (key === "q") emit("update:q", "");
-  else if (key === "category") emit("update:category", "");
+  else if (key === "preference") preference.value = "";
   else if (key === "days") days.value = 0;
-  else if (key === "tag") tag.value = "";
 }
 function clearFilters() {
   days.value = 0;
-  tag.value = "";
   emit("update:q", "");
-  emit("update:category", "");
+  preference.value = "";
 }
-watch([days, tag, () => props.q, () => props.category], load);
-watch(() => props.seedTag, (value) => { tag.value = value || ""; });
+function revealPreference() {
+  const row = preferenceRow.value;
+  const button = row && [...row.querySelectorAll("[data-preference]")].find((item) => item.dataset.preference === props.preference);
+  if (!button) return;
+  const bounds = row.getBoundingClientRect();
+  const selected = button.getBoundingClientRect();
+  if (selected.left < bounds.left) row.scrollLeft += selected.left - bounds.left - 4;
+  else if (selected.right > bounds.right) row.scrollLeft += selected.right - bounds.right + 4;
+}
+watch([days, () => props.q.trim(), () => props.preference], load);
+watch([() => props.preference, () => props.preferenceOptions], async () => { await nextTick(); revealPreference(); }, { flush: "post" });
 onMounted(() => {
   try { mode.value = normalizeRouteMode(localStorage.getItem("bj_route_view")); } catch { /* Default to the editorial view. */ }
   load();
-  http.get("/play-tags").then((response) => { if (!disposed) tags.value = Array.isArray(response.data) ? response.data : []; }).catch(() => {});
+  nextTick(revealPreference);
 });
 onUnmounted(() => { disposed = true; requestId++; });
 </script>
@@ -158,8 +207,13 @@ onUnmounted(() => { disposed = true; requestId++; });
 .rc-scroll::-webkit-scrollbar { display:none; }
 .rc-scroll button { flex:none; padding:8px 13px; border:1px solid var(--rc-line); border-radius:10px; background:var(--rc-paper); color:#82728f; font-size:calc(12px * var(--ui-scale,1)); line-height:1.4; white-space:nowrap; }
 .rc-scroll button.on { color:var(--rc-purple); border-color:#d7c8e8; background:#eee7f7; font-weight:600; }
-.rc-play button { padding:6px 11px; border:0; border-radius:7px; background:transparent; font-size:calc(11px * var(--ui-scale,1)); }
-.rc-play button.on { background:var(--rc-soft); }
+.rc-preference-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; color:var(--rc-muted); font-size:calc(12px * var(--ui-scale,1)); }
+.rc-preference-heading > button { display:flex; align-items:center; gap:6px; min-height:44px; padding:8px 0 8px 10px; border:0; background:transparent; color:var(--rc-purple); font-size:calc(11px * var(--ui-scale,1)); }
+.rc-preference-options button { display:flex; align-items:center; gap:7px; min-height:44px; }
+.rc-preference-options small { font-size:calc(10px * var(--ui-scale,1)); opacity:.8; }
+.rc-preference-options .rc-zero:not(.on) { color:var(--rc-muted); }
+.rc-preference-status { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 10px !important; color:var(--rc-muted); font-size:calc(11px * var(--ui-scale,1)); line-height:1.6; }
+.rc-preference-status > button { flex:none; min-height:44px; padding:8px; border:1px solid var(--rc-line); border-radius:8px; color:var(--rc-purple); background:var(--rc-paper); font-size:inherit; }
 .rc-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:17px 0; }
 .rc-toolbar > p { color:var(--rc-muted); font-size:calc(11px * var(--ui-scale,1)); line-height:1.6; }
 .rc-toolbar > p strong { color:var(--rc-purple); font-size:calc(14px * var(--ui-scale,1)); font-weight:600; background:transparent; }

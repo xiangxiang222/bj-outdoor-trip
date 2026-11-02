@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { effectScope } from 'vue';
+import { effectScope, nextTick } from 'vue';
 import Home from './Home.vue';
 
 const fixture = vi.hoisted(() => ({
@@ -7,6 +7,7 @@ const fixture = vi.hoisted(() => ({
   router: { push: vi.fn(), replace: vi.fn() },
   store: { token: '', fetchMe: vi.fn() },
   scroller: { scrollTo: vi.fn(), cancel: vi.fn() },
+  get: vi.fn(),
 }));
 
 vi.mock('vue', async importOriginal => {
@@ -20,7 +21,7 @@ vi.mock('vue', async importOriginal => {
 });
 vi.mock('vue-router', () => ({ useRoute: () => fixture.route, useRouter: () => fixture.router }));
 vi.mock('@/stores/user', () => ({ useUserStore: () => fixture.store }));
-vi.mock('@/api/http', () => ({ default: { get: vi.fn(), post: vi.fn() } }));
+vi.mock('@/api/http', () => ({ default: { get: fixture.get, post: vi.fn() } }));
 vi.mock('@/utils/resultScroll', () => ({ createResultScroller: () => fixture.scroller }));
 
 const scopes = [];
@@ -38,6 +39,7 @@ const slides = count => Array.from({ length: count }, (_, index) => ({
 describe('homepage destination discovery and hero state', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    fixture.get.mockResolvedValue({ data: { options: [], total: 0 } });
     fixture.route.query = {};
   });
   afterEach(() => {
@@ -86,34 +88,35 @@ describe('homepage destination discovery and hero state', () => {
     expect(state.heroSource.value).toBe(state.fallbackPhotos[2]);
   });
 
-  it('starts a destination route search without an old play tag or losing the chosen trip date', async () => {
+  it('starts a destination route search without a hidden trip tag and preserves days and the chosen trip date', async () => {
     const { state, scroll } = setup();
     state.tag.value = '徒步';
     state.query.value = '旧搜索';
-    state.routeCategory.value = '海滨';
+    state.routePreference.value = 'coast';
+    state.routeDays.value = 2;
     state.date.value = '2099-04-08';
     await state.searchDestination('长城');
     expect(state.view.value).toBe('routes');
-    expect(state.tag.value).toBe('');
+    expect(state.tag.value).toBe('徒步');
     expect(state.query.value).toBe('长城');
-    expect(state.routeCategory.value).toBe('');
+    expect(state.routePreference.value).toBe('');
+    expect(state.routeDays.value).toBe(2);
     expect(state.date.value).toBe('2099-04-08');
-    expect(state.routeSearchVersion.value).toBe(1);
     expect(fixture.router.replace).toHaveBeenLastCalledWith({ path: '/m', query: { view: 'routes' } });
     expect(scroll).toHaveBeenCalledWith(state.feedStart.value);
   });
 
-  it('starts a fresh catalog even when the same destination is chosen again in route view', async () => {
+  it('keeps days when the same destination is chosen again without rebuilding the catalog', async () => {
     fixture.route.query = { view: 'routes' };
     const { state, scroll } = setup();
     state.query.value = '长城';
-    const previous = state.routeSearchVersion.value;
+    state.routeDays.value = 3;
     await state.searchDestination('长城');
     await state.searchDestination('长城');
     expect(state.view.value).toBe('routes');
     expect(state.query.value).toBe('长城');
     expect(state.tag.value).toBe('');
-    expect(state.routeSearchVersion.value).toBe(previous + 2);
+    expect(state.routeDays.value).toBe(3);
     expect(scroll).toHaveBeenCalledTimes(2);
   });
 
@@ -146,18 +149,74 @@ describe('homepage destination discovery and hero state', () => {
     expect(scroll).toHaveBeenCalledWith(state.feedStart.value);
   });
 
-  it.each(['长城', '登山', '海滨'])('opens the %s inspiration as an exact category without old keyword or play filters', async category => {
+  it.each(['great-wall', 'hiking', 'coast'])('selects %s from the same single preference and keeps keyword, days and date', async preference => {
     const { state, scroll } = setup();
     state.tag.value = '徒步';
     state.query.value = '海';
+    state.routeDays.value = 2;
     state.date.value = '2099-04-08';
-    await state.discoverInspiration(category);
+    await state.discoverInspiration(preference);
     expect(state.view.value).toBe('routes');
-    expect(state.routeCategory.value).toBe(category);
-    expect(state.tag.value).toBe('');
-    expect(state.query.value).toBe('');
+    expect(state.routePreference.value).toBe(preference);
+    expect(state.tag.value).toBe('徒步');
+    expect(state.query.value).toBe('海');
+    expect(state.routeDays.value).toBe(2);
     expect(state.date.value).toBe('2099-04-08');
-    expect(state.routeSearchVersion.value).toBe(1);
     expect(scroll).toHaveBeenCalledWith(state.feedStart.value);
+  });
+
+  it('retains route days and preference through trips and routes, with local choices causing no scroll', async () => {
+    const { state, scroll } = setup();
+    state.routeDays.value = 'multi';
+    state.routePreference.value = 'camping';
+    state.setView('trips');
+    state.setView('routes');
+    await nextTick();
+    expect(state.routeDays.value).toBe('multi');
+    expect(state.routePreference.value).toBe('camping');
+    expect(scroll).not.toHaveBeenCalled();
+    expect(fixture.scroller.cancel).not.toHaveBeenCalled();
+  });
+
+  it('uses configured preference names for the cards and refreshes counts only for keyword or days', async () => {
+    const { state } = setup();
+    fixture.get.mockResolvedValue({ data: { options: [{ key: 'hiking', name: '山径漫步', primary: true, count: 2 }], total: 2 } });
+    await state.loadRoutePreferences();
+    expect(state.preferenceName(state.routePreferenceOptions.value, 'hiking')).toBe('山径漫步');
+    fixture.get.mockClear();
+    state.routePreference.value = 'hiking';
+    await nextTick();
+    expect(fixture.get).not.toHaveBeenCalled();
+    state.query.value = ' 怀柔 ';
+    state.routeDays.value = 2;
+    await nextTick();
+    expect(fixture.get).toHaveBeenLastCalledWith('/route-preferences', { params: { q: '怀柔', days: 2 } });
+  });
+
+  it('hides disabled inspiration cards after configuration loads without clearing an existing selection', async () => {
+    const { state, scroll } = setup();
+    expect(state.destinations.value.map(card => card.preference)).toEqual(['great-wall', 'hiking', 'coast']);
+    state.routePreference.value = 'coast';
+    fixture.get.mockResolvedValue({ data: { options: [{ key: 'hiking', name: '山径漫步', primary: true, count: 0 }], total: 0 } });
+    await state.loadRoutePreferences();
+    expect(state.routePreferencesLoaded.value).toBe(true);
+    expect(state.destinations.value.map(card => card.preference)).toEqual(['hiking']);
+    expect(state.routePreference.value).toBe('coast');
+    await state.discoverInspiration('coast');
+    expect(scroll).not.toHaveBeenCalled();
+    expect(state.view.value).toBe('trips');
+    expect(state.routePreference.value).toBe('coast');
+    fixture.get.mockResolvedValue({ data: { options: [], total: 0 } });
+    await state.loadRoutePreferences();
+    expect(state.destinations.value).toEqual([]);
+  });
+
+  it('retains fallback cards on an initial configuration failure without pretending it loaded successfully', async () => {
+    const { state } = setup();
+    fixture.get.mockRejectedValueOnce(new Error('offline'));
+    await state.loadRoutePreferences();
+    expect(state.routePreferencesError.value).toBe(true);
+    expect(state.routePreferencesLoaded.value).toBe(false);
+    expect(state.destinations.value).toHaveLength(3);
   });
 });

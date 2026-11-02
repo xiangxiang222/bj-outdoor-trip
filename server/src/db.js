@@ -3,6 +3,7 @@ const path = require("path");
 const Database = require("better-sqlite3");
 const config = require("./config");
 const { backfillBusPhotos } = require("./seed/bus-art");
+const { initializeRoutePreferences } = require("./services/route-preferences");
 
 function ensureDirs() {
   fs.mkdirSync(config.dataDir, { recursive: true });
@@ -708,6 +709,7 @@ function migrateSchema(db) {
     const insertTag = db.prepare("INSERT INTO play_tags (name, color, cover, sort_order, status) VALUES (?,?,?,?,?)");
     defaults.forEach((t, i) => insertTag.run(t[0], t[1], "", i + 1, "on"));
   }
+  initializeRoutePreferences(db);
   backfillBusPhotos(db);
   db.exec(`
     DELETE FROM reviews
