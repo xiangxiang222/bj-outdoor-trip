@@ -42,10 +42,10 @@
       <button type="button" @click="discoverHostTrips('company')"><span><TravelIcon name="building" /></span><strong>企业团建</strong><small>寻找团队出行</small></button>
       <button type="button" @click="router.push('/m/guides')"><span><TravelIcon name="people" /></span><strong>专业领队</strong><small>认识带路的人</small></button>
     </div>
-    <section class="destination-section" aria-label="山野出游灵感">
+    <section v-if="destinations.length" class="destination-section" aria-label="山野出游灵感">
       <div class="section-heading"><div><span class="section-eyebrow">A LITTLE ESCAPE</span><h2>走出日常，自然会有答案</h2></div><router-link class="destination-caption" to="/m/guides">专业领队 ›</router-link></div>
       <div class="destination-grid">
-        <button v-for="place in destinations" :key="place.category" class="destination-card" type="button" @click="discoverInspiration(place.category)"><img :src="place.photo" :alt="place.name" loading="lazy" /><span class="destination-shade"></span><span class="destination-tag">{{ place.tag }}</span><span class="destination-copy"><small>{{ place.en }}</small><strong>{{ place.name }}</strong><em>{{ place.copy }}</em></span><TravelIcon name="arrow" /></button>
+        <button v-for="place in destinations" :key="place.preference" class="destination-card" :class="{ selected: routePreference === place.preference }" type="button" :aria-pressed="routePreference === place.preference" @click="discoverInspiration(place.preference)"><img :src="place.photo" :alt="place.name" loading="lazy" /><span class="destination-shade"></span><span class="destination-tag">{{ preferenceName(routePreferenceOptions, place.preference) }}</span><span class="destination-copy"><small>{{ place.en }}</small><strong>{{ place.name }}</strong><em>{{ place.copy }}</em></span><TravelIcon name="arrow" /></button>
       </div>
     </section>
     <section class="campus-card" aria-label="校园认证">
@@ -169,7 +169,7 @@
     </div>
     </template>
 
-    <RouteCatalog v-else :key="routeSearchVersion" v-model:q="query" v-model:category="routeCategory" :seed-tag="tag" />
+    <RouteCatalog v-else v-model:q="query" v-model:preference="routePreference" v-model:days="routeDays" :preference-options="routePreferenceOptions" :preference-total="routePreferenceTotal" :preferences-loading="routePreferencesLoading" :preferences-error="routePreferencesError" @retry-preferences="loadRoutePreferences" />
 
     <section class="organizer-section">
       <div class="section-heading">
@@ -231,6 +231,7 @@ import { useUserStore } from "@/stores/user";
 import { OFFER_TYPES } from "@/utils/offer";
 import { mediaSrc } from "@/utils/media";
 import { createResultScroller } from "@/utils/resultScroll";
+import { preferenceName, useRoutePreferences } from "@/utils/routePreferences";
 import { boardedLine, coverMark, coverOf, feedWhen, hostName, isFreeOffer, taglineOf } from "@/utils/feedCard";
 import { cycleSort, hostFacets as collectHostFacets, processFeed, sortLabel } from "@/utils/feedList";
 import { availableDepartures, buildDepartureMonth, chinaDay, departureMonths, matchesDepartureTime, weekendRange } from "@/utils/departureDates";
@@ -248,10 +249,10 @@ const departureNow = ref(new Date());
 const today = computed(() => chinaDay(departureNow.value));
 const selectableMonths = computed(() => departureMonths(departureNow.value));
 const lastDepartureDay = computed(() => buildDepartureMonth(selectableMonths.value.at(-1)?.key, [], departureNow.value).filter((cell) => !cell.blank).at(-1)?.date || today.value);
-const destinations = [
-  { category: '长城', name: '在长城，追一场山风', en: 'WALK INTO THE WILD', tag: '山脊漫步', copy: '把辽阔，装进行程', photo: '/static/photos/mutianyu.jpg' },
-  { category: '登山', name: '山深处，有好风景', en: 'FIND YOUR OWN PACE', tag: '山野徒步', copy: '慢下来，听山野说话', photo: '/static/photos/wuling_07.jpg' },
-  { category: '海滨', name: '去海边，等风也等你', en: 'MEET BY THE SEA', tag: '海岸出走', copy: '有些放松，只需一片海', photo: '/static/photos/beidaihe.jpg' },
+const destinationCards = [
+  { preference: 'great-wall', name: '在长城，追一场山风', en: 'WALK INTO THE WILD', copy: '把辽阔，装进行程', photo: '/static/photos/mutianyu.jpg' },
+  { preference: 'hiking', name: '山深处，有好风景', en: 'FIND YOUR OWN PACE', copy: '慢下来，听山野说话', photo: '/static/photos/wuling_07.jpg' },
+  { preference: 'coast', name: '去海边，等风也等你', en: 'MEET BY THE SEA', copy: '有些放松，只需一片海', photo: '/static/photos/beidaihe.jpg' },
 ];
 const home = ref({ brand: {}, cities: [], tags: [], festivals: [], months: [] });
 const loading = ref(true);
@@ -279,8 +280,10 @@ const school = ref("");
 const query = ref("");
 const sort = ref("soon");
 const heroIndex = ref(0);
-const routeSearchVersion = ref(0);
-const routeCategory = ref("");
+const routePreference = ref("");
+const routeDays = ref(0);
+const { options: routePreferenceOptions, total: routePreferenceTotal, loading: routePreferencesLoading, error: routePreferencesError, loaded: routePreferencesLoaded, load: loadRoutePreferences } = useRoutePreferences(query, routeDays);
+const destinations = computed(() => routePreferencesLoaded.value ? destinationCards.filter((card) => routePreferenceOptions.value.some((option) => option.key === card.preference)) : destinationCards);
 const upcoming = ref(null);
 const fold = reactive({ extra: false });
 const offers = OFFER_TYPES.filter((o) => o.key !== "full");
@@ -572,20 +575,14 @@ async function discoverHostTrips(kind) {
   return discoverTrips();
 }
 async function searchDestination(keyword) {
-  tag.value = "";
   query.value = keyword;
-  routeCategory.value = "";
-  // A destination starts a fresh catalog, including its own days/tag filters.
-  routeSearchVersion.value++;
+  routePreference.value = "";
   setView("routes");
   return discoverTrips();
 }
-async function discoverInspiration(category) {
-  if (!destinations.some((place) => place.category === category)) return;
-  tag.value = "";
-  query.value = "";
-  routeCategory.value = category;
-  routeSearchVersion.value++;
+async function discoverInspiration(preference) {
+  if (!destinations.value.some((place) => place.preference === preference)) return;
+  routePreference.value = preference;
   setView("routes");
   return discoverTrips();
 }
@@ -611,6 +608,7 @@ function goPublish(when, organizer) {
 </script>
 
 <style scoped>
+.destination-card.selected { outline:2px solid #a588c3; outline-offset:3px; }
 .discovery-language-entry { display:flex; align-items:center; gap:12px; padding:15px 17px; margin:15px 0 20px; border:1px solid #e3d7ef; border-radius:14px; background:#f4eef9; color:#5b3b8c; }
 .discovery-language-symbol { display:grid; place-items:center; width:33px; height:33px; border:1px solid #d5c1e7; border-radius:50%; flex:none; }
 .discovery-language-entry .travel-icon { width:18px; height:18px; stroke-width:1.4; flex:none; }

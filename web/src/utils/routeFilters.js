@@ -11,7 +11,20 @@ function haystack(row) {
     .toLowerCase();
 }
 
-export function filterRoutes(rows, query = {}) {
+export function matchesRoutePreference(row, preference) {
+  if (!row || !preference) return false;
+  const categories = Array.isArray(preference.categories) ? preference.categories : [];
+  const tags = Array.isArray(preference.tags) ? preference.tags : [];
+  return categories.includes(row.category) || (Array.isArray(row.tags) && row.tags.some((tag) => tags.includes(tag)));
+}
+
+export function matchingRoutePreferences(row, preferences) {
+  return (Array.isArray(preferences) ? preferences : [])
+    .filter((preference) => preference.status === "on" && matchesRoutePreference(row, preference))
+    .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0) || String(a.key).localeCompare(String(b.key)));
+}
+
+export function filterRoutes(rows, query = {}, preferences = []) {
   const list = Array.isArray(rows) ? rows : [];
   const q = text(query.q).toLowerCase();
   const review = text(query.review);
@@ -22,6 +35,8 @@ export function filterRoutes(rows, query = {}) {
   const region = text(query.region);
   const tag = text(query.tag);
   const source = text(query.source);
+  const preferenceKey = text(query.preference);
+  const preference = (Array.isArray(preferences) ? preferences : []).find((item) => item.key === preferenceKey && item.status === "on");
   const days = query.days === "" || query.days == null ? null : Number(query.days);
 
   return list.filter((row) => {
@@ -33,6 +48,7 @@ export function filterRoutes(rows, query = {}) {
     if (season && row.season !== season) return false;
     if (region && !text(row.region).includes(region)) return false;
     if (tag && !(row.tags || []).includes(tag)) return false;
+    if (preferenceKey && (!preference || !matchesRoutePreference(row, preference))) return false;
     if (source === "bot" && row.source !== "bot") return false;
     if (source === "user" && !row.submittedBy) return false;
     if (source === "official" && (row.source === "bot" || row.submittedBy)) return false;

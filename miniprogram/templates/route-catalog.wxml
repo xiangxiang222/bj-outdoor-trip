@@ -1,5 +1,21 @@
 <wxs src="../utils/locale.wxs" module="rt" />
 
+<template name="route-preferences">
+  <view class="rt-preferences">
+    <view class="rt-filter-label">{{rt.t('出游偏好', lang)}}</view>
+    <scroll-view scroll-x class="rt-filter-scroll" scroll-into-view="{{scrollInto}}" aria-role="group" aria-label="{{rt.t('出游偏好', lang)}}"><view class="rt-filter-row">
+      <button id="route-pref-all" class="rt-filter {{preference==''?'on':''}}" bindtap="setRoutePreference" data-preference="" aria-pressed="{{preference==''}}">{{rt.t('全部', lang)}}<text class="rt-pref-count" wx:if="{{!loading && !err && total!==null}}">{{total}}</text></button>
+      <button id="route-pref-{{item.key}}" class="rt-filter {{preference==item.key?'on':''}}" wx:for="{{options}}" wx:key="key" bindtap="setRoutePreference" data-preference="{{item.key}}" aria-pressed="{{preference==item.key}}">{{rt.t(item.name, lang)}}<text class="rt-pref-count" wx:if="{{!loading && !err}}">{{item.count}}</text></button>
+      <button wx:if="{{more.length}}" class="rt-filter" bindtap="toggleRoutePreferences" aria-expanded="{{expanded}}">{{rt.t(expanded ? '收起偏好' : '更多偏好', lang)}}</button>
+    </view></scroll-view>
+    <view wx:if="{{expanded}}" class="rt-more-preferences" aria-role="group" aria-label="{{rt.t('更多偏好', lang)}}">
+      <button id="route-pref-{{item.key}}" class="rt-filter {{preference==item.key?'on':''}}" wx:for="{{more}}" wx:key="key" bindtap="setRoutePreference" data-preference="{{item.key}}" aria-pressed="{{preference==item.key}}">{{rt.t(item.name, lang)}}<text class="rt-pref-count" wx:if="{{!loading && !err}}">{{item.count}}</text></button>
+    </view>
+    <view class="rt-pref-status" wx:if="{{loading}}" aria-live="polite">{{rt.t('正在更新偏好数量…', lang)}}</view>
+    <view class="rt-pref-status" wx:elif="{{err}}" aria-live="polite"><text>{{rt.t('偏好数量暂时加载失败', lang)}}</text><button bindtap="reloadRoutePreferences">{{rt.t('重新加载偏好', lang)}}</button></view>
+  </view>
+</template>
+
 <template name="route-modes">
   <view class="rt-toolbar">
     <view class="rt-result"><text>{{count}}</text> {{rt.t('条线路', lang)}}<text class="rt-refresh" wx:if="{{loading && count}}"> · {{rt.t('更新中', lang)}}</text></view>

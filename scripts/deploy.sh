@@ -113,7 +113,6 @@ fi
 npm install --omit=dev
 npm install --prefix server --omit=dev
 npm install --prefix web
-npm run build --prefix web
 
 if [ ! -f server/data/app.sqlite ]; then
   npm run seed
@@ -125,7 +124,18 @@ pm2 save
 sudo env PATH="$PATH" pm2 startup systemd -u "$USER" --hp "$HOME" >/dev/null || true
 ok=0
 for _ in $(seq 1 20); do
-  if curl -fsS -o /dev/null -w "local_api:%{http_code}\n" http://127.0.0.1:3780/api/routes; then
+  if curl -fsS -o /dev/null -w "local_api:%{http_code}\n" http://127.0.0.1:3780/api/routes \
+    && curl -fsS http://127.0.0.1:3780/api/route-preferences | node -e '
+      let body = "";
+      process.stdin.setEncoding("utf8");
+      process.stdin.on("data", chunk => { body += chunk; });
+      process.stdin.on("end", () => {
+        try {
+          const response = JSON.parse(body);
+          if (response.ok !== true || !Array.isArray(response.data?.options) || !Number.isSafeInteger(response.data?.total)) process.exit(1);
+        } catch { process.exit(1); }
+      });
+    '; then
     ok=1
     break
   fi
@@ -137,5 +147,8 @@ if [ "$ok" -ne 1 ]; then
   pm2 logs beiyexing --err --lines 120 --nostream || true
   exit 1
 fi
+# Older servers ignore the new preference filter. Keep the existing frontend
+# until the new backend and its preference configuration endpoint are ready.
+npm run build --prefix web
 echo "deploy ok: $PUBLIC_URL/m  $PUBLIC_URL/admin"
 REMOTE

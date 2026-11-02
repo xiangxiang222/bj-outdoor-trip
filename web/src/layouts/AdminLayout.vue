@@ -113,7 +113,7 @@ const navGroups = [
     { title: "意见反馈", path: "/admin/feedback", icon: "chat", cap: "ops" },
   ] },
   { label: "平台设置", items: [
-    { title: "玩法标签", path: "/admin/tags", icon: "tag", cap: "ops" },
+    { title: "偏好与标签", path: "/admin/tags", icon: "tag", cap: "roster" },
     { title: "退费规则", path: "/admin/refund", icon: "refund", cap: "ops" },
     { title: "团队与权限", path: "/admin/staff", icon: "settings", cap: "staff" },
   ] },
