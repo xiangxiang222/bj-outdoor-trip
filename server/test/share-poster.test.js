@@ -1,8 +1,10 @@
 const fs = require("fs");
 const path = require("path");
-const { describe, it } = require("node:test");
+const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
+const sharp = require("sharp");
 const config = require("../src/config");
+const { harness } = require("./http");
 const {
   encodeShareScene,
   decodeShareScene,
@@ -46,5 +48,56 @@ describe("share poster helpers", () => {
 
   it("skips embed when the cover file is missing", () => {
     assert.equal(embedLocalMedia("/static/photos/missing-cover.jpg"), "");
+  });
+});
+
+describe("schedule poster covers", () => {
+  let agent;
+  let seed;
+
+  beforeEach(() => {
+    ({ agent, seed } = harness());
+  });
+
+  async function writeImage(rel, format = "jpeg") {
+    const file = path.join(config.publicDir, rel);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    await sharp({ create: { width: 800, height: 600, channels: 3, background: "#336699" } })
+      .toFormat(format).toFile(file);
+    return fs.readFileSync(file);
+  }
+
+  it("uses and embeds the same resolved photo as the detail page", async () => {
+    const photo = await writeImage("static/photos/resolved-share.jpg");
+    seed.db.prepare("UPDATE routes SET cover=? WHERE id=?")
+      .run("http://old.example/static/photos/resolved-share.svg", seed.routeId);
+    const detail = await agent.get(`/api/schedules/${seed.individualScheduleId}`).expect(200);
+    const poster = await agent.get(`/api/schedules/${seed.individualScheduleId}/poster`).expect(200);
+    assert.equal(poster.body.data.facts.cover, detail.body.data.route.cover);
+    assert.match(poster.body.data.facts.cover, /\/static\/photos\/resolved-share\.jpg$/);
+    assert.equal(poster.body.data.facts.coverEmbed, `data:image/jpeg;base64,${photo.toString("base64")}`);
+    assert.equal(poster.body.data.shareImage, poster.body.data.facts.cover);
+  });
+
+  it("includes the default activity cover when the host did not upload one", async () => {
+    const photo = await writeImage("static/activities/guandan.png", "png");
+    seed.db.prepare("UPDATE routes SET title='周末掼蛋', cover='', gallery_json='[]' WHERE id=?")
+      .run(seed.routeId);
+    seed.db.prepare("UPDATE schedules SET channel='activity' WHERE id=?").run(seed.individualScheduleId);
+    const detail = await agent.get(`/api/schedules/${seed.individualScheduleId}`).expect(200);
+    const poster = await agent.get(`/api/schedules/${seed.individualScheduleId}/poster`).expect(200);
+    assert.equal(poster.body.data.facts.cover, detail.body.data.gallery[0]);
+    assert.match(poster.body.data.facts.cover, /\/static\/activities\/guandan\.png$/);
+    assert.equal(poster.body.data.facts.coverEmbed, `data:image/png;base64,${photo.toString("base64")}`);
+  });
+
+  it("uses the trip gallery when there is no route cover", async () => {
+    await writeImage("static/photos/gallery-share.jpg");
+    seed.db.prepare("UPDATE routes SET cover='', gallery_json=? WHERE id=?")
+      .run(JSON.stringify(["/static/photos/gallery-share.jpg"]), seed.routeId);
+    const detail = await agent.get(`/api/schedules/${seed.individualScheduleId}`).expect(200);
+    const poster = await agent.get(`/api/schedules/${seed.individualScheduleId}/poster`).expect(200);
+    assert.equal(poster.body.data.facts.cover, detail.body.data.gallery[0]);
+    assert.match(poster.body.data.facts.coverEmbed, /^data:image\/jpeg;base64,/);
   });
 });

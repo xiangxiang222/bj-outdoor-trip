@@ -1,10 +1,34 @@
-function loadCover(src) {
+// Canvas 2D needs an Image created by this canvas, not a getImageInfo path.
+// Bound downloads/decoding so a share can finish within WeChat's 3s deadline.
+const FALLBACK_SHARE_CARD = "/images/share-card.png";
+const IMAGE_TIMEOUT = 1200;
+
+function loadCover(canvas, src) {
   return new Promise((resolve) => {
     if (!src) return resolve(null);
+    let done = false;
+    const timer = setTimeout(() => finish(null), IMAGE_TIMEOUT);
+    function finish(image) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      resolve(image);
+    }
+    function decode(path) {
+      if (done) return;
+      try {
+        const image = canvas.createImage();
+        image.onload = () => finish(image);
+        image.onerror = () => finish(null);
+        image.src = path;
+      } catch (e) { finish(null); }
+    }
+    // Poster QR codes are returned as data URLs, which getImageInfo cannot download.
+    if (/^data:image\//i.test(src)) return decode(src);
     wx.getImageInfo({
       src,
-      success: (res) => resolve(res),
-      fail: () => resolve(null),
+      success: (res) => decode(res.path),
+      fail: () => finish(null),
     });
   });
 }
@@ -26,16 +50,23 @@ function yuan(n) {
 }
 
 function drawCover(ctx, cover, x, y, w, h) {
-  if (cover && cover.path) {
+  // Paint a visible background even if a device cannot draw the source image.
+  ctx.fillStyle = "#1b4332";
+  ctx.fillRect(x, y, w, h);
+  if (cover && cover.width && cover.height) {
     try {
-      ctx.drawImage(cover.path, x, y, w, h);
+      const scale = Math.max(w / cover.width, h / cover.height);
+      const sw = w / scale;
+      const sh = h / scale;
+      ctx.drawImage(cover, (cover.width - sw) / 2, (cover.height - sh) / 2, sw, sh, x, y, w, h);
       return;
     } catch (e) {
       /* fallback block */
     }
   }
-  ctx.fillStyle = "#1b4332";
-  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "700 26px sans-serif";
+  ctx.fillText("同行者众 · 一起出发", x + 24, y + h / 2);
 }
 
 function canvasToFile(canvas) {
@@ -69,11 +100,22 @@ async function getCanvas(page, id, cssW, cssH) {
   });
 }
 
-async function drawShareCard(page, facts) {
+function queueCanvas(page, id, draw) {
+  const jobs = page._shareCanvasJobs || (page._shareCanvasJobs = {});
+  const task = (jobs[id] || Promise.resolve()).catch(() => {}).then(draw);
+  jobs[id] = task.catch(() => {});
+  return task;
+}
+
+function drawShareCard(page, facts) {
+  return queueCanvas(page, "card", () => renderShareCard(page, facts));
+}
+
+async function renderShareCard(page, facts) {
   const w = 500;
   const h = 400;
   const { canvas, ctx } = await getCanvas(page, "#shareCardCanvas", w, h);
-  const cover = await loadCover(facts.cover);
+  const cover = await loadCover(canvas, facts.cover);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, w, h);
   drawCover(ctx, cover, 0, 0, w, 228);
@@ -95,12 +137,16 @@ async function drawShareCard(page, facts) {
   return canvasToFile(canvas);
 }
 
-async function drawSharePoster(page, facts, qrSrc) {
+function drawSharePoster(page, facts, qrSrc) {
+  return queueCanvas(page, "poster", () => renderSharePoster(page, facts, qrSrc));
+}
+
+async function renderSharePoster(page, facts, qrSrc) {
   const w = 375;
   const h = 490;
   const { canvas, ctx } = await getCanvas(page, "#sharePosterCanvas", w, h);
-  const cover = await loadCover(facts.cover);
-  const qr = await loadCover(qrSrc);
+  const [cover, qr] = await Promise.all([loadCover(canvas, facts.cover), loadCover(canvas, qrSrc)]);
+  if (!qr) throw new Error("poster QR image unavailable");
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, w, h);
   drawCover(ctx, cover, 0, 0, w, 180);
@@ -131,7 +177,7 @@ async function drawSharePoster(page, facts, qrSrc) {
   ctx.fillText(String(facts.startDate || "") + " " + String(facts.meetupTime || ""), 46, 286);
   ctx.fillText(String(facts.meetupPoint || "").slice(0, 14), 46, 310);
   ctx.fillText("已报名 " + (facts.enrolled || 0) + "/" + (facts.maxSeats || 0), 46, 334);
-  if (qr && qr.path) ctx.drawImage(qr.path, 250, 220, 110, 110);
+  ctx.drawImage(qr, 250, 220, 110, 110);
   ctx.fillStyle = "#c2410c";
   ctx.font = "700 12px sans-serif";
   ctx.fillText("扫码报名", 268, 214);
@@ -148,4 +194,4 @@ async function drawSharePoster(page, facts, qrSrc) {
   return canvasToFile(canvas);
 }
 
-module.exports = { drawShareCard, drawSharePoster };
+module.exports = { drawShareCard, drawSharePoster, FALLBACK_SHARE_CARD };

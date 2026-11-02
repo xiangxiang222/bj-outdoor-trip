@@ -1,12 +1,12 @@
 const { request } = require("../../utils/request");
 const { payStatusText, starText } = require("../../utils/labels");
-const { shareCover, absMedia } = require("../../utils/media");
+const { absMedia } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
 const { dateOf, kindOf, activityDetails, activityBody, activityEnded } = require("../../utils/activity-kind");
 const { peopleLine, trustChips, dockPrice, enrollCta, canShowEnroll, ticketState, showDetailTabs } = require("../../utils/scan-facts");
 const { openCampusPick } = require("../../utils/campus");
 const { decodeShareScene, persistRef, readRef, enrollQuery } = require("../../utils/share-scene");
-const { drawShareCard, drawSharePoster } = require("../../utils/share-card");
+const { drawShareCard, drawSharePoster, FALLBACK_SHARE_CARD } = require("../../utils/share-card");
 const { baseUrl } = require("../../config");
 const app = getApp();
 
@@ -167,6 +167,10 @@ Page({
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
   },
   onShow() { this.load(); },
+  onUnload() {
+    this._shareUnloaded = true;
+    this._shareTask = null;
+  },
   load() {
     this.setData({ reviewsReady: false, routeReviewsReady: false, seatsReady: false, loadErr: "" });
     request("/schedules/" + this.data.id).then((r) => {
@@ -618,6 +622,7 @@ Page({
   },
   prepareShare(s) {
     const quote = (s && s.quote) || {};
+    const id = this.data.id;
     const cover = absMedia((s.gallery && s.gallery[0]) || (s.route && s.route.cover) || "", baseUrl);
     const facts = {
       title: (s.route && s.route.title) || "行程",
@@ -639,17 +644,44 @@ Page({
     this._shareFacts = facts;
     const title = facts.free ? facts.title + " 免费报名" : facts.title + " ¥" + Math.round(Number(facts.price || 0)) + " 立即报名";
     this.setData({ shareTitle: title, posterCover: cover });
-    request("/schedules/" + this.data.id + "/poster").then((res) => {
+    const metaVersion = this._shareMetaVersion = (this._shareMetaVersion || 0) + 1;
+    request("/schedules/" + id + "/poster").then((res) => {
+      if (this._shareUnloaded || this._shareMetaVersion !== metaVersion || this.data.id !== id) return;
       const data = (res && res.data) || {};
-      if (data.referralCode) persistRef(this.data.id, data.referralCode);
+      if (data.referralCode) persistRef(id, data.referralCode);
       this.setData({
         ref: data.referralCode || this.data.ref,
         posterQr: data.qr || this.data.posterQr,
       });
     }).catch(() => {});
-    wx.nextTick(() => {
-      drawShareCard(this, facts).then((path) => this.setData({ shareCardPath: path })).catch(() => {});
+    // Refreshing the same page must not restart a pending render or discard its PNG.
+    const key = JSON.stringify([id, facts.title, facts.cover, facts.price, facts.free]);
+    if (this._shareTask && this._shareTask.key === key) return this._shareTask.promise;
+    const task = { key };
+    this._shareTask = task;
+    this.setData({ shareCardPath: "" });
+    task.promise = new Promise((resolve) => wx.nextTick(resolve))
+      .then(() => drawShareCard(this, facts))
+      .catch(() => FALLBACK_SHARE_CARD)
+      .then((path) => {
+        if (!this._shareUnloaded && this._shareTask === task) this.setData({ shareCardPath: path });
+        return path;
+      });
+    return task.promise;
+  },
+  shareResult(content) {
+    const task = this._shareTask;
+    if (!task || this.data.shareCardPath) return content;
+    // WeChat falls back to the synchronous fields after 3 seconds. Both paths
+    // always use a complete card, never a raw cover or an automatic screenshot.
+    const promise = new Promise((resolve) => {
+      const timer = setTimeout(() => resolve(content), 2400);
+      task.promise.then((imageUrl) => {
+        clearTimeout(timer);
+        resolve({ ...content, imageUrl });
+      });
     });
+    return { ...content, promise };
   },
   openPoster() {
     this.setData({ showPoster: true, posterHint: "正在生成带二维码的详情图…" });
@@ -688,20 +720,20 @@ Page({
     const ref = this.data.ref;
     if (ref) path += "&ref=" + encodeURIComponent(ref);
     if (s && s.joinCode) path += "&joinCode=" + encodeURIComponent(s.joinCode);
-    return {
+    return this.shareResult({
       title,
       path,
-      imageUrl: this.data.shareCardPath || shareCover(s && s.route && s.route.cover),
-    };
+      imageUrl: this.data.shareCardPath || FALLBACK_SHARE_CARD,
+    });
   },
   onShareTimeline() {
     const s = this.data.s;
     let query = "id=" + this.data.id;
     if (this.data.ref) query += "&ref=" + encodeURIComponent(this.data.ref);
-    return {
+    return this.shareResult({
       title: this.data.shareTitle || ((s && s.route && s.route.title) || "同行者众"),
       query,
-      imageUrl: this.data.shareCardPath || shareCover(s && s.route && s.route.cover),
-    };
+      imageUrl: this.data.shareCardPath || FALLBACK_SHARE_CARD,
+    });
   },
 });
