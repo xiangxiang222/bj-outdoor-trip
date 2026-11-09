@@ -333,6 +333,16 @@ function createSchema(db) {
       created_at TEXT DEFAULT (datetime('now','localtime'))
     );
 
+    CREATE TABLE IF NOT EXISTS enrollment_refund_plans (
+      enrollment_id INTEGER PRIMARY KEY,
+      amount INTEGER NOT NULL,
+      original_amount INTEGER NOT NULL,
+      percent INTEGER NOT NULL DEFAULT 100,
+      remark TEXT NOT NULL,
+      plan_json TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now','localtime'))
+    );
+
     CREATE TABLE IF NOT EXISTS payment_splits (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       schedule_id INTEGER,
@@ -817,6 +827,7 @@ function migrateSchema(db) {
   addColumnIfMissing(db, "payments", "wechat_transaction_id", "TEXT");
   addColumnIfMissing(db, "payments", "refunded_amount", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "payments", "refund_of", "INTEGER DEFAULT 0");
+  addColumnIfMissing(db, "payments", "parent_payment_id", "INTEGER DEFAULT 0");
   addColumnIfMissing(db, "enrollments", "pay_share_token", "TEXT");
   addColumnIfMissing(db, "routes", "submitted_by", "INTEGER");
   addColumnIfMissing(db, "routes", "contact_phone", "TEXT");

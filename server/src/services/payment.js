@@ -1,3 +1,4 @@
+const { randomBytes, createHash } = require("node:crypto");
 const { getDb } = require("../db");
 const { addPoints, isMember, quoteForSchedule, realEnrolledCount, maybeMatchGuide } = require("./helpers");
 const { grantMembership } = require("./member");
@@ -27,6 +28,7 @@ const {
   planPayerRefunds,
   enrollmentByPayToken,
   leftoverOf,
+  recoverLegacyCompanyShares,
 } = require("./pay-ledger");
 
 function fail(status, message, extra) {
@@ -36,8 +38,8 @@ function fail(status, message, extra) {
   throw err;
 }
 
-function newTradeNo(prefix, userId) {
-  return `${prefix}${Date.now()}${userId}`.slice(0, 32);
+function newTradeNo(prefix) {
+  return `${prefix}${randomBytes(15).toString("hex")}`.slice(0, 32);
 }
 
 function pendingOf({ userId, enrollmentId, scene, amount }) {
@@ -212,33 +214,41 @@ function completeEnrollmentPay(en, payerId, amount, opts = {}) {
   return applyEnrollmentCharge(en, payerId, amount, opts);
 }
 
-function recordRefundSlice(en, slice, refundNo, remark) {
+function recordRefundSlice(en, slice, refundNo, remark, { walletCredit } = {}) {
   const db = getDb();
   const channel = slice.channel === "wallet" ? "wallet" : "wechat";
-  if (slice.paymentId) {
-    db.prepare("UPDATE payments SET refunded_amount=IFNULL(refunded_amount,0)+? WHERE id=?").run(slice.amount, slice.paymentId);
-  }
-  db.prepare(
-    `INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene,refund_of) VALUES (?,?,?,?,?,?,?,?,?,?)`
-  ).run(
-    en.id,
-    slice.userId,
-    en.schedule_id,
-    slice.amount,
-    channel,
-    "refunded",
-    refundNo,
-    remark,
-    "enrollment",
-    slice.paymentId || 0
-  );
+  const recorded = db.transaction(() => {
+    const existing = db.prepare("SELECT * FROM payments WHERE trade_no=?").get(refundNo);
+    if (existing) return existing;
+    db.prepare(
+      `INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene,refund_of) VALUES (?,?,?,?,?,?,?,?,?,?)`
+    ).run(
+      en.id,
+      slice.userId,
+      en.schedule_id,
+      slice.amount,
+      channel,
+      "refunded",
+      refundNo,
+      remark,
+      "enrollment",
+      slice.paymentId || 0
+    );
+    if (slice.paymentId) {
+      const updated = db.prepare("UPDATE payments SET refunded_amount=IFNULL(refunded_amount,0)+? WHERE id=? AND amount-IFNULL(refunded_amount,0)>=?")
+        .run(slice.amount, slice.paymentId, slice.amount);
+      if (!updated.changes) fail(409, "退款金额已发生变化，请重试");
+    }
+    if (walletCredit) walletCredit();
+    return db.prepare("SELECT * FROM payments WHERE trade_no=?").get(refundNo);
+  })();
   try {
     const route = db.prepare("SELECT r.title FROM schedules s JOIN routes r ON r.id=s.route_id WHERE s.id=?").get(en.schedule_id);
     require("./mine-desk").pushUserNotice({
       userId: slice.userId,
       kind: "refund",
       title: "退款到账",
-      body: `${route?.title ? "「" + route.title + "」" : ""}${channel === "wallet" ? "已退回余额" : "已原路退回微信"} ¥${slice.amount}`,
+      body: `${route?.title ? "「" + route.title + "」" : ""}${recorded.channel === "wallet" ? "已退回余额" : "已原路退回微信"} ¥${slice.amount}`,
       href: "/m/orders?tab=refund",
       refType: "enrollment",
       refId: en.id,
@@ -246,6 +256,7 @@ function recordRefundSlice(en, slice, refundNo, remark) {
   } catch {
     /* 退款入账不依赖消息 */
   }
+  return recorded;
 }
 
 function walletRefundClosed(err) {
@@ -278,8 +289,9 @@ function repairSkippedWalletRefunds() {
     const amount = leftoverOf(pay);
     if (!en || amount <= 0) continue;
     const slice = { paymentId: pay.id, userId: pay.user_id, amount, channel: "wallet" };
-    creditRefundToWallet(en, slice, "取消报名退回余额");
-    recordRefundSlice(en, slice, newTradeNo("RF", pay.user_id), "取消报名退回余额");
+    recordRefundSlice(en, slice, newTradeNo("RF", pay.user_id), "取消报名退回余额", {
+      walletCredit: () => creditRefundToWallet(en, slice, "取消报名退回余额"),
+    });
     count += 1;
   }
   db.prepare("INSERT INTO settings (key, value) VALUES (?, '1') ON CONFLICT(key) DO UPDATE SET value='1'").run(key);
@@ -295,51 +307,65 @@ function creditRefundToWallet(en, slice, remark) {
   });
 }
 
-async function refundEnrollmentToPayers(en, { amount, remark, refundWechat } = {}) {
-  const plan = preflightEnrollmentRefund(en, amount);
+function enrollmentRefundPlan(enrollmentId) {
+  const row = getDb().prepare("SELECT * FROM enrollment_refund_plans WHERE enrollment_id=?").get(enrollmentId);
+  return row ? { ...row, plan: JSON.parse(row.plan_json) } : null;
+}
+
+async function refundEnrollmentToPayers(en, { amount, remark, refundWechat, percent = 100, originalAmount = amount } = {}) {
+  const db = getDb();
+  // Cancellation/dissolution is one terminal refund operation per enrollment.
+  // Persist the complete plan before any gateway call, including retry IDs.
+  const saved = db.transaction(() => {
+    const existing = enrollmentRefundPlan(en.id);
+    if (existing) return existing;
+    const plan = preflightEnrollmentRefund(en, amount).map(slice => ({ ...slice, refundNo: newTradeNo("RF", slice.userId) }));
+    db.prepare("INSERT INTO enrollment_refund_plans(enrollment_id,amount,original_amount,percent,remark,plan_json) VALUES (?,?,?,?,?,?)")
+      .run(en.id, plan.reduce((sum, slice) => sum + slice.amount, 0), originalAmount || 0, percent, remark || "原路退款", JSON.stringify(plan));
+    return enrollmentRefundPlan(en.id);
+  })();
+  const plan = saved.plan;
+  if (plan.some(slice => slice.channel === "wechat")) requireLivePaymentInProduction();
   const results = [];
   for (let slice of plan) {
-    const refundNo = newTradeNo("RF", slice.userId);
-    if (slice.channel === "wallet") {
-      creditRefundToWallet(en, slice, remark);
-    } else if (slice.channel === "wechat" && (payLive() || refundWechat) && slice.tradeNo) {
-      const orderTotal = getDb()
-        .prepare(
-          "SELECT IFNULL(SUM(amount),0) AS s FROM payments WHERE trade_no=? AND status='success' AND IFNULL(refund_of,0)=0 AND IFNULL(scene,'')!='company'"
-        )
-        .get(slice.tradeNo);
-      const totalYuan = Number(orderTotal?.s || 0) || Number(slice.chargeAmount || 0);
+    const refundNo = slice.refundNo;
+    const existing = db.prepare("SELECT * FROM payments WHERE trade_no=? AND status='refunded'").get(refundNo);
+    if (existing) {
+      results.push({ userId: existing.user_id, amount: existing.amount, tradeNo: refundNo, originalTradeNo: slice.tradeNo || "", channel: existing.channel });
+      continue;
+    }
+    if (slice.channel === "wechat" && (payLive() || refundWechat) && slice.tradeNo) {
       try {
         await (refundWechat || refundOrder)({
           tradeNo: slice.tradeNo,
           transactionId: slice.transactionId,
           refundNo,
-          totalFen: yuanToFen(totalYuan),
+          totalFen: yuanToFen(slice.chargeAmount),
           refundFen: yuanToFen(slice.amount),
         });
       } catch (err) {
         if (!walletRefundClosed(err)) throw err;
-        creditRefundToWallet(en, slice, remark || "报名退回余额");
         slice = { ...slice, channel: "wallet" };
       }
     } else if (slice.channel === "wechat" && payLive() && !slice.tradeNo) {
-      creditRefundToWallet(en, slice, remark || "报名退回余额");
       slice = { ...slice, channel: "wallet" };
     }
-    recordRefundSlice(en, slice, refundNo, remark || "原路退款");
+    const recorded = recordRefundSlice(en, slice, refundNo, saved.remark, {
+      walletCredit: slice.channel === "wallet" ? () => creditRefundToWallet(en, slice, saved.remark) : undefined,
+    });
     results.push({
       userId: slice.userId,
       amount: slice.amount,
       tradeNo: refundNo,
       originalTradeNo: slice.tradeNo || "",
-      channel: slice.channel,
+      channel: recorded.channel,
     });
   }
   return results;
 }
 
 function preflightEnrollmentRefund(en, amount) {
-  const plan = planPayerRefunds(en, amount);
+  const plan = enrollmentRefundPlan(en.id)?.plan || planPayerRefunds(en, amount);
   if (plan.some((slice) => slice.channel === "wechat")) requireLivePaymentInProduction();
   return plan;
 }
@@ -350,15 +376,16 @@ async function refundPaymentExcess(pay, excess, remark) {
   const amount = Math.min(excess, leftover);
   if (amount <= 0) return null;
   if (pay.channel === "wechat") requireLivePaymentInProduction();
-  const refundNo = newTradeNo("RX", pay.user_id);
-  if (pay.channel === "wallet") {
-    require("./wallet").credit(pay.user_id, amount, {
+  // An excess refund has no enrollment cancellation plan; its original payment
+  // and refund offset give retries a stable gateway idempotency key.
+  const refundNo = "RX" + createHash("sha256").update(`${pay.id}:${pay.refunded_amount || 0}:${amount}`).digest("hex").slice(0, 30);
+  const walletCredit = () => require("./wallet").credit(pay.user_id, amount, {
       reason: remark || "超额退回钱包",
       scene: "refund",
       refType: "payment",
       refId: pay.id,
     });
-  } else if (payLive() && pay.trade_no) {
+  if (pay.channel !== "wallet" && payLive() && pay.trade_no) {
     await refundOrder({
       tradeNo: pay.trade_no,
       transactionId: pay.wechat_transaction_id,
@@ -372,7 +399,8 @@ async function refundPaymentExcess(pay, excess, remark) {
     en,
     { paymentId: pay.id, userId: pay.user_id, amount, tradeNo: pay.trade_no, chargeAmount: pay.amount, channel: pay.channel },
     refundNo,
-    remark || "超额原路退回"
+    remark || "超额原路退回",
+    { walletCredit: pay.channel === "wallet" ? walletCredit : undefined }
   );
   return { userId: pay.user_id, amount, tradeNo: refundNo };
 }
@@ -582,28 +610,33 @@ function applyCompanyShares(pay) {
   if (!sch || !lines.length) return;
   const channel = payLive() ? "wechat" : "company";
   const tx = db.transaction(() => {
+    // Pre-upgrade shares used the traveler's identity and had no parent link.
+    // Recover only unambiguous allocations before calculating unused money.
+    recoverLegacyCompanyShares(pay);
     for (const line of lines) {
       const updated = db
         .prepare(
-          "UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=? AND pay_status='company_pending'"
+          "UPDATE enrollments SET pay_status='paid', pay_amount=?, pay_channel='wechat_company' WHERE id=? AND pay_status='company_pending' AND status='joined'"
         )
         .run(line.amount, line.id);
       if (!updated.changes) continue;
       db.prepare(
-        "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene,wechat_transaction_id) VALUES (?,?,?,?,?,?,?,?,?,?)"
+        "INSERT INTO payments (enrollment_id,user_id,schedule_id,amount,channel,status,trade_no,remark,scene,wechat_transaction_id,parent_payment_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
       ).run(
         line.id,
-        line.userId,
+        pay.user_id,
         sch.id,
         line.amount,
         channel,
         "success",
-        pay.trade_no,
+        newTradeNo("CS"),
         "公司统一支付",
         "company_share",
-        pay.wechat_transaction_id || ""
+        pay.wechat_transaction_id || "",
+        pay.id
       );
     }
+    db.prepare("UPDATE payments SET status='success' WHERE id=?").run(pay.id);
   });
   tx();
   try {
@@ -617,10 +650,20 @@ function applyCompanyShares(pay) {
 async function payCompanySchedule(userId, scheduleId, opts = {}) {
   requireLivePaymentInProduction();
   const db = getDb();
-  const sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
+  let sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
   if (!sch) fail(400, "排期不存在");
   if (sch.status === "cancelled") fail(400, "该拼团已解散");
   if (Number(sch.organizer_id) !== Number(userId)) fail(403, "仅开团公司可统一支付");
+  if (!config.wechat.mock) {
+    await ensurePayerWechat(userId, opts.code);
+    // A session lookup may yield to a successful notification. Recover old
+    // successful parents before deciding whether to issue another charge.
+    for (const prior of db.prepare("SELECT trade_no FROM payments WHERE user_id=? AND schedule_id=? AND scene='company' AND status='success'").all(userId, scheduleId)) {
+      await settleByTradeNo(prior.trade_no);
+    }
+    sch = db.prepare("SELECT * FROM schedules WHERE id=?").get(scheduleId);
+    if (!sch || sch.status === "cancelled") fail(400, "该拼团已解散");
+  }
   const pending = db
     .prepare("SELECT * FROM enrollments WHERE schedule_id=? AND pay_status='company_pending' AND status='joined'")
     .all(sch.id);
@@ -636,7 +679,11 @@ async function payCompanySchedule(userId, scheduleId, opts = {}) {
   const remark = JSON.stringify({ lines });
   if (config.wechat.mock) {
     const tradeNo = newTradeNo("CO", userId);
-    applyCompanyShares({ remark, trade_no: tradeNo, schedule_id: sch.id, wechat_transaction_id: "" });
+    // Keep the same parent/child ledger model as live company payments.
+    db.transaction(() => {
+      const row = insertPending({ userId, scheduleId: sch.id, amount: total, scene: "company", remark, tradeNo });
+      applyCompanyShares(row);
+    })();
     return {
       count: lines.length,
       total,
@@ -646,8 +693,6 @@ async function payCompanySchedule(userId, scheduleId, opts = {}) {
       mock: true,
     };
   }
-  await ensurePayerWechat(userId, opts.code);
-  pending.forEach((en) => assertCampusEnrollment(db.prepare("SELECT * FROM enrollments WHERE id=?").get(en.id), db.prepare("SELECT * FROM schedules WHERE id=?").get(sch.id)));
   if (!payLive()) fail(400, "未配置微信支付密钥，无法收款");
   let row = db
     .prepare("SELECT * FROM payments WHERE user_id=? AND schedule_id=? AND scene='company' AND status='pending' ORDER BY id DESC")
@@ -693,6 +738,21 @@ async function settleByTradeNo(tradeNo, extra = {}) {
   stampTransaction(tradeNo, extra.transactionId);
   const pay = db.prepare("SELECT * FROM payments WHERE trade_no=?").get(tradeNo);
   if (!pay) fail(400, "支付单不存在");
+  const scene = pay.scene || (pay.remark === "会员年费" ? "member" : "enrollment");
+  if (scene === "company") {
+    // Also repair old notifications that marked the parent successful before
+    // their detail transaction failed. Pending children are updated atomically
+    // with the parent; a failed transaction leaves the notification retryable.
+    if (pay.status !== "refunded") applyCompanyShares(pay);
+    const fresh = db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id);
+    // A traveler can cancel while a company prepayment is outstanding. Return
+    // any unallocated part to the original company order, using a stable retry
+    // key; never mark that cancelled enrollment paid again.
+    const allocated = db.prepare("SELECT IFNULL(SUM(amount),0) amount FROM payments WHERE parent_payment_id=? AND scene='company_share'").get(pay.id).amount;
+    const unallocated = Number(fresh.amount) - Number(allocated) - Number(fresh.refunded_amount || 0);
+    if (unallocated > 0) await refundPaymentExcess(fresh, unallocated, "公司报名已取消，原路退回");
+    return { already: pay.status === "success", pay: db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id), scene };
+  }
   if (pay.status === "success" || pay.status === "refunded") {
     return { already: true, pay };
   }
@@ -703,16 +763,10 @@ async function settleByTradeNo(tradeNo, extra = {}) {
     const latest = db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id);
     return { already: true, pay: latest };
   }
-  const scene = pay.scene || (pay.remark === "会员年费" ? "member" : "enrollment");
   if (scene === "member") {
     db.prepare("UPDATE payments SET status='success' WHERE id=?").run(pay.id);
     grantMembership(pay.user_id);
     return { already: false, pay: db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id), scene: "member" };
-  }
-  if (scene === "company") {
-    db.prepare("UPDATE payments SET status='success' WHERE id=?").run(pay.id);
-    applyCompanyShares(db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id));
-    return { already: false, pay: db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id), scene: "company" };
   }
   if (scene === "wallet_topup") {
     const { credit } = require("./wallet");
@@ -856,6 +910,8 @@ async function confirmTrade(tradeNo, userId) {
     const data = await queryOrder(tradeNo);
     if (data.trade_state !== "SUCCESS") fail(400, "尚未支付完成");
     await settleByTradeNo(tradeNo, { transactionId: data.transaction_id });
+  } else if (pay.scene === "company") {
+    await settleByTradeNo(tradeNo);
   }
   await reportSettledShipment(tradeNo);
   const next = db.prepare("SELECT * FROM payments WHERE id=?").get(pay.id);
@@ -886,6 +942,7 @@ module.exports = {
   applyEnrollmentCharge,
   refundEnrollmentToPayers,
   preflightEnrollmentRefund,
+  enrollmentRefundPlan,
   repairSkippedWalletRefunds,
   applyWechatSession,
   ensurePayerWechat,

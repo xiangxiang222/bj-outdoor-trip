@@ -49,8 +49,20 @@ function strokeCatmull(ctx, pts) {
   }
 }
 
-function drawWeatherChart(canvas, cssW, cssH, hourly) {
+function drawWeatherChart(canvas, cssW, cssH, hourly, options) {
   if (!canvas || !cssW || !cssH) return;
+  options = options || {};
+  const dark = !!options.dark;
+  const fontScale = Math.max(1, Number(options.fontScale) || 1);
+  const palette = {
+    line: dark ? "#c6addf" : "#785498",
+    area: dark ? "rgba(198,173,223,.08)" : "rgba(120,84,152,.055)",
+    rain: dark ? "rgba(198,173,223,.28)" : "rgba(120,84,152,.22)",
+    label: dark ? "#d3c5df" : "#6e5c7f",
+    muted: dark ? "#a29aa9" : "#8a8692",
+    surface: dark ? "#1c1c1e" : "#ffffff",
+    grid: dark ? "#343039" : "#eeecf2",
+  };
   const dpr = (wx.getSystemInfoSync().pixelRatio || 2);
   canvas.width = cssW * dpr;
   canvas.height = cssH * dpr;
@@ -61,13 +73,21 @@ function drawWeatherChart(canvas, cssW, cssH, hourly) {
   if (!layout) return;
   const pts = layout.points;
 
+  ctx.beginPath();
+  ctx.moveTo(0, layout.baseY);
+  ctx.lineTo(cssW, layout.baseY);
+  ctx.strokeStyle = palette.grid;
+  ctx.lineWidth = 0.7;
+  ctx.stroke();
+
   if (layout.maxPrecip > 0) {
     pts.forEach(function (p) {
-      const h = Math.max(2, (p.precip / layout.maxPrecip) * 28);
-      ctx.fillStyle = "rgba(142, 202, 230, 0.55)";
+      if (p.precip <= 0) return;
+      const h = Math.max(2, (p.precip / layout.maxPrecip) * 18);
+      ctx.fillStyle = palette.rain;
       ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(p.x - 4, layout.baseY - h, 8, h, 2);
-      else ctx.rect(p.x - 4, layout.baseY - h, 8, h);
+      if (ctx.roundRect) ctx.roundRect(p.x - 2.5, layout.baseY - h, 5, h, 2);
+      else ctx.rect(p.x - 2.5, layout.baseY - h, 5, h);
       ctx.fill();
     });
   }
@@ -76,30 +96,31 @@ function drawWeatherChart(canvas, cssW, cssH, hourly) {
   ctx.lineTo(pts[pts.length - 1].x, layout.baseY);
   ctx.lineTo(pts[0].x, layout.baseY);
   ctx.closePath();
-  ctx.fillStyle = "rgba(58, 124, 165, 0.18)";
+  ctx.fillStyle = palette.area;
   ctx.fill();
 
-  ctx.strokeStyle = "#3a7ca5";
-  ctx.lineWidth = 2.2;
+  ctx.strokeStyle = palette.line;
+  ctx.lineWidth = 1.7;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
   strokeCatmull(ctx, pts);
   ctx.stroke();
 
-  ctx.font = "10px sans-serif";
+  ctx.font = Math.round(10 * fontScale) + "px sans-serif";
   ctx.textAlign = "center";
   pts.forEach(function (p) {
+    if (!p.hourLabel) return;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 2.8, 0, Math.PI * 2);
-    ctx.fillStyle = "#fff";
+    ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
+    ctx.fillStyle = palette.surface;
     ctx.fill();
-    ctx.strokeStyle = "#3a7ca5";
-    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = palette.line;
+    ctx.lineWidth = 1.2;
     ctx.stroke();
-    ctx.fillStyle = "#1b4332";
+    ctx.fillStyle = palette.label;
     ctx.fillText(p.temp + "°", p.x, p.y - 8);
     if (p.hourLabel) {
-      ctx.fillStyle = "#6b705c";
+      ctx.fillStyle = palette.muted;
       ctx.fillText(p.hourLabel, p.x, cssH - 6);
     }
   });

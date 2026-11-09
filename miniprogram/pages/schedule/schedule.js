@@ -2,6 +2,7 @@ const { request } = require("../../utils/request");
 const { payStatusText, starText } = require("../../utils/labels");
 const { absMedia } = require("../../utils/media");
 const { drawWeatherChart } = require("../../utils/weather-chart");
+const appearance = require("../../utils/appearance");
 const { dateOf, kindOf, activityDetails, activityBody, activityEnded } = require("../../utils/activity-kind");
 const { peopleLine, trustChips, dockPrice, enrollCta, canShowEnroll, ticketState, showDetailTabs } = require("../../utils/scan-facts");
 const { openCampusPick } = require("../../utils/campus");
@@ -80,6 +81,7 @@ function quoteSnippet(list) {
 
 Page({
   data: {
+    detailDark: false,
     s: null,
     id: "",
     coupon: "",
@@ -166,7 +168,10 @@ Page({
     });
     wx.showShareMenu({ withShareTicket: true, menus: ["shareAppMessage", "shareTimeline"] });
   },
-  onShow() { this.load(); },
+  onShow() {
+    this.setData({ detailDark: appearance.isDark() });
+    this.load();
+  },
   onUnload() {
     this._shareUnloaded = true;
     this._shareTask = null;
@@ -393,7 +398,10 @@ Page({
       .exec((res) => {
         const info = res && res[0];
         if (!info || !info.node) return;
-        drawWeatherChart(info.node, info.width, info.height, hourly);
+        drawWeatherChart(info.node, info.width, info.height, hourly, {
+          dark: this.data.detailDark,
+          fontScale: this.data.previewScale || 1,
+        });
       });
   },
   goUser(e) {

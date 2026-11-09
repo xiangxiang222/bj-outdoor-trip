@@ -1,0 +1,641 @@
+{
+  "date": "2026-11-05",
+  "timezone": "America/Toronto",
+  "scope": "Chromium mobile H5 user, admin and guide interfaces; isolated API assistance explicitly recorded",
+  "output": "/tmp/bj-full-flow-qa-2026-11-05/browser",
+  "dataDir": "/var/folders/hw/7bmlf6pd2rv36rk8yv0rltrm0000gn/T/bj-qa-browser-PyMSUU",
+  "mock": {
+    "payment": true,
+    "sms": true,
+    "identityProvider": "not invoked",
+    "weather": "unavailable",
+    "externalNetwork": "blocked in browser"
+  },
+  "accounts": [
+    {
+      "id": 3,
+      "phone": "19870000101",
+      "nickname": "QA大众发起人",
+      "method": "browser SMS registration"
+    },
+    {
+      "id": 4,
+      "phone": "19870000102",
+      "nickname": "QA高校发起人",
+      "method": "browser SMS registration"
+    },
+    {
+      "id": 5,
+      "phone": "19870000103",
+      "nickname": "QA公司发起人",
+      "method": "browser SMS registration"
+    },
+    {
+      "id": 6,
+      "phone": "19870000104",
+      "nickname": "QA报名人4",
+      "method": "API registration fixture"
+    },
+    {
+      "id": 7,
+      "phone": "19870000105",
+      "nickname": "QA报名人5",
+      "method": "API registration fixture"
+    }
+  ],
+  "cases": [
+    {
+      "name": "UI registers 大众发起人 with mock SMS",
+      "status": "pass",
+      "ms": 906,
+      "evidence": {
+        "userId": 3
+      }
+    },
+    {
+      "name": "UI registers 高校发起人 with mock SMS",
+      "status": "pass",
+      "ms": 604,
+      "evidence": {
+        "userId": 4
+      }
+    },
+    {
+      "name": "UI registers 公司发起人 with mock SMS",
+      "status": "pass",
+      "ms": 530,
+      "evidence": {
+        "userId": 5
+      }
+    },
+    {
+      "name": "API prepares newly registered participant first",
+      "status": "pass",
+      "ms": 78,
+      "evidence": {
+        "userId": 6
+      }
+    },
+    {
+      "name": "API prepares newly registered participant second",
+      "status": "pass",
+      "ms": 71,
+      "evidence": {
+        "userId": 7
+      }
+    },
+    {
+      "name": "API certifies the registered campus publisher",
+      "status": "pass",
+      "ms": 2,
+      "evidence": {
+        "userId": 4
+      }
+    },
+    {
+      "name": "大众 trip is published through all four mobile form steps",
+      "status": "pass",
+      "ms": 1043,
+      "evidence": {
+        "scheduleId": 3,
+        "reviewStatus": "approved",
+        "note": "Existing /schedules product flow automatically approves known-route departures; no admin approval button is required."
+      }
+    },
+    {
+      "name": "大众 trip first participant enrolls using mobile form",
+      "status": "pass",
+      "ms": 481,
+      "evidence": {
+        "enrollmentId": 1,
+        "payStatus": "unpaid",
+        "viewport": 375
+      }
+    },
+    {
+      "name": "大众 trip second participant enrolls using mobile form",
+      "status": "pass",
+      "ms": 471,
+      "evidence": {
+        "enrollmentId": 2,
+        "payStatus": "unpaid",
+        "viewport": 390
+      }
+    },
+    {
+      "name": "大众 trip forms and mock payment is recorded",
+      "status": "pass",
+      "ms": 12,
+      "evidence": {
+        "scheduleId": 3,
+        "status": "confirmed",
+        "guideId": 1,
+        "paidCount": 2
+      }
+    },
+    {
+      "name": "高校 trip is published through all four mobile form steps",
+      "status": "pass",
+      "ms": 1209,
+      "evidence": {
+        "scheduleId": 4,
+        "reviewStatus": "approved",
+        "note": "Existing /schedules product flow automatically approves known-route departures; no admin approval button is required."
+      }
+    },
+    {
+      "name": "高校 trip first participant enrolls using mobile form",
+      "status": "pass",
+      "ms": 527,
+      "evidence": {
+        "enrollmentId": 3,
+        "payStatus": "unpaid",
+        "viewport": 375
+      }
+    },
+    {
+      "name": "高校 trip second participant enrolls using mobile form",
+      "status": "pass",
+      "ms": 486,
+      "evidence": {
+        "enrollmentId": 4,
+        "payStatus": "unpaid",
+        "viewport": 390
+      }
+    },
+    {
+      "name": "高校 trip forms and mock payment is recorded",
+      "status": "pass",
+      "ms": 11,
+      "evidence": {
+        "scheduleId": 4,
+        "status": "confirmed",
+        "guideId": 1,
+        "paidCount": 2
+      }
+    },
+    {
+      "name": "公司 trip is published through all four mobile form steps",
+      "status": "pass",
+      "ms": 953,
+      "evidence": {
+        "scheduleId": 5,
+        "reviewStatus": "approved",
+        "note": "Existing /schedules product flow automatically approves known-route departures; no admin approval button is required."
+      }
+    },
+    {
+      "name": "公司 trip first participant enrolls using mobile form",
+      "status": "pass",
+      "ms": 468,
+      "evidence": {
+        "enrollmentId": 5,
+        "payStatus": "company_pending",
+        "viewport": 375
+      }
+    },
+    {
+      "name": "公司 trip second participant enrolls using mobile form",
+      "status": "pass",
+      "ms": 484,
+      "evidence": {
+        "enrollmentId": 6,
+        "payStatus": "company_pending",
+        "viewport": 390
+      }
+    },
+    {
+      "name": "公司 trip forms and mock payment is recorded",
+      "status": "fail",
+      "ms": 379,
+      "error": "AssertionError [ERR_ASSERTION]: {\"ok\":false,\"message\":\"UNIQUE constraint failed: payments.trade_no\",\"code\":\"SQLITE_CONSTRAINT_UNIQUE\"}\n\n500 !== 200\n\n    at <repo>/scripts/qa-trip-browser.cjs:78:1249\n    at async test (<repo>/scripts/qa-trip-browser.cjs:24:72)\n    at async main (<repo>/scripts/qa-trip-browser.cjs:76:3)"
+    },
+    {
+      "name": "Uncertified account is blocked from campus enrollment in the UI",
+      "status": "pass",
+      "ms": 289,
+      "evidence": {
+        "accountId": 3,
+        "scheduleId": 4,
+        "disabled": true
+      }
+    },
+    {
+      "name": "Admin logs in through browser and sees all three groups",
+      "status": "pass",
+      "ms": 722,
+      "evidence": {
+        "visibleGroups": [
+          3,
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "name": "Guide logs in through captcha and mock SMS form",
+      "status": "pass",
+      "ms": 499,
+      "evidence": {
+        "phone": "13700001101",
+        "method": "UI captcha + mock SMS"
+      }
+    },
+    {
+      "name": "Guide operates 大众 roster, departure, two check-in rounds and completion",
+      "status": "pass",
+      "ms": 809,
+      "evidence": {
+        "scheduleId": 3,
+        "roster": 2,
+        "confirmedRounds": 2,
+        "completed": true,
+        "paymentState": [
+          {
+            "pay_status": "paid"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Guide operates 高校 roster, departure, two check-in rounds and completion",
+      "status": "pass",
+      "ms": 964,
+      "evidence": {
+        "scheduleId": 4,
+        "roster": 2,
+        "confirmedRounds": 2,
+        "completed": true,
+        "paymentState": [
+          {
+            "pay_status": "paid"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Guide operates 公司 roster, departure, two check-in rounds and completion",
+      "status": "pass",
+      "ms": 913,
+      "evidence": {
+        "scheduleId": 5,
+        "roster": 2,
+        "confirmedRounds": 2,
+        "completed": true,
+        "paymentState": [
+          {
+            "pay_status": "company_pending"
+          }
+        ],
+        "note": "Guide functions independently verified; company payment remains blocked and full company lifecycle has NOT passed."
+      }
+    }
+  ],
+  "errors": [],
+  "screenshots": [
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/registered-01.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/registered-02.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/registered-03.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/publish-individual-audience.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/publish-individual-review.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/published-individual.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/enroll-individual-first.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/enroll-individual-second.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/publish-campus-audience.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/publish-campus-review.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/published-campus.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/enroll-campus-first.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/enroll-campus-second.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/publish-company-audience.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/publish-company-review.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/published-company.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/enroll-company-first.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/enroll-company-second.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/company-settlement-result.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/campus-ineligible-account.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/admin-groups.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-home.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-individual-masked.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-individual-started.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-individual-checkins.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-individual-completed.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-campus-masked.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-campus-started.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-campus-checkins.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-campus-completed.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-company-masked.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-company-started.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-company-checkins.png",
+    "/tmp/bj-full-flow-qa-2026-11-05/browser/guide-company-completed.png"
+  ],
+  "apiAssist": [
+    {
+      "action": "campus certification submitted and approved through APIs",
+      "userId": 6
+    },
+    {
+      "action": "campus certification submitted and approved through APIs",
+      "userId": 7
+    },
+    {
+      "action": "campus certification submitted and approved through APIs",
+      "userId": 4
+    },
+    {
+      "action": "mock payment through actual service API",
+      "branch": "individual",
+      "scheduleId": 3
+    },
+    {
+      "action": "mock payment through actual service API",
+      "branch": "campus",
+      "scheduleId": 4
+    },
+    {
+      "action": "isolated clock fixture: move departure date to China today to avoid waiting seven days",
+      "scheduleId": 3
+    },
+    {
+      "action": "isolated clock fixture: move departure date to China today to avoid waiting seven days",
+      "scheduleId": 4
+    },
+    {
+      "action": "isolated clock fixture: move departure date to China today to avoid waiting seven days",
+      "scheduleId": 5
+    }
+  ],
+  "findings": [
+    {
+      "id": "company-settlement-500",
+      "request": {
+        "method": "POST",
+        "path": "/api/pay/company-settle",
+        "body": {
+          "scheduleId": 5
+        }
+      },
+      "response": {
+        "status": 500,
+        "body": {
+          "ok": false,
+          "message": "UNIQUE constraint failed: payments.trade_no",
+          "code": "SQLITE_CONSTRAINT_UNIQUE"
+        }
+      },
+      "enrollments": [
+        {
+          "id": 5,
+          "status": "joined",
+          "pay_status": "company_pending",
+          "pay_amount": 0
+        },
+        {
+          "id": 6,
+          "status": "joined",
+          "pay_status": "company_pending",
+          "pay_amount": 0
+        }
+      ],
+      "payments": [],
+      "indexes": [
+        {
+          "name": "idx_payments_trade_no",
+          "sql": "CREATE UNIQUE INDEX idx_payments_trade_no ON payments(trade_no) WHERE trade_no IS NOT NULL AND trade_no != ''"
+        }
+      ],
+      "uiVisibleFailure": false,
+      "screenshot": "/tmp/bj-full-flow-qa-2026-11-05/browser/company-settlement-result.png"
+    }
+  ],
+  "layoutChecks": [
+    {
+      "name": "registered-01",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "registered-02",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "registered-03",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "publish-individual-audience",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "publish-individual-review",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "published-individual",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "enroll-individual-first",
+      "viewport": 375,
+      "scrollWidth": 375
+    },
+    {
+      "name": "enroll-individual-second",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "publish-campus-audience",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "publish-campus-review",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "published-campus",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "enroll-campus-first",
+      "viewport": 375,
+      "scrollWidth": 375
+    },
+    {
+      "name": "enroll-campus-second",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "publish-company-audience",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "publish-company-review",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "published-company",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "enroll-company-first",
+      "viewport": 375,
+      "scrollWidth": 375
+    },
+    {
+      "name": "enroll-company-second",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "company-settlement-result",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "campus-ineligible-account",
+      "viewport": 375,
+      "scrollWidth": 375
+    },
+    {
+      "name": "admin-groups",
+      "viewport": 1100,
+      "scrollWidth": 1100
+    },
+    {
+      "name": "guide-home",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "guide-individual-masked",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "guide-individual-started",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "guide-individual-checkins",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "guide-individual-completed",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "guide-campus-masked",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "guide-campus-started",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "guide-campus-checkins",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "guide-campus-completed",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "guide-company-masked",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "guide-company-started",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "guide-company-checkins",
+      "viewport": 390,
+      "scrollWidth": 390
+    },
+    {
+      "name": "guide-company-completed",
+      "viewport": 390,
+      "scrollWidth": 390
+    }
+  ],
+  "base": "http://127.0.0.1:50636",
+  "branch": {
+    "individual": {
+      "id": 3,
+      "publisher": 3,
+      "enrollments": [
+        {
+          "id": 1,
+          "userId": 6
+        },
+        {
+          "id": 2,
+          "userId": 7
+        }
+      ],
+      "guideId": 1
+    },
+    "campus": {
+      "id": 4,
+      "publisher": 4,
+      "enrollments": [
+        {
+          "id": 3,
+          "userId": 6
+        },
+        {
+          "id": 4,
+          "userId": 7
+        }
+      ],
+      "guideId": 1
+    },
+    "company": {
+      "id": 5,
+      "publisher": 5,
+      "enrollments": [
+        {
+          "id": 5,
+          "userId": 6
+        },
+        {
+          "id": 6,
+          "userId": 7
+        }
+      ],
+      "guideId": 1
+    }
+  },
+  "lifecycleConclusion": {
+    "individual": "passed including mocked payment",
+    "campus": "passed including verified-campus enrollment and mocked payment",
+    "company": "blocked at payment; later guide steps tested independently"
+  },
+  "summary": {
+    "pass": 23,
+    "fail": 1,
+    "pageErrors": 0
+  },
+  "fatal": "AssertionError [ERR_ASSERTION]: Browser QA contains failures\n\n1 !== 0\n\n    at main (<repo>/scripts/qa-trip-browser.cjs:99:518)"
+}

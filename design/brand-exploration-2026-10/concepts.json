@@ -1,0 +1,43 @@
+{
+  "brand": "同行者众",
+  "palette": {
+    "purple": "#5B3B8C",
+    "red": "#BD4055",
+    "ink": "#282331"
+  },
+  "concepts": [
+    {
+      "id": "A",
+      "slug": "side-by-side",
+      "name": "并肩",
+      "en": "SIDE BY SIDE",
+      "desc": "各自有节奏，一起向前。",
+      "use": "运动感最强，适合跑步服与活动旗帜。"
+    },
+    {
+      "id": "B",
+      "slug": "tong-seal",
+      "name": "同印",
+      "en": "THE TONG MARK",
+      "desc": "以「同」为记忆，把名字变成标志。",
+      "use": "更稳重，适合作为小程序和长期主标。"
+    },
+    {
+      "id": "C",
+      "slug": "gather",
+      "name": "共席",
+      "en": "ROOM FOR EVERYONE",
+      "desc": "来自不同地方，相聚在同一个中心。",
+      "use": "更亲近，适合校园、社团与同城活动。"
+    },
+    {
+      "id": "D",
+      "slug": "shared-paths",
+      "name": "同路",
+      "en": "PATHS THAT CONNECT",
+      "desc": "不同的路径，也能同行。",
+      "use": "更流动，适合运动社群与品牌辅助纹样。"
+    }
+  ],
+  "method": "Original deterministic vector path construction; lettering converted to outlines. No image-generation model used."
+}

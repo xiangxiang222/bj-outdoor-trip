@@ -1,0 +1,23 @@
+{
+  "date": "2026-11-06",
+  "command": "npm test",
+  "exitCode": 0,
+  "server": {
+    "tests": 943,
+    "suites": 121,
+    "passed": 943,
+    "failed": 0,
+    "skipped": 0
+  },
+  "web": {
+    "files": 52,
+    "tests": 372,
+    "passed": 372,
+    "failed": 0
+  },
+  "newReliabilityCases": {
+    "company": 12,
+    "refund": 8
+  },
+  "log": "/tmp/bj-payment-fix-2026-11-06/unit-tests.log"
+}

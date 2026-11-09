@@ -3215,5 +3215,16 @@
   "重新选择偏好": "Choose another preference",
   "取消偏好": "Clear preference",
   "清除关键词": "Clear keyword",
-  "出游偏好加载失败，请重试": "Preferences are unavailable. Please try again."
+  "出游偏好加载失败，请重试": "Preferences are unavailable. Please try again.",
+  "领队与摄影": "Trip crew",
+  "带队同行": "Lead the journey",
+  "免个人团费，保险另计": "Trip fee waived; insurance extra",
+  "风速": "Wind",
+  "降水": "Precipitation",
+  "气温": "Temperature",
+  "出行提醒": "Travel notes",
+  "发现新版本": "Update available",
+  "新版本已准备好，是否重新加载？建议先完成当前操作。": "A new version is ready. Reload now? Please finish what you are doing first.",
+  "立即更新": "Load",
+  "稍后再说": "Skip"
 }

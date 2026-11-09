@@ -35,6 +35,7 @@ function wipe(db) {
     DELETE FROM points_ledger;
     DELETE FROM wallet_ledger;
     DELETE FROM bank_cards;
+    DELETE FROM enrollment_refund_plans;
     DELETE FROM payments;
     DELETE FROM coupon_allowlist;
     DELETE FROM user_coupons;

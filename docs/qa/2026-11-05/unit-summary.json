@@ -1,0 +1,7 @@
+{
+  "command": "npm test",
+  "exitCode": 0,
+  "durationSeconds": 55.72,
+  "log": "/tmp/bj-full-flow-qa-2026-11-05/full-unit-tests-corrected.log",
+  "note": "Retain normal AI quota; tests inject mock provider with test-key. Previous quota=0 run correctly blocked model branches and failed 4 expectations."
+}

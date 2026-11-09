@@ -1,0 +1,396 @@
+{
+  "database": "/var/folders/hw/7bmlf6pd2rv36rk8yv0rltrm0000gn/T/bj-qa-company-ulsMtS/app.sqlite",
+  "externalAttempts": [],
+  "mockGatewayCalls": [
+    {
+      "phase": "unifiedOrder",
+      "url": "https://api.mch.weixin.qq.com/pay/unifiedorder"
+    }
+  ],
+  "cases": [
+    {
+      "name": "公司两人mock统一结算500，明细事务全部回滚",
+      "status": "observed",
+      "evidence": {
+        "before": {
+          "enrollments": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "status": "joined",
+              "pay_status": "company_pending",
+              "pay_amount": 0,
+              "pay_channel": ""
+            },
+            {
+              "id": 2,
+              "user_id": 1,
+              "status": "joined",
+              "pay_status": "company_pending",
+              "pay_amount": 0,
+              "pay_channel": ""
+            }
+          ],
+          "payments": []
+        },
+        "httpStatus": 500,
+        "response": {
+          "ok": false,
+          "message": "UNIQUE constraint failed: payments.trade_no",
+          "code": "SQLITE_CONSTRAINT_UNIQUE"
+        },
+        "after": {
+          "enrollments": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "status": "joined",
+              "pay_status": "company_pending",
+              "pay_amount": 0,
+              "pay_channel": ""
+            },
+            {
+              "id": 2,
+              "user_id": 1,
+              "status": "joined",
+              "pay_status": "company_pending",
+              "pay_amount": 0,
+              "pay_channel": ""
+            }
+          ],
+          "payments": []
+        },
+        "atomicity": "applyCompanyShares事务回滚，未出现半数报名paid；整个公司支付功能仍被唯一键阻断"
+      }
+    },
+    {
+      "name": "公司单人真实协议mock通知：parent先success，明细冲突，重试回SUCCESS但仍未结算",
+      "status": "observed",
+      "evidence": {
+        "scope": "真实支付协议路径的全mock网关/签名通知，没有连接微信商户",
+        "prepay": {
+          "needPay": true,
+          "mock": false,
+          "tradeNo": "CO17938802349584",
+          "amount": 199,
+          "wechatPay": {
+            "timeStamp": "1793880234",
+            "nonceStr": "00fbe7f36c22aa69",
+            "package": "prepay_id=qa_company_prepay",
+            "signType": "MD5"
+          },
+          "count": 1,
+          "total": 199,
+          "price": 199,
+          "splits": []
+        },
+        "before": {
+          "enrollments": [
+            {
+              "id": 3,
+              "user_id": 3,
+              "status": "joined",
+              "pay_status": "company_pending",
+              "pay_amount": 0,
+              "pay_channel": ""
+            }
+          ],
+          "payments": [
+            {
+              "id": 1,
+              "user_id": 4,
+              "enrollment_id": 0,
+              "scene": "company",
+              "status": "pending",
+              "trade_no": "CO17938802349584",
+              "amount": 199,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": null
+            }
+          ]
+        },
+        "firstNotify": "<xml><return_code><![CDATA[FAIL]]></return_code><return_msg><![CDATA[处理失败]]></return_msg></xml>",
+        "afterFirst": {
+          "enrollments": [
+            {
+              "id": 3,
+              "user_id": 3,
+              "status": "joined",
+              "pay_status": "company_pending",
+              "pay_amount": 0,
+              "pay_channel": ""
+            }
+          ],
+          "payments": [
+            {
+              "id": 1,
+              "user_id": 4,
+              "enrollment_id": 0,
+              "scene": "company",
+              "status": "success",
+              "trade_no": "CO17938802349584",
+              "amount": 199,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": "QA_COMPANY_TXN"
+            }
+          ]
+        },
+        "retryNotify": "<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>",
+        "afterRetry": {
+          "enrollments": [
+            {
+              "id": 3,
+              "user_id": 3,
+              "status": "joined",
+              "pay_status": "company_pending",
+              "pay_amount": 0,
+              "pay_channel": ""
+            }
+          ],
+          "payments": [
+            {
+              "id": 1,
+              "user_id": 4,
+              "enrollment_id": 0,
+              "scene": "company",
+              "status": "success",
+              "trade_no": "CO17938802349584",
+              "amount": 199,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": "QA_COMPANY_TXN"
+            }
+          ]
+        },
+        "confirm": {
+          "already": true,
+          "payStatus": "paid"
+        },
+        "cause": "parent scene=company的trade_no已唯一占用；首个company_share同号INSERT失败；parent状态更新不在明细事务内，重试被success/already拦截"
+      }
+    },
+    {
+      "name": "同付款人两笔分摊同毫秒退款：退款流水部分落账，报名仍joined/paid",
+      "status": "observed",
+      "evidence": {
+        "clockControl": "仅退款开始后冻结Date.now，受控模拟同一付款人两个退款slice生成订单号落在同毫秒",
+        "fixedMs": 1793880235022,
+        "before": {
+          "enrollments": [
+            {
+              "id": 4,
+              "user_id": 5,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 195,
+              "pay_channel": "wechat"
+            }
+          ],
+          "payments": [
+            {
+              "id": 2,
+              "user_id": 5,
+              "enrollment_id": 4,
+              "scene": "enrollment",
+              "status": "success",
+              "trade_no": "P17938802350165",
+              "amount": 50,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": null
+            },
+            {
+              "id": 3,
+              "user_id": 5,
+              "enrollment_id": 4,
+              "scene": "enrollment",
+              "status": "success",
+              "trade_no": "P17938802350215",
+              "amount": 145,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": null
+            }
+          ]
+        },
+        "httpStatus": 500,
+        "response": {
+          "ok": false,
+          "message": "UNIQUE constraint failed: payments.trade_no"
+        },
+        "after": {
+          "enrollments": [
+            {
+              "id": 4,
+              "user_id": 5,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 195,
+              "pay_channel": "wechat"
+            }
+          ],
+          "payments": [
+            {
+              "id": 2,
+              "user_id": 5,
+              "enrollment_id": 4,
+              "scene": "enrollment",
+              "status": "success",
+              "trade_no": "P17938802350165",
+              "amount": 50,
+              "refunded_amount": 50,
+              "refund_of": 0,
+              "wechat_transaction_id": null
+            },
+            {
+              "id": 3,
+              "user_id": 5,
+              "enrollment_id": 4,
+              "scene": "enrollment",
+              "status": "success",
+              "trade_no": "P17938802350215",
+              "amount": 145,
+              "refunded_amount": 145,
+              "refund_of": 0,
+              "wechat_transaction_id": null
+            },
+            {
+              "id": 4,
+              "user_id": 5,
+              "enrollment_id": 4,
+              "scene": "enrollment",
+              "status": "refunded",
+              "trade_no": "RF17938802350225",
+              "amount": 50,
+              "refunded_amount": 0,
+              "refund_of": 2,
+              "wechat_transaction_id": null
+            }
+          ]
+        },
+        "cause": "newTradeNo(RF,userId)没有随机/序列；第二个recordRefundSlice先更新原付款refunded_amount后INSERT唯一键失败，整个退款循环和取消未共同事务化"
+      }
+    },
+    {
+      "name": "同毫秒重复退款号的真实退款服务mock注入：两次外部调用使用同一refundNo",
+      "status": "observed",
+      "evidence": {
+        "scope": "只注入refundWechat函数模拟真实退款协议调用，不是商户回调或真实退款",
+        "clockControl": "退款阶段Date.now冻结模拟同毫秒",
+        "before": {
+          "enrollments": [
+            {
+              "id": 5,
+              "user_id": 7,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 195,
+              "pay_channel": "wechat"
+            }
+          ],
+          "payments": [
+            {
+              "id": 5,
+              "user_id": 7,
+              "enrollment_id": 5,
+              "scene": "enrollment",
+              "status": "success",
+              "trade_no": "P17938802350807",
+              "amount": 50,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": null
+            },
+            {
+              "id": 6,
+              "user_id": 7,
+              "enrollment_id": 5,
+              "scene": "enrollment",
+              "status": "success",
+              "trade_no": "P17938802350857",
+              "amount": 145,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": null
+            }
+          ]
+        },
+        "error": "UNIQUE constraint failed: payments.trade_no",
+        "mockedRefundRequests": [
+          {
+            "tradeNo": "P17938802350807",
+            "transactionId": "",
+            "refundNo": "RF17938802350867",
+            "totalFen": 5000,
+            "refundFen": 5000
+          },
+          {
+            "tradeNo": "P17938802350857",
+            "transactionId": "",
+            "refundNo": "RF17938802350867",
+            "totalFen": 14500,
+            "refundFen": 14500
+          }
+        ],
+        "after": {
+          "enrollments": [
+            {
+              "id": 5,
+              "user_id": 7,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 195,
+              "pay_channel": "wechat"
+            }
+          ],
+          "payments": [
+            {
+              "id": 5,
+              "user_id": 7,
+              "enrollment_id": 5,
+              "scene": "enrollment",
+              "status": "success",
+              "trade_no": "P17938802350807",
+              "amount": 50,
+              "refunded_amount": 50,
+              "refund_of": 0,
+              "wechat_transaction_id": null
+            },
+            {
+              "id": 6,
+              "user_id": 7,
+              "enrollment_id": 5,
+              "scene": "enrollment",
+              "status": "success",
+              "trade_no": "P17938802350857",
+              "amount": 145,
+              "refunded_amount": 145,
+              "refund_of": 0,
+              "wechat_transaction_id": null
+            },
+            {
+              "id": 7,
+              "user_id": 7,
+              "enrollment_id": 5,
+              "scene": "enrollment",
+              "status": "refunded",
+              "trade_no": "RF17938802350867",
+              "amount": 50,
+              "refunded_amount": 0,
+              "refund_of": 5,
+              "wechat_transaction_id": null
+            }
+          ]
+        },
+        "implication": "可确认代码会把同一个商户退款号用于两个不同原支付单，真实网关的拒绝/幂等结果未在本轮验证"
+      }
+    }
+  ],
+  "summary": {
+    "cases": 4,
+    "observed": 4,
+    "executionFailures": 0
+  }
+}

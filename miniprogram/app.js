@@ -1,4 +1,5 @@
 const { baseUrl, mediaBaseUrl } = require("./config");
+const updates = require("./utils/update");
 
 App({
   globalData: {
@@ -11,6 +12,7 @@ App({
     enrollmentRevision: 0,
   },
   onLaunch() {
+    updates.init();
     this.globalData.token = wx.getStorageSync("bj_token") || "";
     this.globalData.user = wx.getStorageSync("bj_user") || null;
     this.globalData.couponPrompted = false;
@@ -21,9 +23,14 @@ App({
     }
   },
   onShow() {
+    updates.onShow();
+    if (updates.isPrompting()) return;
     const app = liveApp(this);
     if (!app) return;
     promptUnusedCoupons();
+  },
+  onHide() {
+    updates.onHide();
   },
 });
 
@@ -50,13 +57,14 @@ function promptUnusedCoupons() {
   request("/me/coupons")
     .then((res) => {
       const live = liveApp();
-      if (!live) return;
+      if (!live || updates.isPrompting()) return;
       const rows = unusedCoupons(res.data || []);
       live.globalData.couponPrompted = true;
       if (!rows.length) return;
       const first = rows[0];
       const clock = couponCountdown(first);
       const extra = clock && !clock.expired ? clock.label : "";
+      updates.setBlocked(true);
       wx.showModal({
         title: "有未使用的优惠券",
         content:
@@ -71,6 +79,9 @@ function promptUnusedCoupons() {
           const page = stack[stack.length - 1];
           if (page && typeof page.navigateHome === "function") page.navigateHome("navigateTo", "/pages/coupons/coupons");
           else wx.navigateTo({ url: "/pages/coupons/coupons" });
+        },
+        complete() {
+          updates.setBlocked(false);
         },
       });
     })

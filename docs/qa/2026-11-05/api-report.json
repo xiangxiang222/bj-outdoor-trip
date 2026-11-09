@@ -1,0 +1,1077 @@
+{
+  "task": "大众 / 高校 / 公司发团、报名、成团与导游全流程",
+  "startedAt": "2026-11-05T12:00:01.001Z",
+  "referenceDate": "2026-11-05",
+  "environment": {
+    "database": "/tmp/bj-full-flow-qa-2026-11-05/api-final/data-ESTaRt/app.sqlite",
+    "publicDir": "/tmp/bj-full-flow-qa-2026-11-05/api-final/data-ESTaRt/public",
+    "host": "127.0.0.1",
+    "payment": "WX_PAY_MOCK=1",
+    "identity": "demo identity provider",
+    "sms": "demo 888888",
+    "externalNetwork": "blocked",
+    "origin": "http://127.0.0.1:61101"
+  },
+  "boundaries": [
+    "No WeChat/iPhone native UI or real payment/refund provider is exercised.",
+    "Captcha text is read from the isolated DB to automate the image challenge.",
+    "To cross the departure-date boundary, only the isolated schedules' dates are moved to Beijing today; all start/check-in/complete transitions use HTTP APIs.",
+    "Corporate verification uses the existing group certification API; no separate business-license verification endpoint exists."
+  ],
+  "cases": [
+    {
+      "name": "环境：支付/短信/实名 mock 且数据库在隔离目录",
+      "status": "pass",
+      "startSeq": 1,
+      "evidence": {
+        "wechatPayMock": true,
+        "smsLive": false,
+        "database": "/tmp/bj-full-flow-qa-2026-11-05/api-final/data-ESTaRt/app.sqlite"
+      },
+      "ms": 22,
+      "endSeq": 1
+    },
+    {
+      "name": "后台：管理员真实密码登录",
+      "status": "pass",
+      "startSeq": 2,
+      "ms": 33,
+      "endSeq": 2
+    },
+    {
+      "name": "账号：注册并实名 大众发起人",
+      "status": "pass",
+      "startSeq": 3,
+      "evidence": {
+        "id": 3,
+        "phone": "19900010000",
+        "idVerified": true
+      },
+      "ms": 162,
+      "endSeq": 7
+    },
+    {
+      "name": "账号：注册并实名 高校发起人",
+      "status": "pass",
+      "startSeq": 8,
+      "evidence": {
+        "id": 4,
+        "phone": "19900010001",
+        "idVerified": true
+      },
+      "ms": 127,
+      "endSeq": 12
+    },
+    {
+      "name": "账号：注册并实名 公司发起人",
+      "status": "pass",
+      "startSeq": 13,
+      "evidence": {
+        "id": 5,
+        "phone": "19900010002",
+        "idVerified": true
+      },
+      "ms": 127,
+      "endSeq": 17
+    },
+    {
+      "name": "账号：注册并实名 大众报名甲",
+      "status": "pass",
+      "startSeq": 18,
+      "evidence": {
+        "id": 6,
+        "phone": "19900010003",
+        "idVerified": true
+      },
+      "ms": 124,
+      "endSeq": 22
+    },
+    {
+      "name": "账号：注册并实名 大众报名乙",
+      "status": "pass",
+      "startSeq": 23,
+      "evidence": {
+        "id": 7,
+        "phone": "19900010004",
+        "idVerified": true
+      },
+      "ms": 129,
+      "endSeq": 27
+    },
+    {
+      "name": "账号：注册并实名 大众报名丙",
+      "status": "pass",
+      "startSeq": 28,
+      "evidence": {
+        "id": 8,
+        "phone": "19900010005",
+        "idVerified": true
+      },
+      "ms": 126,
+      "endSeq": 32
+    },
+    {
+      "name": "账号：注册并实名 高校报名甲",
+      "status": "pass",
+      "startSeq": 33,
+      "evidence": {
+        "id": 9,
+        "phone": "19900010006",
+        "idVerified": true
+      },
+      "ms": 125,
+      "endSeq": 37
+    },
+    {
+      "name": "账号：注册并实名 高校报名乙",
+      "status": "pass",
+      "startSeq": 38,
+      "evidence": {
+        "id": 10,
+        "phone": "19900010007",
+        "idVerified": true
+      },
+      "ms": 130,
+      "endSeq": 42
+    },
+    {
+      "name": "账号：注册并实名 高校报名丙",
+      "status": "pass",
+      "startSeq": 43,
+      "evidence": {
+        "id": 11,
+        "phone": "19900010008",
+        "idVerified": true
+      },
+      "ms": 437,
+      "endSeq": 47
+    },
+    {
+      "name": "账号：注册并实名 公司员工甲",
+      "status": "pass",
+      "startSeq": 48,
+      "evidence": {
+        "id": 12,
+        "phone": "19900010009",
+        "idVerified": true
+      },
+      "ms": 138,
+      "endSeq": 52
+    },
+    {
+      "name": "账号：注册并实名 公司员工乙",
+      "status": "pass",
+      "startSeq": 53,
+      "evidence": {
+        "id": 13,
+        "phone": "19900010010",
+        "idVerified": true
+      },
+      "ms": 126,
+      "endSeq": 57
+    },
+    {
+      "name": "账号：注册并实名 公司员工丙",
+      "status": "pass",
+      "startSeq": 58,
+      "evidence": {
+        "id": 14,
+        "phone": "19900010011",
+        "idVerified": true
+      },
+      "ms": 126,
+      "endSeq": 62
+    },
+    {
+      "name": "账号：注册并实名 普通旁观者",
+      "status": "pass",
+      "startSeq": 63,
+      "evidence": {
+        "id": 15,
+        "phone": "19900010012",
+        "idVerified": true
+      },
+      "ms": 123,
+      "endSeq": 67
+    },
+    {
+      "name": "账号：注册并实名 外校学生",
+      "status": "pass",
+      "startSeq": 68,
+      "evidence": {
+        "id": 16,
+        "phone": "19900010013",
+        "idVerified": true
+      },
+      "ms": 123,
+      "endSeq": 72
+    },
+    {
+      "name": "账号边界：无验证码、错误密码、重复注册均拒绝",
+      "status": "pass",
+      "startSeq": 73,
+      "ms": 65,
+      "endSeq": 77
+    },
+    {
+      "name": "校园认证：高校发起人 申请、上传凭证、后台通过",
+      "status": "pass",
+      "startSeq": 78,
+      "ms": 16,
+      "endSeq": 80
+    },
+    {
+      "name": "校园认证：高校报名甲 申请、上传凭证、后台通过",
+      "status": "pass",
+      "startSeq": 81,
+      "ms": 7,
+      "endSeq": 83
+    },
+    {
+      "name": "校园认证：高校报名乙 申请、上传凭证、后台通过",
+      "status": "pass",
+      "startSeq": 84,
+      "ms": 4,
+      "endSeq": 86
+    },
+    {
+      "name": "校园认证：高校报名丙 申请、上传凭证、后台通过",
+      "status": "pass",
+      "startSeq": 87,
+      "ms": 4,
+      "endSeq": 89
+    },
+    {
+      "name": "校园认证：外校学生 申请、上传凭证、后台通过",
+      "status": "pass",
+      "startSeq": 90,
+      "ms": 4,
+      "endSeq": 92
+    },
+    {
+      "name": "公司发起人团体资料：申请、后台审核通过、公司名称维护",
+      "status": "pass",
+      "startSeq": 93,
+      "ms": 2,
+      "endSeq": 95
+    },
+    {
+      "name": "大众团：发团提交审核，未审时不能报名",
+      "status": "pass",
+      "startSeq": 96,
+      "evidence": {
+        "id": 3,
+        "organizerType": "individual",
+        "reviewStatus": "pending"
+      },
+      "ms": 9,
+      "endSeq": 98
+    },
+    {
+      "name": "大众团：后台审批，公开详情和发起人消息可见",
+      "status": "pass",
+      "startSeq": 99,
+      "evidence": {
+        "scheduleId": 3,
+        "title": "QA全流程-大众团"
+      },
+      "ms": 5,
+      "endSeq": 101
+    },
+    {
+      "name": "高校团：发团提交审核，未审时不能报名",
+      "status": "pass",
+      "startSeq": 102,
+      "evidence": {
+        "id": 4,
+        "organizerType": "campus",
+        "reviewStatus": "pending"
+      },
+      "ms": 5,
+      "endSeq": 104
+    },
+    {
+      "name": "高校团：后台审批，公开详情和发起人消息可见",
+      "status": "pass",
+      "startSeq": 105,
+      "evidence": {
+        "scheduleId": 4,
+        "title": "QA全流程-高校团"
+      },
+      "ms": 4,
+      "endSeq": 107
+    },
+    {
+      "name": "公司团：发团提交审核，未审时不能报名",
+      "status": "pass",
+      "startSeq": 108,
+      "evidence": {
+        "id": 5,
+        "organizerType": "company",
+        "reviewStatus": "pending"
+      },
+      "ms": 4,
+      "endSeq": 110
+    },
+    {
+      "name": "公司团：后台审批，公开详情和发起人消息可见",
+      "status": "pass",
+      "startSeq": 111,
+      "evidence": {
+        "scheduleId": 5,
+        "title": "QA全流程-公司团"
+      },
+      "ms": 4,
+      "endSeq": 113
+    },
+    {
+      "name": "高校资格：未认证和外校学生均不能报名",
+      "status": "pass",
+      "startSeq": 114,
+      "ms": 3,
+      "endSeq": 115
+    },
+    {
+      "name": "大众团：大众报名甲 报名、订单、mock支付",
+      "status": "pass",
+      "startSeq": 116,
+      "evidence": {
+        "enrollmentId": 1,
+        "seatNo": "1A",
+        "payStatus": "paid",
+        "amount": 99,
+        "formation": "recruiting"
+      },
+      "ms": 9,
+      "endSeq": 120
+    },
+    {
+      "name": "大众团：大众报名乙 报名、订单、mock支付",
+      "status": "pass",
+      "startSeq": 121,
+      "evidence": {
+        "enrollmentId": 2,
+        "seatNo": "1B",
+        "payStatus": "paid",
+        "amount": 99,
+        "formation": "recruiting"
+      },
+      "ms": 4,
+      "endSeq": 125
+    },
+    {
+      "name": "大众团：大众报名丙 报名、订单、mock支付",
+      "status": "pass",
+      "startSeq": 126,
+      "evidence": {
+        "enrollmentId": 3,
+        "seatNo": "1C",
+        "payStatus": "paid",
+        "amount": 99,
+        "formation": "confirmed"
+      },
+      "ms": 5,
+      "endSeq": 130
+    },
+    {
+      "name": "大众团：3个真实报名达到成团并自动匹配导游",
+      "status": "pass",
+      "startSeq": 131,
+      "evidence": {
+        "enrolled": 3,
+        "minGroupSize": 3,
+        "guideId": 1,
+        "virtualUsers": 0
+      },
+      "ms": 2,
+      "endSeq": 131
+    },
+    {
+      "name": "高校团：高校报名甲 报名、订单、mock支付",
+      "status": "pass",
+      "startSeq": 132,
+      "evidence": {
+        "enrollmentId": 4,
+        "seatNo": "1A",
+        "payStatus": "paid",
+        "amount": 90,
+        "formation": "recruiting"
+      },
+      "ms": 5,
+      "endSeq": 136
+    },
+    {
+      "name": "高校团：高校报名乙 报名、订单、mock支付",
+      "status": "pass",
+      "startSeq": 137,
+      "evidence": {
+        "enrollmentId": 5,
+        "seatNo": "1B",
+        "payStatus": "paid",
+        "amount": 90,
+        "formation": "recruiting"
+      },
+      "ms": 5,
+      "endSeq": 141
+    },
+    {
+      "name": "高校团：高校报名丙 报名、订单、mock支付",
+      "status": "pass",
+      "startSeq": 142,
+      "evidence": {
+        "enrollmentId": 6,
+        "seatNo": "1C",
+        "payStatus": "paid",
+        "amount": 90,
+        "formation": "confirmed"
+      },
+      "ms": 5,
+      "endSeq": 146
+    },
+    {
+      "name": "高校团：3个真实报名达到成团并自动匹配导游",
+      "status": "pass",
+      "startSeq": 147,
+      "evidence": {
+        "enrolled": 3,
+        "minGroupSize": 3,
+        "guideId": 1,
+        "virtualUsers": 0
+      },
+      "ms": 2,
+      "endSeq": 147
+    },
+    {
+      "name": "公司团：公司员工甲 报名、订单、企业挂账",
+      "status": "pass",
+      "startSeq": 148,
+      "evidence": {
+        "enrollmentId": 7,
+        "seatNo": "1A",
+        "payStatus": "company_pending",
+        "amount": 0,
+        "formation": "recruiting"
+      },
+      "ms": 2,
+      "endSeq": 150
+    },
+    {
+      "name": "公司团：公司员工乙 报名、订单、企业挂账",
+      "status": "pass",
+      "startSeq": 151,
+      "evidence": {
+        "enrollmentId": 8,
+        "seatNo": "1B",
+        "payStatus": "company_pending",
+        "amount": 0,
+        "formation": "recruiting"
+      },
+      "ms": 3,
+      "endSeq": 153
+    },
+    {
+      "name": "公司团：公司员工丙 报名、订单、企业挂账",
+      "status": "pass",
+      "startSeq": 154,
+      "evidence": {
+        "enrollmentId": 9,
+        "seatNo": "1C",
+        "payStatus": "company_pending",
+        "amount": 0,
+        "formation": "confirmed"
+      },
+      "ms": 2,
+      "endSeq": 156
+    },
+    {
+      "name": "公司团：3个真实报名达到成团并自动匹配导游",
+      "status": "pass",
+      "startSeq": 157,
+      "evidence": {
+        "enrolled": 3,
+        "minGroupSize": 3,
+        "guideId": 1,
+        "virtualUsers": 0
+      },
+      "ms": 2,
+      "endSeq": 157
+    },
+    {
+      "name": "公司统一结算：非发起人拒绝，发起人 mock 支付全部3人且不能重复扣款",
+      "status": "fail",
+      "startSeq": 158,
+      "error": "POST /pay/company-settle: UNIQUE constraint failed: payments.trade_no\n\n500 !== 200\n",
+      "ms": 2,
+      "endSeq": 159
+    },
+    {
+      "name": "公司支付闭环：统一支付后3个订单均paid",
+      "status": "blocked",
+      "startSeq": 160,
+      "reason": "A prerequisite case failed"
+    },
+    {
+      "name": "退款：新增报名、分两笔支付、越权取消拒绝、本人取消原付款人退款",
+      "status": "fail",
+      "startSeq": 160,
+      "error": "POST /orders/10/cancel: UNIQUE constraint failed: payments.trade_no\n\n500 !== 200\n",
+      "ms": 7,
+      "endSeq": 165
+    },
+    {
+      "name": "退款对照：单笔mock支付、本人取消、全额退款和报名状态一致",
+      "status": "pass",
+      "startSeq": 166,
+      "evidence": {
+        "enrollmentId": 11,
+        "cancelled": {
+          "enrollmentId": 11,
+          "status": "cancelled",
+          "payStatus": "refunded",
+          "refunded": true,
+          "refundAmount": 89,
+          "refundPercent": 100,
+          "refunds": [
+            {
+              "userId": 16,
+              "amount": 89,
+              "tradeNo": "RF179388000337916",
+              "originalTradeNo": "P179388000337816",
+              "channel": "wechat"
+            }
+          ],
+          "promoted": null
+        },
+        "original": {
+          "amount": 89,
+          "refunded_amount": 89
+        }
+      },
+      "ms": 5,
+      "endSeq": 169
+    },
+    {
+      "name": "权限：用户token不能访问后台/导游端，游客不能查看他人订单",
+      "status": "pass",
+      "startSeq": 170,
+      "ms": 2,
+      "endSeq": 173
+    },
+    {
+      "name": "导游端：图片验证码和模拟短信登录，错误验证码拒绝",
+      "status": "pass",
+      "startSeq": 174,
+      "evidence": {
+        "guidePhone": "13700001101",
+        "scheduleIds": [
+          3,
+          4,
+          5
+        ]
+      },
+      "ms": 5,
+      "endSeq": 178
+    },
+    {
+      "name": "大众团导游：开团前电话脱敏，提前开团/结束均拒绝",
+      "status": "pass",
+      "startSeq": 179,
+      "ms": 3,
+      "endSeq": 181
+    },
+    {
+      "name": "大众团导游：当天开团、幂等重试、电话解密和旅客详情",
+      "status": "pass",
+      "startSeq": 182,
+      "evidence": {
+        "startedAt": "2026-11-05 20:00:03",
+        "roster": [
+          {
+            "enrollmentId": 1,
+            "phonesVisible": true
+          },
+          {
+            "enrollmentId": 2,
+            "phonesVisible": true
+          },
+          {
+            "enrollmentId": 3,
+            "phonesVisible": true
+          }
+        ]
+      },
+      "ms": 4,
+      "endSeq": 184
+    },
+    {
+      "name": "大众团导游：depart签到、重复开轮拒绝、全员确认",
+      "status": "pass",
+      "startSeq": 185,
+      "evidence": {
+        "sessionId": 1,
+        "status": "confirmed",
+        "markedCount": 3
+      },
+      "ms": 9,
+      "endSeq": 190
+    },
+    {
+      "name": "大众团导游：stop-1签到、重复开轮拒绝、全员确认",
+      "status": "pass",
+      "startSeq": 191,
+      "evidence": {
+        "sessionId": 2,
+        "status": "confirmed",
+        "markedCount": 3
+      },
+      "ms": 5,
+      "endSeq": 196
+    },
+    {
+      "name": "大众团导游：完成行程、全员完成同步、幂等重试、结束后报名拒绝",
+      "status": "pass",
+      "startSeq": 197,
+      "evidence": {
+        "completedAt": "2026-11-05 20:00:03",
+        "completedTravelers": 3
+      },
+      "ms": 7,
+      "endSeq": 202
+    },
+    {
+      "name": "大众团行后：参加者评价、重复评价和未报名者评价拒绝",
+      "status": "pass",
+      "startSeq": 203,
+      "ms": 4,
+      "endSeq": 206
+    },
+    {
+      "name": "高校团导游：开团前电话脱敏，提前开团/结束均拒绝",
+      "status": "pass",
+      "startSeq": 207,
+      "ms": 3,
+      "endSeq": 209
+    },
+    {
+      "name": "高校团导游：当天开团、幂等重试、电话解密和旅客详情",
+      "status": "pass",
+      "startSeq": 210,
+      "evidence": {
+        "startedAt": "2026-11-05 20:00:03",
+        "roster": [
+          {
+            "enrollmentId": 4,
+            "phonesVisible": true
+          },
+          {
+            "enrollmentId": 5,
+            "phonesVisible": true
+          },
+          {
+            "enrollmentId": 6,
+            "phonesVisible": true
+          }
+        ]
+      },
+      "ms": 4,
+      "endSeq": 212
+    },
+    {
+      "name": "高校团导游：depart签到、重复开轮拒绝、全员确认",
+      "status": "pass",
+      "startSeq": 213,
+      "evidence": {
+        "sessionId": 3,
+        "status": "confirmed",
+        "markedCount": 3
+      },
+      "ms": 5,
+      "endSeq": 218
+    },
+    {
+      "name": "高校团导游：stop-1签到、重复开轮拒绝、全员确认",
+      "status": "pass",
+      "startSeq": 219,
+      "evidence": {
+        "sessionId": 4,
+        "status": "confirmed",
+        "markedCount": 3
+      },
+      "ms": 6,
+      "endSeq": 224
+    },
+    {
+      "name": "高校团导游：完成行程、全员完成同步、幂等重试、结束后报名拒绝",
+      "status": "pass",
+      "startSeq": 225,
+      "evidence": {
+        "completedAt": "2026-11-05 20:00:03",
+        "completedTravelers": 3
+      },
+      "ms": 5,
+      "endSeq": 230
+    },
+    {
+      "name": "高校团行后：参加者评价、重复评价和未报名者评价拒绝",
+      "status": "pass",
+      "startSeq": 231,
+      "ms": 1,
+      "endSeq": 234
+    },
+    {
+      "name": "公司团导游：开团前电话脱敏，提前开团/结束均拒绝",
+      "status": "pass",
+      "startSeq": 235,
+      "ms": 3,
+      "endSeq": 237
+    },
+    {
+      "name": "公司团导游：当天开团、幂等重试、电话解密和旅客详情",
+      "status": "pass",
+      "startSeq": 238,
+      "evidence": {
+        "startedAt": "2026-11-05 20:00:03",
+        "roster": [
+          {
+            "enrollmentId": 7,
+            "phonesVisible": true
+          },
+          {
+            "enrollmentId": 8,
+            "phonesVisible": true
+          },
+          {
+            "enrollmentId": 9,
+            "phonesVisible": true
+          }
+        ]
+      },
+      "ms": 3,
+      "endSeq": 240
+    },
+    {
+      "name": "公司团导游：depart签到、重复开轮拒绝、全员确认",
+      "status": "pass",
+      "startSeq": 241,
+      "evidence": {
+        "sessionId": 5,
+        "status": "confirmed",
+        "markedCount": 3
+      },
+      "ms": 9,
+      "endSeq": 246
+    },
+    {
+      "name": "公司团导游：stop-1签到、重复开轮拒绝、全员确认",
+      "status": "pass",
+      "startSeq": 247,
+      "evidence": {
+        "sessionId": 6,
+        "status": "confirmed",
+        "markedCount": 3
+      },
+      "ms": 6,
+      "endSeq": 252
+    },
+    {
+      "name": "公司团导游：完成行程、全员完成同步、幂等重试、结束后报名拒绝",
+      "status": "pass",
+      "startSeq": 253,
+      "evidence": {
+        "completedAt": "2026-11-05 20:00:03",
+        "completedTravelers": 3
+      },
+      "ms": 5,
+      "endSeq": 258
+    },
+    {
+      "name": "公司团行后：参加者评价、重复评价和未报名者评价拒绝",
+      "status": "pass",
+      "startSeq": 259,
+      "ms": 2,
+      "endSeq": 262
+    },
+    {
+      "name": "汇总：账本、签到、非虚拟用户和外网零调用",
+      "status": "pass",
+      "startSeq": 263,
+      "evidence": {
+        "registeredAccounts": 14,
+        "activeJoined": 10,
+        "confirmedCheckinRounds": 6,
+        "payments": {
+          "n": 12,
+          "amount": 1084,
+          "refunded": 188
+        },
+        "completedSchedules": 3,
+        "externalRequests": 0
+      },
+      "ms": 1,
+      "endSeq": 262
+    }
+  ],
+  "accounts": [
+    {
+      "id": 3,
+      "phone": "19900010000",
+      "nickname": "大众发起人"
+    },
+    {
+      "id": 4,
+      "phone": "19900010001",
+      "nickname": "高校发起人",
+      "school": "北京大学"
+    },
+    {
+      "id": 5,
+      "phone": "19900010002",
+      "nickname": "公司发起人"
+    },
+    {
+      "id": 6,
+      "phone": "19900010003",
+      "nickname": "大众报名甲"
+    },
+    {
+      "id": 7,
+      "phone": "19900010004",
+      "nickname": "大众报名乙"
+    },
+    {
+      "id": 8,
+      "phone": "19900010005",
+      "nickname": "大众报名丙"
+    },
+    {
+      "id": 9,
+      "phone": "19900010006",
+      "nickname": "高校报名甲",
+      "school": "北京大学"
+    },
+    {
+      "id": 10,
+      "phone": "19900010007",
+      "nickname": "高校报名乙",
+      "school": "北京大学"
+    },
+    {
+      "id": 11,
+      "phone": "19900010008",
+      "nickname": "高校报名丙",
+      "school": "北京大学"
+    },
+    {
+      "id": 12,
+      "phone": "19900010009",
+      "nickname": "公司员工甲"
+    },
+    {
+      "id": 13,
+      "phone": "19900010010",
+      "nickname": "公司员工乙"
+    },
+    {
+      "id": 14,
+      "phone": "19900010011",
+      "nickname": "公司员工丙"
+    },
+    {
+      "id": 15,
+      "phone": "19900010012",
+      "nickname": "普通旁观者"
+    },
+    {
+      "id": 16,
+      "phone": "19900010013",
+      "nickname": "外校学生",
+      "school": "清华大学"
+    }
+  ],
+  "trips": [
+    {
+      "id": 3,
+      "key": "public",
+      "label": "大众团",
+      "type": "individual",
+      "routeId": 2,
+      "enrollments": [
+        {
+          "id": 1,
+          "userId": 6,
+          "phone": "19900010003"
+        },
+        {
+          "id": 2,
+          "userId": 7,
+          "phone": "19900010004"
+        },
+        {
+          "id": 3,
+          "userId": 8,
+          "phone": "19900010005"
+        }
+      ],
+      "guideId": 1
+    },
+    {
+      "id": 4,
+      "key": "campus",
+      "label": "高校团",
+      "type": "campus",
+      "routeId": 3,
+      "enrollments": [
+        {
+          "id": 4,
+          "userId": 9,
+          "phone": "19900010006"
+        },
+        {
+          "id": 5,
+          "userId": 10,
+          "phone": "19900010007"
+        },
+        {
+          "id": 6,
+          "userId": 11,
+          "phone": "19900010008"
+        }
+      ],
+      "guideId": 1
+    },
+    {
+      "id": 5,
+      "key": "company",
+      "label": "公司团",
+      "type": "company",
+      "routeId": 4,
+      "enrollments": [
+        {
+          "id": 7,
+          "userId": 12,
+          "phone": "19900010009"
+        },
+        {
+          "id": 8,
+          "userId": 13,
+          "phone": "19900010010"
+        },
+        {
+          "id": 9,
+          "userId": 14,
+          "phone": "19900010011"
+        }
+      ],
+      "guideId": 1
+    },
+    {
+      "id": 6,
+      "key": "refund",
+      "type": "individual",
+      "label": "分笔支付退款隔离团"
+    },
+    {
+      "id": 7,
+      "key": "single-refund",
+      "type": "individual",
+      "label": "单笔支付退款对照团"
+    }
+  ],
+  "fixtures": [
+    {
+      "scheduleId": 3,
+      "action": "advance isolated fixture to departure day",
+      "before": {
+        "start_date": "2026-11-13",
+        "end_date": "2026-11-13"
+      },
+      "after": "2026-11-05"
+    },
+    {
+      "scheduleId": 4,
+      "action": "advance isolated fixture to departure day",
+      "before": {
+        "start_date": "2026-11-14",
+        "end_date": "2026-11-14"
+      },
+      "after": "2026-11-05"
+    },
+    {
+      "scheduleId": 5,
+      "action": "advance isolated fixture to departure day",
+      "before": {
+        "start_date": "2026-11-15",
+        "end_date": "2026-11-15"
+      },
+      "after": "2026-11-05"
+    }
+  ],
+  "companyFailureState": {
+    "enrollments": [
+      {
+        "id": 7,
+        "status": "joined",
+        "pay_status": "company_pending",
+        "pay_amount": 0
+      },
+      {
+        "id": 8,
+        "status": "joined",
+        "pay_status": "company_pending",
+        "pay_amount": 0
+      },
+      {
+        "id": 9,
+        "status": "joined",
+        "pay_status": "company_pending",
+        "pay_amount": 0
+      }
+    ],
+    "payments": []
+  },
+  "refundFailureState": {
+    "enrollments": [
+      {
+        "id": 10,
+        "status": "joined",
+        "pay_status": "paid",
+        "pay_amount": 99
+      }
+    ],
+    "payments": [
+      {
+        "id": 8,
+        "amount": 40,
+        "status": "success",
+        "trade_no": "P179388000337115",
+        "refunded_amount": 40,
+        "refund_of": 0
+      },
+      {
+        "id": 9,
+        "amount": 59,
+        "status": "success",
+        "trade_no": "P179388000337215",
+        "refunded_amount": 59,
+        "refund_of": 0
+      },
+      {
+        "id": 10,
+        "amount": 40,
+        "status": "refunded",
+        "trade_no": "RF179388000337415",
+        "refunded_amount": 0,
+        "refund_of": 8
+      }
+    ]
+  },
+  "finishedAt": "2026-11-05T12:00:03.472Z",
+  "summary": {
+    "pass": 64,
+    "fail": 2,
+    "blocked": 1,
+    "requests": 262,
+    "accounts": 14
+  },
+  "externalRequests": []
+}

@@ -1,6 +1,6 @@
 <page-meta root-font-size="{{lookRoot}}" page-style="{{lookStyle}}" />
 <wxs src="../../utils/locale.wxs" module="tr" />
-<view class="schedule-page {{isActivity ? 'is-activity' : ''}}">
+<view class="schedule-page {{isActivity ? 'is-activity' : ''}} {{detailDark ? 'detail-dark' : ''}}">
 <view class="offer-hero" wx:if="{{!isActivity && gallery.length}}">
   <swiper class="hero-swipe" autoplay circular interval="4000">
     <swiper-item wx:for="{{gallery}}" wx:key="*this">
@@ -146,42 +146,71 @@
       <view class="pad">{{tr.t(s.coupon.label, lang)}} {{tr.t('余', lang)}} {{tr.t(s.coupon.remain, lang)}}/{{tr.t(s.coupon.total, lang)}} {{tr.t('· 点此领取', lang)}}</view>
     </view>
     <view class="muted" wx:elif="{{s.guide}}" bindtap="goGuide">{{tr.t('已匹配导游：', lang)}}{{tr.t(s.guide.name, lang)}} <text class="nav-link">{{tr.t('查看详情', lang)}}</text></view>
-    <block wx:if="{{!isActivity}}">
-      <view class="role-kicker" wx:if="{{!(leaderSlots[0].leader && leaderSlots[1].leader && s.photographer)}}">{{tr.t('本团还有空位', lang)}}</view>
+    <view class="role-board" wx:if="{{!isActivity}}">
+      <view class="role-heading">
+        <view>{{tr.t('领队与摄影', lang)}}</view>
+        <text class="role-kicker" wx:if="{{!(leaderSlots[0].leader && leaderSlots[1].leader && s.photographer)}}">{{tr.t('招募中', lang)}}</text>
+      </view>
       <block wx:for="{{leaderSlots}}" wx:key="slot">
-        <view class="leader-slot" wx:if="{{item.leader}}" bindtap="openLeader" data-kind="{{item.leader.kind}}" data-id="{{item.leader.id}}" data-userid="{{item.leader.userId}}">
-          <text class="nav-link">{{tr.t(item.label, lang)}} {{tr.t(item.leader.name, lang)}}</text>
-        </view>
-        <view wx:else class="role-open" bindtap="applyLeader">
-          <view>
-            <view class="role-open-name">{{tr.t(item.label, lang)}} · {{tr.t('报名领队', lang)}}</view>
-            <view class="role-open-sub">{{tr.t('空位，点此带这团', lang)}}</view>
+        <view class="role-row is-filled" wx:if="{{item.leader}}" bindtap="openLeader" data-kind="{{item.leader.kind}}" data-id="{{item.leader.id}}" data-userid="{{item.leader.userId}}">
+          <view class="role-icon role-icon-leader"></view>
+          <view class="role-copy">
+            <view class="role-title">{{tr.t(item.label, lang)}}</view>
+            <view class="role-sub role-person">{{tr.t(item.leader.name, lang)}}</view>
           </view>
-          <view class="role-open-go">›</view>
+          <view class="role-action role-view">{{tr.t('查看', lang)}}<view class="role-chevron"></view></view>
+        </view>
+        <view wx:else class="role-row" bindtap="applyLeader">
+          <view class="role-icon role-icon-leader"></view>
+          <view class="role-copy">
+            <view class="role-title">{{tr.t(item.label, lang)}}</view>
+            <view class="role-sub">{{tr.t('带队同行', lang)}}</view>
+          </view>
+          <view class="role-action">{{tr.t('报名', lang)}}<view class="role-chevron"></view></view>
         </view>
       </block>
-      <view class="leader-slot" wx:if="{{s.photographer}}" bindtap="openLeader" data-kind="user" data-id="{{s.photographer.id}}" data-userid="{{s.photographer.userId}}">
-        <text class="nav-link">{{tr.t('摄影师', lang)}} {{tr.t(s.photographer.name, lang)}}</text>
-      </view>
-      <view wx:else class="role-open" bindtap="applyPhotographer">
-        <view>
-          <view class="role-open-name">{{tr.t('报名摄影师', lang)}}</view>
-          <view class="role-open-sub">{{tr.t('空位，免个人团费', lang)}}</view>
+      <view class="role-row is-filled" wx:if="{{s.photographer}}" bindtap="openLeader" data-kind="user" data-id="{{s.photographer.id}}" data-userid="{{s.photographer.userId}}">
+        <view class="role-icon role-icon-camera"></view>
+        <view class="role-copy">
+          <view class="role-title">{{tr.t('摄影师', lang)}}</view>
+          <view class="role-sub role-person">{{tr.t(s.photographer.name, lang)}}</view>
         </view>
-        <view class="role-open-go">›</view>
+        <view class="role-action role-view">{{tr.t('查看', lang)}}<view class="role-chevron"></view></view>
       </view>
-    </block>
+      <view wx:else class="role-row" bindtap="applyPhotographer">
+        <view class="role-icon role-icon-camera"></view>
+        <view class="role-copy">
+          <view class="role-title">{{tr.t('摄影师', lang)}}</view>
+          <view class="role-sub">{{tr.t('免个人团费，保险另计', lang)}}</view>
+        </view>
+        <view class="role-action">{{tr.t('报名', lang)}}<view class="role-chevron"></view></view>
+      </view>
+    </view>
   </view>
 </view>
-<view class="pad title" wx:if="{{!isActivity && weather}}">{{tr.t('出行天气', lang)}}</view>
-<view class="card" wx:if="{{!isActivity && weather}}">
-  <view class="pad">
-    <view class="weather">
-      <view>{{tr.t(weather.place, lang)}} {{tr.t(weather.summary, lang)}}</view>
-      <view class="muted">{{tr.t(weather.tmin, lang)}}~{{tr.t(weather.tmax, lang)}}{{tr.t('℃ · 风', lang)}} {{tr.t(weather.wind, lang)}}km/h</view>
-      <canvas wx:if="{{weather.hourly && weather.hourly.length}}" type="2d" id="weatherChart" class="wx-chart" disable-scroll="true"></canvas>
-      <view class="muted" wx:for="{{weather.alerts}}" wx:key="text">{{tr.t(item.text, lang)}}</view>
+<view class="card trip-weather-card" wx:if="{{!isActivity && weather}}">
+  <view class="weather-heading">
+    <view>{{tr.t('出行天气', lang)}}</view>
+    <text class="weather-day">{{weather.date}}</text>
+  </view>
+  <view class="weather-overview">
+    <view class="weather-location">
+      <view class="weather-place">{{tr.t(weather.place, lang)}}</view>
+      <view class="weather-summary">{{tr.t(weather.summary, lang)}}</view>
     </view>
+    <view class="weather-range">{{weather.tmin}}<text class="weather-range-sep">~</text>{{weather.tmax}}<text class="weather-unit">°C</text></view>
+  </view>
+  <view class="weather-meta">
+    <view><text>{{tr.t('风速', lang)}}</text> {{weather.wind}} km/h</view>
+    <view wx:if="{{weather.precip != null}}"><text>{{tr.t('降水', lang)}}</text> {{weather.precip}} mm</view>
+  </view>
+  <block wx:if="{{weather.hourly && weather.hourly.length}}">
+    <view class="weather-chart-legend"><view><text class="weather-temp-key"></text>{{tr.t('气温', lang)}}</view><view><text class="weather-rain-key"></text>{{tr.t('降水', lang)}}</view></view>
+    <canvas type="2d" id="weatherChart" class="wx-chart" disable-scroll="true"></canvas>
+  </block>
+  <view class="weather-advice" wx:if="{{weather.alerts && weather.alerts.length}}">
+    <view class="weather-advice-label">{{tr.t('出行提醒', lang)}}</view>
+    <view class="weather-advice-copy"><view wx:for="{{weather.alerts}}" wx:key="text" class="{{item.level == 'high' ? 'weather-high' : ''}}">{{tr.t(item.text, lang)}}</view></view>
   </view>
 </view>
 <block wx:if="{{!isActivity}}">

@@ -2,6 +2,8 @@
 // Bound downloads/decoding so a share can finish within WeChat's 3s deadline.
 const FALLBACK_SHARE_CARD = "/images/share-card.png";
 const IMAGE_TIMEOUT = 1200;
+// Canvas 2D has a 1365px limit per edge, including the device pixel ratio.
+const MAX_CANVAS_EDGE = 1365;
 
 function loadCover(canvas, src) {
   return new Promise((resolve) => {
@@ -73,6 +75,12 @@ function canvasToFile(canvas) {
   return new Promise((resolve, reject) => {
     wx.canvasToTempFilePath({
       canvas,
+      x: 0,
+      y: 0,
+      width: canvas.width,
+      height: canvas.height,
+      destWidth: canvas.width,
+      destHeight: canvas.height,
       fileType: "png",
       quality: 0.92,
       success: (r) => resolve(r.tempFilePath),
@@ -90,7 +98,8 @@ async function getCanvas(page, id, cssW, cssH) {
       .exec((res) => {
         const node = res && res[0] && res[0].node;
         if (!node) return reject(new Error("canvas missing"));
-        const dpr = wx.getSystemInfoSync().pixelRatio || 2;
+        const deviceDpr = Math.max(1, Number(wx.getSystemInfoSync().pixelRatio) || 1);
+        const dpr = Math.min(deviceDpr, 2, MAX_CANVAS_EDGE / Math.max(cssW, cssH));
         node.width = cssW * dpr;
         node.height = cssH * dpr;
         const ctx = node.getContext("2d");

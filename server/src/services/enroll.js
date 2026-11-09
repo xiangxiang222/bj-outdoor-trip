@@ -25,7 +25,7 @@ const { isOversubPending } = require("./oversub");
 const { assertJoinCode } = require("./joinCode");
 const { cancelQuote, refundAmount } = require("./refund");
 const { ensurePayShareToken, refundableOf } = require("./pay-ledger");
-const { refundEnrollmentToPayers } = require("./payment");
+const { refundEnrollmentToPayers, enrollmentRefundPlan } = require("./payment");
 const { scheduleHasStarted } = require("./schedule-lifecycle");
 
 function fail(status, message, extra) {
@@ -407,11 +407,17 @@ async function cancelEnrollment(enrollmentId, userId, options = {}) {
   if (sch.status === "cancelled" && !options.force) fail(400, "拼团已解散，报名已取消");
 
   const route = db.prepare("SELECT * FROM routes WHERE id=?").get(sch.route_id);
-  const refundable = refundableOf(en);
+  const savedRefund = enrollmentRefundPlan(en.id);
+  const refundable = savedRefund ? savedRefund.original_amount : refundableOf(en);
   const hasMoney = refundable > 0;
   let refundPercent = 100;
   let refundedAmount = 0;
-  if (!options.force && !options.admin) {
+  if (savedRefund) {
+    // Finish the original operation after a provider/local recording failure,
+    // retaining its original ladder and total instead of discounting twice.
+    refundPercent = savedRefund.percent;
+    refundedAmount = savedRefund.amount;
+  } else if (!options.force && !options.admin) {
     const quote = cancelQuote(en, {
       status: sch.status,
       startDate: sch.start_date,
@@ -441,13 +447,14 @@ async function cancelEnrollment(enrollmentId, userId, options = {}) {
 
   let refunds = [];
   if (hasMoney && refundedAmount > 0) {
-    refunds = await refundEnrollmentToPayers(en, { amount: refundedAmount, remark });
-    clawActivityPoints(en.user_id, en.id, refundedAmount, refundable);
+    refunds = await refundEnrollmentToPayers(en, { amount: refundedAmount, remark, percent: refundPercent, originalAmount: refundable, refundWechat: options.refundWechat });
   }
-  reverseEnrollReferral(en.id);
 
   const run = db.transaction(() => {
-    db.prepare("UPDATE enrollments SET status='cancelled', pay_status=? WHERE id=?").run(nextPay, en.id);
+    const changed = db.prepare("UPDATE enrollments SET status='cancelled', pay_status=? WHERE id=? AND status!='cancelled'").run(nextPay, en.id);
+    if (!changed.changes) fail(400, "该报名已取消");
+    if (hasMoney && refundedAmount > 0) clawActivityPoints(en.user_id, en.id, refundedAmount, refundable);
+    reverseEnrollReferral(en.id);
     releaseCouponByEnrollment(en.id);
     if (hasMoney && en.points_used) addPoints(en.user_id, en.points_used, "取消报名退还积分", "enrollment", en.id);
     const n = realEnrolledCount(sch.id);
