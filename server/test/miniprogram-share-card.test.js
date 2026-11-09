@@ -89,7 +89,7 @@ function canvasHarness(options = {}) {
     return node;
   }
   const wx = {
-    getSystemInfoSync: () => ({ pixelRatio: 2 }),
+    getSystemInfoSync: () => ({ pixelRatio: options.pixelRatio === undefined ? 2 : options.pixelRatio }),
     getImageInfo(request) {
       downloads.push(request);
       if (options.download === "hang") return;
@@ -148,6 +148,28 @@ describe("native share image rendering", () => {
     assert.equal(drawn[1].src, qr);
     assert.ok(h.exports[0].ops.some((op) => op.kind === "text" && op.text === "扫码报名"));
   });
+
+  for (const pixelRatio of [1, 2, 3, 4]) {
+    it(`exports bounded, correctly proportioned card and poster images on a ${pixelRatio}x device`, async () => {
+      const h = canvasHarness({ pixelRatio });
+      await h.drawShareCard({}, facts);
+      await h.drawSharePoster({}, facts, "data:image/png;base64,aGVsbG8=");
+      assert.equal(h.exports.length, 2);
+      for (const [index, aspectRatio, imageCount] of [[0, 5 / 4, 1], [1, 375 / 490, 2]]) {
+        const { request, ops } = h.exports[index];
+        const { canvas } = request;
+        assert.ok(canvas.width > 0 && canvas.width <= 1365, "Canvas 2D width must stay within the native limit");
+        assert.ok(canvas.height > 0 && canvas.height <= 1365, "Canvas 2D height must stay within the native limit");
+        assert.equal(canvas.width / canvas.height, aspectRatio);
+        assert.equal(request.width, canvas.width, "export must read the complete rendered canvas");
+        assert.equal(request.height, canvas.height, "export must read the complete rendered canvas");
+        assert.equal(request.destWidth, canvas.width, "export must not multiply the device pixel ratio again");
+        assert.equal(request.destHeight, canvas.height, "export must not multiply the device pixel ratio again");
+        assert.equal(ops.filter((op) => op.kind === "image").length, imageCount);
+      }
+      assert.ok(h.images.every((image) => image.loaded), "cover and QR must finish native decoding before export");
+    });
+  }
 
   for (const failure of [{ download: "fail" }, { decode: "fail" }]) {
     it(`keeps the title, price, CTA and a visible branded cover when ${Object.keys(failure)[0]} fails`, async () => {

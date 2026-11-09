@@ -1,0 +1,649 @@
+{
+  "startedAt": "2026-11-06T10:38:36.095Z",
+  "database": "/tmp/bj-payment-fix-2026-11-06/payment-boundaries/data-hjgUnJ/app.sqlite",
+  "scope": "Company settlement and split-refund regressions, including mocked WeChat XML/signature protocol; no real merchant calls",
+  "externalAttempts": [],
+  "mockGatewayCalls": [
+    {
+      "url": "https://api.mch.weixin.qq.com/pay/unifiedorder",
+      "phase": "unifiedOrder"
+    }
+  ],
+  "cases": [
+    {
+      "name": "公司两人mock统一结算成功，父子流水唯一且金额一致",
+      "status": "pass",
+      "evidence": {
+        "before": {
+          "enrollments": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "status": "joined",
+              "pay_status": "company_pending",
+              "pay_amount": 0,
+              "pay_channel": ""
+            },
+            {
+              "id": 2,
+              "user_id": 1,
+              "status": "joined",
+              "pay_status": "company_pending",
+              "pay_amount": 0,
+              "pay_channel": ""
+            }
+          ],
+          "payments": []
+        },
+        "httpStatus": 200,
+        "result": {
+          "count": 2,
+          "total": 398
+        },
+        "after": {
+          "enrollments": [
+            {
+              "id": 1,
+              "user_id": 1,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 199,
+              "pay_channel": "wechat_company"
+            },
+            {
+              "id": 2,
+              "user_id": 1,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 199,
+              "pay_channel": "wechat_company"
+            }
+          ],
+          "payments": [
+            {
+              "id": 1,
+              "user_id": 2,
+              "enrollment_id": 0,
+              "scene": "company",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "CO438e828c5a9f50ae219c1368bcaad2",
+              "amount": 398,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            },
+            {
+              "id": 2,
+              "user_id": 2,
+              "enrollment_id": 1,
+              "scene": "company_share",
+              "status": "success",
+              "channel": "company",
+              "trade_no": "CS563d2bccecfd5410ac5ac90444e423",
+              "amount": 199,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": "",
+              "parent_payment_id": 1
+            },
+            {
+              "id": 3,
+              "user_id": 2,
+              "enrollment_id": 2,
+              "scene": "company_share",
+              "status": "success",
+              "channel": "company",
+              "trade_no": "CScb0f65b0425101244e14a0e327ec52",
+              "amount": 199,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": "",
+              "parent_payment_id": 1
+            }
+          ]
+        },
+        "repeatSettlementStatus": 400
+      }
+    },
+    {
+      "name": "公司两人真实协议mock通知成功，重复通知幂等且退款定位父商户单",
+      "status": "pass",
+      "evidence": {
+        "scope": "真实支付XML/签名通知协议使用全mock网关；退款只注入provider，无商户连接",
+        "prepay": {
+          "tradeNo": "CO8ff9a9dc1e4206cf5ae6eb32d167ca",
+          "needPay": true,
+          "count": 2,
+          "total": 398
+        },
+        "before": {
+          "enrollments": [
+            {
+              "id": 3,
+              "user_id": 3,
+              "status": "joined",
+              "pay_status": "company_pending",
+              "pay_amount": 0,
+              "pay_channel": ""
+            },
+            {
+              "id": 4,
+              "user_id": 3,
+              "status": "joined",
+              "pay_status": "company_pending",
+              "pay_amount": 0,
+              "pay_channel": ""
+            }
+          ],
+          "payments": [
+            {
+              "id": 4,
+              "user_id": 4,
+              "enrollment_id": 0,
+              "scene": "company",
+              "status": "pending",
+              "channel": "wechat",
+              "trade_no": "CO8ff9a9dc1e4206cf5ae6eb32d167ca",
+              "amount": 398,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            }
+          ]
+        },
+        "firstNotify": "<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>",
+        "afterFirst": {
+          "enrollments": [
+            {
+              "id": 3,
+              "user_id": 3,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 199,
+              "pay_channel": "wechat_company"
+            },
+            {
+              "id": 4,
+              "user_id": 3,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 199,
+              "pay_channel": "wechat_company"
+            }
+          ],
+          "payments": [
+            {
+              "id": 4,
+              "user_id": 4,
+              "enrollment_id": 0,
+              "scene": "company",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "CO8ff9a9dc1e4206cf5ae6eb32d167ca",
+              "amount": 398,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": "QA_COMPANY_TXN",
+              "parent_payment_id": 0
+            },
+            {
+              "id": 5,
+              "user_id": 4,
+              "enrollment_id": 3,
+              "scene": "company_share",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "CS04a6f04fc255838975423e70c73e18",
+              "amount": 199,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": "QA_COMPANY_TXN",
+              "parent_payment_id": 4
+            },
+            {
+              "id": 6,
+              "user_id": 4,
+              "enrollment_id": 4,
+              "scene": "company_share",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "CSdcc33d09438fc3a9051ae9ea42fcdb",
+              "amount": 199,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": "QA_COMPANY_TXN",
+              "parent_payment_id": 4
+            }
+          ]
+        },
+        "retryNotify": "<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>",
+        "afterRetry": {
+          "enrollments": [
+            {
+              "id": 3,
+              "user_id": 3,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 199,
+              "pay_channel": "wechat_company"
+            },
+            {
+              "id": 4,
+              "user_id": 3,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 199,
+              "pay_channel": "wechat_company"
+            }
+          ],
+          "payments": [
+            {
+              "id": 4,
+              "user_id": 4,
+              "enrollment_id": 0,
+              "scene": "company",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "CO8ff9a9dc1e4206cf5ae6eb32d167ca",
+              "amount": 398,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": "QA_COMPANY_TXN",
+              "parent_payment_id": 0
+            },
+            {
+              "id": 5,
+              "user_id": 4,
+              "enrollment_id": 3,
+              "scene": "company_share",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "CS04a6f04fc255838975423e70c73e18",
+              "amount": 199,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": "QA_COMPANY_TXN",
+              "parent_payment_id": 4
+            },
+            {
+              "id": 6,
+              "user_id": 4,
+              "enrollment_id": 4,
+              "scene": "company_share",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "CSdcc33d09438fc3a9051ae9ea42fcdb",
+              "amount": 199,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": "QA_COMPANY_TXN",
+              "parent_payment_id": 4
+            }
+          ]
+        },
+        "confirm": {
+          "already": true,
+          "payStatus": "paid"
+        },
+        "mockedRefundRequests": [
+          {
+            "tradeNo": "CO8ff9a9dc1e4206cf5ae6eb32d167ca",
+            "transactionId": "QA_COMPANY_TXN",
+            "refundNo": "RFa9852311907145719f627aee82e4af",
+            "totalFen": 39800,
+            "refundFen": 19900
+          }
+        ],
+        "afterRefund": {
+          "enrollments": [
+            {
+              "id": 3,
+              "user_id": 3,
+              "status": "cancelled",
+              "pay_status": "refunded",
+              "pay_amount": 199,
+              "pay_channel": "wechat_company"
+            },
+            {
+              "id": 4,
+              "user_id": 3,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 199,
+              "pay_channel": "wechat_company"
+            }
+          ],
+          "payments": [
+            {
+              "id": 4,
+              "user_id": 4,
+              "enrollment_id": 0,
+              "scene": "company",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "CO8ff9a9dc1e4206cf5ae6eb32d167ca",
+              "amount": 398,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": "QA_COMPANY_TXN",
+              "parent_payment_id": 0
+            },
+            {
+              "id": 5,
+              "user_id": 4,
+              "enrollment_id": 3,
+              "scene": "company_share",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "CS04a6f04fc255838975423e70c73e18",
+              "amount": 199,
+              "refunded_amount": 199,
+              "refund_of": 0,
+              "wechat_transaction_id": "QA_COMPANY_TXN",
+              "parent_payment_id": 4
+            },
+            {
+              "id": 6,
+              "user_id": 4,
+              "enrollment_id": 4,
+              "scene": "company_share",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "CSdcc33d09438fc3a9051ae9ea42fcdb",
+              "amount": 199,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": "QA_COMPANY_TXN",
+              "parent_payment_id": 4
+            },
+            {
+              "id": 7,
+              "user_id": 4,
+              "enrollment_id": 3,
+              "scene": "enrollment",
+              "status": "refunded",
+              "channel": "wechat",
+              "trade_no": "RFa9852311907145719f627aee82e4af",
+              "amount": 199,
+              "refunded_amount": 0,
+              "refund_of": 5,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "同付款人两笔分摊同毫秒退款成功，取消状态和退款账一致",
+      "status": "pass",
+      "evidence": {
+        "clockControl": "仅退款阶段冻结Date.now，两个退款slice在同毫秒生成",
+        "fixedMs": 1793961516811,
+        "before": {
+          "enrollments": [
+            {
+              "id": 5,
+              "user_id": 5,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 195,
+              "pay_channel": "wechat"
+            }
+          ],
+          "payments": [
+            {
+              "id": 8,
+              "user_id": 5,
+              "enrollment_id": 5,
+              "scene": "enrollment",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "Pe8c9e8a6fce4335312f983178b2775",
+              "amount": 50,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            },
+            {
+              "id": 9,
+              "user_id": 5,
+              "enrollment_id": 5,
+              "scene": "enrollment",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "P020fbe8d5d741e1a7c9b4a7f9a7753",
+              "amount": 145,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            }
+          ]
+        },
+        "httpStatus": 200,
+        "refundAmount": 195,
+        "after": {
+          "enrollments": [
+            {
+              "id": 5,
+              "user_id": 5,
+              "status": "cancelled",
+              "pay_status": "refunded",
+              "pay_amount": 195,
+              "pay_channel": "wechat"
+            }
+          ],
+          "payments": [
+            {
+              "id": 8,
+              "user_id": 5,
+              "enrollment_id": 5,
+              "scene": "enrollment",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "Pe8c9e8a6fce4335312f983178b2775",
+              "amount": 50,
+              "refunded_amount": 50,
+              "refund_of": 0,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            },
+            {
+              "id": 9,
+              "user_id": 5,
+              "enrollment_id": 5,
+              "scene": "enrollment",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "P020fbe8d5d741e1a7c9b4a7f9a7753",
+              "amount": 145,
+              "refunded_amount": 145,
+              "refund_of": 0,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            },
+            {
+              "id": 10,
+              "user_id": 5,
+              "enrollment_id": 5,
+              "scene": "enrollment",
+              "status": "refunded",
+              "channel": "wechat",
+              "trade_no": "RFabf6ad1cec969741f7358faf877a8e",
+              "amount": 50,
+              "refunded_amount": 0,
+              "refund_of": 8,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            },
+            {
+              "id": 11,
+              "user_id": 5,
+              "enrollment_id": 5,
+              "scene": "enrollment",
+              "status": "refunded",
+              "channel": "wechat",
+              "trade_no": "RF569e6e7ccca49a16318cae482f5ebd",
+              "amount": 145,
+              "refunded_amount": 0,
+              "refund_of": 9,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            }
+          ]
+        },
+        "repeatCancellationStatus": 400
+      }
+    },
+    {
+      "name": "同毫秒退款provider使用不同退款号，重复执行保持幂等",
+      "status": "pass",
+      "evidence": {
+        "scope": "只注入退款provider；本case不执行报名取消，未验证真实网关行为",
+        "clockControl": "退款阶段Date.now冻结模拟同毫秒",
+        "fixedMs": 1793961516878,
+        "before": {
+          "enrollments": [
+            {
+              "id": 6,
+              "user_id": 7,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 195,
+              "pay_channel": "wechat"
+            }
+          ],
+          "payments": [
+            {
+              "id": 12,
+              "user_id": 7,
+              "enrollment_id": 6,
+              "scene": "enrollment",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "P71c0063fce902cb159a0a84b58309a",
+              "amount": 50,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            },
+            {
+              "id": 13,
+              "user_id": 7,
+              "enrollment_id": 6,
+              "scene": "enrollment",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "P4bb12b533d77d5e8503e9274925a2f",
+              "amount": 145,
+              "refunded_amount": 0,
+              "refund_of": 0,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            }
+          ]
+        },
+        "mockedRefundRequests": [
+          {
+            "tradeNo": "P71c0063fce902cb159a0a84b58309a",
+            "transactionId": "",
+            "refundNo": "RF3778e4c55c81dc50bedb5f550596a6",
+            "totalFen": 5000,
+            "refundFen": 5000
+          },
+          {
+            "tradeNo": "P4bb12b533d77d5e8503e9274925a2f",
+            "transactionId": "",
+            "refundNo": "RF68c2f7c3bc7559f659f618ee3f4514",
+            "totalFen": 14500,
+            "refundFen": 14500
+          }
+        ],
+        "after": {
+          "enrollments": [
+            {
+              "id": 6,
+              "user_id": 7,
+              "status": "joined",
+              "pay_status": "paid",
+              "pay_amount": 195,
+              "pay_channel": "wechat"
+            }
+          ],
+          "payments": [
+            {
+              "id": 12,
+              "user_id": 7,
+              "enrollment_id": 6,
+              "scene": "enrollment",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "P71c0063fce902cb159a0a84b58309a",
+              "amount": 50,
+              "refunded_amount": 50,
+              "refund_of": 0,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            },
+            {
+              "id": 13,
+              "user_id": 7,
+              "enrollment_id": 6,
+              "scene": "enrollment",
+              "status": "success",
+              "channel": "wechat",
+              "trade_no": "P4bb12b533d77d5e8503e9274925a2f",
+              "amount": 145,
+              "refunded_amount": 145,
+              "refund_of": 0,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            },
+            {
+              "id": 14,
+              "user_id": 7,
+              "enrollment_id": 6,
+              "scene": "enrollment",
+              "status": "refunded",
+              "channel": "wechat",
+              "trade_no": "RF3778e4c55c81dc50bedb5f550596a6",
+              "amount": 50,
+              "refunded_amount": 0,
+              "refund_of": 12,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            },
+            {
+              "id": 15,
+              "user_id": 7,
+              "enrollment_id": 6,
+              "scene": "enrollment",
+              "status": "refunded",
+              "channel": "wechat",
+              "trade_no": "RF68c2f7c3bc7559f659f618ee3f4514",
+              "amount": 145,
+              "refunded_amount": 0,
+              "refund_of": 13,
+              "wechat_transaction_id": null,
+              "parent_payment_id": 0
+            }
+          ]
+        },
+        "repeatProviderCalls": 0
+      }
+    }
+  ],
+  "finishedAt": "2026-11-06T10:38:36.879Z",
+  "summary": {
+    "cases": 4,
+    "passed": 4,
+    "failed": 0,
+    "externalAttempts": 0
+  }
+}

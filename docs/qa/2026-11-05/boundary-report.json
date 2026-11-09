@@ -1,0 +1,179 @@
+{
+  "database": "/var/folders/hw/7bmlf6pd2rv36rk8yv0rltrm0000gn/T/bj-qa-boundaries-RTXdQP/app.sqlite",
+  "externalAttempts": [],
+  "cases": [
+    {
+      "name": "未登录不能发团或访问导游/后台接口",
+      "status": "pass",
+      "ms": 13,
+      "evidence": {
+        "codes": [
+          401,
+          401,
+          401,
+          401
+        ]
+      }
+    },
+    {
+      "name": "新普通账号填公司/学校名称能发已审批线路排期",
+      "status": "observed",
+      "ms": 91,
+      "evidence": {
+        "profile": {
+          "role": "user",
+          "id_verified": 0,
+          "student_status": null,
+          "group_status": null
+        },
+        "outputs": [
+          {
+            "type": "company",
+            "reviewStatus": "approved",
+            "status": "recruiting"
+          },
+          {
+            "type": "campus",
+            "reviewStatus": "approved",
+            "status": "recruiting"
+          }
+        ],
+        "interpretation": "现有规则仅校验名称；不是认证拒绝路径，不应报告为认证通过"
+      },
+      "kind": "policy-observation"
+    },
+    {
+      "name": "新普通账号发布高校/公司新线路仍进入审核",
+      "status": "observed",
+      "ms": 71,
+      "evidence": [
+        {
+          "type": "company",
+          "reviewStatus": "pending"
+        },
+        {
+          "type": "campus",
+          "reviewStatus": "pending"
+        }
+      ],
+      "kind": "policy-observation"
+    },
+    {
+      "name": "非公司员工可报公开公司团，但不能代公司结算",
+      "status": "pass",
+      "ms": 69,
+      "evidence": {
+        "enrollStatus": 200,
+        "payStatus": "company_pending",
+        "outsiderSettlement": 403,
+        "interpretation": "公司不查员工认证；公开报名按当前规则允许，结算按发起人权限拦截"
+      }
+    },
+    {
+      "name": "未达学校资格的游客不能报受限高校团",
+      "status": "pass",
+      "ms": 83,
+      "evidence": {
+        "status": 400,
+        "message": "本团仅限 北京大学 已认证学生报名"
+      }
+    },
+    {
+      "name": "未分配导游无法读名单/开团/签到/完成",
+      "status": "pass",
+      "ms": 4,
+      "evidence": {
+        "codes": [
+          404,
+          404,
+          404,
+          404,
+          404
+        ]
+      }
+    },
+    {
+      "name": "未来日期已成团不可提前开团",
+      "status": "pass",
+      "ms": 18,
+      "evidence": {
+        "status": 400,
+        "message": "行程不在出发日期，不能开始"
+      }
+    },
+    {
+      "name": "出发当天未成团却可经后台正式开团",
+      "status": "observed",
+      "ms": 19,
+      "evidence": {
+        "status": 200,
+        "realEnrolled": 0,
+        "minGroup": 2,
+        "startedAt": "2026-11-05 20:03:55",
+        "interpretation": "startTrip仅校验出发日期，未校验成团状态或人数，需产品确认是否允许后台强开"
+      },
+      "kind": "policy-observation"
+    },
+    {
+      "name": "出发当天未开始可直接完成行程，完成后仍可新建签到",
+      "status": "observed",
+      "ms": 21,
+      "evidence": {
+        "completeStatus": 200,
+        "startedBeforeComplete": null,
+        "checkinAfterCompletionStatus": 200,
+        "interpretation": "completeSchedule不要求started_at，openCheckin未拦completed_at；完成后仍可写入签到轮次，状态边界待修"
+      },
+      "kind": "policy-observation"
+    },
+    {
+      "name": "mock付款重复请求不重复收款或积分",
+      "status": "pass",
+      "ms": 23,
+      "evidence": {
+        "amount": 195,
+        "repeatStatus": 400,
+        "pointsBefore": 704,
+        "pointsAfter": 704,
+        "successPaymentRows": 1
+      }
+    },
+    {
+      "name": "已付款取消重复请求只退款一次，取消后不能再付款",
+      "status": "pass",
+      "ms": 24,
+      "evidence": {
+        "repeatCancelStatus": 400,
+        "cancelledPaymentStatus": 400,
+        "refundRows": 1
+      }
+    },
+    {
+      "name": "mock-success可被其他用户调用，已退款支付流水可重新置为success",
+      "status": "observed",
+      "ms": 87,
+      "evidence": {
+        "outsiderStatus": 200,
+        "before": {
+          "id": 5,
+          "trade_no": "RF179388023569227",
+          "status": "refunded"
+        },
+        "after": {
+          "id": 5,
+          "status": "success",
+          "amount": 195,
+          "refund_of": 4
+        },
+        "interpretation": "仅非生产mock端点缺权限/状态检查；生产有403保护，真实支付不受此端点影响。测试不应将此路径当可信支付回调"
+      },
+      "kind": "policy-observation"
+    }
+  ],
+  "summary": {
+    "total": 12,
+    "passed": 7,
+    "failed": 0,
+    "observations": 5
+  }
+}

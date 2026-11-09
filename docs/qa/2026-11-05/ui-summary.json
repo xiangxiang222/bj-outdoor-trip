@@ -1,0 +1,6 @@
+{
+  "command": "npm run test:ui",
+  "exitCode": 0,
+  "durationSeconds": 90.92,
+  "log": "/tmp/bj-full-flow-qa-2026-11-05/ui-regression.log"
+}

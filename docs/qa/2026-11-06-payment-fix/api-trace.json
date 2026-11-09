@@ -1,0 +1,2353 @@
+[
+  {
+    "seq": 1,
+    "method": "GET",
+    "path": "/meta",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 2,
+    "method": "POST",
+    "path": "/admin/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 3,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 4,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 5,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 6,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 7,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 8,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 9,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 10,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 11,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 12,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 13,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 14,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 15,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 16,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 17,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 18,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 19,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 20,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 21,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 22,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 23,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 24,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 25,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 26,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 27,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 28,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 29,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 30,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 31,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 32,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 33,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 34,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 35,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 36,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 37,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 38,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 39,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 40,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 41,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 42,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 43,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 44,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 45,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 46,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 47,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 48,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 49,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 50,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 51,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 52,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 53,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 54,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 55,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 56,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 57,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 58,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 59,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 60,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 61,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 62,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 63,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 64,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 65,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 66,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 67,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 68,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 69,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 70,
+    "method": "POST",
+    "path": "/me/realname",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 71,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 72,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 73,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "验证码错误或已过期"
+  },
+  {
+    "seq": 74,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 75,
+    "method": "POST",
+    "path": "/auth/login",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "手机号或密码错误"
+  },
+  {
+    "seq": 76,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 77,
+    "method": "POST",
+    "path": "/auth/register",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "手机号已注册"
+  },
+  {
+    "seq": 78,
+    "method": "POST",
+    "path": "/upload",
+    "status": 200,
+    "expected": 200
+  },
+  {
+    "seq": 79,
+    "method": "POST",
+    "path": "/me/student",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": "已提交学生认证，待后台审核"
+  },
+  {
+    "seq": 80,
+    "method": "POST",
+    "path": "/admin/users/4/verify",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 81,
+    "method": "POST",
+    "path": "/upload",
+    "status": 200,
+    "expected": 200
+  },
+  {
+    "seq": 82,
+    "method": "POST",
+    "path": "/me/student",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": "已提交学生认证，待后台审核"
+  },
+  {
+    "seq": 83,
+    "method": "POST",
+    "path": "/admin/users/9/verify",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 84,
+    "method": "POST",
+    "path": "/upload",
+    "status": 200,
+    "expected": 200
+  },
+  {
+    "seq": 85,
+    "method": "POST",
+    "path": "/me/student",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": "已提交学生认证，待后台审核"
+  },
+  {
+    "seq": 86,
+    "method": "POST",
+    "path": "/admin/users/10/verify",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 87,
+    "method": "POST",
+    "path": "/upload",
+    "status": 200,
+    "expected": 200
+  },
+  {
+    "seq": 88,
+    "method": "POST",
+    "path": "/me/student",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": "已提交学生认证，待后台审核"
+  },
+  {
+    "seq": 89,
+    "method": "POST",
+    "path": "/admin/users/11/verify",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 90,
+    "method": "POST",
+    "path": "/upload",
+    "status": 200,
+    "expected": 200
+  },
+  {
+    "seq": 91,
+    "method": "POST",
+    "path": "/me/student",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": "已提交学生认证，待后台审核"
+  },
+  {
+    "seq": 92,
+    "method": "POST",
+    "path": "/admin/users/16/verify",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 93,
+    "method": "POST",
+    "path": "/me/group",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": "已提交团体认证，待后台审核"
+  },
+  {
+    "seq": 94,
+    "method": "POST",
+    "path": "/admin/users/5/verify",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 95,
+    "method": "PUT",
+    "path": "/me",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 96,
+    "method": "POST",
+    "path": "/upload",
+    "status": 200,
+    "expected": 200
+  },
+  {
+    "seq": 97,
+    "method": "POST",
+    "path": "/trips",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 98,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该团正在审核或未通过，暂不能报名"
+  },
+  {
+    "seq": 99,
+    "method": "POST",
+    "path": "/admin/schedules/3/review",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 100,
+    "method": "GET",
+    "path": "/schedules/3",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 101,
+    "method": "GET",
+    "path": "/me/notices",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 102,
+    "method": "POST",
+    "path": "/upload",
+    "status": 200,
+    "expected": 200
+  },
+  {
+    "seq": 103,
+    "method": "POST",
+    "path": "/trips",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 104,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该团正在审核或未通过，暂不能报名"
+  },
+  {
+    "seq": 105,
+    "method": "POST",
+    "path": "/admin/schedules/4/review",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 106,
+    "method": "GET",
+    "path": "/schedules/4",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 107,
+    "method": "GET",
+    "path": "/me/notices",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 108,
+    "method": "POST",
+    "path": "/upload",
+    "status": 200,
+    "expected": 200
+  },
+  {
+    "seq": 109,
+    "method": "POST",
+    "path": "/trips",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 110,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该团正在审核或未通过，暂不能报名"
+  },
+  {
+    "seq": 111,
+    "method": "POST",
+    "path": "/admin/schedules/5/review",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 112,
+    "method": "GET",
+    "path": "/schedules/5",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 113,
+    "method": "GET",
+    "path": "/me/notices",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 114,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "本团仅限 北京大学 已认证学生报名"
+  },
+  {
+    "seq": 115,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "本团仅限 北京大学 已认证学生报名"
+  },
+  {
+    "seq": 116,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 117,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该身份证已在本团报名"
+  },
+  {
+    "seq": 118,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 119,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该报名已支付"
+  },
+  {
+    "seq": 120,
+    "method": "GET",
+    "path": "/orders/1",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 121,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 122,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该身份证已在本团报名"
+  },
+  {
+    "seq": 123,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 124,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该报名已支付"
+  },
+  {
+    "seq": 125,
+    "method": "GET",
+    "path": "/orders/2",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 126,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 127,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该身份证已在本团报名"
+  },
+  {
+    "seq": 128,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 129,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该报名已支付"
+  },
+  {
+    "seq": 130,
+    "method": "GET",
+    "path": "/orders/3",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 131,
+    "method": "GET",
+    "path": "/schedules/3",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 132,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 133,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该身份证已在本团报名"
+  },
+  {
+    "seq": 134,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 135,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该报名已支付"
+  },
+  {
+    "seq": 136,
+    "method": "GET",
+    "path": "/orders/4",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 137,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 138,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该身份证已在本团报名"
+  },
+  {
+    "seq": 139,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 140,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该报名已支付"
+  },
+  {
+    "seq": 141,
+    "method": "GET",
+    "path": "/orders/5",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 142,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 143,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该身份证已在本团报名"
+  },
+  {
+    "seq": 144,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 145,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该报名已支付"
+  },
+  {
+    "seq": 146,
+    "method": "GET",
+    "path": "/orders/6",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 147,
+    "method": "GET",
+    "path": "/schedules/4",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 148,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 149,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该身份证已在本团报名"
+  },
+  {
+    "seq": 150,
+    "method": "GET",
+    "path": "/orders/7",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 151,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 152,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该身份证已在本团报名"
+  },
+  {
+    "seq": 153,
+    "method": "GET",
+    "path": "/orders/8",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 154,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 155,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该身份证已在本团报名"
+  },
+  {
+    "seq": 156,
+    "method": "GET",
+    "path": "/orders/9",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 157,
+    "method": "GET",
+    "path": "/schedules/5",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 158,
+    "method": "POST",
+    "path": "/pay/company-settle",
+    "status": 403,
+    "expected": 403,
+    "ok": false,
+    "message": "仅开团公司可统一支付"
+  },
+  {
+    "seq": 159,
+    "method": "POST",
+    "path": "/pay/company-settle",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 160,
+    "method": "POST",
+    "path": "/pay/company-settle",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "没有待统一支付的报名"
+  },
+  {
+    "seq": 161,
+    "method": "POST",
+    "path": "/schedules",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 162,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 163,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 164,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 165,
+    "method": "POST",
+    "path": "/orders/10/cancel",
+    "status": 403,
+    "expected": 403,
+    "ok": false,
+    "message": "只能取消自己的报名"
+  },
+  {
+    "seq": 166,
+    "method": "POST",
+    "path": "/orders/10/cancel",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 167,
+    "method": "POST",
+    "path": "/schedules",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 168,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 169,
+    "method": "POST",
+    "path": "/pay/for-enrollment",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 170,
+    "method": "POST",
+    "path": "/orders/11/cancel",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 171,
+    "method": "GET",
+    "path": "/admin/dashboard",
+    "status": 401,
+    "expected": 401,
+    "ok": false,
+    "message": "需要管理员权限"
+  },
+  {
+    "seq": 172,
+    "method": "GET",
+    "path": "/guide/me",
+    "status": 401,
+    "expected": 401,
+    "ok": false,
+    "message": "需要导游身份"
+  },
+  {
+    "seq": 173,
+    "method": "GET",
+    "path": "/orders/1",
+    "status": 404,
+    "expected": 404,
+    "ok": false,
+    "message": "订单不存在"
+  },
+  {
+    "seq": 174,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 401,
+    "expected": 401,
+    "ok": false,
+    "message": "请先登录"
+  },
+  {
+    "seq": 175,
+    "method": "GET",
+    "path": "/auth/captcha",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 176,
+    "method": "POST",
+    "path": "/auth/sms",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": "演示环境验证码为 888888"
+  },
+  {
+    "seq": 177,
+    "method": "POST",
+    "path": "/guide/login",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "验证码错误或已过期"
+  },
+  {
+    "seq": 178,
+    "method": "POST",
+    "path": "/guide/login",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 179,
+    "method": "GET",
+    "path": "/guide/schedules",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 180,
+    "method": "GET",
+    "path": "/guide/schedules/3",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 181,
+    "method": "POST",
+    "path": "/guide/schedules/3/start",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "行程不在出发日期，不能开始"
+  },
+  {
+    "seq": 182,
+    "method": "POST",
+    "path": "/guide/schedules/3/complete",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "行程还没结束"
+  },
+  {
+    "seq": 183,
+    "method": "POST",
+    "path": "/guide/schedules/3/start",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 184,
+    "method": "POST",
+    "path": "/guide/schedules/3/start",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 185,
+    "method": "GET",
+    "path": "/guide/schedules/3/travelers/1",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 186,
+    "method": "POST",
+    "path": "/guide/schedules/3/checkins",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 187,
+    "method": "POST",
+    "path": "/guide/schedules/3/checkins",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "本轮签到还没确认，确认后再发起下一轮"
+  },
+  {
+    "seq": 188,
+    "method": "POST",
+    "path": "/guide/schedules/3/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 189,
+    "method": "POST",
+    "path": "/guide/schedules/3/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 190,
+    "method": "POST",
+    "path": "/guide/schedules/3/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 191,
+    "method": "POST",
+    "path": "/guide/schedules/3/checkins/1/confirm",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 192,
+    "method": "POST",
+    "path": "/guide/schedules/3/checkins",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 193,
+    "method": "POST",
+    "path": "/guide/schedules/3/checkins",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "本轮签到还没确认，确认后再发起下一轮"
+  },
+  {
+    "seq": 194,
+    "method": "POST",
+    "path": "/guide/schedules/3/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 195,
+    "method": "POST",
+    "path": "/guide/schedules/3/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 196,
+    "method": "POST",
+    "path": "/guide/schedules/3/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 197,
+    "method": "POST",
+    "path": "/guide/schedules/3/checkins/2/confirm",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 198,
+    "method": "POST",
+    "path": "/guide/schedules/3/complete",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 199,
+    "method": "POST",
+    "path": "/guide/schedules/3/complete",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 200,
+    "method": "GET",
+    "path": "/schedules/3/after",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 201,
+    "method": "GET",
+    "path": "/schedules/3/after",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 202,
+    "method": "GET",
+    "path": "/schedules/3/after",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 203,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "本团已开始或结束，请选择其他团期"
+  },
+  {
+    "seq": 204,
+    "method": "POST",
+    "path": "/reviews",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 205,
+    "method": "POST",
+    "path": "/reviews",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该行程已评价过"
+  },
+  {
+    "seq": 206,
+    "method": "POST",
+    "path": "/reviews",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "仅报名成功的出行人可评价"
+  },
+  {
+    "seq": 207,
+    "method": "GET",
+    "path": "/schedules/3/reviews",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 208,
+    "method": "GET",
+    "path": "/guide/schedules/4",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 209,
+    "method": "POST",
+    "path": "/guide/schedules/4/start",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "行程不在出发日期，不能开始"
+  },
+  {
+    "seq": 210,
+    "method": "POST",
+    "path": "/guide/schedules/4/complete",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "行程还没结束"
+  },
+  {
+    "seq": 211,
+    "method": "POST",
+    "path": "/guide/schedules/4/start",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 212,
+    "method": "POST",
+    "path": "/guide/schedules/4/start",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 213,
+    "method": "GET",
+    "path": "/guide/schedules/4/travelers/4",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 214,
+    "method": "POST",
+    "path": "/guide/schedules/4/checkins",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 215,
+    "method": "POST",
+    "path": "/guide/schedules/4/checkins",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "本轮签到还没确认，确认后再发起下一轮"
+  },
+  {
+    "seq": 216,
+    "method": "POST",
+    "path": "/guide/schedules/4/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 217,
+    "method": "POST",
+    "path": "/guide/schedules/4/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 218,
+    "method": "POST",
+    "path": "/guide/schedules/4/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 219,
+    "method": "POST",
+    "path": "/guide/schedules/4/checkins/3/confirm",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 220,
+    "method": "POST",
+    "path": "/guide/schedules/4/checkins",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 221,
+    "method": "POST",
+    "path": "/guide/schedules/4/checkins",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "本轮签到还没确认，确认后再发起下一轮"
+  },
+  {
+    "seq": 222,
+    "method": "POST",
+    "path": "/guide/schedules/4/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 223,
+    "method": "POST",
+    "path": "/guide/schedules/4/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 224,
+    "method": "POST",
+    "path": "/guide/schedules/4/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 225,
+    "method": "POST",
+    "path": "/guide/schedules/4/checkins/4/confirm",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 226,
+    "method": "POST",
+    "path": "/guide/schedules/4/complete",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 227,
+    "method": "POST",
+    "path": "/guide/schedules/4/complete",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 228,
+    "method": "GET",
+    "path": "/schedules/4/after",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 229,
+    "method": "GET",
+    "path": "/schedules/4/after",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 230,
+    "method": "GET",
+    "path": "/schedules/4/after",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 231,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "本团已开始或结束，请选择其他团期"
+  },
+  {
+    "seq": 232,
+    "method": "POST",
+    "path": "/reviews",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 233,
+    "method": "POST",
+    "path": "/reviews",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该行程已评价过"
+  },
+  {
+    "seq": 234,
+    "method": "POST",
+    "path": "/reviews",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "仅报名成功的出行人可评价"
+  },
+  {
+    "seq": 235,
+    "method": "GET",
+    "path": "/schedules/4/reviews",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 236,
+    "method": "GET",
+    "path": "/guide/schedules/5",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 237,
+    "method": "POST",
+    "path": "/guide/schedules/5/start",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "行程不在出发日期，不能开始"
+  },
+  {
+    "seq": 238,
+    "method": "POST",
+    "path": "/guide/schedules/5/complete",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "行程还没结束"
+  },
+  {
+    "seq": 239,
+    "method": "POST",
+    "path": "/guide/schedules/5/start",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 240,
+    "method": "POST",
+    "path": "/guide/schedules/5/start",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 241,
+    "method": "GET",
+    "path": "/guide/schedules/5/travelers/7",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 242,
+    "method": "POST",
+    "path": "/guide/schedules/5/checkins",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 243,
+    "method": "POST",
+    "path": "/guide/schedules/5/checkins",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "本轮签到还没确认，确认后再发起下一轮"
+  },
+  {
+    "seq": 244,
+    "method": "POST",
+    "path": "/guide/schedules/5/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 245,
+    "method": "POST",
+    "path": "/guide/schedules/5/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 246,
+    "method": "POST",
+    "path": "/guide/schedules/5/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 247,
+    "method": "POST",
+    "path": "/guide/schedules/5/checkins/5/confirm",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 248,
+    "method": "POST",
+    "path": "/guide/schedules/5/checkins",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 249,
+    "method": "POST",
+    "path": "/guide/schedules/5/checkins",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "本轮签到还没确认，确认后再发起下一轮"
+  },
+  {
+    "seq": 250,
+    "method": "POST",
+    "path": "/guide/schedules/5/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 251,
+    "method": "POST",
+    "path": "/guide/schedules/5/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 252,
+    "method": "POST",
+    "path": "/guide/schedules/5/checkin",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 253,
+    "method": "POST",
+    "path": "/guide/schedules/5/checkins/6/confirm",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 254,
+    "method": "POST",
+    "path": "/guide/schedules/5/complete",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 255,
+    "method": "POST",
+    "path": "/guide/schedules/5/complete",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 256,
+    "method": "GET",
+    "path": "/schedules/5/after",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 257,
+    "method": "GET",
+    "path": "/schedules/5/after",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 258,
+    "method": "GET",
+    "path": "/schedules/5/after",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 259,
+    "method": "POST",
+    "path": "/enroll",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "本团已开始或结束，请选择其他团期"
+  },
+  {
+    "seq": 260,
+    "method": "POST",
+    "path": "/reviews",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  },
+  {
+    "seq": 261,
+    "method": "POST",
+    "path": "/reviews",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "该行程已评价过"
+  },
+  {
+    "seq": 262,
+    "method": "POST",
+    "path": "/reviews",
+    "status": 400,
+    "expected": 400,
+    "ok": false,
+    "message": "仅报名成功的出行人可评价"
+  },
+  {
+    "seq": 263,
+    "method": "GET",
+    "path": "/schedules/5/reviews",
+    "status": 200,
+    "expected": 200,
+    "ok": true,
+    "message": ""
+  }
+]

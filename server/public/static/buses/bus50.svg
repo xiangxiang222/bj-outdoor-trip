@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+  <rect width="1200" height="720" fill="#eef6f1"/>
+  <rect x="80" y="220" width="980" height="280" rx="48" fill="#081c15"/>
+  <rect x="140" y="250" width="160" height="110" rx="16" fill="#d8f3dc"/>
+  <rect x="330" y="250" width="160" height="110" rx="16" fill="#d8f3dc"/>
+  <rect x="520" y="250" width="160" height="110" rx="16" fill="#d8f3dc"/>
+  <rect x="710" y="250" width="160" height="110" rx="16" fill="#d8f3dc"/>
+  <circle cx="280" cy="520" r="58" fill="#1b4332"/>
+  <circle cx="280" cy="520" r="28" fill="#d8d2c2"/>
+  <circle cx="880" cy="520" r="58" fill="#1b4332"/>
+  <circle cx="880" cy="520" r="28" fill="#d8d2c2"/>
+  <text x="120" y="160" font-family="PingFang SC, sans-serif" font-size="36" fill="#1b4332">同行者众用车</text>
+  <text x="120" y="480" font-family="PingFang SC, sans-serif" font-size="44" font-weight="700" fill="#fff">50 人大型大巴</text>
+</svg>

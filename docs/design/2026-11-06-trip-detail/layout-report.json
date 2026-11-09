@@ -1,0 +1,2737 @@
+{
+  "kind": "Browser compatibility simulation; not WeChat simulator or real device",
+  "actualSources": [
+    "miniprogram/pages/schedule/schedule.wxml",
+    "miniprogram/pages/schedule/schedule.wxss",
+    "miniprogram/app.wxss",
+    "miniprogram/utils/weather-chart.js"
+  ],
+  "cases": [
+    {
+      "id": "320-1-zh-light-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 31211
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-zh-light-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "领队2\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 31211
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-zh-light-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 31211
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-zh-light-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-zh-dark-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 31211
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-zh-dark-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "领队2\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 31211
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-zh-dark-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 31211
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-zh-dark-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-en-light-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 31238
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-en-light-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Guide2\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 31238
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-en-light-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 31238
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-en-light-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-en-dark-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 31238
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-en-dark-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Guide2\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 31238
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-en-dark-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 31238
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1-en-dark-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-zh-light-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 32663
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-zh-light-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "领队2\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 32663
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-zh-light-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 32663
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-zh-light-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-zh-dark-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 32663
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-zh-dark-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "领队2\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 32663
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-zh-dark-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 32663
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-zh-dark-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-en-light-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 32776
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-en-light-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Guide2\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 32776
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-en-light-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 32776
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-en-light-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-en-dark-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 32776
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-en-dark-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Guide2\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 32776
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-en-dark-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 272.25,
+        "height": 102.390625,
+        "paintedPixels": 32776
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "320-1.36-en-dark-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 320,
+        "documentWidth": 320,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-zh-light-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 53367
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-zh-light-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "领队2\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 53367
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-zh-light-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 53367
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-zh-light-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-zh-dark-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 53367
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-zh-dark-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "领队2\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 53367
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-zh-dark-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 53367
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-zh-dark-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-en-light-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 53400
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-en-light-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Guide2\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 53400
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-en-light-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 53400
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-en-light-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-en-dark-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 53400
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-en-dark-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Guide2\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 53400
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-en-dark-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 53400
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1-en-dark-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-zh-light-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 54779
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-zh-light-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "领队2\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 54779
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-zh-light-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 54779
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-zh-light-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-zh-dark-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 54779
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-zh-dark-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "领队2\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 54779
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-zh-dark-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 54779
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-zh-dark-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-en-light-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 54906
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-en-light-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Guide2\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 54906
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-en-light-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 54906
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-en-light-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-en-dark-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 54906
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-en-dark-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Guide2\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 54906
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-en-dark-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 331.8125,
+        "height": 124.796875,
+        "paintedPixels": 54906
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "390-1.36-en-dark-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 390,
+        "documentWidth": 390,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-zh-light-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 68114
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-zh-light-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "领队2\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 68114
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-zh-light-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 68114
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-zh-light-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-zh-dark-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 68114
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-zh-dark-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "领队2\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 68114
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-zh-dark-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 68114
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-zh-dark-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-en-light-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 68153
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-en-light-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Guide2\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 68153
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-en-light-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 68153
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-en-light-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-en-dark-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 68153
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-en-dark-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Guide2\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 68153
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-en-dark-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 68153
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1-en-dark-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-zh-light-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 69548
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-zh-light-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "领队2\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 69548
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-zh-light-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 69548
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-zh-light-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-zh-dark-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 69548
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-zh-dark-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "领队2\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 69548
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-zh-dark-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "领队1\n            山野同行的领队小林\n          \n          查看"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "openLeader",
+          "text": "摄影师\n          摄影师阿远\n        \n        查看"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 69548
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-zh-dark-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "领队1\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "领队2\n            带队同行\n          \n          报名"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "摄影师\n          免个人团费，保险另计\n        \n        报名"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-en-light-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 69671
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-en-light-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Guide2\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 69671
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-en-light-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 69671
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-en-light-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-en-dark-empty",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 69671
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-en-dark-filled",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Guide2\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 69671
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-en-dark-mixed",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "openLeader",
+          "text": "Guide1\n            Alexandra Mountain Walker\n          \n          View"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "openLeader",
+          "text": "Photographer\n          Christopher Photographer\n        \n        View"
+        }
+      ],
+      "canvas": {
+        "present": true,
+        "width": 365.8125,
+        "height": 137.59375,
+        "paintedPixels": 69671
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    },
+    {
+      "id": "430-1.36-en-dark-no-hourly",
+      "status": "pass",
+      "bindings": [
+        {
+          "handler": "applyLeader",
+          "text": "Guide1\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyLeader",
+          "text": "Guide2\n            Lead the journey\n          \n          Join"
+        },
+        {
+          "handler": "applyPhotographer",
+          "text": "Photographer\n          Trip fee waived; insurance extra\n        \n        Join"
+        }
+      ],
+      "canvas": {
+        "present": false
+      },
+      "layout": {
+        "viewport": 430,
+        "documentWidth": 430,
+        "rows": 3
+      }
+    }
+  ],
+  "screenshots": [
+    "/tmp/bj-schedule-redesign-2026-11-06/final/320-1.36-en-light-mixed.png",
+    "/tmp/bj-schedule-redesign-2026-11-06/final/320-1.36-en-dark-mixed.png",
+    "/tmp/bj-schedule-redesign-2026-11-06/final/390-1-zh-light-empty.png",
+    "/tmp/bj-schedule-redesign-2026-11-06/final/390-1-zh-light-filled.png",
+    "/tmp/bj-schedule-redesign-2026-11-06/final/390-1-zh-dark-empty.png",
+    "/tmp/bj-schedule-redesign-2026-11-06/final/390-1-zh-dark-filled.png"
+  ],
+  "summary": {
+    "total": 96,
+    "passed": 96,
+    "failed": 0,
+    "screenshots": 6
+  }
+}

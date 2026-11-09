@@ -1,0 +1,20 @@
+[
+  {
+    "path": "<repo>/server/data/app.sqlite",
+    "sameSha256": true,
+    "bytes": 446464,
+    "sha256": "89099d7f4757399e7b49fa2019a4e57183c2a29767dbcfca8930f758637496c5"
+  },
+  {
+    "path": "<repo>/server/data/app.sqlite-wal",
+    "sameSha256": true,
+    "bytes": 4132392,
+    "sha256": "054605c61c4662bf6b25bd1f414dceeb7a2d84115f218bce964e09646aa7f4c0"
+  },
+  {
+    "path": "<repo>/server/data/app.sqlite-shm",
+    "sameSha256": true,
+    "bytes": 32768,
+    "sha256": "8b40cd51ded9ee038591458bc1f2c9827d1781cc7a0fa0fb8e9834842b51361a"
+  }
+]

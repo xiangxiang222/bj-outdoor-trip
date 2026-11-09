@@ -104,7 +104,7 @@ function remainingForPayer(en, payerId) {
 function refundableOf(en) {
   const collected = collectedOf(en.id);
   if (collected > 0) return collected;
-  if (en && en.pay_status === "paid" && Number(en.pay_amount || 0) > 0) return Number(en.pay_amount);
+  if (en && en.pay_status === "paid" && Number(en.pay_amount || 0) > 0 && !chargeRows(en.id).length) return Number(en.pay_amount);
   return 0;
 }
 
@@ -115,7 +115,51 @@ function payProgress(en) {
   return { payAmount, paidAmount, remainAmount };
 }
 
-const REVENUE_SKIP_SCENES = "('member','wallet_topup','withdraw','trip_bounty','route_bounty','referral')";
+function companyLines(pay) {
+  try {
+    const lines = JSON.parse(pay.remark || "{}").lines;
+    return Array.isArray(lines) ? lines : [];
+  } catch {
+    return [];
+  }
+}
+
+function recoverLegacyCompanyShare(row, expectedParentId) {
+  if (row.scene !== "company_share" || Number(row.parent_payment_id || 0)) return row;
+  const db = getDb();
+  let parents = db.prepare("SELECT * FROM payments WHERE schedule_id=? AND scene='company'").all(row.schedule_id)
+    .filter((parent) => companyLines(parent).some((line) => Number(line.id) === Number(row.enrollment_id) && Number(line.amount) === Number(row.amount)));
+  const sameTrade = parents.filter((parent) => parent.trade_no && parent.trade_no === row.trade_no);
+  if (sameTrade.length) parents = sameTrade;
+  else if (row.wechat_transaction_id) {
+    const sameTransaction = parents.filter((parent) => parent.wechat_transaction_id === row.wechat_transaction_id);
+    if (sameTransaction.length) parents = sameTransaction;
+    else parents = parents.filter((parent) => !parent.wechat_transaction_id);
+  }
+  // Old mock shares have no parent order. They never represent gateway money.
+  if (!parents.length && row.channel !== "wechat" && !expectedParentId) return row;
+  if (parents.length !== 1 || (expectedParentId && Number(parents[0].id) !== Number(expectedParentId))) {
+    fail(409, "历史公司支付记录关联不明确，请先核对支付流水");
+  }
+  const parent = parents[0];
+  db.prepare("UPDATE payments SET parent_payment_id=?,user_id=? WHERE id=? AND IFNULL(parent_payment_id,0)=0")
+    .run(parent.id, parent.user_id, row.id);
+  return { ...row, parent_payment_id: parent.id, user_id: parent.user_id };
+}
+
+function recoverLegacyCompanyShares(pay) {
+  const db = getDb();
+  for (const line of companyLines(pay)) {
+    const rows = db.prepare(`SELECT * FROM payments WHERE schedule_id=? AND enrollment_id=?
+      AND scene='company_share' AND IFNULL(parent_payment_id,0)=0 AND IFNULL(refund_of,0)=0`).all(pay.schedule_id, line.id);
+    if (rows.length > 1 || rows.some((row) => Number(row.amount) !== Number(line.amount))) {
+      fail(409, "历史公司支付记录关联不明确，请先核对支付流水");
+    }
+    for (const row of rows) recoverLegacyCompanyShare(row, pay.id);
+  }
+}
+
+const REVENUE_SKIP_SCENES = "('member','wallet_topup','withdraw','trip_bounty','route_bounty','referral','company')";
 
 function revenueWhere() {
   return `p.status='success' AND IFNULL(p.refund_of,0)=0
@@ -236,7 +280,7 @@ function planPayerRefunds(en, refundTotal) {
   if (want <= 0) return [];
   const charges = chargeRows(en.id).filter((row) => leftoverOf(row) > 0);
   if (!charges.length) {
-    if (en.pay_status === "paid" && Number(en.pay_amount || 0) > 0) {
+    if (en.pay_status === "paid" && Number(en.pay_amount || 0) > 0 && !chargeRows(en.id).length) {
       return [
         {
           paymentId: 0,
@@ -254,15 +298,19 @@ function planPayerRefunds(en, refundTotal) {
   const leftovers = charges.map((row) => leftoverOf(row));
   const slices = allocateByShare(leftovers, want);
   return charges
-    .map((row, i) => ({
-      paymentId: row.id,
-      userId: row.user_id,
-      amount: slices[i],
-      tradeNo: row.trade_no || "",
-      transactionId: row.wechat_transaction_id || "",
-      chargeAmount: Number(row.amount || 0),
-      channel: row.channel === "wallet" ? "wallet" : row.channel === "wechat" ? "wechat" : "book",
-    }))
+    .map((originalRow, i) => {
+      const row = recoverLegacyCompanyShare(originalRow);
+      const parent = row.parent_payment_id ? getDb().prepare("SELECT * FROM payments WHERE id=? AND scene='company'").get(row.parent_payment_id) : null;
+      return {
+        paymentId: row.id,
+        userId: row.user_id,
+        amount: slices[i],
+        tradeNo: (parent || row).trade_no || "",
+        transactionId: (parent || row).wechat_transaction_id || "",
+        chargeAmount: Number((parent || row).amount || 0),
+        channel: row.channel === "wallet" ? "wallet" : row.channel === "wechat" ? "wechat" : "book",
+      };
+    })
     .filter((row) => row.amount > 0);
 }
 
@@ -330,6 +378,7 @@ module.exports = {
   parsePayYuan,
   remarkForPay,
   planPayerRefunds,
+  recoverLegacyCompanyShares,
   leftoverOf,
   enrollmentByPayToken,
   payShareView,

@@ -5,7 +5,7 @@ const { reverseEnrollReferral } = require("./referral");
 const { buildCancelSms, sendSms } = require("./sms");
 const { releaseCouponByEnrollment } = require("./coupons");
 const { refundableOf } = require("./pay-ledger");
-const { refundEnrollmentToPayers, preflightEnrollmentRefund } = require("./payment");
+const { refundEnrollmentToPayers, preflightEnrollmentRefund, enrollmentRefundPlan } = require("./payment");
 const { scheduleHasStarted } = require("./schedule-lifecycle");
 
 function fail(status, message) {
@@ -45,7 +45,11 @@ async function dissolveSchedule(scheduleId, { reason, actor, actorId } = {}) {
   let smsCount = 0;
   let smsRecordCount = 0;
   const refunds = [];
-  const refundPlans = enrollments.map((en) => ({ enrollment: en, amount: refundableOf(en) }));
+  const refundPlans = enrollments.map((en) => {
+    const saved = enrollmentRefundPlan(en.id);
+    if (saved && saved.percent < 100) fail(409, "该报名取消退款处理中，请先完成取消退款后再解散");
+    return { enrollment: en, amount: saved ? saved.amount : refundableOf(en) };
+  });
 
   for (const plan of refundPlans) {
     if (plan.amount > 0) preflightEnrollmentRefund(plan.enrollment, plan.amount);

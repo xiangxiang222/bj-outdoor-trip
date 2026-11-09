@@ -179,37 +179,37 @@
               <span class="muted"> 余 {{ s.coupon.remain }}/{{ s.coupon.total }} · 点此领取</span>
             </div>
           </div>
-          <div class="leader-board" v-if="!isActivity">
-            <p class="role-kicker" v-if="hasOpenRole">本团还有空位</p>
+          <div class="trip-team" v-if="!isActivity">
+            <div class="team-heading"><h3>领队与摄影</h3><span v-if="hasOpenRole" class="team-status">招募中</span></div>
             <template v-for="slot in leaderSlots" :key="slot.slot">
-              <div class="leader-slot" v-if="slot.leader">
-                <a class="nav-link" href="#" @click.prevent="openLeader(slot.leader)">
-                  <img v-if="slot.leader.avatar" class="leader-face" :src="slot.leader.avatar" alt="" />
-                  <span v-else class="leader-face">{{ (slot.leader.name || "领").slice(0, 1) }}</span>
-                  {{ slot.label }} {{ slot.leader.name }}
-                </a>
-              </div>
-              <button v-else class="role-open" type="button" @click="applyLeader(slot.slot)">
-                <span class="role-open-copy">
-                  <b>{{ slot.label }} · 报名领队</b>
-                  <small>空位，点此带这团</small>
+              <button v-if="slot.leader" class="team-row is-filled" type="button" @click="openLeader(slot.leader)">
+                <img v-if="slot.leader.avatar" class="team-icon team-avatar" :src="slot.leader.avatar" alt="" />
+                <span v-else class="team-icon" aria-hidden="true"><i class="team-flag"></i></span>
+                <span class="team-copy"><b>{{ slot.label }}</b><small>{{ slot.leader.name }}</small></span>
+                <span class="team-action">查看 <i aria-hidden="true">›</i></span>
+              </button>
+              <button v-else class="team-row" type="button" @click="applyLeader(slot.slot)">
+                <span class="team-icon" aria-hidden="true"><i class="team-flag"></i></span>
+                <span class="team-copy">
+                  <b>{{ slot.label }}</b>
+                  <small>带队同行</small>
                 </span>
-                <i>›</i>
+                <span class="team-action">报名 <i aria-hidden="true">›</i></span>
               </button>
             </template>
-            <div class="leader-slot" v-if="s.photographer">
-              <a class="nav-link" href="#" @click.prevent="openLeader(s.photographer)">
-                <img v-if="s.photographer.avatar" class="leader-face" :src="s.photographer.avatar" alt="" />
-                <span v-else class="leader-face">{{ (s.photographer.name || "摄").slice(0, 1) }}</span>
-                摄影师 {{ s.photographer.name }}
-              </a>
-            </div>
-            <button v-else class="role-open" type="button" @click="applyPhotographer">
-              <span class="role-open-copy">
-                <b>报名摄影师</b>
-                <small>空位，免个人团费</small>
+            <button v-if="s.photographer" class="team-row is-filled" type="button" @click="openLeader(s.photographer)">
+              <img v-if="s.photographer.avatar" class="team-icon team-avatar" :src="s.photographer.avatar" alt="" />
+              <span v-else class="team-icon" aria-hidden="true"><i class="team-camera"></i></span>
+              <span class="team-copy"><b>摄影师</b><small>{{ s.photographer.name }}</small></span>
+              <span class="team-action">查看 <i aria-hidden="true">›</i></span>
+            </button>
+            <button v-else class="team-row" type="button" @click="applyPhotographer">
+              <span class="team-icon" aria-hidden="true"><i class="team-camera"></i></span>
+              <span class="team-copy">
+                <b>摄影师</b>
+                <small>免个人团费，保险另计</small>
               </span>
-              <i>›</i>
+              <span class="team-action">报名 <i aria-hidden="true">›</i></span>
             </button>
             <div v-if="leaderNeedApply" class="card" style="margin-top:8px">
               <div class="pad">
@@ -222,13 +222,23 @@
       </div>
 
       <template v-if="!isActivity && weather">
-        <div class="h2">出行天气</div>
-        <div class="card"><div class="pad">
-          <div class="weather" :class="weather.alerts?.[0]?.level">
-            <strong>{{ weather.place }} {{ weather.summary }}</strong>
-            <span>{{ weather.tmin }}~{{ weather.tmax }}℃ · 风 {{ weather.wind }}km/h</span>
+        <div class="card weather-card"><div class="pad">
+          <div class="forecast-heading"><h3>出行天气</h3><time v-if="weather.date" :datetime="weather.date">{{ weather.date }}</time></div>
+          <div class="forecast-main">
+            <div class="forecast-place"><strong>{{ weather.place }}</strong><span>{{ weather.summary }}</span></div>
+            <div class="forecast-temperature">{{ weather.tmin }}<span>–</span>{{ weather.tmax }}<small>℃</small></div>
+          </div>
+          <div class="forecast-facts">
+            <span>风速 <b>{{ weather.wind }}</b><small>km/h</small></span>
+            <span>降水 <b>{{ weather.precip }}</b><small>mm</small></span>
+          </div>
+          <template v-if="weather.hourly?.length">
+            <div class="forecast-legend"><span><i></i>气温</span><span v-if="weather.precip > 0"><i class="rain"></i>降水</span></div>
             <WeatherChart :hourly="weather.hourly" :label="weather.place + '分时气温'" />
-            <p v-for="(a, i) in weather.alerts" :key="i">{{ a.text }}</p>
+          </template>
+          <div v-if="weather.alerts?.length" class="forecast-notes">
+            <span class="forecast-note-label">出行提醒</span>
+            <div><p v-for="(a, i) in weather.alerts" :key="i" :class="{ 'is-high': a.level === 'high' }">{{ a.text }}</p></div>
           </div>
         </div></div>
       </template>
@@ -1208,6 +1218,57 @@ function closeDissolve() { if (!dissolving.value) showDissolve.value = false; }
 
 
 <style scoped>
+.trip-team, .weather-card { --detail-accent:#765797; --detail-soft:rgba(118,87,151,.085); }
+.trip-team { margin-top:22px; border-top:1px solid var(--line,#eeecf2); padding-top:18px; }
+.team-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px; }
+.team-heading h3, .forecast-heading h3 { margin:0; font-size:calc(14px * var(--ui-scale,1)); font-weight:600; color:var(--ink,#24222a); }
+.team-status { flex:none; color:var(--detail-accent); background:var(--detail-soft); padding:3px 9px; border-radius:20px; font-size:calc(10px * var(--ui-scale,1)); }
+.team-row { width:100%; display:flex; align-items:center; gap:12px; min-height:64px; margin:0; padding:12px 0; border:0; border-bottom:1px solid var(--line,#eeecf2); border-radius:0; background:transparent; color:var(--ink,#24222a); text-align:left; line-height:1.5; cursor:pointer; }
+.team-row:last-of-type { border-bottom:0; padding-bottom:4px; }
+.team-row:focus-visible { outline:2px solid var(--detail-accent); outline-offset:3px; border-radius:8px; }
+.team-icon { flex:none; width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:13px; background:var(--detail-soft); color:var(--detail-accent); }
+.team-avatar { object-fit:cover; }
+.team-flag { position:relative; display:block; width:18px; height:21px; border-left:1.7px solid currentColor; }
+.team-flag::before { content:""; position:absolute; top:1px; left:0; width:14px; height:10px; border:1.7px solid currentColor; border-left:0; border-radius:0 2px 2px 0; transform:skewY(-9deg); }
+.team-camera { position:relative; display:block; width:22px; height:16px; border:1.7px solid currentColor; border-radius:4px; }
+.team-camera::before { content:""; position:absolute; width:8px; height:4px; top:-5px; left:4px; border:1.7px solid currentColor; border-bottom:0; border-radius:3px 3px 0 0; }
+.team-camera::after { content:""; position:absolute; width:6px; height:6px; top:3px; left:6px; border:1.7px solid currentColor; border-radius:50%; }
+.team-copy { flex:1; min-width:0; display:flex; flex-direction:column; gap:3px; overflow-wrap:anywhere; }
+.team-copy b { color:var(--ink,#24222a); font-size:calc(14px * var(--ui-scale,1)); font-weight:550; }
+.team-copy small { color:var(--muted,#8a8692); font-size:calc(11px * var(--ui-scale,1)); font-weight:400; }
+.team-action { display:flex; align-items:center; gap:7px; flex:none; color:var(--detail-accent); font-size:calc(12px * var(--ui-scale,1)); white-space:nowrap; }
+.team-action i { font-size:21px; font-style:normal; font-weight:400; line-height:1; }
+.weather-card { background:var(--card,var(--paper,#fff)); color:var(--ink,#24222a); }
+.weather-card > .pad { padding:20px; }
+.forecast-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.forecast-heading time { font-size:calc(10px * var(--ui-scale,1)); color:var(--muted,#8a8692); font-variant-numeric:tabular-nums; }
+.forecast-main { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:19px; flex-wrap:wrap; }
+.forecast-place { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.forecast-place strong { font-size:calc(16px * var(--ui-scale,1)); font-weight:600; }
+.forecast-place > span { color:var(--detail-accent); background:var(--detail-soft); padding:3px 9px; border-radius:7px; font-size:calc(11px * var(--ui-scale,1)); }
+.forecast-temperature { display:flex; align-items:baseline; gap:3px; color:var(--ink,#24222a); font-size:calc(22px * var(--ui-scale,1)); font-weight:550; line-height:1.4; font-variant-numeric:tabular-nums; letter-spacing:-.7px; }
+.forecast-temperature > span { font-size:.7em; color:var(--muted,#8a8692); font-weight:400; margin:0 2px; }
+.forecast-temperature > small { font-size:calc(14px * var(--ui-scale,1)); font-weight:400; margin-left:1px; letter-spacing:0; }
+.forecast-facts { display:flex; flex-wrap:wrap; gap:9px 20px; margin-top:7px; color:var(--muted,#8a8692); font-size:calc(11px * var(--ui-scale,1)); }
+.forecast-facts > span { display:inline-flex; align-items:baseline; gap:5px; }
+.forecast-facts b { font-weight:500; color:var(--ink,#24222a); }
+.forecast-facts small { font-size:inherit; }
+.forecast-legend { display:flex; justify-content:flex-end; gap:15px; margin-top:22px; color:var(--muted,#8a8692); font-size:calc(10px * var(--ui-scale,1)); }
+.forecast-legend > span { display:flex; align-items:center; gap:6px; }
+.forecast-legend i { display:inline-block; width:12px; height:2px; border-radius:2px; background:var(--detail-accent); }
+.forecast-legend i.rain { width:5px; height:8px; background:#baaacb; }
+.forecast-notes { display:flex; align-items:flex-start; gap:11px; margin-top:15px; padding-top:15px; border-top:1px solid var(--line,#eeecf2); font-size:calc(11px * var(--ui-scale,1)); line-height:1.8; }
+.forecast-note-label { color:var(--detail-accent); flex:none; padding-top:1px; }
+.forecast-notes > div { min-width:0; flex:1; }
+.forecast-notes p { margin:0; color:var(--muted,#8a8692); overflow-wrap:anywhere; }
+.forecast-notes p.is-high { color:var(--clay,#ac536a); }
+:global(html[data-night="dark"] .trip-team), :global(html[data-night="dark"] .weather-card) { --detail-accent:#c2a5e0; --detail-soft:rgba(183,145,218,.12); }
+@media (max-width:360px) {
+  .team-row { gap:9px; }
+  .team-icon { width:36px; height:36px; border-radius:12px; }
+  .team-action { gap:4px; }
+  .weather-card > .pad { padding:18px; }
+}
 .activity-detail-brief { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px 18px; border:1px solid var(--line); border-radius:14px; background:var(--bg); padding:16px; margin:18px 0 6px; }
 .activity-detail-brief > div { min-width:0; display:flex; flex-direction:column; gap:5px; line-height:1.7; }
 .activity-detail-brief span { color:var(--muted); font-size:calc(10px * var(--ui-scale,1)); }
